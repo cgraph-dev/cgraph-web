@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary SEO Meta Tags -->
+    <title>CGraph - Beyond Messaging | Secure Communication Platform</title>
+    <meta name="title" content="CGraph - Beyond Messaging | Secure Communication Platform" />
+    <meta
+      name="description"
+      content="Real-time messaging meets community forums — with end-to-end encryption, Web3 authentication, group channels, and rewards that make every interaction count."
+    />
+    <meta
+      name="keywords"
+      content="secure messaging, encrypted chat, end-to-end encryption, community forums, voice calls, video calls, Web3, blockchain, real-time communication, privacy"
+    />
+    <meta name="author" content="CGraph" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f172a" />
+
+    <!--
+      Content Security Policy (defense-in-depth: also set via Vercel headers)
+      NOTE: style-src 'unsafe-inline' is required by Framer Motion and Radix UI which inject
+      inline style attributes (transform, opacity, pointer-events) at runtime. This cannot be
+      replaced with nonces — nonces only cover <style> blocks, not style="" attributes.
+
+      Both meta tag and vercel.json keep script-src free of unsafe-inline. Turnstile is allowed
+      explicitly for auth anti-automation.
+      See docs/SECURITY_AUDIT_CHECKLIST.md §4.4 for full risk assessment.
+
+      NOTE: frame-ancestors is intentionally omitted from this meta tag because browsers
+      ignore it when delivered via <meta>. It is enforced via the HTTP header in vercel.json.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://cgraph-backend-prod-v2.fly.dev wss://cgraph-backend-prod-v2.fly.dev https://*.ingest.sentry.io https://vitals.vercel-insights.com https://fonts.gstatic.com https://challenges.cloudflare.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cgraph.org/" />
+    <meta
+      property="og:title"
+      content="CGraph - Beyond Messaging | Secure Encrypted Communication"
+    />
+    <meta
+      property="og:description"
+      content="Real-time messaging meets community forums — with end-to-end encryption, Web3 authentication, and rewards that make every interaction count."
+    />
+    <meta property="og:image" content="https://cgraph.org/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="CGraph - The All-in-One Secure Communication Platform" />
+    <meta property="og:site_name" content="CGraph" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://cgraph.org/" />
+    <meta
+      name="twitter:title"
+      content="CGraph - Beyond Messaging | Secure Encrypted Communication"
+    />
+    <meta
+      name="twitter:description"
+      content="Real-time messaging meets community forums — with end-to-end encryption, Web3 authentication, and rewards."
+    />
+    <meta name="twitter:image" content="https://cgraph.org/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="CGraph - The All-in-One Secure Communication Platform"
+    />
+
+    <!-- Additional SEO -->
+    <link rel="canonical" href="https://cgraph.org/" />
+    <meta name="application-name" content="CGraph" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Critical CSS - Inlined for faster LCP on landing page -->
+    <style id="critical-css">
+      /* Core variables for landing page - prevents FOUC */
+      :root {
+        --color-primary: #a78bfa;
+        --color-primary-dark: #8b5cf6;
+        --color-secondary: #10b981;
+        --color-dark: #030712;
+        --color-dark-alt: #0f0a1f;
+        --gradient-primary: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+        --gradient-hero: linear-gradient(135deg, #030712 0%, #0f0a1f 50%, #111827 100%);
+        --glow-purple: 0 0 20px rgba(167, 139, 250, 0.5);
+      }
+
+      /* Critical layout - prevents layout shift */
+      .demo-landing {
+        background: var(--color-dark);
+        color: #ffffff;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Hero section critical styles */
+      .hero-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      /* GPU acceleration hint for animated elements */
+      .gpu-accelerated {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+      }
+
+      /* Reduced motion preference */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Font display optimization */
+      .font-display {
+        font-family: 'Outfit', system-ui, sans-serif;
+      }
+      .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+    </style>
+    <!-- Early error capture: catches module eval errors BEFORE React loads -->
+    <script src="/early-errors.js"></script>
+  </head>
+  <body class="antialiased">
+    <div id="root">
+      <!-- Theme bootstrap adjusts this before React mounts -->
+      <div
+        id="initial-loader"
+        style="
+          min-height: 100vh;
+          background: linear-gradient(135deg, #080b14 0%, #11162a 52%, #0d0f1c 100%);
+        "
+      ></div>
+    </div>
+    <script src="/theme-bootstrap.js"></script>
+    <script type="module" src="/src/main.tsx"></script>
+    <script src="/diagnostic-timeout.js"></script>
+  </body>
+</html>

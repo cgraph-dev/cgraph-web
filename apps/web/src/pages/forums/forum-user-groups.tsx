@@ -1,0 +1,25 @@
+/**
+ * Forum User Groups Page
+ *
+ * Route: /forums/:forumId/admin/user-groups
+ * Wraps UserGroupManager with page layout.
+ *
+ */
+
+import { useParams } from 'react-router-dom';
+import { UserGroupManager } from '@/modules/forums/components/user-groups/user-group-manager';
+
+/** Forum User Groups Page component. */
+export default function ForumUserGroupsPage() {
+  const { forumId } = useParams<{ forumId: string }>();
+
+  if (!forumId) {
+    return <div className="p-8 text-center text-gray-400">Forum not found</div>;
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <UserGroupManager forumId={forumId} />
+    </div>
+  );
+}

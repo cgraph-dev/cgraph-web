@@ -1,0 +1,27 @@
+/**
+ * Forum Customization Page
+ *
+ * Route: /forums/:forumId/customize
+ * Renders the full customization center for forum admins/owners.
+ *
+ */
+
+import { useParams } from 'react-router-dom';
+import { CustomizationCenter } from '../components/customization-center';
+
+/** Forum Customization Page component. */
+export default function ForumCustomizationPage() {
+  const { forumId } = useParams<{ forumId: string }>();
+
+  if (!forumId) {
+    return (
+      <div className="flex h-96 items-center justify-center text-white/50">Forum not found</div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
+      <CustomizationCenter forumId={forumId} isOwner />
+    </div>
+  );
+}

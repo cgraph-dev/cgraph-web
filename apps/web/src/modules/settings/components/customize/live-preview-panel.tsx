@@ -1,0 +1,27 @@
+/**
+ * Live Preview Panel
+ *
+ * Real-time preview of all customization settings.
+ * Shows profile card, avatar, and chat bubbles with live updates.
+ *
+ * Uses the unified customization store for all settings.
+ *
+ * @see ./live-preview-panel for modular implementation
+ */
+
+export {
+  // Types
+  type ParticleData,
+  type ParticleStyle,
+  type PreviewBadge,
+  type ThemeColors,
+  // Constants
+  ANIMATION_SPEED_MULTIPLIERS,
+  PREVIEW_BADGES,
+  PARTICLE_COLORS,
+  LEGENDARY_TITLE_IDS,
+  // Components
+  ProfileCardPreview,
+  LivePreviewPanel,
+  default,
+} from './live-preview-panel/index';

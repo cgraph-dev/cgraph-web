@@ -1,0 +1,133 @@
+export interface GhostChatTheme {
+  readonly id: string;
+  readonly name: string;
+  readonly background: string;
+  readonly textPrimary: string;
+  readonly textSecondary: string;
+  readonly accent: string;
+  readonly border: string;
+  readonly glow: string;
+}
+
+export const ghostChatThemes: readonly GhostChatTheme[] = [
+  {
+    id: 'void',
+    name: 'Void',
+    background: '#0a0a0a',
+    textPrimary: '#e5e5e5',
+    textSecondary: '#737373',
+    accent: '#404040',
+    border: '#262626',
+    glow: 'rgba(64, 64, 64, 0.3)',
+  },
+  {
+    id: 'redacted',
+    name: 'Redacted',
+    background: '#1a1a1a',
+    textPrimary: '#d4d4d4',
+    textSecondary: '#737373',
+    accent: '#525252',
+    border: '#333333',
+    glow: 'rgba(82, 82, 82, 0.3)',
+  },
+  {
+    id: 'midnight',
+    name: 'Midnight',
+    background: '#0d1b2a',
+    textPrimary: '#e2e8f0',
+    textSecondary: '#64748b',
+    accent: '#1e3a5f',
+    border: '#1e293b',
+    glow: 'rgba(30, 58, 95, 0.4)',
+  },
+  {
+    id: 'signal',
+    name: 'Signal',
+    background: '#1a1a2e',
+    textPrimary: '#eef2ff',
+    textSecondary: '#818cf8',
+    accent: '#2c6bed',
+    border: '#312e81',
+    glow: 'rgba(44, 107, 237, 0.3)',
+  },
+  {
+    id: 'ghost',
+    name: 'Ghost',
+    background: '#2d2d44',
+    textPrimary: '#e2e2f0',
+    textSecondary: '#9898b8',
+    accent: '#3d3d5c',
+    border: '#3d3d5c',
+    glow: 'rgba(61, 61, 92, 0.4)',
+  },
+  {
+    id: 'cipher',
+    name: 'Cipher',
+    background: '#0d2818',
+    textPrimary: '#bbf7d0',
+    textSecondary: '#4ade80',
+    accent: '#166534',
+    border: '#14532d',
+    glow: 'rgba(22, 101, 52, 0.5)',
+  },
+  {
+    id: 'onyx',
+    name: 'Onyx',
+    background: '#121212',
+    textPrimary: '#e0e0e0',
+    textSecondary: '#9e9e9e',
+    accent: '#424242',
+    border: '#2a2a2a',
+    glow: 'rgba(66, 66, 66, 0.3)',
+  },
+  {
+    id: 'eclipse',
+    name: 'Eclipse',
+    background: '#1a0a2e',
+    textPrimary: '#e9d5ff',
+    textSecondary: '#c084fc',
+    accent: '#f59e0b',
+    border: '#581c87',
+    glow: 'rgba(245, 158, 11, 0.3)',
+  },
+  {
+    id: 'static',
+    name: 'Static',
+    background: '#2a2a2a',
+    textPrimary: '#d4d4d4',
+    textSecondary: '#a3a3a3',
+    accent: '#525252',
+    border: '#404040',
+    glow: 'rgba(82, 82, 82, 0.2)',
+  },
+  {
+    id: 'shadow',
+    name: 'Shadow',
+    background: '#1c1c1c',
+    textPrimary: '#e5e5e5',
+    textSecondary: '#737373',
+    accent: '#404040',
+    border: '#333333',
+    glow: 'rgba(64, 64, 64, 0.25)',
+  },
+  {
+    id: 'obsidian',
+    name: 'Obsidian',
+    background: '#0e0e14',
+    textPrimary: '#e2e2f0',
+    textSecondary: '#7878a0',
+    accent: '#4a4a6a',
+    border: '#28283c',
+    glow: 'rgba(74, 74, 106, 0.35)',
+  },
+  {
+    id: 'abyss',
+    name: 'Abyss',
+    background: '#020818',
+    textPrimary: '#c8d8ff',
+    textSecondary: '#4a6fa5',
+    accent: '#0a2463',
+    border: '#0f172a',
+    glow: 'rgba(10, 36, 99, 0.5)',
+  },
+] as const;

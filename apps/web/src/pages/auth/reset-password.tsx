@@ -1,0 +1,18 @@
+/**
+ * Reset Password Page
+ *
+ * Handles password reset with token validation.
+ * Features strength meter and confirmation.
+ *
+ * Modularized into reset-password/ directory:
+ * - types.ts: ResetState, PasswordStrength, PasswordRequirements
+ * - utils.ts: calculatePasswordStrength, animation variants, REQUIREMENT_CONFIG
+ * - StateViews.tsx: ValidatingView, ExpiredView, SuccessView
+ * - PasswordStrengthMeter.tsx: Strength indicator with requirement checklist
+ * - PasswordInput.tsx: Password field with show/hide toggle
+ * - ResetPasswordForm.tsx: Main form component
+ * - ResetPassword.tsx: Main page component
+ *
+ */
+export { default } from './reset-password/index';
+export * from './reset-password/index';

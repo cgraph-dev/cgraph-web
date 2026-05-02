@@ -1,0 +1,206 @@
+/**
+ * Pulse Settings — Reputation & Ranks category
+ *
+ * Pulse name, upvote/downvote labels, rank thresholds,
+ * rank image upload, show reputation toggle.
+ *
+ */
+
+import { useState, useEffect } from 'react';
+import { CheckIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { isRecord, asString, asNumber } from '@/lib/api-utils';
+import type { RankThreshold } from '@cgraph/shared-types';
+
+interface PulseSettingsProps {
+  options: Record<string, unknown>;
+  onSave: (changes: Record<string, unknown>) => void;
+  saving: boolean;
+}
+
+const DEFAULT_THRESHOLDS: RankThreshold[] = [
+  { name: 'Newcomer', minPulse: 0, imageUrl: '' },
+  { name: 'Member', minPulse: 10, imageUrl: '' },
+  { name: 'Regular', minPulse: 50, imageUrl: '' },
+  { name: 'Veteran', minPulse: 200, imageUrl: '' },
+  { name: 'Elite', minPulse: 500, imageUrl: '' },
+];
+
+/** Pulse Settings component. */
+export function PulseSettings({ options, onSave, saving }: PulseSettingsProps) {
+  const [draft, setDraft] = useState<Record<string, unknown>>({});
+  const [thresholds, setThresholds] = useState<RankThreshold[]>(DEFAULT_THRESHOLDS);
+
+  useEffect(() => {
+    setDraft({ ...options });
+    const stored = options.rank_thresholds;
+    if (Array.isArray(stored) && stored.length > 0) {
+      setThresholds(
+        stored
+          .filter(isRecord)
+          .map((t) => ({
+            name: asString(t.name),
+            minPulse: asNumber(t.min_karma, asNumber(t.minPulse, 0)),
+            imageUrl: asString(t.image_url, asString(t.imageUrl)),
+          }))
+      );
+    }
+  }, [options]);
+
+  const updateField = (key: string, value: unknown) => {
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateThreshold = (index: number, field: keyof RankThreshold, value: unknown) => {
+      setThresholds((prev) => prev.map((t, i) => (i === index ? { ...t, [field]: value } : t)));
+    };
+
+  const addThreshold = () => {
+    setThresholds((prev) => [
+      ...prev,
+      {
+        name: '',
+        minPulse: prev.length > 0 ? (prev[prev.length - 1]?.minPulse ?? 0) + 100 : 0,
+        imageUrl: '',
+      },
+    ]);
+  };
+
+  const removeThreshold = (index: number) => {
+    setThresholds((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSave = () => {
+    onSave({
+      ...draft,
+      rank_thresholds: thresholds.map((t) => ({
+        name: t.name,
+        min_karma: t.minPulse,
+        image_url: t.imageUrl,
+      })),
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Pulse Name & Labels */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div>
+          <label className="mb-1 block text-xs text-white/50">Pulse Name</label>
+          <input
+            type="text"
+
+            value={asString(draft.karma_name, 'Pulse')}
+            onChange={(e) => updateField('karma_name', e.target.value)}
+            placeholder="Pulse"
+            className="w-full rounded border border-[var(--token-border-muted)] bg-white/5 px-2 py-1.5 text-sm text-white"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-white/50">Upvote Label</label>
+          <input
+            type="text"
+
+            value={asString(draft.upvote_label, 'Upvote')}
+            onChange={(e) => updateField('upvote_label', e.target.value)}
+            placeholder="Upvote"
+            className="w-full rounded border border-[var(--token-border-muted)] bg-white/5 px-2 py-1.5 text-sm text-white"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-white/50">Downvote Label</label>
+          <input
+            type="text"
+
+            value={asString(draft.downvote_label, 'Downvote')}
+            onChange={(e) => updateField('downvote_label', e.target.value)}
+            placeholder="Downvote"
+            className="w-full rounded border border-[var(--token-border-muted)] bg-white/5 px-2 py-1.5 text-sm text-white"
+          />
+        </div>
+      </div>
+
+      {/* Show Reputation Toggle */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => updateField('show_reputation', !draft.show_reputation)}
+          className={`relative h-5 w-10 rounded-full transition-colors ${
+            draft.show_reputation !== false ? 'bg-green-500' : 'bg-white/20'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+              draft.show_reputation !== false ? 'left-5' : 'left-0.5'
+            }`}
+          />
+        </button>
+        <label className="text-sm text-white/70">Show Reputation on Profiles & Posts</label>
+      </div>
+
+      {/* Rank Thresholds */}
+      <div>
+        <h4 className="mb-3 text-sm font-semibold text-white/80">Rank Thresholds</h4>
+        <div className="space-y-2">
+          {thresholds.map((threshold, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 rounded-lg border border-[var(--token-border-muted)] bg-white/5 px-4 py-2"
+            >
+              <div className="grid flex-1 grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  value={threshold.name}
+                  onChange={(e) => updateThreshold(index, 'name', e.target.value)}
+                  placeholder="Rank name"
+                  className="rounded border border-[var(--token-border-muted)] bg-white/5 px-2 py-1 text-sm text-white"
+                />
+                <input
+                  type="number"
+                  value={threshold.minPulse}
+                  onChange={(e) =>
+                    updateThreshold(index, 'minPulse', parseInt(e.target.value) || 0)
+                  }
+                  placeholder="Min pulse"
+                  className="rounded border border-[var(--token-border-muted)] bg-white/5 px-2 py-1 text-sm text-white"
+                />
+                <input
+                  type="url"
+                  value={threshold.imageUrl}
+                  onChange={(e) => updateThreshold(index, 'imageUrl', e.target.value)}
+                  placeholder="Image URL"
+                  className="rounded border border-[var(--token-border-muted)] bg-white/5 px-2 py-1 text-sm text-white"
+                />
+              </div>
+              <button
+                onClick={() => removeThreshold(index)}
+                className="rounded p-1.5 text-white/40 hover:bg-red-500/20 hover:text-red-400"
+              >
+                <TrashIcon className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={addThreshold}
+          className="mt-2 flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 text-sm text-white/60 transition-colors hover:bg-white/10"
+        >
+          <PlusIcon className="h-4 w-4" />
+          Add Rank
+        </button>
+      </div>
+
+      {/* Save */}
+      <div className="flex justify-end border-t border-[var(--token-border-muted)] pt-4">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-500 disabled:opacity-50"
+        >
+          <CheckIcon className="h-4 w-4" />
+          {saving ? 'Saving...' : 'Save Reputation & Ranks'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default PulseSettings;

@@ -1,0 +1,82 @@
+{
+  "title": "Settings",
+  "sections": {
+    "account": "Account",
+    "appearance": "Appearance",
+    "notifications": "Notifications",
+    "privacy": "Privacy & Security",
+    "language": "Language",
+    "accessibility": "Accessibility",
+    "advanced": "Advanced",
+    "about": "About"
+  },
+  "account": {
+    "username": "Username",
+    "email": "Email",
+    "display_name": "Display name",
+    "bio": "Bio",
+    "avatar": "Profile picture",
+    "change_password": "Change password",
+    "two_factor": "Two-factor authentication",
+    "delete_account": "Delete account",
+    "export_data": "Export my data"
+  },
+  "appearance": {
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "font_size": "Font size",
+    "compact_mode": "Compact mode",
+    "animations": "Animations",
+    "reduced_motion": "Reduce motion"
+  },
+  "notifications": {
+    "push": "Push notifications",
+    "email": "Email notifications",
+    "sound": "Notification sound",
+    "desktop": "Desktop notifications",
+    "dnd": "Do not disturb",
+    "mentions_only": "Mentions only"
+  },
+  "privacy": {
+    "online_status": "Show online status",
+    "read_receipts": "Read receipts",
+    "typing_indicator": "Typing indicator",
+    "profile_visibility": "Profile visibility",
+    "blocked_users": "Blocked users",
+    "data_collection": "Data collection"
+  },
+  "language": {
+    "title": "Language",
+    "select": "Select language",
+    "rtl_support": "Right-to-left support"
+  },
+  "accessibility": {
+    "screen_reader": "Screen reader optimizations",
+    "high_contrast": "High contrast mode",
+    "keyboard_shortcuts": "Keyboard shortcuts",
+    "font_scaling": "Font scaling"
+  },
+  "delete_account": {
+    "title": "Delete Account",
+    "danger_zone": "Danger Zone",
+    "permanent_warning": "Deleting your account is permanent and cannot be undone after the grace period. All your data, messages, and activity will be permanently removed.",
+    "consequence1": "Your profile and all personal data will be deleted",
+    "consequence2": "Your messages will be anonymized",
+    "consequence3": "Groups you own will need a new owner or be deleted",
+    "grace_period": "30-day grace period — log in to cancel",
+    "want_to_delete": "I want to delete my account",
+    "confirm_password": "Confirm your password",
+    "enter_password": "Enter your password",
+    "to_confirm": "to confirm",
+    "deleting": "Deleting...",
+    "delete_my_account": "Delete My Account"
+  },
+  "data_export": {
+    "title": "Data Export",
+    "description": "Download a copy of your data",
+    "request_export": "Request Export",
+    "processing": "Processing..."
+  }
+}

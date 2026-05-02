@@ -1,0 +1,259 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        // Brand tokens (from landing/auth identity)
+        brand: {
+          purple: 'var(--color-brand-purple)',
+          'purple-dark': 'var(--color-brand-purple-dark)',
+          cyan: 'var(--color-brand-cyan)',
+          teal: 'var(--color-brand-teal)',
+          green: 'var(--color-brand-green)',
+        },
+        surface: {
+          glass: 'var(--color-surface-glass)',
+          card: 'var(--color-surface-card)',
+          raised: 'var(--color-surface-raised)',
+          bg: 'var(--color-bg-space)',
+        },
+        // Token-driven colors — read from CSS variables set by the theme engine.
+        // The `rgb(var(--token-X-rgb) / <alpha>)` pattern lets Tailwind opacity
+        // utilities (bg-primary/50) work correctly.
+        primary: {
+          DEFAULT: 'var(--color-primary)',
+          light: 'color-mix(in srgb, var(--color-primary) 70%, white)',
+          dark: 'var(--color-primary-dark)',
+          // Full numeric scale — theme-aware via --color-primary CSS variable
+          // Aurora = emerald (#10b981), Dark = lime (#DFFF0A), Light = sapphire (#2563eb)
+          50: 'color-mix(in srgb, var(--color-primary) 5%, white)',
+          100: 'color-mix(in srgb, var(--color-primary) 10%, white)',
+          200: 'color-mix(in srgb, var(--color-primary) 20%, white)',
+          300: 'color-mix(in srgb, var(--color-primary) 40%, white)',
+          400: 'color-mix(in srgb, var(--color-primary) 70%, white)',
+          500: 'var(--color-primary)',
+          600: 'var(--color-primary-dark)',
+          700: 'color-mix(in srgb, var(--color-primary-dark) 85%, black)',
+          800: 'color-mix(in srgb, var(--color-primary-dark) 70%, black)',
+          900: 'color-mix(in srgb, var(--color-primary-dark) 55%, black)',
+          950: 'color-mix(in srgb, var(--color-primary-dark) 35%, black)',
+        },
+        // Matrix-inspired green palette
+        matrix: {
+          50: '#f0fff4',
+          100: '#c6f6d5',
+          200: '#9ae6b4',
+          300: '#68d391',
+          400: '#48bb78',
+          500: '#38a169',
+          600: '#25855a',
+          700: '#276749',
+          800: '#22543d',
+          900: '#1c4532',
+          glow: '#00ff41',
+          dim: '#003b00',
+          bright: '#39ff14',
+        },
+        // Dark theme — token-driven surfaces
+        dark: {
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          200: '#e5e7eb',
+          300: '#d1d5db',
+          400: '#9ca3af',
+          500: '#6b7280',
+          600: 'rgb(var(--token-border-default-rgb, 75 85 99) / <alpha-value>)',
+          700: 'rgb(var(--token-bg-tertiary-rgb, 55 65 81) / <alpha-value>)',
+          800: 'rgb(var(--token-bg-secondary-rgb, 31 41 55) / <alpha-value>)',
+          900: 'rgb(var(--token-bg-primary-rgb, 17 24 39) / <alpha-value>)',
+          950: '#030712',
+        },
+        // Chat/messaging colors — token-driven
+        chat: {
+          bg: 'var(--token-chat-bg, #36393f)',
+          hover: 'var(--token-sidebar-hover, #32353b)',
+          input: 'var(--token-input-bg, #40444b)',
+          mention: 'rgba(250, 166, 26, 0.1)',
+        },
+        // Sidebar colors — token-driven
+        sidebar: {
+          bg: 'var(--token-sidebar-bg, #2f3136)',
+          hover: 'var(--token-sidebar-hover, #34373c)',
+          active: 'var(--token-sidebar-active, #393c43)',
+        },
+        // Token-driven foreground / text colors — swap automatically with theme
+        foreground: {
+          DEFAULT: 'rgb(var(--token-text-primary-rgb, 255 255 255) / <alpha-value>)',
+          secondary: 'rgb(var(--token-text-secondary-rgb, 163 163 163) / <alpha-value>)',
+          muted: 'rgb(var(--token-text-muted-rgb, 115 115 115) / <alpha-value>)',
+          inverse: 'rgb(var(--token-text-inverse-rgb, 15 15 15) / <alpha-value>)',
+        },
+        // Token-driven border colors
+        'token-border': {
+          DEFAULT: 'rgb(var(--token-border-default-rgb, 51 51 51) / <alpha-value>)',
+          muted: 'rgb(var(--token-border-muted-rgb, 42 42 42) / <alpha-value>)',
+        },
+        // Feedback semantic colors
+        success: 'rgb(var(--token-feedback-success-rgb, 34 197 94) / <alpha-value>)',
+        warning: 'rgb(var(--token-feedback-warning-rgb, 245 158 11) / <alpha-value>)',
+        error: 'rgb(var(--token-feedback-error-rgb, 239 68 68) / <alpha-value>)',
+        info: 'rgb(var(--token-feedback-info-rgb, 59 130 246) / <alpha-value>)',
+        // Override built-in purple/violet to be theme-aware
+        // In dark theme, --color-brand-purple resolves to lime (#DFFF0A)
+        // In aurora theme, it stays purple (#8b5cf6)
+        purple: {
+          50: 'color-mix(in srgb, var(--color-brand-purple) 5%, white)',
+          100: 'color-mix(in srgb, var(--color-brand-purple) 10%, white)',
+          200: 'color-mix(in srgb, var(--color-brand-purple) 20%, white)',
+          300: 'color-mix(in srgb, var(--color-brand-purple) 40%, white)',
+          400: 'color-mix(in srgb, var(--color-brand-purple) 70%, white)',
+          500: 'var(--color-brand-purple)',
+          600: 'var(--color-brand-purple-dark)',
+          700: 'color-mix(in srgb, var(--color-brand-purple-dark) 85%, black)',
+          800: 'color-mix(in srgb, var(--color-brand-purple-dark) 70%, black)',
+          900: 'color-mix(in srgb, var(--color-brand-purple-dark) 55%, black)',
+          950: 'color-mix(in srgb, var(--color-brand-purple-dark) 35%, black)',
+        },
+        violet: {
+          50: 'color-mix(in srgb, var(--color-brand-purple) 5%, white)',
+          100: 'color-mix(in srgb, var(--color-brand-purple) 10%, white)',
+          200: 'color-mix(in srgb, var(--color-brand-purple) 20%, white)',
+          300: 'color-mix(in srgb, var(--color-brand-purple) 40%, white)',
+          400: 'color-mix(in srgb, var(--color-brand-purple) 70%, white)',
+          500: 'var(--color-brand-purple)',
+          600: 'var(--color-brand-purple-dark)',
+          700: 'color-mix(in srgb, var(--color-brand-purple-dark) 85%, black)',
+          800: 'color-mix(in srgb, var(--color-brand-purple-dark) 70%, black)',
+          900: 'color-mix(in srgb, var(--color-brand-purple-dark) 55%, black)',
+          950: 'color-mix(in srgb, var(--color-brand-purple-dark) 35%, black)',
+        },
+      },
+      fontFamily: {
+        sans: [
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'sans-serif',
+        ],
+        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.2s ease-out',
+        'fade-in-up': 'fadeInUp 0.4s ease-out',
+        'fade-in-delay': 'fadeIn 0.5s ease-out 0.2s forwards',
+        'slide-up': 'slideUp 0.3s ease-out',
+        'slide-up-delay': 'slideUp 0.4s ease-out 0.1s forwards',
+        'slide-down': 'slideDown 0.3s ease-out',
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'slide-in': 'slideIn 0.3s ease-out',
+        'scale-in': 'scaleIn 0.2s ease-out',
+        'bounce-in': 'bounceIn 0.5s ease-out',
+        shimmer: 'shimmer 2s linear infinite',
+        glow: 'glowGreen 2s ease-in-out infinite alternate',
+        'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+        'matrix-flicker': 'matrixFlicker 0.15s ease-in-out infinite',
+        'border-glow': 'borderGlow 2s ease-in-out infinite alternate',
+        float: 'float 6s ease-in-out infinite',
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        typing: 'typing 2s steps(20, end) forwards',
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideDown: {
+          '0%': { transform: 'translateY(-10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(-10px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideIn: {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        scaleIn: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        bounceIn: {
+          '0%': { transform: 'scale(0.3)', opacity: '0' },
+          '50%': { transform: 'scale(1.05)' },
+          '70%': { transform: 'scale(0.9)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        glowGreen: {
+          '0%': { boxShadow: '0 0 5px rgba(16, 185, 129, 0.4)' },
+          '100%': {
+            boxShadow: '0 0 20px rgba(16, 185, 129, 0.7), 0 0 40px rgba(16, 185, 129, 0.4)',
+          },
+        },
+        glowPulse: {
+          '0%, 100%': {
+            boxShadow: '0 0 5px rgba(16, 185, 129, 0.3), inset 0 0 5px rgba(16, 185, 129, 0.1)',
+          },
+          '50%': {
+            boxShadow: '0 0 20px rgba(16, 185, 129, 0.5), inset 0 0 10px rgba(16, 185, 129, 0.2)',
+          },
+        },
+        matrixFlicker: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' },
+        },
+        borderGlow: {
+          '0%': { borderColor: 'rgba(16, 185, 129, 0.3)' },
+          '100%': { borderColor: 'rgba(16, 185, 129, 0.6)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        typing: {
+          '0%': { width: '0' },
+          '100%': { width: '100%' },
+        },
+      },
+      boxShadow: {
+        'glow-sm': '0 0 10px rgba(16, 185, 129, 0.3)',
+        'glow-md': '0 0 20px rgba(16, 185, 129, 0.4)',
+        'glow-lg': '0 0 30px rgba(16, 185, 129, 0.5)',
+        'glow-xl': '0 0 40px rgba(16, 185, 129, 0.6), 0 0 60px rgba(16, 185, 129, 0.3)',
+        'glow-purple': 'var(--glow-purple)',
+        'glow-cyan': 'var(--glow-cyan)',
+        'glow-green': 'var(--glow-green)',
+        matrix: '0 0 15px rgba(0, 255, 65, 0.3), inset 0 0 10px rgba(0, 255, 65, 0.1)',
+        'matrix-intense': '0 0 30px rgba(0, 255, 65, 0.5), 0 0 60px rgba(0, 255, 65, 0.2)',
+        card: 'var(--shadow-card)',
+        'card-hover': '0 8px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(16, 185, 129, 0.2)',
+      },
+      backgroundImage: {
+        'gradient-brand': 'var(--gradient-brand)',
+        'gradient-brand-text': 'var(--gradient-brand-text)',
+        'gradient-hero': 'var(--gradient-hero)',
+        'glow-purple': 'var(--gradient-glow-purple)',
+        'glow-cyan': 'var(--gradient-glow-cyan)',
+      },
+    },
+  },
+  plugins: [],
+};

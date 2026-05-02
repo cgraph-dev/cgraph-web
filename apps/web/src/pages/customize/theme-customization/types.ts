@@ -1,0 +1,38 @@
+/**
+ * Type definitions for ThemeCustomization
+ */
+
+export type ThemeCategory = 'profile' | 'chat' | 'forum' | 'app';
+
+export interface Theme {
+  id: string;
+  name: string;
+  description: string;
+  category: ThemeCategory;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    text: string;
+  };
+  preview: string; // CSS gradient or solid color for preview
+  unlocked: boolean;
+  unlockRequirement?: string;
+  isPremium?: boolean;
+}
+
+export interface ThemeCardProps {
+  theme: Theme;
+  isActive: boolean;
+  isPreviewing: boolean;
+  onApply: () => void;
+  delay?: number;
+}
+
+export interface CategoryTab {
+  id: ThemeCategory;
+  name: string;
+  icon: React.ReactNode;
+  description: string;
+}

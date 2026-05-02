@@ -1,0 +1,264 @@
+/**
+ * Avatar Borders Section
+ *
+ * Manages avatar border selection, filtering, and equipping.
+ */
+
+import { useState, useMemo } from 'react';
+import { motion } from 'motion/react';
+import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
+
+import type { AvatarBorderConfig } from '@/types/avatar-borders';
+import type { SectionProps, FilterState } from './types';
+import { RARITY_COLORS } from './constants';
+import { GridIcon, ListIcon } from './icons';
+import { AVATAR_BORDERS } from '@/data/avatar-borders';
+import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+
+/** Type guard: trust `<select>` option values for theme filter */
+function isThemeFilter(_v: string): _v is FilterState['theme'] {
+  return true; // values constrained by <select> options
+}
+
+/** Type guard: trust `<select>` option values for rarity filter */
+function isRarityFilter(_v: string): _v is FilterState['rarity'] {
+  return true; // values constrained by <select> options
+}
+
+// COMPONENT
+
+export function AvatarBordersSection({ filters, setFilters, viewMode, setViewMode }: SectionProps) {
+  const equippedBorderId = useCustomizationStore((s) => s.selectedBorderId);
+  const selectBorderId = useCustomizationStore((s) => s.selectBorderId);
+  const [selectedBorder, setSelectedBorder] = useState<string | null>(null);
+
+  const filteredBorders = useMemo(() => {
+    let result: AvatarBorderConfig[] = [...AVATAR_BORDERS];
+
+    if (filters.theme !== 'all') {
+      result = result.filter((b) => b.theme === filters.theme);
+    }
+    if (filters.rarity !== 'all') {
+      result = result.filter((b) => b.rarity === filters.rarity);
+    }
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      result = result.filter(
+        (b) =>
+          b.name.toLowerCase().includes(search) || b.description?.toLowerCase().includes(search)
+      );
+    }
+
+    return result;
+  }, [filters]);
+
+  function handleEquip(borderId: string) {
+    selectBorderId(equippedBorderId === borderId ? null : borderId);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-4">
+        {/* Search */}
+        <div className="relative min-w-[200px] max-w-md flex-1">
+          <input
+            type="text"
+            placeholder="Search borders..."
+            value={filters.search}
+            onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+            className="w-full rounded-lg border border-[var(--token-border-muted)] bg-white/5 px-4 py-2 text-white placeholder-white/30 focus:border-cyan-500/50 focus:outline-none"
+          />
+        </div>
+
+        {/* Theme Filter */}
+        <select
+          value={filters.theme}
+          onChange={(e) => {
+            const { value } = e.target;
+            if (isThemeFilter(value)) {
+              setFilters((f) => ({ ...f, theme: value }));
+            }
+          }}
+          className="rounded-lg border border-[var(--token-border-muted)] bg-white/5 px-4 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+        >
+          <option value="all">All Themes</option>
+          <option value="8bit">8-Bit</option>
+          <option value="anime">Anime</option>
+          <option value="cyberpunk">Cyberpunk</option>
+          <option value="kawaii">Kawaii</option>
+          <option value="cosmic">Cosmic</option>
+        </select>
+
+        {/* Rarity Filter */}
+        <select
+          value={filters.rarity}
+          onChange={(e) => {
+            const { value } = e.target;
+            if (isRarityFilter(value)) {
+              setFilters((f) => ({ ...f, rarity: value }));
+            }
+          }}
+          className="rounded-lg border border-[var(--token-border-muted)] bg-white/5 px-4 py-2 text-white focus:border-cyan-500/50 focus:outline-none"
+        >
+          <option value="all">All Rarities</option>
+          <option value="free">Free</option>
+          <option value="common">Common</option>
+          <option value="rare">Rare</option>
+          <option value="epic">Epic</option>
+          <option value="legendary">Legendary</option>
+          <option value="mythic">Mythic</option>
+        </select>
+
+        {/* Animation Type Badge */}
+        <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
+          <span className="rounded bg-cyan-500/20 px-3 py-1.5 text-xs font-medium text-cyan-400">
+            Lottie
+          </span>
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`rounded p-2 ${viewMode === 'grid' ? 'bg-white/10' : ''}`}
+          >
+            <GridIcon />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`rounded p-2 ${viewMode === 'list' ? 'bg-white/10' : ''}`}
+          >
+            <ListIcon />
+          </button>
+        </div>
+      </div>
+
+      {/* Equipped Border Preview */}
+      {equippedBorderId && (
+        <div className="aurora-social-panel rounded-2xl p-6">
+          <h3 className="mb-4 text-sm font-medium text-white/40">Currently Equipped</h3>
+          <div className="flex items-center gap-6">
+            <div className="relative h-24 w-24">
+              <AvatarBorderRenderer
+                border={AVATAR_BORDERS.find((b) => b.id === equippedBorderId)}
+                size={96}
+                src="/default-avatar.png"
+              />
+            </div>
+            <div>
+              <p className="font-medium">
+                {AVATAR_BORDERS.find((b) => b.id === equippedBorderId)?.name}
+              </p>
+              <p className="text-sm text-white/40">
+                {AVATAR_BORDERS.find((b) => b.id === equippedBorderId)?.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Border Grid */}
+      <div
+        className={
+          viewMode === 'grid'
+            ? 'grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+            : 'space-y-3'
+        }
+      >
+        {filteredBorders.map((border) => {
+          const isOwned =
+            border.rarity === 'free' ||
+            border.rarity === 'common' ||
+            border.unlockType === 'default';
+          const isEquipped = equippedBorderId === border.id;
+
+          return (
+            <motion.div
+              key={border.id}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`group relative cursor-pointer ${
+                viewMode === 'grid' ? 'aspect-square' : 'flex items-center gap-4 p-4'
+              } rounded-xl border bg-white/5 transition-all ${(() => {
+                if (isEquipped) return 'border-cyan-500/50 ring-2 ring-cyan-500/20';
+                if (selectedBorder === border.id) return 'border-white/20';
+                return 'border-white/5 hover:border-[var(--token-border-muted)]';
+              })()}`}
+              onClick={() => setSelectedBorder(border.id)}
+            >
+              {/* Preview */}
+              <div
+                className={`${viewMode === 'grid' ? 'p-4' : ''} flex items-center justify-center`}
+              >
+                <AvatarBorderRenderer
+                  border={border}
+                  size={viewMode === 'grid' ? 80 : 56}
+                  src="/default-avatar.png"
+                />
+              </div>
+
+              {/* Info */}
+              <div
+                className={
+                  viewMode === 'grid'
+                    ? 'absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 p-3'
+                    : 'flex-1'
+                }
+              >
+                <p className="truncate text-sm font-medium">{border.name}</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span
+                    className={`rounded-full bg-gradient-to-r px-2 py-0.5 text-xs ${
+                      RARITY_COLORS[border.rarity] || RARITY_COLORS.common
+                    }`}
+                  >
+                    {border.rarity}
+                  </span>
+                  {border.theme && <span className="text-xs text-white/30">{border.theme}</span>}
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              {isEquipped && (
+                <div className="absolute right-2 top-2 rounded-full bg-cyan-500 px-2 py-1 text-xs font-medium">
+                  Equipped
+                </div>
+              )}
+
+              {!isOwned && (
+                <div className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs">
+                  🔒 {(border.nodeCost ?? 0) > 0 ? `${border.nodeCost} nodes` : border.unlockType}
+                </div>
+              )}
+
+              {/* Hover Actions */}
+              <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-xl bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEquip(border.id);
+                  }}
+                  className={`${
+                    isEquipped
+                      ? 'aurora-social-button-muted cursor-not-allowed text-white/50'
+                      : 'aurora-social-button text-white'
+                  } rounded-xl px-4 py-2 text-sm font-medium transition-colors`}
+                >
+                  {isEquipped ? 'Equipped' : 'Equip'}
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {filteredBorders.length === 0 && (
+        <div className="py-12 text-center text-white/40">No borders match your filters</div>
+      )}
+    </div>
+  );
+}
+
+export default AvatarBordersSection;

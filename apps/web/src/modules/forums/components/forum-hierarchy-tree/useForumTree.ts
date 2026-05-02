@@ -1,0 +1,54 @@
+/**
+ * useForumTree hook
+ */
+
+import { useState, useEffect } from 'react';
+import { http } from '@/lib/api-client';
+import { createLogger } from '@/lib/logger';
+import type { ForumNode } from './types';
+
+const logger = createLogger('ForumHierarchyTree');
+
+/**
+ * Hook for managing forum tree.
+ *
+ * @param rootForumId - The root forum id.
+ * @param maxDepth - The max depth.
+ * @param showHidden - The show hidden.
+ */
+export function useForumTree(rootForumId?: string, maxDepth = 10, showHidden = false) {
+  const [tree, setTree] = useState<ForumNode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTree = async () => {
+      try {
+        setLoading(true);
+        const params: Record<string, string> = {
+          max_depth: maxDepth.toString(),
+          include_hidden: showHidden.toString(),
+        };
+
+        let response;
+        if (rootForumId) {
+          response = await http.get(`/api/v1/forums/${rootForumId}/subtree`, { params });
+        } else {
+          response = await http.get('/api/v1/forums/tree', { params });
+        }
+
+        setTree(response.data?.data || []);
+        setError(null);
+      } catch (err) {
+        logger.error('Failed to fetch forum tree:', err);
+        setError('Failed to load forum structure');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTree();
+  }, [rootForumId, maxDepth, showHidden]);
+
+  return { tree, loading, error, refetch: () => setLoading(true) };
+}

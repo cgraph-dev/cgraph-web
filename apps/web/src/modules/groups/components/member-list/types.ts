@@ -1,0 +1,40 @@
+import type { Member } from '@/modules/groups/store';
+
+export interface MemberListProps {
+  /** Group ID to display members for */
+  groupId: string;
+  /** Additional CSS classes */
+  className?: string;
+}
+
+/** Online status type */
+export type StatusType = 'online' | 'idle' | 'dnd' | 'offline';
+
+export interface MemberItemProps {
+  /** Member data */
+  member: Member;
+  /** Role color for name display */
+  roleColor?: string;
+  /** Click handler for context menu */
+  onClick: (event: React.MouseEvent) => void;
+}
+
+export interface MemberContextMenuProps {
+  /** Target member */
+  member: Member;
+  /** Menu position coordinates */
+  position: { x: number; y: number };
+  /** Whether the current user owns the group */
+  isOwner: boolean;
+  /** Close the context menu */
+  onClose: () => void;
+}
+
+export interface RoleSectionProps {
+  /** Role to display */
+  role: import('@/modules/groups/store').Role;
+  /** Members with this role */
+  members: Member[];
+  /** Click handler for member rows */
+  onMemberClick: (member: Member, event: React.MouseEvent) => void;
+}

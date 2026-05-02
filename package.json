@@ -1,0 +1,56 @@
+{
+  "name": "cgraph-web",
+  "version": "1.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "description": "CGraph browser client workspace",
+  "scripts": {
+    "dev": "pnpm --filter @cgraph/web dev",
+    "build": "pnpm --filter @cgraph/web build:strict",
+    "lint": "pnpm --filter @cgraph/web lint",
+    "test": "pnpm --filter @cgraph/web test:run",
+    "typecheck": "pnpm --filter @cgraph/web typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint-plugin-react": "^7.37.0"
+  },
+  "engines": {
+    "node": ">=20.x",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.12.1",
+  "pnpm": {
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "@types/react": "19.1.17",
+      "glob": "^11.0.0",
+      "rimraf": "^6.0.0",
+      "inflight": "npm:@pnpm/noop@1.0.0",
+      "tar": ">=7.5.10",
+      "esbuild": "0.25.12",
+      "@babel/runtime": ">=7.26.10",
+      "tmp": ">=0.2.4",
+      "@tootallnate/once": ">=3.0.1"
+    },
+    "onlyBuiltDependencies": [
+      "@next/swc",
+      "@parcel/watcher",
+      "@sentry/cli",
+      "@swc/core",
+      "bufferutil",
+      "core-js",
+      "esbuild",
+      "msw",
+      "msgpack",
+      "utf-8-validate",
+      "@signalapp/libsignal-client"
+    ],
+    "allowedDeprecatedVersions": {
+      "glob": "*",
+      "whatwg-encoding": "3.1.1"
+    }
+  }
+}

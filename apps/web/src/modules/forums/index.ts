@@ -1,0 +1,45 @@
+/**
+ * Forums Module
+ *
+ * Consolidated forum functionality including:
+ * - Components (27 components)
+ * - Store (forumStore, forumHostingStore, announcementStore, forumThemeStore)
+ * - Hooks (forum/thread socket hooks)
+ * - Types
+ * - API
+ */
+
+export * from './components';
+// hooks were archived in batch cleanup — import directly from hooks/ if needed
+
+// Re-export store with renamed conflicting types
+export {
+  useForumStore,
+  type Forum,
+  type ForumCategory,
+  type ForumModerator,
+  type ThreadPrefix as ThreadPrefixType,
+  type ThreadRating as ThreadRatingType,
+  type PostAttachment,
+  type PostEditHistory,
+  type Poll,
+  type PollOption,
+  type Post,
+  type Subscription,
+  type UserGroup,
+  type GroupPermissions,
+  type UserWarning,
+  type WarningType,
+  type Ban,
+  type ModerationQueueItem,
+  type Report,
+  type Comment,
+  type ForumState,
+  type CreatePostData,
+  useForumHostingStore,
+  useAnnouncementStore,
+  useForumThemeStore,
+} from './store';
+// Types not re-exported: name collisions with store types (Forum, Post, Comment, etc.)
+// Import directly from '@/modules/forums/types' when needed
+// export * from './api';  // Uncomment when API is migrated

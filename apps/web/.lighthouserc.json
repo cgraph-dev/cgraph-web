@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/GoogleChrome/lighthouse-ci/main/packages/utils/src/configs/schema.json",
+  "ci": {
+    "collect": {
+      "staticDistDir": "./dist",
+      "numberOfRuns": 3,
+      "url": ["http://localhost/"],
+      "settings": {
+        "preset": "desktop",
+        "skipAudits": ["csp-xss", "uses-rel-preconnect", "uses-rel-preload", "canonical"]
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "csp-xss": "off",
+        "uses-rel-preconnect": "off",
+        "uses-rel-preload": "off",
+        "canonical": "off",
+        "is-crawlable": "off",
+        "meta-description": "off",
+        "service-worker": "off",
+        "installable-manifest": "off",
+        "maskable-icon": "off",
+        "themed-omnibox": "off",
+        "apple-touch-icon": "off",
+        "splash-screen": "off",
+        "uses-http2": "off",
+        "valid-source-maps": "off",
+        "errors-in-console": "warn",
+        "largest-contentful-paint": [
+          "error",
+          { "maxNumericValue": 4000, "aggregationMethod": "median" }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          { "maxNumericValue": 0.25, "aggregationMethod": "median" }
+        ],
+        "total-blocking-time": ["error", { "maxNumericValue": 600, "aggregationMethod": "median" }],
+        "interactive": ["warn", { "maxNumericValue": 3500, "aggregationMethod": "median" }],
+        "first-contentful-paint": [
+          "warn",
+          { "maxNumericValue": 2500, "aggregationMethod": "median" }
+        ]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

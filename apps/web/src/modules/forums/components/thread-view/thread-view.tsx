@@ -1,0 +1,182 @@
+/**
+ * ThreadView Component
+ *
+ * Comprehensive thread viewing experience with:
+ * - Original post display with full content
+ * - Virtualized comment list for performance
+ * - Thread prefix badges and poll integration
+ * - Rating system, view counter, bookmark/subscribe
+ * - Moderation actions for privileged users
+ * - View mode toggle (linear/threaded)
+ *
+ */
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { GlassCard } from '@/shared/components/ui';
+import { useThemeStore, THEME_COLORS } from '@/stores/theme';
+import { useAuthStore } from '@/modules/auth/store';
+import { TipButton } from '@/modules/nodes/components/tip-button';
+import { ContentUnlockOverlay } from '@/modules/nodes/components/content-unlock-overlay';
+
+import type { ThreadViewProps } from './types';
+import {
+  useViewMode,
+  useSortedComments,
+  useCommentVirtualizer,
+  useReplyHandler,
+  useVoteHandlers,
+  useRating,
+} from './hooks';
+import { ThreadLoadingSkeleton, PostVoteSidebar, PostContent, CommentsSection } from './components';
+import { SimilarThreads } from '../similar-threads';
+import { ThreadViewers } from '../thread-viewers';
+import { ForumJump } from '../forum-jump';
+
+/** Full thread view with post content, voting, comments, and moderation actions. */
+export function ThreadView({
+  post,
+  comments,
+  isLoading = false,
+  onVote,
+  onComment,
+  onBookmark,
+  onRate,
+  onPin,
+  onLock,
+  onDelete,
+  onEdit,
+  onReport,
+  onExport,
+  onMarkBestAnswer,
+  isBookmarked = false,
+  canModerate = false,
+  canEdit = false,
+  canMarkBestAnswer = false,
+  variant = 'default',
+  defaultViewMode = 'linear',
+  forumId,
+  forumSlug,
+  boardSlug,
+}: ThreadViewProps) {
+  const { user } = useAuthStore();
+  const { theme } = useThemeStore();
+  const primaryColor = THEME_COLORS[theme.colorPreset]?.primary || '#10B981';
+  const navigate = useNavigate();
+
+  // State
+  const [showCommentForm, setShowCommentForm] = useState(false);
+  const [commentContent, setCommentContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Hooks
+  const { viewMode, handleViewModeChange } = useViewMode(defaultViewMode);
+  const sortedComments = useSortedComments(comments);
+  const { parentRef, rowVirtualizer } = useCommentVirtualizer(sortedComments);
+  const { replyToId, handleReplyTo, setReplyToId } = useReplyHandler();
+  const { handlePostVote, handleCommentVote, handleThreadedVote } = useVoteHandlers(
+    onVote,
+    post.id,
+    post.myVote
+  );
+  const { hoveredRating, setHoveredRating, handleRate } = useRating(onRate);
+
+  const handleSubmitComment = async () => {
+    if (!commentContent.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onComment(commentContent.trim(), replyToId);
+      setCommentContent('');
+      setShowCommentForm(false);
+      setReplyToId(undefined);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) return <ThreadLoadingSkeleton />;
+
+  return (
+    <div className="space-y-4">
+      {/* Post Card */}
+      <GlassCard variant="frosted" className="mb-4 p-6">
+        <div className="flex items-start gap-4">
+          <PostVoteSidebar score={post.score} myVote={post.myVote} onVote={handlePostVote} />
+          <PostContent
+            post={post}
+            primaryColor={primaryColor}
+            isBookmarked={isBookmarked}
+            canModerate={canModerate}
+            canEdit={canEdit}
+            variant={variant}
+            hoveredRating={hoveredRating}
+            setHoveredRating={setHoveredRating}
+            onRate={handleRate}
+            onBookmark={onBookmark}
+            onEdit={onEdit}
+            onPin={onPin}
+            onLock={onLock}
+            onDelete={onDelete}
+            onReport={onReport}
+            showCommentForm={showCommentForm}
+            setShowCommentForm={setShowCommentForm}
+            commentContent={commentContent}
+            setCommentContent={setCommentContent}
+            isSubmitting={isSubmitting}
+            onSubmitComment={handleSubmitComment}
+          />
+        </div>
+
+        {/* Tip the author — Nodes Economy */}
+        {user && post.author.id !== user.id && (
+          <div className="flex justify-end border-t border-white/5 px-2 pt-3">
+            <TipButton
+              recipientId={post.author.id}
+              recipientName={post.author.displayName || post.author.username || 'User'}
+            />
+          </div>
+        )}
+      </GlassCard>
+
+      {/* Content Gating Overlay — Phase 31 */}
+      {post.isContentGated && (
+        <ContentUnlockOverlay
+          postId={post.id}
+          price={post.gatePriceNodes ?? 0}
+          onUnlocked={() => navigate(0)}
+        />
+      )}
+
+      {/* Comments */}
+      <CommentsSection
+        comments={comments}
+        sortedComments={sortedComments}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        parentRef={parentRef}
+        rowVirtualizer={rowVirtualizer}
+        currentUserId={user?.id}
+        primaryColor={primaryColor}
+        replyToId={replyToId}
+        onCancelReply={() => setReplyToId(undefined)}
+        onReply={handleReplyTo}
+        onCommentVote={handleCommentVote}
+        onThreadedVote={handleThreadedVote}
+        onExport={onExport}
+        onMarkBestAnswer={onMarkBestAnswer}
+        canMarkBestAnswer={canMarkBestAnswer}
+      />
+
+      {/* Phase C: Currently Viewing Users */}
+      <ThreadViewers threadId={post.id} />
+
+      {/* Phase C: Similar Threads */}
+      <SimilarThreads threadId={post.id} boardSlug={boardSlug} forumSlug={forumSlug} />
+
+      {/* Phase C: Forum Jump */}
+      {forumId && forumSlug && <ForumJump forumId={forumId} forumSlug={forumSlug} />}
+    </div>
+  );
+}
+
+export default ThreadView;

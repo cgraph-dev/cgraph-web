@@ -1,0 +1,166 @@
+import { motion } from 'motion/react';
+import { springs, tweens, staggerConfigs } from '@/lib/animation-presets';
+import {
+  InboxIcon,
+  ChatBubbleLeftRightIcon,
+  UsersIcon,
+  DocumentTextIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
+
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: staggerConfigs.standard.staggerChildren },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: tweens.standard },
+};
+
+const iconVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  show: { opacity: 1, scale: 1, transition: springs.gentle },
+};
+
+interface EmptyStateProps {
+  title?: string;
+  message?: string;
+  icon?: React.ReactNode;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  className?: string;
+}
+
+/**
+ * Empty State — fallback UI for empty data states.
+ */
+export default function EmptyState({
+  title = 'Nothing here yet',
+  message = 'No items to display.',
+  icon,
+  action,
+  className = '',
+}: EmptyStateProps) {
+  return (
+    <motion.div
+      role="status"
+      aria-label={title}
+      className={`flex flex-col items-center justify-center px-4 py-12 text-center ${className}`}
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div
+        variants={iconVariants}
+        className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--token-card-bg)]"
+      >
+        {icon || <InboxIcon className="h-8 w-8 text-gray-500" />}
+      </motion.div>
+      <motion.h3 variants={itemVariants} className="mb-2 text-lg font-semibold text-white">
+        {title}
+      </motion.h3>
+      <motion.p variants={itemVariants} className="mb-6 max-w-md text-sm text-gray-400">
+        {message}
+      </motion.p>
+      {action && (
+        <motion.button
+          variants={itemVariants}
+          whileTap={{ scale: 0.88 }}
+          onClick={action.onClick}
+          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-[rgb(30,32,40)]"
+        >
+          <PlusIcon className="h-4 w-4" />
+          <span>{action.label}</span>
+        </motion.button>
+      )}
+    </motion.div>
+  );
+}
+
+// Common empty state variants
+/**
+ * No Posts Empty — fallback UI for empty data states.
+ */
+export function NoPostsEmpty({ onCreatePost }: { onCreatePost?: () => void }) {
+  return (
+    <EmptyState
+      title="No Posts Yet"
+      message="Be the first to share something with the community!"
+      icon={<DocumentTextIcon className="h-8 w-8 text-gray-500" />}
+      action={onCreatePost ? { label: 'Create Post', onClick: onCreatePost } : undefined}
+    />
+  );
+}
+
+/**
+ * No Comments Empty — fallback UI for empty data states.
+ */
+export function NoCommentsEmpty() {
+  return (
+    <EmptyState
+      title="No Comments Yet"
+      message="Start the conversation by leaving the first comment!"
+      icon={<ChatBubbleLeftRightIcon className="h-8 w-8 text-gray-500" />}
+    />
+  );
+}
+
+/**
+ * No Members Empty — fallback UI for empty data states.
+ */
+export function NoMembersEmpty() {
+  return (
+    <EmptyState
+      title="No Members"
+      message="This community doesn't have any members yet."
+      icon={<UsersIcon className="h-8 w-8 text-gray-500" />}
+    />
+  );
+}
+
+/**
+ * No Messages Empty — fallback UI for empty data states.
+ */
+export function NoMessagesEmpty({ onStartChat }: { onStartChat?: () => void }) {
+  return (
+    <EmptyState
+      title="No Messages"
+      message="You haven't started any conversations yet."
+      icon={<ChatBubbleLeftRightIcon className="h-8 w-8 text-gray-500" />}
+      action={onStartChat ? { label: 'Start Chat', onClick: onStartChat } : undefined}
+    />
+  );
+}
+
+/**
+ * No Friends Empty — fallback UI for empty data states.
+ */
+export function NoFriendsEmpty({ onAddFriend }: { onAddFriend?: () => void }) {
+  return (
+    <EmptyState
+      title="No Friends Yet"
+      message="Connect with others by adding friends."
+      icon={<UsersIcon className="h-8 w-8 text-gray-500" />}
+      action={onAddFriend ? { label: 'Add Friends', onClick: onAddFriend } : undefined}
+    />
+  );
+}
+
+export function SearchNoResults({ query }: { query?: string }) {
+  return (
+    <EmptyState
+      title="No Results Found"
+      message={
+        query
+          ? `No results found for "${query}". Try a different search term.`
+          : 'Try a different search term.'
+      }
+      icon={<InboxIcon className="h-8 w-8 text-gray-500" />}
+    />
+  );
+}

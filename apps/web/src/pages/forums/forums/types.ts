@@ -1,0 +1,89 @@
+/**
+ * Type definitions for Forums page
+ */
+
+import type { Post } from '@/modules/forums/store';
+
+/**
+ * Sort option configuration
+ */
+export interface SortOption {
+  value: 'hot' | 'new' | 'top';
+  label: string;
+  icon: React.ElementType;
+}
+
+/**
+ * Time range option configuration
+ */
+export interface TimeRangeOption {
+  value: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
+  label: string;
+}
+
+export interface PostCardProps {
+  post: Post;
+  onVote: (value: 1 | -1) => void;
+}
+
+export interface ForumHeaderProps {
+  forum: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    iconUrl?: string;
+    bannerUrl?: string;
+    memberCount?: number;
+    isSubscribed: boolean;
+    ownerId?: string;
+    moderators?: Array<{ id: string }>;
+    createdAt: string;
+  };
+  userId?: string;
+  onSubscribe: () => void;
+  onNavigateToAdmin: () => void;
+}
+
+export interface SortControlsProps {
+  sortBy: 'hot' | 'new' | 'top' | 'controversial';
+  timeRange: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
+  showSortMenu: boolean;
+  showTimeMenu: boolean;
+  isAuthenticated: boolean;
+  onSortChange: (value: 'hot' | 'new' | 'top' | 'controversial') => void;
+  onTimeRangeChange: (value: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all') => void;
+  onToggleSortMenu: () => void;
+  onToggleTimeMenu: () => void;
+  onCloseSortMenu: () => void;
+  onCloseTimeMenu: () => void;
+  onNavigateToCreateForum: () => void;
+}
+
+export interface ForumSidebarProps {
+  activeForum: {
+    id: string;
+    slug: string;
+    description?: string;
+    memberCount?: number;
+    createdAt: string;
+  } | null;
+  forums: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    iconUrl?: string;
+    memberCount?: number;
+    isPublic: boolean;
+  }>;
+  isLoadingForums: boolean;
+}
+
+export interface PostsListProps {
+  posts: Post[];
+  isLoading: boolean;
+  hasMore: boolean;
+  activeForum: { slug: string } | null;
+  onVote: (postId: string, value: 1 | -1, currentVote: 1 | -1 | null) => void;
+  onLoadMore: () => void;
+}

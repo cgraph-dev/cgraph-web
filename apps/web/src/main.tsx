@@ -1,0 +1,214 @@
+/**
+ * Application entry point and root render.
+ */
+// In production, suppress noisy third-party console messages
+if (!import.meta.env.DEV) {
+  const _warn = console.warn.bind(console);
+  const _info = console.info.bind(console);
+  const _log = console.log.bind(console);
+  const suppress = (msg: unknown) =>
+    typeof msg === 'string' &&
+    (msg.includes('locize') ||
+      msg.includes('i18next') ||
+      msg.includes('SES') ||
+      msg.includes('unpermitted intrinsics'));
+  console.warn = (...args: unknown[]) => {
+    if (!suppress(args[0])) _warn(...args);
+  };
+  console.info = (...args: unknown[]) => {
+    if (!suppress(args[0])) _info(...args);
+  };
+  console.log = (...args: unknown[]) => {
+    if (!suppress(args[0])) _log(...args);
+  };
+}
+
+// Initialize OpenTelemetry tracing (async, non-blocking)
+import('./lib/tracing').then(({ initTracing }) => initTracing());
+
+// Register the push notification service worker (idempotent, non-blocking).
+// Failure does not throw — push is opt-in via Settings, so we don't want a
+// broken SW registration to blanket the rest of the app.
+import('./lib/push/register-sw').then(({ registerServiceWorker }) =>
+  registerServiceWorker()
+);
+
+// Startup debug logging (only in development)
+// Note: Using console directly here because logger isn't loaded yet
+const debugLog = import.meta.env.DEV
+  ? (msg: string, ...args: unknown[]) => console.debug('[CGraph]', msg, ...args)
+  : () => {};
+
+debugLog('Module loading - start');
+
+import React, { Suspense } from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
+import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { Toaster } from 'react-hot-toast';
+import App from './App';
+import ErrorBoundary from './components/error-boundary';
+import { ThemeProvider } from './providers/theme-context';
+import { NotificationProvider } from './providers/notification-provider';
+import { WalletProvider } from './lib/wallet';
+import { logger } from './lib/logger';
+import './i18n'; // i18n initialization (must be before App)
+import './index.css';
+
+debugLog('All imports completed');
+debugLog('Environment:', import.meta.env.MODE);
+debugLog('API URL:', import.meta.env.VITE_API_URL || 'http://localhost:4000');
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Real-time messaging app: shorter stale times for dynamic content
+      staleTime: 1000 * 30, // 30 seconds - better for real-time data
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours - keep unused data for offline
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: true, // Re-fetch when user returns to app
+      refetchOnReconnect: true, // Re-fetch when coming back online
+      // Enable network mode for offline support
+      networkMode: 'offlineFirst',
+    },
+    mutations: {
+      // Mutations should pause when offline and resume when online
+      networkMode: 'offlineFirst',
+      retry: 2,
+    },
+  },
+});
+
+// Create a persister to save cache to localStorage for offline support
+const localStoragePersister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: 'cgraph-query-cache',
+  // Serialize/deserialize with error handling
+  serialize: (data) => {
+    try {
+      return JSON.stringify(data);
+    } catch (error) {
+      logger.warn('Failed to serialize cache:', error);
+      return '{}';
+    }
+  },
+  deserialize: (data) => {
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      logger.warn('Failed to deserialize cache, clearing corrupted data:', error);
+      // Clear corrupted cache
+      try {
+        window.localStorage.removeItem('cgraph-query-cache');
+      } catch (_e) {
+        // Ignore localStorage errors
+      }
+      return {};
+    }
+  },
+});
+
+// Persist the query client cache
+persistQueryClient({
+  queryClient,
+  persister: localStoragePersister,
+  maxAge: 1000 * 60 * 60 * 24,
+  buster: 'v0.9.31-web', // Must match package.json version for cache invalidation
+});
+
+// Track online/offline status for offline-first behavior
+if (typeof window !== 'undefined') {
+  onlineManager.setEventListener((setOnline) => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  });
+}
+
+// Global loading fallback — plain dark background only (no spinner, instant feel)
+function GlobalLoadingFallback() {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #030712 0%, #0f0a1f 50%, #030712 100%)',
+      }}
+    />
+  );
+}
+
+// Root element validation
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('[CGraph] Root element not found. Check index.html for <div id="root"></div>');
+}
+
+// Handle uncaught errors at the window level
+window.addEventListener('error', (event) => {
+  logger.error('Uncaught error:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  logger.error('Unhandled promise rejection:', event.reason);
+});
+
+// Helper: remove the static HTML loader so the 15s timeout never fires
+function removeInitialLoader() {
+  const loader = document.getElementById('initial-loader');
+  if (loader) loader.remove();
+}
+
+debugLog('Creating React root...');
+try {
+  const root = ReactDOM.createRoot(rootElement);
+  debugLog('Root created, rendering...');
+  root.render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <Suspense fallback={<GlobalLoadingFallback />}>
+          <ThemeProvider>
+            <QueryClientProvider client={queryClient}>
+              <BrowserRouter>
+                <NotificationProvider>
+                  <WalletProvider>
+                    <App />
+                  </WalletProvider>
+                </NotificationProvider>
+                <Toaster
+                  position="bottom-right"
+                  toastOptions={{
+                    className: 'bg-white/[0.04] text-white border border-white/[0.06]',
+                    duration: 4000,
+                    style: {
+                      background: '#1f2937',
+                      color: '#fff',
+                    },
+                  }}
+                />
+              </BrowserRouter>
+            </QueryClientProvider>
+          </ThemeProvider>
+        </Suspense>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+  // React has mounted — remove the static HTML loader immediately
+  removeInitialLoader();
+  debugLog('Application rendered successfully');
+} catch (err) {
+  // Even on error, remove the loader so ErrorBoundary or fallback UI is visible
+  removeInitialLoader();
+  logger.error('Failed to render:', err);
+}
+
+debugLog('Application mounted');

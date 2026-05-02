@@ -1,0 +1,40 @@
+/**
+ * Type definitions for LivePreviewPanel module
+ */
+
+export interface ChatBubbleProps {
+  message: string;
+  isOwn: boolean;
+  timestamp?: string;
+  senderName?: string;
+}
+
+export interface ParticleData {
+  id: number;
+  width: number;
+  height: number;
+  left: number;
+  top: number;
+  boxShadow: number;
+  delay: number;
+  duration: number;
+}
+
+export interface ParticleStyle {
+  color: string;
+  shape: 'circle' | 'square';
+}
+
+export interface PreviewBadge {
+  emoji: string;
+  color: string;
+  name?: string;
+  rarity?: string;
+}
+
+export interface ThemeColors {
+  primary: string;
+  secondary: string;
+  glow: string;
+  name: string;
+}

@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+out/
+.turbo/
+.tsbuild/
+*.tsbuildinfo
+storybook-static/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.secret
+*.keystore
+secrets/
+.secrets/
+credentials/
+
+# Platform state
+.vercel/
+.vercel.bak/
+
+# Test and analysis output
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.lighthouseci/
+debug*.log
+*.log
+tsc_out.txt
+stats.html
+
+# Editor and OS files
+.idea/
+.vscode/*
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

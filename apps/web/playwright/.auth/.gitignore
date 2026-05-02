@@ -1,0 +1,7 @@
+# Playwright authentication state files
+# This directory stores authenticated browser states for E2E tests
+# Auth setup writes browser storage state here.
+
+# Ignore actual auth files (contain session data)
+*.json
+!.gitkeep

@@ -1,0 +1,220 @@
+/**
+ * Widget Configurator — Sidebar Widgets category
+ *
+ * Widget enable/disable toggles with drag-to-reorder,
+ * per-widget visibility settings, and custom HTML widget.
+ *
+ */
+
+import { useState, useEffect } from 'react';
+import {
+  CheckIcon,
+  ChartBarIcon,
+  ChatBubbleLeftRightIcon,
+  UserGroupIcon,
+  TrophyIcon,
+  ChartPieIcon,
+  CodeBracketIcon,
+  ArrowsUpDownIcon,
+} from '@heroicons/react/24/outline';
+
+interface WidgetConfiguratorProps {
+  options: Record<string, unknown>;
+  onSave: (changes: Record<string, unknown>) => void;
+  saving: boolean;
+}
+
+function asStringArray(v: unknown, fallback: string[]): string[] {
+  return Array.isArray(v) && v.every((x) => typeof x === 'string') ? v : fallback;
+}
+
+function asRecord(v: unknown): Record<string, boolean> {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return {};
+  return Object.fromEntries(Object.entries(v).filter(([, value]) => typeof value === 'boolean'));
+}
+
+interface WidgetConfig {
+  key: string;
+  label: string;
+  icon: React.ElementType;
+  optionKey: string;
+}
+
+const WIDGETS: WidgetConfig[] = [
+  {
+    key: 'statistics',
+    label: 'Forum Statistics',
+    icon: ChartBarIcon,
+    optionKey: 'widget_statistics',
+  },
+  {
+    key: 'recent_threads',
+    label: 'Recent Threads',
+    icon: ChatBubbleLeftRightIcon,
+    optionKey: 'widget_recent_threads',
+  },
+  {
+    key: 'online_users',
+    label: 'Online Users',
+    icon: UserGroupIcon,
+    optionKey: 'widget_online_users',
+  },
+  { key: 'leaderboard', label: 'Leaderboard', icon: TrophyIcon, optionKey: 'widget_leaderboard' },
+  { key: 'poll', label: 'Active Poll', icon: ChartPieIcon, optionKey: 'widget_poll' },
+  {
+    key: 'custom_html',
+    label: 'Custom HTML',
+    icon: CodeBracketIcon,
+    optionKey: 'widget_custom_html',
+  },
+];
+
+export function WidgetConfigurator({ options, onSave, saving }: WidgetConfiguratorProps) {
+  const [draft, setDraft] = useState<Record<string, unknown>>({});
+  const [widgetOrder, setWidgetOrder] = useState<string[]>([]);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraft({ ...options });
+
+    const order = asStringArray(
+      options.widget_order,
+      WIDGETS.map((w) => w.key)
+    );
+    setWidgetOrder(order);
+  }, [options]);
+
+  const toggleWidget = (optionKey: string) => {
+    setDraft((prev) => ({ ...prev, [optionKey]: !prev[optionKey] }));
+  };
+
+  const moveWidget = (fromIndex: number, toIndex: number) => {
+    setWidgetOrder((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved!);
+      return next;
+    });
+  };
+
+  const handleDragStart = (key: string) => {
+    setDraggedItem(key);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetKey: string) => {
+    e.preventDefault();
+    if (draggedItem && draggedItem !== targetKey) {
+      const fromIndex = widgetOrder.indexOf(draggedItem);
+      const toIndex = widgetOrder.indexOf(targetKey);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        moveWidget(fromIndex, toIndex);
+      }
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  const handleSave = () => {
+    onSave({ ...draft, widget_order: widgetOrder });
+  };
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-white/50">
+        Enable, disable, and reorder sidebar widgets. Drag to reorder.
+      </p>
+
+      {/* Widget List */}
+      <div className="space-y-2">
+        {widgetOrder.map((key) => {
+          const widget = WIDGETS.find((w) => w.key === key);
+          if (!widget) return null;
+          const Icon = widget.icon;
+
+          const enabled = draft[widget.optionKey] === true;
+
+          return (
+            <div
+              key={key}
+              draggable
+              onDragStart={() => handleDragStart(key)}
+              onDragOver={(e) => handleDragOver(e, key)}
+              onDragEnd={handleDragEnd}
+              className={`flex cursor-move items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                enabled
+                  ? 'border-[var(--token-border-muted)] bg-white/5'
+                  : 'border-white/5 bg-[var(--token-bg-primary)] opacity-50'
+              } ${draggedItem === key ? 'ring-2 ring-blue-500' : ''}`}
+            >
+              <ArrowsUpDownIcon className="h-4 w-4 flex-shrink-0 text-white/30" />
+              <Icon className="h-5 w-5 flex-shrink-0 text-white/60" />
+              <span className="flex-1 text-sm text-white/80">{widget.label}</span>
+              <button
+                onClick={() => toggleWidget(widget.optionKey)}
+                className={`relative h-5 w-10 rounded-full transition-colors ${
+                  enabled ? 'bg-green-500' : 'bg-white/20'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                    enabled ? 'left-5' : 'left-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Widget Visibility */}
+      <div>
+        <h4 className="mb-2 text-sm font-semibold text-white/80">Widget Visibility</h4>
+        <div className="flex gap-4">
+          {['guests', 'members', 'mods'].map((role) => {
+            const visibility = asRecord(draft.widget_visibility);
+            const enabled = visibility[role] !== false;
+            return (
+              <div key={role} className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const current = asRecord(draft.widget_visibility);
+                    setDraft((prev) => ({
+                      ...prev,
+                      widget_visibility: { ...current, [role]: !enabled },
+                    }));
+                  }}
+                  className={`relative h-4 w-8 rounded-full transition-colors ${
+                    enabled ? 'bg-green-500' : 'bg-white/20'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${
+                      enabled ? 'left-4' : 'left-0.5'
+                    }`}
+                  />
+                </button>
+                <span className="text-xs capitalize text-white/60">{role}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Save */}
+      <div className="flex justify-end border-t border-[var(--token-border-muted)] pt-4">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-500 disabled:opacity-50"
+        >
+          <CheckIcon className="h-4 w-4" />
+          {saving ? 'Saving...' : 'Save Widgets'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default WidgetConfigurator;

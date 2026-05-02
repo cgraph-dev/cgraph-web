@@ -1,0 +1,35 @@
+/**
+ * ForumPost Module
+ *
+ * Complete forum post view with voting, content display, comments,
+ * moderation tools, and reporting.
+ *
+ *
+ * @example
+ * ```tsx
+ * import ForumPost from '@/pages/forums/forum-post';
+ * ```
+ */
+
+export { default } from './page';
+export { default as ForumPost } from './page';
+
+export { PostVoteSidebar } from './post-vote-sidebar';
+export { PostContent } from './post-content';
+export { PostActionBar } from './post-action-bar';
+export { CommentInput } from './comment-input';
+export { CommentList } from './comment-list';
+export { CommentItem } from './comment-item';
+export { ReportModal } from './report-modal';
+export { PostSkeleton, BackButton } from './loading';
+
+export { useForumPostActions } from './useForumPostActions';
+
+export type { PostVoteSidebarProps } from './post-vote-sidebar';
+export type { PostContentProps } from './post-content';
+export type { PostActionBarProps } from './post-action-bar';
+export type { CommentInputProps } from './comment-input';
+export type { CommentListProps } from './comment-list';
+export type { ForumPostActions } from './useForumPostActions';
+export * from './types';
+export * from './constants';

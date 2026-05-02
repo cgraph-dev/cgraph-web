@@ -1,0 +1,206 @@
+/**
+ * React Profiler Wrapper Component
+ *
+ * A development utility component that wraps children with React's Profiler
+ * API to measure rendering performance. Logs render timings and can be
+ * configured to send metrics to analytics.
+ *
+ */
+
+import React, { Profiler, ProfilerOnRenderCallback, useRef } from 'react';
+
+interface RenderMetric {
+  id: string;
+  phase: 'mount' | 'update';
+  actualDuration: number;
+  baseDuration: number;
+  startTime: number;
+  commitTime: number;
+  timestamp: number;
+}
+
+interface ProfilerWrapperProps {
+  /** Unique identifier for this profiler instance */
+  id: string;
+  /** Children to profile */
+  children: React.ReactNode;
+  /** Whether to log metrics to console (default: true in dev) */
+  logToConsole?: boolean;
+  /** Threshold in ms - only log renders exceeding this duration */
+  thresholdMs?: number;
+  /** Custom callback for render metrics */
+  onRender?: (metric: RenderMetric) => void;
+  /** Whether profiling is enabled (default: true in dev, false in prod) */
+  enabled?: boolean;
+  /** Maximum metrics to keep in memory */
+  maxMetrics?: number;
+}
+
+// In-memory metrics storage for debugging
+const metricsStore: Map<string, RenderMetric[]> = new Map();
+
+/**
+ * Get collected metrics for a profiler ID
+ */
+export function getProfilerMetrics(id: string): RenderMetric[] {
+  return metricsStore.get(id) || [];
+}
+
+/**
+ * Clear collected metrics for a profiler ID or all metrics
+ */
+export function clearProfilerMetrics(id?: string): void {
+  if (id) {
+    metricsStore.delete(id);
+  } else {
+    metricsStore.clear();
+  }
+}
+
+/**
+ * Get summary statistics for a profiler ID
+ */
+export function getProfilerStats(id: string): {
+  count: number;
+  avgActualDuration: number;
+  maxActualDuration: number;
+  avgBaseDuration: number;
+  mountCount: number;
+  updateCount: number;
+} | null {
+  const metrics = metricsStore.get(id);
+  if (!metrics || metrics.length === 0) return null;
+
+  const mountMetrics = metrics.filter((m) => m.phase === 'mount');
+  const updateMetrics = metrics.filter((m) => m.phase === 'update');
+
+  const totalActual = metrics.reduce((sum, m) => sum + m.actualDuration, 0);
+  const totalBase = metrics.reduce((sum, m) => sum + m.baseDuration, 0);
+  const maxActual = Math.max(...metrics.map((m) => m.actualDuration));
+
+  return {
+    count: metrics.length,
+    avgActualDuration: totalActual / metrics.length,
+    maxActualDuration: maxActual,
+    avgBaseDuration: totalBase / metrics.length,
+    mountCount: mountMetrics.length,
+    updateCount: updateMetrics.length,
+  };
+}
+
+/**
+ * ProfilerWrapper component that measures render performance.
+ *
+ * Features:
+ * - Wraps children with React.Profiler
+ * - Configurable threshold for logging slow renders
+ * - Stores metrics in memory for later analysis
+ * - Custom callback support for analytics integration
+ * - Automatically disabled in production by default
+ *
+ * @example
+ * ```tsx
+ * <ProfilerWrapper id="MessageList" thresholdMs={16}>
+ *   <MessageList messages={messages} />
+ * </ProfilerWrapper>
+ * ```
+ */
+export function ProfilerWrapper({
+  id,
+  children,
+  logToConsole = process.env.NODE_ENV === 'development',
+  thresholdMs = 0,
+  onRender,
+  enabled = process.env.NODE_ENV === 'development',
+  maxMetrics = 100,
+}: ProfilerWrapperProps): React.ReactElement | null {
+  const metricsRef = useRef<RenderMetric[]>([]);
+
+  const handleRender: ProfilerOnRenderCallback = (
+      profilerId: string,
+      phase: 'mount' | 'update' | 'nested-update',
+      actualDuration: number,
+      baseDuration: number,
+      startTime: number,
+      commitTime: number
+    ) => {
+      // Normalize nested-update to update for storage
+      const normalizedPhase = phase === 'nested-update' ? 'update' : phase;
+
+      const metric: RenderMetric = {
+        id: profilerId,
+        phase: normalizedPhase,
+        actualDuration,
+        baseDuration,
+        startTime,
+        commitTime,
+        timestamp: Date.now(),
+      };
+
+      // Store metric
+      metricsRef.current.push(metric);
+      if (metricsRef.current.length > maxMetrics) {
+        metricsRef.current.shift();
+      }
+
+      // Update global store
+      const stored = metricsStore.get(profilerId) || [];
+      stored.push(metric);
+      if (stored.length > maxMetrics) {
+        stored.shift();
+      }
+      metricsStore.set(profilerId, stored);
+
+      // Log if above threshold
+      if (logToConsole && actualDuration >= thresholdMs) {
+        const color = actualDuration > 16 ? '#f43f5e' : actualDuration > 8 ? '#f59e0b' : '#22c55e';
+        // Use warn/error-only safe output for production logger compliance;
+        // this component is dev-only (enabled=false in prod) so the log is guarded
+        console.warn(
+          `[Profiler] ${profilerId} ${phase} in ${actualDuration.toFixed(2)}ms (base: ${baseDuration.toFixed(2)}ms) color=${color}`
+        );
+      }
+
+      // Call custom callback
+      onRender?.(metric);
+    }
+
+  // Bypass profiler in production unless explicitly enabled
+  if (!enabled) {
+    return <>{children}</>;
+  }
+
+  return (
+    <Profiler id={id} onRender={handleRender}>
+      {children}
+    </Profiler>
+  );
+}
+
+/**
+ * Higher-order component version of ProfilerWrapper
+ */
+export function withProfiler<P extends object>(
+  WrappedComponent: React.ComponentType<P>,
+  id: string,
+  options?: Omit<ProfilerWrapperProps, 'id' | 'children'>
+): (props: P) => React.ReactElement | null {
+  function WithProfiler(props: P): React.ReactElement | null {
+    return (
+      <ProfilerWrapper id={id} {...options}>
+        <WrappedComponent {...props} />
+      </ProfilerWrapper>
+    );
+  }
+  return WithProfiler;
+}
+
+export function useProfilerMetrics(id: string) {
+  return {
+    getMetrics: () => getProfilerMetrics(id),
+    getStats: () => getProfilerStats(id),
+    clear: () => clearProfilerMetrics(id),
+  };
+}
+
+export default ProfilerWrapper;

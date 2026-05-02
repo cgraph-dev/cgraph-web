@@ -1,0 +1,40 @@
+
+import { memo } from 'react';
+import { motion } from 'motion/react';
+
+import { THEME_COLORS as themeColors } from '@/modules/settings/store/customization';
+
+import { allThemes, colorPickerSizeConfig } from './constants';
+import type { ColorPickerGridProps } from './types';
+
+export const ColorPickerGrid = memo(function ColorPickerGrid({
+  selected,
+  onSelect,
+  size = 'md',
+}: ColorPickerGridProps) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {allThemes.map((preset) => {
+        const colors = themeColors[preset];
+        const isSelected = preset === selected;
+
+        return (
+          <motion.button
+            key={preset}
+            className={`${colorPickerSizeConfig[size]} rounded-full border-2 ${
+              isSelected ? 'border-white' : 'border-transparent'
+            }`}
+            style={{
+              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+              boxShadow: isSelected ? `0 0 15px ${colors.glow}` : 'none',
+            }}
+            whileHover={{ opacity: 0.9 }}
+            whileTap={{ scale: 1 }}
+            onClick={() => onSelect(preset)}
+            title={colors.name}
+          />
+        );
+      })}
+    </div>
+  );
+});
