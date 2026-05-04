@@ -49,6 +49,7 @@ import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { Toaster } from 'react-hot-toast';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import App from './App';
 import ErrorBoundary from './components/error-boundary';
 import { ThemeProvider } from './providers/theme-context';
@@ -201,6 +202,7 @@ try {
           </ThemeProvider>
         </Suspense>
         <Analytics />
+        <SpeedInsights />
       </ErrorBoundary>
     </React.StrictMode>
   );
