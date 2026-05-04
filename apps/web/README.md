@@ -23,18 +23,27 @@ Copy `.env.example` to a local env file and set deployment-specific values outsi
 
 Required production values:
 
-- `VITE_API_URL`
-- `VITE_WS_URL`
 - `VITE_TURNSTILE_SITE_KEY`
+
+Leave `VITE_API_URL`, `VITE_WS_URL`, and `VITE_SOCKET_URL` blank for the standard Vercel deployment.
+`vercel.json` routes `/api/*` and `/socket/*` to the Fly backend.
 
 Optional integrations:
 
+- `VITE_SENTRY_DSN`
+- `VITE_OTEL_TRACE_ENDPOINT`
+- `VITE_VAPID_PUBLIC_KEY`
 - `VITE_LIVEKIT_URL`
 - `VITE_TURN_URL`
 - `VITE_TURN_USERNAME`
 - `VITE_TURN_CREDENTIAL`
-- `VITE_SENTRY_DSN`
-- `VITE_VAPID_PUBLIC_KEY`
+
+Production toggles:
+
+- `VITE_ENABLE_ANALYTICS=true`
+- `VITE_ENABLE_SENTRY=true`
+- `VITE_ENABLE_LOGGING=false`
+- `VITE_ENABLE_QUERY_CACHE_PERSISTENCE=false`
 
 ## Commands
 

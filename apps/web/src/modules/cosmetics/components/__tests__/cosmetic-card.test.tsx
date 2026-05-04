@@ -171,22 +171,22 @@ describe('CosmeticCard', () => {
   });
 
   it('applies equipped card classes when equipped', () => {
-    const { container } = render(<CosmeticCard item={makeItem()} owned={true} equipped={true} />);
+    render(<CosmeticCard item={makeItem()} owned={true} equipped={true} />);
 
-    const button = container.querySelector('button');
-    expect(button?.className).toContain('border-cyan-500/60');
+    expect(screen.getByRole('button', { name: 'Cosmic Border' }).className).toContain(
+      'border-cyan-500/60'
+    );
   });
 
   it('applies expired card classes with grayscale when expired', () => {
     const entitlement = makeEntitlement({
       expiresAt: '2020-01-01T00:00:00Z',
     });
-    const { container } = render(
+    render(
       <CosmeticCard item={makeItem()} owned={true} equipped={false} entitlement={entitlement} />
     );
 
-    const button = container.querySelector('button');
-    expect(button?.className).toContain('grayscale');
+    expect(screen.getByRole('button', { name: 'Cosmic Border' }).className).toContain('grayscale');
   });
 
   it('does not show purchase button when item is not purchasable', () => {

@@ -38,6 +38,9 @@ import('./lib/push/register-sw').then(({ registerServiceWorker }) =>
 const debugLog = import.meta.env.DEV
   ? (msg: string, ...args: unknown[]) => console.debug('[CGraph]', msg, ...args)
   : () => {};
+const shouldPersistQueryCache = import.meta.env.VITE_ENABLE_QUERY_CACHE_PERSISTENCE === 'true';
+const shouldRenderAnalytics =
+  import.meta.env.PROD && import.meta.env.VITE_ENABLE_ANALYTICS !== 'false';
 
 debugLog('Module loading - start');
 
@@ -45,8 +48,6 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
-import { persistQueryClient } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { Toaster } from 'react-hot-toast';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
@@ -83,42 +84,43 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create a persister to save cache to localStorage for offline support
-const localStoragePersister = createSyncStoragePersister({
-  storage: window.localStorage,
-  key: 'cgraph-query-cache',
-  // Serialize/deserialize with error handling
-  serialize: (data) => {
-    try {
-      return JSON.stringify(data);
-    } catch (error) {
-      logger.warn('Failed to serialize cache:', error);
-      return '{}';
-    }
-  },
-  deserialize: (data) => {
-    try {
-      return JSON.parse(data);
-    } catch (error) {
-      logger.warn('Failed to deserialize cache, clearing corrupted data:', error);
-      // Clear corrupted cache
+if (shouldPersistQueryCache) {
+  void import('@tanstack/query-sync-storage-persister')
+    .then(({ createSyncStoragePersister }) => {
+      const localStoragePersister = createSyncStoragePersister({
+        storage: window.localStorage,
+        key: 'cgraph-query-cache',
+        serialize: (data) => JSON.stringify(data),
+        deserialize: (data) => JSON.parse(data),
+      });
+
+      return import('@tanstack/react-query-persist-client').then(({ persistQueryClient }) => {
+        persistQueryClient({
+          queryClient,
+          persister: localStoragePersister,
+          maxAge: 1000 * 60 * 60 * 24,
+          buster: import.meta.env.VITE_APP_VERSION ?? '0.9.31',
+          dehydrateOptions: {
+            shouldDehydrateQuery: (query) => query.meta?.persist === true,
+          },
+        });
+      });
+    })
+    .catch((error: unknown) => {
+      logger.warn('Query cache persistence was requested but could not start:', error);
       try {
         window.localStorage.removeItem('cgraph-query-cache');
-      } catch (_e) {
-        // Ignore localStorage errors
+      } catch (_error) {
+        // Storage cleanup is best-effort.
       }
-      return {};
-    }
-  },
-});
-
-// Persist the query client cache
-persistQueryClient({
-  queryClient,
-  persister: localStoragePersister,
-  maxAge: 1000 * 60 * 60 * 24,
-  buster: 'v0.9.31-web', // Must match package.json version for cache invalidation
-});
+    });
+} else {
+  try {
+    window.localStorage.removeItem('cgraph-query-cache');
+  } catch (_error) {
+    // Storage cleanup is best-effort.
+  }
+}
 
 // Track online/offline status for offline-first behavior
 if (typeof window !== 'undefined') {
@@ -200,7 +202,7 @@ try {
             </QueryClientProvider>
           </ThemeProvider>
         </Suspense>
-        <Analytics />
+        {shouldRenderAnalytics ? <Analytics /> : null}
       </ErrorBoundary>
     </React.StrictMode>
   );

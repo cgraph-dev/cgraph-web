@@ -12,7 +12,8 @@
  * - Release health tracking (crash-free sessions)
  *
  * Configuration:
- *   Set VITE_SENTRY_DSN in environment to enable.
+ *   Set VITE_SENTRY_DSN in environment to enable. Set VITE_ENABLE_SENTRY=false
+ *   to force-disable reporting in a build that still carries a DSN.
  *   Source maps are uploaded in CI but NOT served to users.
  */
 
@@ -22,6 +23,7 @@
 // Use console directly in this file — it's the lowest-level error infrastructure.
 
 const SENTRY_DSN: string | undefined = import.meta.env.VITE_SENTRY_DSN; // type-cast: Vite env vars may be undefined at runtime
+const ENABLE_SENTRY = import.meta.env.VITE_ENABLE_SENTRY !== 'false';
 const ENVIRONMENT = import.meta.env.MODE || 'development';
 const RELEASE = import.meta.env.VITE_APP_VERSION || '0.9.31';
 
@@ -33,7 +35,7 @@ let isInitialized = false;
  * No-op if VITE_SENTRY_DSN is not set.
  */
 export async function initErrorTracking(): Promise<void> {
-  if (!SENTRY_DSN || isInitialized) return;
+  if (!ENABLE_SENTRY || !SENTRY_DSN || isInitialized) return;
 
   try {
     const Sentry = await import('@sentry/react');
@@ -78,8 +80,8 @@ export async function initErrorTracking(): Promise<void> {
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration({
-          maskAllText: false,
-          blockAllMedia: false,
+          maskAllText: true,
+          blockAllMedia: true,
         }),
       ],
     });
