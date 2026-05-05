@@ -332,12 +332,13 @@ export function extractApiError(error: unknown): {
     const status = error.response?.status;
     const rawData: unknown = error.response?.data;
     const data: Record<string, unknown> = isRecord(rawData) ? rawData : {};
-    const message =
-      (typeof data.message === 'string' && data.message) ||
-      (typeof data.error === 'string' && data.error) ||
-      error.message ||
-      'Request failed';
-    const code = typeof data.code === 'string' ? data.code : undefined;
+    const message = extractErrorMessage(data) || error.message || 'Request failed';
+    const code =
+      typeof data.code === 'string'
+        ? data.code
+        : isRecord(data.error) && typeof data.error.code === 'string'
+          ? data.error.code
+          : undefined;
     return { message, code, status };
   }
 
@@ -346,6 +347,39 @@ export function extractApiError(error: unknown): {
   }
 
   return { message: 'Request failed' };
+}
+
+function extractErrorMessage(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value;
+  }
+
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const direct =
+    extractErrorMessage(value.message) ||
+    extractErrorMessage(value.error) ||
+    extractErrorMessage(value.detail);
+
+  if (direct) return direct;
+
+  if (Array.isArray(value.errors)) {
+    return value.errors.map(extractErrorMessage).filter(Boolean).join(', ') || undefined;
+  }
+
+  if (isRecord(value.errors)) {
+    return (
+      Object.values(value.errors)
+        .flatMap((item) => (Array.isArray(item) ? item : [item]))
+        .map(extractErrorMessage)
+        .filter(Boolean)
+        .join(', ') || undefined
+    );
+  }
+
+  return undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

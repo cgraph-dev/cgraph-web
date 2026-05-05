@@ -38,6 +38,9 @@ interface WrappedBody {
   readonly data: unknown;
 }
 
+/** String-keyed object shape used for backend response bodies. */
+type RecordBody = Record<string, unknown>;
+
 /** Shape of the `error` field inside a backend error body. */
 interface ErrorPayload {
   readonly code?: unknown;
@@ -63,15 +66,6 @@ function isWrappedBody(value: unknown): value is WrappedBody {
   return typeof value === 'object' && value !== null && 'data' in value;
 }
 
-function isErrorBody(value: unknown): value is ErrorBody {
-  if (typeof value !== 'object' || value === null || !('error' in value)) {
-    return false;
-  }
-  // TypeScript narrows value to `object & Record<"error", unknown>` after the `in` check
-  const errorField = value.error;
-  return typeof errorField === 'object' && errorField !== null;
-}
-
 function isAxiosError(error: unknown): error is AxiosErrorLike {
   if (typeof error !== 'object' || error === null || !('response' in error)) {
     return false;
@@ -83,6 +77,65 @@ function isAxiosError(error: unknown): error is AxiosErrorLike {
 
 function coerceString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
+}
+
+function isRecordBody(value: unknown): value is RecordBody {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isErrorBody(value: unknown): value is ErrorBody {
+  return isRecordBody(value) && isRecordBody(value.error);
+}
+
+function extractMessage(value: unknown, fallback: string): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (!isRecordBody(value)) {
+    return fallback;
+  }
+
+  const fromMessage = extractMessage(value.message, '');
+  if (fromMessage) return fromMessage;
+
+  const fromError = extractMessage(value.error, '');
+  if (fromError) return fromError;
+
+  const fromDetail = extractMessage(value.detail, '');
+  if (fromDetail) return fromDetail;
+
+  const fromErrors = extractErrorsMessage(value.errors);
+  if (fromErrors) return fromErrors;
+
+  return fallback;
+}
+
+function extractErrorsMessage(value: unknown): string | undefined {
+  if (Array.isArray(value)) {
+    return value.map((item) => extractMessage(item, '')).filter(Boolean).join(', ') || undefined;
+  }
+
+  if (isRecordBody(value)) {
+    return (
+      Object.values(value)
+        .flatMap((item) => (Array.isArray(item) ? item : [item]))
+        .map((item) => extractMessage(item, ''))
+        .filter(Boolean)
+        .join(', ') || undefined
+    );
+  }
+
+  return undefined;
+}
+
+function extractCode(value: unknown): string {
+  if (isRecordBody(value)) {
+    const rawCode = isRecordBody(value.error) ? value.error.code : value.code;
+    return coerceString(rawCode, 'unknown');
+  }
+
+  return 'unknown';
 }
 
 function invalidResponseError(error: ZodError): ApiError {
@@ -180,23 +233,22 @@ export async function apiCall<S extends ZodType>(
 
     if (isAxiosError(error)) {
       const body = error.response.data;
-      if (isErrorBody(body)) {
-        return {
-          ok: false,
-          error: {
-            code: coerceString(body.error.code, 'unknown'),
-            message: coerceString(body.error.message, 'Request failed'),
-            details: extractErrorDetails(body.error),
-          },
-          status: error.response.status,
-        };
-      }
+      const details = isErrorBody(body) ? extractErrorDetails(body.error) : undefined;
+      const errorPayload =
+        details === undefined
+          ? {
+              code: extractCode(body),
+              message: extractMessage(body, 'Request failed'),
+            }
+          : {
+              code: extractCode(body),
+              message: extractMessage(body, 'Request failed'),
+              details,
+            };
+
       return {
         ok: false,
-        error: {
-          code: 'unknown',
-          message: String(body),
-        },
+        error: errorPayload,
         status: error.response.status,
       };
     }

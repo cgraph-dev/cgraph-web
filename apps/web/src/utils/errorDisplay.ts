@@ -17,15 +17,51 @@
  * Error-like object structure that may come from API responses
  */
 interface ErrorLike {
-  message?: string;
-  error?: string;
-  code?: string;
-  detail?: string;
+  message?: unknown;
+  error?: unknown;
+  code?: unknown;
+  detail?: unknown;
+  errors?: unknown;
 }
 
 /** Type guard: checks if value is an ErrorLike object. */
 function isErrorLike(v: unknown): v is ErrorLike {
   return v !== null && typeof v === 'object';
+}
+
+function extractNestedMessage(error: unknown): string | null {
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return error.message || null;
+  }
+
+  if (!isErrorLike(error)) {
+    return null;
+  }
+
+  const candidates = [error.message, error.error, error.detail];
+  for (const candidate of candidates) {
+    const message = extractNestedMessage(candidate);
+    if (message) return message;
+  }
+
+  if (Array.isArray(error.errors)) {
+    const messages = error.errors.map(extractNestedMessage).filter(Boolean);
+    if (messages.length > 0) return messages.join(', ');
+  }
+
+  if (isErrorLike(error.errors)) {
+    const messages = Object.values(error.errors)
+      .flatMap((item) => (Array.isArray(item) ? item : [item]))
+      .map(extractNestedMessage)
+      .filter(Boolean);
+    if (messages.length > 0) return messages.join(', ');
+  }
+
+  return typeof error.code === 'string' ? `Error: ${error.code}` : null;
 }
 
 /**
@@ -46,33 +82,7 @@ function isErrorLike(v: unknown): v is ErrorLike {
  * {error && <Alert>{getDisplayError(error)}</Alert>}
  */
 export function getDisplayError(error: unknown, fallback = 'An unexpected error occurred'): string {
-  // Already a string - safe to render
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  // Standard Error instance
-  if (error instanceof Error) {
-    return error.message || fallback;
-  }
-
-  // API error object with various message fields
-  if (isErrorLike(error)) {
-    const msg =
-      typeof error.message === 'string'
-        ? error.message
-        : typeof error.error === 'string'
-          ? error.error
-          : typeof error.detail === 'string'
-            ? error.detail
-            : typeof error.code === 'string'
-              ? `Error: ${error.code}`
-              : null;
-    return msg ?? fallback;
-  }
-
-  // Null, undefined, or other primitive
-  return fallback;
+  return extractNestedMessage(error) ?? fallback;
 }
 
 /**
