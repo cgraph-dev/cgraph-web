@@ -95,7 +95,9 @@ export function RegisterFormFields(props: RegisterFormFieldsProps) {
             onToggle={() => props.setShowPassword(!props.showPassword)}
           />
         </div>
-        <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+        <p className="mt-1 text-xs text-gray-500">
+          8+ characters with uppercase, lowercase, number, and symbol.
+        </p>
       </motion.div>
 
       <motion.div variants={reduced ? {} : itemVariants}>

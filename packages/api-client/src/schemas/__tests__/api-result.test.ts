@@ -49,4 +49,38 @@ describe('apiCall error normalization', () => {
       error: { message: 'is required' },
     });
   });
+
+  it('formats backend validation details with field names', async () => {
+    const result = await apiCall(
+      async () =>
+        axiosFailure(
+          {
+            error: {
+              code: 'validation_error',
+              message: 'Validation failed',
+              details: {
+                email: ['has invalid format'],
+                password: ['must contain at least one uppercase letter'],
+              },
+            },
+          },
+          422
+        ),
+      Schema
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 422,
+      error: {
+        code: 'validation_error',
+        message:
+          'Email has invalid format. Password must contain at least one uppercase letter',
+        details: {
+          email: ['has invalid format'],
+          password: ['must contain at least one uppercase letter'],
+        },
+      },
+    });
+  });
 });
