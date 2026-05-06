@@ -3,8 +3,8 @@
  *
  * Unified from:
  *   apps/web/src/lib/animations.ts (durations)
- *   apps/mobile-legacy-expo/src/lib/animations.ts (timings)
- *   apps/mobile-legacy-expo/src/lib/animations/AnimationLibrary.ts (TIMING_PRESETS)
+ *   mobile client animation timings
+ *   mobile client timing presets
  */
 
 export interface DurationPreset {

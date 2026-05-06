@@ -16,7 +16,7 @@ export interface SpringConfig {
  *
  * Sources reconciled from:
  *   apps/web/src/lib/animation-presets/presets.ts  (springs)
- *   apps/mobile-legacy-expo/src/lib/animations/AnimationLibrary.ts (SPRING_PRESETS)
+ *   mobile client spring presets
  */
 export const springs = {
   /** Slow, soft motion — tooltips, subtle reveals */

@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "pnpm --filter @cgraph/web dev",
     "build": "pnpm --filter @cgraph/web build:strict",
+    "check:packages": "node scripts/validate-package-snapshot.mjs",
     "lint": "pnpm --filter @cgraph/web lint",
     "test": "pnpm --filter @cgraph/web test:run",
     "typecheck": "pnpm --filter @cgraph/web typecheck"

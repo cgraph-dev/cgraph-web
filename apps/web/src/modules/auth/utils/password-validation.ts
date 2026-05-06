@@ -1,9 +1,8 @@
 /**
  * Shared password validation utility.
  *
- * Mirrors the complexity rules enforced on mobile
- * (`apps/mobile-legacy-expo/src/screens/auth/register-screen/use-register.ts`)
- * so both clients reject weak passwords identically.
+ * Mirrors the complexity rules enforced by the mobile client so both clients
+ * reject weak passwords identically.
  *
  */
 

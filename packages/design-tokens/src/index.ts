@@ -2,7 +2,7 @@
  * @cgraph/design-tokens
  *
  * Platform-agnostic design tokens consumed by both
- * apps/web (CSS variables) and apps/mobile-legacy-expo (JS objects).
+ * web clients (CSS variables) and mobile clients (JS objects).
  *
  * Only raw values live here — no framework imports.
  */

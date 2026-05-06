@@ -2,7 +2,7 @@
  * @cgraph/animation-constants
  *
  * Platform-agnostic animation constants consumed by both
- * apps/web (Framer Motion) and apps/mobile-legacy-expo (Reanimated).
+ * web clients (Framer Motion) and mobile clients (Reanimated).
  *
  * Only raw numeric / string values live here — no framework imports.
  */

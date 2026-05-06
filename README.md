@@ -29,6 +29,7 @@ Do not make product changes directly inside `packages/` unless the matching
 
 ```sh
 pnpm install
+pnpm check:packages
 pnpm typecheck
 pnpm lint
 pnpm test

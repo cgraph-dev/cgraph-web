@@ -3,7 +3,7 @@
  *
  * Used by:
  * - apps/web button components (magnetic pull, shimmer, flowing border)
- * - apps/mobile-legacy-expo animated-button (gradient glow, haptic feedback patterns)
+ * - mobile client button components (gradient glow, haptic feedback patterns)
  *
  * Values are raw numbers — each platform adapts them to its animation framework
  * (Framer Motion on web, Reanimated on mobile).

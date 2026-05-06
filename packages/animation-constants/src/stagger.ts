@@ -3,7 +3,7 @@
  *
  * Unified from:
  *   apps/web/src/lib/animation-presets/presets.ts (staggerConfigs)
- *   apps/mobile-legacy-expo/src/lib/animations/AnimationLibrary.ts (getStaggerDelay)
+ *   mobile client stagger timing
  */
 
 export interface StaggerConfig {

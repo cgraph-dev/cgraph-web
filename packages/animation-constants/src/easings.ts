@@ -8,8 +8,8 @@
  *
  * Unified from:
  *   apps/web/src/lib/animations.ts (easings)
- *   apps/mobile-legacy-expo/src/lib/animations.ts (easings)
- *   apps/mobile-legacy-expo/src/lib/animations/AnimationLibrary.ts (EASING_FUNCTIONS)
+ *   mobile client easing curves
+ *   mobile client animation presets
  */
 
 /** Control points for a cubic bézier: [x1, y1, x2, y2] */
