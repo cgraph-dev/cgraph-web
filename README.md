@@ -14,6 +14,17 @@ packages required by that app.
 - `packages/animation-constants` and `packages/design-tokens`: cross-platform UI
   constants used by web and native clients.
 
+## Shared Package Ownership
+
+`cgraph-packages` is the canonical repository for every `@cgraph/*` package.
+The `packages/` directory in this repository is a deployment snapshot used while
+the app still builds through a Vercel workspace. Shared contract, crypto, token,
+or utility changes must land in `cgraph-packages` first, then be released or
+mirrored into this repo by an explicit package-sync change.
+
+Do not make product changes directly inside `packages/` unless the matching
+`cgraph-packages` change is part of the same rollout.
+
 ## Commands
 
 ```sh
@@ -38,6 +49,12 @@ Required production values:
 - `VITE_API_URL`
 - `VITE_WS_URL`
 - `VITE_TURNSTILE_SITE_KEY`
+
+Optional production values:
+
+- `VITE_VAPID_PUBLIC_KEY` for browser push subscriptions.
+- `VITE_SENTRY_DSN` and `VITE_ENABLE_SENTRY=true` for client error reporting.
+- `VITE_ENABLE_ANALYTICS=true` when Vercel Web Analytics is enabled.
 
 ## License
 

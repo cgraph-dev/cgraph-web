@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Build output
 dist/
@@ -9,11 +10,15 @@ out/
 .tsbuild/
 *.tsbuildinfo
 storybook-static/
+*.tgz
 
 # Environment and secrets
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
+.npmrc
 *.pem
 *.key
 *.p12
@@ -39,6 +44,10 @@ blob-report/
 .lighthouseci/
 debug*.log
 *.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 tsc_out.txt
 stats.html
 
@@ -48,6 +57,7 @@ stats.html
 !.vscode/settings.json
 .DS_Store
 Thumbs.db
+Desktop.ini
 *.swp
 *.swo
 *~
