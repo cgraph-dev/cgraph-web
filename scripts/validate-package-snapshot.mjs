@@ -13,6 +13,7 @@ const packageRoots = [
 
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.mjs']);
 const allowedExternalImports = new Set(['axios', 'zod']);
+const wildcardExportPattern = /^\s*export\s+\*\s+from\s+['"][^'"]+['"];?/m;
 
 const forbiddenImportPrefixes = [
   '@expo/',
@@ -110,6 +111,12 @@ for (const file of sourceFiles()) {
 
   if (content.includes(retiredMobileRepositoryName)) {
     findings.push(`${rel}: references the retired mobile repository name.`);
+  }
+
+  if (wildcardExportPattern.test(content)) {
+    findings.push(
+      `${rel}: wildcard public re-exports hide package ownership; mirror named exports from cgraph-packages.`,
+    );
   }
 
   const allowedGlobals = allowedGlobalsByFile.get(rel) ?? new Set();

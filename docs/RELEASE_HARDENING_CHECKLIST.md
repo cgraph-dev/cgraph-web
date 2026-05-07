@@ -103,7 +103,7 @@ Current web verification:
 
 - [x] Keep `cgraph-packages` canonical for shared contracts, crypto boundaries,
       tokens, and utilities.
-- [ ] Narrow broad package entrypoints after the web app is stable.
+- [x] Narrow broad package entrypoints after the web app is stable.
 - [ ] Publish versioned packages or sync app snapshots only from package commits.
 - [x] Document package ownership, release flow, platform support, and emergency
       snapshot rules in `cgraph-packages/docs/SHARED_PACKAGES.md`.
@@ -111,8 +111,10 @@ Current web verification:
 Current package verification:
 
 - `pnpm check:platform`
+- `pnpm check:entrypoints`
 - `pnpm typecheck`
 - `pnpm test`
+- Web snapshot: `pnpm check:packages`
 
 ## Operating Rules
 
