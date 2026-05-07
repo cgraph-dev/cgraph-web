@@ -15,6 +15,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { SafeHtml } from '@/shared/components/security';
 import { http } from '@/modules/forums/store/forumStore.utils';
 import { createLogger } from '@/lib/logger';
 
@@ -306,10 +307,7 @@ export function BbcodeManagerPanel({ forumId }: BbcodeManagerPanelProps) {
                   <p className="mb-1 text-xs font-medium text-[var(--token-text-secondary)]">
                     Preview Output:
                   </p>
-                  <div
-                    className="prose prose-invert text-sm"
-                    dangerouslySetInnerHTML={{ __html: previewOutput }}
-                  />
+                  <SafeHtml className="prose prose-invert text-sm" html={previewOutput} />
                 </div>
               )}
 

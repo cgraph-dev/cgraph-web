@@ -178,7 +178,7 @@ function showStandaloneToast(type: ToastType, message: string) {
   const toastEl = document.createElement('div');
   const id = `standalone-toast-${Date.now()}`;
   toastEl.id = id;
-  toastEl.innerHTML = createToastHTML(type, message);
+  toastEl.appendChild(createToastElement(type, message));
   toastEl.classList.add('animate-slide-in');
   container.appendChild(toastEl);
 
@@ -203,7 +203,7 @@ function getOrCreateContainer(): HTMLElement {
   return container;
 }
 
-function createToastHTML(type: ToastType, message: string): string {
+function createToastElement(type: ToastType, message: string): HTMLElement {
   const colors: Record<ToastType, string> = {
     success: 'bg-green-50 border-green-200',
     error: 'bg-red-50 border-red-200',
@@ -211,17 +211,15 @@ function createToastHTML(type: ToastType, message: string): string {
     info: 'bg-blue-50 border-blue-200',
   };
 
-  return `
-    <div class="flex items-center gap-3 p-4 rounded-lg border shadow-lg ${colors[type]}">
-      <span class="text-sm text-gray-800">${escapeHtml(message)}</span>
-    </div>
-  `;
-}
+  const wrapper = document.createElement('div');
+  wrapper.className = `flex items-center gap-3 p-4 rounded-lg border shadow-lg ${colors[type]}`;
 
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  const messageEl = document.createElement('span');
+  messageEl.className = 'text-sm text-gray-800';
+  messageEl.textContent = message;
+  wrapper.appendChild(messageEl);
+
+  return wrapper;
 }
 
 export default ToastProvider;

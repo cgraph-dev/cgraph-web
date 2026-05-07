@@ -7,7 +7,6 @@
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import DOMPurify from 'dompurify';
 import {
   ChatBubbleLeftIcon,
   ShareIcon,
@@ -23,6 +22,7 @@ import { BookmarkIcon as BookmarkIconSolid } from '@heroicons/react/24/solid';
 import { formatTimeAgo } from '@/lib/utils';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { InlineTitle } from '@/shared/components/ui/inline-title';
+import { SafeHtml } from '@/shared/components/security';
 import type { Post } from '@/modules/forums/store';
 // Import siblings directly to avoid circular dep through barrel
 import { PrefixBadge } from './prefix-badge';
@@ -148,11 +148,7 @@ export function PostContent({
       <div
         className={`prose prose-invert max-w-none ${!isExpanded && variant !== 'expanded' ? 'relative max-h-96 overflow-hidden' : ''}`}
       >
-        <div
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(post.content, { USE_PROFILES: { html: true } }),
-          }}
-        />
+        <SafeHtml html={post.content} />
         {!isExpanded && variant !== 'expanded' && (
           <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-dark-800 to-transparent" />
         )}

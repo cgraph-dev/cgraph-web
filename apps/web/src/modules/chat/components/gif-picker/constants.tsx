@@ -43,8 +43,8 @@ export const GIF_CATEGORIES: GifCategory[] = [
 /**
  * Local storage keys
  */
-export const FAVORITES_KEY = 'cgraph-gif-favorites';
-export const RECENT_KEY = 'cgraph-gif-recent';
+export const FAVORITES_KEY = 'cgraph:v1:gif:favorites';
+export const RECENT_KEY = 'cgraph:v1:gif:recent';
 
 /**
  * Limits

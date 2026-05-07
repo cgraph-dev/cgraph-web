@@ -12,6 +12,7 @@ import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import { handleOAuthCallback, type OAuthProvider } from '@/lib/oauth';
 import { useAuthStore } from '@/modules/auth/store';
 import { createLogger } from '@/lib/logger';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 const VALID_PROVIDERS = new Set<string>(['google', 'apple', 'facebook', 'tiktok']);
 
@@ -71,7 +72,8 @@ export function OAuthCallbackPage() {
     const validatedProvider = provider;
 
     // Verify state matches (CSRF protection)
-    const storedState = sessionStorage.getItem('oauth_state');
+    const storedState =
+      sessionStorage.getItem(STORAGE_KEYS.oauthState) ?? sessionStorage.getItem('oauth_state');
     if (state !== storedState) {
       setStatus('error');
       setErrorMessage('Invalid state parameter. Please try again.');
@@ -130,6 +132,8 @@ export function OAuthCallbackPage() {
           });
 
           // Clear stored OAuth data
+          sessionStorage.removeItem(STORAGE_KEYS.oauthState);
+          sessionStorage.removeItem(STORAGE_KEYS.oauthProvider);
           sessionStorage.removeItem('oauth_state');
           sessionStorage.removeItem('oauth_provider');
 

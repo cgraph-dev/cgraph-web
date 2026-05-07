@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createLogger } from '@/lib/logger';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { useAnnouncementStore, type Announcement } from '@/modules/forums/store';
 import { AnnouncementItem } from '@/modules/forums/components/announcement-item';
 
@@ -47,7 +48,7 @@ export function AnnouncementBanner({
 
   // Load dismissed announcements from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('dismissedAnnouncements');
+    const stored = localStorage.getItem(STORAGE_KEYS.dismissedAnnouncements);
     if (stored) {
       try {
         setDismissedIds(new Set(JSON.parse(stored)));
@@ -98,7 +99,7 @@ export function AnnouncementBanner({
     const newDismissed = new Set(dismissedIds);
     newDismissed.add(id);
     setDismissedIds(newDismissed);
-    localStorage.setItem('dismissedAnnouncements', JSON.stringify([...newDismissed]));
+    localStorage.setItem(STORAGE_KEYS.dismissedAnnouncements, JSON.stringify([...newDismissed]));
     markAsRead(id);
   };
 

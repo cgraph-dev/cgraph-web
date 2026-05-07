@@ -1,5 +1,6 @@
 import { apiClient, http } from '@/lib/api-client';
 import { authLogger } from '@/lib/logger';
+import { clearAuthScopedStorage } from '@/lib/storage/namespaces';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { AxiosError } from 'axios';
 
@@ -257,6 +258,7 @@ export function createLogoutAction(set: Set, get: Get) {
 
     // Clear customizations to prevent persistence bleed to the next user
     useCustomizationStore.getState().resetToDefaults();
+    clearAuthScopedStorage();
 
     // Clear all client-side auth state
     set({

@@ -9,6 +9,7 @@
 import { Socket, Channel, Presence } from 'phoenix';
 import { exponentialBackoffWithJitter } from '@cgraph/utils';
 import { useAuthStore } from '@/modules/auth/store';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { socketLogger as logger } from '../logger';
 import { getSocketUrl } from '../backend-url';
 import { setConnectionStatus } from './connection-status-store';
@@ -114,8 +115,8 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
       // Preserve session info for resumption on reconnect
       if (state.sessionId) {
         try {
-          sessionStorage.setItem('ws_session_id', state.sessionId);
-          sessionStorage.setItem('ws_last_sequence', String(state.lastSequence));
+          sessionStorage.setItem(STORAGE_KEYS.socketSessionId, state.sessionId);
+          sessionStorage.setItem(STORAGE_KEYS.socketLastSequence, String(state.lastSequence));
         } catch (error) {
           logger.error('Failed to persist session info to sessionStorage', error);
         }

@@ -10,6 +10,7 @@
  */
 
 import { lazy, type ComponentType } from 'react';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 /**
  * Wraps a dynamic import with retry logic for chunk load failures.
@@ -19,7 +20,7 @@ function lazyRetry(importFn: () => Promise<{ default: ComponentType<Record<strin
   return lazy(() =>
     importFn().catch((error: Error) => {
       // Only auto-reload once per session to avoid infinite reload loops
-      const KEY = 'chunk_reload_ts';
+      const KEY = STORAGE_KEYS.routeReload;
       const lastReload = sessionStorage.getItem(KEY);
       const now = Date.now();
 

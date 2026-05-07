@@ -17,8 +17,9 @@ import { useState, useEffect} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BellAlertIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/modules/auth/store';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
-const DISMISS_KEY = 'cgraph:push-prompt-dismissed';
+const DISMISS_KEY = STORAGE_KEYS.pushPromptDismissed;
 const PROMPT_DELAY_MS = 15_000;
 
 export function PushNotificationPrompt() {

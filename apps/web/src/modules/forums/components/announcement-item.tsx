@@ -1,6 +1,6 @@
-import DOMPurify from 'dompurify';
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import type { Announcement } from '@/modules/forums/store';
+import { SafeHtml, textToSafeHtml } from '@/shared/components/security';
 import {
   getAnnouncementStyle,
   getStyleClasses,
@@ -13,13 +13,6 @@ export interface AnnouncementItemProps {
   onToggle: () => void;
   onDismiss?: () => void;
   collapsible: boolean;
-}
-
-/** Escape raw text so it can be safely rendered as HTML. */
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 export function AnnouncementItem({
@@ -75,13 +68,9 @@ export function AnnouncementItem({
           shouldShowToggle && !isExpanded ? 'relative max-h-20 overflow-hidden' : ''
         }`}
       >
-        <div
+        <SafeHtml
           className="prose prose-sm dark:prose-invert max-w-none"
-          dangerouslySetInnerHTML={{
-            __html: announcement.allowHtml
-              ? DOMPurify.sanitize(announcement.content, { USE_PROFILES: { html: true } })
-              : escapeHtml(announcement.content).replace(/\n/g, '<br/>'),
-          }}
+          html={announcement.allowHtml ? announcement.content : textToSafeHtml(announcement.content)}
         />
 
         {/* Fade overlay for collapsed long content */}

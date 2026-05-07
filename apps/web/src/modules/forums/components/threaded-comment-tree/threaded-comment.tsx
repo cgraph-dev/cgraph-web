@@ -1,6 +1,5 @@
 import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import DOMPurify from 'dompurify';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { ThreadLine } from './thread-line';
 import { CommentHeader } from './comment-header';
@@ -9,6 +8,7 @@ import { countDescendants } from './utils';
 import type { ThreadedCommentProps } from './types';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
+import { SafeHtml } from '@/shared/components/security';
 
 export const ThreadedComment = memo(function ThreadedComment({
   comment,
@@ -95,11 +95,9 @@ export const ThreadedComment = memo(function ThreadedComment({
         />
 
         {/* Comment Content */}
-        <div
+        <SafeHtml
           className="prose prose-invert prose-sm max-w-none text-gray-300"
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(comment.content, { USE_PROFILES: { html: true } }),
-          }}
+          html={comment.content}
         />
 
         <CommentActions

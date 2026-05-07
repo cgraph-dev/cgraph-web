@@ -4,6 +4,7 @@
  */
 
 import { api as http } from './api';
+import { STORAGE_KEYS } from './storage/namespaces';
 
 export type OAuthProvider = 'google' | 'apple' | 'facebook' | 'tiktok';
 
@@ -69,8 +70,8 @@ export function openOAuthPopup(provider: OAuthProvider): Promise<OAuthTokenRespo
     startOAuthFlow(provider)
       .then(({ authorization_url, state }) => {
         // Store state for verification
-        sessionStorage.setItem('oauth_state', state);
-        sessionStorage.setItem('oauth_provider', provider);
+        sessionStorage.setItem(STORAGE_KEYS.oauthState, state);
+        sessionStorage.setItem(STORAGE_KEYS.oauthProvider, provider);
 
         // Calculate popup position (center of screen)
         const width = 500;

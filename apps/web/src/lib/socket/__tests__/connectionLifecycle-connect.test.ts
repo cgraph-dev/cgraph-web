@@ -12,6 +12,7 @@
  * - Connection timeout
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 const mockToken = vi.hoisted(() => ({ value: 'test-token' }));
 
 vi.mock('phoenix', () => {
@@ -205,13 +206,12 @@ describe('connectSocket', () => {
     mockSocketInstance.onOpenCb!();
     await promise;
 
-    // Simulate reaching max attempts (connection resets to 0 on open, so set it high)
-    state.reconnectAttempts = 14;
+    // Simulate reaching the production circuit-breaker ceiling.
+    state.reconnectAttempts = 63;
 
-    // This close should trip the circuit breaker (14 + 1 = 15)
     mockSocketInstance.onCloseCb!();
 
-    expect(state.reconnectAttempts).toBe(15);
+    expect(state.reconnectAttempts).toBe(64);
     expect(mockSocketInstance.disconnect).toHaveBeenCalled();
     expect(state.socket).toBeNull();
   });
@@ -233,8 +233,14 @@ describe('connectSocket', () => {
 
     mockSocketInstance.onCloseCb!();
 
-    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('ws_session_id', 'sess-123');
-    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('ws_last_sequence', '42');
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
+      STORAGE_KEYS.socketSessionId,
+      'sess-123'
+    );
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
+      STORAGE_KEYS.socketLastSequence,
+      '42'
+    );
 
     vi.unstubAllGlobals();
   });
@@ -273,14 +279,14 @@ describe('connectSocket', () => {
 
   it('trips circuit breaker on error after max attempts', async () => {
     const mockSocketInstance = setupMockSocket();
-    const state = makeState({ reconnectAttempts: 14 });
+    const state = makeState({ reconnectAttempts: 63 });
 
     const promise = connectSocket(state);
     mockSocketInstance.onErrorCb!(new Error('test'));
 
     await promise;
 
-    expect(state.reconnectAttempts).toBe(15);
+    expect(state.reconnectAttempts).toBe(64);
     expect(mockSocketInstance.disconnect).toHaveBeenCalled();
     expect(state.socket).toBeNull();
   });

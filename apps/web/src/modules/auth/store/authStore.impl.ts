@@ -13,6 +13,7 @@ import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { StateStorage } from 'zustand/middleware';
 import { authLogger } from '@/lib/logger';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 // Types
 export type { ApiErrorResponse, User, WalletChallenge, AuthState } from './authStore.types';
@@ -102,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
         };
       },
       {
-        name: 'cgraph-auth-v2',
+        name: STORAGE_KEYS.auth,
         storage: createJSONStorage(() => safeStorage),
         partialize: (state) => ({
           token: state.token,

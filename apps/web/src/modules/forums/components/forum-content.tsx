@@ -7,7 +7,6 @@
  * - Click-to-toggle spoiler blocks (`.bbcode-spoiler`)
  */
 import { useRef, useEffect } from 'react';
-import DOMPurify from 'dompurify';
 import Prism from 'prismjs';
 
 import 'prismjs/components/prism-javascript';
@@ -29,6 +28,7 @@ import 'prismjs/components/prism-yaml';
 import 'prismjs/components/prism-markdown';
 
 import './forum-content.css';
+import { SafeHtml } from '@/shared/components/security';
 
 interface ForumContentProps {
   html: string;
@@ -66,13 +66,5 @@ export function ForumContent({ html, className = '' }: ForumContentProps) {
     };
   }, [html]);
 
-  return (
-    <div
-      ref={ref}
-      className={`forum-content ${className}`}
-      dangerouslySetInnerHTML={{
-        __html: DOMPurify.sanitize(html, { USE_PROFILES: { html: true } }),
-      }}
-    />
-  );
+  return <SafeHtml ref={ref} html={html} className={`forum-content ${className}`} />;
 }

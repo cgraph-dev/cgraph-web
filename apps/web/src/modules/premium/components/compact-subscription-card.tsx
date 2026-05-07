@@ -13,7 +13,15 @@ import {
   TIER_ICONS,
   TIER_GRADIENTS,
 } from '@/modules/premium/components/subscription-card.constants';
-import type { SubscriptionCardProps } from '@/modules/premium/components/subscription-card';
+import type { SubscriptionPlan, SubscriptionTier } from '@/modules/premium/store/types';
+
+interface CompactSubscriptionCardProps {
+  plan: SubscriptionPlan;
+  isCurrentPlan?: boolean;
+  billingInterval?: 'monthly' | 'yearly';
+  onSelect?: (tier: SubscriptionTier) => void;
+  className?: string;
+}
 
 export function CompactSubscriptionCard({
   plan,
@@ -21,10 +29,7 @@ export function CompactSubscriptionCard({
   billingInterval = 'monthly',
   onSelect,
   className = '',
-}: Pick<
-  SubscriptionCardProps,
-  'plan' | 'isCurrentPlan' | 'billingInterval' | 'onSelect' | 'className'
->): React.ReactElement {
+}: CompactSubscriptionCardProps): React.ReactElement {
   const tierGradient = TIER_GRADIENTS[plan.tier];
 
   const price =

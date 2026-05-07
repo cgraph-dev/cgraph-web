@@ -107,7 +107,65 @@ export default defineConfig({
             normalizedId.includes('/settings/store/customization/') ||
             normalizedId.includes('/chat/store/')
           ) {
-            return 'stores-app';
+            return 'app-runtime';
+          }
+
+          if (
+            normalizedId.includes('/src/modules/groups/store/') ||
+            normalizedId.includes('/src/modules/social/store/') ||
+            normalizedId.includes('/src/modules/forums/store/') ||
+            normalizedId.includes('/src/modules/moderation/store/') ||
+            normalizedId.includes('/src/modules/search/store/') ||
+            normalizedId.includes('/src/modules/premium/store/') ||
+            normalizedId.includes('/src/modules/calls/store/') ||
+            normalizedId.includes('/src/modules/onboarding/')
+          ) {
+            return 'app-runtime';
+          }
+
+          if (
+            normalizedId.includes('/src/layouts/') ||
+            normalizedId.includes('/src/routes/') ||
+            normalizedId.includes('/src/providers/') ||
+            normalizedId.includes('/src/components/socket/') ||
+            normalizedId.includes('/src/lib/offline/') ||
+            normalizedId.includes('/src/components/logo/') ||
+            normalizedId.includes('/src/shared/components/accessibility/') ||
+            normalizedId.includes('/src/shared/components/presence-status-selector')
+          ) {
+            return 'app-runtime';
+          }
+
+          if (
+            normalizedId.includes('/src/components/ui/') ||
+            normalizedId.includes('/src/shared/components/ui/') ||
+            normalizedId.includes('/src/components/liquid-glass/')
+          ) {
+            return 'app-runtime';
+          }
+
+          if (
+            normalizedId.includes('/src/lib/theme/') ||
+            normalizedId.includes('/src/providers/theme-') ||
+            normalizedId.includes('/src/modules/settings/hooks/useCustomizationApplication')
+          ) {
+            return 'app-runtime';
+          }
+
+          if (normalizedId.includes('/src/modules/auth/components/auth-effects/')) {
+            return 'app-runtime';
+          }
+
+          if (
+            normalizedId.includes('/src/modules/social/components/avatar/') ||
+            normalizedId.includes('/src/data/avatar-borders') ||
+            normalizedId.includes('/src/types/avatar-borders')
+          ) {
+            return 'app-runtime';
+          }
+
+          if (normalizedId.includes('/src/i18n')) {
+            return 'i18n';
           }
 
           if (isWorkspacePackageModule(normalizedId, 'api-client')) {
@@ -245,6 +303,26 @@ export default defineConfig({
             packageName.startsWith('@sentry-internal/')
           ) {
             return 'sentry';
+          }
+
+          if (
+            packageName === 'i18next' ||
+            packageName === 'react-i18next' ||
+            packageName === 'i18next-browser-languagedetector' ||
+            packageName === 'i18next-http-backend' ||
+            packageName === 'i18next-icu' ||
+            packageName === 'intl-messageformat' ||
+            packageName.startsWith('@formatjs/')
+          ) {
+            return 'i18n';
+          }
+
+          if (packageName === 'react-hot-toast' || packageName === 'goober') {
+            return 'toast-vendor';
+          }
+
+          if (packageName === '@vercel/analytics') {
+            return 'analytics';
           }
 
           if (packageName === 'dompurify') {

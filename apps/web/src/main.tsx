@@ -56,6 +56,7 @@ import { ThemeProvider } from './providers/theme-context';
 import { NotificationProvider } from './providers/notification-provider';
 import { WalletProvider } from './lib/wallet';
 import { logger } from './lib/logger';
+import { STORAGE_KEYS, clearCGraphQueryCache } from './lib/storage/namespaces';
 import './i18n'; // i18n initialization (must be before App)
 import './index.css';
 
@@ -84,12 +85,25 @@ const queryClient = new QueryClient({
   },
 });
 
+const SAFE_OFFLINE_QUERY_ROOTS = new Set([
+  'feature-flags',
+  'notification-preferences',
+  'public-forums',
+  'settings',
+  'theme',
+]);
+
+function isSafeOfflineQueryKey(queryKey: readonly unknown[]): boolean {
+  const root = queryKey[0];
+  return typeof root === 'string' && SAFE_OFFLINE_QUERY_ROOTS.has(root);
+}
+
 if (shouldPersistQueryCache) {
   void import('@tanstack/query-sync-storage-persister')
     .then(({ createSyncStoragePersister }) => {
       const localStoragePersister = createSyncStoragePersister({
         storage: window.localStorage,
-        key: 'cgraph-query-cache',
+        key: STORAGE_KEYS.queryCache,
         serialize: (data) => JSON.stringify(data),
         deserialize: (data) => JSON.parse(data),
       });
@@ -101,25 +115,18 @@ if (shouldPersistQueryCache) {
           maxAge: 1000 * 60 * 60 * 24,
           buster: import.meta.env.VITE_APP_VERSION ?? '0.9.31',
           dehydrateOptions: {
-            shouldDehydrateQuery: (query) => query.meta?.persist === true,
+            shouldDehydrateQuery: (query) =>
+              query.meta?.persist === true && isSafeOfflineQueryKey(query.queryKey),
           },
         });
       });
     })
     .catch((error: unknown) => {
       logger.warn('Query cache persistence was requested but could not start:', error);
-      try {
-        window.localStorage.removeItem('cgraph-query-cache');
-      } catch (_error) {
-        // Storage cleanup is best-effort.
-      }
+      clearCGraphQueryCache();
     });
 } else {
-  try {
-    window.localStorage.removeItem('cgraph-query-cache');
-  } catch (_error) {
-    // Storage cleanup is best-effort.
-  }
+  clearCGraphQueryCache();
 }
 
 // Track online/offline status for offline-first behavior

@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import DOMPurify from 'dompurify';
 import { formatDistanceToNow } from 'date-fns';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
+import { SafeHtml } from '@/shared/components/security';
 import type { SearchResultCardProps } from './types';
 
 /**
@@ -22,11 +22,9 @@ export const SearchResultCard = memo<SearchResultCardProps>(function SearchResul
               {formatDistanceToNow(new Date(result.createdAt), { addSuffix: true })}
             </span>
           </div>
-          <p
+          <SafeHtml
             className="line-clamp-2 text-sm text-white/70"
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(result.highlightedContent),
-            }}
+            html={result.highlightedContent}
           />
           <div className="mt-2 flex items-center justify-between">
             <span className="text-xs text-white/40">in {result.conversationName}</span>

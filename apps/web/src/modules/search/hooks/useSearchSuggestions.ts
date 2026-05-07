@@ -1,27 +1,18 @@
-/**
- * Search Suggestions Hook
- *
- * Hook for search suggestions and recent search history.
- *
- */
-
 import { useEffect, useState } from 'react';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 function parseStringArray(raw: string): string[] {
   const parsed: unknown = JSON.parse(raw);
   return Array.isArray(parsed) && parsed.every((value) => typeof value === 'string') ? parsed : [];
 }
 
-/**
- * Hook for search suggestions/autocomplete
- */
 export function useSearchSuggestions() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Load recent searches from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('cgraph_recent_searches');
+    const stored = localStorage.getItem(STORAGE_KEYS.searchRecent);
     if (stored) {
       try {
         setRecentSearches(parseStringArray(stored));
@@ -52,20 +43,20 @@ export function useSearchSuggestions() {
     setRecentSearches((prev) => {
       const filtered = prev.filter((s) => s !== query);
       const updated = [query, ...filtered].slice(0, 10);
-      localStorage.setItem('cgraph_recent_searches', JSON.stringify(updated));
+      localStorage.setItem(STORAGE_KEYS.searchRecent, JSON.stringify(updated));
       return updated;
     });
   }
 
   function clearRecentSearches() {
     setRecentSearches([]);
-    localStorage.removeItem('cgraph_recent_searches');
+    localStorage.removeItem(STORAGE_KEYS.searchRecent);
   }
 
   function removeRecentSearch(query: string) {
     setRecentSearches((prev) => {
       const updated = prev.filter((s) => s !== query);
-      localStorage.setItem('cgraph_recent_searches', JSON.stringify(updated));
+      localStorage.setItem(STORAGE_KEYS.searchRecent, JSON.stringify(updated));
       return updated;
     });
   }

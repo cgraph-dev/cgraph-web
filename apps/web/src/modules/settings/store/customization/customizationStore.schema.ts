@@ -7,7 +7,7 @@
  */
 
 import { http } from '@/lib/api-client';
-import { socketManager } from '@/lib/socket';
+import { dispatchCustomizationChanged } from '@/lib/events/customization-events';
 import { createSchemaMapper, createDebouncedSave } from '@/lib/store-helpers';
 
 import type { CustomizationState, CustomizationStore } from './customizationStore.types';
@@ -84,8 +84,7 @@ export const debouncedSave = createDebouncedSave<CustomizationStore>(
       ...payload,
       custom_config: payload,
     });
-    // Notify friends via WebSocket that customizations have changed
-    socketManager.notifyCustomizationChanged();
+    dispatchCustomizationChanged();
   },
   { delay: 1000 }
 );

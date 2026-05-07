@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { entranceVariants, springs } from '@/lib/animation-presets';
 import { SpeakerWaveIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { createLogger } from '@/lib/logger';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 const logger = createLogger('NotificationSoundSettings');
 
@@ -51,9 +52,9 @@ export function NotificationSoundSettings() {
   function handleSoundChange(category: string, soundId: string) {
     setSelectedSounds((prev) => ({ ...prev, [category]: soundId }));
     // Persist to localStorage
-    const settings = JSON.parse(localStorage.getItem('notification_sounds') || '{}');
+    const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.notificationSounds) || '{}');
     settings[category] = soundId;
-    localStorage.setItem('notification_sounds', JSON.stringify(settings));
+    localStorage.setItem(STORAGE_KEYS.notificationSounds, JSON.stringify(settings));
   }
 
   function handlePreview(_soundId: string) {

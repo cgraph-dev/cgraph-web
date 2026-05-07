@@ -14,6 +14,7 @@ import {
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
 import { tweens, springs, entranceVariants } from '@/lib/animation-presets';
+import { clearCGraphCacheStorage } from '@/lib/storage/namespaces';
 
 interface StorageBreakdown {
   messages: number; // bytes
@@ -107,8 +108,7 @@ export function StorageManagement() {
         const names = await caches.keys();
         await Promise.all(names.map((name) => caches.delete(name)));
       }
-      // Clear localStorage (auth tokens are in sessionStorage, not affected)
-      localStorage.clear();
+      clearCGraphCacheStorage();
 
       setStorage((prev) => ({ ...prev, cache: 0, total: prev.total - prev.cache }));
     } finally {
