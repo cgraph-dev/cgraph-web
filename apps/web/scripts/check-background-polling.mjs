@@ -18,6 +18,28 @@ for (const file of files) {
   }
 }
 
+const userChannelPath = 'src/lib/socket/userChannel.ts';
+const userChannel = readFileSync(join(root, userChannelPath), 'utf8');
+const friendRequestHandler = userChannel.match(
+  /channel\.on\('friend_request',\s*\([^)]*\)\s*=>\s*\{[\s\S]*?\n\s*\}\);/
+);
+
+if (!friendRequestHandler) {
+  violations.push(`${userChannelPath}: friend_request socket handler is missing`);
+} else {
+  const handlerSource = friendRequestHandler[0];
+  if (handlerSource.includes('fetchPendingRequests')) {
+    violations.push(
+      `${userChannelPath}: friend_request must apply the socket payload directly, not refetch pending requests`
+    );
+  }
+  if (!handlerSource.includes('upsertIncomingRequest')) {
+    violations.push(
+      `${userChannelPath}: friend_request must upsert the incoming request into the social store`
+    );
+  }
+}
+
 if (violations.length > 0) {
   console.error('Background polling gate failed:\n');
   console.error(violations.join('\n'));

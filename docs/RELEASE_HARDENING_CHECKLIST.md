@@ -85,7 +85,7 @@ Current backend verification:
 
 - [x] Collapse Zustand stores into a smaller set of stable domain stores.
 - [x] Move release-critical background polling to adaptive scheduling.
-- [ ] Prefer socket push for realtime updates where the backend already emits
+- [x] Prefer socket push for realtime updates where the backend already emits
       events.
 - [x] Keep UI-only countdown timers separate from network polling policy.
 
@@ -97,17 +97,21 @@ Current web verification:
 - `pnpm --filter @cgraph/web build:budget`
 - Focused regression set: storage namespaces, auth actions, auth store,
   auth hooks, theme storage, message-search storage, GIF storage, notification
-  sounds, session settings, and adaptive interval behavior.
+  sounds, session settings, social store socket updates, and adaptive interval
+  behavior.
 - State-store architecture gate: no root-level Zustand creation outside the
   theme compatibility store; current creation cap is 39 and must decrease after
   future consolidations.
+- Realtime push gate: the `friend_request` user-channel event applies the
+  backend payload directly to the social store; reconnect resume remains the
+  only path allowed to refetch missed pending requests.
 
 ## Priority 6: Package Boundaries
 
 - [x] Keep `cgraph-packages` canonical for shared contracts, crypto boundaries,
       tokens, and utilities.
 - [x] Narrow broad package entrypoints after the web app is stable.
-- [ ] Publish versioned packages or sync app snapshots only from package commits.
+- [x] Publish versioned packages or sync app snapshots only from package commits.
 - [x] Document package ownership, release flow, platform support, and emergency
       snapshot rules in `cgraph-packages/docs/SHARED_PACKAGES.md`.
 
@@ -118,6 +122,10 @@ Current package verification:
 - `pnpm typecheck`
 - `pnpm test`
 - Web snapshot: `pnpm check:packages`
+- Web snapshot manifest:
+  `packages/CGRAPH_PACKAGES_SNAPSHOT.json` records the canonical
+  `cgraph-dev/cgraph-packages` commit; `pnpm check:packages` rejects snapshots
+  without this provenance.
 
 ## Operating Rules
 

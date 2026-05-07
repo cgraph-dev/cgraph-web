@@ -45,6 +45,7 @@ export interface FriendState {
   fetchFriends: () => Promise<void>;
   fetchPendingRequests: () => Promise<void>;
   fetchSentRequests: () => Promise<void>;
+  upsertIncomingRequest: (request: FriendRequest) => void;
   sendRequest: (usernameOrId: string) => Promise<void>;
   acceptRequest: (requestId: string) => Promise<void>;
   declineRequest: (requestId: string) => Promise<void>;

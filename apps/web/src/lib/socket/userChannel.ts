@@ -20,6 +20,7 @@ import { toTypedMessage } from '@/modules/chat/store/chatStore.normalizers';
 import { useIncomingCallStore, type IncomingCall } from '@/modules/calls/store';
 import { useNotificationStore, type Notification } from '@/modules/social/store';
 import { useFriendStore } from '@/modules/social/store';
+import { normalizeIncomingRequestEvent } from '@/modules/social/store/friend-normalizers';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { useSettingsStore } from '@/modules/settings/store/settingsStore.impl';
@@ -229,8 +230,14 @@ export function joinUserChannel(
 
   channel.on('friend_request', (payload) => {
     logger.log('Friend request received:', payload);
-    // Refresh pending requests in real-time
-    useFriendStore.getState().fetchPendingRequests();
+    const request = normalizeIncomingRequestEvent(toRecord(payload));
+
+    if (!request) {
+      logger.warn('Malformed friend_request payload:', payload);
+      return;
+    }
+
+    useFriendStore.getState().upsertIncomingRequest(request);
   });
 
   // Real-time notification delivery — backend broadcasts serialized notifications

@@ -14,6 +14,8 @@ const packageRoots = [
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.mjs']);
 const allowedExternalImports = new Set(['axios', 'zod']);
 const wildcardExportPattern = /^\s*export\s+\*\s+from\s+['"][^'"]+['"];?/m;
+const snapshotManifestPath = 'packages/CGRAPH_PACKAGES_SNAPSHOT.json';
+const canonicalPackagesRepository = 'cgraph-dev/cgraph-packages';
 
 const forbiddenImportPrefixes = [
   '@expo/',
@@ -104,6 +106,58 @@ function isForbiddenImport(source) {
 }
 
 const findings = [];
+
+function validateSnapshotManifest() {
+  const path = join(process.cwd(), snapshotManifestPath);
+
+  if (!existsSync(path)) {
+    findings.push(`${snapshotManifestPath}: missing canonical package snapshot manifest.`);
+    return;
+  }
+
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    findings.push(`${snapshotManifestPath}: invalid JSON.`);
+    return;
+  }
+
+  if (
+    typeof manifest !== 'object' ||
+    manifest === null ||
+    Array.isArray(manifest)
+  ) {
+    findings.push(`${snapshotManifestPath}: manifest must be a JSON object.`);
+    return;
+  }
+
+  if (manifest.source_repository !== canonicalPackagesRepository) {
+    findings.push(
+      `${snapshotManifestPath}: source_repository must be "${canonicalPackagesRepository}".`
+    );
+  }
+
+  if (manifest.source_branch !== 'main') {
+    findings.push(`${snapshotManifestPath}: source_branch must be "main".`);
+  }
+
+  if (
+    typeof manifest.source_commit !== 'string' ||
+    !/^[0-9a-f]{40}$/.test(manifest.source_commit)
+  ) {
+    findings.push(`${snapshotManifestPath}: source_commit must be a full 40-character commit SHA.`);
+  }
+
+  if (
+    typeof manifest.sync_policy !== 'string' ||
+    !manifest.sync_policy.includes('cgraph-packages')
+  ) {
+    findings.push(`${snapshotManifestPath}: sync_policy must name cgraph-packages.`);
+  }
+}
+
+validateSnapshotManifest();
 
 for (const file of sourceFiles()) {
   const rel = relativePath(file);

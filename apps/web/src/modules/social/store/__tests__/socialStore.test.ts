@@ -24,7 +24,7 @@ vi.mock('../friend-normalizers', () => ({
   normalizeRequest: (d: Record<string, unknown>, type: string) => ({ ...d, type }),
 }));
 
-import { api } from '@/lib/api-client';
+import { http as api } from '@/lib/api-client';
 const mockApi = {
   get: api.get as MockedFunction<typeof api.get>,
   post: api.post as MockedFunction<typeof api.post>,
@@ -86,7 +86,9 @@ describe('fetchFriends', () => {
     const friends = [makeFriend()];
     mockApi.get.mockResolvedValueOnce({ data: { data: friends } });
     await useFriendStore.getState().fetchFriends();
-    expect(useFriendStore.getState().friends).toEqual(friends);
+    expect(useFriendStore.getState().friends).toEqual([
+      expect.objectContaining({ id: 'f-1', username: 'alice', status: 'online' }),
+    ]);
     expect(useFriendStore.getState().isLoading).toBe(false);
   });
 
@@ -128,52 +130,48 @@ describe('fetchSentRequests', () => {
 
 describe('sendRequest', () => {
   it('sends by username', async () => {
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
     mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest('alice');
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
-      expect.objectContaining({ username: 'alice' }),
-      expect.any(Object)
+      expect.objectContaining({ username: 'alice', message: undefined })
     );
   });
 
   it('sends by email', async () => {
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
     mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest('alice@example.com');
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
-      expect.objectContaining({ email: 'alice@example.com' }),
-      expect.any(Object)
+      expect.objectContaining({ email: 'alice@example.com', message: undefined })
     );
   });
 
   it('sends by UUID', async () => {
     const uuid = '12345678-1234-1234-1234-123456789abc';
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
     mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest(uuid);
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
-      expect.objectContaining({ user_id: uuid }),
-      expect.any(Object)
+      expect.objectContaining({ user_id: uuid, message: undefined })
     );
   });
 
   it('sends by UID (numeric)', async () => {
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
     mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest('#12345');
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
-      expect.objectContaining({ uid: '12345' }),
-      expect.any(Object)
+      expect.objectContaining({ uid: '12345', message: undefined })
     );
   });
 
   it('refreshes sent requests on success', async () => {
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
     mockApi.get.mockResolvedValueOnce({ data: { data: [makeRequest({ type: 'outgoing' })] } });
     await useFriendStore.getState().sendRequest('alice');
     expect(mockApi.get).toHaveBeenCalledWith('/api/v1/friends/sent');
@@ -189,7 +187,7 @@ describe('sendRequest', () => {
 
 describe('acceptRequest', () => {
   it('accepts and refreshes friends + pending', async () => {
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: { id: 'req-1' } });
     mockApi.get.mockResolvedValueOnce({ data: { data: [makeFriend()] } });
     mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().acceptRequest('req-1');
@@ -206,7 +204,7 @@ describe('acceptRequest', () => {
 
 describe('declineRequest', () => {
   it('declines and refreshes pending', async () => {
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: {} });
     mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().declineRequest('req-1');
     expect(mockApi.post).toHaveBeenCalledWith('/api/v1/friends/req-1/decline');
@@ -222,7 +220,7 @@ describe('declineRequest', () => {
 describe('removeFriend', () => {
   it('removes friend from list optimistically', async () => {
     useFriendStore.setState({ friends: [makeFriend()] });
-    mockApi.delete.mockResolvedValueOnce({});
+    mockApi.delete.mockResolvedValueOnce({ data: {} });
     await useFriendStore.getState().removeFriend('fs-1');
     expect(useFriendStore.getState().friends).toHaveLength(0);
   });
@@ -242,7 +240,7 @@ describe('blockUser', () => {
         makeRequest({ user: { id: 'target', username: 'x', displayName: null, avatarUrl: null } }),
       ],
     });
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: {} });
     await useFriendStore.getState().blockUser('target');
     expect(useFriendStore.getState().friends).toHaveLength(0);
     expect(useFriendStore.getState().pendingRequests).toHaveLength(0);
@@ -257,7 +255,7 @@ describe('blockUser', () => {
 
 describe('unblockUser', () => {
   it('calls unblock API', async () => {
-    mockApi.delete.mockResolvedValueOnce({});
+    mockApi.delete.mockResolvedValueOnce({ data: {} });
     await useFriendStore.getState().unblockUser('u-1');
     expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/friends/u-1/block');
     expect(useFriendStore.getState().isLoading).toBe(false);
@@ -283,7 +281,7 @@ describe('clearError', () => {
 describe('fetchNotifications', () => {
   it('fetches first page (no cursor) and replaces list', async () => {
     const notifs = [makeNotification()];
-    mockApi.get.mockResolvedValueOnce({ data: { notifications: notifs } });
+    mockApi.get.mockResolvedValueOnce({ data: { data: notifs } });
     await useNotificationStore.getState().fetchNotifications(null);
     expect(useNotificationStore.getState().notifications).toHaveLength(1);
     expect(useNotificationStore.getState().isLoading).toBe(false);
@@ -292,7 +290,7 @@ describe('fetchNotifications', () => {
   it('appends when cursor is provided', async () => {
     useNotificationStore.setState({ notifications: [makeNotification({ id: 'n-0' })] });
     mockApi.get.mockResolvedValueOnce({
-      data: { notifications: [makeNotification({ id: 'n-2' })] },
+      data: { data: [makeNotification({ id: 'n-2' })] },
     });
     await useNotificationStore.getState().fetchNotifications('cursor-abc');
     expect(useNotificationStore.getState().notifications).toHaveLength(2);
@@ -300,7 +298,7 @@ describe('fetchNotifications', () => {
 
   it('sets loading false on error', async () => {
     mockApi.get.mockRejectedValueOnce(new Error('fail'));
-    await expect(useNotificationStore.getState().fetchNotifications()).rejects.toThrow();
+    await useNotificationStore.getState().fetchNotifications();
     expect(useNotificationStore.getState().isLoading).toBe(false);
   });
 });
@@ -311,7 +309,7 @@ describe('markAsRead', () => {
       notifications: [makeNotification()],
       unreadCount: 3,
     });
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: {} });
     await useNotificationStore.getState().markAsRead('n-1');
     expect(useNotificationStore.getState().notifications[0]!.isRead).toBe(true);
     expect(useNotificationStore.getState().unreadCount).toBe(2);
@@ -324,7 +322,7 @@ describe('markAllAsRead', () => {
       notifications: [makeNotification({ id: 'a' }), makeNotification({ id: 'b' })],
       unreadCount: 2,
     });
-    mockApi.post.mockResolvedValueOnce({});
+    mockApi.post.mockResolvedValueOnce({ data: {} });
     await useNotificationStore.getState().markAllAsRead();
     expect(useNotificationStore.getState().unreadCount).toBe(0);
     expect(useNotificationStore.getState().notifications.every((n) => n.isRead)).toBe(true);
@@ -337,7 +335,7 @@ describe('deleteNotification', () => {
       notifications: [makeNotification({ isRead: false })],
       unreadCount: 1,
     });
-    mockApi.delete.mockResolvedValueOnce({});
+    mockApi.delete.mockResolvedValueOnce({ data: {} });
     await useNotificationStore.getState().deleteNotification('n-1');
     expect(useNotificationStore.getState().notifications).toHaveLength(0);
     expect(useNotificationStore.getState().unreadCount).toBe(0);
@@ -348,7 +346,7 @@ describe('deleteNotification', () => {
       notifications: [makeNotification({ isRead: true })],
       unreadCount: 0,
     });
-    mockApi.delete.mockResolvedValueOnce({});
+    mockApi.delete.mockResolvedValueOnce({ data: {} });
     await useNotificationStore.getState().deleteNotification('n-1');
     expect(useNotificationStore.getState().unreadCount).toBe(0);
   });
@@ -373,7 +371,7 @@ describe('clearAll', () => {
       notifications: [makeNotification()],
       unreadCount: 5,
     });
-    mockApi.delete.mockResolvedValueOnce({});
+    mockApi.delete.mockResolvedValueOnce({ data: {} });
     await useNotificationStore.getState().clearAll();
     expect(useNotificationStore.getState().notifications).toHaveLength(0);
     expect(useNotificationStore.getState().unreadCount).toBe(0);

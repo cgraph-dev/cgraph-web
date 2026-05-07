@@ -62,6 +62,19 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
     });
   },
 
+  upsertIncomingRequest: (request) => {
+    set((state) => {
+      const pendingRequests = state.pendingRequests.filter(
+        (existing) => existing.id !== request.id && existing.user.id !== request.user.id
+      );
+
+      return {
+        pendingRequests: [request, ...pendingRequests],
+        error: null,
+      };
+    });
+  },
+
   sendRequest: async (usernameOrIdOrEmail: string) => {
     set({ isLoading: true, error: null });
     const input = usernameOrIdOrEmail.trim();

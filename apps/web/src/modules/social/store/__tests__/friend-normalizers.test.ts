@@ -6,7 +6,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { normalizeRequest, normalizeFriend } from '../friend-normalizers';
+import {
+  normalizeRequest,
+  normalizeFriend,
+  normalizeIncomingRequestEvent,
+} from '../friend-normalizers';
 
 describe('normalizeRequest', () => {
   describe('incoming requests', () => {
@@ -145,6 +149,38 @@ describe('normalizeRequest', () => {
 
       expect(result.user.id).toBe('unknown');
     });
+  });
+});
+
+describe('normalizeIncomingRequestEvent', () => {
+  it('normalizes the user-channel friend_request payload', () => {
+    const result = normalizeIncomingRequestEvent({
+      request_id: 'req-10',
+      from_user_id: 'user-10',
+      from_username: 'maya',
+      from_display_name: 'Maya',
+      from_avatar_url: 'https://example.com/maya.png',
+      created_at: '2026-05-08T00:00:00Z',
+    });
+
+    expect(result).toEqual({
+      id: 'req-10',
+      user: {
+        id: 'user-10',
+        username: 'maya',
+        displayName: 'Maya',
+        avatarUrl: 'https://example.com/maya.png',
+        avatarBorderId: null,
+        avatar_border_id: null,
+      },
+      createdAt: '2026-05-08T00:00:00Z',
+      type: 'incoming',
+    });
+  });
+
+  it('rejects payloads that cannot identify the request and actor', () => {
+    expect(normalizeIncomingRequestEvent({ request_id: 'req-missing-user' })).toBeNull();
+    expect(normalizeIncomingRequestEvent({ from_user_id: 'user-missing-request' })).toBeNull();
   });
 });
 
