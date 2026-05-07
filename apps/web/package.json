@@ -17,6 +17,7 @@
     "check:release-gates": "pnpm check:safe-html && pnpm check:storage-policy && pnpm check:import-cycles && pnpm check:state-stores && pnpm check:background-polling && pnpm check:auth-storage",
     "build:budget": "pnpm build && pnpm check:bundle-budgets",
     "build:strict": "tsc --noEmit -p tsconfig.app.json && vite build",
+    "smoke:production": "node ./scripts/smoke-production.mjs",
     "lint": "eslint src/ --quiet",
     "lint:report": "eslint src/",
     "lint:fix": "eslint . --fix --quiet",

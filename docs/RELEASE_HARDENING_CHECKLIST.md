@@ -95,6 +95,7 @@ Current web verification:
 - `pnpm --filter @cgraph/web typecheck`
 - `pnpm --filter @cgraph/web check:release-gates`
 - `pnpm --filter @cgraph/web build:budget`
+- `pnpm --filter @cgraph/web smoke:production`
 - Focused regression set: storage namespaces, auth actions, auth store,
   auth hooks, theme storage, message-search storage, GIF storage, notification
   sounds, session settings, social store socket updates, and adaptive interval
