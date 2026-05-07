@@ -27,7 +27,9 @@ Current backend verification:
 - 266 focused controller/domain tests covering auth, phone auth, sessions,
   BBCode safety, upload safety, messages, transcription, bounties, commissions,
   notifications, user sessions, and device attestation.
-- Full suite: 4118 tests, 0 failures, 98 skipped.
+- Current auth/session regression set: 91 tests covering session ownership,
+  token refresh rotation, logout-all, current-session rendering, and cookie auth.
+- Full suite: 4123 tests, 0 failures, 98 skipped.
 
 ## Priority 1: Auth And Session Ownership
 
@@ -37,10 +39,10 @@ Current backend verification:
       or thin compatibility modules, not separate owners.
 - [x] Ensure DB session revocation flows through the canonical session service
       and revokes associated token-manager entries.
-- [ ] Finish logout-all consolidation for access tokens, refresh
+- [x] Finish logout-all consolidation for access tokens, refresh
       tokens, device sessions, and logout-all flows.
 - [x] Add focused tests for create/list/revoke behavior.
-- [ ] Add logout-all tests once that controller path is moved to the canonical
+- [x] Add logout-all tests once that controller path is moved to the canonical
       service.
 
 ## Priority 2: HTML Safety
@@ -65,7 +67,7 @@ Current backend verification:
 - [x] Add storage regression tests that prove unrelated origin data is retained.
 - [x] Add logout regression tests that prove account-scoped persisted stores
       cannot bleed into the next session.
-- [ ] Add browser-reload auth hydration tests that prove stale persisted auth
+- [x] Add browser-reload auth hydration tests that prove stale persisted auth
       cannot resurrect a previous account.
 
 ## Priority 4: Import Graph And Bundle Gates
@@ -77,7 +79,7 @@ Current backend verification:
 - [x] Keep bundle-size checks tied to route-level lazy loading.
 - [x] Split production chunks so the largest `index-*` chunk stays below budget.
 - [x] Fail CI on logout storage regressions.
-- [ ] Fail CI on browser-reload auth hydration regressions.
+- [x] Fail CI on browser-reload auth hydration regressions.
 
 ## Priority 5: State And Scheduler Architecture
 
@@ -94,8 +96,8 @@ Current web verification:
 - `pnpm --filter @cgraph/web check:release-gates`
 - `pnpm --filter @cgraph/web build:budget`
 - Focused regression set: storage namespaces, auth actions, auth store,
-  theme storage, message-search storage, GIF storage, notification sounds, and
-  adaptive interval behavior.
+  auth hooks, theme storage, message-search storage, GIF storage, notification
+  sounds, session settings, and adaptive interval behavior.
 
 ## Priority 6: Package Boundaries
 

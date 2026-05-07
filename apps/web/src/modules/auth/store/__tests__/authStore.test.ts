@@ -80,6 +80,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 import { api } from '@/lib/api-client';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 const mockedApi = {
   get: api.get as MockedFunction<typeof api.get>,
@@ -125,6 +126,11 @@ const getInitialState = () => ({
   isLoading: false,
   error: null,
 });
+
+function encodePersistedAuthState(state: Record<string, unknown>): string {
+  return btoa(encodeURIComponent(JSON.stringify({ state, version: 0 })));
+}
+
 // Dynamic import so mocks are registered first
 async function getStore() {
   const mod = await import('../authStore.impl');
@@ -138,6 +144,72 @@ describe('AuthStore', () => {
     useAuthStore = await getStore();
     useAuthStore.setState(getInitialState());
   });
+
+  describe('hydration', () => {
+    it('does not trust a persisted user until the backend confirms the session', async () => {
+      vi.resetModules();
+      sessionStorage.setItem(
+        STORAGE_KEYS.auth,
+        encodePersistedAuthState({
+          token: 'persisted-access',
+          refreshToken: 'persisted-refresh',
+          user: {
+            id: 'previous-user',
+            email: 'previous@example.com',
+            username: 'previous',
+          },
+          isAuthenticated: true,
+        })
+      );
+
+      const reloadedStore = await getStore();
+
+      await vi.waitFor(() => {
+        expect(reloadedStore.getState().token).toBe('persisted-access');
+        expect(reloadedStore.getState().refreshToken).toBe('persisted-refresh');
+        expect(reloadedStore.getState().user).toBeNull();
+        expect(reloadedStore.getState().isAuthenticated).toBe(false);
+      });
+
+      mockedApi.get.mockResolvedValueOnce({
+        data: { data: mockApiUser },
+      } as AxiosResponse);
+
+      await reloadedStore.getState().checkAuth();
+
+      expect(reloadedStore.getState().user?.id).toBe('user-1');
+      expect(reloadedStore.getState().isAuthenticated).toBe(true);
+    });
+
+    it('clears stale hydrated tokens when the backend rejects the session', async () => {
+      vi.resetModules();
+      sessionStorage.setItem(
+        STORAGE_KEYS.auth,
+        encodePersistedAuthState({
+          token: 'stale-access',
+          refreshToken: 'stale-refresh',
+          user: {
+            id: 'previous-user',
+            email: 'previous@example.com',
+          },
+          isAuthenticated: true,
+        })
+      );
+
+      const reloadedStore = await getStore();
+      await vi.waitFor(() => expect(reloadedStore.getState().token).toBe('stale-access'));
+
+      mockedApi.get.mockRejectedValueOnce(new Error('401'));
+
+      await reloadedStore.getState().checkAuth();
+
+      expect(reloadedStore.getState().user).toBeNull();
+      expect(reloadedStore.getState().token).toBeNull();
+      expect(reloadedStore.getState().refreshToken).toBeNull();
+      expect(reloadedStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
   describe('Initial state', () => {
     it('starts with null user', () => {
       expect(useAuthStore.getState().user).toBeNull();

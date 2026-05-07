@@ -108,8 +108,6 @@ export const useAuthStore = create<AuthState>()(
         partialize: (state) => ({
           token: state.token,
           refreshToken: state.refreshToken,
-          user: state.user,
-          isAuthenticated: state.isAuthenticated,
         }),
         // Critical: Handle rehydration to fix isLoading state.
         // Uses captured _storeSet instead of useAuthStore.setState to avoid
@@ -129,11 +127,13 @@ export const useAuthStore = create<AuthState>()(
                 refreshToken: null,
               });
             } else if (state) {
-              // Rehydration successful - mark loading as complete
-              // Don't block on token validation - let the app render
+              // Tokens may survive reload for WebSocket/API continuity, but
+              // account identity is trusted only after checkAuth confirms /me.
               authLogger.debug('Rehydration complete - hasToken:', !!state.token);
               _storeSet?.({
-                isLoading: false, // Never block - checkAuth runs in background
+                user: null,
+                isAuthenticated: false,
+                isLoading: false,
               });
             } else {
               // No state to rehydrate

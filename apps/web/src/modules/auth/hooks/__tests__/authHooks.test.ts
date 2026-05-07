@@ -169,18 +169,33 @@ describe('Auth Hooks — Extended Coverage', () => {
   describe('useSessions – getSessions', () => {
     it('should fetch sessions and populate state', async () => {
       const sessionsData = {
-        sessions: [
-          { id: 's1', device: 'Chrome', ip: '1.2.3.4', lastActive: '2025-12-01', isCurrent: true },
+        data: [
+          {
+            id: 's1',
+            user_agent: 'Chrome',
+            ip: '1.2.3.4',
+            last_active_at: '2025-12-01',
+            current: true,
+          },
           {
             id: 's2',
-            device: 'Firefox',
+            user_agent: 'Firefox',
             ip: '5.6.7.8',
-            lastActive: '2025-11-30',
-            isCurrent: false,
+            last_active_at: '2025-11-30',
+            current: false,
           },
         ],
-        current_session_id: 's1',
       };
+      const expectedSessions = [
+        { id: 's1', device: 'Chrome', ip: '1.2.3.4', lastActive: '2025-12-01', isCurrent: true },
+        {
+          id: 's2',
+          device: 'Firefox',
+          ip: '5.6.7.8',
+          lastActive: '2025-11-30',
+          isCurrent: false,
+        },
+      ];
       mockApi.get.mockResolvedValueOnce({ data: sessionsData });
 
       const { result } = renderHook(() => useSessions());
@@ -190,10 +205,10 @@ describe('Auth Hooks — Extended Coverage', () => {
         fetched = await result.current.getSessions();
       });
 
-      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/auth/sessions');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/me/sessions');
       expect(result.current.sessions).toHaveLength(2);
       expect(result.current.currentSessionId).toBe('s1');
-      expect(fetched).toEqual(sessionsData.sessions);
+      expect(fetched).toEqual(expectedSessions);
     });
 
     it('should return empty array when getSessions fails', async () => {
@@ -242,7 +257,7 @@ describe('Auth Hooks — Extended Coverage', () => {
         revokeResult = await result.current.revokeSession('s2');
       });
 
-      expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/auth/sessions/s2');
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/me/sessions/s2');
       expect(revokeResult).toBe(true);
       expect(result.current.sessions).toHaveLength(1);
       expect(result.current.sessions[0]!.id).toBe('s1');
@@ -280,7 +295,7 @@ describe('Auth Hooks — Extended Coverage', () => {
         revokeResult = await result.current.revokeAllOtherSessions();
       });
 
-      expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/auth/sessions');
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/me/sessions');
       expect(revokeResult).toBe(true);
       expect(result.current.sessions).toHaveLength(1);
       expect(result.current.sessions[0]!.isCurrent).toBe(true);
