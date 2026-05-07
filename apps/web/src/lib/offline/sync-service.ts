@@ -49,11 +49,13 @@ export interface SyncStats {
 }
 
 let isSyncing = false;
-let syncInterval: ReturnType<typeof setInterval> | null = null;
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let onlineHandler: (() => void) | null = null;
 let offlineHandler: (() => void) | null = null;
+let visibilityHandler: (() => void) | null = null;
 
 const SYNC_INTERVAL_MS = 60_000; // 1 minute background sync
+const HIDDEN_SYNC_MULTIPLIER = 4;
 
 type SyncListener = (stats: SyncStats) => void;
 type StatusListener = (isOnline: boolean) => void;
@@ -238,30 +240,35 @@ export async function runSync(): Promise<SyncStats | null> {
 export function startAutoSync(): void {
   stopAutoSync();
 
-  syncInterval = setInterval(() => {
-    runSync();
-  }, SYNC_INTERVAL_MS);
-
   onlineHandler = () => {
     notifyStatusChange(true);
     runSync();
+    scheduleNextSync();
   };
 
   offlineHandler = () => {
     notifyStatusChange(false);
+    scheduleNextSync();
+  };
+
+  visibilityHandler = () => {
+    if (!document.hidden) runSync();
+    scheduleNextSync();
   };
 
   window.addEventListener('online', onlineHandler);
   window.addEventListener('offline', offlineHandler);
+  document.addEventListener('visibilitychange', visibilityHandler);
 
   runSync();
+  scheduleNextSync();
 }
 
 /** Stop automatic syncing and clean up listeners. */
 export function stopAutoSync(): void {
-  if (syncInterval) {
-    clearInterval(syncInterval);
-    syncInterval = null;
+  if (syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = null;
   }
 
   if (onlineHandler) {
@@ -273,9 +280,31 @@ export function stopAutoSync(): void {
     window.removeEventListener('offline', offlineHandler);
     offlineHandler = null;
   }
+
+  if (visibilityHandler) {
+    document.removeEventListener('visibilitychange', visibilityHandler);
+    visibilityHandler = null;
+  }
 }
 
 /** Check if sync is currently running. */
 export function isSyncInProgress(): boolean {
   return isSyncing;
+}
+
+function scheduleNextSync(): void {
+  if (syncTimer) clearTimeout(syncTimer);
+
+  syncTimer = setTimeout(async () => {
+    await runSync();
+    scheduleNextSync();
+  }, getSyncDelayMs());
+}
+
+function getSyncDelayMs(): number {
+  if (!navigator.onLine) return SYNC_INTERVAL_MS * HIDDEN_SYNC_MULTIPLIER;
+  if (typeof document !== 'undefined' && document.hidden) {
+    return SYNC_INTERVAL_MS * HIDDEN_SYNC_MULTIPLIER;
+  }
+  return SYNC_INTERVAL_MS;
 }

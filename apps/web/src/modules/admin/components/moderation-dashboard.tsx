@@ -8,7 +8,7 @@
  *
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Card, { CardContent } from '@/components/ui/card';
 import { ModerationTrends } from '@/modules/moderation/components/moderation-trends';
 import { ModeratorLeaderboard } from '@/modules/moderation/components/moderator-leaderboard';
@@ -17,6 +17,7 @@ import { AppealsStats } from '@/modules/moderation/components/appeals-stats';
 import { AnimatedEmptyState, AnimatedErrorState } from '@/shared/components';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { useAdaptiveInterval } from '@/hooks/useAdaptiveInterval';
 
 const logger = createLogger('ModerationDashboard');
 interface ModerationStats {
@@ -65,7 +66,7 @@ export function ModerationDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const { data } = await http.get('/api/admin/moderation/stats');
       setStats(data.data || data);
@@ -76,15 +77,13 @@ export function ModerationDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStats();
-
-    // Poll every 60s — admin-only dashboard, low traffic; no WebSocket push needed
-    const interval = setInterval(fetchStats, 60_000);
-    return () => clearInterval(interval);
   }, [fetchStats]);
+
+  useAdaptiveInterval(fetchStats, 60_000, { hiddenMultiplier: 6, enabled: !loading });
 
   if (loading) {
     return (

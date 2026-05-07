@@ -16,6 +16,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { http } from '@/lib/api-client';
 import { safeLocalStorage } from '@/lib/safeStorage';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { type ZustandSet } from '@/lib/store-helpers';
 import { createLogger } from '@/lib/logger';
 
@@ -195,7 +196,7 @@ export const useCustomizationStore = create<CustomizationStore>()(
       };
     },
     {
-      name: 'cgraph-customization',
+      name: STORAGE_KEYS.customizationStore,
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: PERSIST_PARTIALIZE,
     }

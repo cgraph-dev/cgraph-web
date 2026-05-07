@@ -6,7 +6,7 @@ release-critical architecture decisions.
 
 ## Priority 0: Backend Test Health
 
-- [ ] Make full `mix test` pass on `cgraph-backend`.
+- [x] Make full `mix test` pass on `cgraph-backend`.
 - [x] Fix notification profile setup so `user_settings.user_id` is never null.
 - [x] Provide a deterministic 32-byte test `CLOUD_KMS_MASTER_KEY`.
 - [x] Reconcile message sequence/idempotency tests with the current snowflake
@@ -23,9 +23,11 @@ release-critical architecture decisions.
 Current backend verification:
 
 - `mix compile --warnings-as-errors`
+- `mix test --max-cases 1`
 - 266 focused controller/domain tests covering auth, phone auth, sessions,
   BBCode safety, upload safety, messages, transcription, bounties, commissions,
   notifications, user sessions, and device attestation.
+- Full suite: 4118 tests, 0 failures, 98 skipped.
 
 ## Priority 1: Auth And Session Ownership
 
@@ -57,12 +59,14 @@ Current backend verification:
       data only.
 - [x] Namespace browser storage touched by auth, sockets, search, forums,
       notifications, route reloads, OAuth, push prompts, and query persistence.
-- [ ] Namespace every remaining low-risk feature cache with a CGraph prefix and schema
+- [x] Namespace every remaining low-risk feature cache with a CGraph prefix and schema
       version.
 - [x] Replace production full-storage clear calls with namespace-aware removal.
 - [x] Add storage regression tests that prove unrelated origin data is retained.
-- [ ] Add auth-hydration regression tests that prove account data
-      cannot bleed between sessions.
+- [x] Add logout regression tests that prove account-scoped persisted stores
+      cannot bleed into the next session.
+- [ ] Add browser-reload auth hydration tests that prove stale persisted auth
+      cannot resurrect a previous account.
 
 ## Priority 4: Import Graph And Bundle Gates
 
@@ -72,15 +76,26 @@ Current backend verification:
 - [x] Fail CI on broad storage clear regressions.
 - [x] Keep bundle-size checks tied to route-level lazy loading.
 - [x] Split production chunks so the largest `index-*` chunk stays below budget.
-- [ ] Fail CI on auth hydration/logout storage regressions.
+- [x] Fail CI on logout storage regressions.
+- [ ] Fail CI on browser-reload auth hydration regressions.
 
 ## Priority 5: State And Scheduler Architecture
 
 - [ ] Collapse Zustand stores into a smaller set of stable domain stores.
-- [ ] Move background polling to one adaptive scheduler.
+- [x] Move release-critical background polling to adaptive scheduling.
 - [ ] Prefer socket push for realtime updates where the backend already emits
       events.
-- [ ] Keep UI-only countdown timers separate from network polling policy.
+- [x] Keep UI-only countdown timers separate from network polling policy.
+
+Current web verification:
+
+- `pnpm --filter @cgraph/web lint`
+- `pnpm --filter @cgraph/web typecheck`
+- `pnpm --filter @cgraph/web check:release-gates`
+- `pnpm --filter @cgraph/web build:budget`
+- Focused regression set: storage namespaces, auth actions, auth store,
+  theme storage, message-search storage, GIF storage, notification sounds, and
+  adaptive interval behavior.
 
 ## Priority 6: Package Boundaries
 

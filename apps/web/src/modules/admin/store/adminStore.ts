@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
 import { createLogger } from '@/lib/logger';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import type { AdminStats, AdminState, AdminStore } from './adminStore.types';
 
 const logger = createLogger('AdminStore');
@@ -82,7 +83,7 @@ export const useAdminStore = create<AdminStore>()(
           }),
       }),
       {
-        name: 'admin-store',
+        name: STORAGE_KEYS.adminStore,
         partialize: (state) => ({
           activeTab: state.activeTab,
           sidebarCollapsed: state.sidebarCollapsed,

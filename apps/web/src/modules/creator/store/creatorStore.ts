@@ -9,6 +9,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeLocalStorage } from '@/lib/safeStorage';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { createLogger } from '@/lib/logger';
 import { creatorService } from '../services/creatorService';
 import type {
@@ -587,7 +588,7 @@ export const useCreatorStore = create<CreatorState>()(
       reset: () => set(initialState),
     }),
     {
-      name: 'cgraph-creator',
+      name: STORAGE_KEYS.creatorStore,
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({
         isCreator: state.isCreator,

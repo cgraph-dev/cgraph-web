@@ -1,11 +1,11 @@
 import { apiClient, http } from '@/lib/api-client';
 import { authLogger } from '@/lib/logger';
 import { clearAuthScopedStorage } from '@/lib/storage/namespaces';
-import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { AxiosError } from 'axios';
 
 import type { User, WalletChallenge, AuthState, TwoFactorRequired } from './authStore.types';
 import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
+import { resetUserScopedStores } from './user-session-cleanup';
 
 type Set = (
   partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>),
@@ -40,7 +40,7 @@ export function createLoginAction(set: Set, _get: Get) {
       }
 
       // Full login response
-      if (!('user' in data) || !('tokens' in data)) {
+      if (!('user' in data) || !('tokens' in data) || !data.user || !data.tokens) {
         authLogger.error('[Auth] Invalid response structure', { data });
         throw new Error('Invalid login response: missing user or tokens');
       }
@@ -256,8 +256,7 @@ export function createLogoutAction(set: Set, get: Get) {
       }
     }
 
-    // Clear customizations to prevent persistence bleed to the next user
-    useCustomizationStore.getState().resetToDefaults();
+    resetUserScopedStores();
     clearAuthScopedStorage();
 
     // Clear all client-side auth state

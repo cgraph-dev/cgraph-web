@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDownIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { springs } from '@/lib/animation-presets';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { cn } from '@/lib/utils';
 
 interface ChannelCategoryProps {
@@ -24,7 +25,7 @@ interface ChannelCategoryProps {
   className?: string;
 }
 
-const STORAGE_KEY = 'cgraph:collapsed-categories';
+const STORAGE_KEY = STORAGE_KEYS.channelCollapsedCategories;
 
 function parseStringArray(raw: string): string[] {
   const parsed: unknown = JSON.parse(raw);

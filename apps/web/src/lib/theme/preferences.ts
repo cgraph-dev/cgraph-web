@@ -7,13 +7,15 @@
  */
 
 import { createLogger } from '@/lib/logger';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import type { Theme, ThemePreferences } from './types';
 
 const logger = createLogger('ThemePreferences');
 
 // CONSTANTS
 
-export const STORAGE_KEY = 'cgraph-theme-preferences';
+export const STORAGE_KEY = STORAGE_KEYS.themePreference;
+const LEGACY_STORAGE_KEY = 'cgraph-theme-preferences';
 const BROADCAST_CHANNEL = 'cgraph-theme-sync';
 
 // DEFAULT PREFERENCES
@@ -51,7 +53,7 @@ export function loadPreferences(): ThemePreferences {
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
     if (stored) {
       const parsed: ThemePreferences = JSON.parse(stored);
       return { ...getDefaultPreferences(), ...parsed };

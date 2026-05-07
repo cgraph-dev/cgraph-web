@@ -6,6 +6,8 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
+
 vi.mock('@/lib/animation-presets', () => ({
   tweens: { standard: {} },
   springs: { snappy: {}, bouncy: {}, gentle: {} },
@@ -82,7 +84,7 @@ describe('NotificationSoundSettings', () => {
     render(<NotificationSoundSettings />);
     const selects = screen.getAllByRole('combobox');
     fireEvent.change(selects[0]!, { target: { value: 'chime' } });
-    const stored = JSON.parse(localStorage.getItem('notification_sounds') || '{}');
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.notificationSounds) || '{}');
     expect(stored.message).toBe('chime');
   });
 

@@ -43,6 +43,12 @@ describe('storage namespaces', () => {
     sessionStorage.setItem('cgraph-auth-v2', 'legacy-auth');
     sessionStorage.setItem('ws_session_id', 'socket');
     sessionStorage.setItem('other-session', 'keep');
+    localStorage.setItem(STORAGE_KEYS.settingsStore, 'settings');
+    localStorage.setItem(STORAGE_KEYS.customizationStore, 'customization');
+    localStorage.setItem(STORAGE_KEYS.premiumStore, 'premium');
+    localStorage.setItem(STORAGE_KEYS.nodesStore, 'nodes');
+    localStorage.setItem(STORAGE_KEYS.creatorStore, 'creator');
+    localStorage.setItem(STORAGE_KEYS.themeStore, 'theme');
     localStorage.setItem('other-local', 'keep');
 
     clearAuthScopedStorage();
@@ -52,6 +58,12 @@ describe('storage namespaces', () => {
     expect(sessionStorage.getItem(STORAGE_KEYS.socketLastSequence)).toBeNull();
     expect(sessionStorage.getItem('cgraph-auth-v2')).toBeNull();
     expect(sessionStorage.getItem('ws_session_id')).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.settingsStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.customizationStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.premiumStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.nodesStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.creatorStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.themeStore)).toBeNull();
     expect(sessionStorage.getItem('other-session')).toBe('keep');
     expect(localStorage.getItem('other-local')).toBe('keep');
   });

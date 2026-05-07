@@ -7,21 +7,25 @@
 
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import type { PushSubscriptionResult } from './types';
 
 const logger = createLogger('WebPush:Backend');
+const LEGACY_DEVICE_ID_KEY = 'cgraph_device_id';
 
 /**
  * Get or create a unique device ID for this browser
  */
 function getDeviceId(): string {
-  const storageKey = 'cgraph_device_id';
-  let deviceId = localStorage.getItem(storageKey);
+  let deviceId =
+    localStorage.getItem(STORAGE_KEYS.webPushDeviceId) ?? localStorage.getItem(LEGACY_DEVICE_ID_KEY);
 
   if (!deviceId) {
     deviceId = `web-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem(storageKey, deviceId);
   }
+
+  localStorage.setItem(STORAGE_KEYS.webPushDeviceId, deviceId);
+  localStorage.removeItem(LEGACY_DEVICE_ID_KEY);
 
   return deviceId;
 }

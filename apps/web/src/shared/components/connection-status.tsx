@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { socketManager } from '@/lib/socket';
+import { useConnectionStatusStore } from '@/lib/socket/connection-status-store';
 
 type ConnectionState = 'connected' | 'reconnecting' | 'offline';
 
@@ -10,43 +10,34 @@ const STATE_CONFIG: Record<ConnectionState, { color: string; label: string; puls
   offline: { color: 'bg-red-400', label: 'Offline', pulse: false },
 };
 
-const CHECK_INTERVAL_MS = 3000;
-
 /** Connection Status. */
 export function ConnectionStatus() {
+  const socketStatus = useConnectionStatusStore((store) => store.status);
   const [state, setState] = useState<ConnectionState>('connected');
   const [showLabel, setShowLabel] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    function checkConnection(): void {
-      const isConnected = socketManager.isConnected();
+    function resolveConnectionState(): ConnectionState {
       const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-
-      if (!isOnline) {
-        setState('offline');
-      } else if (!isConnected) {
-        setState('reconnecting');
-      } else {
-        setState('connected');
-      }
+      if (!isOnline) return 'offline';
+      if (socketStatus === 'connected') return 'connected';
+      return 'reconnecting';
     }
 
-    checkConnection();
-    const intervalId = setInterval(checkConnection, CHECK_INTERVAL_MS);
+    setState(resolveConnectionState());
 
-    const handleOnline = () => checkConnection();
+    const handleOnline = () => setState(resolveConnectionState());
     const handleOffline = () => setState('offline');
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
     return () => {
-      clearInterval(intervalId);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [socketStatus]);
 
   useEffect(() => {
     if (state !== 'connected') {

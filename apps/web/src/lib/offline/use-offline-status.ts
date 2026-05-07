@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { runSync, onStatusChange, onSyncComplete, type SyncStats } from './sync-service';
 import { getPendingMessages } from './indexeddb-cache';
+import { useAdaptiveInterval } from '@/hooks/useAdaptiveInterval';
 
 export interface OfflineStatus {
   readonly isOnline: boolean;
@@ -39,12 +40,7 @@ export function useOfflineStatus(): OfflineStatus {
     };
   }, []);
 
-  useEffect(() => {
-    refreshPendingCount();
-
-    const interval = setInterval(refreshPendingCount, 5_000);
-    return () => clearInterval(interval);
-  }, []);
+  useAdaptiveInterval(refreshPendingCount, 5_000, { hiddenMultiplier: 6, immediate: true });
 
   function refreshPendingCount(): void {
     getPendingMessages()

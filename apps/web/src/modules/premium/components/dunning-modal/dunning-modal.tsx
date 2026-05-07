@@ -12,12 +12,13 @@ import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { GlassCard, toast } from '@/shared/components/ui';
 import { http } from '@/lib/api-client';
 import { safeLocalStorage } from '@/lib/safeStorage';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { createLogger } from '@/lib/logger';
 import { usePremiumStore } from '@/modules/premium/store';
 
 const logger = createLogger('DunningModal');
 
-const DISMISS_STORAGE_KEY = 'cgraph-dunning-dismissed-until';
+const DISMISS_STORAGE_KEY = STORAGE_KEYS.dunningDismissedUntil;
 const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000;
 
 /**

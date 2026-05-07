@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeLocalStorage } from '@/lib/safeStorage';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { nodesApi } from '../services/nodesApi';
 import type { Wallet, Bundle } from '../services/nodesApi';
 
@@ -58,7 +59,7 @@ export const useNodesStore = create<NodesState>()(
       reset: () => set(initialState),
     }),
     {
-      name: 'cgraph-nodes',
+      name: STORAGE_KEYS.nodesStore,
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({
         wallet: state.wallet,

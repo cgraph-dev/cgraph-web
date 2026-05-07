@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeLocalStorage } from '@/lib/safeStorage';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { apiClient } from '@/lib/api-client';
 import { safeRedirect } from '@/lib/security';
 import type { SubscriptionTier, PurchaseHistory } from './types';
@@ -221,7 +222,7 @@ export const usePremiumStore = create<PremiumState>()(
         }),
     }),
     {
-      name: 'cgraph-premium',
+      name: STORAGE_KEYS.premiumStore,
       storage: createJSONStorage(() => safeLocalStorage),
     }
   )

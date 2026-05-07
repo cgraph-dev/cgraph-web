@@ -16,7 +16,7 @@
  *
  */
 
-import { useEffect, useRef} from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 export interface AdaptiveIntervalOptions {
   /** Multiplier applied to the interval when the tab is hidden (default: 4) */
@@ -47,19 +47,20 @@ export function useAdaptiveInterval(
 
   const currentInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  function getDelay() {
-    return (document.hidden ? activeMs * hiddenMultiplier : activeMs);
-  }
+  const getDelay = useCallback(
+    () => (document.hidden ? activeMs * hiddenMultiplier : activeMs),
+    [activeMs, hiddenMultiplier]
+  );
 
   // Start / restart the interval with the appropriate delay.
-  function restart() {
+  const restart = useCallback(() => {
     if (currentInterval.current) clearInterval(currentInterval.current);
     if (!enabled) return;
     const delay = getDelay();
     currentInterval.current = setInterval(() => {
       void savedCallback.current();
     }, delay);
-  }
+  }, [enabled, getDelay]);
 
   useEffect(() => {
     if (!enabled) return;

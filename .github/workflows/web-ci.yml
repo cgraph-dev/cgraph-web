@@ -21,8 +21,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:packages
       - run: pnpm --filter @cgraph/web typecheck
-      - run: pnpm --filter @cgraph/web test:run -- src/lib/storage/__tests__/namespaces.test.ts
       - run: pnpm --filter @cgraph/web check:safe-html
       - run: pnpm --filter @cgraph/web check:storage-policy
       - run: pnpm --filter @cgraph/web check:import-cycles
+      - run: pnpm --filter @cgraph/web check:background-polling
+      - run: pnpm --filter @cgraph/web check:auth-storage
       - run: pnpm --filter @cgraph/web build:budget

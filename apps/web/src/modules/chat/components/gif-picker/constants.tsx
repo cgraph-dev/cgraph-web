@@ -6,6 +6,7 @@ import {
   HandThumbUpIcon,
   GlobeAltIcon,
 } from '@heroicons/react/24/outline';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import type { GifCategory } from './types';
 
 /**
@@ -43,8 +44,8 @@ export const GIF_CATEGORIES: GifCategory[] = [
 /**
  * Local storage keys
  */
-export const FAVORITES_KEY = 'cgraph:v1:gif:favorites';
-export const RECENT_KEY = 'cgraph:v1:gif:recent';
+export const FAVORITES_KEY = STORAGE_KEYS.gifFavorites;
+export const RECENT_KEY = STORAGE_KEYS.gifRecent;
 
 /**
  * Limits

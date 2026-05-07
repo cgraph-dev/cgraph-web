@@ -8,17 +8,75 @@
 
 import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
 import { AxiosError, type AxiosResponse } from 'axios';
+
+const mockApi = vi.hoisted(() => ({
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+}));
+
 vi.mock('@/lib/api', () => ({
-  api: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
+  api: mockApi,
+}));
+
+vi.mock('@/lib/api-client', () => ({
+  api: mockApi,
+  http: mockApi,
+  apiClient: {
+    auth: {
+      login: async (identifier: string, password: string) => {
+        const response = await mockApi.post('/api/v1/auth/login', { identifier, password });
+        return { ok: true, data: response.data };
+      },
+      verifyLoginTwoFactor: async (twoFactorToken: string, code: string) => {
+        const response = await mockApi.post('/api/v1/auth/login/2fa', {
+          two_factor_token: twoFactorToken,
+          code,
+        });
+        return { ok: true, data: response.data };
+      },
+      register: async (user: Record<string, unknown>) => {
+        const response = await mockApi.post('/api/v1/auth/register', { user });
+        return { ok: true, data: response.data };
+      },
+      logout: async () => {
+        await mockApi.post('/api/v1/auth/logout');
+        return { ok: true, data: undefined };
+      },
+      refresh: async (refreshToken: string) => {
+        const response = await mockApi.post('/api/v1/auth/refresh', {
+          refresh_token: refreshToken,
+        });
+        return { ok: true, data: response.data.tokens ?? response.data };
+      },
+    },
+    profile: {
+      getMe: async () => {
+        const response = await mockApi.get('/api/v1/me');
+        return { ok: true, data: response.data.data ?? response.data };
+      },
+    },
   },
 }));
 
 vi.mock('@/lib/tokenService', () => ({
   registerTokenHandlers: vi.fn(),
+}));
+
+vi.mock('@/lib/logger', () => ({
+  authLogger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
 }));
 
 import { api } from '@/lib/api-client';

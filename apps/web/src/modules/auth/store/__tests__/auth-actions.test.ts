@@ -7,12 +7,57 @@
 
 import { describe, it, expect, vi, beforeEach, type MockedFunction } from 'vitest';
 import { AxiosError, type AxiosResponse } from 'axios';
-vi.mock('@/lib/api', () => ({
-  api: {
-    get: vi.fn(),
-    post: vi.fn(),
-  },
+
+const mockApi = vi.hoisted(() => ({
+  get: vi.fn(),
+  post: vi.fn(),
 }));
+
+vi.mock('@/lib/api', () => ({
+  api: mockApi,
+}));
+
+vi.mock('@/lib/api-client', () => {
+  return {
+    api: mockApi,
+    http: mockApi,
+    apiClient: {
+      auth: {
+        login: async (identifier: string, password: string) => {
+          const response = await mockApi.post('/api/v1/auth/login', { identifier, password });
+          return { ok: true, data: response.data };
+        },
+        verifyLoginTwoFactor: async (twoFactorToken: string, code: string) => {
+          const response = await mockApi.post('/api/v1/auth/login/2fa', {
+            two_factor_token: twoFactorToken,
+            code,
+          });
+          return { ok: true, data: response.data };
+        },
+        register: async (user: Record<string, unknown>) => {
+          const response = await mockApi.post('/api/v1/auth/register', { user });
+          return { ok: true, data: response.data };
+        },
+        logout: async () => {
+          await mockApi.post('/api/v1/auth/logout');
+          return { ok: true, data: undefined };
+        },
+        refresh: async (refreshToken: string) => {
+          const response = await mockApi.post('/api/v1/auth/refresh', {
+            refresh_token: refreshToken,
+          });
+          return { ok: true, data: response.data.tokens ?? response.data };
+        },
+      },
+      profile: {
+        getMe: async () => {
+          const response = await mockApi.get('/api/v1/me');
+          return { ok: true, data: response.data.data ?? response.data };
+        },
+      },
+    },
+  };
+});
 
 vi.mock('@/lib/logger', () => ({
   authLogger: {
@@ -21,15 +66,21 @@ vi.mock('@/lib/logger', () => ({
     error: vi.fn(),
     debug: vi.fn(),
   },
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
 }));
 
-vi.mock('@/modules/settings/store/customization', () => ({
-  useCustomizationStore: {
-    getState: vi.fn(() => ({ resetToDefaults: vi.fn() })),
-  },
+vi.mock('../user-session-cleanup', () => ({
+  resetUserScopedStores: vi.fn(),
 }));
 
 import { api } from '@/lib/api-client';
+import { STORAGE_KEYS } from '@/lib/storage/namespaces';
+import { resetUserScopedStores } from '../user-session-cleanup';
 import {
   createLoginAction,
   createVerifyLoginTwoFactorAction,
@@ -317,7 +368,11 @@ describe('createRegisterAction', () => {
 });
 
 describe('createLogoutAction', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    sessionStorage.clear();
+  });
 
   it('calls server logout and clears state', async () => {
     const { set, get, state } = createMockSetGet();
@@ -330,6 +385,7 @@ describe('createLogoutAction', () => {
     await logout();
 
     expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/logout');
+    expect(resetUserScopedStores).toHaveBeenCalled();
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({
         user: null,
@@ -348,6 +404,7 @@ describe('createLogoutAction', () => {
     await logout();
 
     expect(mockedApi.post).not.toHaveBeenCalled();
+    expect(resetUserScopedStores).toHaveBeenCalled();
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({ user: null, isAuthenticated: false })
     );
@@ -362,9 +419,42 @@ describe('createLogoutAction', () => {
 
     await logout();
 
+    expect(resetUserScopedStores).toHaveBeenCalled();
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({ user: null, isAuthenticated: false })
     );
+  });
+
+  it('removes auth and user-scoped persisted stores without clearing unrelated origin data', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.token = 'tok';
+    const logout = createLogoutAction(set as never, get as never);
+
+    sessionStorage.setItem(STORAGE_KEYS.auth, 'auth');
+    sessionStorage.setItem(STORAGE_KEYS.socketSessionId, 'socket');
+    localStorage.setItem(STORAGE_KEYS.settingsStore, 'settings');
+    localStorage.setItem(STORAGE_KEYS.customizationStore, 'customization');
+    localStorage.setItem(STORAGE_KEYS.premiumStore, 'premium');
+    localStorage.setItem(STORAGE_KEYS.nodesStore, 'nodes');
+    localStorage.setItem(STORAGE_KEYS.creatorStore, 'creator');
+    localStorage.setItem(STORAGE_KEYS.themeStore, 'theme');
+    localStorage.setItem('third-party-widget', 'keep');
+    sessionStorage.setItem('third-party-session', 'keep');
+
+    mockedApi.post.mockResolvedValueOnce({} as AxiosResponse);
+
+    await logout();
+
+    expect(sessionStorage.getItem(STORAGE_KEYS.auth)).toBeNull();
+    expect(sessionStorage.getItem(STORAGE_KEYS.socketSessionId)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.settingsStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.customizationStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.premiumStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.nodesStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.creatorStore)).toBeNull();
+    expect(localStorage.getItem(STORAGE_KEYS.themeStore)).toBeNull();
+    expect(localStorage.getItem('third-party-widget')).toBe('keep');
+    expect(sessionStorage.getItem('third-party-session')).toBe('keep');
   });
 });
 
