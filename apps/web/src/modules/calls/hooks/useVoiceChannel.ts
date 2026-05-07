@@ -8,7 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Channel } from 'phoenix';
-import { useVoiceStateStore } from '@/stores/voiceStateStore';
+import { useVoiceStateStore } from '@/modules/calls/store/voiceStateStore';
 import { LiveKitService } from '@/lib/webrtc/livekitService';
 import { useSocket } from '@/lib/socket';
 import type { Room } from 'livekit-client';

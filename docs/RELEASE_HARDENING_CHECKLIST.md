@@ -83,7 +83,7 @@ Current backend verification:
 
 ## Priority 5: State And Scheduler Architecture
 
-- [ ] Collapse Zustand stores into a smaller set of stable domain stores.
+- [x] Collapse Zustand stores into a smaller set of stable domain stores.
 - [x] Move release-critical background polling to adaptive scheduling.
 - [ ] Prefer socket push for realtime updates where the backend already emits
       events.
@@ -98,6 +98,9 @@ Current web verification:
 - Focused regression set: storage namespaces, auth actions, auth store,
   auth hooks, theme storage, message-search storage, GIF storage, notification
   sounds, session settings, and adaptive interval behavior.
+- State-store architecture gate: no root-level Zustand creation outside the
+  theme compatibility store; current creation cap is 39 and must decrease after
+  future consolidations.
 
 ## Priority 6: Package Boundaries
 

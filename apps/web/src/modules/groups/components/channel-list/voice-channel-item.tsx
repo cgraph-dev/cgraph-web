@@ -9,7 +9,7 @@
 ;
 import { motion } from 'motion/react';
 import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
-import { useVoiceStateStore, type VoiceMember } from '@/stores/voiceStateStore';
+import { useVoiceStateStore, type VoiceMember } from '@/modules/calls/store/voiceStateStore';
 import { useVoiceChannel } from '@/modules/calls/hooks/useVoiceChannel';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { springs } from '@/lib/animation-presets';

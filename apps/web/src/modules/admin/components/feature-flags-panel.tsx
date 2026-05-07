@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import type { FeatureFlag, FlagType, FlagHistoryEntry } from '@/stores/featureFlagStore';
+import type { FeatureFlag, FlagType, FlagHistoryEntry } from '@/modules/platform/store';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('FeatureFlags');
