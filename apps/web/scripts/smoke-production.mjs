@@ -68,9 +68,19 @@ async function main() {
   page.on('requestfailed', (request) => {
     if (!isFirstPartyUrl(request.url())) return;
 
+    const failure = request.failure()?.errorText ?? 'unknown';
+    const resourceType = request.resourceType();
+    if (
+      failure === 'net::ERR_ABORTED' &&
+      ['image', 'script', 'stylesheet', 'font'].includes(resourceType)
+    ) {
+      return;
+    }
+
     failedRequests.push({
       url: request.url(),
-      failure: request.failure()?.errorText ?? 'unknown',
+      resourceType,
+      failure,
     });
   });
 
