@@ -55,6 +55,12 @@ vi.mock('@/modules/settings/store/customization', () => ({
   ),
 }));
 
+vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
+  useCustomizationStore: vi.fn((selector: (state: { selectedBorderId: string }) => unknown) =>
+    selector({ selectedBorderId: 'default-border' })
+  ),
+}));
+
 import { AvatarPreviewCard } from '../avatar-settings/avatar-preview-card';
 
 describe('AvatarPreviewCard', () => {

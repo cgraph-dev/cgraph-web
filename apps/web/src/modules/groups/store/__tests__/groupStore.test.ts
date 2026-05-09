@@ -395,7 +395,7 @@ describe('groupStore (modules)', () => {
       mockedApi.post.mockResolvedValue({ data: {} });
 
       await expect(useGroupStore.getState().createGroup({ name: 'X' })).rejects.toThrow(
-        'Failed to create group'
+        'unexpected response'
       );
     });
   });
@@ -419,7 +419,7 @@ describe('groupStore (modules)', () => {
       mockedApi.patch.mockResolvedValue({ data: {} });
 
       await expect(useGroupStore.getState().updateGroup('group-1', { name: 'X' })).rejects.toThrow(
-        'Failed to update group'
+        'unexpected response'
       );
     });
   });
@@ -496,7 +496,7 @@ describe('groupStore (modules)', () => {
   describe('leaveGroup', () => {
     it('should remove the group from the store', async () => {
       useGroupStore.setState({ groups: [mockGroup, mockGroup2] });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -506,7 +506,7 @@ describe('groupStore (modules)', () => {
 
     it('should reset activeGroupId when leaving the active group', async () => {
       useGroupStore.setState({ groups: [mockGroup], activeGroupId: 'group-1' });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -515,11 +515,11 @@ describe('groupStore (modules)', () => {
 
     it('should call the correct endpoint', async () => {
       useGroupStore.setState({ groups: [mockGroup] });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/groups/group-1/members/@me');
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/groups/group-1/leave');
     });
   });
 
@@ -745,7 +745,9 @@ describe('groupStore (modules)', () => {
 
       await useGroupStore.getState().fetchMembers('group-1');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/groups/group-1/members');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/groups/group-1/members', {
+        params: undefined,
+      });
     });
   });
 

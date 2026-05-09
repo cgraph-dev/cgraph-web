@@ -16,13 +16,17 @@ vi.mock('motion/react', () => ({
       children,
       onClick,
       className,
-      ...rest
+      initial: _initial,
+      animate: _animate,
+      exit: _exit,
+      transition: _transition,
+      style: _style,
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: (e: unknown) => void;
       className?: string;
     }) => (
-      <div onClick={onClick} className={className} {...rest}>
+      <div onClick={onClick} className={className}>
         {children}
       </div>
     ),
@@ -32,7 +36,9 @@ vi.mock('motion/react', () => ({
       disabled,
       type,
       className,
-      ...rest
+      whileTap: _whileTap,
+      animate: _animate,
+      transition: _transition,
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: () => void;
@@ -40,7 +46,7 @@ vi.mock('motion/react', () => ({
       type?: 'button' | 'submit' | 'reset';
       className?: string;
     }) => (
-      <button onClick={onClick} disabled={disabled} type={type} className={className} {...rest}>
+      <button onClick={onClick} disabled={disabled} type={type} className={className}>
         {children}
       </button>
     ),
@@ -50,15 +56,11 @@ vi.mock('motion/react', () => ({
 
 vi.mock(
   '@heroicons/react/24/outline',
-  () =>
-    new Proxy(
-      {},
-      {
-        get: (_, name) => (props: Record<string, unknown>) => (
-          <svg data-testid={String(name)} {...props} />
-        ),
-      }
-    )
+  () => ({
+    SparklesIcon: (props: Record<string, unknown>) => (
+      <svg data-testid="SparklesIcon" {...props} />
+    ),
+  })
 );
 
 vi.mock('@/shared/components/ui', () => ({

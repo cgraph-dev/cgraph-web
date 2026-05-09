@@ -383,12 +383,12 @@ describe('creatorStore', () => {
       expect(mockCreatorService.listPayouts).toHaveBeenCalledWith(3);
     });
 
-    it('should default to page 1', async () => {
+    it('should default to the initial cursor', async () => {
       mockCreatorService.listPayouts.mockResolvedValueOnce([]);
 
       await useCreatorStore.getState().fetchPayouts();
 
-      expect(mockCreatorService.listPayouts).toHaveBeenCalledWith(1);
+      expect(mockCreatorService.listPayouts).toHaveBeenCalledWith(null);
     });
 
     it('should handle errors', async () => {

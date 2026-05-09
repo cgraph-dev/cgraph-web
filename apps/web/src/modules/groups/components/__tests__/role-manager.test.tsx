@@ -35,7 +35,12 @@ const mockRoles = [
 const mockGroups = [{ id: 'grp-1', name: 'My Group', roles: mockRoles }];
 
 vi.mock('@/modules/groups/store', () => ({
-  useGroupStore: vi.fn(() => ({ groups: mockGroups })),
+  useGroupStore: vi.fn(() => ({
+    groups: mockGroups,
+    createRole: vi.fn(() => Promise.resolve({ id: 'role-created' })),
+    updateRole: vi.fn(() => Promise.resolve()),
+    deleteRole: vi.fn(() => Promise.resolve()),
+  })),
 }));
 
 vi.mock('@/lib/animations/AnimationEngine', () => ({

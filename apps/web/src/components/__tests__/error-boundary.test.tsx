@@ -1,11 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+
+const { mockLogger } = vi.hoisted(() => ({
+  mockLogger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    log: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    time: vi.fn(),
+    timeEnd: vi.fn(),
+    breadcrumb: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/logger', () => ({
+  logger: mockLogger,
+}));
+
 import ErrorBoundary from '../error-boundary';
 
 // Suppress React error boundary console errors during tests
 const originalConsoleError = console.error;
 beforeEach(() => {
+  vi.clearAllMocks();
   console.error = (...args: unknown[]) => {
     if (typeof args[0] === 'string' && args[0].includes('Error Boundary')) return;
     if (typeof args[0] === 'string' && args[0].includes('The above error')) return;
@@ -72,23 +91,17 @@ describe('ErrorBoundary', () => {
     expect(screen.getByRole('button', { name: 'Reload Page' })).toBeInTheDocument();
   });
 
-  it('logs error via console.error in componentDidCatch', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
+  it('logs error through the shared logger in componentDidCatch', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent />
       </ErrorBoundary>
     );
 
-    const errorCalls = consoleSpy.mock.calls.filter(
-      (args) => typeof args[0] === 'string' && args[0].includes('[ErrorBoundary]')
-    );
-    expect(errorCalls.length).toBe(1);
-    expect(errorCalls[0]![1]).toBeInstanceOf(Error);
-    expect(errorCalls[0]![1].message).toBe('Test error');
-
-    consoleSpy.mockRestore();
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.any(Error), {
+      componentStack: expect.any(String),
+      source: 'ErrorBoundary',
+    });
   });
 
   it('does not render Try Again or Report Issue buttons', () => {

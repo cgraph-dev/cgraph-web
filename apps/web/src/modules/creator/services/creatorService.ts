@@ -103,9 +103,7 @@ export const creatorService = {
 
   /** List past payouts (cursor-paginated) */
   async listPayouts(cursor: string | null = null) {
-    // apiClient.creator.listPayouts accepts a page number; cursor not yet supported
-    void cursor;
-    const result = await apiClient.creator.listPayouts();
+    const result = await apiClient.creator.listPayouts(cursor ?? undefined);
     if (!result.ok) {
       logger.error('Failed to fetch payouts', result.error);
       throw new Error(result.error.message);

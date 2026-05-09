@@ -166,7 +166,7 @@ describe('createBoard', () => {
 describe('updateBoard', () => {
   it('updates a board in the list', async () => {
     useForumHostingStore.setState({ boards: [{ id: 'b1', name: 'Old' }] as never });
-    mockedApi.put.mockResolvedValueOnce({ data: { data: makeBoardApi({ name: 'Updated' }) } });
+    mockedApi.patch.mockResolvedValueOnce({ data: { data: makeBoardApi({ name: 'Updated' }) } });
     const board = await useForumHostingStore
       .getState()
       .updateBoard('f1', 'b1', { name: 'Updated' });

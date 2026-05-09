@@ -233,9 +233,9 @@ describe('TypingIndicator', () => {
     expect(screen.getByText('Alice is typing...')).toBeInTheDocument();
   });
 
-  it('shows generic typing text for multiple users', () => {
+  it('shows participant names for multiple users', () => {
     render(<TypingIndicator typing={['Alice', 'Bob']} />);
-    expect(screen.getByText('typing...')).toBeInTheDocument();
+    expect(screen.getByText('Alice and Bob are typing...')).toBeInTheDocument();
   });
 
   it('renders three bouncing dots', () => {

@@ -34,6 +34,19 @@ vi.mock('@/modules/chat/store', () => ({
   },
 }));
 
+vi.mock('@/modules/chat/store/chatStore.impl', () => ({
+  useChatStore: {
+    getState: () => ({
+      conversations: [
+        {
+          id: 'conv-1',
+          participants: [{ userId: 'caller-1' }],
+        },
+      ],
+    }),
+  },
+}));
+
 vi.mock('../incoming-call-modal', () => ({
   IncomingCallModal: ({
     call,

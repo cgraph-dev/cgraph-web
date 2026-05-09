@@ -12,6 +12,7 @@ vi.mock('@/lib/api', () => ({
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
+    patch: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -26,6 +27,7 @@ const mockedApi = {
   get: api.get as MockedFunction<typeof api.get>,
   post: api.post as MockedFunction<typeof api.post>,
   put: api.put as MockedFunction<typeof api.put>,
+  patch: api.patch as MockedFunction<typeof api.patch>,
   delete: api.delete as MockedFunction<typeof api.delete>,
 };
 function createTestStore(overrides: Partial<ForumState> = {}) {
@@ -293,7 +295,7 @@ describe('createFeatureActions', () => {
   describe('votePoll', () => {
     it('should call vote endpoint with option IDs', async () => {
       const { actions } = createTestStore();
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({ data: {} });
 
       await actions.votePoll('poll-1', ['opt-1', 'opt-2']);
 
@@ -306,7 +308,7 @@ describe('createFeatureActions', () => {
   describe('closePoll', () => {
     it('should call close endpoint', async () => {
       const { actions } = createTestStore();
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({ data: {} });
 
       await actions.closePoll('poll-1');
 
@@ -357,7 +359,9 @@ describe('createFeatureActions', () => {
         createdAt: '2026-01-01T00:00:00Z',
       };
       const { state, actions } = createTestStore({ subscriptions: [sub] });
-      mockedApi.put.mockResolvedValue({});
+      mockedApi.patch.mockResolvedValue({
+        data: { id: 'sub-1', notification_mode: 'instant' },
+      });
 
       await actions.updateSubscription('sub-1', 'instant');
 

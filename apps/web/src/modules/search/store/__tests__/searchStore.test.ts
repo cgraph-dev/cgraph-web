@@ -35,13 +35,16 @@ vi.mock('@/lib/api-client', () => ({
       searchMessages: vi.fn(),
     },
   },
+  http: {
+    get: vi.fn(),
+  },
 }));
 
-import { api } from '@/lib/api-client';
+import { http } from '@/lib/api-client';
 import { apiClient } from '@/lib/api-client';
 
 // Typed mock helpers — vi.mocked() is the assertion-free Vitest idiom
-const mockedApiGet = vi.mocked(api.get);
+const mockedApiGet = vi.mocked(http.get);
 const mockedSearch = {
   searchUsers: vi.mocked(apiClient.search.searchUsers),
   searchGroups: vi.mocked(apiClient.search.searchGroups),
@@ -228,11 +231,11 @@ describe('Search Store', () => {
       useSearchStore.getState().setQuery('hello');
       await useSearchStore.getState().search();
 
-      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('hello', undefined);
-      expect(mockedSearch.searchMessages).toHaveBeenCalledWith('hello', undefined);
-      expect(mockedSearch.searchPosts).toHaveBeenCalledWith('hello', undefined);
-      expect(mockedSearch.searchGroups).toHaveBeenCalledWith('hello', undefined);
-      expect(mockedSearch.searchForums).toHaveBeenCalledWith('hello', undefined);
+      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('hello');
+      expect(mockedSearch.searchMessages).toHaveBeenCalledWith('hello');
+      expect(mockedSearch.searchPosts).toHaveBeenCalledWith('hello');
+      expect(mockedSearch.searchGroups).toHaveBeenCalledWith('hello');
+      expect(mockedSearch.searchForums).toHaveBeenCalledWith('hello');
     });
 
     it('should populate result arrays from API responses', async () => {
@@ -295,7 +298,7 @@ describe('Search Store', () => {
 
       await useSearchStore.getState().search();
 
-      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('alice', undefined);
+      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('alice');
       expect(mockedSearch.searchGroups).not.toHaveBeenCalled();
       expect(mockedSearch.searchForums).not.toHaveBeenCalled();
       expect(mockedSearch.searchPosts).not.toHaveBeenCalled();
@@ -309,7 +312,7 @@ describe('Search Store', () => {
 
       await useSearchStore.getState().search();
 
-      expect(mockedSearch.searchGroups).toHaveBeenCalledWith('dev', undefined);
+      expect(mockedSearch.searchGroups).toHaveBeenCalledWith('dev');
       expect(mockedSearch.searchUsers).not.toHaveBeenCalled();
     });
 
@@ -320,7 +323,7 @@ describe('Search Store', () => {
 
       await useSearchStore.getState().search();
 
-      expect(mockedSearch.searchPosts).toHaveBeenCalledWith('hello', undefined);
+      expect(mockedSearch.searchPosts).toHaveBeenCalledWith('hello');
       expect(mockedSearch.searchMessages).not.toHaveBeenCalled();
     });
   });
@@ -332,7 +335,7 @@ describe('Search Store', () => {
       useSearchStore.getState().setQuery('original');
       await useSearchStore.getState().search('override');
 
-      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('override', undefined);
+      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('override');
     });
   });
 

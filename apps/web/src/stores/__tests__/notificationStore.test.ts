@@ -101,7 +101,7 @@ describe('notificationStore', () => {
       expect(state.unreadCount).toBe(2);
       expect(state.isLoading).toBe(false);
       expect(api.get).toHaveBeenCalledWith('/api/v1/notifications', {
-        params: { page: 1, limit: 20 },
+        params: { limit: 20 },
       });
     });
 
@@ -170,9 +170,7 @@ describe('notificationStore', () => {
     it('should handle fetch errors and reset loading state', async () => {
       vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(useNotificationStore.getState().fetchNotifications()).rejects.toThrow(
-        'Network error'
-      );
+      await useNotificationStore.getState().fetchNotifications();
 
       const state = useNotificationStore.getState();
       expect(state.isLoading).toBe(false);
@@ -243,7 +241,7 @@ describe('notificationStore', () => {
       const state = useNotificationStore.getState();
       expect(state.notifications.every((n) => n.isRead)).toBe(true);
       expect(state.unreadCount).toBe(0);
-      expect(api.post).toHaveBeenCalledWith('/api/v1/notifications/read');
+      expect(api.post).toHaveBeenCalledWith('/api/v1/notifications/read-all');
     });
   });
 

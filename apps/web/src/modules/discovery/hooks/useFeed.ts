@@ -38,6 +38,28 @@ interface FeedResponse {
   };
 }
 
+interface LegacyFeedResponse {
+  data?: FeedThread[];
+  meta?: {
+    has_more?: boolean;
+    cursor?: string | null;
+    end_cursor?: string | null;
+  };
+}
+
+function normalizeFeedResponse(raw: FeedResponse | LegacyFeedResponse): FeedResponse {
+  if ('page_info' in raw && raw.page_info) return raw;
+  const meta = 'meta' in raw ? raw.meta : undefined;
+
+  return {
+    data: Array.isArray(raw.data) ? raw.data : [],
+    page_info: {
+      has_next_page: meta?.has_more ?? false,
+      end_cursor: meta?.end_cursor ?? meta?.cursor ?? null,
+    },
+  };
+}
+
 /** Hook for feed. */
 export function useFeed(mode: FeedMode, communityId?: string | null) {
   return useInfiniteQuery<FeedResponse>({
@@ -48,8 +70,10 @@ export function useFeed(mode: FeedMode, communityId?: string | null) {
       if (pageParam) params.set('cursor', String(pageParam));
       if (communityId) params.set('community_id', communityId);
 
-      const res = await http.get<FeedResponse>(`/api/v1/feed?${params.toString()}`);
-      return res.data;
+      const res = await http.get<FeedResponse | LegacyFeedResponse>(
+        `/api/v1/feed?${params.toString()}`
+      );
+      return normalizeFeedResponse(res.data);
     },
     initialPageParam: null satisfies string | null,
     getNextPageParam: (lastPage) =>

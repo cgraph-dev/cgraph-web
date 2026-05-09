@@ -29,6 +29,20 @@ describe('creatorService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
+  const payoutFixture = (overrides: Record<string, unknown> = {}) => ({
+    id: 'payout-1',
+    amount: 100,
+    amountCents: 10000,
+    status: 'pending',
+    currency: 'USD',
+    requestedAt: '2026-01-15T12:00:00Z',
+    completedAt: null,
+    failureReason: null,
+    createdAt: '2026-01-15T12:00:00Z',
+    ...overrides,
+  });
+
   describe('onboard', () => {
     it('should POST to /api/v1/creator/onboard and return data', async () => {
       const responseData = {
@@ -96,43 +110,37 @@ describe('creatorService', () => {
   });
   describe('requestPayout', () => {
     it('should POST to /api/v1/creator/payout with amount', async () => {
-      const payoutData = {
-        id: 'payout-1',
-        amount: 100,
-        amountCents: 10000,
-        status: 'pending',
-        currency: 'USD',
-        requestedAt: '2026-01-15T12:00:00Z',
-        completedAt: null,
-        failureReason: null,
-        createdAt: '2026-01-15T12:00:00Z',
-      };
+      const payoutData = payoutFixture();
       mockApi.post.mockResolvedValueOnce(wrapResponse(payoutData));
 
       const result = await creatorService.requestPayout(100);
 
-      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/creator/payout', { amount: 100 });
+      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/creator/payouts/request', {
+        amount: 100,
+      });
       expect(result).toEqual(payoutData);
     });
 
     it('should POST without amount when not provided', async () => {
-      mockApi.post.mockResolvedValueOnce(wrapResponse({ id: 'payout-2' }));
+      mockApi.post.mockResolvedValueOnce(wrapResponse(payoutFixture({ id: 'payout-2' })));
 
       await creatorService.requestPayout();
 
-      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/creator/payout', { amount: undefined });
+      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/creator/payouts/request', {
+        amount: undefined,
+      });
     });
   });
 
   describe('listPayouts', () => {
     it('should GET /api/v1/creator/payouts with cursor parameter', async () => {
-      const payoutsData = [{ id: 'p1' }, { id: 'p2' }];
+      const payoutsData = [payoutFixture({ id: 'p1' }), payoutFixture({ id: 'p2' })];
       mockApi.get.mockResolvedValueOnce(wrapResponse(payoutsData));
 
       const result = await creatorService.listPayouts('cursor-abc');
 
       expect(mockApi.get).toHaveBeenCalledWith('/api/v1/creator/payouts', {
-        params: { cursor: 'cursor-abc' },
+        params: { after: 'cursor-abc' },
       });
       expect(result).toEqual(payoutsData);
     });
@@ -142,7 +150,9 @@ describe('creatorService', () => {
 
       await creatorService.listPayouts();
 
-      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/creator/payouts', { params: {} });
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/creator/payouts', {
+        params: { after: undefined },
+      });
     });
   });
   describe('getAnalyticsOverview', () => {
@@ -198,7 +208,9 @@ describe('creatorService', () => {
 
       const result = await creatorService.getAnalyticsSubscribers();
 
-      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/creator/analytics/subscribers');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/creator/analytics/subscribers', {
+        params: undefined,
+      });
       expect(result).toEqual(subs);
     });
   });
@@ -213,7 +225,9 @@ describe('creatorService', () => {
 
       const result = await creatorService.getAnalyticsContent();
 
-      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/creator/analytics/content');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/creator/analytics/content', {
+        params: undefined,
+      });
       expect(result).toEqual(content);
     });
   });
@@ -235,7 +249,7 @@ describe('creatorService', () => {
       const result = await creatorService.unsubscribe('forum-123');
 
       expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/forums/forum-123/subscription');
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({});
     });
   });
   describe('updateMonetization', () => {
@@ -304,7 +318,13 @@ describe('creatorService', () => {
 
       const result = await creatorService.createTier(attrs);
 
-      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/creator/tiers', attrs);
+      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/creator/tiers', {
+        forum_id: 'forum-1',
+        max_subscribers: 50,
+        name: 'Platinum',
+        perks: ['exclusiveContent', 'earlyAccess'],
+        price_cents: 200,
+      });
       expect(result).toEqual(created);
     });
   });

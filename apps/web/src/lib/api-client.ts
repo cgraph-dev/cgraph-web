@@ -30,4 +30,4 @@ export type { ApiClient } from '@cgraph/api-client';
  * cover the endpoint you need. Prefer `apiClient.<namespace>.<method>()` where
  * possible; `http` is the escape hatch for endpoints pending migration.
  */
-export { api as http } from './api';
+export { api, api as http } from './api';

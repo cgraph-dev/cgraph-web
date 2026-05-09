@@ -277,7 +277,7 @@ export const useCreatorStore = create<CreatorState>()(
         try {
           const data = await creatorService.onboard();
           set({ isLoading: false });
-          const url = data.onboarding_url ?? data.url ?? '';
+          const url = data.onboarding_url || data.url || '';
           return url ? { url } : null;
         } catch (error) {
           logger.error('Failed to start onboarding', error);
@@ -291,7 +291,7 @@ export const useCreatorStore = create<CreatorState>()(
         try {
           const data = await creatorService.refreshOnboard();
           set({ isLoading: false });
-          const url = data.onboarding_url ?? data.url ?? '';
+          const url = data.onboarding_url || data.url || '';
           return url ? { url } : null;
         } catch (error) {
           logger.error('Failed to refresh onboarding link', error);

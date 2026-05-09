@@ -66,6 +66,7 @@ export function useUserSearch(query: string): UseUserSearchReturn {
                 }))
               );
             } else {
+              setError('Failed to search users');
               setResults([]);
             }
           }

@@ -15,6 +15,10 @@ vi.mock('@/modules/settings/store/customization', () => ({
   useCustomizationStore: vi.fn((selector: (s: typeof mockState) => unknown) => selector(mockState)),
 }));
 
+vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
+  useCustomizationStore: vi.fn((selector: (s: typeof mockState) => unknown) => selector(mockState)),
+}));
+
 import {
   useCustomizationApplication,
   getAvatarBorderStyle,

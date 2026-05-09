@@ -472,7 +472,7 @@ describe('adminStore', () => {
       expect(state.users).toHaveLength(2);
       expect(state.isLoading).toBe(false);
       expect(api.get).toHaveBeenCalledWith('/api/v1/admin/users', {
-        params: { page: 1, limit: 50 },
+        params: { limit: 50 },
       });
     });
 

@@ -33,7 +33,9 @@ export function getMediaBaseUrl(): string {
     return envUrl;
   }
 
-  return shouldUseSameOriginApiProxy() ? '' : PROD_BACKEND_API_URL;
+  return shouldUseSameOriginApiProxy()
+    ? (import.meta.env.VITE_DEV_API_TARGET ?? PROD_BACKEND_API_URL)
+    : PROD_BACKEND_API_URL;
 }
 
 /** Resolve the Phoenix socket URL for the current runtime. */

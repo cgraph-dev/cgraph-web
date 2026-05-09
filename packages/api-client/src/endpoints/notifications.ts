@@ -23,7 +23,15 @@ import type {
 } from '../schemas/notification';
 import type { ApiResult } from '../schemas/api-result';
 
-const EmptySchema = z.object({}).passthrough();
+const EmptySchema = z.preprocess((value) => value ?? {}, z.object({}).passthrough());
+const NotificationListSchema = z.preprocess((value) => {
+  if (Array.isArray(value)) return value;
+  if (value !== null && typeof value === 'object' && 'notifications' in value) {
+    const notifications = (value as { notifications?: unknown }).notifications;
+    return Array.isArray(notifications) ? notifications : value;
+  }
+  return value;
+}, NotificationSchema.array());
 
 export type {
   Notification,
@@ -46,12 +54,14 @@ export function createNotificationEndpoints(http: AxiosInstance) {
     async list(options?: {
       readonly limit?: number;
       readonly offset?: number;
+      readonly page?: number;
+      readonly cursor?: string;
       readonly type?: NotificationType;
       readonly unread_only?: boolean;
     }): Promise<ApiResult<Notification[]>> {
       return apiCall(
         () => http.get('/api/v1/notifications', { params: options }),
-        NotificationSchema.array()
+        NotificationListSchema
       );
     },
 

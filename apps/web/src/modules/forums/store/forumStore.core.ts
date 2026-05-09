@@ -102,7 +102,7 @@ export function createCoreActions(set: Set, get: Get) {
       if (!result.ok) {
         set({ isLoadingForums: false });
         logger.error(new Error(result.error.message), 'fetchForums');
-        return;
+        throw new Error(result.error.message);
       }
       const forums = result.data.map((f) => mapForumFromApi(Object.fromEntries(Object.entries(f))));
       set({ forums, isLoadingForums: false });

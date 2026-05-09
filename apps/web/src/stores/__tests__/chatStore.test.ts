@@ -368,7 +368,9 @@ describe('chatStore', () => {
 
       await useChatStore.getState().fetchConversations();
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/conversations');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/conversations', {
+        params: undefined,
+      });
       expect(useChatStore.getState().conversations).toHaveLength(1);
       expect(useChatStore.getState().isLoadingConversations).toBe(false);
     });
@@ -428,7 +430,7 @@ describe('chatStore', () => {
       await useChatStore.getState().fetchMessages('conv-456', 'msg-before');
 
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/conversations/conv-456/messages', {
-        params: { before: 'msg-before', limit: 50 },
+        params: { cursor: 'msg-before', direction: 'before', limit: 50 },
       });
     });
 

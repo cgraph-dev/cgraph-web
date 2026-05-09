@@ -208,6 +208,7 @@ vi.mock('@/shared/components/ui', () => ({
 }));
 
 vi.mock('@/lib/animations/transitions', () => ({
+  FADE_IN: {},
   FADE_UP: {},
   springs: { smooth: { type: 'spring' } },
 }));

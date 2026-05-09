@@ -146,7 +146,7 @@ describe('NotificationStore', () => {
 
     it('resets isLoading on error', async () => {
       mockedApi.get.mockRejectedValueOnce(new Error('network'));
-      await expect(useNotificationStore.getState().fetchNotifications()).rejects.toThrow('network');
+      await useNotificationStore.getState().fetchNotifications();
       expect(useNotificationStore.getState().isLoading).toBe(false);
     });
 
@@ -208,7 +208,7 @@ describe('NotificationStore', () => {
     it('calls bulk read endpoint', async () => {
       mockedApi.post.mockResolvedValueOnce({});
       await useNotificationStore.getState().markAllAsRead();
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/notifications/read');
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/notifications/read-all');
     });
   });
 

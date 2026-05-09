@@ -47,18 +47,14 @@ vi.mock('motion/react', () => ({
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock(
-  '@heroicons/react/24/outline',
-  () =>
-    new Proxy(
-      {},
-      {
-        get: (_, name) => (props: Record<string, unknown>) => (
-          <svg data-testid={String(name)} {...props} />
-        ),
-      }
-    )
-);
+vi.mock('@heroicons/react/24/outline', () => ({
+  CurrencyDollarIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="CurrencyDollarIcon" {...props} />
+  ),
+  LockClosedIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="LockClosedIcon" {...props} />
+  ),
+}));
 
 vi.mock('@/lib/animations/transitions', () => ({
   FADE_IN: { initial: { opacity: 0 }, animate: { opacity: 1 } },

@@ -30,7 +30,7 @@ vi.mock('motion/react', () => ({
 }));
 
 vi.mock('@/components/theme/themed-avatar', () => ({
-  ThemedAvatar: ({ alt }: { alt: string }) => <div data-testid="avatar">{alt}</div>,
+  ThemedAvatar: ({ alt }: { alt: string }) => <div aria-label={alt} data-testid="avatar" />,
 }));
 
 vi.mock('@/shared/components/ui', () => ({
@@ -72,15 +72,23 @@ vi.mock('@/lib/animations/transitions', () => ({
 
 vi.mock(
   '@heroicons/react/24/outline',
-  () =>
-    new Proxy(
-      {},
-      {
-        get: (_, name) => (props: Record<string, unknown>) => (
-          <svg data-testid={String(name)} {...props} />
-        ),
-      }
-    )
+  () => ({
+    ChatBubbleLeftIcon: (props: Record<string, unknown>) => (
+      <svg data-testid="ChatBubbleLeftIcon" {...props} />
+    ),
+    NoSymbolIcon: (props: Record<string, unknown>) => (
+      <svg data-testid="NoSymbolIcon" {...props} />
+    ),
+    ShieldCheckIcon: (props: Record<string, unknown>) => (
+      <svg data-testid="ShieldCheckIcon" {...props} />
+    ),
+    UserMinusIcon: (props: Record<string, unknown>) => (
+      <svg data-testid="UserMinusIcon" {...props} />
+    ),
+    UserPlusIcon: (props: Record<string, unknown>) => (
+      <svg data-testid="UserPlusIcon" {...props} />
+    ),
+  })
 );
 
 vi.mock('@heroicons/react/24/solid', () => ({

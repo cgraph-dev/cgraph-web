@@ -232,7 +232,7 @@ const getInitialState = () => ({
 // Reset store state after each test
 afterEach(() => {
   useProfileStore.setState(getInitialState());
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('profileStore', () => {
@@ -379,7 +379,7 @@ describe('profileStore', () => {
 
       await useProfileStore.getState().fetchMyProfile();
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/users/me');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/me');
     });
 
     it('should throw error on failure', async () => {
@@ -425,7 +425,7 @@ describe('profileStore', () => {
         website: 'https://newsite.com',
       });
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me', {
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/me', {
         user: {
           display_name: 'New Name',
           location: 'London',
@@ -444,7 +444,7 @@ describe('profileStore', () => {
         },
       });
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me', {
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/me', {
         user: {
           twitter: '@newhandle',
           github: 'newgithub',
@@ -477,9 +477,8 @@ describe('profileStore', () => {
     it('should update signature', async () => {
       mockedApi.put.mockResolvedValue({
         data: {
-          enabled: true,
-          content: 'New signature content',
-          max_length: 500,
+          ...mockApiProfileResponse.data,
+          signature: 'New signature content',
         },
       });
 
@@ -494,7 +493,7 @@ describe('profileStore', () => {
 
     it('should call API with correct endpoint and payload', async () => {
       mockedApi.put.mockResolvedValue({
-        data: { enabled: false, content: '', max_length: 500 },
+        data: { ...mockApiProfileResponse.data, signature: '' },
       });
 
       await useProfileStore.getState().updateSignature({
@@ -502,20 +501,16 @@ describe('profileStore', () => {
         content: '',
       });
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me/signature', {
-        signature: {
-          enabled: false,
-          content: '',
-        },
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/profiles/signature', {
+        signature: '',
       });
     });
 
     it('should update myProfile signature as well', async () => {
       mockedApi.put.mockResolvedValue({
         data: {
-          enabled: true,
-          content: 'Updated!',
-          max_length: 500,
+          ...mockApiProfileResponse.data,
+          signature: 'Updated!',
         },
       });
 
@@ -545,8 +540,9 @@ describe('profileStore', () => {
 
       await useProfileStore.getState().equipTitle('title-2');
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me/title', {
-        title_id: 'title-2',
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/cosmetics/equip', {
+        item_type: 'title',
+        item_id: 'title-2',
       });
     });
 
@@ -557,12 +553,12 @@ describe('profileStore', () => {
           current_title: null,
         },
       };
-      mockedApi.put.mockResolvedValue(updatedResponse);
+      mockedApi.delete.mockResolvedValue(updatedResponse);
 
       await useProfileStore.getState().equipTitle(null);
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me/title', {
-        title_id: null,
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/cosmetics/unequip', {
+        data: { item_type: 'title' },
       });
     });
 
@@ -581,12 +577,13 @@ describe('profileStore', () => {
     });
 
     it('should equip a badge', async () => {
-      mockedApi.post.mockResolvedValue(mockApiProfileResponse);
+      mockedApi.put.mockResolvedValue(mockApiProfileResponse);
 
       await useProfileStore.getState().equipBadge('badge-1');
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/users/me/badges/equip', {
-        badge_id: 'badge-1',
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/cosmetics/equip', {
+        item_type: 'badge',
+        item_id: 'badge-1',
       });
     });
 
@@ -595,11 +592,13 @@ describe('profileStore', () => {
 
       await useProfileStore.getState().unequipBadge('badge-2');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/users/me/badges/equip/badge-2');
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/cosmetics/unequip', {
+        data: { item_type: 'badge', item_id: 'badge-2' },
+      });
     });
 
     it('should throw error when equipping non-owned badge', async () => {
-      mockedApi.post.mockRejectedValue(new Error('Badge not owned'));
+      mockedApi.put.mockRejectedValue(new Error('Badge not owned'));
 
       await expect(useProfileStore.getState().equipBadge('unknown-badge')).rejects.toThrow(
         'Badge not owned'
@@ -648,8 +647,7 @@ describe('profileStore', () => {
 
       await useProfileStore.getState().blockUser('user-999', 'Harassment');
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/users/me/blocked', {
-        user_id: 'user-999',
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/friends/user-999/block', {
         reason: 'Harassment',
       });
     });
@@ -659,7 +657,7 @@ describe('profileStore', () => {
 
       await useProfileStore.getState().blockUser('user-999');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/users/me/blocked');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
     });
 
     it('should update currentProfile.isBlocked when blocking viewed user', async () => {
@@ -678,7 +676,7 @@ describe('profileStore', () => {
 
       await useProfileStore.getState().unblockUser('blocked-1');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/users/me/blocked/blocked-1');
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/friends/blocked-1/block');
     });
 
     it('should remove user from blocked list after unblocking', async () => {
@@ -748,7 +746,7 @@ describe('profileStore', () => {
 
       await useProfileStore.getState().fetchBlockedUsers();
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/users/me/blocked');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
     });
 
     it('should set loading to false on error', async () => {

@@ -373,7 +373,7 @@ describe('groupStore', () => {
       mockedApi.post.mockResolvedValue({ data: {} });
 
       await expect(useGroupStore.getState().createGroup({ name: 'Test' })).rejects.toThrow(
-        'Failed to create group'
+        'unexpected response'
       );
     });
   });
@@ -411,7 +411,7 @@ describe('groupStore', () => {
   describe('leaveGroup action', () => {
     it('should remove group from store after leaving', async () => {
       useGroupStore.setState({ groups: [mockGroup, mockGroup2] });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -422,16 +422,16 @@ describe('groupStore', () => {
 
     it('should call API with correct endpoint', async () => {
       useGroupStore.setState({ groups: [mockGroup] });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/groups/group-1/members/@me');
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/groups/group-1/leave');
     });
 
     it('should reset activeGroupId if leaving active group', async () => {
       useGroupStore.setState({ groups: [mockGroup], activeGroupId: 'group-1' });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -443,7 +443,7 @@ describe('groupStore', () => {
         groups: [mockGroup, mockGroup2],
         activeGroupId: 'group-2',
       });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -727,7 +727,9 @@ describe('groupStore', () => {
 
       await useGroupStore.getState().fetchMembers('group-1');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/groups/group-1/members');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/groups/group-1/members', {
+        params: undefined,
+      });
     });
   });
 
@@ -750,7 +752,7 @@ describe('groupStore', () => {
 
       await expect(
         useGroupStore.getState().updateGroup('group-1', { name: 'Test' })
-      ).rejects.toThrow('Failed to update group');
+      ).rejects.toThrow('unexpected response');
     });
   });
 

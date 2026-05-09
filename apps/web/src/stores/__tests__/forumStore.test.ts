@@ -248,7 +248,7 @@ const getInitialState = () => ({
 // Reset store state after each test
 afterEach(() => {
   useForumStore.setState(getInitialState());
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('forumStore', () => {
@@ -342,7 +342,9 @@ describe('forumStore', () => {
 
       await useForumStore.getState().fetchForums();
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/forums');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/forums', {
+        params: undefined,
+      });
     });
 
     it('should reset loading state on error', async () => {
@@ -389,7 +391,7 @@ describe('forumStore', () => {
       await useForumStore.getState().fetchPosts();
 
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/posts/feed', {
-        params: expect.objectContaining({ sort: 'hot', page: 1, limit: 25 }),
+        params: { sort: 'hot', limit: 25 },
       });
     });
 
@@ -398,8 +400,8 @@ describe('forumStore', () => {
 
       await useForumStore.getState().fetchPosts('test-forum');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/forums/test-forum/posts', {
-        params: expect.any(Object),
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/forums/test-forum/feed', {
+        params: { sort: 'hot', limit: 25 },
       });
     });
 
@@ -421,7 +423,7 @@ describe('forumStore', () => {
         data: { posts: [mockPost2] },
       });
 
-      await useForumStore.getState().fetchPosts(undefined, 1);
+      await useForumStore.getState().fetchPosts(undefined, null);
 
       const state = useForumStore.getState();
       expect(state.posts).toHaveLength(1);
@@ -522,7 +524,7 @@ describe('forumStore', () => {
     });
 
     it('should throw error if post creation fails', async () => {
-      mockedApi.post.mockResolvedValue({ data: {} });
+      mockedApi.post.mockRejectedValue(new Error('Failed to create post'));
 
       await expect(
         useForumStore.getState().createPost({
@@ -568,7 +570,7 @@ describe('forumStore', () => {
     });
 
     it('should throw error if comment creation fails', async () => {
-      mockedApi.post.mockResolvedValue({ data: {} });
+      mockedApi.post.mockRejectedValue(new Error('Failed to create comment'));
 
       await expect(useForumStore.getState().createComment('post-1', 'Test')).rejects.toThrow(
         'Failed to create comment'
@@ -815,7 +817,12 @@ describe('forumStore', () => {
     });
 
     it('should throw error if forum not found', async () => {
-      mockedApi.get.mockResolvedValue({ data: {} });
+      mockedApi.get.mockRejectedValue({
+        response: {
+          status: 404,
+          data: { error: { code: 'not_found', message: 'Forum not found' } },
+        },
+      });
 
       await expect(useForumStore.getState().fetchForum('nonexistent')).rejects.toThrow(
         'Forum not found'
@@ -840,7 +847,9 @@ describe('forumStore', () => {
 
       await useForumStore.getState().fetchComments('post-1');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/posts/post-1/comments');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/posts/post-1/comments', {
+        params: undefined,
+      });
     });
 
     it('should reset loading state on error', async () => {
@@ -915,7 +924,7 @@ describe('forumStore', () => {
   describe('updateForum action', () => {
     it('should update forum and update state', async () => {
       const updatedForum = { ...mockForum, name: 'Updated Name' };
-      mockedApi.put.mockResolvedValue({ data: { forum: updatedForum } });
+      mockedApi.patch.mockResolvedValue({ data: { forum: updatedForum } });
       useForumStore.setState({ forums: [mockForum], currentForum: mockForum });
 
       const result = await useForumStore
@@ -927,7 +936,7 @@ describe('forumStore', () => {
 
     it('should update currentForum if it matches', async () => {
       const updatedForum = { ...mockForum, description: 'New description' };
-      mockedApi.put.mockResolvedValue({ data: { forum: updatedForum } });
+      mockedApi.patch.mockResolvedValue({ data: { forum: updatedForum } });
       useForumStore.setState({ forums: [mockForum], currentForum: mockForum });
 
       await useForumStore.getState().updateForum('forum-1', { description: 'New description' });
@@ -993,12 +1002,12 @@ describe('forumStore', () => {
     });
 
     it('should unpin a post', async () => {
-      mockedApi.delete.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({ data: {} });
       useForumStore.setState({ posts: [{ ...mockPost, isPinned: true }] });
 
       await useForumStore.getState().unpinPost('forum-1', 'post-1');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/forums/forum-1/posts/post-1/pin');
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/forums/forum-1/posts/post-1/unpin');
     });
   });
 
@@ -1013,12 +1022,12 @@ describe('forumStore', () => {
     });
 
     it('should unlock a post', async () => {
-      mockedApi.delete.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({ data: {} });
       useForumStore.setState({ posts: [{ ...mockPost, isLocked: true }] });
 
       await useForumStore.getState().unlockPost('forum-1', 'post-1');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/forums/forum-1/posts/post-1/lock');
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/forums/forum-1/posts/post-1/unlock');
     });
   });
 
@@ -1029,7 +1038,7 @@ describe('forumStore', () => {
 
       await useForumStore.getState().deletePost('forum-1', 'post-1');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/forums/forum-1/posts/post-1');
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/posts/post-1');
       expect(useForumStore.getState().posts).toHaveLength(1);
     });
 
@@ -1049,8 +1058,10 @@ describe('forumStore', () => {
 
       await useForumStore.getState().moveThread('thread-1', 'forum-2');
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/posts/thread-1/move', {
-        target_forum_id: 'forum-2',
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/threads/thread-1/move', {
+        target_board_id: 'forum-2',
+        leave_redirect: true,
+        redirect_days: 30,
       });
     });
 
@@ -1176,7 +1187,7 @@ describe('forumStore', () => {
 
       await useForumStore.getState().subscribeThread('thread-1', 'instant');
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/posts/thread-1/subscribe', {
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/threads/thread-1/subscribe', {
         notification_mode: 'instant',
       });
     });
@@ -1186,7 +1197,7 @@ describe('forumStore', () => {
 
       await useForumStore.getState().unsubscribeThread('thread-1');
 
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/posts/thread-1/subscribe');
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/threads/thread-1/subscribe');
     });
 
     it('should fetch subscriptions', async () => {

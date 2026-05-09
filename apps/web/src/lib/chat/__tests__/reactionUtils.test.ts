@@ -19,6 +19,15 @@ vi.mock('@/modules/chat/store', () => ({
   },
 }));
 
+vi.mock('@/modules/chat/store/chatStore.impl', () => ({
+  useChatStore: {
+    getState: vi.fn().mockReturnValue({
+      removeReaction: mockRemoveReaction,
+      addReaction: mockAddReaction,
+    }),
+  },
+}));
+
 import {
   aggregateReactions,
   aggregateReactionsSimple,

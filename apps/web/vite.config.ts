@@ -9,6 +9,24 @@ import { defineConfig } from 'vite';
 
 const NODE_MODULES_SEGMENT = '/node_modules/';
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
+const isVitest = process.env.VITEST === 'true';
+const testOnlyAliases = isVitest
+  ? {
+      'motion/react': path.resolve(currentDir, './src/test/__mocks__/framer-motion.tsx'),
+      '@heroicons/react/20/solid': path.resolve(
+        currentDir,
+        './src/test/__mocks__/heroicons-20-solid.tsx'
+      ),
+      '@heroicons/react/24/outline': path.resolve(
+        currentDir,
+        './src/test/__mocks__/heroicons-outline.tsx'
+      ),
+      '@heroicons/react/24/solid': path.resolve(
+        currentDir,
+        './src/test/__mocks__/heroicons-solid.tsx'
+      ),
+    }
+  : {};
 
 function normalizeModuleId(id: string): string {
   return id.replace(/\\/g, '/');
@@ -49,6 +67,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(currentDir, './src'),
+      ...testOnlyAliases,
     },
   },
   test: {

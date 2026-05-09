@@ -49,7 +49,7 @@ describe('cosmeticsApi', () => {
 
     const result = await cosmeticsApi.listBorders({ theme: 'cosmic' });
 
-    expect(mockApi.get).toHaveBeenCalledWith('/api/v1/avatar-borders', {
+    expect(mockApi.get).toHaveBeenCalledWith('/api/v1/cosmetics/borders', {
       params: { theme: 'cosmic' },
     });
     expect(result).toEqual({
@@ -117,7 +117,9 @@ describe('cosmeticsApi', () => {
 
     const result = await cosmeticsApi.getUnlockedBorders();
 
-    expect(mockApi.get).toHaveBeenCalledWith('/api/v1/avatar-borders/unlocked');
+    expect(mockApi.get).toHaveBeenCalledWith('/api/v1/cosmetics/inventory', {
+      params: { type: 'avatar_border' },
+    });
     expect(result.equippedId).toBe('border-1');
     expect(result.inventory).toEqual([
       expect.objectContaining({
@@ -147,7 +149,7 @@ describe('cosmeticsApi', () => {
     mockApi.get
       .mockResolvedValueOnce({
         data: {
-          themes: [
+          listings: [
             {
               id: 'theme-1',
               slug: 'midnight',
@@ -175,7 +177,7 @@ describe('cosmeticsApi', () => {
       })
       .mockResolvedValueOnce({
         data: {
-          theme: {
+          profile_theme: {
             id: 'owned-theme-1',
             themeId: 'theme-1',
             isActive: true,
@@ -208,20 +210,20 @@ describe('cosmeticsApi', () => {
           },
         },
       })
-      .mockResolvedValueOnce({ data: { theme: null } });
+      .mockResolvedValueOnce({ data: { profile_theme: null } });
 
     const listed = await cosmeticsApi.listProfileThemes({ preset: 'midnight' });
     const active = await cosmeticsApi.getActiveTheme();
     const inactive = await cosmeticsApi.getActiveTheme();
 
-    expect(mockApi.get).toHaveBeenNthCalledWith(1, '/api/v1/profile-themes', {
-      params: { preset: 'midnight' },
+    expect(mockApi.get).toHaveBeenNthCalledWith(1, '/api/v1/marketplace/listings', {
+      params: { preset: 'midnight', type: 'theme' },
     });
     expect(listed).toEqual({
       themes: [
         expect.objectContaining({
           id: 'theme-1',
-          type: 'theme',
+          type: 'profile_theme',
           unlockType: 'free',
           animationType: 'none',
           previewUrl: 'https://example.com/theme.png',
@@ -236,7 +238,7 @@ describe('cosmeticsApi', () => {
         source: 'purchase',
         cosmetic: expect.objectContaining({
           id: 'theme-1',
-          type: 'theme',
+          type: 'profile_theme',
           unlockCondition: { type: 'purchase', threshold: 120 },
         }),
       })
@@ -245,9 +247,9 @@ describe('cosmeticsApi', () => {
   });
 
   it('uses theme fallback data when activating a theme with missing embedded theme details', async () => {
-    mockApi.post.mockResolvedValue({
+    mockApi.put.mockResolvedValue({
       data: {
-        theme: {
+        equipped: {
           id: 'owned-theme-2',
           themeId: 'theme-2',
           isActive: true,
@@ -264,7 +266,10 @@ describe('cosmeticsApi', () => {
 
     const result = await cosmeticsApi.activateTheme('theme-2');
 
-    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/profile-themes/theme-2/activate');
+    expect(mockApi.put).toHaveBeenCalledWith('/api/v1/cosmetics/equip', {
+      type: 'profile_theme',
+      id: 'theme-2',
+    });
     expect(result).toEqual(
       expect.objectContaining({
         equipped: true,
@@ -272,7 +277,7 @@ describe('cosmeticsApi', () => {
         cosmetic: expect.objectContaining({
           id: 'theme-2',
           name: 'Unknown Theme',
-          type: 'avatar_border',
+          type: 'profile_theme',
         }),
       })
     );
@@ -335,7 +340,10 @@ describe('cosmeticsApi', () => {
     const accent = await cosmeticsApi.updateAccentColor('#112233');
 
     const uploadCall = mockApi.put.mock.calls[0];
-    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/avatar-borders/border-9/purchase');
+    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/marketplace/purchase', {
+      listing_id: 'border-9',
+      type: 'avatar_border',
+    });
     expect(purchase).toEqual(
       expect.objectContaining({
         source: 'purchase',

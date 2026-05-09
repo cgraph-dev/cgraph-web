@@ -755,7 +755,6 @@ describe('moderationStore', () => {
           moderator_id: 'mod-1',
           action: 'ban_user',
           target_type: 'user',
-          page: 2,
         },
       });
     });

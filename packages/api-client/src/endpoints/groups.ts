@@ -59,6 +59,49 @@ const JoinedGroupSchema = z.union([
   z.object({ group: GroupSchema }).transform(({ group }) => group),
 ]);
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function unwrapPayload(value: unknown, keys: readonly string[]): unknown {
+  if (!isRecord(value)) return value;
+  for (const key of keys) {
+    if (key in value) return value[key];
+  }
+  return value;
+}
+
+function unwrapListPayload(value: unknown, keys: readonly string[]): unknown {
+  if (Array.isArray(value)) return value;
+  if (!isRecord(value)) return value;
+  for (const key of keys) {
+    const candidate = value[key];
+    if (Array.isArray(candidate)) return candidate;
+  }
+  return value;
+}
+
+const GroupResponseSchema = z.preprocess(
+  (value) => unwrapPayload(value, ['group', 'data']),
+  GroupSchema
+);
+const GroupListResponseSchema = z.preprocess(
+  (value) => unwrapListPayload(value, ['groups', 'communities', 'data', 'results']),
+  z.array(GroupResponseSchema)
+);
+const GroupInviteResponseSchema = z.preprocess(
+  (value) => unwrapPayload(value, ['invite', 'data']),
+  GroupInviteSchema
+);
+const GroupInviteListResponseSchema = z.preprocess(
+  (value) => unwrapListPayload(value, ['invites', 'data', 'results']),
+  z.array(GroupInviteResponseSchema)
+);
+const GroupMemberListResponseSchema = z.preprocess(
+  (value) => unwrapListPayload(value, ['members', 'data', 'results']),
+  z.array(GroupMemberSchema)
+);
+
 /**
  * Creates all group-related endpoint methods bound to the provided Axios instance.
  * Every method returns `Promise<ApiResult<T>>` so callers must check `result.ok`
@@ -68,12 +111,12 @@ export function createGroupsEndpoints(http: AxiosInstance) {
   return {
     /** Get user's groups. */
     async list(): Promise<ApiResult<Group[]>> {
-      return apiCall(() => http.get('/api/v1/groups'), GroupSchema.array());
+      return apiCall(() => http.get('/api/v1/groups'), GroupListResponseSchema);
     },
 
     /** Get group by ID. */
     async get(groupId: string): Promise<ApiResult<Group>> {
-      return apiCall(() => http.get(`/api/v1/groups/${groupId}`), GroupSchema);
+      return apiCall(() => http.get(`/api/v1/groups/${groupId}`), GroupResponseSchema);
     },
 
     /** Create a group. */
@@ -93,7 +136,7 @@ export function createGroupsEndpoints(http: AxiosInstance) {
             category: data.category,
             features: data.features,
           }),
-        GroupSchema
+        GroupResponseSchema
       );
     },
 
@@ -104,8 +147,14 @@ export function createGroupsEndpoints(http: AxiosInstance) {
         readonly name?: string;
         readonly description?: string;
         readonly isPublic?: boolean;
+        readonly visibility?: 'public' | 'private';
         readonly category?: string;
         readonly features?: Record<string, boolean>;
+        readonly icon_url?: string | null;
+        readonly banner_url?: string | null;
+        readonly is_node_gated?: boolean;
+        readonly gate_type?: GateType | null;
+        readonly gate_price_nodes?: number | null;
       }
     ): Promise<ApiResult<Group>> {
       return apiCall(
@@ -114,11 +163,17 @@ export function createGroupsEndpoints(http: AxiosInstance) {
             name: data.name,
             description: data.description,
             visibility:
-              data.isPublic !== undefined ? (data.isPublic ? 'public' : 'private') : undefined,
+              data.visibility ??
+              (data.isPublic !== undefined ? (data.isPublic ? 'public' : 'private') : undefined),
             category: data.category,
             features: data.features,
+            icon_url: data.icon_url,
+            banner_url: data.banner_url,
+            is_node_gated: data.is_node_gated,
+            gate_type: data.gate_type,
+            gate_price_nodes: data.gate_price_nodes,
           }),
-        GroupSchema
+        GroupResponseSchema
       );
     },
 
@@ -129,7 +184,7 @@ export function createGroupsEndpoints(http: AxiosInstance) {
 
     /** Join a group. */
     async join(groupId: string): Promise<ApiResult<Group>> {
-      return apiCall(() => http.post(`/api/v1/groups/${groupId}/join`), GroupSchema);
+      return apiCall(() => http.post(`/api/v1/groups/${groupId}/join`), GroupResponseSchema);
     },
 
     /** Leave a group. */
@@ -147,13 +202,13 @@ export function createGroupsEndpoints(http: AxiosInstance) {
     }): Promise<ApiResult<Group[]>> {
       return apiCall(
         () => http.get('/api/v1/groups/public', { params: options }),
-        GroupSchema.array()
+        GroupListResponseSchema
       );
     },
 
     /** Get featured groups. */
     async getFeatured(): Promise<ApiResult<Group[]>> {
-      return apiCall(() => http.get('/api/v1/groups/featured'), GroupSchema.array());
+      return apiCall(() => http.get('/api/v1/groups/featured'), GroupListResponseSchema);
     },
 
     /** Get group members. */
@@ -169,7 +224,7 @@ export function createGroupsEndpoints(http: AxiosInstance) {
     ): Promise<ApiResult<GroupMember[]>> {
       return apiCall(
         () => http.get(`/api/v1/groups/${groupId}/members`, { params: options }),
-        GroupMemberSchema.array()
+        GroupMemberListResponseSchema
       );
     },
 
@@ -200,7 +255,7 @@ export function createGroupsEndpoints(http: AxiosInstance) {
     async getInvites(groupId: string): Promise<ApiResult<GroupInvite[]>> {
       return apiCall(
         () => http.get(`/api/v1/groups/${groupId}/invites`),
-        GroupInviteSchema.array()
+        GroupInviteListResponseSchema
       );
     },
 
@@ -214,7 +269,7 @@ export function createGroupsEndpoints(http: AxiosInstance) {
     ): Promise<ApiResult<GroupInvite>> {
       return apiCall(
         () => http.post(`/api/v1/groups/${groupId}/invites`, options),
-        GroupInviteSchema
+        GroupInviteResponseSchema
       );
     },
 

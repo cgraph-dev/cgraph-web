@@ -20,6 +20,16 @@ vi.mock('@/modules/chat/store', () => ({
   },
 }));
 
+vi.mock('@/modules/chat/store/chatStore.impl', () => ({
+  useChatStore: {
+    getState: vi.fn().mockReturnValue({
+      removeReaction: mockRemoveReaction,
+      addReaction: mockAddReaction,
+      activeConversationId: null,
+    }),
+  },
+}));
+
 // NOTE: parseMessageDate removed — not exported from messageUtils (batch 2)
 import { formatDateHeader, formatLastSeen, groupMessagesByDate } from '../messageUtils';
 import {

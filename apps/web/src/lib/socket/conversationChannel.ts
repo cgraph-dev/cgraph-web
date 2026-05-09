@@ -475,9 +475,8 @@ export function joinConversation(
 
       const normalized = recordToMessage(normalizeMessage(payload.message));
 
-      const conversation = useChatStore
-        .getState()
-        .conversations.find((c) => c.id === conversationId);
+      const conversations = useChatStore.getState().conversations ?? [];
+      const conversation = conversations.find((c) => c.id === conversationId);
       const isMobileOnlyPayload =
         conversation?.conversationType === 'secret' ||
         (normalized.isEncrypted && normalized.requiresMobile !== false);

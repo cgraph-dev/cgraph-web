@@ -118,7 +118,7 @@ export type GroupMember = z.infer<typeof GroupMemberSchema>;
 // ---------------------------------------------------------------------------
 
 export const GroupInviteSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   code: z.string(),
   group_id: z.string().optional(),
   groupId: z.string().optional(),

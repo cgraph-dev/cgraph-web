@@ -312,10 +312,10 @@ describe('Social profileStore', () => {
       expect(s.mySignature?.content).toBe('[b]My Sig[/b]');
     });
 
-    it('should call /api/v1/users/me', async () => {
+    it('should call /api/v1/me', async () => {
       mockedApi.get.mockResolvedValue(mockApiResponse);
       await useProfileStore.getState().fetchMyProfile();
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/users/me');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/me');
     });
 
     it('should throw on failure', async () => {
@@ -338,7 +338,7 @@ describe('Social profileStore', () => {
         bio: 'New bio',
       });
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me', {
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/me', {
         user: { display_name: 'New Name', bio: 'New bio' },
       });
     });
@@ -360,7 +360,7 @@ describe('Social profileStore', () => {
         socialLinks: { twitter: '@new', github: 'gh' },
       });
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me', {
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/me', {
         user: expect.objectContaining({
           twitter: '@new',
           github: 'gh',
@@ -383,9 +383,7 @@ describe('Social profileStore', () => {
     });
 
     it('should update mySignature state', async () => {
-      mockedApi.put.mockResolvedValue({
-        data: { enabled: false, content: '', max_length: 500 },
-      });
+      mockedApi.put.mockResolvedValue(mockApiResponse);
 
       await useProfileStore.getState().updateSignature({ enabled: false, content: '' });
 
@@ -395,20 +393,16 @@ describe('Social profileStore', () => {
     });
 
     it('should also update signature inside myProfile', async () => {
-      mockedApi.put.mockResolvedValue({
-        data: { enabled: true, content: 'New!', max_length: 500 },
-      });
+      mockedApi.put.mockResolvedValue(mockApiResponse);
 
       await useProfileStore.getState().updateSignature({ enabled: true, content: 'New!' });
       expect(useProfileStore.getState().myProfile?.signature.content).toBe('New!');
     });
 
     it('should call the correct endpoint', async () => {
-      mockedApi.put.mockResolvedValue({ data: { enabled: true, content: 'x', max_length: 500 } });
+      mockedApi.put.mockResolvedValue(mockApiResponse);
       await useProfileStore.getState().updateSignature({ enabled: true, content: 'x' });
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me/signature', {
-        signature: { enabled: true, content: 'x' },
-      });
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/profiles/signature', { signature: 'x' });
     });
   });
 
@@ -426,8 +420,9 @@ describe('Social profileStore', () => {
         showEmail: true,
       });
 
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me/privacy', {
-        privacy: { is_profile_private: true, show_email: true },
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/settings/privacy', {
+        profile_visibility: 'private',
+        show_email: true,
       });
     });
 
@@ -448,15 +443,20 @@ describe('Social profileStore', () => {
     it('should call PUT with title_id', async () => {
       mockedApi.put.mockResolvedValue(mockApiResponse);
       await useProfileStore.getState().equipTitle('t2');
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me/title', { title_id: 't2' });
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/cosmetics/equip', {
+        item_type: 'title',
+        item_id: 't2',
+      });
     });
 
     it('should allow null to unequip', async () => {
-      mockedApi.put.mockResolvedValue({
+      mockedApi.delete.mockResolvedValue({
         data: { ...mockApiResponse.data, current_title: null },
       });
       await useProfileStore.getState().equipTitle(null);
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/users/me/title', { title_id: null });
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/cosmetics/unequip', {
+        data: { item_type: 'title' },
+      });
     });
 
     it('should throw on failure', async () => {
@@ -471,21 +471,24 @@ describe('Social profileStore', () => {
     });
 
     it('should POST to equip a badge', async () => {
-      mockedApi.post.mockResolvedValue(mockApiResponse);
+      mockedApi.put.mockResolvedValue(mockApiResponse);
       await useProfileStore.getState().equipBadge('b1');
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/users/me/badges/equip', {
-        badge_id: 'b1',
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/cosmetics/equip', {
+        item_type: 'badge',
+        item_id: 'b1',
       });
     });
 
     it('should DELETE to unequip a badge', async () => {
       mockedApi.delete.mockResolvedValue(mockApiResponse);
       await useProfileStore.getState().unequipBadge('b1');
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/users/me/badges/equip/b1');
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/cosmetics/unequip', {
+        data: { item_type: 'badge', item_id: 'b1' },
+      });
     });
 
     it('should throw when equip fails', async () => {
-      mockedApi.post.mockRejectedValue(new Error('Badge not owned'));
+      mockedApi.put.mockRejectedValue(new Error('Badge not owned'));
       await expect(useProfileStore.getState().equipBadge('zzz')).rejects.toThrow('Badge not owned');
     });
 
@@ -532,7 +535,7 @@ describe('Social profileStore', () => {
     it('should call the correct endpoint', async () => {
       mockedApi.get.mockResolvedValue({ data: [] });
       await useProfileStore.getState().fetchBlockedUsers();
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/users/me/blocked');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
     });
 
     it('should stop loading on error', async () => {
@@ -563,8 +566,7 @@ describe('Social profileStore', () => {
     it('should POST to block endpoint with reason', async () => {
       mockedApi.post.mockResolvedValue({ data: {} });
       await useProfileStore.getState().blockUser('u-99', 'Harassment');
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/users/me/blocked', {
-        user_id: 'u-99',
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/friends/u-99/block', {
         reason: 'Harassment',
       });
     });
@@ -572,7 +574,7 @@ describe('Social profileStore', () => {
     it('should refresh blocked list after blocking', async () => {
       mockedApi.post.mockResolvedValue({ data: {} });
       await useProfileStore.getState().blockUser('u-99');
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/users/me/blocked');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
     });
 
     it('should set currentProfile.isBlocked when blocking viewed user', async () => {
@@ -594,7 +596,7 @@ describe('Social profileStore', () => {
     it('should DELETE to unblock endpoint', async () => {
       mockedApi.delete.mockResolvedValue({ data: {} });
       await useProfileStore.getState().unblockUser('blocked-1');
-      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/users/me/blocked/blocked-1');
+      expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/friends/blocked-1/block');
     });
 
     it('should remove user from blockedUsers list', async () => {
@@ -651,7 +653,7 @@ describe('Social profileStore', () => {
       expect(useProfileStore.getState().myProfile?.avatarUrl).toBe(
         'https://cdn.example.com/new.png'
       );
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/users/me/avatar', expect.any(FormData), {
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData), {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
     });
@@ -663,7 +665,7 @@ describe('Social profileStore', () => {
     });
 
     it('should POST FormData and update myProfile.bannerUrl', async () => {
-      mockedApi.post.mockResolvedValue({
+      mockedApi.put.mockResolvedValue({
         data: { banner_url: 'https://cdn.example.com/bann.png' },
       });
 

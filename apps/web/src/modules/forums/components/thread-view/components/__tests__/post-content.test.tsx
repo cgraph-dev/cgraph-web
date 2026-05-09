@@ -195,6 +195,10 @@ vi.mock('@/lib/utils', () => ({
   formatTimeAgo: (date: string) => `${date} ago`,
 }));
 
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+}));
+
 // NOTE: vi.mock('@/modules/gamification/components/user-stars') removed — module was deleted.
 // The test "renders user stars component" may need updating.
 

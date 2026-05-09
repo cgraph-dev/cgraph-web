@@ -1,27 +1,35 @@
 /**
- * useBilling Hook Unit Tests
- *
- * Tests for the billing hook that wraps billingService.
+ * useBilling hook tests.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-const mockRedirectToCheckout = vi.fn();
-const mockRedirectToPortal = vi.fn();
-const mockGetPlans = vi.fn();
 
-vi.mock('@/services/billing', () => ({
-  billingService: {
-    redirectToCheckout: (...args: unknown[]) => mockRedirectToCheckout(...args),
-    redirectToPortal: (...args: unknown[]) => mockRedirectToPortal(...args),
-    getPlans: (...args: unknown[]) => mockGetPlans(...args),
+const mockCreateCheckout = vi.fn();
+const mockCreatePortal = vi.fn();
+const mockGetPlans = vi.fn();
+const mockSafeRedirect = vi.fn();
+
+vi.mock('@/lib/api-client', () => ({
+  apiClient: {
+    billing: {
+      createCheckout: (...args: unknown[]) => mockCreateCheckout(...args),
+      createPortal: (...args: unknown[]) => mockCreatePortal(...args),
+      getPlans: (...args: unknown[]) => mockGetPlans(...args),
+    },
   },
 }));
 
+vi.mock('@/lib/security', () => ({
+  safeRedirect: (...args: unknown[]) => mockSafeRedirect(...args),
+}));
+
 import { useBilling } from '../useBilling';
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
+
 describe('useBilling', () => {
   it('returns redirectToCheckout, redirectToPortal, and getPlans', () => {
     const { result } = renderHook(() => useBilling());
@@ -32,8 +40,11 @@ describe('useBilling', () => {
   });
 
   describe('redirectToCheckout', () => {
-    it('calls billingService.redirectToCheckout with planId and yearly flag', async () => {
-      mockRedirectToCheckout.mockResolvedValueOnce(undefined);
+    it('creates checkout with planId and yearly flag', async () => {
+      mockCreateCheckout.mockResolvedValueOnce({
+        ok: true,
+        data: { url: 'https://checkout.stripe.com/c/session' },
+      });
 
       const { result } = renderHook(() => useBilling());
 
@@ -41,11 +52,15 @@ describe('useBilling', () => {
         await result.current.redirectToCheckout('premium', true);
       });
 
-      expect(mockRedirectToCheckout).toHaveBeenCalledWith('premium', true);
+      expect(mockCreateCheckout).toHaveBeenCalledWith('premium', true);
+      expect(mockSafeRedirect).toHaveBeenCalledWith('https://checkout.stripe.com/c/session');
     });
 
     it('defaults yearly to false', async () => {
-      mockRedirectToCheckout.mockResolvedValueOnce(undefined);
+      mockCreateCheckout.mockResolvedValueOnce({
+        ok: true,
+        data: { url: 'https://checkout.stripe.com/c/session' },
+      });
 
       const { result } = renderHook(() => useBilling());
 
@@ -53,25 +68,32 @@ describe('useBilling', () => {
         await result.current.redirectToCheckout('enterprise');
       });
 
-      expect(mockRedirectToCheckout).toHaveBeenCalledWith('enterprise', false);
+      expect(mockCreateCheckout).toHaveBeenCalledWith('enterprise', false);
     });
 
-    it('propagates errors from billingService', async () => {
-      mockRedirectToCheckout.mockRejectedValueOnce(new Error('Checkout failed'));
+    it('does not redirect when checkout creation fails', async () => {
+      mockCreateCheckout.mockResolvedValueOnce({
+        ok: false,
+        error: { code: 'billing_error', message: 'Checkout failed' },
+        status: 500,
+      });
 
       const { result } = renderHook(() => useBilling());
 
-      await expect(
-        act(async () => {
-          await result.current.redirectToCheckout('premium');
-        })
-      ).rejects.toThrow('Checkout failed');
+      await act(async () => {
+        await result.current.redirectToCheckout('premium');
+      });
+
+      expect(mockSafeRedirect).not.toHaveBeenCalled();
     });
   });
 
   describe('redirectToPortal', () => {
-    it('calls billingService.redirectToPortal', async () => {
-      mockRedirectToPortal.mockResolvedValueOnce(undefined);
+    it('creates a billing portal session', async () => {
+      mockCreatePortal.mockResolvedValueOnce({
+        ok: true,
+        data: { url: 'https://billing.stripe.com/p/session' },
+      });
 
       const { result } = renderHook(() => useBilling());
 
@@ -79,29 +101,34 @@ describe('useBilling', () => {
         await result.current.redirectToPortal();
       });
 
-      expect(mockRedirectToPortal).toHaveBeenCalled();
+      expect(mockCreatePortal).toHaveBeenCalled();
+      expect(mockSafeRedirect).toHaveBeenCalledWith('https://billing.stripe.com/p/session');
     });
 
-    it('propagates errors', async () => {
-      mockRedirectToPortal.mockRejectedValueOnce(new Error('Portal error'));
+    it('does not redirect when portal creation fails', async () => {
+      mockCreatePortal.mockResolvedValueOnce({
+        ok: false,
+        error: { code: 'billing_error', message: 'Portal failed' },
+        status: 500,
+      });
 
       const { result } = renderHook(() => useBilling());
 
-      await expect(
-        act(async () => {
-          await result.current.redirectToPortal();
-        })
-      ).rejects.toThrow('Portal error');
+      await act(async () => {
+        await result.current.redirectToPortal();
+      });
+
+      expect(mockSafeRedirect).not.toHaveBeenCalled();
     });
   });
 
   describe('getPlans', () => {
-    it('returns plans from billingService', async () => {
+    it('returns plans from apiClient.billing', async () => {
       const mockPlans = [
         { id: 'premium', name: 'Premium', price: 9.99 },
         { id: 'enterprise', name: 'Enterprise', price: 29.99 },
       ];
-      mockGetPlans.mockResolvedValueOnce(mockPlans);
+      mockGetPlans.mockResolvedValueOnce({ ok: true, data: mockPlans });
 
       const { result } = renderHook(() => useBilling());
 
@@ -113,16 +140,21 @@ describe('useBilling', () => {
       expect(plans).toEqual(mockPlans);
     });
 
-    it('propagates errors', async () => {
-      mockGetPlans.mockRejectedValueOnce(new Error('Plans unavailable'));
+    it('returns an empty array when plan loading fails', async () => {
+      mockGetPlans.mockResolvedValueOnce({
+        ok: false,
+        error: { code: 'billing_error', message: 'Plans unavailable' },
+        status: 500,
+      });
 
       const { result } = renderHook(() => useBilling());
 
-      await expect(
-        act(async () => {
-          await result.current.getPlans();
-        })
-      ).rejects.toThrow('Plans unavailable');
+      let plans: unknown;
+      await act(async () => {
+        plans = await result.current.getPlans();
+      });
+
+      expect(plans).toEqual([]);
     });
   });
 

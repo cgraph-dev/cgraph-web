@@ -9,6 +9,22 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { usePremiumStore } from '@/modules/premium/store';
 import type { PurchaseHistory } from '@/modules/premium/store';
+
+const { mockBillingGetStatus } = vi.hoisted(() => ({
+  mockBillingGetStatus: vi.fn(),
+}));
+
+vi.mock('@/lib/api-client', () => ({
+  apiClient: {
+    billing: {
+      createCheckout: vi.fn(),
+      createPortal: vi.fn(),
+      getInvoices: vi.fn(),
+      getStatus: mockBillingGetStatus,
+    },
+  },
+}));
+
 const mockPurchase: PurchaseHistory = {
   id: 'purchase-1',
   type: 'subscription',
@@ -280,18 +296,15 @@ describe('premiumStore', () => {
   });
   describe('fetchBillingStatus', () => {
     it('should set tier and status from billing API on success', async () => {
-      const mockStatus = {
-        tier: 'premium',
-        status: 'active',
-        currentPeriodEnd: '2027-06-01T00:00:00Z',
-      };
-
-      const { billingService } = await import('@/services/billing');
-      vi.spyOn(billingService, 'getStatus').mockResolvedValueOnce(
-        mockStatus as ReturnType<typeof billingService.getStatus> extends Promise<infer T>
-          ? T
-          : never
-      );
+      mockBillingGetStatus.mockResolvedValueOnce({
+        ok: true,
+        data: {
+          tier: 'premium',
+          status: 'active',
+          current_period_end: '2027-06-01T00:00:00Z',
+          cancel_at_period_end: false,
+        },
+      });
 
       await usePremiumStore.getState().fetchBillingStatus();
 
@@ -304,18 +317,15 @@ describe('premiumStore', () => {
     });
 
     it('should set isSubscribed false for canceled status', async () => {
-      const mockStatus = {
-        tier: 'premium',
-        status: 'canceled',
-        currentPeriodEnd: '2026-03-01T00:00:00Z',
-      };
-
-      const { billingService } = await import('@/services/billing');
-      vi.spyOn(billingService, 'getStatus').mockResolvedValueOnce(
-        mockStatus as ReturnType<typeof billingService.getStatus> extends Promise<infer T>
-          ? T
-          : never
-      );
+      mockBillingGetStatus.mockResolvedValueOnce({
+        ok: true,
+        data: {
+          tier: 'premium',
+          status: 'canceled',
+          current_period_end: '2026-03-01T00:00:00Z',
+          cancel_at_period_end: false,
+        },
+      });
 
       await usePremiumStore.getState().fetchBillingStatus();
 
@@ -326,8 +336,7 @@ describe('premiumStore', () => {
     });
 
     it('should handle API errors gracefully', async () => {
-      const { billingService } = await import('@/services/billing');
-      vi.spyOn(billingService, 'getStatus').mockRejectedValueOnce(new Error('Network error'));
+      mockBillingGetStatus.mockRejectedValueOnce(new Error('Network error'));
 
       await usePremiumStore.getState().fetchBillingStatus();
 
@@ -343,13 +352,20 @@ describe('premiumStore', () => {
         resolvePromise = resolve;
       });
 
-      const { billingService } = await import('@/services/billing');
-      vi.spyOn(billingService, 'getStatus').mockReturnValueOnce(pendingPromise as never);
+      mockBillingGetStatus.mockReturnValueOnce(pendingPromise);
 
       const fetchPromise = usePremiumStore.getState().fetchBillingStatus();
       expect(usePremiumStore.getState().isLoading).toBe(true);
 
-      resolvePromise!({ tier: 'free', status: 'none', currentPeriodEnd: null });
+      resolvePromise!({
+        ok: true,
+        data: {
+          tier: 'free',
+          status: 'none',
+          current_period_end: null,
+          cancel_at_period_end: false,
+        },
+      });
       await fetchPromise;
 
       expect(usePremiumStore.getState().isLoading).toBe(false);

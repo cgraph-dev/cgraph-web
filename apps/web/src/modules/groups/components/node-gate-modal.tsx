@@ -6,7 +6,7 @@
  *
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { LockClosedIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { FADE_IN } from '@/lib/animations/transitions';
@@ -46,6 +46,14 @@ export function NodeGateModal({
 }: NodeGateModalProps): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   async function handlePayAndJoin(): Promise<void> {
     setIsLoading(true);
@@ -60,10 +68,10 @@ export function NodeGateModal({
           : err instanceof Error
             ? err.message
             : 'Payment failed. Please try again.';
-      setError(message);
+      if (isMountedRef.current) setError(message);
       logger.error('Failed to subscribe to group:', err);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) setIsLoading(false);
     }
   }
 

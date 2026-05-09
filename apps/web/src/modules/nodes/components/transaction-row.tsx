@@ -10,8 +10,9 @@ const typeConfig: Record<string, { label: string; icon: string; colorClass: stri
   tip_received: { label: 'Tip Received', icon: '🎁', colorClass: 'text-green-500' },
   content_unlock: { label: 'Content Unlock', icon: '🔓', colorClass: 'text-red-500' },
   subscription_received: { label: 'Subscription', icon: '⭐', colorClass: 'text-green-500' },
-  subscription_sent: { label: 'Subscription', icon: '⭐', colorClass: 'text-red-500' },
+  subscription_sent: { label: 'Subscription', icon: '💸', colorClass: 'text-red-500' },
   cosmetic_purchase: { label: 'Cosmetic', icon: '🎨', colorClass: 'text-red-500' },
+  withdrawal: { label: 'Withdrawal', icon: '💸', colorClass: 'text-red-500' },
 };
 
 const fallbackConfig = { label: 'Transaction', icon: '📝', colorClass: 'text-zinc-400' };

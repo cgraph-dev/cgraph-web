@@ -44,6 +44,12 @@ vi.mock('@/modules/chat/store', () => ({
   },
 }));
 
+vi.mock('@/modules/chat/store/chatStore.impl', () => ({
+  useChatStore: {
+    getState: vi.fn(() => mockChatStore),
+  },
+}));
+
 vi.mock('@/modules/auth/store', () => ({
   useAuthStore: {
     getState: vi.fn(() => ({

@@ -26,6 +26,15 @@ vi.mock('@/modules/chat/store', () => {
   return { useChatStore: storeSelector };
 });
 
+vi.mock('@/modules/chat/store/chatStore.impl', () => {
+  const storeSelector = vi.fn((selector?: (s: typeof mockChatState) => unknown) => {
+    if (typeof selector === 'function') return selector(mockChatState);
+    return mockChatState;
+  });
+  (storeSelector as unknown as Record<string, unknown>).getState = () => mockChatState;
+  return { useChatStore: storeSelector };
+});
+
 vi.mock('@/modules/auth/store', () => ({
   useAuthStore: vi.fn(() => ({ user: { id: 'me' } })),
 }));

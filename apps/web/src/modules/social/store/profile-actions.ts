@@ -124,6 +124,8 @@ export function createUpdatePrivacySettings(set: Set) {
         payload.profile_visibility = data.isProfilePrivate ? 'private' : 'public';
       if (data.showOnlineStatus !== undefined) payload.show_online_status = data.showOnlineStatus;
       if (data.showLastActive !== undefined) payload.show_last_active = data.showLastActive;
+      if (data.showEmail !== undefined) payload.show_email = data.showEmail;
+      if (data.showLocation !== undefined) payload.show_location = data.showLocation;
 
       // Privacy lives on the unified SettingsController at
       // /api/v1/settings/privacy (PUT). Backend expects the privacy
@@ -140,6 +142,8 @@ export function createUpdatePrivacySettings(set: Set) {
                 ? { showOnlineStatus: data.showOnlineStatus }
                 : {}),
               ...(data.showLastActive !== undefined ? { showLastActive: data.showLastActive } : {}),
+              ...(data.showEmail !== undefined ? { showEmail: data.showEmail } : {}),
+              ...(data.showLocation !== undefined ? { showLocation: data.showLocation } : {}),
             }
           : state.myProfile,
       }));

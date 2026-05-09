@@ -25,6 +25,7 @@ const mockedApi = {
   get: api.get as MockedFunction<typeof api.get>,
   post: api.post as MockedFunction<typeof api.post>,
   put: api.put as MockedFunction<typeof api.put>,
+  patch: api.patch as MockedFunction<typeof api.patch>,
   delete: api.delete as MockedFunction<typeof api.delete>,
 };
 const makeForum = (overrides: Partial<Forum> = {}): Forum => ({
@@ -175,7 +176,7 @@ describe('createForumCrudActions', () => {
       const { actions } = createTestStore();
       mockedApi.post.mockResolvedValue({ data: {} });
 
-      await expect(actions.createForum({ name: 'X' })).rejects.toThrow('Failed to create forum');
+      await expect(actions.createForum({ name: 'X' })).rejects.toThrow('unexpected response');
     });
 
     it('should propagate API errors', async () => {
@@ -191,13 +192,13 @@ describe('createForumCrudActions', () => {
       const existing = makeForum({ id: 'f-1', name: 'Old Name' });
       const { state, actions } = createTestStore();
       state.forums = [existing];
-      mockedApi.put.mockResolvedValue({
+      mockedApi.patch.mockResolvedValue({
         data: { forum: { id: 'f-1', name: 'New Name', slug: 'new' } },
       });
 
       const result = await actions.updateForum('f-1', { name: 'New Name' });
 
-      expect(mockedApi.put).toHaveBeenCalledWith(
+      expect(mockedApi.patch).toHaveBeenCalledWith(
         '/api/v1/forums/f-1',
         expect.objectContaining({ name: 'New Name' })
       );
@@ -207,16 +208,16 @@ describe('createForumCrudActions', () => {
 
     it('should throw when API returns no forum', async () => {
       const { actions } = createTestStore();
-      mockedApi.put.mockResolvedValue({ data: {} });
+      mockedApi.patch.mockResolvedValue({ data: {} });
 
       await expect(actions.updateForum('f-1', { name: 'X' })).rejects.toThrow(
-        'Failed to update forum'
+        'unexpected response'
       );
     });
 
     it('should propagate API errors', async () => {
       const { actions } = createTestStore();
-      mockedApi.put.mockRejectedValue(new Error('Not Found'));
+      mockedApi.patch.mockRejectedValue(new Error('Not Found'));
 
       await expect(actions.updateForum('f-1', { name: 'X' })).rejects.toThrow('Not Found');
     });

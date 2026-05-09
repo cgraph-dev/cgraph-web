@@ -6,6 +6,7 @@
  *
  */
 
+import { useCallback, useMemo } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { safeRedirect } from '@/lib/security';
 import type { PlanId } from '@/lib/stripe';
@@ -14,21 +15,24 @@ import type { PlanId } from '@/lib/stripe';
  * Hook for managing billing.
  */
 export function useBilling() {
-  async function redirectToCheckout(planId: PlanId, yearly = false) {
+  const redirectToCheckout = useCallback(async (planId: PlanId, yearly = false) => {
     const result = await apiClient.billing.createCheckout(planId, yearly);
     if ('ok' in result && result.ok && result.data.url) safeRedirect(result.data.url);
-  }
+  }, []);
 
-  async function redirectToPortal() {
+  const redirectToPortal = useCallback(async () => {
     const result = await apiClient.billing.createPortal();
     if ('ok' in result && result.ok && result.data.url) safeRedirect(result.data.url);
-  }
+  }, []);
 
-  async function getPlans() {
+  const getPlans = useCallback(async () => {
     const result = await apiClient.billing.getPlans();
     if ('ok' in result && result.ok) return result.data;
     return [];
-  }
+  }, []);
 
-  return { redirectToCheckout, redirectToPortal, getPlans };
+  return useMemo(
+    () => ({ redirectToCheckout, redirectToPortal, getPlans }),
+    [getPlans, redirectToCheckout, redirectToPortal]
+  );
 }

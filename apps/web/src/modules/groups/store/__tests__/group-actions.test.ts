@@ -171,7 +171,7 @@ describe('group-actions (extended)', () => {
         params: {
           q: 'gaming',
           sort: 'popular',
-          offset: 10,
+          cursor: null,
           limit: 10,
         },
       });
@@ -221,8 +221,8 @@ describe('group-actions (extended)', () => {
     });
   });
   describe('addChannelMessage (MAX_CHANNEL_MESSAGES)', () => {
-    it('should cap messages at 500 per channel', () => {
-      const existingMsgs = Array.from({ length: 500 }, (_, i) => makeMessage(`existing-${i}`));
+    it('should cap messages at 200 per channel', () => {
+      const existingMsgs = Array.from({ length: 200 }, (_, i) => makeMessage(`existing-${i}`));
       useGroupStore.setState({
         channelMessages: { 'channel-1': existingMsgs },
       });
@@ -231,7 +231,7 @@ describe('group-actions (extended)', () => {
       useGroupStore.getState().addChannelMessage(newMsg);
 
       const msgs = useGroupStore.getState().channelMessages['channel-1']!;
-      expect(msgs).toHaveLength(500);
+      expect(msgs).toHaveLength(200);
       // The newest message should be the last one
       expect(msgs[msgs.length - 1]!.id).toBe('new-msg');
       // The first old message should have been dropped

@@ -202,6 +202,7 @@ describe('MessageBubble', () => {
   describe('reply preview', () => {
     it('renders reply preview when message has replyTo', () => {
       const message = createMockMessage({
+        replyToId: 'reply-msg',
         replyTo: {
           ...createMockMessage({ id: 'reply-msg', content: 'Original message' }),
           sender: { id: 'user-2', username: 'replyuser', displayName: null, avatarUrl: null },

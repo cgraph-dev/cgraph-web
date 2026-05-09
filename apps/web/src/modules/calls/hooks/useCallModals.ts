@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 
@@ -49,27 +49,33 @@ export function useCallModals(
     }
   }, [searchParams, setSearchParams]);
 
-  const handleStartVoiceCall = (enableHaptic = false) => {
+  const handleStartVoiceCall = useCallback(
+    (enableHaptic = false) => {
       if (!conversationId) return;
       setShowVoiceCallModal(true);
       if (enableHaptic) HapticFeedback.medium();
-    };
+    },
+    [conversationId]
+  );
 
-  const handleStartVideoCall = (enableHaptic = false) => {
+  const handleStartVideoCall = useCallback(
+    (enableHaptic = false) => {
       if (!conversationId) return;
       setShowVideoCallModal(true);
       if (enableHaptic) HapticFeedback.medium();
-    };
+    },
+    [conversationId]
+  );
 
-  const closeVoiceCallModal = () => {
+  const closeVoiceCallModal = useCallback(() => {
     setShowVoiceCallModal(false);
     setIncomingRoomId(undefined);
-  };
+  }, []);
 
-  const closeVideoCallModal = () => {
+  const closeVideoCallModal = useCallback(() => {
     setShowVideoCallModal(false);
     setIncomingRoomId(undefined);
-  };
+  }, []);
 
   return {
     showVoiceCallModal,

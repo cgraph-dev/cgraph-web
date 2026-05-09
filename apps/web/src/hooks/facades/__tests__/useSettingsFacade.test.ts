@@ -66,6 +66,12 @@ vi.mock('@/modules/settings/store/customization', () => ({
   ),
 }));
 
+vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
+  useCustomizationStore: vi.fn((sel: (s: typeof mockCustomizationState) => unknown) =>
+    sel(mockCustomizationState)
+  ),
+}));
+
 vi.mock('@/stores/theme', () => ({
   useThemeStore: vi.fn((sel?: (s: Record<string, unknown>) => unknown) => {
     const __ts = {

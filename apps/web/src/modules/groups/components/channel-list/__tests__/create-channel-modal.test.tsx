@@ -16,13 +16,15 @@ vi.mock('motion/react', () => ({
       children,
       onClick,
       className,
-      ...rest
+      initial: _initial,
+      animate: _animate,
+      exit: _exit,
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: (e: unknown) => void;
       className?: string;
     }) => (
-      <div onClick={onClick} className={className} {...rest}>
+      <div onClick={onClick} className={className}>
         {children}
       </div>
     ),
@@ -31,14 +33,15 @@ vi.mock('motion/react', () => ({
       onClick,
       disabled,
       className,
-      ...rest
+      whileTap: _whileTap,
+      animate: _animate,
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: () => void;
       disabled?: boolean;
       className?: string;
     }) => (
-      <button onClick={onClick} disabled={disabled} className={className} {...rest}>
+      <button onClick={onClick} disabled={disabled} className={className}>
         {children}
       </button>
     ),
@@ -47,15 +50,11 @@ vi.mock('motion/react', () => ({
 
 vi.mock(
   '@heroicons/react/24/outline',
-  () =>
-    new Proxy(
-      {},
-      {
-        get: (_, name) => (props: Record<string, unknown>) => (
-          <svg data-testid={String(name)} {...props} />
-        ),
-      }
-    )
+  () => ({
+    SparklesIcon: (props: Record<string, unknown>) => (
+      <svg data-testid="SparklesIcon" {...props} />
+    ),
+  })
 );
 
 vi.mock('@/lib/animations/animation-engine', () => ({
@@ -70,9 +69,13 @@ vi.mock('@/lib/animations/transitions', () => ({
   FADE_IN: { initial: { opacity: 0 }, animate: { opacity: 1 } },
 }));
 
-const mockApiPost = vi.fn();
-vi.mock('@/lib/api', () => ({
-  api: { post: (...args: unknown[]) => mockApiPost(...args) },
+const mockCreateChannel = vi.fn();
+vi.mock('@/lib/api-client', () => ({
+  apiClient: {
+    groups: {
+      createChannel: (...args: unknown[]) => mockCreateChannel(...args),
+    },
+  },
 }));
 
 const mockFetchGroup = vi.fn().mockResolvedValue(undefined);
@@ -133,11 +136,12 @@ describe('CreateChannelModal', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetchGroup.mockResolvedValue(undefined);
   });
 
   it('renders the modal with title', () => {
     render(<CreateChannelModal {...defaultProps} />);
-    expect(screen.getByText('Create Channel')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Create Channel' })).toBeInTheDocument();
     expect(screen.getByText('Add a new channel to your group')).toBeInTheDocument();
   });
 
@@ -162,14 +166,14 @@ describe('CreateChannelModal', () => {
 
   it('disables create button when name is empty', () => {
     render(<CreateChannelModal {...defaultProps} />);
-    const createBtn = screen.getByText('Create Channel');
+    const createBtn = screen.getByRole('button', { name: 'Create Channel' });
     expect(createBtn).toBeDisabled();
   });
 
   it('enables create button when name is entered', () => {
     render(<CreateChannelModal {...defaultProps} />);
     fireEvent.change(screen.getByPlaceholderText('general'), { target: { value: 'test' } });
-    const createBtn = screen.getByText('Create Channel');
+    const createBtn = screen.getByRole('button', { name: 'Create Channel' });
     expect(createBtn).not.toBeDisabled();
   });
 
@@ -188,18 +192,18 @@ describe('CreateChannelModal', () => {
   });
 
   it('submits channel creation to API', async () => {
-    mockApiPost.mockResolvedValueOnce({ data: { data: { id: 'ch-new' } } });
+    mockCreateChannel.mockResolvedValueOnce({ ok: true, data: { id: 'ch-new' } });
 
     render(<CreateChannelModal {...defaultProps} />);
     fireEvent.change(screen.getByPlaceholderText('general'), { target: { value: 'test-channel' } });
-    fireEvent.click(screen.getByText('Create Channel'));
+    fireEvent.click(screen.getByRole('button', { name: 'Create Channel' }));
 
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalledWith('/api/v1/groups/g-1/channels', {
+      expect(mockCreateChannel).toHaveBeenCalledWith('g-1', {
         name: 'test-channel',
         type: 'text',
         category_id: 'cat-1',
-        nsfw: false,
+        is_private: false,
       });
     });
     expect(mockFetchGroup).toHaveBeenCalledWith('g-1');
@@ -207,14 +211,17 @@ describe('CreateChannelModal', () => {
   });
 
   it('handles API error without crashing', async () => {
-    mockApiPost.mockRejectedValueOnce(new Error('Server error'));
+    mockCreateChannel.mockResolvedValueOnce({
+      ok: false,
+      error: { message: 'Server error' },
+    });
 
     render(<CreateChannelModal {...defaultProps} />);
     fireEvent.change(screen.getByPlaceholderText('general'), { target: { value: 'fail-channel' } });
-    fireEvent.click(screen.getByText('Create Channel'));
+    fireEvent.click(screen.getByRole('button', { name: 'Create Channel' }));
 
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalled();
+      expect(mockCreateChannel).toHaveBeenCalled();
     });
     // Modal should not close on error
     expect(defaultProps.onClose).not.toHaveBeenCalled();
@@ -225,19 +232,19 @@ describe('CreateChannelModal', () => {
     expect(screen.getByText('Age-Restricted')).toBeInTheDocument();
   });
 
-  it('sends null category_id when categoryId is null', async () => {
-    mockApiPost.mockResolvedValueOnce({ data: { data: { id: 'ch-new' } } });
+  it('omits category_id when categoryId is null', async () => {
+    mockCreateChannel.mockResolvedValueOnce({ ok: true, data: { id: 'ch-new' } });
 
     render(<CreateChannelModal {...defaultProps} categoryId={null} />);
     fireEvent.change(screen.getByPlaceholderText('general'), {
       target: { value: 'uncategorized' },
     });
-    fireEvent.click(screen.getByText('Create Channel'));
+    fireEvent.click(screen.getByRole('button', { name: 'Create Channel' }));
 
     await waitFor(() => {
-      expect(mockApiPost).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ category_id: null })
+      expect(mockCreateChannel).toHaveBeenCalledWith(
+        'g-1',
+        expect.objectContaining({ category_id: undefined })
       );
     });
   });

@@ -14,6 +14,9 @@ const mockStoreState = {
   earningsData: null as Record<string, unknown> | null,
   subscriberAnalytics: null as Record<string, unknown> | null,
   contentAnalytics: null as Record<string, unknown> | null,
+  revenueBreakdown: null as Record<string, unknown> | null,
+  subscriberGrowth: null as Record<string, unknown> | null,
+  contentAnalyticsEnhanced: null as Record<string, unknown> | null,
   isLoadingBalance: false,
   isLoadingPayouts: false,
   isLoadingAnalytics: false,
@@ -25,6 +28,9 @@ const mockStoreState = {
   fetchAnalyticsEarnings: vi.fn(),
   fetchAnalyticsSubscribers: vi.fn(),
   fetchAnalyticsContent: vi.fn(),
+  fetchAnalyticsRevenue: vi.fn(),
+  fetchSubscriberGrowth: vi.fn(),
+  fetchContentAnalyticsEnhanced: vi.fn(),
   requestPayout: vi.fn(),
 };
 
@@ -47,6 +53,9 @@ describe('useCreatorDashboard', () => {
     mockStoreState.earningsData = null;
     mockStoreState.subscriberAnalytics = null;
     mockStoreState.contentAnalytics = null;
+    mockStoreState.revenueBreakdown = null;
+    mockStoreState.subscriberGrowth = null;
+    mockStoreState.contentAnalyticsEnhanced = null;
     mockStoreState.isLoadingBalance = false;
     mockStoreState.isLoadingPayouts = false;
     mockStoreState.isLoadingAnalytics = false;
@@ -137,6 +146,9 @@ describe('useCreatorDashboard', () => {
   it('fetchAllAnalytics should call overview and earnings in parallel', async () => {
     mockStoreState.fetchAnalyticsOverview.mockResolvedValueOnce(undefined);
     mockStoreState.fetchAnalyticsEarnings.mockResolvedValueOnce(undefined);
+    mockStoreState.fetchAnalyticsRevenue.mockResolvedValueOnce(undefined);
+    mockStoreState.fetchSubscriberGrowth.mockResolvedValueOnce(undefined);
+    mockStoreState.fetchContentAnalyticsEnhanced.mockResolvedValueOnce(undefined);
 
     const { result } = renderHook(() => useCreatorDashboard());
 
@@ -146,11 +158,17 @@ describe('useCreatorDashboard', () => {
 
     expect(mockStoreState.fetchAnalyticsOverview).toHaveBeenCalledWith({ period: '30d' });
     expect(mockStoreState.fetchAnalyticsEarnings).toHaveBeenCalledWith({ period: '30d' });
+    expect(mockStoreState.fetchAnalyticsRevenue).toHaveBeenCalledWith({ period: '30d' });
+    expect(mockStoreState.fetchSubscriberGrowth).toHaveBeenCalledWith({ period: '30d' });
+    expect(mockStoreState.fetchContentAnalyticsEnhanced).toHaveBeenCalledWith({ period: '30d' });
   });
 
   it('fetchAllAnalytics should work without params', async () => {
     mockStoreState.fetchAnalyticsOverview.mockResolvedValueOnce(undefined);
     mockStoreState.fetchAnalyticsEarnings.mockResolvedValueOnce(undefined);
+    mockStoreState.fetchAnalyticsRevenue.mockResolvedValueOnce(undefined);
+    mockStoreState.fetchSubscriberGrowth.mockResolvedValueOnce(undefined);
+    mockStoreState.fetchContentAnalyticsEnhanced.mockResolvedValueOnce(undefined);
 
     const { result } = renderHook(() => useCreatorDashboard());
 
@@ -160,5 +178,8 @@ describe('useCreatorDashboard', () => {
 
     expect(mockStoreState.fetchAnalyticsOverview).toHaveBeenCalledWith(undefined);
     expect(mockStoreState.fetchAnalyticsEarnings).toHaveBeenCalledWith(undefined);
+    expect(mockStoreState.fetchAnalyticsRevenue).toHaveBeenCalledWith(undefined);
+    expect(mockStoreState.fetchSubscriberGrowth).toHaveBeenCalledWith(undefined);
+    expect(mockStoreState.fetchContentAnalyticsEnhanced).toHaveBeenCalledWith(undefined);
   });
 });

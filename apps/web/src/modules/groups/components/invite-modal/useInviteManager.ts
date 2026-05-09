@@ -65,7 +65,7 @@ export function useInviteManager(groupId?: string) {
         if (!result.ok) return;
         setInvites(
           result.data.map((inv) => ({
-            id: inv.id,
+            id: inv.id ?? inv.code,
             code: inv.code,
             url: `${window.location.origin}/invite/${inv.code}`,
             maxUses: inv.max_uses ?? inv.maxUses ?? null,

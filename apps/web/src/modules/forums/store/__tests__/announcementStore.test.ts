@@ -79,8 +79,8 @@ const getInitialState = () => ({
   currentAnnouncement: null,
   isLoading: false,
   readAnnouncementIds: new Set<string>(),
-  page: 1,
-  totalPages: 1,
+  cursor: null,
+  hasNextPage: false,
   totalCount: 0,
 });
 beforeEach(() => {
@@ -113,10 +113,10 @@ describe('AnnouncementStore', () => {
       expect(useAnnouncementStore.getState().readAnnouncementIds.size).toBe(0);
     });
 
-    it('starts at page 1 with defaults', () => {
+    it('starts with cursor pagination defaults', () => {
       const s = useAnnouncementStore.getState();
-      expect(s.page).toBe(1);
-      expect(s.totalPages).toBe(1);
+      expect(s.cursor).toBeNull();
+      expect(s.hasNextPage).toBe(false);
       expect(s.totalCount).toBe(0);
     });
   });
@@ -341,8 +341,8 @@ describe('AnnouncementStore', () => {
         globalAnnouncements: [mockAnnouncement],
         currentAnnouncement: mockAnnouncement,
         readAnnouncementIds: new Set(['ann-1']),
-        page: 3,
-        totalPages: 5,
+        cursor: 'cursor-3',
+        hasNextPage: true,
         totalCount: 50,
       });
 
@@ -353,8 +353,8 @@ describe('AnnouncementStore', () => {
       expect(s.globalAnnouncements).toEqual([]);
       expect(s.currentAnnouncement).toBeNull();
       expect(s.readAnnouncementIds.size).toBe(0);
-      expect(s.page).toBe(1);
-      expect(s.totalPages).toBe(1);
+      expect(s.cursor).toBeNull();
+      expect(s.hasNextPage).toBe(false);
       expect(s.totalCount).toBe(0);
     });
   });
