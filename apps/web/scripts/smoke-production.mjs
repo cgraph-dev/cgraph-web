@@ -29,6 +29,15 @@ function isThirdPartyFrameNoise(url) {
   return url.includes('challenges.cloudflare.com') || url === 'about:srcdoc';
 }
 
+function waitForOAuthProviders(page) {
+  return page
+    .waitForResponse(
+      (response) => response.url().startsWith(`${apiOrigin}/api/v1/auth/oauth/providers`),
+      { timeout: 20_000 }
+    )
+    .catch(() => null);
+}
+
 async function launchBrowser() {
   const executablePath = systemChromePath();
   return chromium.launch({
@@ -43,6 +52,7 @@ async function main() {
   const badResponses = [];
   const failedRequests = [];
   const appConsoleErrors = [];
+  const oauthProviderStatuses = [];
 
   page.on('console', (message) => {
     if (!['error', 'warning'].includes(message.type())) return;
@@ -94,8 +104,10 @@ async function main() {
     }
   });
 
+  const loginOAuthProvidersResponse = waitForOAuthProviders(page);
   await page.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await page.getByRole('heading', { name: /welcome back/i }).waitFor({ timeout: 20_000 });
+  oauthProviderStatuses.push((await loginOAuthProvidersResponse)?.status() ?? null);
   const loginOk = await page.getByRole('button', { name: /sign in/i }).isVisible();
 
   const countriesResponse = page.waitForResponse(
@@ -108,8 +120,10 @@ async function main() {
   const phoneInputOk = (await page.locator('input[type="tel"]').count()) >= 2;
   const phoneNextOk = await page.getByRole('button', { name: /^next$/i }).isVisible();
 
+  const registerOAuthProvidersResponse = waitForOAuthProviders(page);
   await page.goto(`${baseUrl}/register`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await page.getByRole('heading', { name: /create your account/i }).waitFor({ timeout: 20_000 });
+  oauthProviderStatuses.push((await registerOAuthProvidersResponse)?.status() ?? null);
   const registerOk = await page.getByRole('button', { name: /create account/i }).isVisible();
 
   await page.waitForTimeout(3_000);
@@ -126,6 +140,7 @@ async function main() {
     phoneInputOk,
     phoneNextOk,
     countriesStatus,
+    oauthProviderStatuses,
     registerOk,
     turnstileFrames,
     badResponses,
@@ -139,6 +154,9 @@ async function main() {
   if (!loginOk) failures.push('login form did not render');
   if (!phoneInputOk || !phoneNextOk) failures.push('phone login form did not render');
   if (countriesStatus !== 200) failures.push(`phone countries returned ${countriesStatus}`);
+  if (oauthProviderStatuses.some((status) => status !== 200)) {
+    failures.push(`OAuth providers returned ${oauthProviderStatuses.join(', ')}`);
+  }
   if (!registerOk) failures.push('register form did not render');
   if (expectTurnstile && turnstileFrames < 1) failures.push('Turnstile frame did not render');
   if (badResponses.length > 0) failures.push('first-party HTTP errors were observed');
