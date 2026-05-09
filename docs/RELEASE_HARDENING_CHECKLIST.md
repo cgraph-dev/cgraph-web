@@ -36,17 +36,19 @@ Latest proof:
 
 - Repository: `cgraph-web`
 - Verified working tree based on commit:
-  `72caf78841cfa4ed844969f65a38e6d9f06198a9`
-- Date: `2026-05-09T21:11:40+03:00`
+  `2897782146adc1039f464248450d6d913a07cd09`
+- Date: `2026-05-09T22:06:01+03:00`
 - Commands:
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web lint`
   - `pnpm --filter @cgraph/web typecheck`
   - `pnpm --filter @cgraph/web build:budget`
   - `pnpm check:packages`
+  - `pnpm --filter @cgraph/web smoke:production`
 - Result: 381 Vitest files and 5,665 tests passed; the release gate exits
   cleanly with the full unit suite included; lint, typecheck, bundle budget,
-  and package snapshot validation pass.
+  package snapshot validation, and the production smoke path pass. GitHub
+  Actions run `25608643879` passed `Web Release Gates` for this commit.
 - Known non-blocking test output: React `act(...)` warnings, test-only motion
   prop warnings, and a few MSW unhandled-request warnings still appear during
   the suite. They do not fail the release gate and are tracked as routine test
@@ -72,24 +74,29 @@ proof artifact.
 Required proof fields:
 
 - Repository: `cgraph-backend`
-- Commit: `90469e10f0cb3c04eb10b6bd604b4e9451ae41e1`
-- Date: `2026-05-09T21:11:40+03:00`
+- Runtime commit: `90469e10f0cb3c04eb10b6bd604b4e9451ae41e1`
+- Current repository head: `6dab8daff2bf95357e903aa72944fb5e9ee00836`
+- Date: `2026-05-09T22:06:01+03:00`
 - Commands:
   - `MIX_ENV=test mix compile --warnings-as-errors`
   - `MIX_ENV=test mix test`
   - `MIX_ENV=test mix test test/cgraph_web/controllers/api/v1/auth_controller_test.exs test/cgraph_web/controllers/api/v1/phone_auth_controller_test.exs test/cgraph/accounts/sessions_test.exs test/cgraph/auth/session_token_bridge_test.exs test/cgraph/auth/token_refresh_test.exs test/cgraph_web/plugs/cookie_auth_test.exs`
   - `fly deploy --app cgraph-backend-prod-v2 --strategy rolling --remote-only`
+  - `gh run watch 25609202838 --repo cgraph-dev/cgraph-backend --exit-status`
   - `curl https://cgraph-backend-prod-v2.fly.dev/health`
   - `curl https://cgraph-backend-prod-v2.fly.dev/ready`
   - `curl https://cgraph-backend-prod-v2.fly.dev/api/v1/auth/phone/countries`
   - CORS preflight from `https://web.cgraph.org` to `/api/v1/auth/login`
 - Result: compile passed; full suite passed with 4,123 tests, 0 failures, and
   98 skipped; focused auth/session/phone tests passed with 98 tests and 0
-  failures; Fly app `cgraph-backend-prod-v2` deployed image
-  `deployment-01KR6YN6ZBD0P5Y8W8V7MGW6WF`; `/health`, `/ready`, phone countries,
-  and web-origin CORS checks pass. Dependency audit passes with no vulnerable or
-  retired packages after updating Phoenix to `1.8.7`, Bandit to `1.11.0`, and
-  removing unused Cowboy/Plug Cowboy lock entries.
+  failures; GitHub Actions run `25609202838` passed `Backend Release Gates` on
+  the current repository head; Fly app `cgraph-backend-prod-v2` runs image
+  `deployment-01KR6YN6ZBD0P5Y8W8V7MGW6WF` from the verified runtime commit;
+  `/health`, `/ready`, phone countries, and web-origin CORS checks pass.
+  Dependency audit passes with no vulnerable or retired packages after updating
+  Phoenix to `1.8.7`, Bandit to `1.11.0`, and removing unused Cowboy/Plug
+  Cowboy lock entries. The commits after the runtime deployment only change CI
+  workflow files, so no runtime redeploy is required for behavioral parity.
 
 ## Priority 2: Package Proof
 
