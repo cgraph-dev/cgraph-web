@@ -6,6 +6,8 @@
  * and scheduling types.
  *
  */
+import type { MessageRequestStatus } from '@cgraph/shared-types';
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -218,6 +220,9 @@ export interface ChatState {
   readonly hasMoreMessages: Readonly<Record<string, boolean>>;
   readonly conversationsLastFetchedAt: number | null;
   readonly readReceipts: Readonly<Record<string, Readonly<Record<string, string>>>>; // messageId → userId → readAt
+  readonly requestStates: Readonly<Record<string, MessageRequestStatus>>;
+  readonly processingAction: string | null;
+  readonly actionError: string | null;
 
   // Actions
   fetchConversations: () => Promise<void>;
@@ -277,5 +282,9 @@ export interface ChatState {
     username?: string
   ) => void;
   removeReactionFromMessage: (messageId: string, emoji: string, userId: string) => void;
+  setRequestState: (conversationId: string, status: MessageRequestStatus) => void;
+  removeRequestState: (conversationId: string) => void;
+  setProcessingAction: (conversationId: string | null) => void;
+  setActionError: (error: string | null) => void;
   reset: () => void;
 }

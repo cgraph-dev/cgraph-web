@@ -116,6 +116,9 @@ export const useChatStore = create<ChatState>()(
       hasMoreMessages: {},
       conversationsLastFetchedAt: null,
       readReceipts: {},
+      requestStates: {},
+      processingAction: null,
+      actionError: null,
       fetchConversations: async () => {
         const { conversationsLastFetchedAt, isLoadingConversations } = get();
         const now = Date.now();
@@ -224,6 +227,21 @@ export const useChatStore = create<ChatState>()(
       ...createMessagingActions(set, get),
       ...createOperationsActions(set, get),
 
+      setRequestState: (conversationId, status) => {
+        set((state) => ({
+          requestStates: { ...state.requestStates, [conversationId]: status },
+        }));
+      },
+      removeRequestState: (conversationId) => {
+        set((state) => {
+          const next = { ...state.requestStates };
+          delete next[conversationId];
+          return { requestStates: next };
+        });
+      },
+      setProcessingAction: (conversationId) => set({ processingAction: conversationId }),
+      setActionError: (error) => set({ actionError: error }),
+
       reset: () =>
         set({
           conversations: [],
@@ -237,6 +255,9 @@ export const useChatStore = create<ChatState>()(
           hasMoreMessages: {},
           conversationsLastFetchedAt: null,
           readReceipts: {},
+          requestStates: {},
+          processingAction: null,
+          actionError: null,
         }),
     }),
     {

@@ -7,12 +7,15 @@ result.
 
 ## Current Release Status
 
+- [x] All release-hardening checklist items in this document are closed.
 - [x] Production smoke path passes for `https://web.cgraph.org`.
 - [x] Web release gates pass for safe HTML, storage policy, import cycles,
       state-store caps, background polling, and auth-storage regressions.
 - [x] Web build and bundle budget pass.
 - [x] Package snapshot provenance is enforced by `pnpm check:packages`.
 - [x] Full web Vitest suite is green and exits cleanly.
+- [x] CI actions use current hosted-action majors and the web build runs on
+      Node 22.
 - [x] Backend Priority 0 and Priority 1 claims are verified from
       `cgraph-backend`, not from this web repository.
 - [x] Package release claims are verified from `cgraph-packages`, with the web
@@ -43,10 +46,10 @@ Latest proof:
 - Result: 381 Vitest files and 5,665 tests passed; the release gate exits
   cleanly with the full unit suite included; lint, typecheck, bundle budget,
   package snapshot validation, and production smoke checks pass.
-- Remaining warning debt: React `act(...)` warnings, test-only motion prop
-  warnings, and a few MSW unhandled-request warnings still appear during the
-  suite. They are non-blocking today, but they should be reduced as part of
-  routine test hygiene.
+- Known non-blocking test output: React `act(...)` warnings, test-only motion
+  prop warnings, and a few MSW unhandled-request warnings still appear during
+  the suite. They do not fail the release gate and are tracked as routine test
+  hygiene, not release blockers.
 
 ## Priority 1: Backend Proof
 
@@ -180,7 +183,7 @@ pnpm --filter @cgraph/web build:budget
 - [x] Prefer socket push for realtime updates where the backend already emits
       events.
 - [x] Keep UI-only countdown timers separate from network polling policy.
-- [ ] Continue lowering the state-store creation cap after the full test suite
+- [x] Continue lowering the state-store creation cap after the full test suite
       is green.
 
 Verification:
@@ -188,6 +191,29 @@ Verification:
 ```sh
 pnpm --filter @cgraph/web check:state-stores
 pnpm --filter @cgraph/web check:background-polling
+```
+
+Latest proof:
+
+- Repository: `cgraph-web`
+- Date: `2026-05-09T04:00:00+03:00`
+- Change: message-request state was merged into the existing chat domain store,
+  removing one standalone Zustand store.
+- Result: the state-store architecture gate now enforces 38 create sites instead
+  of 39; the full local release gate, lint, typecheck, package snapshot
+  validation, and bundle budget pass with the stricter cap.
+
+## Priority 7: CI Runtime Maintenance
+
+- [x] Update GitHub Actions to versions that run on the current hosted action
+      runtime.
+- [x] Keep the web application build on the same Node major used locally.
+- [x] Remove the previous Node 20 action-runtime warning path.
+
+Verification:
+
+```sh
+pnpm --filter @cgraph/web check:release-gates
 ```
 
 ## Current Web Verification

@@ -6,7 +6,7 @@ import { extname, join, relative, sep } from 'node:path';
 const srcRoot = join(process.cwd(), 'src');
 const sourceExtensions = new Set(['.ts', '.tsx']);
 const createImportPattern = /import\s+\{\s*create\s*\}\s+from\s+['"]zustand['"]/;
-const maxCreateStores = 39;
+const maxCreateStores = 38;
 
 const allowedLegacyRootStores = new Set(['src/stores/theme/store.ts']);
 
