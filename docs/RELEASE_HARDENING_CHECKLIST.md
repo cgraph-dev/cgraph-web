@@ -14,6 +14,8 @@ result.
 - [x] Web build and bundle budget pass.
 - [x] Package snapshot provenance is enforced by `pnpm check:packages`.
 - [x] Full web Vitest suite is green and exits cleanly.
+- [x] Full web Vitest suite runs with one worker in release gates to avoid the
+      Node/Vitest child-process teardown crash seen with parallel forks.
 - [x] CI actions use current hosted-action majors and the web build runs on
       Node 22.
 - [x] Backend Priority 0 and Priority 1 claims are verified from
@@ -33,23 +35,25 @@ pnpm --filter @cgraph/web check:release-gates
 Latest proof:
 
 - Repository: `cgraph-web`
-- Base commit: `c29f8be6123ceb99d1df8d0b896d782cac406a77`
-- Date: `2026-05-09T02:01:29+03:00`
+- Verified working tree based on commit:
+  `72caf78841cfa4ed844969f65a38e6d9f06198a9`
+- Date: `2026-05-09T21:11:40+03:00`
 - Commands:
-  - `pnpm --filter @cgraph/web exec vitest run --reporter=dot`
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web lint`
   - `pnpm --filter @cgraph/web typecheck`
   - `pnpm --filter @cgraph/web build:budget`
   - `pnpm check:packages`
-  - `pnpm --filter @cgraph/web smoke:production`
 - Result: 381 Vitest files and 5,665 tests passed; the release gate exits
   cleanly with the full unit suite included; lint, typecheck, bundle budget,
-  package snapshot validation, and production smoke checks pass.
+  and package snapshot validation pass.
 - Known non-blocking test output: React `act(...)` warnings, test-only motion
   prop warnings, and a few MSW unhandled-request warnings still appear during
   the suite. They do not fail the release gate and are tracked as routine test
   hygiene, not release blockers.
+- The full unit suite is intentionally run through `check:unit-suite`, which
+  pins Vitest to one worker until the upstream Node/Vitest child-process
+  teardown crash seen with parallel forks is isolated or fixed.
 
 ## Priority 1: Backend Proof
 
@@ -68,8 +72,8 @@ proof artifact.
 Required proof fields:
 
 - Repository: `cgraph-backend`
-- Commit: `97c65e0b4d890f9e26afb0fcd36dba06913a2504`
-- Date: `2026-05-09T02:40:18+03:00`
+- Commit: `90469e10f0cb3c04eb10b6bd604b4e9451ae41e1`
+- Date: `2026-05-09T21:11:40+03:00`
 - Commands:
   - `MIX_ENV=test mix compile --warnings-as-errors`
   - `MIX_ENV=test mix test`
@@ -82,8 +86,10 @@ Required proof fields:
 - Result: compile passed; full suite passed with 4,123 tests, 0 failures, and
   98 skipped; focused auth/session/phone tests passed with 98 tests and 0
   failures; Fly app `cgraph-backend-prod-v2` deployed image
-  `deployment-01KR4YPCM9G7YRXZ2TWVZ5PCE3`; `/health`, `/ready`, phone countries,
-  and web-origin CORS checks pass.
+  `deployment-01KR6YN6ZBD0P5Y8W8V7MGW6WF`; `/health`, `/ready`, phone countries,
+  and web-origin CORS checks pass. Dependency audit passes with no vulnerable or
+  retired packages after updating Phoenix to `1.8.7`, Bandit to `1.11.0`, and
+  removing unused Cowboy/Plug Cowboy lock entries.
 
 ## Priority 2: Package Proof
 
@@ -209,6 +215,12 @@ Latest proof:
       runtime.
 - [x] Keep the web application build on the same Node major used locally.
 - [x] Remove the previous Node 20 action-runtime warning path.
+- [x] Invoke `pnpm --filter @cgraph/web check:release-gates` from CI so the
+      full unit suite and state-store cap are enforced by GitHub Actions, not
+      only by local verification.
+- [x] Keep `check:unit-suite` serial until the upstream Vitest/Node worker
+      teardown crash is eliminated or the affected tests are isolated behind a
+      separate stable shard.
 
 Verification:
 
@@ -224,7 +236,6 @@ Commands that currently pass:
 pnpm --filter @cgraph/web lint
 pnpm --filter @cgraph/web typecheck
 pnpm --filter @cgraph/web check:release-gates
-pnpm --filter @cgraph/web exec vitest run --reporter=dot
 pnpm --filter @cgraph/web build:budget
 pnpm check:packages
 pnpm --filter @cgraph/web smoke:production

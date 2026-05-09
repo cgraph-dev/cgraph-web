@@ -20,10 +20,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:packages
+      - run: pnpm --filter @cgraph/web lint
       - run: pnpm --filter @cgraph/web typecheck
-      - run: pnpm --filter @cgraph/web check:safe-html
-      - run: pnpm --filter @cgraph/web check:storage-policy
-      - run: pnpm --filter @cgraph/web check:import-cycles
-      - run: pnpm --filter @cgraph/web check:background-polling
-      - run: pnpm --filter @cgraph/web check:auth-storage
+      - run: pnpm --filter @cgraph/web check:release-gates
       - run: pnpm --filter @cgraph/web build:budget
