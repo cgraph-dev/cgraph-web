@@ -40,17 +40,24 @@ Latest proof:
 
 - Repository: `cgraph-web`
 - Verified working tree based on commit:
-  `de084c29682619e54d0b91d5564583e8d56a94d0`
-- Date: `2026-05-10T00:15:02+03:00`
+  `70b69daea061bfe886789ff9f84b34c5260bd9f5`
+- Date: `2026-05-10T00:47:02+03:00`
 - Commands:
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web lint`
   - `pnpm --filter @cgraph/web typecheck`
   - `pnpm --filter @cgraph/web build:budget`
+  - `pnpm check:packages`
   - `pnpm --filter @cgraph/web smoke:production`
 - Result: 381 Vitest files and 5,667 tests passed; the release gate exits
   cleanly with the full unit suite included; lint, typecheck, bundle budget,
-  and the production smoke path pass.
+  package snapshot validation, and the production smoke path pass. GitHub
+  Actions run `25612332311` passed `Web Release Gates` for the branch tip.
+  Vercel completed production deployment
+  `46kwnqodMtKaMSHsB5cgeEsR7qPV`. Production smoke confirmed login,
+  phone-login, register, Turnstile, phone countries, and OAuth-provider
+  endpoints with no first-party HTTP errors, failed requests, or app console
+  errors.
 - Known non-blocking test output: React `act(...)` warnings, test-only motion
   prop warnings, and a few MSW unhandled-request warnings still appear during
   the suite. They do not fail the release gate and are tracked as routine test
@@ -249,6 +256,10 @@ pnpm --filter @cgraph/web check:release-gates
       actions are hidden until provider credentials are installed.
 - [x] WalletConnect is disabled unless `VITE_WC_PROJECT_ID` is configured with a
       real project ID. Injected wallets and Coinbase Wallet remain available.
+- [x] Live DOM probe on `https://web.cgraph.org/login` confirms zero social
+      OAuth controls, zero WalletConnect controls, and visible injected-wallet
+      plus Coinbase Wallet controls while the backend provider endpoint returns
+      200.
 
 ## Current Web Verification
 
