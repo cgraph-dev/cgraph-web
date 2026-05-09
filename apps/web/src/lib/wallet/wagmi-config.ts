@@ -10,7 +10,11 @@ import { type Config, createConfig, http } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
 import { injected, walletConnect, coinbaseWallet } from '@wagmi/connectors';
 
-const WC_PROJECT_ID = import.meta.env.VITE_WC_PROJECT_ID ?? 'PLACEHOLDER_WC_PROJECT_ID';
+const WC_PROJECT_ID = import.meta.env.VITE_WC_PROJECT_ID?.trim();
+
+export const walletConnectEnabled = Boolean(
+  WC_PROJECT_ID && WC_PROJECT_ID !== 'PLACEHOLDER_WC_PROJECT_ID'
+);
 
 /**
  * wagmi configuration with multi-wallet support.
@@ -24,16 +28,20 @@ export const wagmiConfig: Config = createConfig({
   chains: [mainnet],
   connectors: [
     injected({ shimDisconnect: true }),
-    walletConnect({
-      projectId: WC_PROJECT_ID,
-      metadata: {
-        name: 'CGraph',
-        description: 'Secure Community Platform',
-        url: 'https://web.cgraph.org',
-        icons: ['https://cgraph.org/logo.png'],
-      },
-      showQrModal: true,
-    }),
+    ...(walletConnectEnabled && WC_PROJECT_ID
+      ? [
+          walletConnect({
+            projectId: WC_PROJECT_ID,
+            metadata: {
+              name: 'CGraph',
+              description: 'Secure Community Platform',
+              url: 'https://web.cgraph.org',
+              icons: ['https://cgraph.org/logo.png'],
+            },
+            showQrModal: true,
+          }),
+        ]
+      : []),
     coinbaseWallet({
       appName: 'CGraph',
       appLogoUrl: 'https://cgraph.org/logo.png',

@@ -4,7 +4,10 @@
 import { durations } from '@cgraph/animation-constants';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { OAuthButtonGroup } from '@/modules/auth/components/o-auth-buttons';
+import {
+  OAuthButtonGroup,
+  useConfiguredOAuthProviders,
+} from '@/modules/auth/components/o-auth-buttons';
 import { TurnstileWidget, isTurnstileEnabled } from '@/modules/auth/components/turnstile-widget';
 import { prefersReducedMotion } from '@/modules/auth/components/auth-effects';
 import { LogoIcon } from '@/components/logo';
@@ -50,6 +53,7 @@ export default function Register() {
   const reduced = prefersReducedMotion();
   const form = useRegisterForm();
   const captchaRequired = isTurnstileEnabled();
+  const oauthProviders = useConfiguredOAuthProviders();
 
   return (
     <motion.div
@@ -100,27 +104,31 @@ export default function Register() {
         </Link>
       </motion.div>
 
-      {/* Divider with matrix styling */}
-      <motion.div variants={reduced ? {} : itemVariants} className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-dark-600/50" />
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-transparent px-4 text-foreground-muted backdrop-blur-sm">
-            Or sign up with
-          </span>
-        </div>
-      </motion.div>
+      {oauthProviders.hasProviders && (
+        <>
+          {/* Divider with matrix styling */}
+          <motion.div variants={reduced ? {} : itemVariants} className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-dark-600/50" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-transparent px-4 text-foreground-muted backdrop-blur-sm">
+                Or sign up with
+              </span>
+            </div>
+          </motion.div>
 
-      {/* OAuth Buttons with matrix hover effects */}
-      <motion.div variants={reduced ? {} : itemVariants}>
-        <OAuthButtonGroup
-          providers={['google', 'apple', 'facebook', 'tiktok']}
-          variant="icon"
-          onSuccess={() => navigate('/messages')}
-          onError={(err) => logger.error('OAuth error:', err)}
-        />
-      </motion.div>
+          {/* OAuth Buttons with matrix hover effects */}
+          <motion.div variants={reduced ? {} : itemVariants}>
+            <OAuthButtonGroup
+              providers={oauthProviders.providers}
+              variant="icon"
+              onSuccess={() => navigate('/messages')}
+              onError={(err) => logger.error('OAuth error:', err)}
+            />
+          </motion.div>
+        </>
+      )}
 
       {/* Sign In Link with matrix styling */}
       <motion.p

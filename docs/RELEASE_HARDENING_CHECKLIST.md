@@ -16,6 +16,10 @@ result.
 - [x] Full web Vitest suite is green and exits cleanly.
 - [x] Full web Vitest suite runs with one worker in release gates to avoid the
       Node/Vitest child-process teardown crash seen with parallel forks.
+- [x] Social OAuth buttons are gated by the backend configured-provider
+      endpoint, so production does not advertise unavailable providers.
+- [x] WalletConnect is only registered and shown when `VITE_WC_PROJECT_ID` is a
+      real project ID, not the local placeholder.
 - [x] CI actions use current hosted-action majors and the web build runs on
       Node 22.
 - [x] Backend Priority 0 and Priority 1 claims are verified from
@@ -36,19 +40,17 @@ Latest proof:
 
 - Repository: `cgraph-web`
 - Verified working tree based on commit:
-  `2897782146adc1039f464248450d6d913a07cd09`
-- Date: `2026-05-09T22:06:01+03:00`
+  `de084c29682619e54d0b91d5564583e8d56a94d0`
+- Date: `2026-05-10T00:15:02+03:00`
 - Commands:
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web lint`
   - `pnpm --filter @cgraph/web typecheck`
   - `pnpm --filter @cgraph/web build:budget`
-  - `pnpm check:packages`
   - `pnpm --filter @cgraph/web smoke:production`
-- Result: 381 Vitest files and 5,665 tests passed; the release gate exits
+- Result: 381 Vitest files and 5,667 tests passed; the release gate exits
   cleanly with the full unit suite included; lint, typecheck, bundle budget,
-  package snapshot validation, and the production smoke path pass. GitHub
-  Actions run `25608643879` passed `Web Release Gates` for this commit.
+  and the production smoke path pass.
 - Known non-blocking test output: React `act(...)` warnings, test-only motion
   prop warnings, and a few MSW unhandled-request warnings still appear during
   the suite. They do not fail the release gate and are tracked as routine test
@@ -74,9 +76,9 @@ proof artifact.
 Required proof fields:
 
 - Repository: `cgraph-backend`
-- Runtime commit: `90469e10f0cb3c04eb10b6bd604b4e9451ae41e1`
+- Runtime commit: `6dab8daff2bf95357e903aa72944fb5e9ee00836`
 - Current repository head: `6dab8daff2bf95357e903aa72944fb5e9ee00836`
-- Date: `2026-05-09T22:06:01+03:00`
+- Date: `2026-05-10T00:16:17+03:00`
 - Commands:
   - `MIX_ENV=test mix compile --warnings-as-errors`
   - `MIX_ENV=test mix test`
@@ -86,17 +88,19 @@ Required proof fields:
   - `curl https://cgraph-backend-prod-v2.fly.dev/health`
   - `curl https://cgraph-backend-prod-v2.fly.dev/ready`
   - `curl https://cgraph-backend-prod-v2.fly.dev/api/v1/auth/phone/countries`
+  - `curl https://cgraph-backend-prod-v2.fly.dev/api/v1/auth/oauth/providers`
   - CORS preflight from `https://web.cgraph.org` to `/api/v1/auth/login`
 - Result: compile passed; full suite passed with 4,123 tests, 0 failures, and
   98 skipped; focused auth/session/phone tests passed with 98 tests and 0
   failures; GitHub Actions run `25609202838` passed `Backend Release Gates` on
   the current repository head; Fly app `cgraph-backend-prod-v2` runs image
-  `deployment-01KR6YN6ZBD0P5Y8W8V7MGW6WF` from the verified runtime commit;
+  `deployment-01KR76ZSJTA76FQXQ0CX1NFYTK` from the verified runtime commit;
   `/health`, `/ready`, phone countries, and web-origin CORS checks pass.
   Dependency audit passes with no vulnerable or retired packages after updating
   Phoenix to `1.8.7`, Bandit to `1.11.0`, and removing unused Cowboy/Plug
-  Cowboy lock entries. The commits after the runtime deployment only change CI
-  workflow files, so no runtime redeploy is required for behavioral parity.
+  Cowboy lock entries. The production OAuth provider endpoint currently returns
+  an empty provider list until Google, Apple, Facebook, or TikTok credentials
+  are configured.
 
 ## Priority 2: Package Proof
 
@@ -234,6 +238,17 @@ Verification:
 ```sh
 pnpm --filter @cgraph/web check:release-gates
 ```
+
+## Production External Providers
+
+- [x] Phone login and registration use Turnstile and pass the production smoke
+      path against `https://web.cgraph.org`.
+- [x] Social OAuth providers are discovered from
+      `/api/v1/auth/oauth/providers`; production currently returns
+      `{"data":{"providers":[]}}`, so social OAuth buttons and account-linking
+      actions are hidden until provider credentials are installed.
+- [x] WalletConnect is disabled unless `VITE_WC_PROJECT_ID` is configured with a
+      real project ID. Injected wallets and Coinbase Wallet remain available.
 
 ## Current Web Verification
 

@@ -3,9 +3,15 @@
  * Social login buttons for Google, Apple, Facebook, and TikTok
  */
 
-import { useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { motion } from 'motion/react';
-import { OAuthProvider, openOAuthPopup, providerColors, providerNames } from '@/lib/oauth';
+import {
+  type OAuthProvider,
+  listConfiguredOAuthProviders,
+  openOAuthPopup,
+  providerColors,
+  providerNames,
+} from '@/lib/oauth';
 import { useAuthStore, mapUserFromApi } from '@/modules/auth/store';
 import { createLogger } from '@/lib/logger';
 
@@ -227,20 +233,64 @@ interface OAuthButtonGroupProps {
   className?: string;
 }
 
+export function useConfiguredOAuthProviders(providers?: OAuthProvider[]) {
+  const [configuredProviders, setConfiguredProviders] = useState<OAuthProvider[] | null>(
+    providers ?? null
+  );
+
+  useEffect(() => {
+    if (providers) {
+      setConfiguredProviders(providers);
+      return;
+    }
+
+    let active = true;
+
+    listConfiguredOAuthProviders()
+      .then((availableProviders) => {
+        if (active) {
+          setConfiguredProviders(availableProviders);
+        }
+      })
+      .catch((error) => {
+        logger.warn('Failed to load OAuth providers', error);
+        if (active) {
+          setConfiguredProviders([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [providers]);
+
+  return {
+    providers: configuredProviders ?? [],
+    isLoading: configuredProviders === null,
+    hasProviders: (configuredProviders?.length ?? 0) > 0,
+  };
+}
+
 /**
  * Group of OAuth buttons
  */
 export function OAuthButtonGroup({
   onSuccess,
   onError,
-  providers = ['google', 'apple', 'facebook', 'tiktok'],
+  providers,
   variant = 'full',
   className = '',
 }: OAuthButtonGroupProps) {
+  const { providers: visibleProviders, hasProviders } = useConfiguredOAuthProviders(providers);
+
+  if (!hasProviders) {
+    return null;
+  }
+
   if (variant === 'icon') {
     return (
       <div className={`flex items-center justify-center gap-4 ${className}`}>
-        {providers.map((provider) => (
+        {visibleProviders.map((provider) => (
           <OAuthButton
             key={provider}
             provider={provider}
@@ -255,7 +305,7 @@ export function OAuthButtonGroup({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {providers.map((provider) => (
+      {visibleProviders.map((provider) => (
         <OAuthButton
           key={provider}
           provider={provider}

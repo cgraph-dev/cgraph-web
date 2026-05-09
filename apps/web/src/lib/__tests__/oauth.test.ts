@@ -6,7 +6,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { handleOAuthCallback, providerNames, providerColors } from '../oauth';
+import {
+  handleOAuthCallback,
+  listConfiguredOAuthProviders,
+  providerNames,
+  providerColors,
+} from '../oauth';
 
 vi.mock('../api', () => ({
   api: {
@@ -57,6 +62,35 @@ describe('handleOAuthCallback', () => {
     });
     expect(result.user.id).toBe('user-123');
     expect(result.tokens.access_token).toBe('access-token-xyz');
+  });
+});
+
+describe('listConfiguredOAuthProviders', () => {
+  it('returns configured providers from the backend response', async () => {
+    mockApi.get.mockResolvedValue({
+      data: {
+        data: {
+          providers: [
+            { id: 'google', name: 'Google' },
+            { id: 'apple', name: 'Apple' },
+            { id: 'unknown', name: 'Unsupported' },
+          ],
+        },
+      },
+    });
+
+    await expect(listConfiguredOAuthProviders()).resolves.toEqual(['google', 'apple']);
+    expect(mockApi.get).toHaveBeenCalledWith('/api/v1/auth/oauth/providers');
+  });
+
+  it('supports the flat providers response shape', async () => {
+    mockApi.get.mockResolvedValue({
+      data: {
+        providers: [{ id: 'facebook', name: 'Facebook' }],
+      },
+    });
+
+    await expect(listConfiguredOAuthProviders()).resolves.toEqual(['facebook']);
   });
 });
 
