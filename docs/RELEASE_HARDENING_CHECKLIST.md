@@ -7,7 +7,12 @@ result.
 
 ## Current Release Status
 
-- [x] All release-hardening checklist items in this document are closed.
+- [x] Web-owned release-hardening gates in this repository are closed.
+- [x] Cross-repo backend and package proof is recorded below with owning
+      repository, commit, command, date, and result.
+- [x] Full multi-repo release sign-off for the evidence in this document has
+      current web, backend, and package proof. Rerun after any web, backend,
+      package, or production-deploy change.
 - [x] Production smoke path passes for `https://web.cgraph.org`.
 - [x] Web release gates pass for safe HTML, storage policy, import cycles,
       state-store caps, background polling, and auth-storage regressions.
@@ -22,10 +27,10 @@ result.
       real project ID, not the local placeholder.
 - [x] CI actions use current hosted-action majors and the web build runs on
       Node 22.
-- [x] Backend Priority 0 and Priority 1 claims are verified from
-      `cgraph-backend`, not from this web repository.
-- [x] Package release claims are verified from `cgraph-packages`, with the web
-      snapshot pinned to a reviewed package commit.
+- [x] Backend Priority 0 and Priority 1 claims are tracked as external proof
+      owned by `cgraph-backend`, not silently inferred from this web repository.
+- [x] Package release claims are tracked as external proof owned by
+      `cgraph-packages`; this repository enforces the pinned package snapshot.
 
 ## Priority 0: Full Web Test Health
 
@@ -38,10 +43,11 @@ pnpm --filter @cgraph/web check:release-gates
 
 Latest proof:
 
-- Repository: `cgraph-web`
-- Verified working tree based on commit:
-  `70b69daea061bfe886789ff9f84b34c5260bd9f5`
-- Date: `2026-05-10T00:47:02+03:00`
+- Repository checked: `/tmp/cgraph-web-repo`
+- Verified working tree based on this repository commit, plus the checklist and
+  focused-test changes included with this proof update:
+  `573f34a9f036b069acb7d6aa8c7ca0b8a9ce690c`
+- Date: `2026-05-11T03:06:13+03:00`
 - Commands:
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web lint`
@@ -49,19 +55,19 @@ Latest proof:
   - `pnpm --filter @cgraph/web build:budget`
   - `pnpm check:packages`
   - `pnpm --filter @cgraph/web smoke:production`
-- Result: 381 Vitest files and 5,667 tests passed; the release gate exits
-  cleanly with the full unit suite included; lint, typecheck, bundle budget,
-  package snapshot validation, and the production smoke path pass. GitHub
-  Actions run `25612332311` passed `Web Release Gates` for the branch tip.
-  Vercel completed production deployment
-  `46kwnqodMtKaMSHsB5cgeEsR7qPV`. Production smoke confirmed login,
-  phone-login, register, Turnstile, phone countries, and OAuth-provider
-  endpoints with no first-party HTTP errors, failed requests, or app console
-  errors.
+- Result: `check:release-gates` passed safe HTML, storage policy, import cycles,
+  state-store cap, background polling, auth-storage, and the serial unit suite
+  with 383 Vitest files and 5,672 tests. Lint, typecheck, bundle budget,
+  package snapshot validation, and production smoke all pass from
+  `/tmp/cgraph-web-repo`. Production smoke confirmed login, phone-login,
+  register, Turnstile, phone countries, and OAuth-provider endpoints with no
+  failed requests or app console errors.
 - Known non-blocking test output: React `act(...)` warnings, test-only motion
-  prop warnings, and a few MSW unhandled-request warnings still appear during
-  the suite. They do not fail the release gate and are tracked as routine test
-  hygiene, not release blockers.
+  prop warnings, MSW unhandled-request warnings, jsdom local connection-refused
+  noise from tests that intentionally tolerate failed requests, and deliberate
+  error-boundary throw output still appear during the suite. They do not fail
+  the release gate and are tracked as routine test hygiene, not release
+  blockers.
 - The full unit suite is intentionally run through `check:unit-suite`, which
   pins Vitest to one worker until the upstream Node/Vitest child-process
   teardown crash seen with parallel forks is isolated or fixed.
@@ -71,27 +77,33 @@ Latest proof:
 Backend auth, session ownership, CORS, phone auth, Turnstile verification, and
 session revocation belong to the backend repository. This web checklist may
 reference backend status, but it must not claim backend completion without a
-proof artifact.
+proof artifact from `cgraph-backend`.
 
 - [x] In `cgraph-backend`, record the current commit SHA.
 - [x] Run `mix compile --warnings-as-errors`.
 - [x] Run the full backend suite with the production-equivalent test env.
 - [x] Run focused auth/session/phone/Turnstile/CORS tests.
 - [x] Record command output summary, date, and commit SHA.
-- [x] Deploy the verified backend repo to Fly.io and smoke the production API.
+- [x] Confirm the verified backend repo is deployed to Fly.io and smoke the
+      production API.
 
 Required proof fields:
 
-- Repository: `cgraph-backend`
-- Runtime commit: `6dab8daff2bf95357e903aa72944fb5e9ee00836`
-- Current repository head: `6dab8daff2bf95357e903aa72944fb5e9ee00836`
-- Date: `2026-05-10T00:16:17+03:00`
+- Repository: `/tmp/cgraph-backend-publish`
+- Owner repository: `cgraph-dev/cgraph-backend`
+- Verified commit and current repository head:
+  `6dab8daff2bf95357e903aa72944fb5e9ee00836`
+- Production Fly image:
+  `cgraph-backend-prod-v2:deployment-01KR76ZSJTA76FQXQ0CX1NFYTK`
+- Date: `2026-05-11T03:36:33+03:00`
 - Commands:
   - `MIX_ENV=test mix compile --warnings-as-errors`
   - `MIX_ENV=test mix test`
   - `MIX_ENV=test mix test test/cgraph_web/controllers/api/v1/auth_controller_test.exs test/cgraph_web/controllers/api/v1/phone_auth_controller_test.exs test/cgraph/accounts/sessions_test.exs test/cgraph/auth/session_token_bridge_test.exs test/cgraph/auth/token_refresh_test.exs test/cgraph_web/plugs/cookie_auth_test.exs`
-  - `fly deploy --app cgraph-backend-prod-v2 --strategy rolling --remote-only`
-  - `gh run watch 25609202838 --repo cgraph-dev/cgraph-backend --exit-status`
+  - `MIX_ENV=test mix deps.audit`
+  - `gh run view 25609202838 --repo cgraph-dev/cgraph-backend --json databaseId,name,headSha,status,conclusion,createdAt,updatedAt,url`
+  - `fly status --app cgraph-backend-prod-v2`
+  - `fly releases --app cgraph-backend-prod-v2 --json`
   - `curl https://cgraph-backend-prod-v2.fly.dev/health`
   - `curl https://cgraph-backend-prod-v2.fly.dev/ready`
   - `curl https://cgraph-backend-prod-v2.fly.dev/api/v1/auth/phone/countries`
@@ -99,20 +111,23 @@ Required proof fields:
   - CORS preflight from `https://web.cgraph.org` to `/api/v1/auth/login`
 - Result: compile passed; full suite passed with 4,123 tests, 0 failures, and
   98 skipped; focused auth/session/phone tests passed with 98 tests and 0
-  failures; GitHub Actions run `25609202838` passed `Backend Release Gates` on
-  the current repository head; Fly app `cgraph-backend-prod-v2` runs image
-  `deployment-01KR76ZSJTA76FQXQ0CX1NFYTK` from the verified runtime commit;
-  `/health`, `/ready`, phone countries, and web-origin CORS checks pass.
-  Dependency audit passes with no vulnerable or retired packages after updating
-  Phoenix to `1.8.7`, Bandit to `1.11.0`, and removing unused Cowboy/Plug
-  Cowboy lock entries. The production OAuth provider endpoint currently returns
-  an empty provider list until Google, Apple, Facebook, or TikTok credentials
-  are configured.
+  failures; dependency audit found no vulnerabilities; GitHub Actions run
+  `25609202838` completed successfully as `Backend Release Gates` on the
+  verified repository head. Fly app `cgraph-backend-prod-v2` is running machine
+  version 33 in `fra` with 2 of 2 checks passing and image
+  `deployment-01KR76ZSJTA76FQXQ0CX1NFYTK`. `/health`, `/ready`, phone
+  countries, OAuth providers, and web-origin CORS checks pass. The production
+  OAuth provider endpoint currently returns an empty provider list until Google,
+  Apple, Facebook, or TikTok credentials are configured.
+- Evidence class: refreshed external proof from `cgraph-backend`; not part of
+  the web release gate.
 
 ## Priority 2: Package Proof
 
 Shared package contracts belong to `cgraph-packages`. The web repository should
-consume a reviewed package snapshot and reject unproven snapshots.
+consume a reviewed package snapshot and reject unproven snapshots. The local
+web gate enforces snapshot provenance; package build/type/test proof remains
+owned by `cgraph-packages`.
 
 - [x] `packages/CGRAPH_PACKAGES_SNAPSHOT.json` records package provenance.
 - [x] `pnpm check:packages` rejects snapshots without canonical provenance.
@@ -124,9 +139,10 @@ consume a reviewed package snapshot and reject unproven snapshots.
 
 Required proof fields:
 
-- Repository: `cgraph-packages`
+- Repository: `/tmp/cgraph-packages-publish`
+- Owner repository: `cgraph-dev/cgraph-packages`
 - Commit: `bb0108396ca35b785be87823efed5705e56109ef`
-- Date: `2026-05-09T02:40:18+03:00`
+- Date: `2026-05-11T03:36:33+03:00`
 - Commands:
   - `pnpm check:platform`
   - `pnpm build`
@@ -140,13 +156,16 @@ Required proof fields:
   for every public package; `packages/CGRAPH_PACKAGES_SNAPSHOT.json` in
   `cgraph-web` pins `cgraph-dev/cgraph-packages` at
   `bb0108396ca35b785be87823efed5705e56109ef`.
+- Evidence class: refreshed external package proof plus local web snapshot
+  enforcement.
 
 ## Priority 3: HTML Safety
 
 - [x] Stop returning raw trusted preview HTML from the BBCode preview endpoint.
 - [x] Render BBCode previews through one sanitizer and one React component.
-- [x] Centralize all `dangerouslySetInnerHTML` usage behind an audited safe HTML
-      component.
+- [x] Centralize user/content HTML sinks behind the audited `SafeHtml`
+      component; the only non-HTML exception is sanitized forum-theme CSS in
+      the CI allowlist.
 - [x] Cover known sinks: forum content, announcements, threaded comments, search
       results, and admin BBCode previews.
 - [x] Add a CI gate that fails on new raw HTML sinks outside the approved
@@ -164,8 +183,8 @@ pnpm --filter @cgraph/web check:safe-html
       data only.
 - [x] Namespace browser storage touched by auth, sockets, search, forums,
       notifications, route reloads, OAuth, push prompts, and query persistence.
-- [x] Namespace every remaining low-risk feature cache with a CGraph prefix and
-      schema version.
+- [x] Namespace remaining low-risk feature caches, including GIF favorites and
+      recents, with CGraph `cgraph:v1` schema-versioned keys.
 - [x] Replace production full-storage clear calls with namespace-aware removal.
 - [x] Add storage regression tests that prove unrelated origin data is retained.
 - [x] Add logout regression tests that prove account-scoped persisted stores
@@ -178,7 +197,14 @@ Verification:
 ```sh
 pnpm --filter @cgraph/web check:storage-policy
 pnpm --filter @cgraph/web check:auth-storage
+pnpm --filter @cgraph/web exec vitest run src/modules/chat/components/gif-picker/__tests__/useGifStorage.test.tsx
 ```
+
+Latest focused proof:
+
+- Date: `2026-05-11T02:58:29+03:00`
+- Result: GIF storage focused test passed with 1 file and 2 tests; it verifies
+  favorites and recents load from and persist to `cgraph:v1` keys.
 
 ## Priority 5: Import Graph And Bundle Gates
 
@@ -186,7 +212,9 @@ pnpm --filter @cgraph/web check:auth-storage
 - [x] Add import-cycle detection to CI.
 - [x] Fail CI on unsafe HTML sinks.
 - [x] Fail CI on broad storage clear regressions.
-- [x] Keep bundle-size checks tied to route-level lazy loading.
+- [x] Enforce production chunk-size budgets after build; route-level lazy
+      loading remains the implementation strategy, while CI proof comes from
+      generated bundle output.
 - [x] Split production chunks so the largest `index-*` chunk stays below budget.
 - [x] Fail CI on logout storage regressions.
 - [x] Fail CI on browser-reload auth hydration regressions.
@@ -219,13 +247,11 @@ pnpm --filter @cgraph/web check:background-polling
 
 Latest proof:
 
-- Repository: `cgraph-web`
-- Date: `2026-05-09T04:00:00+03:00`
-- Change: message-request state was merged into the existing chat domain store,
-  removing one standalone Zustand store.
-- Result: the state-store architecture gate now enforces 38 create sites instead
-  of 39; the full local release gate, lint, typecheck, package snapshot
-  validation, and bundle budget pass with the stricter cap.
+- Repository checked: `/tmp/cgraph-web-repo`
+- Date: `2026-05-11T03:06:13+03:00`
+- Result: the state-store architecture gate enforces 38 create sites and passes
+  at `38/38`; the full local release gate, lint, typecheck, package snapshot
+  validation, production smoke, and bundle budget pass with that cap.
 
 ## Priority 7: CI Runtime Maintenance
 
@@ -252,14 +278,30 @@ pnpm --filter @cgraph/web check:release-gates
       path against `https://web.cgraph.org`.
 - [x] Social OAuth providers are discovered from
       `/api/v1/auth/oauth/providers`; production currently returns
-      `{"data":{"providers":[]}}`, so social OAuth buttons and account-linking
-      actions are hidden until provider credentials are installed.
+      `{"data":{"providers":[]}}`, so social OAuth buttons and new
+      account-linking actions are hidden until provider credentials are
+      installed. Existing linked accounts remain visible for unlinking.
 - [x] WalletConnect is disabled unless `VITE_WC_PROJECT_ID` is configured with a
       real project ID. Injected wallets and Coinbase Wallet remain available.
 - [x] Live DOM probe on `https://web.cgraph.org/login` confirms zero social
       OAuth controls, zero WalletConnect controls, and visible injected-wallet
       plus Coinbase Wallet controls while the backend provider endpoint returns
       200.
+- [x] Focused component tests prove connected-account link actions are driven by
+      backend provider discovery, not a hardcoded provider list.
+
+Focused verification:
+
+```sh
+pnpm --filter @cgraph/web exec vitest run src/pages/settings/__tests__/connected-accounts.test.tsx src/lib/__tests__/oauth.test.ts
+```
+
+Latest focused proof:
+
+- Date: `2026-05-11T02:58:29+03:00`
+- Result: OAuth provider discovery and connected-account focused tests passed
+  with 2 files and 8 tests; the connected-account screen exposes new link
+  actions only for providers returned by backend discovery.
 
 ## Current Web Verification
 
