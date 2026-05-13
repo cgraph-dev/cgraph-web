@@ -7,10 +7,17 @@
 
 import React, { useState, lazy, Suspense, type ReactNode } from 'react';
 import {
+  BookmarkIcon,
+  CheckIcon,
+  EllipsisVerticalIcon,
   FaceSmileIcon,
   ChatBubbleLeftRightIcon,
   FlagIcon,
+  LinkIcon,
   PaperClipIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { DisplayName } from '@/shared/components/ui';
 import type { ChannelMessageItemProps } from './types';
@@ -31,20 +38,63 @@ export function ChannelMessageItem({
   onReply,
   onOpenThread,
   onReport,
+  onEditMessage,
+  onDeleteMessage,
+  onPinMessage,
+  onCopyLink,
   onReaction,
   onToggleReaction,
   currentUserId,
+  canManageMessages = false,
   threadReplyCount,
 }: ChannelMessageItemProps) {
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDraft, setEditDraft] = useState(message.content);
+  const [isActionPending, setIsActionPending] = useState(false);
 
   const displayName = getDisplayName(message.author.username, message.author.displayName);
   const initial = getAvatarInitial(message.author.username, message.author.displayName);
+  const isOwnMessage = currentUserId === message.authorId;
+  const canEdit = Boolean(onEditMessage && isOwnMessage && message.messageType === 'text');
+  const canDelete = Boolean(onDeleteMessage && (isOwnMessage || canManageMessages));
+  const canPin = Boolean(onPinMessage && canManageMessages && !message.isPinned);
+  const hasMoreActions = canEdit || canDelete || canPin || Boolean(onCopyLink || onReport);
 
   function handleReactionSelect(emoji: string): void {
     onReaction(emoji);
     setShowReactionPicker(false);
+  }
+
+  async function runMessageAction(action: () => Promise<void> | void): Promise<void> {
+    if (isActionPending) return;
+    setIsActionPending(true);
+    try {
+      await action();
+      setShowMoreMenu(false);
+    } finally {
+      setIsActionPending(false);
+    }
+  }
+
+  async function handleSaveEdit(): Promise<void> {
+    const nextContent = editDraft.trim();
+    if (!nextContent || nextContent === message.content) {
+      setIsEditing(false);
+      setEditDraft(message.content);
+      return;
+    }
+    await runMessageAction(async () => {
+      await onEditMessage?.(nextContent);
+      setIsEditing(false);
+    });
+  }
+
+  function handleCancelEdit(): void {
+    setIsEditing(false);
+    setEditDraft(message.content);
   }
 
   return (
@@ -52,15 +102,12 @@ export function ChannelMessageItem({
       id={`group-message-${message.id}`}
       className={`group relative flex scroll-mt-24 gap-4 rounded-lg px-4 py-0.5 transition-colors hover:bg-[var(--token-bg-secondary)/0.3] ${
         showHeader ? 'mt-4' : ''
-      } ${
-        isHighlighted
-          ? 'bg-primary-500/10 ring-1 ring-primary-400/50'
-          : ''
-      }`}
+      } ${isHighlighted ? 'bg-primary-500/10 ring-primary-400/50 ring-1' : ''}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => {
         setShowActions(false);
         setShowReactionPicker(false);
+        setShowMoreMenu(false);
       }}
     >
       {/* Avatar or spacer */}
@@ -116,8 +163,51 @@ export function ChannelMessageItem({
           </div>
         )}
 
-        <ChannelMarkdown content={message.content} />
-        <MessageAttachment message={message} />
+        {isEditing ? (
+          <div className="space-y-2">
+            <textarea
+              value={editDraft}
+              onChange={(event) => setEditDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  handleCancelEdit();
+                }
+                if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                  event.preventDefault();
+                  void handleSaveEdit();
+                }
+              }}
+              className="min-h-20 w-full resize-y rounded border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-primary-400/60"
+              autoFocus
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => void handleSaveEdit()}
+                disabled={isActionPending || !editDraft.trim()}
+                className="inline-flex items-center gap-1 rounded bg-primary-500 px-2 py-1 text-xs font-medium text-white hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <CheckIcon className="h-3.5 w-3.5" />
+                Save
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                disabled={isActionPending}
+                className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-300 hover:bg-white/[0.08] hover:text-white disabled:opacity-50"
+              >
+                <XMarkIcon className="h-3.5 w-3.5" />
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <ChannelMarkdown content={message.content} />
+            {message.isEdited && <span className="ml-1 text-[11px] text-gray-500">(edited)</span>}
+            {message.isPinned && <span className="ml-2 text-[11px] text-primary-300">Pinned</span>}
+            <MessageAttachment message={message} />
+          </>
+        )}
 
         {/* Reactions */}
         {message.reactions.length > 0 && (
@@ -181,14 +271,91 @@ export function ChannelMessageItem({
           >
             <ChatBubbleLeftRightIcon className="h-4 w-4" />
           </button>
-          {onReport && currentUserId && message.authorId !== currentUserId && (
-            <button
-              onClick={onReport}
-              className="p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-red-400"
-              title="Report"
-            >
-              <FlagIcon className="h-4 w-4" />
-            </button>
+          {hasMoreActions && (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowMoreMenu((prev) => !prev);
+                  setShowReactionPicker(false);
+                }}
+                disabled={isActionPending}
+                className={`p-1.5 hover:bg-[var(--token-card-bg)/0.8] ${
+                  showMoreMenu ? 'text-primary-400' : 'text-gray-400 hover:text-white'
+                } disabled:opacity-50`}
+                title="More Actions"
+                aria-haspopup="menu"
+                aria-expanded={showMoreMenu}
+              >
+                <EllipsisVerticalIcon className="h-4 w-4" />
+              </button>
+
+              {showMoreMenu && (
+                <div
+                  role="menu"
+                  aria-label="Message actions"
+                  className="absolute right-0 top-full z-50 mt-1 w-36 rounded-lg border border-white/10 bg-[var(--token-card-bg)] py-1 shadow-xl"
+                >
+                  {canEdit && (
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setEditDraft(message.content);
+                        setIsEditing(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
+                    >
+                      <PencilSquareIcon className="h-4 w-4" />
+                      Edit
+                    </button>
+                  )}
+                  {canPin && (
+                    <button
+                      role="menuitem"
+                      onClick={() => void runMessageAction(() => onPinMessage?.())}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
+                    >
+                      <BookmarkIcon className="h-4 w-4" />
+                      Pin
+                    </button>
+                  )}
+                  {onCopyLink && (
+                    <button
+                      role="menuitem"
+                      onClick={() => void runMessageAction(() => onCopyLink())}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
+                    >
+                      <LinkIcon className="h-4 w-4" />
+                      Copy Link
+                    </button>
+                  )}
+                  {onReport && currentUserId && message.authorId !== currentUserId && (
+                    <button
+                      role="menuitem"
+                      onClick={() => void runMessageAction(() => onReport())}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
+                    >
+                      <FlagIcon className="h-4 w-4" />
+                      Report
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        if (window.confirm('Delete this message?')) {
+                          void runMessageAction(() => onDeleteMessage?.());
+                        }
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-red-300 hover:bg-red-500/10"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

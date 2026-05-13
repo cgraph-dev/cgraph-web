@@ -24,9 +24,14 @@ export function MessagesArea({
   onReply,
   onOpenThread,
   onReport,
+  onEditMessage,
+  onDeleteMessage,
+  onPinMessage,
+  onCopyMessageLink,
   onReaction,
   onToggleReaction,
   currentUserId,
+  canManageMessages,
   highlightedMessageId,
   threadReplyCounts,
   formatDateHeader,
@@ -86,11 +91,18 @@ export function MessagesArea({
                   onReply={() => onReply(message)}
                   onOpenThread={() => onOpenThread(message)}
                   onReport={onReport ? () => onReport(message) : undefined}
+                  onEditMessage={
+                    onEditMessage ? (content) => onEditMessage(message, content) : undefined
+                  }
+                  onDeleteMessage={onDeleteMessage ? () => onDeleteMessage(message) : undefined}
+                  onPinMessage={onPinMessage ? () => onPinMessage(message) : undefined}
+                  onCopyLink={onCopyMessageLink ? () => onCopyMessageLink(message) : undefined}
                   onReaction={(emoji) => onReaction(message.id, emoji)}
                   onToggleReaction={(emoji, hasReacted) =>
                     onToggleReaction(message.id, emoji, hasReacted)
                   }
                   currentUserId={currentUserId}
+                  canManageMessages={canManageMessages}
                   threadReplyCount={threadReplyCounts[message.id]}
                 />
               );

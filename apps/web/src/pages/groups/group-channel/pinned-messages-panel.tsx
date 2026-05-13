@@ -116,9 +116,7 @@ export function PinnedMessagesPanel({
           >
             <span className="mb-2 text-3xl">📌</span>
             <p className="text-sm font-medium text-gray-300">No pinned messages</p>
-            <p className="mt-1 text-xs text-gray-500">
-              Right-click a message and select &quot;Pin&quot; to pin it here.
-            </p>
+            <p className="mt-1 text-xs text-gray-500">Use a message menu to pin it here.</p>
           </motion.div>
         )}
 

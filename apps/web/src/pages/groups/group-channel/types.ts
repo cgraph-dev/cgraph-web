@@ -16,9 +16,14 @@ export interface ChannelMessageItemProps {
   onReply: () => void;
   onOpenThread: () => void;
   onReport?: () => void;
+  onEditMessage?: (content: string) => Promise<void> | void;
+  onDeleteMessage?: () => Promise<void> | void;
+  onPinMessage?: () => Promise<void> | void;
+  onCopyLink?: () => Promise<void> | void;
   onReaction: (emoji: string) => void;
   onToggleReaction: (emoji: string, hasReacted: boolean) => void;
   currentUserId?: string;
+  canManageMessages?: boolean;
   threadReplyCount?: number;
 }
 
@@ -72,9 +77,14 @@ export interface MessagesAreaProps {
   onReply: (message: ChannelMessage) => void;
   onOpenThread: (message: ChannelMessage) => void;
   onReport?: (message: ChannelMessage) => void;
+  onEditMessage?: (message: ChannelMessage, content: string) => Promise<void> | void;
+  onDeleteMessage?: (message: ChannelMessage) => Promise<void> | void;
+  onPinMessage?: (message: ChannelMessage) => Promise<void> | void;
+  onCopyMessageLink?: (message: ChannelMessage) => Promise<void> | void;
   onReaction: (messageId: string, emoji: string) => void;
   onToggleReaction: (messageId: string, emoji: string, hasReacted: boolean) => void;
   currentUserId?: string;
+  canManageMessages?: boolean;
   highlightedMessageId?: string | null;
   threadReplyCounts: Record<string, number>;
   formatDateHeader: (date: Date) => string;

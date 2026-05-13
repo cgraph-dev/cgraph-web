@@ -69,9 +69,21 @@ interface UploadedAttachment {
 }
 
 const EMPTY_MESSAGES: readonly ChannelMessage[] = [];
+const ADMINISTRATOR_PERMISSION = 1 << 0;
+const MANAGE_MESSAGES_PERMISSION = 1 << 6;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function groupActionErrorMessage(value: unknown): string {
+  if (isRecord(value)) {
+    const reason = value.reason;
+    if (typeof reason === 'string') return reason.replace(/_/g, ' ');
+    const errors = value.errors;
+    if (isRecord(errors)) return Object.values(errors).flat().join(', ');
+  }
+  return 'Channel action failed.';
 }
 
 function stringValue(value: unknown): string | null {
@@ -136,6 +148,8 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     fetchMembers,
     sendChannelMessage,
     setActiveChannel,
+    updateChannelMessage,
+    removeChannelMessage,
     toggleChannelReaction,
   } = useGroupStore();
 
@@ -166,6 +180,16 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const typing = channelId ? typingUsers[channelId] || [] : [];
   const groupMembers = groupId ? members[groupId] || [] : [];
   const notificationLevel = group?.myMember?.notifications ?? 'mentions';
+  const canManageMessages = Boolean(
+    group &&
+      currentUserId &&
+      (group.ownerId === currentUserId ||
+        group.myMember?.roles?.some(
+          (role) =>
+            (role.permissions & ADMINISTRATOR_PERMISSION) !== 0 ||
+            (role.permissions & MANAGE_MESSAGES_PERMISSION) !== 0
+        ))
+  );
 
   const searchMatches = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -350,6 +374,106 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     toggleChannelReaction(channelId, messageId, emoji);
   }
 
+  function pushGroupChannelEvent(event: string, payload: Record<string, unknown>): Promise<void> {
+    if (!channelId) {
+      return Promise.reject(new Error('No active channel.'));
+    }
+
+    const socketChannel = socketManager.getChannel(`group:${channelId}`);
+    if (!socketChannel || socketChannel.state !== 'joined') {
+      return Promise.reject(new Error('Channel socket is not ready.'));
+    }
+
+    return new Promise((resolve, reject) => {
+      socketChannel
+        .push(event, payload)
+        .receive('ok', () => resolve())
+        .receive('error', (response: unknown) =>
+          reject(new Error(groupActionErrorMessage(response)))
+        )
+        .receive('timeout', () => reject(new Error('Channel action timed out.')));
+    });
+  }
+
+  async function handleEditMessage(message: ChannelMessage, content: string): Promise<void> {
+    if (!channelId) return;
+    const previous = message;
+    const nextMessage = { ...message, content, isEdited: true };
+    updateChannelMessage(nextMessage);
+
+    try {
+      await pushGroupChannelEvent('edit_message', {
+        message_id: message.id,
+        content,
+      });
+      toast.success('Message edited.');
+    } catch (error) {
+      updateChannelMessage(previous);
+      logger.error('Failed to edit group message:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to edit message.');
+      throw error;
+    }
+  }
+
+  async function handleDeleteMessage(message: ChannelMessage): Promise<void> {
+    if (!channelId) return;
+    try {
+      await pushGroupChannelEvent('delete_message', { message_id: message.id });
+      removeChannelMessage(message.id, channelId);
+      toast.success('Message deleted.');
+    } catch (error) {
+      logger.error('Failed to delete group message:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete message.');
+      throw error;
+    }
+  }
+
+  async function handlePinMessage(message: ChannelMessage): Promise<void> {
+    if (!groupId || !channelId || message.isPinned) return;
+    try {
+      await http.post(`/api/v1/groups/${groupId}/channels/${channelId}/pins`, {
+        message_id: message.id,
+      });
+      updateChannelMessage({ ...message, isPinned: true });
+      setShowPinned(true);
+      toast.success('Message pinned.');
+    } catch (error) {
+      logger.error('Failed to pin group message:', error);
+      toast.error('Failed to pin message.');
+      throw error;
+    }
+  }
+
+  async function handleReportMessage(message: ChannelMessage): Promise<void> {
+    if (message.authorId === currentUserId) return;
+    const description = window.prompt('Why are you reporting this message?');
+    if (!description?.trim()) return;
+
+    try {
+      await http.post('/api/v1/reports', {
+        report: {
+          target_type: 'message',
+          target_id: message.id,
+          category: 'other',
+          description: description.trim(),
+        },
+      });
+      toast.success('Report submitted.');
+    } catch (error) {
+      logger.error('Failed to report group message:', error);
+      toast.error('Failed to submit report.');
+      throw error;
+    }
+  }
+
+  async function handleCopyMessageLink(message: ChannelMessage): Promise<void> {
+    const next = new URLSearchParams(window.location.search);
+    next.set('scrollTo', message.id);
+    const url = `${window.location.origin}${window.location.pathname}?${next.toString()}`;
+    await navigator.clipboard.writeText(url);
+    toast.success('Message link copied.');
+  }
+
   function moveSearch(delta: number): void {
     if (searchMatches.length === 0) return;
     setActiveSearchIndex((current) => {
@@ -416,7 +540,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
         />
 
         {showSearch && (
-          <div className="flex h-12 items-center gap-2 border-b border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)]/70 px-4">
+          <div className="bg-[var(--token-bg-secondary)]/70 flex h-12 items-center gap-2 border-b border-[var(--token-border-muted)] px-4">
             <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
             <input
               value={searchQuery}
@@ -472,11 +596,17 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
           onLoadMore={handleLoadMore}
           onReply={setReplyTo}
           onOpenThread={(msg) => groupId && channelId && openThread(groupId, channelId, msg)}
+          onReport={handleReportMessage}
+          onEditMessage={handleEditMessage}
+          onDeleteMessage={handleDeleteMessage}
+          onPinMessage={handlePinMessage}
+          onCopyMessageLink={handleCopyMessageLink}
           onReaction={handleReaction}
           onToggleReaction={handleToggleReaction}
           threadReplyCounts={replyCounts}
           formatDateHeader={formatDateHeader}
           currentUserId={currentUserId}
+          canManageMessages={canManageMessages}
           highlightedMessageId={highlightedMessageId}
         />
 
