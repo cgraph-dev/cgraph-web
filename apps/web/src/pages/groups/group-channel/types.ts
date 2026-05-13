@@ -12,6 +12,7 @@ import type { ChannelMessage, Member } from '@/modules/groups/store';
 export interface ChannelMessageItemProps {
   message: ChannelMessage;
   showHeader: boolean;
+  isHighlighted?: boolean;
   onReply: () => void;
   onOpenThread: () => void;
   onReport?: () => void;
@@ -45,6 +46,11 @@ export interface ChannelHeaderProps {
   channelTopic?: string;
   channelType?: 'text' | 'announcement' | 'forum';
   channelLabel?: string;
+  isSearchOpen?: boolean;
+  onToggleSearch?: () => void;
+  notificationLevel?: 'all' | 'mentions' | 'none';
+  isSavingNotifications?: boolean;
+  onToggleNotifications?: () => void;
   showMembers: boolean;
   onToggleMembers: () => void;
   showPinnedMessages?: boolean;
@@ -67,12 +73,9 @@ export interface MessagesAreaProps {
   onOpenThread: (message: ChannelMessage) => void;
   onReport?: (message: ChannelMessage) => void;
   onReaction: (messageId: string, emoji: string) => void;
-  onToggleReaction: (
-    messageId: string,
-    emoji: string,
-    hasReacted: boolean,
-  ) => void;
+  onToggleReaction: (messageId: string, emoji: string, hasReacted: boolean) => void;
   currentUserId?: string;
+  highlightedMessageId?: string | null;
   threadReplyCounts: Record<string, number>;
   formatDateHeader: (date: Date) => string;
 }

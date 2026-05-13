@@ -8,6 +8,9 @@ import { motion } from 'motion/react';
 import {
   HashtagIcon,
   BookmarkIcon,
+  BellIcon,
+  BellSlashIcon,
+  MagnifyingGlassIcon,
   UserGroupIcon,
   MegaphoneIcon,
   ChatBubbleLeftRightIcon,
@@ -30,6 +33,11 @@ export function ChannelHeader({
   channelTopic,
   channelType = 'text',
   channelLabel,
+  isSearchOpen,
+  onToggleSearch,
+  notificationLevel = 'mentions',
+  isSavingNotifications,
+  onToggleNotifications,
   showMembers,
   onToggleMembers,
   showPinnedMessages,
@@ -37,6 +45,7 @@ export function ChannelHeader({
   pinnedCount,
 }: ChannelHeaderProps) {
   const Icon = channelIcons[channelType] ?? HashtagIcon;
+  const NotificationIcon = notificationLevel === 'none' ? BellSlashIcon : BellIcon;
 
   return (
     <header className="flex h-12 items-center justify-between border-b border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4">
@@ -51,14 +60,43 @@ export function ChannelHeader({
         {channelTopic && (
           <>
             <div className="mx-2 h-5 w-px bg-white/[0.08]" />
-            <span className="max-w-md truncate text-sm text-gray-400">
-              {channelTopic}
-            </span>
+            <span className="max-w-md truncate text-sm text-gray-400">{channelTopic}</span>
           </>
         )}
       </div>
 
       <div className="flex items-center gap-1">
+        {onToggleSearch && (
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            onClick={onToggleSearch}
+            className={`rounded p-1.5 transition-colors ${
+              isSearchOpen
+                ? 'bg-white/[0.08] text-white'
+                : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
+            }`}
+            title="Search Messages"
+            aria-pressed={isSearchOpen}
+          >
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </motion.button>
+        )}
+        {onToggleNotifications && (
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            onClick={onToggleNotifications}
+            disabled={isSavingNotifications}
+            className={`rounded p-1.5 transition-colors disabled:cursor-wait disabled:opacity-60 ${
+              notificationLevel === 'none'
+                ? 'bg-white/[0.08] text-red-300'
+                : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
+            }`}
+            title={notificationLevel === 'none' ? 'Unmute Group' : 'Mute Group'}
+            aria-pressed={notificationLevel === 'none'}
+          >
+            <NotificationIcon className="h-5 w-5" />
+          </motion.button>
+        )}
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={onTogglePinnedMessages}

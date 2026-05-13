@@ -5,9 +5,16 @@
  * and input for sending new messages.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
+import toast from 'react-hot-toast';
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useGroupStore } from '@/modules/groups/store';
 import { useAuthStore } from '@/modules/auth/store';
 import { socketManager } from '@/lib/socket';
@@ -21,6 +28,7 @@ import { MembersSidebar } from './members-sidebar';
 import { PinnedMessagesPanel } from './pinned-messages-panel';
 import { ChannelThreadPanel } from './channel-thread-panel';
 import { useChannelThreadStore } from '@/modules/groups/store/channelThreadStore';
+import { findGroupChannel } from '@/modules/groups/routing';
 import { formatDateHeader, groupMessagesByDate } from './utils';
 import type { ChannelMessage } from './types';
 
@@ -60,6 +68,8 @@ interface UploadedAttachment {
   thumbnailUrl: string | null;
 }
 
+const EMPTY_MESSAGES: readonly ChannelMessage[] = [];
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -85,10 +95,7 @@ async function uploadAttachment(file: File): Promise<UploadedAttachment> {
   formData.append('context', 'message');
 
   const response = await http.post('/api/v1/uploads', formData);
-  const data =
-    isRecord(response.data) && isRecord(response.data.data)
-      ? response.data.data
-      : null;
+  const data = isRecord(response.data) && isRecord(response.data.data) ? response.data.data : null;
   const url = stringValue(data?.url);
 
   if (!data || !url) {
@@ -97,10 +104,7 @@ async function uploadAttachment(file: File): Promise<UploadedAttachment> {
 
   return {
     url,
-    filename:
-      stringValue(data.original_filename) ??
-      stringValue(data.filename) ??
-      file.name,
+    filename: stringValue(data.original_filename) ?? stringValue(data.filename) ?? file.name,
     contentType: stringValue(data.content_type) ?? file.type,
     size: numberValue(data.size) ?? file.size,
     thumbnailUrl: stringValue(data.thumbnail_url),
@@ -115,6 +119,8 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     groupId: string;
     channelId: string;
   }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const scrollToMessageId = searchParams.get('scrollTo');
   const currentUserId = useAuthStore((s) => s.user?.id);
   const copy = surfaceCopy[surface];
 
@@ -126,6 +132,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     typingUsers,
     hasMoreMessages,
     fetchChannelMessages,
+    fetchGroup,
     fetchMembers,
     sendChannelMessage,
     setActiveChannel,
@@ -138,8 +145,14 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [showMembers, setShowMembers] = useState(true);
   const [showPinned, setShowPinned] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchIndex, setActiveSearchIndex] = useState(0);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Thread panel state
   const threadOpen = useChannelThreadStore((s) => s.activeThread !== null);
@@ -148,10 +161,34 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const fetchReplyCounts = useChannelThreadStore((s) => s.fetchReplyCounts);
 
   const group = groups.find((g) => g.id === groupId);
-  const channel = group?.channels?.find((c) => c.id === channelId);
-  const messages = channelId ? channelMessages[channelId] || [] : [];
+  const channel = group ? findGroupChannel(group, channelId) : null;
+  const messages = channelId ? (channelMessages[channelId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES;
   const typing = channelId ? typingUsers[channelId] || [] : [];
   const groupMembers = groupId ? members[groupId] || [] : [];
+  const notificationLevel = group?.myMember?.notifications ?? 'mentions';
+
+  const searchMatches = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (query.length < 2) return [];
+    return messages.filter((message) => message.content.toLowerCase().includes(query));
+  }, [messages, searchQuery]);
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    const target = document.getElementById(`group-message-${messageId}`);
+    if (!target) return false;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedMessageId(messageId);
+
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
+    highlightTimeoutRef.current = setTimeout(() => {
+      setHighlightedMessageId((current) => (current === messageId ? null : current));
+    }, 3000);
+
+    return true;
+  }, []);
 
   // Join channel and fetch data
   useEffect(() => {
@@ -166,14 +203,17 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     return () => {
       setActiveChannel(null);
       socketManager.leaveGroupChannel(channelId);
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
     };
-  }, [
-    channelId,
-    groupId,
-    setActiveChannel,
-    fetchChannelMessages,
-    fetchMembers,
-  ]);
+  }, [channelId, groupId, setActiveChannel, fetchChannelMessages, fetchMembers]);
+
+  useEffect(() => {
+    setSearchQuery('');
+    setActiveSearchIndex(0);
+    setHighlightedMessageId(null);
+  }, [channelId]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -189,7 +229,32 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     if (groupId) {
       fetchReplyCounts(groupId, channelId, messageIds);
     }
-  }, [channelId, groupId, messages.length, fetchReplyCounts]);
+  }, [channelId, groupId, messages, fetchReplyCounts]);
+
+  useEffect(() => {
+    if (!scrollToMessageId || messages.length === 0) return;
+    const exists = messages.some((message) => message.id === scrollToMessageId);
+    if (!exists || !scrollToMessage(scrollToMessageId)) return;
+
+    const next = new URLSearchParams(searchParams);
+    next.delete('scrollTo');
+    setSearchParams(next, { replace: true });
+  }, [messages, scrollToMessage, scrollToMessageId, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (searchMatches.length === 0) {
+      setActiveSearchIndex(0);
+      return;
+    }
+    setActiveSearchIndex((current) => Math.min(current, searchMatches.length - 1));
+  }, [searchMatches.length]);
+
+  useEffect(() => {
+    const activeMatch = searchMatches[activeSearchIndex];
+    if (activeMatch) {
+      scrollToMessage(activeMatch.id);
+    }
+  }, [activeSearchIndex, scrollToMessage, searchMatches]);
 
   // Handle typing indicator
   function handleTyping() {
@@ -209,8 +274,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
   // Send message (with optional file attachment)
   async function handleSend(): Promise<void> {
-    if (!channelId || (!messageInput.trim() && !attachment) || isSending)
-      return;
+    if (!channelId || (!messageInput.trim() && !attachment) || isSending) return;
 
     setIsSending(true);
     try {
@@ -218,19 +282,14 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
       if (attachment) {
         const uploaded = await uploadAttachment(attachment);
-        await sendChannelMessage(
-          channelId,
-          trimmedContent || uploaded.filename,
-          replyTo?.id,
-          {
-            contentType: messageTypeForFile(attachment),
-            fileUrl: uploaded.url,
-            fileName: uploaded.filename,
-            fileSize: uploaded.size,
-            fileMimeType: uploaded.contentType,
-            thumbnailUrl: uploaded.thumbnailUrl,
-          },
-        );
+        await sendChannelMessage(channelId, trimmedContent || uploaded.filename, replyTo?.id, {
+          contentType: messageTypeForFile(attachment),
+          fileUrl: uploaded.url,
+          fileName: uploaded.filename,
+          fileSize: uploaded.size,
+          fileMimeType: uploaded.contentType,
+          thumbnailUrl: uploaded.thumbnailUrl,
+        });
       } else {
         await sendChannelMessage(channelId, trimmedContent, replyTo?.id);
       }
@@ -286,13 +345,39 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   }
 
   // Handle toggling an existing reaction
-  function handleToggleReaction(
-    messageId: string,
-    emoji: string,
-    _hasReacted: boolean,
-  ): void {
+  function handleToggleReaction(messageId: string, emoji: string, _hasReacted: boolean): void {
     if (!channelId) return;
     toggleChannelReaction(channelId, messageId, emoji);
+  }
+
+  function moveSearch(delta: number): void {
+    if (searchMatches.length === 0) return;
+    setActiveSearchIndex((current) => {
+      const next = current + delta;
+      if (next < 0) return searchMatches.length - 1;
+      if (next >= searchMatches.length) return 0;
+      return next;
+    });
+  }
+
+  async function handleToggleNotifications(): Promise<void> {
+    if (!groupId || isSavingNotifications) return;
+
+    const nextLevel = notificationLevel === 'none' ? 'mentions' : 'none';
+    setIsSavingNotifications(true);
+    try {
+      await http.patch(`/api/v1/groups/${groupId}/members/me/notifications`, {
+        notifications: nextLevel,
+        suppress_everyone: group?.myMember?.suppressEveryone ?? false,
+      });
+      await fetchGroup(groupId);
+      toast.success(nextLevel === 'none' ? 'Group muted.' : 'Group notifications restored.');
+    } catch (error) {
+      logger.error('Failed to update group notifications:', error);
+      toast.error('Failed to update group notifications.');
+    } finally {
+      setIsSavingNotifications(false);
+    }
   }
 
   // Group messages by date
@@ -319,11 +404,63 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
           channelTopic={channel.topic ?? undefined}
           channelType={copy.headerType}
           channelLabel={copy.label}
+          isSearchOpen={showSearch}
+          onToggleSearch={() => setShowSearch((current) => !current)}
+          notificationLevel={notificationLevel}
+          isSavingNotifications={isSavingNotifications}
+          onToggleNotifications={handleToggleNotifications}
           showMembers={showMembers}
           onToggleMembers={() => setShowMembers(!showMembers)}
           showPinnedMessages={showPinned}
           onTogglePinnedMessages={() => setShowPinned(!showPinned)}
         />
+
+        {showSearch && (
+          <div className="flex h-12 items-center gap-2 border-b border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)]/70 px-4">
+            <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={`Search #${channel.name}`}
+              autoFocus
+              className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+            />
+            <span className="min-w-[92px] text-right text-xs text-gray-400">
+              {searchQuery.trim().length < 2
+                ? 'Type 2+ chars'
+                : searchMatches.length > 0
+                  ? `${activeSearchIndex + 1}/${searchMatches.length}`
+                  : 'No results'}
+            </span>
+            <button
+              onClick={() => moveSearch(-1)}
+              disabled={searchMatches.length === 0}
+              className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white disabled:opacity-40"
+              title="Previous result"
+            >
+              <ChevronUpIcon className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => moveSearch(1)}
+              disabled={searchMatches.length === 0}
+              className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white disabled:opacity-40"
+              title="Next result"
+            >
+              <ChevronDownIcon className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                setShowSearch(false);
+                setSearchQuery('');
+                setHighlightedMessageId(null);
+              }}
+              className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white"
+              title="Close search"
+            >
+              <XMarkIcon className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         <MessagesArea
           groupedMessages={groupedMessages}
@@ -334,14 +471,13 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
           messagesEndRef={messagesEndRef}
           onLoadMore={handleLoadMore}
           onReply={setReplyTo}
-          onOpenThread={(msg) =>
-            groupId && channelId && openThread(groupId, channelId, msg)
-          }
+          onOpenThread={(msg) => groupId && channelId && openThread(groupId, channelId, msg)}
           onReaction={handleReaction}
           onToggleReaction={handleToggleReaction}
           threadReplyCounts={replyCounts}
           formatDateHeader={formatDateHeader}
           currentUserId={currentUserId}
+          highlightedMessageId={highlightedMessageId}
         />
 
         <MessageInput
@@ -363,16 +499,11 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
       {/* Members sidebar */}
       {showMembers && (
-        <MembersSidebar
-          onlineMembers={onlineMembers}
-          offlineMembers={offlineMembers}
-        />
+        <MembersSidebar onlineMembers={onlineMembers} offlineMembers={offlineMembers} />
       )}
 
       {/* Thread panel */}
-      <AnimatePresence>
-        {threadOpen && channelId && <ChannelThreadPanel />}
-      </AnimatePresence>
+      <AnimatePresence>{threadOpen && channelId && <ChannelThreadPanel />}</AnimatePresence>
 
       {/* Pinned messages panel */}
       <AnimatePresence>

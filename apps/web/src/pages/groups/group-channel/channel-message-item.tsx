@@ -27,6 +27,7 @@ const EmojiPicker = lazy(() =>
 export function ChannelMessageItem({
   message,
   showHeader,
+  isHighlighted = false,
   onReply,
   onOpenThread,
   onReport,
@@ -48,8 +49,13 @@ export function ChannelMessageItem({
 
   return (
     <div
-      className={`group relative flex gap-4 px-4 py-0.5 hover:bg-[var(--token-bg-secondary)/0.3] ${
+      id={`group-message-${message.id}`}
+      className={`group relative flex scroll-mt-24 gap-4 rounded-lg px-4 py-0.5 transition-colors hover:bg-[var(--token-bg-secondary)/0.3] ${
         showHeader ? 'mt-4' : ''
+      } ${
+        isHighlighted
+          ? 'bg-primary-500/10 ring-1 ring-primary-400/50'
+          : ''
       }`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => {

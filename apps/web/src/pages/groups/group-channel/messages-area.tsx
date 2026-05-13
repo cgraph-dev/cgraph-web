@@ -27,6 +27,7 @@ export function MessagesArea({
   onReaction,
   onToggleReaction,
   currentUserId,
+  highlightedMessageId,
   threadReplyCounts,
   formatDateHeader,
 }: MessagesAreaProps) {
@@ -81,6 +82,7 @@ export function MessagesArea({
                   key={message.id}
                   message={message}
                   showHeader={showHeader}
+                  isHighlighted={message.id === highlightedMessageId}
                   onReply={() => onReply(message)}
                   onOpenThread={() => onOpenThread(message)}
                   onReport={onReport ? () => onReport(message) : undefined}
