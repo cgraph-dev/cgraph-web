@@ -48,10 +48,16 @@ export function getGroupRoute(group: RoutableGroup): string {
   );
 }
 
+/**
+ * Builds the mounted route for a specific group channel.
+ */
 export function getGroupChannelRoute(groupId: string, channelId: string): string {
   return `/groups/${groupId}/channels/${channelId}`;
 }
 
+/**
+ * Builds the best available group route from group, channel, and optional message context.
+ */
 export function getGroupDestinationRoute({
   groupId,
   channelId,
