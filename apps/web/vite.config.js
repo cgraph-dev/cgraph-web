@@ -45,6 +45,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      // LiveKit ships a single large ESM file; source modules keep the call vendor chunk under budget.
+      'livekit-client': path.resolve(__dirname, './node_modules/livekit-client/src/index.ts'),
       '@': path.resolve(__dirname, './src'),
     },
   },
