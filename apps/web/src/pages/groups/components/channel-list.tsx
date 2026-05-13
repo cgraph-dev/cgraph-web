@@ -4,7 +4,13 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDownIcon, UserGroupIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { NavLink } from 'react-router-dom';
+import {
+  ChevronDownIcon,
+  UserGroupIcon,
+  PlusIcon,
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { http } from '@/lib/api-client';
 import { useGroupStore } from '@/modules/groups/store';
@@ -49,7 +55,10 @@ export function ChannelList({
               transition={{ delay: 0.2 }}
               className="p-4 text-center"
             >
-              <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={loop(tweens.glacial)}>
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={loop(tweens.glacial)}
+              >
                 <UserGroupIcon className="mx-auto mb-3 h-12 w-12 text-primary-400" />
               </motion.div>
               <p className="text-gray-400">Select a server to view channels</p>
@@ -75,6 +84,14 @@ export function ChannelList({
           <h2 className="truncate bg-gradient-to-br from-white to-white/60 bg-clip-text font-bold tracking-tight text-transparent">
             {activeGroup.name}
           </h2>
+          <NavLink
+            to={`/groups/${activeGroup.id}/settings`}
+            onClick={() => HapticFeedback.light()}
+            aria-label={`Open ${activeGroup.name} settings`}
+            className="ml-auto rounded p-1.5 text-white/40 transition-colors hover:bg-white/[0.08] hover:text-white"
+          >
+            <Cog6ToothIcon className="h-5 w-5" />
+          </NavLink>
         </div>
       </motion.div>
 
@@ -98,7 +115,9 @@ export function ChannelList({
               className="group flex w-full items-center gap-1 rounded px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40 transition-all hover:text-white/60"
             >
               <motion.div
-                animate={{ rotate: expandedCategories.has(category.id) ? 0 : -90 }}
+                animate={{
+                  rotate: expandedCategories.has(category.id) ? 0 : -90,
+                }}
                 transition={tweens.fast}
               >
                 <ChevronDownIcon className="h-3 w-3" />
@@ -171,9 +190,12 @@ export function ChannelList({
                 autoFocus
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter' && categoryName.trim()) {
-                    await http.post(`/api/v1/groups/${activeGroup.id}/categories`, {
-                      name: categoryName.trim(),
-                    });
+                    await http.post(
+                      `/api/v1/groups/${activeGroup.id}/categories`,
+                      {
+                        name: categoryName.trim(),
+                      },
+                    );
                     setCategoryName('');
                     setShowCategoryInput(false);
                     fetchGroup(activeGroup.id);
@@ -214,8 +236,12 @@ export function ChannelList({
             <motion.div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[rgba(20,20,25,0.95)] bg-green-500" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-white/90">You</p>
-            <p className="truncate text-[11px] font-medium text-white/40">Online</p>
+            <p className="truncate text-[13px] font-semibold text-white/90">
+              You
+            </p>
+            <p className="truncate text-[11px] font-medium text-white/40">
+              Online
+            </p>
           </div>
         </motion.div>
       </motion.div>

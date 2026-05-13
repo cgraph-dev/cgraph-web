@@ -4,7 +4,7 @@
 
 import { durations } from '@cgraph/animation-constants';
 import { motion } from 'motion/react';
-import { Outlet } from 'react-router-dom';
+import { useOutlet } from 'react-router-dom';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import type { ContentAreaProps } from './types';
@@ -15,10 +15,20 @@ import { tweens, loop, springs } from '@/lib/animation-presets';
 /**
  * Content Area component.
  */
-export function ContentArea({ activeGroup, groupId, channelId }: ContentAreaProps) {
+export function ContentArea({
+  activeGroup,
+  groupId,
+  channelId,
+}: ContentAreaProps) {
+  const outlet = useOutlet();
+
+  if (outlet) {
+    return outlet;
+  }
+
   // Has channel selected
   if (channelId) {
-    return <Outlet />;
+    return null;
   }
 
   // Has group selected but no channel
@@ -30,10 +40,7 @@ export function ContentArea({ activeGroup, groupId, channelId }: ContentAreaProp
           animate={{ opacity: 1, scale: 1 }}
           transition={springs.bouncy}
         >
-          <GlassCard
-            variant="holographic"
-            className="p-12 text-center"
-          >
+          <GlassCard variant="holographic" className="p-12 text-center">
             <motion.div
               animate={{ rotate: [0, 5, -5, 0], y: [0, -5, 0] }}
               transition={loop(tweens.glacial)}
@@ -67,10 +74,7 @@ export function ContentArea({ activeGroup, groupId, channelId }: ContentAreaProp
         animate={{ opacity: 1, scale: 1 }}
         transition={springs.bouncy}
       >
-        <GlassCard
-          variant="holographic"
-          className="p-16 text-center"
-        >
+        <GlassCard variant="holographic" className="p-16 text-center">
           {/* Floating particles */}
           {[...Array(6)].map((_, i) => (
             <motion.div

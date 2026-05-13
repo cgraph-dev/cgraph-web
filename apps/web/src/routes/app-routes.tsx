@@ -28,6 +28,7 @@ import {
   GroupCallChannel,
   GroupAnnouncementChannel,
   GroupForumChannel,
+  GroupSettingsPage,
   ExploreGroups,
   // Explore (unified)
   ExplorePage,
@@ -160,6 +161,7 @@ export function AppRoutes() {
             path=":groupId/forums/:channelId"
             element={<GroupForumChannel />}
           />
+          <Route path=":groupId/settings" element={<GroupSettingsPage />} />
         </Route>
         <Route path="groups/explore" element={<ExploreGroups />} />
 
