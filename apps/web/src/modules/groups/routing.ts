@@ -4,6 +4,12 @@ const CHANNEL_ROUTE_TYPES = new Set<Channel['type']>(['text', 'announcement', 'f
 
 type RoutableGroup = Pick<Group, 'id' | 'channels' | 'categories'>;
 
+export interface GroupDestinationParams {
+  groupId?: string | null;
+  channelId?: string | null;
+  messageId?: string | null;
+}
+
 function collectChannels(group: Pick<Group, 'channels' | 'categories'>): Channel[] {
   const channelsById = new Map<string, Channel>();
 
@@ -36,5 +42,23 @@ export function getDefaultGroupChannel(group: Pick<Group, 'channels' | 'categori
  */
 export function getGroupRoute(group: RoutableGroup): string {
   const channel = getDefaultGroupChannel(group);
-  return channel ? `/groups/${group.id}/channels/${channel.id}` : `/groups/${group.id}`;
+  return (
+    getGroupDestinationRoute({ groupId: group.id, channelId: channel?.id }) ??
+    `/groups/${group.id}`
+  );
+}
+
+export function getGroupChannelRoute(groupId: string, channelId: string): string {
+  return `/groups/${groupId}/channels/${channelId}`;
+}
+
+export function getGroupDestinationRoute({
+  groupId,
+  channelId,
+  messageId,
+}: GroupDestinationParams): string | undefined {
+  if (!groupId) return undefined;
+
+  const route = channelId ? getGroupChannelRoute(groupId, channelId) : `/groups/${groupId}`;
+  return messageId ? `${route}?scrollTo=${encodeURIComponent(messageId)}` : route;
 }

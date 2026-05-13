@@ -279,8 +279,9 @@ export function Social() {
         name: group.name,
         description: group.description || '',
         slug: group.slug,
-        route: `/groups/${group.id}`,
+        defaultChannelId: group.default_channel_id ?? undefined,
         memberCount: group.member_count,
+        isJoined: group.is_member,
       });
     }
     for (const forum of searchForums) {

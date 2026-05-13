@@ -85,6 +85,8 @@ export const SearchGroupSchema = z.object({
   icon_url: z.string().nullable().optional(),
   member_count: z.number().optional(),
   is_public: z.boolean().optional(),
+  is_member: z.boolean().optional(),
+  default_channel_id: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   created_at: z.string().optional(),
 });

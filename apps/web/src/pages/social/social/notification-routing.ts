@@ -1,4 +1,5 @@
 import type { Notification as StoreNotification } from '@/modules/social/store';
+import { getGroupDestinationRoute } from '@/modules/groups/routing';
 
 type RoutableNotification = Pick<
   StoreNotification,
@@ -25,6 +26,18 @@ function postRoute(params: Record<string, unknown>): string | undefined {
   return forumIdOrSlug && postId ? `/forums/${forumIdOrSlug}/post/${postId}` : undefined;
 }
 
+function groupRoute(params: Record<string, unknown>): string | undefined {
+  const groupId = stringValue(params, 'group_id') ?? stringValue(params, 'groupId');
+  const channelId =
+    stringValue(params, 'channel_id') ??
+    stringValue(params, 'channelId') ??
+    stringValue(params, 'default_channel_id') ??
+    stringValue(params, 'defaultChannelId');
+  const messageId = stringValue(params, 'message_id') ?? stringValue(params, 'messageId');
+
+  return getGroupDestinationRoute({ groupId, channelId, messageId });
+}
+
 function routeFromAction(action: Record<string, unknown>): string | undefined {
   const screen = stringValue(action, 'screen');
   const params = isRecord(action.params) ? action.params : {};
@@ -46,8 +59,7 @@ function routeFromAction(action: Record<string, unknown>): string | undefined {
   }
 
   if (screen === 'group') {
-    const groupId = stringValue(params, 'group_id');
-    return groupId ? `/groups/${groupId}` : undefined;
+    return groupRoute(params);
   }
 
   if (screen === 'post') {
@@ -72,8 +84,8 @@ export function getNotificationActionUrl(notification: RoutableNotification): st
     return withMessageAnchor(`/messages/${conversationId}`, stringValue(data, 'message_id'));
   }
 
-  const groupId = stringValue(data, 'group_id');
-  if (groupId) return `/groups/${groupId}`;
+  const group = groupRoute(data);
+  if (group) return group;
 
   const post = postRoute(data);
   if (post) return post;

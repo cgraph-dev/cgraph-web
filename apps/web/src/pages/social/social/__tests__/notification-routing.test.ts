@@ -49,7 +49,33 @@ describe('getNotificationActionUrl', () => {
     ).toBe('/forums/forum-slug/post/post-1');
   });
 
-  it('maps group invitations to the mounted group route', () => {
+  it('maps group notifications with channel metadata to mounted channel routes', () => {
+    expect(
+      getNotificationActionUrl(
+        notification({
+          type: 'mention',
+          data: { group_id: 'group-1', channel_id: 'channel-1', message_id: 'message-1' },
+        })
+      )
+    ).toBe('/groups/group-1/channels/channel-1?scrollTo=message-1');
+  });
+
+  it('maps group actions with default channel metadata to mounted channel routes', () => {
+    expect(
+      getNotificationActionUrl(
+        notification({
+          type: 'group_invite',
+          action: {
+            type: 'navigate',
+            screen: 'group',
+            params: { group_id: 'group-1', default_channel_id: 'channel-1' },
+          },
+        })
+      )
+    ).toBe('/groups/group-1/channels/channel-1');
+  });
+
+  it('maps group invitations to the mounted group route when channel metadata is absent', () => {
     expect(
       getNotificationActionUrl(
         notification({

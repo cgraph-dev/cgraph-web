@@ -39,6 +39,7 @@ export interface SearchResult {
   description: string;
   slug?: string;
   route?: string;
+  defaultChannelId?: string;
   avatarUrl?: string;
   memberCount?: number;
   isJoined?: boolean;

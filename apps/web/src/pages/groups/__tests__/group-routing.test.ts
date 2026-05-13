@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getDefaultGroupChannel, getGroupRoute } from '@/modules/groups/routing';
+import {
+  getDefaultGroupChannel,
+  getGroupDestinationRoute,
+  getGroupRoute,
+} from '@/modules/groups/routing';
 import type { Group } from '@/modules/groups/store';
 
 function groupWithChannels(channels: Group['channels'], categories: Group['categories'] = []) {
@@ -74,5 +78,15 @@ describe('group routing', () => {
 
   it('keeps the group root as a real fallback when no channels exist yet', () => {
     expect(getGroupRoute(groupWithChannels([]))).toBe('/groups/group-1');
+  });
+
+  it('builds canonical channel destinations with message anchors', () => {
+    expect(
+      getGroupDestinationRoute({
+        groupId: 'group-1',
+        channelId: 'channel-1',
+        messageId: 'message 1',
+      })
+    ).toBe('/groups/group-1/channels/channel-1?scrollTo=message%201');
   });
 });

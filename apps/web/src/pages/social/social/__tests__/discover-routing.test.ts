@@ -28,9 +28,30 @@ describe('getDiscoverResultRoute', () => {
     expect(getDiscoverResultRoute(result({ id: 'forum-id', type: 'forum' }))).toBe('/forums');
   });
 
-  it('opens groups on the mounted group root fallback', () => {
+  it('opens groups on the canonical channel route when search metadata includes it', () => {
+    expect(
+      getDiscoverResultRoute(
+        result({ id: 'group-1', type: 'group', defaultChannelId: 'channel-1' })
+      )
+    ).toBe('/groups/group-1/channels/channel-1');
+  });
+
+  it('opens groups on the mounted group root fallback when no channel metadata exists', () => {
     expect(getDiscoverResultRoute(result({ id: 'group-1', type: 'group' }))).toBe(
       '/groups/group-1'
     );
+  });
+
+  it('does not let stale bare routes override canonical group channel metadata', () => {
+    expect(
+      getDiscoverResultRoute(
+        result({
+          id: 'group-1',
+          type: 'group',
+          defaultChannelId: 'channel-1',
+          route: '/groups/group-1',
+        })
+      )
+    ).toBe('/groups/group-1/channels/channel-1');
   });
 });
