@@ -9,6 +9,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { UserGroupIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { getCommunityRoute } from './community-routing';
 
 export interface Community {
   id: string;
@@ -18,6 +19,8 @@ export interface Community {
   member_count: number;
   avatar_url: string | null;
   category: string | null;
+  default_channel_id?: string | null;
+  defaultChannelId?: string | null;
   created_at: string;
   is_verified: boolean;
 }
@@ -33,11 +36,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    if (community.type === 'group') {
-      navigate(`/groups/${community.id}`);
-    } else {
-      navigate(`/forums/${community.id}`);
-    }
+    navigate(getCommunityRoute(community));
   };
 
   const TypeIcon = community.type === 'group' ? UserGroupIcon : ChatBubbleLeftRightIcon;
