@@ -1,10 +1,6 @@
 import type { Channel, Group } from './store';
 
-const CHANNEL_ROUTE_TYPES = new Set<Channel['type']>([
-  'text',
-  'announcement',
-  'forum',
-]);
+const CHANNEL_ROUTE_TYPES = new Set<Channel['type']>(['text', 'announcement', 'forum']);
 
 type RoutableGroup = Pick<Group, 'id' | 'channels' | 'categories'>;
 
@@ -15,9 +11,10 @@ export interface GroupDestinationParams {
   messageId?: string | null;
 }
 
-export function collectGroupChannels(
-  group: Pick<Group, 'channels' | 'categories'>,
-): Channel[] {
+/**
+ * Collects flat and categorized channels into one stable ordered list.
+ */
+export function collectGroupChannels(group: Pick<Group, 'channels' | 'categories'>): Channel[] {
   const channelsById = new Map<string, Channel>();
 
   for (const channel of group.channels ?? []) {
@@ -32,35 +29,27 @@ export function collectGroupChannels(
 
   return Array.from(channelsById.values()).sort((left, right) => {
     const positionDelta = left.position - right.position;
-    return positionDelta === 0
-      ? left.name.localeCompare(right.name)
-      : positionDelta;
+    return positionDelta === 0 ? left.name.localeCompare(right.name) : positionDelta;
   });
 }
 
 /**
  * Returns the first routeable channel for a group.
  */
-export function getDefaultGroupChannel(
-  group: Pick<Group, 'channels' | 'categories'>,
-) {
+export function getDefaultGroupChannel(group: Pick<Group, 'channels' | 'categories'>) {
   const channels = collectGroupChannels(group);
-  return (
-    channels.find((channel) => CHANNEL_ROUTE_TYPES.has(channel.type)) ??
-    channels[0] ??
-    null
-  );
+  return channels.find((channel) => CHANNEL_ROUTE_TYPES.has(channel.type)) ?? channels[0] ?? null;
 }
 
+/**
+ * Finds a channel by id across flat and categorized group channel collections.
+ */
 export function findGroupChannel(
   group: Pick<Group, 'channels' | 'categories'>,
-  channelId?: string | null,
+  channelId?: string | null
 ): Channel | null {
   if (!channelId) return null;
-  return (
-    collectGroupChannels(group).find((channel) => channel.id === channelId) ??
-    null
-  );
+  return collectGroupChannels(group).find((channel) => channel.id === channelId) ?? null;
 }
 
 /**
@@ -83,7 +72,7 @@ export function getGroupRoute(group: RoutableGroup): string {
 export function getGroupChannelRoute(
   groupId: string,
   channelId: string,
-  channelType: Channel['type'] = 'text',
+  channelType: Channel['type'] = 'text'
 ): string {
   switch (channelType) {
     case 'voice':
@@ -99,17 +88,20 @@ export function getGroupChannelRoute(
   }
 }
 
+/**
+ * Builds the mounted route for a channel when the full channel type is available.
+ */
 export function getGroupChannelRouteForChannel(
   groupId: string,
-  channel: Pick<Channel, 'id' | 'type'>,
+  channel: Pick<Channel, 'id' | 'type'>
 ): string {
   return getGroupChannelRoute(groupId, channel.id, channel.type);
 }
 
-export function getGroupLiveKitRoomName(
-  groupId: string,
-  channelId: string,
-): string {
+/**
+ * Builds the backend-compatible LiveKit room name for a group call channel.
+ */
+export function getGroupLiveKitRoomName(groupId: string, channelId: string): string {
   return `group_${groupId}_channel_${channelId}`;
 }
 
@@ -127,7 +119,5 @@ export function getGroupDestinationRoute({
   const route = channelId
     ? getGroupChannelRoute(groupId, channelId, channelType ?? 'text')
     : `/groups/${groupId}`;
-  return messageId
-    ? `${route}?scrollTo=${encodeURIComponent(messageId)}`
-    : route;
+  return messageId ? `${route}?scrollTo=${encodeURIComponent(messageId)}` : route;
 }
