@@ -43,6 +43,8 @@ export interface GroupedMessages {
 export interface ChannelHeaderProps {
   channelName: string;
   channelTopic?: string;
+  channelType?: 'text' | 'announcement' | 'forum';
+  channelLabel?: string;
   showMembers: boolean;
   onToggleMembers: () => void;
   showPinnedMessages?: boolean;
@@ -65,7 +67,11 @@ export interface MessagesAreaProps {
   onOpenThread: (message: ChannelMessage) => void;
   onReport?: (message: ChannelMessage) => void;
   onReaction: (messageId: string, emoji: string) => void;
-  onToggleReaction: (messageId: string, emoji: string, hasReacted: boolean) => void;
+  onToggleReaction: (
+    messageId: string,
+    emoji: string,
+    hasReacted: boolean,
+  ) => void;
   currentUserId?: string;
   threadReplyCounts: Record<string, number>;
   formatDateHeader: (date: Date) => string;
@@ -76,6 +82,7 @@ export interface MessagesAreaProps {
  */
 export interface MessageInputProps {
   channelName: string;
+  placeholder?: string;
   messageInput: string;
   isSending: boolean;
   replyTo: ChannelMessage | null;

@@ -13,6 +13,7 @@ import {
   ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { getGroupChannelRouteForChannel } from '@/modules/groups/routing';
 import type { ChannelItemProps } from './types';
 
 /**
@@ -40,7 +41,7 @@ export function ChannelItem({ channel, groupId, isActive }: ChannelItemProps) {
 
   return (
     <NavLink
-      to={`/groups/${groupId}/channels/${channel.id}`}
+      to={getGroupChannelRouteForChannel(groupId, channel)}
       onClick={() => HapticFeedback.light()}
       className="relative mx-2"
     >
@@ -59,8 +60,14 @@ export function ChannelItem({ channel, groupId, isActive }: ChannelItemProps) {
             transition={springs.bouncy}
           />
         )}
-        <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-primary-300' : ''}`} />
-        <span className={`truncate text-[13px] ${isActive ? 'font-semibold' : 'font-medium'}`}>{channel.name}</span>
+        <Icon
+          className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-primary-300' : ''}`}
+        />
+        <span
+          className={`truncate text-[13px] ${isActive ? 'font-semibold' : 'font-medium'}`}
+        >
+          {channel.name}
+        </span>
         <AnimatePresence>
           {channel.unreadCount > 0 && (
             <motion.span

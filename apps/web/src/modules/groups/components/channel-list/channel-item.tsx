@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { NavLink, useParams } from 'react-router-dom';
 import { HashtagIcon } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { getGroupChannelRouteForChannel } from '@/modules/groups/routing';
 import { channelTypeIcons, channelTypeColors } from './constants';
 import type { ChannelItemProps } from './types';
 import { tweens, loop, springs } from '@/lib/animation-presets';
@@ -22,7 +23,7 @@ export function ChannelItem({ channel, isActive }: ChannelItemProps) {
 
   return (
     <NavLink
-      to={`/groups/${groupId}/channels/${channel.id}`}
+      to={getGroupChannelRouteForChannel(groupId ?? '', channel)}
       onClick={() => HapticFeedback.light()}
     >
       {({ isActive: routeActive }) => (
@@ -53,12 +54,16 @@ export function ChannelItem({ channel, isActive }: ChannelItemProps) {
             />
           )}
           {/* Channel icon */}
-          <Icon className={`h-5 w-5 flex-shrink-0 ${routeActive ? 'text-white' : iconColor}`} />
+          <Icon
+            className={`h-5 w-5 flex-shrink-0 ${routeActive ? 'text-white' : iconColor}`}
+          />
 
           {/* Channel name — bolder + glow pulse when unread */}
           <span
             className={`flex-1 truncate text-sm ${
-              channel.unreadCount > 0 ? 'font-semibold text-white' : 'font-medium'
+              channel.unreadCount > 0
+                ? 'font-semibold text-white'
+                : 'font-medium'
             }`}
           >
             {channel.name}

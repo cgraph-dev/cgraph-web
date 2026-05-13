@@ -26,6 +26,32 @@ import type { ChannelMessage } from './types';
 
 const logger = createLogger('GroupChannel');
 
+type GroupChannelSurface = 'text' | 'announcement' | 'forum';
+
+interface GroupChannelProps {
+  surface?: GroupChannelSurface;
+}
+
+const surfaceCopy: Record<
+  GroupChannelSurface,
+  { headerType: GroupChannelSurface; label?: string; placeholderPrefix: string }
+> = {
+  text: {
+    headerType: 'text',
+    placeholderPrefix: 'Message',
+  },
+  announcement: {
+    headerType: 'announcement',
+    label: 'Announcements',
+    placeholderPrefix: 'Post announcement in',
+  },
+  forum: {
+    headerType: 'forum',
+    label: 'Topics',
+    placeholderPrefix: 'Post in topic channel',
+  },
+};
+
 interface UploadedAttachment {
   url: string;
   filename: string;
@@ -59,7 +85,10 @@ async function uploadAttachment(file: File): Promise<UploadedAttachment> {
   formData.append('context', 'message');
 
   const response = await http.post('/api/v1/uploads', formData);
-  const data = isRecord(response.data) && isRecord(response.data.data) ? response.data.data : null;
+  const data =
+    isRecord(response.data) && isRecord(response.data.data)
+      ? response.data.data
+      : null;
   const url = stringValue(data?.url);
 
   if (!data || !url) {
@@ -68,7 +97,10 @@ async function uploadAttachment(file: File): Promise<UploadedAttachment> {
 
   return {
     url,
-    filename: stringValue(data.original_filename) ?? stringValue(data.filename) ?? file.name,
+    filename:
+      stringValue(data.original_filename) ??
+      stringValue(data.filename) ??
+      file.name,
     contentType: stringValue(data.content_type) ?? file.type,
     size: numberValue(data.size) ?? file.size,
     thumbnailUrl: stringValue(data.thumbnail_url),
@@ -78,9 +110,13 @@ async function uploadAttachment(file: File): Promise<UploadedAttachment> {
 /**
  * Group Channel component.
  */
-export default function GroupChannel() {
-  const { groupId, channelId } = useParams<{ groupId: string; channelId: string }>();
+export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
+  const { groupId, channelId } = useParams<{
+    groupId: string;
+    channelId: string;
+  }>();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const copy = surfaceCopy[surface];
 
   const {
     groups,
@@ -131,7 +167,13 @@ export default function GroupChannel() {
       setActiveChannel(null);
       socketManager.leaveGroupChannel(channelId);
     };
-  }, [channelId, groupId, setActiveChannel, fetchChannelMessages, fetchMembers]);
+  }, [
+    channelId,
+    groupId,
+    setActiveChannel,
+    fetchChannelMessages,
+    fetchMembers,
+  ]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -167,7 +209,8 @@ export default function GroupChannel() {
 
   // Send message (with optional file attachment)
   async function handleSend(): Promise<void> {
-    if (!channelId || (!messageInput.trim() && !attachment) || isSending) return;
+    if (!channelId || (!messageInput.trim() && !attachment) || isSending)
+      return;
 
     setIsSending(true);
     try {
@@ -175,14 +218,19 @@ export default function GroupChannel() {
 
       if (attachment) {
         const uploaded = await uploadAttachment(attachment);
-        await sendChannelMessage(channelId, trimmedContent || uploaded.filename, replyTo?.id, {
-          contentType: messageTypeForFile(attachment),
-          fileUrl: uploaded.url,
-          fileName: uploaded.filename,
-          fileSize: uploaded.size,
-          fileMimeType: uploaded.contentType,
-          thumbnailUrl: uploaded.thumbnailUrl,
-        });
+        await sendChannelMessage(
+          channelId,
+          trimmedContent || uploaded.filename,
+          replyTo?.id,
+          {
+            contentType: messageTypeForFile(attachment),
+            fileUrl: uploaded.url,
+            fileName: uploaded.filename,
+            fileSize: uploaded.size,
+            fileMimeType: uploaded.contentType,
+            thumbnailUrl: uploaded.thumbnailUrl,
+          },
+        );
       } else {
         await sendChannelMessage(channelId, trimmedContent, replyTo?.id);
       }
@@ -238,7 +286,11 @@ export default function GroupChannel() {
   }
 
   // Handle toggling an existing reaction
-  function handleToggleReaction(messageId: string, emoji: string, _hasReacted: boolean): void {
+  function handleToggleReaction(
+    messageId: string,
+    emoji: string,
+    _hasReacted: boolean,
+  ): void {
     if (!channelId) return;
     toggleChannelReaction(channelId, messageId, emoji);
   }
@@ -265,6 +317,8 @@ export default function GroupChannel() {
         <ChannelHeader
           channelName={channel.name}
           channelTopic={channel.topic ?? undefined}
+          channelType={copy.headerType}
+          channelLabel={copy.label}
           showMembers={showMembers}
           onToggleMembers={() => setShowMembers(!showMembers)}
           showPinnedMessages={showPinned}
@@ -280,7 +334,9 @@ export default function GroupChannel() {
           messagesEndRef={messagesEndRef}
           onLoadMore={handleLoadMore}
           onReply={setReplyTo}
-          onOpenThread={(msg) => groupId && channelId && openThread(groupId, channelId, msg)}
+          onOpenThread={(msg) =>
+            groupId && channelId && openThread(groupId, channelId, msg)
+          }
           onReaction={handleReaction}
           onToggleReaction={handleToggleReaction}
           threadReplyCounts={replyCounts}
@@ -290,6 +346,7 @@ export default function GroupChannel() {
 
         <MessageInput
           channelName={channel.name}
+          placeholder={`${copy.placeholderPrefix} #${channel.name}`}
           messageInput={messageInput}
           isSending={isSending}
           replyTo={replyTo}
@@ -306,11 +363,16 @@ export default function GroupChannel() {
 
       {/* Members sidebar */}
       {showMembers && (
-        <MembersSidebar onlineMembers={onlineMembers} offlineMembers={offlineMembers} />
+        <MembersSidebar
+          onlineMembers={onlineMembers}
+          offlineMembers={offlineMembers}
+        />
       )}
 
       {/* Thread panel */}
-      <AnimatePresence>{threadOpen && channelId && <ChannelThreadPanel />}</AnimatePresence>
+      <AnimatePresence>
+        {threadOpen && channelId && <ChannelThreadPanel />}
+      </AnimatePresence>
 
       {/* Pinned messages panel */}
       <AnimatePresence>

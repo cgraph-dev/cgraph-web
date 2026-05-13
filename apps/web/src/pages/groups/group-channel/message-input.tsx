@@ -15,7 +15,9 @@ import type { MessageInputProps } from './types';
 import { getDisplayName } from './utils';
 
 const EmojiPicker = lazy(() =>
-  import('@/modules/chat/components/emoji-picker').then((m) => ({ default: m.EmojiPicker }))
+  import('@/modules/chat/components/emoji-picker').then((m) => ({
+    default: m.EmojiPicker,
+  })),
 );
 
 /**
@@ -39,6 +41,7 @@ function isImageFile(file: File): boolean {
  */
 export function MessageInput({
   channelName,
+  placeholder,
   messageInput,
   isSending,
   replyTo,
@@ -113,9 +116,15 @@ export function MessageInput({
             <div className="h-8 w-1 rounded-full bg-primary-500" />
             <div>
               <p className="text-xs text-primary-400">
-                Replying to {getDisplayName(replyTo.author.username, replyTo.author.displayName)}
+                Replying to{' '}
+                {getDisplayName(
+                  replyTo.author.username,
+                  replyTo.author.displayName,
+                )}
               </p>
-              <p className="max-w-md truncate text-sm text-gray-400">{replyTo.content}</p>
+              <p className="max-w-md truncate text-sm text-gray-400">
+                {replyTo.content}
+              </p>
             </div>
           </div>
           <button
@@ -143,7 +152,9 @@ export function MessageInput({
           )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm text-white">{attachment.name}</p>
-            <p className="text-xs text-gray-400">{formatFileSize(attachment.size)}</p>
+            <p className="text-xs text-gray-400">
+              {formatFileSize(attachment.size)}
+            </p>
           </div>
           <button
             onClick={handleClearAttachment}
@@ -191,7 +202,7 @@ export function MessageInput({
             value={messageInput}
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder={`Message #${channelName}`}
+            placeholder={placeholder ?? `Message #${channelName}`}
             rows={1}
             className="max-h-32 flex-1 resize-none bg-transparent text-white placeholder-white/30 focus:outline-none"
             style={{ minHeight: '24px' }}
@@ -200,7 +211,9 @@ export function MessageInput({
           <button
             onClick={() => setShowEmojiPicker((prev) => !prev)}
             className={`p-1 transition-colors ${
-              showEmojiPicker ? 'text-primary-400' : 'text-gray-400 hover:text-white'
+              showEmojiPicker
+                ? 'text-primary-400'
+                : 'text-gray-400 hover:text-white'
             }`}
             title="Add emoji"
           >
@@ -225,8 +238,18 @@ export function MessageInput({
  */
 function CloseIcon() {
   return (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    <svg
+      className="h-4 w-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   );
 }
