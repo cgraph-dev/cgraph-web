@@ -13,6 +13,9 @@ import type {
 
 // COMPONENT PROPS
 
+/**
+ * Props for ThemeCustomizer component
+ */
 export interface ThemeCustomizerProps {
   onClose?: () => void;
   className?: string;
@@ -72,11 +75,17 @@ export interface QuickPresetOption {
 
 // TAB PROPS
 
+/**
+ * Props for ColorTab component
+ */
 export interface ColorTabProps {
   selectedColor: ThemeColorPreset;
   onSelectColor: (color: ThemeColorPreset) => void;
 }
 
+/**
+ * Props for AvatarTab component
+ */
 export interface AvatarTabProps {
   selectedBorder: AvatarBorderType;
   selectedColor: ThemeColorPreset;
@@ -98,6 +107,9 @@ export interface BubbleSettings {
   entrance: string;
 }
 
+/**
+ * Props for BubblesTab component
+ */
 export interface BubblesTabProps {
   selectedStyle: ChatBubbleStylePreset;
   selectedColor: ThemeColorPreset;
@@ -107,6 +119,9 @@ export interface BubblesTabProps {
   onUpdateSettings: (settings: Record<string, unknown>) => void;
 }
 
+/**
+ * Props for EffectsTab component
+ */
 export interface EffectsTabProps {
   selectedEffect: EffectPreset;
   animationSpeed: 'slow' | 'normal' | 'fast';

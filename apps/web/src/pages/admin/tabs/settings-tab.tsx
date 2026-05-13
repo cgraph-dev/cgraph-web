@@ -1,3 +1,6 @@
+/**
+ * Admin settings tab component.
+ */
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import { adminApi } from '@/modules/admin/api';
@@ -6,6 +9,11 @@ import { FADE_UP } from '@/lib/animations/transitions';
 
 // Settings Tab - System configuration management
 
+/**
+ */
+/**
+ * Settings Tab component.
+ */
 export function SettingsTab() {
   const { data: config, isLoading } = useQuery({
     queryKey: ['admin', 'config'],

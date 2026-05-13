@@ -1,7 +1,7 @@
 /**
  * Push Notification Permission Prompt
  *
- * Non-intrusive slide-in banner that prompts users
+ * Discord/Meta-style non-intrusive slide-in banner that prompts users
  * to enable browser push notifications. Shows once per session after
  * a delay, only when permission is 'default' (never asked before).
  *
@@ -17,11 +17,15 @@ import { useState, useEffect} from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BellAlertIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/modules/auth/store';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
-const DISMISS_KEY = STORAGE_KEYS.pushPromptDismissed;
-const PROMPT_DELAY_MS = 15_000;
+const DISMISS_KEY = 'cgraph:push-prompt-dismissed';
+const PROMPT_DELAY_MS = 15_000; // Show after 15s (Discord-style delayed prompt)
 
+/**
+ */
+/**
+ * Push Notification Prompt component.
+ */
 export function PushNotificationPrompt() {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);

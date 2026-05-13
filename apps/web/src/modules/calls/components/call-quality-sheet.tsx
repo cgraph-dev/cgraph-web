@@ -205,11 +205,15 @@ export function CallQualitySheet(props: CallQualitySheetProps): ReactNode {
                 </p>
               </div>
             ) : null}
+
+            {/* Error message */}
             {error ? (
               <p className="text-destructive mb-3 text-center text-sm" role="alert">
                 {error}
               </p>
             ) : null}
+
+            {/* Action buttons */}
             <div className="flex gap-3">
               <button
                 type="button"

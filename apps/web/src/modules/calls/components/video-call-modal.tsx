@@ -1,3 +1,6 @@
+/**
+ * Video call modal dialog component.
+ */
 import { motion, AnimatePresence } from 'motion/react';
 import { VideoCameraSlashIcon } from '@heroicons/react/24/solid';
 import { useVideoCall } from '@/modules/calls/hooks/useVideoCall';
@@ -36,6 +39,11 @@ interface VideoCallModalProps {
   isGroupCall?: boolean;
 }
 
+/**
+ */
+/**
+ * Video Call Modal dialog component.
+ */
 export function VideoCallModal({
   isOpen,
   onClose,

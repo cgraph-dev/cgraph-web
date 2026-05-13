@@ -7,7 +7,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { useSearch } from '../useSearch';
 // NOTE: useSearchFilters removed — useSearchFilters.ts archived in batch 2
 import { useSearchSuggestions } from '../useSearchSuggestions';
@@ -152,7 +151,7 @@ describe('useSearchSuggestions', () => {
   });
 
   it('loads recent searches from localStorage', () => {
-    localStorage.setItem(STORAGE_KEYS.searchRecent, JSON.stringify(['react', 'vitest']));
+    localStorage.setItem('cgraph_recent_searches', JSON.stringify(['react', 'vitest']));
     const { result } = renderHook(() => useSearchSuggestions());
     expect(result.current.recentSearches).toEqual(['react', 'vitest']);
   });
@@ -163,7 +162,7 @@ describe('useSearchSuggestions', () => {
       result.current.addRecentSearch('zustand');
     });
     expect(result.current.recentSearches).toContain('zustand');
-    expect(JSON.parse(localStorage.getItem(STORAGE_KEYS.searchRecent)!)).toContain('zustand');
+    expect(JSON.parse(localStorage.getItem('cgraph_recent_searches')!)).toContain('zustand');
   });
 
   it('deduplicates recent searches (most recent first)', () => {
@@ -214,7 +213,7 @@ describe('useSearchSuggestions', () => {
       result.current.clearRecentSearches();
     });
     expect(result.current.recentSearches).toEqual([]);
-    expect(localStorage.getItem(STORAGE_KEYS.searchRecent)).toBeNull();
+    expect(localStorage.getItem('cgraph_recent_searches')).toBeNull();
   });
 
   it('generates suggestions matching the query', () => {

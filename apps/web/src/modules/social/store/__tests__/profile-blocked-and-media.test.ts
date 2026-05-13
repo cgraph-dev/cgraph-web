@@ -7,26 +7,13 @@
 
 import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
 
-const friendStoreMock = vi.hoisted(() => ({
-  getState: vi.fn(() => ({
-    friends: [],
-    pendingRequests: [],
-    sentRequests: [],
-  })),
-  setState: vi.fn(),
-}));
-
-vi.mock('@/lib/api-client', () => ({
-  http: {
+vi.mock('@/lib/api', () => ({
+  api: {
     get: vi.fn(),
     post: vi.fn(),
-    delete: vi.fn(),
     put: vi.fn(),
+    delete: vi.fn(),
   },
-}));
-
-vi.mock('../friendStore.impl', () => ({
-  useFriendStore: friendStoreMock,
 }));
 
 vi.mock('@/lib/api-utils', () => ({
@@ -52,7 +39,7 @@ vi.mock('@/lib/logger', () => ({
   }),
 }));
 
-import { http } from '@/lib/api-client';
+import { api } from '@/lib/api-client';
 import type { ProfileState } from '../profileStore.types';
 import {
   createFetchBlockedUsers,
@@ -65,10 +52,10 @@ import {
 } from '../profile-blocked-and-media';
 
 const mockedApi = {
-  get: http.get as MockedFunction<typeof http.get>,
-  post: http.post as MockedFunction<typeof http.post>,
-  delete: http.delete as MockedFunction<typeof http.delete>,
-  put: http.put as MockedFunction<typeof http.put>,
+  get: api.get as MockedFunction<typeof api.get>,
+  post: api.post as MockedFunction<typeof api.post>,
+  put: api.put as MockedFunction<typeof api.put>,
+  delete: api.delete as MockedFunction<typeof api.delete>,
 };
 
 function createMockStore() {
@@ -97,11 +84,6 @@ function createMockStore() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  friendStoreMock.getState.mockReturnValue({
-    friends: [],
-    pendingRequests: [],
-    sentRequests: [],
-  });
 });
 
 describe('createFetchBlockedUsers', () => {
@@ -110,22 +92,25 @@ describe('createFetchBlockedUsers', () => {
     const fetchBlockedUsers = createFetchBlockedUsers(set);
 
     mockedApi.get.mockResolvedValueOnce({
-      data: [
-        {
-          id: 'u-1',
-          username: 'baduser',
-          display_name: 'Bad User',
-          avatar_url: null,
-          blocked_at: '2026-01-01T00:00:00Z',
-          reason: 'spam',
-        },
-      ],
+      data: {
+        blocked: [
+          {
+            id: 'u-1',
+            username: 'baduser',
+            display_name: 'Bad User',
+            avatar_url: null,
+            blocked_at: '2026-01-01T00:00:00Z',
+            reason: 'spam',
+          },
+        ],
+      },
     });
 
     await fetchBlockedUsers();
 
     expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
     expect(set).toHaveBeenCalledWith({ isLoadingBlocked: true });
+    // Last call should set blocked users and loading false
     const lastCall = set.mock.calls[set.mock.calls.length - 1]![0] as Record<string, unknown>;
     expect(lastCall.isLoadingBlocked).toBe(false);
     expect(lastCall.blockedUsers).toHaveLength(1);
@@ -148,6 +133,7 @@ describe('createFetchBlockedUsers', () => {
 describe('createBlockUser', () => {
   it('calls block API and refreshes blocked list', async () => {
     const { set, get } = createMockStore();
+    // Patch get to include fetchBlockedUsers
     const fetchBlockedUsers = vi.fn().mockResolvedValue(undefined);
     get.mockReturnValue({
       ...get(),
@@ -213,6 +199,7 @@ describe('createUnblockUser', () => {
     await unblockUser('u-1');
 
     expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/friends/u-1/block');
+    // set should be called with a function that filters out the user
     expect(set).toHaveBeenCalled();
   });
 

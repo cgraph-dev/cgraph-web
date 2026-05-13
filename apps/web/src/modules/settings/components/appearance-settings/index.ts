@@ -5,6 +5,8 @@
  * font scaling, message density, and accessibility settings.
  *
  */
+
+// Main component
 export { AppearanceSettingsEnhanced, default } from './appearance-settings-enhanced';
 
 // Section components

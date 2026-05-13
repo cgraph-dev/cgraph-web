@@ -7,6 +7,9 @@ interface DeleteChannelModalProps {
   onClose: () => void;
 }
 
+/**
+ * Delete Channel Modal dialog component.
+ */
 export function DeleteChannelModal({
   deleteConfirmId,
   onDelete,

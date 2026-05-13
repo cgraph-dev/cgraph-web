@@ -195,6 +195,9 @@ export function withProfiler<P extends object>(
   return WithProfiler;
 }
 
+/**
+ * Hook to access profiler metrics for a component
+ */
 export function useProfilerMetrics(id: string) {
   return {
     getMetrics: () => getProfilerMetrics(id),

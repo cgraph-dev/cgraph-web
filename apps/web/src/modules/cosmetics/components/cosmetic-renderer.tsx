@@ -150,6 +150,7 @@ const RENDERERS: Record<CosmeticType, SubRendererFn> = {
   profile_effect: FallbackRenderer,
   profile_frame: FallbackRenderer,
 };
+// Main component
 /**
  * Universal cosmetic renderer — delegates to type-specific sub-renderer.
  */

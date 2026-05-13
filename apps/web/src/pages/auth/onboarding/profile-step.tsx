@@ -13,6 +13,9 @@ interface ProfileStepProps {
   onThemeChange: (theme: ProfileData['theme']) => void;
 }
 
+/**
+ * Profile Step component.
+ */
 export function ProfileStep({ bio, theme, onBioChange, onThemeChange }: ProfileStepProps) {
   return (
     <motion.div

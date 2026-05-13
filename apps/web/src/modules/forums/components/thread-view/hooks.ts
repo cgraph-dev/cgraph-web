@@ -5,14 +5,13 @@
 import { useState, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import type { Comment } from '@/modules/forums/store';
 import type { CommentViewMode } from './types';
 /** Use View Mode. */
 export function useViewMode(defaultViewMode: CommentViewMode) {
   const [viewMode, setViewMode] = useState<CommentViewMode>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.threadViewMode);
+      const saved = localStorage.getItem('cgraph_thread_view_mode');
       if (saved === 'linear' || saved === 'threaded') {
         return saved;
       }
@@ -23,7 +22,7 @@ export function useViewMode(defaultViewMode: CommentViewMode) {
   const handleViewModeChange = (mode: CommentViewMode) => {
     setViewMode(mode);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.threadViewMode, mode);
+      localStorage.setItem('cgraph_thread_view_mode', mode);
     }
   };
 

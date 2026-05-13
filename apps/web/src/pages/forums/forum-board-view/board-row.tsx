@@ -1,3 +1,6 @@
+/**
+ * Individual board row component.
+ */
 import { Link } from 'react-router-dom';
 import { FolderOpenIcon } from '@heroicons/react/24/solid';
 

@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the Switch navigation component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import Switch from './switch';
 import { useState } from 'react';

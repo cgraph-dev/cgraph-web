@@ -22,6 +22,11 @@ const floatingIndicator = {
   transition: { duration: durations.dramatic.ms / 1000, ease: 'easeOut' as const },
 };
 
+/**
+ */
+/**
+ * Comment Vote Buttons component.
+ */
 export function CommentVoteButtons({ comment, onVote }: CommentVoteButtonsProps) {
   const [voteAnim, setVoteAnim] = useState<'+1' | '-1' | null>(null);
 

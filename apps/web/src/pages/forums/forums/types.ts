@@ -21,11 +21,17 @@ export interface TimeRangeOption {
   label: string;
 }
 
+/**
+ * Props for PostCard component
+ */
 export interface PostCardProps {
   post: Post;
   onVote: (value: 1 | -1) => void;
 }
 
+/**
+ * Props for ForumHeader component
+ */
 export interface ForumHeaderProps {
   forum: {
     id: string;
@@ -45,6 +51,9 @@ export interface ForumHeaderProps {
   onNavigateToAdmin: () => void;
 }
 
+/**
+ * Props for SortControls component
+ */
 export interface SortControlsProps {
   sortBy: 'hot' | 'new' | 'top' | 'controversial';
   timeRange: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
@@ -60,6 +69,9 @@ export interface SortControlsProps {
   onNavigateToCreateForum: () => void;
 }
 
+/**
+ * Props for ForumSidebar component
+ */
 export interface ForumSidebarProps {
   activeForum: {
     id: string;
@@ -79,6 +91,9 @@ export interface ForumSidebarProps {
   isLoadingForums: boolean;
 }
 
+/**
+ * Props for PostsList component
+ */
 export interface PostsListProps {
   posts: Post[];
   isLoading: boolean;

@@ -7,6 +7,11 @@
 import type { BorderCardGridProps } from './types';
 import { COLUMN_CLASSES } from './constants';
 
+/**
+ */
+/**
+ * Border Card Grid display component.
+ */
 export function BorderCardGrid({ children, columns = 4, className = '' }: BorderCardGridProps) {
   const gridClass = COLUMN_CLASSES[columns] || COLUMN_CLASSES[4];
 

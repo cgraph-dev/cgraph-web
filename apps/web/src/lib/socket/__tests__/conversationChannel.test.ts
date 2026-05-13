@@ -5,11 +5,7 @@
  * message/typing/reaction event handlers, and error cleanup.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  joinConversation,
-  leaveConversation,
-  _gapRepairInFlightHas,
-} from '../conversationChannel';
+import { joinConversation, leaveConversation, _gapRepairInFlightHas } from '../conversationChannel';
 
 // Mocks
 const { MockPresence, mockChatStore, mockHttpGet } = vi.hoisted(() => {
@@ -20,6 +16,7 @@ const { MockPresence, mockChatStore, mockHttpGet } = vi.hoisted(() => {
   MockPresence.prototype.list = vi.fn();
   const mockChatStore = {
     messages: {},
+    conversations: [],
     addMessage: vi.fn(),
     decryptAndAddMessage: vi.fn(),
     updateMessage: vi.fn(),
@@ -36,12 +33,6 @@ const { MockPresence, mockChatStore, mockHttpGet } = vi.hoisted(() => {
 
 vi.mock('phoenix', () => ({
   Presence: MockPresence,
-}));
-
-vi.mock('@/modules/chat/store', () => ({
-  useChatStore: {
-    getState: vi.fn(() => mockChatStore),
-  },
 }));
 
 vi.mock('@/modules/chat/store/chatStore.impl', () => ({

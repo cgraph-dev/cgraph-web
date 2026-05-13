@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === 'true';
+
 /**
  * Playwright E2E Test Configuration for CGraph Web
  * @see https://playwright.dev/docs/test-configuration
@@ -109,9 +111,10 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm run dev',
+    command:
+      process.env.PLAYWRIGHT_WEB_SERVER_COMMAND || 'pnpm exec vite --host 127.0.0.1 --port 3000',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer,
     timeout: 120 * 1000,
   },
 

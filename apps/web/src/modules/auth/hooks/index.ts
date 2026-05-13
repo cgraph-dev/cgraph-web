@@ -7,7 +7,6 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '@/modules/auth/store';
-import { asBool, asString } from '@/lib/api-utils';
 import { authLogger } from '@/lib/logger';
 /**
  * Provides authentication state and login/logout/register actions from the auth store.
@@ -118,29 +117,6 @@ interface Session {
   lastActive: string;
   isCurrent: boolean;
 }
-
-type SessionPayload = Record<string, unknown>;
-
-interface SessionsResponse {
-  data?: SessionPayload[];
-  sessions?: SessionPayload[];
-  current_session_id?: string | null;
-}
-
-function normalizeSession(payload: SessionPayload): Session {
-  return {
-    id: asString(payload.id),
-    device: asString(payload.device) || asString(payload.user_agent) || 'Unknown Device',
-    ip: asString(payload.ip) || asString(payload.ip_address),
-    lastActive:
-      asString(payload.lastActive) ||
-      asString(payload.last_active_at) ||
-      asString(payload.last_seen_at) ||
-      asString(payload.created_at) ||
-      asString(payload.inserted_at),
-    isCurrent: asBool(payload.isCurrent) || asBool(payload.current),
-  };
-}
 /**
  * Provides session management: listing active sessions and revoking specific ones.
  */
@@ -151,17 +127,12 @@ export function useSessions() {
   const getSessions = async () => {
     try {
       const { api: http } = await import('@/lib/api');
-      const response = await http.get<SessionsResponse>('/api/v1/me/sessions');
-      const rawSessions = response.data.data ?? response.data.sessions ?? [];
-      const normalizedSessions = rawSessions.map(normalizeSession);
-      const currentSessionId =
-        response.data.current_session_id ??
-        normalizedSessions.find((session) => session.isCurrent)?.id ??
-        null;
-
-      setSessions(normalizedSessions);
-      setCurrentSessionId(currentSessionId);
-      return normalizedSessions;
+      const response = await http.get<{ sessions: Session[]; current_session_id: string }>(
+        '/api/v1/auth/sessions'
+      );
+      setSessions(response.data.sessions);
+      setCurrentSessionId(response.data.current_session_id);
+      return response.data.sessions;
     } catch (error) {
       authLogger.error('Failed to fetch sessions', error);
       return [];
@@ -171,7 +142,7 @@ export function useSessions() {
   const revokeSession = async (sessionId: string) => {
     try {
       const { api: http } = await import('@/lib/api');
-      await http.delete(`/api/v1/me/sessions/${sessionId}`);
+      await http.delete(`/api/v1/auth/sessions/${sessionId}`);
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
       return true;
     } catch (error) {
@@ -183,7 +154,7 @@ export function useSessions() {
   const revokeAllOtherSessions = async () => {
     try {
       const { api: http } = await import('@/lib/api');
-      await http.delete('/api/v1/me/sessions');
+      await http.delete('/api/v1/auth/sessions');
       setSessions((prev) => prev.filter((s) => s.isCurrent));
       return true;
     } catch (error) {

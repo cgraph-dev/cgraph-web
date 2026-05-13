@@ -16,6 +16,11 @@ interface LeaderboardSidebarProps {
   topForums: Forum[];
 }
 
+/**
+ */
+/**
+ * Leaderboard Sidebar component.
+ */
 export function LeaderboardSidebar({ topForums }: LeaderboardSidebarProps) {
   return (
     <div className="hidden w-80 overflow-y-auto border-l border-[var(--token-card-border)] lg:block">

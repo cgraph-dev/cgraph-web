@@ -2,7 +2,6 @@
   "name": "@cgraph/web",
   "version": "1.0.0",
   "private": true,
-  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,23 +12,22 @@
     "check:state-stores": "node ./scripts/check-state-stores.mjs",
     "check:safe-html": "node ./scripts/check-safe-html-sinks.mjs",
     "check:storage-policy": "node ./scripts/check-storage-policy.mjs",
-    "check:auth-storage": "vitest run src/lib/storage/__tests__/namespaces.test.ts src/modules/auth/store/__tests__/auth-actions.test.ts src/modules/auth/store/__tests__/authStore.test.ts",
-    "check:unit-suite": "vitest run --reporter=dot --maxWorkers=1 --minWorkers=1",
+    "check:auth-storage": "vitest run --coverage=false src/lib/__tests__/safeStorage.test.ts src/modules/auth/store/__tests__/auth-actions.test.ts src/modules/auth/store/__tests__/authStore.test.ts src/modules/auth/store/__tests__/authStore.utils.test.ts",
+    "check:unit-suite": "vitest run --coverage=false --reporter=dot --maxWorkers=1 --minWorkers=1",
     "check:release-gates": "pnpm check:safe-html && pnpm check:storage-policy && pnpm check:import-cycles && pnpm check:state-stores && pnpm check:background-polling && pnpm check:auth-storage && pnpm check:unit-suite",
     "build:budget": "pnpm build && pnpm check:bundle-budgets",
-    "build:strict": "tsc --noEmit -p tsconfig.app.json && vite build",
-    "smoke:production": "node ./scripts/smoke-production.mjs",
-    "lint": "eslint src/ --quiet",
-    "lint:report": "eslint src/",
-    "lint:fix": "eslint . --fix --quiet",
+    "build:strict": "tsc -b && vite build",
+    "lint": "eslint src/ --max-warnings 37",
+    "lint:fix": "eslint . --fix --max-warnings 37",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
+    "test:e2e": "VITE_E2E_AUTH_BYPASS=true pnpm build && PLAYWRIGHT_HTML_OPEN=never PLAYWRIGHT_REUSE_EXISTING_SERVER=false PLAYWRIGHT_WEB_SERVER_COMMAND=\"pnpm exec vite preview --host 127.0.0.1 --port 3000 --strictPort\" playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
+    "smoke:production": "node ./scripts/smoke-production.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
@@ -67,7 +65,6 @@
     "@tiptap/pm": "^3.21.0",
     "@tiptap/react": "^3.21.0",
     "@tiptap/starter-kit": "^3.21.0",
-    "@vercel/analytics": "^2.0.1",
     "@wagmi/connectors": "7.2.1",
     "axios": "^1.9.0",
     "canvas-confetti": "^1.9.4",
@@ -107,8 +104,8 @@
   "optionalDependencies": {
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-notification": "^2.0.0",
-    "@tauri-apps/plugin-process": "^2.0.0",
-    "@tauri-apps/plugin-updater": "^2.0.0"
+    "@tauri-apps/plugin-updater": "^2.0.0",
+    "@tauri-apps/plugin-process": "^2.0.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
@@ -146,7 +143,7 @@
     "typed-emitter": "^2.1.0",
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.32.0",
-    "vite": "6.4.1",
+    "vite": "^6.3.0",
     "vitest": "^3.1.0"
   }
 }

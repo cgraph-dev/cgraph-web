@@ -4,6 +4,9 @@ import { GlassCard } from '@/shared/components/ui';
 import type { DangerTabProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Danger Tab component.
+ */
 export function DangerTab({ isOwner, onLeave, onDelete }: DangerTabProps) {
   return (
     <motion.div

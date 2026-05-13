@@ -33,6 +33,11 @@ const TABS: { id: SettingsTab; label: string }[] = [
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Cosmetics Settings Panel component.
+ */
 export function CosmeticsSettingsPanel() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('borders');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');

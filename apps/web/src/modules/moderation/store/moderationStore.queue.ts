@@ -44,6 +44,8 @@ function toPriority(v: unknown): ModerationQueueItem['priority'] {
 }
 
 /**
+ */
+/**
  * Creates a new queue actions.
  *
  * @param set - The set.

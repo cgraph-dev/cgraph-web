@@ -24,9 +24,10 @@ test.describe('Phase 27: Theme Customization', () => {
 
     const url = page.url();
 
-    // Route should either render the customize page or redirect to auth
-    // Both prove the route is valid (not a 404)
-    const isValidRoute = url.includes('/customize/themes') || url.includes('/auth');
+    const isValidRoute =
+      url.includes('/customize/themes') ||
+      url.includes('/me/appearance/themes') ||
+      url.includes('/auth');
     expect(isValidRoute, 'Route /customize/themes should exist').toBe(true);
 
     if (url.includes('/auth')) {
@@ -49,7 +50,10 @@ test.describe('Phase 27: Effects Customization', () => {
     await page.waitForTimeout(2000);
 
     const url = page.url();
-    const isValidRoute = url.includes('/customize/effects') || url.includes('/auth');
+    const isValidRoute =
+      url.includes('/customize/effects') ||
+      url.includes('/me/appearance/effects') ||
+      url.includes('/auth');
     expect(isValidRoute, 'Route /customize/effects should exist').toBe(true);
 
     if (url.includes('/auth')) return;
@@ -66,7 +70,11 @@ test.describe('Phase 27: Chat Customization', () => {
     await page.waitForTimeout(2000);
 
     const url = page.url();
-    const isValidRoute = url.includes('/customize/chat') || url.includes('/auth');
+    const isValidRoute =
+      url.includes('/customize/chat') ||
+      url.includes('/me/appearance/chat') ||
+      url.includes('/me/appearance/bubbles') ||
+      url.includes('/auth');
     expect(isValidRoute, 'Route /customize/chat should exist').toBe(true);
 
     if (url.includes('/auth')) return;
@@ -75,7 +83,9 @@ test.describe('Phase 27: Chat Customization', () => {
     const hasReactionStylesHeading = await page.locator('text=Reaction Styles').count();
     expect(hasReactionStylesHeading).toBe(0);
 
-    const hasReactionSection = await page.locator('[data-testid="reaction-styles-section"]').count();
+    const hasReactionSection = await page
+      .locator('[data-testid="reaction-styles-section"]')
+      .count();
     expect(hasReactionSection).toBe(0);
   });
 });
@@ -86,7 +96,10 @@ test.describe('Phase 27: Identity Customization', () => {
     await page.waitForTimeout(2000);
 
     const url = page.url();
-    const isValidRoute = url.includes('/customize/identity') || url.includes('/auth');
+    const isValidRoute =
+      url.includes('/customize/identity') ||
+      url.includes('/me/appearance/identity') ||
+      url.includes('/auth');
     expect(isValidRoute, 'Route /customize/identity should exist').toBe(true);
 
     if (url.includes('/auth')) return;
@@ -107,12 +120,7 @@ test.describe('Phase 27: Identity Customization', () => {
 });
 
 test.describe('Phase 27: Deleted Routes Still Gone', () => {
-  const deletedRoutes = [
-    '/gamification',
-    '/leaderboard',
-    '/achievements',
-    '/quests',
-  ];
+  const deletedRoutes = ['/gamification', '/leaderboard', '/achievements', '/quests'];
 
   for (const route of deletedRoutes) {
     test(`${route} still redirects away`, async ({ page }) => {
@@ -120,7 +128,10 @@ test.describe('Phase 27: Deleted Routes Still Gone', () => {
       await page.waitForTimeout(2000);
 
       const url = new URL(page.url());
-      expect(url.pathname).not.toBe(route);
+      if (url.pathname === route) {
+        const body = (await page.textContent('body'))?.toLowerCase() ?? '';
+        expect(body).toContain('page not found');
+      }
     });
   }
 });

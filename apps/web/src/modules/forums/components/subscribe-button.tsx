@@ -1,7 +1,7 @@
 /**
  * Forum Subscribe Button
  *
- * Subscribe control for forums, boards, and threads.
+ * Discord-style subscribe/bell button for forums, boards, and threads.
  * Supports three notification levels: All, Mentions, None.
  *
  * Uses REST API at /api/forum/subscriptions
@@ -50,6 +50,11 @@ const LEVELS: { value: NotificationLevel; label: string; desc: string; icon: typ
   { value: 'none', label: 'Muted', desc: 'No notifications', icon: BellSlashIcon },
 ];
 
+/**
+ */
+/**
+ * Subscribe Button component.
+ */
 export function SubscribeButton({
   targetType,
   targetId,

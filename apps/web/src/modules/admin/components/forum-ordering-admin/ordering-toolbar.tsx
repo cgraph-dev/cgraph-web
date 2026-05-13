@@ -1,3 +1,6 @@
+/**
+ * OrderingToolbar component
+ */
 
 import { memo } from 'react';
 import { motion } from 'motion/react';

@@ -11,6 +11,11 @@ interface ConfirmStepProps {
   subscriptionTier?: string;
 }
 
+/**
+ */
+/**
+ * Confirm Step component.
+ */
 export function ConfirmStep({ formData, subscriptionTier = 'free' }: ConfirmStepProps) {
   const categoryLabel =
     FORUM_CATEGORIES.find((c) => c.value === formData.category)?.label || 'Other';

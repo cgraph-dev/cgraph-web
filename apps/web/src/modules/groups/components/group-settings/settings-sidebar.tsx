@@ -9,6 +9,9 @@ interface SettingsSidebarProps {
   onTabChange: (tab: TabId) => void;
 }
 
+/**
+ * Settings Sidebar component.
+ */
 export function SettingsSidebar({ group, activeTab, onTabChange }: SettingsSidebarProps) {
   return (
     <div className="w-56 border-r border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] p-5 backdrop-blur-2xl backdrop-saturate-[1.8]">

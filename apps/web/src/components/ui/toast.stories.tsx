@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the Toast notification component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import { ToastContainer, toast } from './toast';
 

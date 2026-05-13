@@ -30,6 +30,7 @@ const FONT_OPTIONS = [
   'Source Code Pro, monospace',
 ];
 
+/** Description. */
 /** Header Branding Editor component. */
 export function HeaderBrandingEditor({ options, onSave, saving }: HeaderBrandingEditorProps) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});

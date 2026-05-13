@@ -25,6 +25,9 @@ interface CreateChannelFormProps {
   onCreate: () => void;
 }
 
+/**
+ * Create Channel Form component.
+ */
 export function CreateChannelForm({
   show,
   newName,

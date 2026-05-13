@@ -46,6 +46,9 @@ function getPageRange(current: number, total: number): (number | 'ellipsis')[] {
   return pages;
 }
 
+/**
+ * Page Pagination component.
+ */
 export function PagePagination({
   currentPage,
   totalPages,

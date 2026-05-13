@@ -30,6 +30,9 @@ interface ParsedLinkPreview {
   readonly image?: string;
 }
 
+/**
+ * Chat Info Panel component.
+ */
 export default function ChatInfoPanel({
   userId,
   conversationId,
@@ -71,7 +74,11 @@ export default function ChatInfoPanel({
   });
 
   // Shared media data — fetch on mount
-  const { media: mediaMessages, isLoading: isMediaLoading, fetchMedia } = useConversationMedia(conversationId);
+  const {
+    media: mediaMessages,
+    isLoading: isMediaLoading,
+    fetchMedia,
+  } = useConversationMedia(conversationId);
 
   // Fetch media when panel mounts
   useEffect(() => {
@@ -129,6 +136,8 @@ export default function ChatInfoPanel({
           User Info
         </h3>
         <motion.button
+          type="button"
+          aria-label="Close user info panel"
           onClick={onClose}
           className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
           whileHover={{ rotate: 90 }}
@@ -148,10 +157,7 @@ export default function ChatInfoPanel({
 
         {/* Bio */}
         {user.bio && (
-          <motion.div
-            {...FADE_UP}
-            transition={{ delay: 0.55 }}
-          >
+          <motion.div {...FADE_UP} transition={{ delay: 0.55 }}>
             <GlassCard variant="frosted" className="p-3">
               <p className="text-sm leading-relaxed text-gray-300">{user.bio}</p>
             </GlassCard>
@@ -170,9 +176,7 @@ export default function ChatInfoPanel({
         {/* Shared Media */}
         <motion.div {...FADE_UP} transition={{ delay: 0.65 }}>
           <GlassCard variant="frosted" className="p-3">
-            <p className="mb-2 text-xs font-semibold uppercase text-white/30">
-              Shared Media
-            </p>
+            <p className="mb-2 text-xs font-semibold uppercase text-white/30">Shared Media</p>
             <SharedMediaGrid
               media={mediaItems}
               files={fileItems}
@@ -184,10 +188,7 @@ export default function ChatInfoPanel({
 
         {/* Disappearing Messages */}
         {conversationId && (
-          <motion.div
-            {...FADE_UP}
-            transition={{ delay: 0.7 }}
-          >
+          <motion.div {...FADE_UP} transition={{ delay: 0.7 }}>
             <GlassCard variant="frosted" className="p-3">
               <p className="mb-2 text-xs font-semibold uppercase text-white/30">
                 Disappearing Messages

@@ -10,16 +10,6 @@ vi.mock('@/modules/auth/store', () => ({
   },
 }));
 
-vi.mock('@/modules/chat/store', () => ({
-  useChatStore: {
-    getState: vi.fn().mockReturnValue({
-      removeReaction: mockRemoveReaction,
-      addReaction: mockAddReaction,
-      activeConversationId: null,
-    }),
-  },
-}));
-
 vi.mock('@/modules/chat/store/chatStore.impl', () => ({
   useChatStore: {
     getState: vi.fn().mockReturnValue({
@@ -44,7 +34,6 @@ import {
 // messageUtils
 
 describe('messageUtils', () => {
-
   describe('formatDateHeader', () => {
     it('returns "Today" for today\'s date', () => {
       expect(formatDateHeader(new Date())).toBe('Today');
@@ -216,7 +205,12 @@ describe('reactionUtils', () => {
     });
 
     it('handles missing user data gracefully', () => {
-      const noUser = { id: 'r1', emoji: '👍', userId: 'u1', user: undefined } as unknown as RawReaction;
+      const noUser = {
+        id: 'r1',
+        emoji: '👍',
+        userId: 'u1',
+        user: undefined,
+      } as unknown as RawReaction;
       const result = aggregateReactions([noUser], 'me');
       expect(result).toHaveLength(1);
       // Falls back to userId when user object is missing

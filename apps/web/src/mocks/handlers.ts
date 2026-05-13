@@ -1,14 +1,18 @@
 /**
- * MSW handlers used by tests that exercise network-bound UI paths.
+ * MSW (Mock Service Worker) Handlers
+ *
+ * Comprehensive API mocks for testing. These handlers simulate the backend
+ * API responses for unit and integration tests.
  *
  * @see https://mswjs.io/docs/
+ * @updated v0.9.9 - Added comprehensive handlers for all API endpoints
  */
 
 import { http, HttpResponse, delay } from 'msw';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-// Test data factories
+// Mock Data Factories
 
 const mockUser = (overrides: Partial<MockUser> = {}): MockUser => ({
   id: 'user-1',
@@ -604,13 +608,7 @@ const forumHandlers = [
     const content = readString(body, 'content') ?? '';
     return HttpResponse.json(
       {
-        data: {
-          id: 'post-new',
-          title,
-          content,
-          authorId: 'user-1',
-          createdAt: new Date().toISOString(),
-        },
+        data: { id: 'post-new', title, content, authorId: 'user-1', createdAt: new Date().toISOString() },
       },
       { status: 201 }
     );

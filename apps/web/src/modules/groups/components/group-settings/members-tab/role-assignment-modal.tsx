@@ -12,6 +12,9 @@ interface RoleAssignmentModalProps {
   onClose: () => void;
 }
 
+/**
+ * Role Assignment Modal dialog component.
+ */
 export function RoleAssignmentModal({
   memberId,
   members,

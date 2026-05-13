@@ -1,11 +1,20 @@
+/**
+ * AnimatedForumTitle component
+ */
 
 import { memo } from 'react';
-import { motion, type MotionProps } from 'motion/react';
+import { motion } from 'motion/react';
+import type { TargetAndTransition, Transition } from 'motion/react';
 import { cn } from '@/lib/utils';
 import type { AnimatedForumTitleProps } from './types';
 import { DEFAULT_COLORS } from './constants';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
+
+interface MotionAnimationProps {
+  animate?: TargetAndTransition;
+  transition?: Transition;
+}
 
 export const AnimatedForumTitle = memo(function AnimatedForumTitle({
   title,
@@ -74,7 +83,7 @@ export const AnimatedForumTitle = memo(function AnimatedForumTitle({
     }
   };
 
-  const getMotionProps = (): MotionProps => {
+  const getMotionProps = (): MotionAnimationProps => {
     const duration = speed;
 
     switch (animation) {

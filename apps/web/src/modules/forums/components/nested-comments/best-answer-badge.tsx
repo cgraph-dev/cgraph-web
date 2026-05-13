@@ -2,6 +2,11 @@ import { motion } from 'motion/react';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import { springs } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Best Answer Badge component.
+ */
 export function BestAnswerBadge() {
   return (
     <motion.div

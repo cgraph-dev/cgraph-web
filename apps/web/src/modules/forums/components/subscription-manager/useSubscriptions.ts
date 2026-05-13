@@ -11,6 +11,10 @@ import { createLogger } from '@/lib/logger';
 import type { NotificationMode, Subscription, SubscriptionCounts } from './types';
 
 const logger = createLogger('SubscriptionManager');
+/**
+ *
+ * Description.
+ */
 export function useSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [isLoading, setIsLoading] = useState(true);

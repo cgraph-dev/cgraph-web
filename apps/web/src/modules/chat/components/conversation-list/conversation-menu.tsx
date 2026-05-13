@@ -1,3 +1,6 @@
+/**
+ * ConversationMenu component
+ */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,6 +12,11 @@ import {
 } from '@heroicons/react/24/outline';
 import type { ConversationMenuProps } from './types';
 
+/**
+ */
+/**
+ * Conversation Menu component.
+ */
 export function ConversationMenu({ conversation, onAction }: ConversationMenuProps) {
   const [showDropdown, setShowDropdown] = useState(false);
 

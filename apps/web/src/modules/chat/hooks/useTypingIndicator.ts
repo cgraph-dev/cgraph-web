@@ -57,6 +57,7 @@ export function useTypingIndicator(channel: ChannelLike | null) {
 
   useEffect(() => {
     if (!channel) return;
+    const timers = expireTimers.current;
 
     const onTyping = (payload: unknown) => {
       if (!isTypingPayload(payload)) return;
@@ -97,8 +98,8 @@ export function useTypingIndicator(channel: ChannelLike | null) {
     return () => {
       channel.off('typing', typingRef);
       channel.off('user_stop_typing', stopRef);
-      expireTimers.current.forEach((t) => clearTimeout(t));
-      expireTimers.current.clear();
+      timers.forEach((t) => clearTimeout(t));
+      timers.clear();
     };
   }, [channel]);
 

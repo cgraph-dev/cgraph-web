@@ -1,3 +1,6 @@
+/**
+ * Username change history component.
+ */
 import React from 'react';
 import { Button } from '@/shared/components/ui';
 import { Loader2, History } from 'lucide-react';
@@ -18,6 +21,11 @@ const formatDate = (date: Date) => {
   });
 };
 
+/**
+ */
+/**
+ * Username History Section section component.
+ */
 export function UsernameHistorySection({
   showHistory,
   onToggle,

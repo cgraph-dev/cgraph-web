@@ -6,17 +6,32 @@ import { cn } from '@/lib/utils';
 import type { GifItemProps } from './types';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Gif Item component.
+ */
 export function GifItem({ gif, onSelect, isFavorite, onToggleFavorite }: GifItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const selectGif = () => onSelect(gif);
 
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
+      aria-label={`Select GIF ${gif.title}`}
       className="relative cursor-pointer overflow-hidden rounded-lg bg-[var(--token-card-bg)/0.6]"
       style={{ aspectRatio: gif.width / gif.height }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onSelect(gif)}
+      onClick={selectGif}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          selectGif();
+        }
+      }}
       whileHover={{ opacity: 0.9 }}
       whileTap={{ scale: 0.98 }}
     >
@@ -38,12 +53,11 @@ export function GifItem({ gif, onSelect, isFavorite, onToggleFavorite }: GifItem
       {/* Hover overlay with favorite button */}
       <AnimatePresence>
         {isHovered && (
-          <motion.div
-            {...FADE_IN}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40"
-          >
+          <motion.div {...FADE_IN} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40">
             <button
+              type="button"
+              aria-label={isFavorite ? 'Remove GIF from favorites' : 'Add GIF to favorites'}
+              aria-pressed={isFavorite}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleFavorite(gif);

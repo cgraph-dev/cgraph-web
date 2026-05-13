@@ -1,3 +1,6 @@
+/**
+ * Type definitions for EmojiPicker component
+ */
 
 export interface EmojiPickerProps {
   isOpen: boolean;

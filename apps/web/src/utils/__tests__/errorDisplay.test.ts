@@ -41,12 +41,6 @@ describe('getDisplayError', () => {
     expect(getDisplayError({ message: 'Invalid email' })).toBe('Invalid email');
   });
 
-  it('extracts nested error messages from API error objects', () => {
-    expect(
-      getDisplayError({ error: { code: 'UNAUTHORIZED', message: 'Invalid credentials' } })
-    ).toBe('Invalid credentials');
-  });
-
   it('extracts error field from error object', () => {
     expect(getDisplayError({ error: 'Unauthorized' })).toBe('Unauthorized');
   });

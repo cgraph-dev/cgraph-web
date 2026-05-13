@@ -1,3 +1,6 @@
+/**
+ * Markdown content renderer component.
+ */
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {

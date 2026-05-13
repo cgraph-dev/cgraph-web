@@ -63,6 +63,7 @@ interface GroupPermissionsMatrixProps {
 
 type PermState = Record<string, Record<string, boolean>>;
 
+/** Description. */
 /** Group Permissions Matrix component. */
 export function GroupPermissionsMatrix({ forumId }: GroupPermissionsMatrixProps) {
   const { groups, fetchGroups, updateGroup, isLoadingGroups } = useUserGroupsStore();

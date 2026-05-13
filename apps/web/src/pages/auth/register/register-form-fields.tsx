@@ -34,6 +34,11 @@ interface RegisterFormFieldsProps {
   captcha?: ReactNode;
 }
 
+/**
+ */
+/**
+ * Register Form Fields component.
+ */
 export function RegisterFormFields(props: RegisterFormFieldsProps) {
   const reduced = prefersReducedMotion();
 
@@ -95,9 +100,7 @@ export function RegisterFormFields(props: RegisterFormFieldsProps) {
             onToggle={() => props.setShowPassword(!props.showPassword)}
           />
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          8+ characters with uppercase, lowercase, number, and symbol.
-        </p>
+        <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
       </motion.div>
 
       <motion.div variants={reduced ? {} : itemVariants}>
@@ -128,6 +131,7 @@ export function RegisterFormFields(props: RegisterFormFieldsProps) {
         <input
           type="checkbox"
           name="agreeToTerms"
+          aria-label="Agree to the Terms of Service and Privacy Policy"
           className="focus:ring-primary-500/50 mt-0.5 h-4 w-4 rounded border-[var(--token-card-border)] bg-[var(--token-card-bg)] text-primary-500 transition-all checked:border-primary-600 checked:bg-primary-600 focus:ring-offset-0"
         />
         <span className="text-sm text-gray-400 transition-colors group-hover:text-gray-300">

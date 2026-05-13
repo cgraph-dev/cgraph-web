@@ -23,6 +23,7 @@ interface TransactionRowProps {
   transaction: Transaction;
 }
 
+/** Description. */
 /** Transaction Row component. */
 export function TransactionRow({ transaction }: TransactionRowProps) {
   const config = typeConfig[transaction.type] ?? fallbackConfig;

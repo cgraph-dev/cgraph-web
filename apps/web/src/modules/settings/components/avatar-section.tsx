@@ -12,6 +12,11 @@ interface AvatarSectionProps {
   user: User | null;
 }
 
+/**
+ */
+/**
+ * Avatar Section component.
+ */
 export function AvatarSection({ user }: AvatarSectionProps) {
   return (
     <GlassCard variant="crystal" className="aurora-social-panel relative mb-6 overflow-hidden p-6">

@@ -56,6 +56,10 @@ const TYPE_CONFIG: Record<
   },
   bump: { label: 'Bump', icon: FireIcon, color: 'text-orange-400', bg: 'bg-orange-500/15' },
 };
+/**
+ *
+ * Description.
+ */
 export function PromoteThreadModal({
   isOpen,
   onClose,

@@ -12,6 +12,11 @@ interface CategoryTabsProps {
   onCategoryChange: (category: EmojiCategory) => void;
 }
 
+/**
+ */
+/**
+ * Category Tabs component.
+ */
 function getEmojiCategoryKeys(obj: Record<EmojiCategory, string[]>): EmojiCategory[] {
   // Object.keys returns string[], but since EMOJI_CATEGORIES is typed as
   // Record<EmojiCategory, string[]>, the keys are always EmojiCategory values.

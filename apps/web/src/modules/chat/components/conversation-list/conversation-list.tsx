@@ -26,6 +26,9 @@ import { NoteToSelfItem } from './note-to-self-item';
 import { NewChatModal } from './new-chat-modal';
 import { buildRows, rowHeight, rowKey, RowType, type Row } from './rows';
 
+/**
+ * Conversation List component.
+ */
 export function ConversationList({ className = '' }: ConversationListProps) {
   const { user } = useAuthStore();
   const typingUsers = useChatStore((s) => s.typingUsers);

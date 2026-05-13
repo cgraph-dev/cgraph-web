@@ -28,6 +28,8 @@ type Set = (
 type Get = () => SettingsState;
 
 /**
+ */
+/**
  * Creates a new settings actions.
  *
  * @param set - The set.

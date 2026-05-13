@@ -1,6 +1,9 @@
 import { motion } from 'motion/react';
 import type { ReplyFormProps, EditFormProps } from './types';
 
+/**
+ * Reply Form Component
+ */
 export function ReplyForm({
   authorUsername,
   content,
@@ -41,6 +44,9 @@ export function ReplyForm({
   );
 }
 
+/**
+ * Edit Form Component
+ */
 export function EditForm({ content, onContentChange, onSubmit, onCancel }: EditFormProps) {
   return (
     <div className="space-y-2">

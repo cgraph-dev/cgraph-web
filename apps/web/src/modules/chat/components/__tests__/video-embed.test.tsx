@@ -52,7 +52,9 @@ describe('VideoEmbed', () => {
   it('renders YouTube thumbnail with play button', () => {
     render(<VideoEmbed embed={makeYouTubeEmbed()} onExpand={onExpand} />);
     expect(screen.getByAltText('Test YouTube Video')).toBeInTheDocument();
-    expect(screen.getAllByTestId('icon-PlayCircleIcon').length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole('button', { name: /play video test youtube video/i })
+    ).toBeInTheDocument();
   });
 
   it('renders video title for YouTube embed', () => {
@@ -100,7 +102,7 @@ describe('VideoEmbed', () => {
 
   it('renders play icon for native video', () => {
     render(<VideoEmbed embed={makeNativeEmbed()} onExpand={onExpand} />);
-    expect(screen.getAllByTestId('icon-PlayCircleIcon').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /open video test video/i })).toBeInTheDocument();
   });
 
   it('renders GlassCard wrapper for YouTube embed', () => {

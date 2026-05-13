@@ -15,6 +15,11 @@ interface LivePreviewProps {
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Live Preview component.
+ */
 export function LivePreview({ isVisible }: LivePreviewProps) {
   if (!isVisible) return null;
 

@@ -208,8 +208,8 @@ vi.mock('@/shared/components/ui', () => ({
 }));
 
 vi.mock('@/lib/animations/transitions', () => ({
-  FADE_IN: {},
   FADE_UP: {},
+  FADE_IN: {},
   springs: { smooth: { type: 'spring' } },
 }));
 
@@ -365,8 +365,8 @@ describe('ChatInfoPanel', () => {
 
   it('calls onClose when close button is clicked', () => {
     render(<ChatInfoPanel {...defaultProps} />);
-    const closeBtn = screen.getByTestId('icon-XMarkIcon').closest('button');
-    if (closeBtn) fireEvent.click(closeBtn);
+    const closeBtn = screen.getByRole('button', { name: /close user info panel/i });
+    fireEvent.click(closeBtn);
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 });

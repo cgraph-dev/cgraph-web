@@ -12,6 +12,9 @@ import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicon
 import { useChannelThreadStore } from '@/modules/groups/store/channelThreadStore';
 import { captureError } from '@/lib/error-tracking';
 
+/**
+ * Channel Thread Panel component.
+ */
 export function ChannelThreadPanel() {
   const { activeThread, threadReplies, isLoading, closeThread, sendThreadReply } =
     useChannelThreadStore();

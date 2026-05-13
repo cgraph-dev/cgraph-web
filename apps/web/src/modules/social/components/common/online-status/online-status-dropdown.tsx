@@ -16,6 +16,11 @@ interface OnlineStatusDropdownProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Online Status Dropdown component.
+ */
 export function OnlineStatusDropdown({
   currentStatus,
   onChange,

@@ -213,6 +213,9 @@ interface SidebarProps {
   navItems: NavItem[];
 }
 
+/**
+ * Sidebar component.
+ */
 export default function Sidebar({
   user,
   location,

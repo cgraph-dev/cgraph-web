@@ -18,6 +18,11 @@ export interface BadgesSectionProps {
   getRarityColor: (rarity: Rarity) => string;
 }
 
+/**
+ */
+/**
+ * Badges Section component.
+ */
 export function BadgesSection({
   badges,
   equippedBadges,

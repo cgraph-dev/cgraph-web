@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { useNodeWallet, useNodeBundles, useCreateCheckout } from '@/modules/nodes/hooks/useNodes';
 import { BundleCard } from '@/modules/nodes/components/bundle-card';
 
+/** Description. */
 /** Nodes Shop Page component. */
 export function NodesShopPage(): React.ReactElement {
   const { data: wallet } = useNodeWallet();

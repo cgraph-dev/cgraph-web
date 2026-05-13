@@ -27,6 +27,9 @@ function isRarityFilter(_v: string): _v is FilterState['rarity'] {
 
 // COMPONENT
 
+/**
+ * Avatar Borders Section component.
+ */
 export function AvatarBordersSection({ filters, setFilters, viewMode, setViewMode }: SectionProps) {
   const equippedBorderId = useCustomizationStore((s) => s.selectedBorderId);
   const selectBorderId = useCustomizationStore((s) => s.selectBorderId);

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useChatStore } from '../store/chatStore.impl';
+import { useMessageRequestStore } from '../store/message-request-store';
 import { apiClient } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 
@@ -19,18 +19,18 @@ interface UseMessageRequestOptions {
  * @see MessageRequestRepository.java
  */
 export function useMessageRequest({ conversationId }: UseMessageRequestOptions) {
-  const setRequestState = useChatStore((s) => s.setRequestState);
-  const removeRequestState = useChatStore(
+  const setRequestState = useMessageRequestStore((s) => s.setRequestState);
+  const removeRequestState = useMessageRequestStore(
     (s) => s.removeRequestState,
   );
-  const setProcessingAction = useChatStore(
+  const setProcessingAction = useMessageRequestStore(
     (s) => s.setProcessingAction,
   );
-  const setActionError = useChatStore((s) => s.setActionError);
-  const status = useChatStore(
+  const setActionError = useMessageRequestStore((s) => s.setActionError);
+  const status = useMessageRequestStore(
     (s) => s.requestStates[conversationId],
   );
-  const isProcessing = useChatStore(
+  const isProcessing = useMessageRequestStore(
     (s) => s.processingAction === conversationId,
   );
 

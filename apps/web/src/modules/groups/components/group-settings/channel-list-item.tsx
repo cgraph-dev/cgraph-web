@@ -15,6 +15,10 @@ const channelIcons = {
   announcement: MegaphoneIcon,
 } as const;
 
+function hasChannelIcon(type: string): type is keyof typeof channelIcons {
+  return type in channelIcons;
+}
+
 interface ChannelItem {
   id: string;
   name: string;
@@ -43,6 +47,9 @@ interface ChannelListItemProps {
 
 export type { ChannelItem };
 
+/**
+ * Channel List Item component.
+ */
 export function ChannelListItem({
   channel,
   index,
@@ -57,7 +64,9 @@ export function ChannelListItem({
   onDelete,
   onPermissions,
 }: ChannelListItemProps) {
-  const Icon: React.ElementType = channelIcons[channel.type] ?? HashtagIcon;
+  const Icon: React.ElementType = hasChannelIcon(channel.type)
+    ? channelIcons[channel.type]
+    : HashtagIcon;
 
   return (
     <motion.div

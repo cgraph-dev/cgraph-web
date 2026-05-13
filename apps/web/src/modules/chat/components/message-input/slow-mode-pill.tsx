@@ -2,7 +2,7 @@
  * SlowModePill — inline countdown surfaced below the composer when a
  * channel has slow mode enabled and the local user is mid-cooldown.
  *
- * Rendered as a compact status pill below the composer.
+ * Discord parity: small pill, "Slow mode: send again in 27s".
  */
 
 import { motion } from 'motion/react';

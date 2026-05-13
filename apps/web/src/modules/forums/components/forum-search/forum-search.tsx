@@ -32,6 +32,11 @@ import type { ForumSearchProps, SearchFilters, SearchResult } from './types';
 
 const logger = createLogger('ForumSearch');
 
+/**
+ */
+/**
+ * Forum Search component.
+ */
 export function ForumSearch({
   forumId: _forumId,
   categories = [],

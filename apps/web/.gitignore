@@ -1,50 +1,10 @@
-# Vercel state
-.vercel/
-.vercel.bak/
+.vercel
 
-# Environment files. Keep only the documented example.
+# Production env
 .env
 .env.local
-.env.*
-!.env.example
+.env.*.local
 
-# Dependencies and build output
-node_modules/
-dist/
-build/
-.turbo/
-.tsbuild/
-*.tsbuildinfo
-vite.config.js
-vite.config.d.ts
-storybook-static/
-
-# Test and analysis output
+# Lighthouse CI local reports
 .lighthouseci/
-coverage/
-test-results/
-playwright-report/
-blob-report/
-debug*.log
-tsc_out.txt
-stats.html
-
-# Local editor and OS files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-
-# Local credentials and signing material
-*.pem
-*.key
-*.p12
-*.pfx
-*.crt
-*.keystore
-secrets/
-.secrets/
-credentials/
+.env*.local

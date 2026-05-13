@@ -15,6 +15,11 @@ interface ThreadReplyBadgeProps {
   message: Message;
 }
 
+/**
+ */
+/**
+ * Thread Reply Badge component.
+ */
 export function ThreadReplyBadge({ messageId, conversationId, message }: ThreadReplyBadgeProps) {
   const replyCount = useThreadStore((s) => s.replyCounts[messageId]);
   const openThread = useThreadStore((s) => s.openThread);

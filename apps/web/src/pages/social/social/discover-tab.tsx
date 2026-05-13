@@ -17,6 +17,11 @@ import type { DiscoverTabProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { loop, tweens } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Discover Tab component.
+ */
 export function DiscoverTab({ searchQuery, searchResults, onSearchChange }: DiscoverTabProps) {
   const navigate = useNavigate();
   const { sendRequest, friends, sentRequests, pendingRequests } = useFriendStore();
@@ -130,19 +135,15 @@ export function DiscoverTab({ searchQuery, searchResults, onSearchChange }: Disc
                       );
                     })()
                   ) : result.type !== 'user' ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        HapticFeedback.medium();
-                      }}
-                      className={`rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all ${
+                    <span
+                      className={`rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest ${
                         result.isJoined
                           ? 'bg-[var(--token-card-bg)] text-white/20'
-                          : 'bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 active:scale-[0.95]'
+                          : 'bg-primary-500/10 text-primary-400'
                       }`}
                     >
-                      {result.isJoined ? 'Joined' : 'Join'}
-                    </button>
+                      {result.isJoined ? 'Joined' : 'Open'}
+                    </span>
                   ) : null}
                 </div>
               </GlassCard>

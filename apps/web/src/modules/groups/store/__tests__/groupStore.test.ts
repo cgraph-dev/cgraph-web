@@ -496,7 +496,7 @@ describe('groupStore (modules)', () => {
   describe('leaveGroup', () => {
     it('should remove the group from the store', async () => {
       useGroupStore.setState({ groups: [mockGroup, mockGroup2] });
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.delete.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -506,7 +506,7 @@ describe('groupStore (modules)', () => {
 
     it('should reset activeGroupId when leaving the active group', async () => {
       useGroupStore.setState({ groups: [mockGroup], activeGroupId: 'group-1' });
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.delete.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -515,7 +515,7 @@ describe('groupStore (modules)', () => {
 
     it('should call the correct endpoint', async () => {
       useGroupStore.setState({ groups: [mockGroup] });
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.delete.mockResolvedValue({});
 
       await useGroupStore.getState().leaveGroup('group-1');
 
@@ -558,6 +558,10 @@ describe('groupStore (modules)', () => {
 
   // fetchChannelMessages
   describe('fetchChannelMessages', () => {
+    beforeEach(() => {
+      useGroupStore.setState({ groups: [mockGroup], activeGroupId: 'group-1' });
+    });
+
     it('should set isLoadingMessages while fetching', async () => {
       mockedApi.get.mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve({ data: { messages: [] } }), 50))
@@ -583,9 +587,12 @@ describe('groupStore (modules)', () => {
 
       await useGroupStore.getState().fetchChannelMessages('channel-1', 'cursor-id');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/channels/channel-1/messages', {
-        params: { before: 'cursor-id', limit: 50 },
-      });
+      expect(mockedApi.get).toHaveBeenCalledWith(
+        '/api/v1/groups/group-1/channels/channel-1/messages',
+        {
+          params: { before: 'cursor-id', limit: 50 },
+        }
+      );
     });
 
     it('should set hasMoreMessages to true when 50 messages returned', async () => {
@@ -630,6 +637,10 @@ describe('groupStore (modules)', () => {
 
   // sendChannelMessage
   describe('sendChannelMessage', () => {
+    beforeEach(() => {
+      useGroupStore.setState({ groups: [mockGroup], activeGroupId: 'group-1' });
+    });
+
     it('should send a message and add it to the store', async () => {
       mockedApi.post.mockResolvedValue({ data: { message: mockMessage } });
 
@@ -643,10 +654,14 @@ describe('groupStore (modules)', () => {
 
       await useGroupStore.getState().sendChannelMessage('channel-1', 'Test');
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/channels/channel-1/messages', {
-        content: 'Test',
-        client_message_id: 'test-idempotency-key-123',
-      });
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        '/api/v1/groups/group-1/channels/channel-1/messages',
+        {
+          content: 'Test',
+          content_type: 'text',
+          client_message_id: 'test-idempotency-key-123',
+        }
+      );
     });
 
     it('should include reply_to_id when replying', async () => {
@@ -654,11 +669,15 @@ describe('groupStore (modules)', () => {
 
       await useGroupStore.getState().sendChannelMessage('channel-1', 'Reply', 'msg-1');
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/channels/channel-1/messages', {
-        content: 'Reply',
-        client_message_id: 'test-idempotency-key-123',
-        reply_to_id: 'msg-1',
-      });
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        '/api/v1/groups/group-1/channels/channel-1/messages',
+        {
+          content: 'Reply',
+          content_type: 'text',
+          client_message_id: 'test-idempotency-key-123',
+          reply_to_id: 'msg-1',
+        }
+      );
     });
   });
 
@@ -745,9 +764,7 @@ describe('groupStore (modules)', () => {
 
       await useGroupStore.getState().fetchMembers('group-1');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/groups/group-1/members', {
-        params: undefined,
-      });
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/groups/group-1/members');
     });
   });
 
@@ -813,7 +830,7 @@ describe('groupStore (modules)', () => {
   describe('createInvite', () => {
     it('should return the invite code and expiry', async () => {
       mockedApi.post.mockResolvedValue({
-        data: { invite: { code: 'abc123', expiresAt: '2026-03-01T00:00:00Z' } },
+        data: { invite: { id: 'invite-1', code: 'abc123', expiresAt: '2026-03-01T00:00:00Z' } },
       });
 
       const result = await useGroupStore.getState().createInvite('group-1');
@@ -824,7 +841,7 @@ describe('groupStore (modules)', () => {
 
     it('should forward options to the API', async () => {
       mockedApi.post.mockResolvedValue({
-        data: { invite: { code: 'xyz', expiresAt: '2026-03-01T00:00:00Z' } },
+        data: { invite: { id: 'invite-2', code: 'xyz', expiresAt: '2026-03-01T00:00:00Z' } },
       });
 
       await useGroupStore.getState().createInvite('group-1', { maxUses: 5, expiresIn: 3600 });
@@ -856,6 +873,7 @@ describe('groupStore (modules)', () => {
     });
 
     it('sendChannelMessage should propagate API errors', async () => {
+      useGroupStore.setState({ groups: [mockGroup], activeGroupId: 'group-1' });
       mockedApi.post.mockRejectedValue(new Error('Rate limited'));
 
       await expect(

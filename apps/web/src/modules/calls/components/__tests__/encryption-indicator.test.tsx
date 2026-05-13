@@ -1,3 +1,6 @@
+/**
+ * @file Tests for EncryptionIndicator component
+ */
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';

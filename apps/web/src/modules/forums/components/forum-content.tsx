@@ -1,13 +1,14 @@
 /**
  * ForumContent — renders sanitized HTML with code highlighting and spoiler toggles.
  *
- * Replaces raw `dangerouslySetInnerHTML` usage in post-content and comment-card
+ * Replaces raw HTML injection in post-content and comment-card
  * by adding post-render enhancements:
  * - Prism.js syntax highlighting for `<code class="language-*">` blocks
  * - Click-to-toggle spoiler blocks (`.bbcode-spoiler`)
  */
 import { useRef, useEffect } from 'react';
 import Prism from 'prismjs';
+import { SafeHtml } from '@/shared/components/security/safe-html';
 
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
@@ -28,13 +29,15 @@ import 'prismjs/components/prism-yaml';
 import 'prismjs/components/prism-markdown';
 
 import './forum-content.css';
-import { SafeHtml } from '@/shared/components/security';
 
 interface ForumContentProps {
   html: string;
   className?: string;
 }
 
+/**
+ * ForumContent component.
+ */
 export function ForumContent({ html, className = '' }: ForumContentProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -66,5 +69,5 @@ export function ForumContent({ html, className = '' }: ForumContentProps) {
     };
   }, [html]);
 
-  return <SafeHtml ref={ref} html={html} className={`forum-content ${className}`} />;
+  return <SafeHtml ref={ref} className={`forum-content ${className}`} html={html} />;
 }

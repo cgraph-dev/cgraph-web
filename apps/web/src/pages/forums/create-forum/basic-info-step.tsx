@@ -12,6 +12,11 @@ interface BasicInfoStepProps {
   onUpdateField: <K extends keyof ForumFormData>(key: K, value: ForumFormData[K]) => void;
 }
 
+/**
+ */
+/**
+ * Basic Info Step component.
+ */
 export function BasicInfoStep({ formData, onNameChange, onUpdateField }: BasicInfoStepProps) {
   const nameInvalid =
     formData.name &&

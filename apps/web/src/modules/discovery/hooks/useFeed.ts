@@ -32,37 +32,38 @@ export interface FeedThread {
 
 interface FeedResponse {
   data: FeedThread[];
+  page_info?: {
+    has_next_page: boolean;
+    end_cursor: string | null;
+  };
+  meta?: {
+    has_more?: boolean;
+    cursor?: string | null;
+  };
+}
+
+interface NormalizedFeedResponse {
+  data: FeedThread[];
   page_info: {
     has_next_page: boolean;
     end_cursor: string | null;
   };
 }
 
-interface LegacyFeedResponse {
-  data?: FeedThread[];
-  meta?: {
-    has_more?: boolean;
-    cursor?: string | null;
-    end_cursor?: string | null;
-  };
-}
-
-function normalizeFeedResponse(raw: FeedResponse | LegacyFeedResponse): FeedResponse {
-  if ('page_info' in raw && raw.page_info) return raw;
-  const meta = 'meta' in raw ? raw.meta : undefined;
-
+function normalizeFeedResponse(response: FeedResponse): NormalizedFeedResponse {
   return {
-    data: Array.isArray(raw.data) ? raw.data : [],
-    page_info: {
-      has_next_page: meta?.has_more ?? false,
-      end_cursor: meta?.end_cursor ?? meta?.cursor ?? null,
+    data: response.data,
+    page_info: response.page_info ?? {
+      has_next_page: response.meta?.has_more ?? false,
+      end_cursor: response.meta?.cursor ?? null,
     },
   };
 }
 
+/** Description. */
 /** Hook for feed. */
 export function useFeed(mode: FeedMode, communityId?: string | null) {
-  return useInfiniteQuery<FeedResponse>({
+  return useInfiniteQuery<NormalizedFeedResponse>({
     queryKey: ['feed', mode, communityId ?? null],
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams({ mode });
@@ -70,9 +71,7 @@ export function useFeed(mode: FeedMode, communityId?: string | null) {
       if (pageParam) params.set('cursor', String(pageParam));
       if (communityId) params.set('community_id', communityId);
 
-      const res = await http.get<FeedResponse | LegacyFeedResponse>(
-        `/api/v1/feed?${params.toString()}`
-      );
+      const res = await http.get<FeedResponse>(`/api/v1/feed?${params.toString()}`);
       return normalizeFeedResponse(res.data);
     },
     initialPageParam: null satisfies string | null,

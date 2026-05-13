@@ -61,6 +61,11 @@ interface PresenceStatusSelectorProps {
   compact?: boolean;
 }
 
+/**
+ */
+/**
+ * Presence Status Selector component.
+ */
 export function PresenceStatusSelector({
   currentStatus = 'online',
   onStatusChange,
@@ -104,6 +109,9 @@ export function PresenceStatusSelector({
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         disabled={updating}
+        aria-label={`Set presence status. Current status: ${currentOption.label}`}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
         className={`flex items-center gap-2 rounded-lg transition-colors hover:bg-[var(--token-card-bg)] ${
           compact ? 'p-1.5' : 'px-3 py-2'
         }`}
@@ -118,6 +126,8 @@ export function PresenceStatusSelector({
             <>
               <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)} />
               <motion.div
+                role="menu"
+                aria-label="Presence status"
                 initial={{ opacity: 0, x: -6, scale: 0.92 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -6, scale: 0.92 }}
@@ -133,6 +143,8 @@ export function PresenceStatusSelector({
                   <button
                     key={option.value}
                     onClick={() => handleSelect(option.value)}
+                    role="menuitemradio"
+                    aria-checked={status === option.value}
                     className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-all duration-150 hover:bg-[var(--token-card-bg)] ${
                       status === option.value ? 'bg-[var(--token-card-bg)]' : ''
                     }`}

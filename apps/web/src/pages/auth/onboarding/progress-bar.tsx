@@ -10,6 +10,9 @@ interface ProgressBarProps {
   currentStep: number;
 }
 
+/**
+ * Progress Bar component.
+ */
 export function ProgressBar({ currentStep }: ProgressBarProps) {
   return (
     <div className="mb-8">

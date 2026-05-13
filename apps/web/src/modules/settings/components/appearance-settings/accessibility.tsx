@@ -24,6 +24,11 @@ interface AccessibilityProps {
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Accessibility component.
+ */
 export function Accessibility({
   reduceMotion,
   highContrast,

@@ -34,6 +34,7 @@ const sizeStyles = {
   },
 } as const;
 
+/** Description. */
 /** Role Badge component. */
 export function RoleBadge({ name, color, size = 'sm', permissions, className }: RoleBadgeProps) {
   const styles = sizeStyles[size];

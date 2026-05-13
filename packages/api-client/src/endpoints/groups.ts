@@ -54,53 +54,47 @@ export type {
 
 export { GroupRoleSchema, GateTypeSchema };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 const JoinedGroupSchema = z.union([
   GroupSchema,
   z.object({ group: GroupSchema }).transform(({ group }) => group),
 ]);
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function unwrapPayload(value: unknown, keys: readonly string[]): unknown {
-  if (!isRecord(value)) return value;
-  for (const key of keys) {
-    if (key in value) return value[key];
+function unwrapObject(value: unknown, primaryKey: string): unknown {
+  if (!isRecord(value)) {
+    return value;
   }
-  return value;
+  return value[primaryKey] ?? value.data ?? value;
 }
 
-function unwrapListPayload(value: unknown, keys: readonly string[]): unknown {
-  if (Array.isArray(value)) return value;
-  if (!isRecord(value)) return value;
-  for (const key of keys) {
-    const candidate = value[key];
-    if (Array.isArray(candidate)) return candidate;
-  }
-  return value;
-}
+const GroupResponseSchema = z.preprocess((value) => unwrapObject(value, 'group'), GroupSchema);
 
-const GroupResponseSchema = z.preprocess(
-  (value) => unwrapPayload(value, ['group', 'data']),
-  GroupSchema
-);
 const GroupListResponseSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['groups', 'communities', 'data', 'results']),
-  z.array(GroupResponseSchema)
+  (value) => unwrapObject(value, 'groups'),
+  GroupSchema.array()
 );
+
+const GroupMemberListResponseSchema = z.preprocess(
+  (value) => unwrapObject(value, 'members'),
+  GroupMemberSchema.array()
+);
+
 const GroupInviteResponseSchema = z.preprocess(
-  (value) => unwrapPayload(value, ['invite', 'data']),
+  (value) => unwrapObject(value, 'invite'),
   GroupInviteSchema
 );
+
 const GroupInviteListResponseSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['invites', 'data', 'results']),
-  z.array(GroupInviteResponseSchema)
+  (value) => unwrapObject(value, 'invites'),
+  GroupInviteSchema.array()
 );
-const GroupMemberListResponseSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['members', 'data', 'results']),
-  z.array(GroupMemberSchema)
-);
+
+function compactPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
+}
 
 /**
  * Creates all group-related endpoint methods bound to the provided Axios instance.
@@ -129,13 +123,16 @@ export function createGroupsEndpoints(http: AxiosInstance) {
     }): Promise<ApiResult<Group>> {
       return apiCall(
         () =>
-          http.post('/api/v1/groups', {
-            name: data.name,
-            description: data.description,
-            visibility: data.isPublic !== false ? 'public' : 'private',
-            category: data.category,
-            features: data.features,
-          }),
+          http.post(
+            '/api/v1/groups',
+            compactPayload({
+              name: data.name,
+              description: data.description,
+              visibility: data.isPublic !== false ? 'public' : 'private',
+              category: data.category,
+              features: data.features,
+            })
+          ),
         GroupResponseSchema
       );
     },
@@ -148,31 +145,28 @@ export function createGroupsEndpoints(http: AxiosInstance) {
         readonly description?: string;
         readonly isPublic?: boolean;
         readonly visibility?: 'public' | 'private';
-        readonly category?: string;
-        readonly features?: Record<string, boolean>;
         readonly icon_url?: string | null;
         readonly banner_url?: string | null;
         readonly is_node_gated?: boolean;
         readonly gate_type?: GateType | null;
         readonly gate_price_nodes?: number | null;
+        readonly category?: string;
+        readonly features?: Record<string, boolean>;
       }
     ): Promise<ApiResult<Group>> {
+      const { isPublic, ...rest } = data;
+      const visibility =
+        rest.visibility ?? (isPublic !== undefined ? (isPublic ? 'public' : 'private') : undefined);
+
       return apiCall(
         () =>
-          http.patch(`/api/v1/groups/${groupId}`, {
-            name: data.name,
-            description: data.description,
-            visibility:
-              data.visibility ??
-              (data.isPublic !== undefined ? (data.isPublic ? 'public' : 'private') : undefined),
-            category: data.category,
-            features: data.features,
-            icon_url: data.icon_url,
-            banner_url: data.banner_url,
-            is_node_gated: data.is_node_gated,
-            gate_type: data.gate_type,
-            gate_price_nodes: data.gate_price_nodes,
-          }),
+          http.patch(
+            `/api/v1/groups/${groupId}`,
+            compactPayload({
+              ...rest,
+              visibility,
+            })
+          ),
         GroupResponseSchema
       );
     },
@@ -223,7 +217,10 @@ export function createGroupsEndpoints(http: AxiosInstance) {
       }
     ): Promise<ApiResult<GroupMember[]>> {
       return apiCall(
-        () => http.get(`/api/v1/groups/${groupId}/members`, { params: options }),
+        () =>
+          options
+            ? http.get(`/api/v1/groups/${groupId}/members`, { params: options })
+            : http.get(`/api/v1/groups/${groupId}/members`),
         GroupMemberListResponseSchema
       );
     },
@@ -267,8 +264,12 @@ export function createGroupsEndpoints(http: AxiosInstance) {
         readonly expires_in?: number;
       }
     ): Promise<ApiResult<GroupInvite>> {
+      const body = {
+        ...(options?.max_uses !== undefined ? { max_uses: options.max_uses } : {}),
+        ...(options?.expires_in !== undefined ? { expires_in: options.expires_in } : {}),
+      };
       return apiCall(
-        () => http.post(`/api/v1/groups/${groupId}/invites`, options),
+        () => http.post(`/api/v1/groups/${groupId}/invites`, body),
         GroupInviteResponseSchema
       );
     },

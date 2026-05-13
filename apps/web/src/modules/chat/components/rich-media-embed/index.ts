@@ -6,6 +6,8 @@
  * with a fullscreen lightbox viewer.
  *
  */
+
+// Main component
 export { default } from './rich-media-embed';
 
 // Sub-components

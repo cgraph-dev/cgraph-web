@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { runSync, onStatusChange, onSyncComplete, type SyncStats } from './sync-service';
 import { getPendingMessages } from './indexeddb-cache';
-import { useAdaptiveInterval } from '@/hooks/useAdaptiveInterval';
 
 export interface OfflineStatus {
   readonly isOnline: boolean;
@@ -24,6 +23,7 @@ export function useOfflineStatus(): OfflineStatus {
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', refreshPendingCount);
 
     const unsubStatus = onStatusChange(setIsOnline);
     const unsubSync = onSyncComplete((stats) => {
@@ -35,12 +35,15 @@ export function useOfflineStatus(): OfflineStatus {
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', refreshPendingCount);
       unsubStatus();
       unsubSync();
     };
   }, []);
 
-  useAdaptiveInterval(refreshPendingCount, 5_000, { hiddenMultiplier: 6, immediate: true });
+  useEffect(() => {
+    refreshPendingCount();
+  }, []);
 
   function refreshPendingCount(): void {
     getPendingMessages()

@@ -1,3 +1,6 @@
+/**
+ * Call history page component.
+ */
 import { motion, AnimatePresence } from 'motion/react';
 import { Phone, RefreshCw } from 'lucide-react';
 import { PageContainer } from '@/components/layout';
@@ -11,6 +14,9 @@ const FILTER_OPTIONS: { value: CallFilter; label: string }[] = [
   { value: 'missed', label: 'Missed' },
 ];
 
+/**
+ * Call History Page — route-level page component.
+ */
 export default function CallHistoryPage() {
   const { sections, filter, setFilter, isLoading, isEmpty, error, refetch } = useCallHistory();
   const hasError = Boolean(error);

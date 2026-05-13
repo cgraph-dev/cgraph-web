@@ -148,6 +148,8 @@ export const AvatarZone = memo(function AvatarZone({
             )}
           </div>
         )}
+
+        {/* Status dot */}
         <div
           className={cn(
             'absolute bottom-1 right-1 z-[3] h-3.5 w-3.5 rounded-full border-[2.5px] border-[#08090f]',

@@ -1,9 +1,20 @@
+/**
+ * Separator Component
+ *
+ * Visual divider between content sections.
+ */
+
 interface SeparatorProps {
   orientation?: 'horizontal' | 'vertical';
   className?: string;
   decorative?: boolean;
 }
 
+/**
+ */
+/**
+ * Separator component.
+ */
 export function Separator({
   orientation = 'horizontal',
   className = '',

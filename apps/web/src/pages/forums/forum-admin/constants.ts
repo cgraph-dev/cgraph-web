@@ -17,6 +17,7 @@ import {
   FlagIcon,
   CodeBracketIcon,
   CalendarDaysIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import type { TabConfig, ThemePreset, MemberRole, PostFlair } from './types';
 
@@ -39,6 +40,12 @@ export const TABS: TabConfig[] = [
   { id: 'modqueue', name: 'Mod Queue', icon: FlagIcon, description: 'Reports and approvals' },
   { id: 'bbcode', name: 'BBCode', icon: CodeBracketIcon, description: 'Custom BBCode tags' },
   { id: 'calendar', name: 'Calendar', icon: CalendarDaysIcon, description: 'Events and calendar' },
+  {
+    id: 'node-gating',
+    name: 'Node Gating',
+    icon: CurrencyDollarIcon,
+    description: 'Charge Nodes for access',
+  },
 ];
 
 // THEME PRESETS

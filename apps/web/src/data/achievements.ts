@@ -141,7 +141,7 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
   {
     id: 'knowledge_keeper',
     title: 'Knowledge Keeper',
-    description: 'Write long-form guides totaling 10,000+ words',
+    description: 'Write comprehensive guides totaling 10,000+ words',
     category: 'content',
     rarity: 'legendary',
     icon: '📚',

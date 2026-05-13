@@ -151,6 +151,7 @@ function ReplyItem({ reply, depth = 0 }: { reply: Reply; depth?: number }) {
     </div>
   );
 }
+/** Description. */
 /** Post View component. */
 export function PostView({
   title,

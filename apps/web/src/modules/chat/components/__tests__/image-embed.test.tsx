@@ -52,13 +52,13 @@ describe('ImageEmbed', () => {
   });
 
   it('renders photo icon in hover overlay', () => {
-    render(<ImageEmbed embed={makeEmbed()} onExpand={onExpand} />);
-    expect(screen.getByTestId('icon-PhotoIcon')).toBeInTheDocument();
+    const { container } = render(<ImageEmbed embed={makeEmbed()} onExpand={onExpand} />);
+    expect(container.querySelectorAll('svg[data-slot="icon"]').length).toBeGreaterThanOrEqual(2);
   });
 
   it('renders expand icon in hover overlay', () => {
     render(<ImageEmbed embed={makeEmbed()} onExpand={onExpand} />);
-    expect(screen.getByTestId('icon-ArrowTopRightOnSquareIcon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /open image test photo/i })).toBeInTheDocument();
   });
 
   it('applies lazy loading to the image', () => {

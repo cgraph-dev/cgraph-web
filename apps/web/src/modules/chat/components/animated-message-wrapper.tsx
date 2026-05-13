@@ -26,6 +26,11 @@ import { tweens, springs } from '@/lib/animation-presets';
 
 export type { AnimatedMessageWrapperProps } from './animated-message-wrapper.types';
 // COMPONENT
+/**
+ */
+/**
+ * Animated Message Wrapper wrapper component.
+ */
 export function AnimatedMessageWrapper({
   children,
   isOwnMessage,

@@ -61,6 +61,9 @@ function formatJoinDate(dateStr: string): string {
   });
 }
 
+/**
+ * Postbit Sidebar component.
+ */
 export function PostbitSidebar({ author, forumId, postId, currentUserId }: PostbitSidebarProps) {
   return (
     <div className="flex w-36 flex-shrink-0 flex-col items-center gap-2 border-r border-[var(--token-card-border)] pr-4 text-center">

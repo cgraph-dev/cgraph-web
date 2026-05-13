@@ -9,7 +9,10 @@ import {
   triggerLogout,
 } from './tokenService';
 import { getApiBaseUrl } from './backend-url';
-import { SOCKET_TOKEN_REFRESHED_EVENT } from './socket/events';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('API');
+const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 
 /**
  * API URL Configuration
@@ -25,8 +28,16 @@ import { SOCKET_TOKEN_REFRESHED_EVENT } from './socket/events';
 // Empty string means "use relative paths" for Vercel rewrites.
 const API_URL = getApiBaseUrl();
 
-function notifySocketTokenRefresh(): void {
-  window.dispatchEvent(new Event(SOCKET_TOKEN_REFRESHED_EVENT));
+// Lazy import socket to avoid circular dependency
+async function reconnectSocket(): Promise<void> {
+  try {
+    const { socketManager } = await import('./socket');
+    if (socketManager.isConnected()) {
+      await socketManager.reconnectWithNewToken();
+    }
+  } catch (err) {
+    logger.warn('Socket reconnect failed:', err);
+  }
 }
 
 /**
@@ -51,10 +62,13 @@ export const api = createHttpClient({
   getRefreshToken: () => getRefreshToken(),
   setTokens: async ({ accessToken, refreshToken }) => {
     setTokensInStore({ accessToken, refreshToken: refreshToken ?? null });
-    notifySocketTokenRefresh();
+    reconnectSocket();
   },
   onLogout: async () => {
     await triggerLogout();
+    if (isE2EAuthBypass) {
+      return;
+    }
     window.location.href = '/login';
   },
   refresh: {
@@ -101,6 +115,8 @@ export const api = createHttpClient({
   },
 });
 
+/**
+ */
 /**
  * Retrieves error message.
  *

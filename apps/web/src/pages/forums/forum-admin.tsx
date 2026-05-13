@@ -20,6 +20,9 @@ import { useForumAdmin } from './forum-admin/useForumAdmin';
 import { Sidebar } from './forum-admin/sidebar';
 import { AdminContent } from './forum-admin/admin-content';
 
+/**
+ * Forum Admin administration component.
+ */
 export default function ForumAdmin() {
   const {
     // Navigation

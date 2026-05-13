@@ -167,6 +167,7 @@ const BadgesRow = memo(function BadgesRow({ badges }: { readonly badges: Readonl
     </div>
   );
 });
+// Main component
 export const CosmeticProfileCard = memo(function CosmeticProfileCard({
   userId,
   groupId,

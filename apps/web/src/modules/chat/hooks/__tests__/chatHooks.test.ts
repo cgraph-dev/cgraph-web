@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-const { mockChatState, mockApi } = vi.hoisted(() => ({
-  mockChatState: {
+const { mockChatState, mockApi, mockUseChatStore } = vi.hoisted(() => {
+  const mockChatState = {
     conversations: [] as Array<{ id: string; name?: string; participants: unknown[] }>,
     messages: {} as Record<string, unknown[]>,
     isLoadingMessages: false,
@@ -13,27 +13,22 @@ const { mockChatState, mockApi } = vi.hoisted(() => ({
     setActiveConversation: vi.fn(),
     editMessage: vi.fn(),
     deleteMessage: vi.fn(),
-  },
-  mockApi: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
-}));
-
-vi.mock('@/modules/chat/store', () => {
-  const storeSelector = vi.fn((selector?: (s: typeof mockChatState) => unknown) => {
+  };
+  const mockUseChatStore = vi.fn((selector?: (s: typeof mockChatState) => unknown) => {
     if (typeof selector === 'function') return selector(mockChatState);
     return mockChatState;
   });
-  (storeSelector as unknown as Record<string, unknown>).getState = () => mockChatState;
-  return { useChatStore: storeSelector };
+  (mockUseChatStore as unknown as Record<string, unknown>).getState = () => mockChatState;
+
+  return {
+    mockChatState,
+    mockUseChatStore,
+    mockApi: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+  };
 });
 
-vi.mock('@/modules/chat/store/chatStore.impl', () => {
-  const storeSelector = vi.fn((selector?: (s: typeof mockChatState) => unknown) => {
-    if (typeof selector === 'function') return selector(mockChatState);
-    return mockChatState;
-  });
-  (storeSelector as unknown as Record<string, unknown>).getState = () => mockChatState;
-  return { useChatStore: storeSelector };
-});
+vi.mock('@/modules/chat/store', () => ({ useChatStore: mockUseChatStore }));
+vi.mock('@/modules/chat/store/chatStore.impl', () => ({ useChatStore: mockUseChatStore }));
 
 vi.mock('@/modules/auth/store', () => ({
   useAuthStore: vi.fn(() => ({ user: { id: 'me' } })),

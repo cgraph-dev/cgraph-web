@@ -21,6 +21,11 @@ interface PaymentStepProps {
   onSubmit: () => void;
 }
 
+/**
+ */
+/**
+ * Payment Step component.
+ */
 export function PaymentStep({
   paymentMethod,
   cardData,

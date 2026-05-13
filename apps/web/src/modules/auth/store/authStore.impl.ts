@@ -13,7 +13,6 @@ import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { StateStorage } from 'zustand/middleware';
 import { authLogger } from '@/lib/logger';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 // Types
 export type { ApiErrorResponse, User, WalletChallenge, AuthState } from './authStore.types';
@@ -103,11 +102,13 @@ export const useAuthStore = create<AuthState>()(
         };
       },
       {
-        name: STORAGE_KEYS.auth,
+        name: 'cgraph-auth-v2',
         storage: createJSONStorage(() => safeStorage),
         partialize: (state) => ({
           token: state.token,
           refreshToken: state.refreshToken,
+          user: state.user,
+          isAuthenticated: state.isAuthenticated,
         }),
         // Critical: Handle rehydration to fix isLoading state.
         // Uses captured _storeSet instead of useAuthStore.setState to avoid
@@ -127,13 +128,11 @@ export const useAuthStore = create<AuthState>()(
                 refreshToken: null,
               });
             } else if (state) {
-              // Tokens may survive reload for WebSocket/API continuity, but
-              // account identity is trusted only after checkAuth confirms /me.
+              // Rehydration successful - mark loading as complete
+              // Don't block on token validation - let the app render
               authLogger.debug('Rehydration complete - hasToken:', !!state.token);
               _storeSet?.({
-                user: null,
-                isAuthenticated: false,
-                isLoading: false,
+                isLoading: false, // Never block - checkAuth runs in background
               });
             } else {
               // No state to rehydrate

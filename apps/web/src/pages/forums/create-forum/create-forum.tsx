@@ -21,11 +21,9 @@ import { AppearanceStep } from './appearance-step';
 import { SettingsStep } from './settings-step';
 import { ConfirmStep } from './confirm-step';
 
-function getSubscriptionTier(user: unknown): string {
-  if (typeof user !== 'object' || user === null || !('subscription_tier' in user)) return 'free';
-  return typeof user.subscription_tier === 'string' ? user.subscription_tier : 'free';
-}
-
+/**
+ * Create Forum component.
+ */
 export default function CreateForum() {
   const {
     step,
@@ -102,7 +100,7 @@ export default function CreateForum() {
         {step === 3 && <SettingsStep formData={formData} onUpdateField={updateFormData} />}
 
         {step === 4 && (
-          <ConfirmStep formData={formData} subscriptionTier={getSubscriptionTier(user)} />
+          <ConfirmStep formData={formData} subscriptionTier={user?.subscription?.tier ?? 'free'} />
         )}
 
         {/* Navigation Buttons */}

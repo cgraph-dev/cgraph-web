@@ -48,11 +48,11 @@ vi.mock('motion/react', () => ({
 }));
 
 vi.mock('@heroicons/react/24/outline', () => ({
-  CurrencyDollarIcon: (props: Record<string, unknown>) => (
-    <svg data-testid="CurrencyDollarIcon" {...props} />
-  ),
   LockClosedIcon: (props: Record<string, unknown>) => (
     <svg data-testid="LockClosedIcon" {...props} />
+  ),
+  CurrencyDollarIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="CurrencyDollarIcon" {...props} />
   ),
 }));
 

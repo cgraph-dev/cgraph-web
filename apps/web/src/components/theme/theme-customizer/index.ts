@@ -4,6 +4,8 @@
  * Comprehensive theme customization panel with live preview.
  *
  */
+
+// Main component
 export { ThemeCustomizer, default } from './theme-customizer';
 
 // Tab components

@@ -18,6 +18,8 @@ import type { ChannelMessage } from './group-types';
 interface ChannelThreadState {
   /** The parent message of the currently open thread */
   activeThread: ChannelMessage | null;
+  /** Group ID of the active thread */
+  activeGroupId: string | null;
   /** Channel ID of the active thread */
   activeChannelId: string | null;
   /** Replies in the active thread (chronological order) */
@@ -32,11 +34,11 @@ interface ChannelThreadState {
   isOpen: boolean;
 
   // Actions
-  openThread: (channelId: string, message: ChannelMessage) => Promise<void>;
+  openThread: (groupId: string, channelId: string, message: ChannelMessage) => Promise<void>;
   closeThread: () => void;
   sendThreadReply: (content: string) => Promise<void>;
   addThreadReply: (reply: ChannelMessage) => void;
-  fetchReplyCounts: (channelId: string, messageIds: string[]) => Promise<void>;
+  fetchReplyCounts: (groupId: string, channelId: string, messageIds: string[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -49,6 +51,7 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
   devtools(
     (set, get) => ({
       activeThread: null,
+      activeGroupId: null,
       activeChannelId: null,
       threadReplies: [],
       isLoading: false,
@@ -58,9 +61,10 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
         return get().activeThread !== null;
       },
 
-      openThread: async (channelId, message) => {
+      openThread: async (groupId, channelId, message) => {
         set({
           activeThread: message,
+          activeGroupId: groupId,
           activeChannelId: channelId,
           threadReplies: [],
           isLoading: true,
@@ -68,7 +72,9 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
         });
 
         try {
-          const res = await http.get(`/api/v1/channels/${channelId}/messages/${message.id}/thread`);
+          const res = await http.get(
+            `/api/v1/groups/${groupId}/channels/${channelId}/messages/${message.id}/replies`
+          );
           const replies: ChannelMessage[] = Array.isArray(res.data?.data)
             ? res.data.data
             : Array.isArray(res.data?.replies)
@@ -89,6 +95,7 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
       closeThread: () => {
         set({
           activeThread: null,
+          activeGroupId: null,
           activeChannelId: null,
           threadReplies: [],
           isLoading: false,
@@ -97,14 +104,17 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
       },
 
       sendThreadReply: async (content: string) => {
-        const { activeChannelId, activeThread } = get();
-        if (!activeChannelId || !activeThread) return;
+        const { activeGroupId, activeChannelId, activeThread } = get();
+        if (!activeGroupId || !activeChannelId || !activeThread) return;
 
         try {
-          const res = await http.post(`/api/v1/channels/${activeChannelId}/messages`, {
-            content,
-            reply_to_id: activeThread.id,
-          });
+          const res = await http.post(
+            `/api/v1/groups/${activeGroupId}/channels/${activeChannelId}/messages`,
+            {
+              content,
+              reply_to_id: activeThread.id,
+            }
+          );
           const replyRaw: unknown = res.data?.data ?? res.data?.message ?? res.data;
           const reply: ChannelMessage | null = isChannelMessage(replyRaw) ? replyRaw : null;
           if (reply?.id) {
@@ -137,13 +147,16 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
         });
       },
 
-      fetchReplyCounts: async (channelId: string, messageIds: string[]) => {
+      fetchReplyCounts: async (groupId: string, channelId: string, messageIds: string[]) => {
         if (messageIds.length === 0) return;
 
         try {
-          const res = await http.post(`/api/v1/channels/${channelId}/thread-counts`, {
-            message_ids: messageIds,
-          });
+          const res = await http.post(
+            `/api/v1/groups/${groupId}/channels/${channelId}/thread-counts`,
+            {
+              message_ids: messageIds,
+            }
+          );
           const raw = res.data?.data ?? res.data?.counts;
           const counts: Record<string, number> =
             typeof raw === 'object' && raw !== null && !Array.isArray(raw)
@@ -162,6 +175,7 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
       reset: () =>
         set({
           activeThread: null,
+          activeGroupId: null,
           activeChannelId: null,
           threadReplies: [],
           isLoading: false,

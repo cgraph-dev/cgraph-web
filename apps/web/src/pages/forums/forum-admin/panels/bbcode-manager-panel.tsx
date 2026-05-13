@@ -15,7 +15,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
-import { SafeHtml } from '@/shared/components/security';
+import { SafeHtml } from '@/shared/components/security/safe-html';
 import { http } from '@/modules/forums/store/forumStore.utils';
 import { createLogger } from '@/lib/logger';
 

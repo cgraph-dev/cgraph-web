@@ -38,9 +38,6 @@ import('./lib/push/register-sw').then(({ registerServiceWorker }) =>
 const debugLog = import.meta.env.DEV
   ? (msg: string, ...args: unknown[]) => console.debug('[CGraph]', msg, ...args)
   : () => {};
-const shouldPersistQueryCache = import.meta.env.VITE_ENABLE_QUERY_CACHE_PERSISTENCE === 'true';
-const shouldRenderAnalytics =
-  import.meta.env.PROD && import.meta.env.VITE_ENABLE_ANALYTICS !== 'false';
 
 debugLog('Module loading - start');
 
@@ -48,15 +45,15 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
+import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { Toaster } from 'react-hot-toast';
-import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import ErrorBoundary from './components/error-boundary';
 import { ThemeProvider } from './providers/theme-context';
 import { NotificationProvider } from './providers/notification-provider';
 import { WalletProvider } from './lib/wallet';
 import { logger } from './lib/logger';
-import { STORAGE_KEYS, clearCGraphQueryCache } from './lib/storage/namespaces';
 import './i18n'; // i18n initialization (must be before App)
 import './index.css';
 
@@ -85,49 +82,42 @@ const queryClient = new QueryClient({
   },
 });
 
-const SAFE_OFFLINE_QUERY_ROOTS = new Set([
-  'feature-flags',
-  'notification-preferences',
-  'public-forums',
-  'settings',
-  'theme',
-]);
+// Create a persister to save cache to localStorage for offline support
+const localStoragePersister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: 'cgraph-query-cache',
+  // Serialize/deserialize with error handling
+  serialize: (data) => {
+    try {
+      return JSON.stringify(data);
+    } catch (error) {
+      logger.warn('Failed to serialize cache:', error);
+      return '{}';
+    }
+  },
+  deserialize: (data) => {
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      logger.warn('Failed to deserialize cache, clearing corrupted data:', error);
+      // Clear corrupted cache
+      try {
+        window.localStorage.removeItem('cgraph-query-cache');
+      } catch (_e) {
+        // Ignore localStorage errors
+      }
+      return {};
+    }
+  },
+});
 
-function isSafeOfflineQueryKey(queryKey: readonly unknown[]): boolean {
-  const root = queryKey[0];
-  return typeof root === 'string' && SAFE_OFFLINE_QUERY_ROOTS.has(root);
-}
-
-if (shouldPersistQueryCache) {
-  void import('@tanstack/query-sync-storage-persister')
-    .then(({ createSyncStoragePersister }) => {
-      const localStoragePersister = createSyncStoragePersister({
-        storage: window.localStorage,
-        key: STORAGE_KEYS.queryCache,
-        serialize: (data) => JSON.stringify(data),
-        deserialize: (data) => JSON.parse(data),
-      });
-
-      return import('@tanstack/react-query-persist-client').then(({ persistQueryClient }) => {
-        persistQueryClient({
-          queryClient,
-          persister: localStoragePersister,
-          maxAge: 1000 * 60 * 60 * 24,
-          buster: import.meta.env.VITE_APP_VERSION ?? '0.9.31',
-          dehydrateOptions: {
-            shouldDehydrateQuery: (query) =>
-              query.meta?.persist === true && isSafeOfflineQueryKey(query.queryKey),
-          },
-        });
-      });
-    })
-    .catch((error: unknown) => {
-      logger.warn('Query cache persistence was requested but could not start:', error);
-      clearCGraphQueryCache();
-    });
-} else {
-  clearCGraphQueryCache();
-}
+// Persist the query client cache
+persistQueryClient({
+  queryClient,
+  persister: localStoragePersister,
+  maxAge: 1000 * 60 * 60 * 24,
+  buster: 'v0.9.31-web', // Must match package.json version for cache invalidation
+});
 
 // Track online/offline status for offline-first behavior
 if (typeof window !== 'undefined') {
@@ -209,7 +199,6 @@ try {
             </QueryClientProvider>
           </ThemeProvider>
         </Suspense>
-        {shouldRenderAnalytics ? <Analytics /> : null}
       </ErrorBoundary>
     </React.StrictMode>
   );

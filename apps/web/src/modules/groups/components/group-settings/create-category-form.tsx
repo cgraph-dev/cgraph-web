@@ -10,6 +10,9 @@ interface CreateCategoryFormProps {
   onClose: () => void;
 }
 
+/**
+ * Create Category Form component.
+ */
 export function CreateCategoryForm({
   show,
   name,

@@ -141,6 +141,8 @@ export default function InlineModerationToolbar({
               </div>
             </div>
           </div>
+
+          {/* Action buttons */}
           <div className="flex items-center gap-2">
             {/* Approve */}
             <button
@@ -253,6 +255,11 @@ interface ModerationCheckboxProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Moderation Checkbox component.
+ */
 export function ModerationCheckbox({ type, id, className = '' }: ModerationCheckboxProps) {
   const { bulkSelection, toggleBulkSelection } = useModerationStore();
 

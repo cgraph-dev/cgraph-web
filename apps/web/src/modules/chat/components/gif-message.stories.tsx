@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the GifMessage component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 
 /** Isolated GIF message mock for Storybook */

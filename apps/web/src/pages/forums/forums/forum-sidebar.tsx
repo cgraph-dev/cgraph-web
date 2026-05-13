@@ -12,9 +12,15 @@ import { LeaderboardSidebar } from '@/modules/forums/components/leaderboard-widg
 import type { ForumSidebarProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Forum Sidebar component.
+ */
 export function ForumSidebar({ activeForum, forums, isLoadingForums }: ForumSidebarProps) {
   return (
     <div className="bg-[var(--token-card-bg)]/40 relative z-10 hidden w-80 shrink-0 overflow-y-auto border-l border-[var(--token-card-border)] p-4 backdrop-blur-3xl transition-all duration-300 lg:block">
+      {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary-500/5 via-black/20 to-violet-500/5" />
 
       <div className="relative z-10 space-y-4">

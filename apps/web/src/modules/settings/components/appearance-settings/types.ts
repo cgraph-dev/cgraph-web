@@ -9,6 +9,9 @@ import type { ReactNode } from 'react';
 
 // COMPONENT PROPS
 
+/**
+ * Props for ThemeCard component
+ */
 export interface ThemeCardProps {
   /** Theme to display */
   theme: Theme;
@@ -22,6 +25,9 @@ export interface ThemeCardProps {
   isPremium?: boolean;
 }
 
+/**
+ * Props for Slider component
+ */
 export interface SliderProps {
   /** Current value */
   value: number;
@@ -41,6 +47,9 @@ export interface SliderProps {
   icon?: ReactNode;
 }
 
+/**
+ * Props for Toggle component
+ */
 export interface ToggleProps {
   /** Whether toggle is enabled */
   enabled: boolean;
@@ -56,6 +65,9 @@ export interface ToggleProps {
   disabled?: boolean;
 }
 
+/**
+ * Props for SectionHeader component
+ */
 export interface SectionHeaderProps {
   /** Icon element */
   icon: ReactNode;

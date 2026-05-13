@@ -10,15 +10,6 @@ vi.mock('@/modules/auth/store', () => ({
   },
 }));
 
-vi.mock('@/modules/chat/store', () => ({
-  useChatStore: {
-    getState: vi.fn().mockReturnValue({
-      removeReaction: mockRemoveReaction,
-      addReaction: mockAddReaction,
-    }),
-  },
-}));
-
 vi.mock('@/modules/chat/store/chatStore.impl', () => ({
   useChatStore: {
     getState: vi.fn().mockReturnValue({
@@ -100,7 +91,9 @@ describe('aggregateReactions', () => {
   });
 
   it('handles reactions with missing user object', () => {
-    const reactions = [{ id: 'r1', emoji: '🔥', userId: 'u1', user: undefined } as unknown as RawReaction];
+    const reactions = [
+      { id: 'r1', emoji: '🔥', userId: 'u1', user: undefined } as unknown as RawReaction,
+    ];
     const result = aggregateReactions(reactions, 'me');
     expect(result).toHaveLength(1);
     expect(result[0]!.users[0]!.id).toBe('u1');

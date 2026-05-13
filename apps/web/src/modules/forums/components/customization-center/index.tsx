@@ -96,6 +96,7 @@ const TABS: TabConfig[] = [
   },
 ];
 // COMPONENT
+/** Description. */
 /** Customization Center component. */
 export function CustomizationCenter({ forumId }: CustomizationCenterProps) {
   const [activeTab, setActiveTab] = useState<CustomizationCategory>('appearance');

@@ -3,6 +3,8 @@
  *
  * Modularized ThemedBorderCard following Google/Meta coding standards
  */
+
+// Main component
 export { default, default as ThemedBorderCard } from './themed-border-card';
 
 // Sub-components

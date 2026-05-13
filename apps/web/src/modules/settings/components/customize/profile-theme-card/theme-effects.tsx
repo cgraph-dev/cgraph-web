@@ -15,6 +15,9 @@ interface ThemeEffectsProps {
   shineY: MotionValue<string>;
 }
 
+/**
+ * Theme Effects component.
+ */
 export default function ThemeEffects({
   theme,
   particles,

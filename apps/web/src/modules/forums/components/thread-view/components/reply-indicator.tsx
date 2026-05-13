@@ -1,3 +1,6 @@
+/**
+ * Reply Indicator Component
+ */
 
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -6,6 +9,11 @@ interface ReplyIndicatorProps {
   onCancel: () => void;
 }
 
+/**
+ */
+/**
+ * Reply Indicator component.
+ */
 export function ReplyIndicator({ replyToId, onCancel }: ReplyIndicatorProps) {
   return (
     <AnimatePresence>

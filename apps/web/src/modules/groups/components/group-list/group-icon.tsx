@@ -4,6 +4,11 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { getGroupRoute } from '@/modules/groups/routing';
 import type { GroupIconProps } from './types';
 
+/**
+ */
+/**
+ * Group Icon component.
+ */
 export function GroupIcon({ group, onClick }: GroupIconProps) {
   return (
     <NavLink

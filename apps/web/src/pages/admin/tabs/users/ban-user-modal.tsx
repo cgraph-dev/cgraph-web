@@ -12,6 +12,11 @@ interface BanUserModalProps {
   onClose: () => void;
 }
 
+/**
+ */
+/**
+ * Ban User Modal dialog component.
+ */
 export function BanUserModal({ user, onConfirm, onClose }: BanUserModalProps) {
   const [reason, setReason] = useState('');
   const [duration, setDuration] = useState<string>('permanent');

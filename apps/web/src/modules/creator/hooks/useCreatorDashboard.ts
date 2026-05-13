@@ -9,6 +9,7 @@
 ;
 import { useCreatorStore } from '../store';
 
+/** Description. */
 /** Hook for creator dashboard. */
 export function useCreatorDashboard() {
   const balance = useCreatorStore((s) => s.balance);

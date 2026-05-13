@@ -1,3 +1,6 @@
+/**
+ * BulkActionsBar component
+ */
 
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -9,6 +12,11 @@ interface BulkActionsBarProps {
   onBulkReject: () => void;
 }
 
+/**
+ */
+/**
+ * Bulk Actions Bar component.
+ */
 export function BulkActionsBar({
   selectedCount,
   onClearSelection,

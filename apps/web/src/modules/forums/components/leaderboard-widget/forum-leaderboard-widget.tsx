@@ -22,6 +22,9 @@ interface RankInfo {
   image_url?: string | null;
 }
 
+/**
+ * Forum Leaderboard Widget component.
+ */
 export function ForumLeaderboardWidget({
   forumId,
   forumSlug,

@@ -1,3 +1,6 @@
+/**
+ * Feedback error boundary component.
+ */
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { captureError, addBreadcrumb } from '@/lib/error-tracking';
 import { createLogger } from '@/lib/logger';
@@ -7,7 +10,9 @@ const logger = createLogger('ErrorBoundary');
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  /** Component name for error context */
   componentName?: string;
+  /** Callback when error is caught */
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
@@ -18,6 +23,17 @@ interface State {
   errorId: string | null;
 }
 
+/**
+ * Error Boundary component that catches JavaScript errors anywhere in the
+ * child component tree and displays a fallback UI instead of crashing.
+ *
+ * Features:
+ * - Automatic error tracking integration
+ * - Error ID for support reference
+ * - Breadcrumb trail for debugging
+ * - Graceful recovery options
+ *
+ */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -29,18 +45,33 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
+  /**
+   * Retrieves derived state from error.
+   *
+   * @param error - The error instance.
+   * @returns The derived state from error.
+   */
   static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
+  /**
+   * component Did Catch for the feedback module.
+   *
+   * @param error - The error instance.
+   * @param errorInfo - The error info.
+   * @returns The result.
+   */
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({ errorInfo });
 
+    // Add breadcrumb for context
     addBreadcrumb('ui', 'React Error Boundary triggered', {
       componentName: this.props.componentName,
       componentStack: errorInfo.componentStack?.substring(0, 500),
     });
 
+    // Capture error with full context
     captureError(error, {
       component: this.props.componentName || 'ErrorBoundary',
       action: 'component_crash',
@@ -55,7 +86,11 @@ export class ErrorBoundary extends Component<Props, State> {
     });
 
     this.setState({ errorId: error.message });
+
+    // Call optional error callback
     this.props.onError?.(error, errorInfo);
+
+    // Log error (sanitized in production via logger)
     logger.error('Caught an error:', error.message);
   }
 
@@ -70,6 +105,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReportIssue = (): void => {
+    // Open support with error context
     const { errorId } = this.state;
     const supportUrl = errorId
       ? `mailto:support@cgraph.org?subject=Error Report ${errorId}&body=Error ID: ${errorId}%0A%0APlease describe what you were doing when this error occurred:%0A%0A`
@@ -77,6 +113,10 @@ export class ErrorBoundary extends Component<Props, State> {
     window.open(supportUrl, '_blank');
   };
 
+  /**
+   * Renders the component.
+   * @returns The result.
+   */
   render(): ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {

@@ -23,16 +23,6 @@ import {
   type ForumUserGroupLocal,
   type CreateGroupData,
 } from '../../store/forumStore.userGroups';
-
-type GroupType = CreateGroupData['type'];
-
-const GROUP_TYPES: GroupType[] = ['custom', 'joinable', 'system'];
-const GROUP_TYPE_VALUES = new Set<string>(GROUP_TYPES);
-
-function isGroupType(value: string): value is GroupType {
-  return GROUP_TYPE_VALUES.has(value);
-}
-
 const PERMISSION_CATEGORIES = {
   Content: [
     'can_view_forum',
@@ -73,11 +63,17 @@ const PERMISSION_CATEGORIES = {
     'can_manage_permissions',
   ],
 } as const;
+const GROUP_TYPES: CreateGroupData['type'][] = ['custom', 'joinable', 'system'];
+
+function isGroupType(value: string): value is CreateGroupData['type'] {
+  return GROUP_TYPES.some((type) => type === value);
+}
 
 interface UserGroupManagerProps {
   forumId: string;
 }
 
+/** Description. */
 /** User Group Manager component. */
 export function UserGroupManager({ forumId }: UserGroupManagerProps) {
   const {

@@ -1,14 +1,18 @@
 /**
- * Collapsible channel category header.
+ * Channel Category — Discord-style collapsible section header
  *
- * Collapse state is persisted per category so large groups keep their navigation shape.
+ * Features:
+ * - Uppercase category label with arrow rotation on toggle
+ * - Channel count when collapsed
+ * - "+" button on hover to add channel
+ * - Collapse state persisted in localStorage
+ *
  */
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDownIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { springs } from '@/lib/animation-presets';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { cn } from '@/lib/utils';
 
 interface ChannelCategoryProps {
@@ -25,11 +29,17 @@ interface ChannelCategoryProps {
   className?: string;
 }
 
-const STORAGE_KEY = STORAGE_KEYS.channelCollapsedCategories;
+const STORAGE_KEY = 'cgraph:collapsed-categories';
 
-function parseStringArray(raw: string): string[] {
-  const parsed: unknown = JSON.parse(raw);
-  return Array.isArray(parsed) && parsed.every((value) => typeof value === 'string') ? parsed : [];
+function parseStringArray(value: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'string')
+      ? parsed
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 function getCollapsedSet(): Set<string> {
@@ -45,6 +55,7 @@ function persistCollapsedSet(set: Set<string>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
 }
 
+/** Description. */
 /** Channel Category component. */
 export function ChannelCategory({
   categoryId,
@@ -57,6 +68,7 @@ export function ChannelCategory({
   const [collapsed, setCollapsed] = useState(() => getCollapsedSet().has(categoryId));
   const [hovered, setHovered] = useState(false);
 
+  // Sync with localStorage on mount
   useEffect(() => {
     setCollapsed(getCollapsedSet().has(categoryId));
   }, [categoryId]);

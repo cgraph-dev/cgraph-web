@@ -3,7 +3,7 @@
  *
  * Supports: **bold**, *italic*, ~~strikethrough~~, `inline code`,
  * ```code blocks```, > blockquotes, [links](url)
- * Sanitized against XSS by react-markdown (no dangerouslySetInnerHTML).
+ * Sanitized against XSS by react-markdown without raw HTML injection.
  */
 
 import ReactMarkdown from 'react-markdown';
@@ -53,7 +53,7 @@ export const MarkdownContent = memo(function MarkdownContent({
             if (isBlock) {
               return (
                 <code
-                  className={`block overflow-x-auto rounded-lg bg-[var(--token-card-bg)]/80 p-3 font-mono text-xs text-emerald-300 ${codeClassName || ''}`}
+                  className={`bg-[var(--token-card-bg)]/80 block overflow-x-auto rounded-lg p-3 font-mono text-xs text-emerald-300 ${codeClassName || ''}`}
                   {...props}
                 >
                   {children}
@@ -62,7 +62,7 @@ export const MarkdownContent = memo(function MarkdownContent({
             }
             return (
               <code
-                className="rounded bg-[var(--token-card-bg)]/60 px-1.5 py-0.5 font-mono text-xs text-pink-300"
+                className="bg-[var(--token-card-bg)]/60 rounded px-1.5 py-0.5 font-mono text-xs text-pink-300"
                 {...props}
               >
                 {children}
@@ -71,7 +71,7 @@ export const MarkdownContent = memo(function MarkdownContent({
           },
           pre: ({ children }) => <pre className="my-1 overflow-hidden rounded-lg">{children}</pre>,
           blockquote: ({ children }) => (
-            <blockquote className="my-1 border-l-2 border-primary-500/60 pl-3 italic text-gray-300">
+            <blockquote className="border-primary-500/60 my-1 border-l-2 pl-3 italic text-gray-300">
               {children}
             </blockquote>
           ),
@@ -80,7 +80,7 @@ export const MarkdownContent = memo(function MarkdownContent({
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-400 underline decoration-primary-400/30 transition-colors hover:text-primary-300 hover:decoration-primary-300/50"
+              className="decoration-primary-400/30 hover:decoration-primary-300/50 text-primary-400 underline transition-colors hover:text-primary-300"
             >
               {children}
             </a>

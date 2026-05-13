@@ -8,7 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Channel } from 'phoenix';
-import { useVoiceStateStore } from '@/modules/calls/store/voiceStateStore';
+import { useVoiceStateStore } from '@/stores/voiceStateStore';
 import { LiveKitService } from '@/lib/webrtc/livekitService';
 import { useSocket } from '@/lib/socket';
 import type { Room } from 'livekit-client';
@@ -74,6 +74,7 @@ export interface UseVoiceChannelReturn {
   /** Toggle video */
   toggleVideo: () => void;
 }
+/** Description. */
 /** Hook for voice channel. */
 export function useVoiceChannel(): UseVoiceChannelReturn {
   const socketManager = useSocket();

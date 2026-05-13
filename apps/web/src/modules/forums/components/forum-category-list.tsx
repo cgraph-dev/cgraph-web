@@ -1,3 +1,6 @@
+/**
+ * Forum category listing component.
+ */
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -61,6 +64,9 @@ interface ForumCategoryListProps {
   className?: string;
 }
 
+/**
+ * Forum Category List component.
+ */
 export function ForumCategoryList({
   categories,
   forums = [],

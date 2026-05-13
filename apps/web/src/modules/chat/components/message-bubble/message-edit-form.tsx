@@ -1,5 +1,10 @@
 import type { MessageEditFormProps } from './types';
 
+/**
+ */
+/**
+ * Message Edit Form component.
+ */
 export function MessageEditForm({
   editContent,
   onEditContentChange,

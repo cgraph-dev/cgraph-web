@@ -174,7 +174,8 @@ export const creatorService = {
     return result.data;
   },
 
-  /** Export analytics as CSV. Uses the raw HTTP client because the endpoint returns a Blob. */
+  /** Export analytics as CSV — triggers file download */
+  // TODO: migrate to apiClient when blob/export endpoints are added
   async exportAnalyticsCsv(params?: { period?: string }) {
     const response = await http.get('/api/v1/creator/analytics/export', {
       params: { ...params, format: 'csv' },

@@ -2,33 +2,33 @@ import { useEffect } from 'react';
 
 /** Global keyboard navigation: Escape closes modals, Alt+1-9 for sidebar, Alt+M/S for focus. */
 export function useKeyboardNavigation(): void {
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      handleEscapeKey(event);
-      return;
-    }
-
-    if (event.altKey && /^[1-9]$/.test(event.key)) {
-      handleQuickNav(event);
-      return;
-    }
-
-    if (event.altKey && event.key === 'm') {
-      event.preventDefault();
-      focusMessageInput();
-      return;
-    }
-
-    if (event.altKey && event.key === 's') {
-      event.preventDefault();
-      focusSidebar();
-    }
-  }
-
   useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        handleEscapeKey(event);
+        return;
+      }
+
+      if (event.altKey && /^[1-9]$/.test(event.key)) {
+        handleQuickNav(event);
+        return;
+      }
+
+      if (event.altKey && event.key === 'm') {
+        event.preventDefault();
+        focusMessageInput();
+        return;
+      }
+
+      if (event.altKey && event.key === 's') {
+        event.preventDefault();
+        focusSidebar();
+      }
+    }
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  }, []);
 }
 
 function handleEscapeKey(event: KeyboardEvent): void {
@@ -47,9 +47,7 @@ function handleEscapeKey(event: KeyboardEvent): void {
 
 function handleQuickNav(event: KeyboardEvent): void {
   const index = parseInt(event.key, 10) - 1;
-  const navLinks = document.querySelectorAll<HTMLAnchorElement>(
-    'nav[role="navigation"] a[href]'
-  );
+  const navLinks = document.querySelectorAll<HTMLAnchorElement>('nav[role="navigation"] a[href]');
   if (navLinks[index]) {
     event.preventDefault();
     navLinks[index].click();
@@ -80,9 +78,7 @@ export function useListNavigation(
   function handleKeyDown(event: KeyboardEvent) {
     if (!containerRef.current) return;
 
-    const items = Array.from(
-      containerRef.current.querySelectorAll<HTMLElement>(itemSelector)
-    );
+    const items = Array.from(containerRef.current.querySelectorAll<HTMLElement>(itemSelector));
     if (items.length === 0) return;
 
     const activeEl = document.activeElement;

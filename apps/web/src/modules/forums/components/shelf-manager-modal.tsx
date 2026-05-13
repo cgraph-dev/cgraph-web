@@ -51,6 +51,10 @@ interface ShelfManagerModalProps {
   readonly forumId: string;
 }
 const MAX_SHELF_ITEMS = 12;
+/**
+ *
+ * Description.
+ */
 export function ShelfManagerModal({ isOpen, onClose, forumId }: ShelfManagerModalProps) {
   const queryClient = useQueryClient();
   const [isAddMode, setIsAddMode] = useState(false);

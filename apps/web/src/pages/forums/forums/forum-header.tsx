@@ -9,6 +9,11 @@ import type { ForumHeaderProps } from './types';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 import { FADE_IN, FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Forum Header component.
+ */
 export function ForumHeader({ forum, userId, onSubscribe, onNavigateToAdmin }: ForumHeaderProps) {
   const isAdminOrMod = forum.ownerId === userId || forum.moderators?.some((m) => m.id === userId);
 

@@ -11,6 +11,9 @@ interface NavigationButtonsProps {
   onSkip: () => void;
 }
 
+/**
+ * Navigation Buttons component.
+ */
 export function NavigationButtons({
   currentStep,
   totalSteps,

@@ -23,6 +23,11 @@ interface CompactSubscriptionCardProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Compact Subscription Card display component.
+ */
 export function CompactSubscriptionCard({
   plan,
   isCurrentPlan = false,

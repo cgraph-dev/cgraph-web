@@ -21,6 +21,11 @@ const pageTransition = {
 
 const instantTransition = { duration: 0 };
 
+/**
+ */
+/**
+ * Animated Outlet component.
+ */
 export function AnimatedOutlet() {
   const location = useLocation();
   const outlet = useOutlet();

@@ -19,6 +19,8 @@ const initialCardData: CardFormData = {
 };
 
 /**
+ */
+/**
  * Hook for managing payment modal.
  *
  * @param item - The item.

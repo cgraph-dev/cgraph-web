@@ -1,3 +1,6 @@
+/**
+ * Particle - Individual particle effect component
+ */
 
 import { durations } from '@cgraph/animation-constants';
 import { memo } from 'react';

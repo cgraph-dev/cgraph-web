@@ -1,3 +1,6 @@
+/**
+ * Premium card-style banner component.
+ */
 import React from 'react';
 import { motion } from 'motion/react';
 import { SparklesIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/outline';
@@ -22,6 +25,11 @@ type CardBannerProps = Pick<
   | 'onDismiss'
 >;
 
+/**
+ */
+/**
+ * Card Banner display component.
+ */
 export function CardBanner({
   title,
   description,

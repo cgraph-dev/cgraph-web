@@ -1,4 +1,7 @@
 /**
+ * Type definitions for the forum leaderboard component.
+ */
+/**
  * Forum Leaderboard Types
  *
  * Type definitions for the forum leaderboard component.
@@ -20,6 +23,9 @@ export interface SortOption {
   icon: React.ElementType;
 }
 
+/**
+ * Props for ForumLeaderboardCard component
+ */
 export interface ForumLeaderboardCardProps {
   forum: Forum;
   rank: number;
@@ -27,6 +33,9 @@ export interface ForumLeaderboardCardProps {
   isAuthenticated: boolean;
 }
 
+/**
+ * Props for TopForumCard component
+ */
 export interface TopForumCardProps {
   forum: Forum;
   rank: number;

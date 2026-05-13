@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the VoiceMessagePlayer component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 
 /** Isolated mock of voice player for Storybook rendering */

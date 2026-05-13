@@ -1,3 +1,6 @@
+/**
+ * Forum subscription toggle button component.
+ */
 import React from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import {
@@ -17,11 +20,10 @@ import {
 
 type SubscriptionType = 'forum' | 'board' | 'thread';
 type NotificationMode = 'instant' | 'daily' | 'weekly' | 'none';
-
-const NOTIFICATION_MODES = new Set(['instant', 'daily', 'weekly', 'none']);
+const NOTIFICATION_MODES: NotificationMode[] = ['instant', 'daily', 'weekly', 'none'];
 
 function isNotificationMode(value: string): value is NotificationMode {
-  return NOTIFICATION_MODES.has(value);
+  return NOTIFICATION_MODES.some((mode) => mode === value);
 }
 
 interface SubscriptionButtonProps {
@@ -47,6 +49,11 @@ interface SubscriptionSettings {
   includeReplies: boolean;
 }
 
+/**
+ */
+/**
+ * Subscription Button component.
+ */
 export function SubscriptionButton({
   type,
   isSubscribed,

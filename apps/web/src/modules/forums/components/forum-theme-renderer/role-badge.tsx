@@ -1,10 +1,19 @@
+/**
+ * RoleBadge component
+ */
 
 import { durations } from '@cgraph/animation-constants';
 import { memo } from 'react';
-import { motion, type MotionProps } from 'motion/react';
+import { motion } from 'motion/react';
+import type { TargetAndTransition, Transition } from 'motion/react';
 import { cn } from '@/lib/utils';
 import type { RoleBadgeProps } from './types';
 import { SIZE_CLASSES } from './constants';
+
+interface BadgeAnimationProps {
+  animate?: TargetAndTransition;
+  transition?: Transition;
+}
 
 export const RoleBadge = memo(function RoleBadge({ role, size = 'md', className }: RoleBadgeProps) {
   const getBadgeStyles = (): React.CSSProperties => {
@@ -42,7 +51,7 @@ export const RoleBadge = memo(function RoleBadge({ role, size = 'md', className 
     }
   };
 
-  const getAnimationProps = (): MotionProps => {
+  const getAnimationProps = (): BadgeAnimationProps => {
     switch (role.animation) {
       case 'pulse':
         return {

@@ -3,11 +3,12 @@
  *
  */
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FeedModeTabs, useFeed, useDiscoveryStore } from '@/modules/discovery';
 import { FeedPostCard } from './feed-post-card';
 
+/** Description. */
 /** Feed Page component. */
 export function FeedPage() {
   const { activeMode, selectedCommunityId, setMode } = useDiscoveryStore();
@@ -19,11 +20,14 @@ export function FeedPage() {
   // Infinite scroll sentinel
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  function handleIntersection(entries: IntersectionObserverEntry[]) {
-    if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }
+  const handleIntersection = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
 
   useEffect(() => {
     const sentinel = sentinelRef.current;

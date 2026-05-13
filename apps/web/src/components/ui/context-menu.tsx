@@ -1,4 +1,6 @@
-/** Radix-based animated right-click menu. */
+/**
+ * ContextMenu — Radix-based animated right-click menu with Discord styling.
+ */
 import { ReactNode } from 'react';
 import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
 import { cn } from '@/lib/utils';
@@ -17,6 +19,7 @@ interface ContextMenuContentProps {
   className?: string;
 }
 
+/** Description. */
 /** Context Menu Content component. */
 export function ContextMenuContent({ children, className }: ContextMenuContentProps) {
   return (
@@ -49,6 +52,7 @@ interface ContextMenuItemProps {
   className?: string;
 }
 
+/** Description. */
 /** Context Menu Item component. */
 export function ContextMenuItem({
   children,
@@ -90,6 +94,7 @@ export function ContextMenuItem({
 
 /* ─── Label ────────────────────────────────────────────────────────────────── */
 
+/** Description. */
 /** Context Menu Label component. */
 export function ContextMenuLabel({
   children,
@@ -110,6 +115,10 @@ export function ContextMenuLabel({
   );
 }
 
+/* ─── Separator ────────────────────────────────────────────────────────────── */
+
+/** Description. */
+/** Context Menu Separator component. */
 export function ContextMenuSeparator({ className }: { className?: string }) {
   return (
     <ContextMenuPrimitive.Separator
@@ -117,6 +126,8 @@ export function ContextMenuSeparator({ className }: { className?: string }) {
     />
   );
 }
+
+/* ─── Sub-menu ─────────────────────────────────────────────────────────────── */
 
 export const ContextMenuSubTrigger = ({
   children,
@@ -146,6 +157,7 @@ export const ContextMenuSubTrigger = ({
   </ContextMenuPrimitive.SubTrigger>
 );
 
+/** Description. */
 /** Context Menu Sub Content component. */
 export function ContextMenuSubContent({
   children,

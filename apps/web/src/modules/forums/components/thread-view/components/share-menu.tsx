@@ -1,3 +1,6 @@
+/**
+ * Share Menu Component
+ */
 
 import { motion, AnimatePresence } from 'motion/react';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
@@ -8,6 +11,11 @@ interface ShareMenuProps {
   postTitle: string;
 }
 
+/**
+ */
+/**
+ * Share Menu component.
+ */
 export function ShareMenu({ isOpen, onClose, postTitle }: ShareMenuProps) {
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);

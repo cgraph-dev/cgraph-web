@@ -6,6 +6,8 @@
  * smooth selection animations.
  *
  */
+
+// Main component
 export { EmojiPicker } from './emoji-picker';
 
 // Sub-components

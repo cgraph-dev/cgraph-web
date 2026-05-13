@@ -33,6 +33,8 @@ type NotificationInput = Omit<ToastNotification, 'id'>;
 export const NotificationContext = createContext<NotificationContextType | null>(null);
 
 /**
+ */
+/**
  * Notification Provider — context provider wrapper.
  */
 export function NotificationProvider({
@@ -157,6 +159,7 @@ export function NotificationProvider({
         </AnimatePresence>
       </div>
 
+      {/* Achievement Notifications — placeholder for AchievementNotification component */}
     </NotificationContext.Provider>
   );
 }

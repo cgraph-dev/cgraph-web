@@ -28,6 +28,9 @@ const RESOLUTIONS: readonly ResolutionOption[] = [
   { value: '1080p', label: '1080p', description: 'Full HD — best quality on fast networks' },
 ];
 
+/**
+ * Calls settings panel component.
+ */
 export function CallsSettingsPanel(): ReactNode {
   const calls = useSettingsStore((s) => s.settings.calls);
   const updateCalls = useSettingsStore((s) => s.updateCallsSettings);

@@ -30,6 +30,9 @@ function getThemeColorEntries(): Array<{
 
 // COMPONENT
 
+/**
+ * Color Tab component.
+ */
 export function ColorTab({ selectedColor, onSelectColor }: ColorTabProps) {
   const colors = getThemeColorEntries();
 

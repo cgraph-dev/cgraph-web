@@ -11,6 +11,11 @@ interface MemberStatsCardsProps {
   members: Member[];
 }
 
+/**
+ */
+/**
+ * Member Stats Cards display component.
+ */
 export function MemberStatsCards({ totalMembers, members }: MemberStatsCardsProps) {
   const onlineCount = members.filter((m) => m.isOnline).length;
   const totalPosts = members.reduce((sum, m) => sum + m.postCount, 0);

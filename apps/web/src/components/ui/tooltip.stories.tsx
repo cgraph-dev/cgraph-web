@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the Tooltip UI component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import Tooltip from './tooltip';
 import { Button } from './button';

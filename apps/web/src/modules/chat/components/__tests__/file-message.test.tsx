@@ -1,6 +1,6 @@
 /** @module file-message tests */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { FileMessage } from '../file-message';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
 
@@ -58,6 +58,25 @@ describe('FileMessage', () => {
     expect(screen.getByText('1024 B')).toBeTruthy();
   });
 
+  it('displays server-normalized attachment metadata', () => {
+    render(
+      <FileMessage
+        message={makeMessage({
+          metadata: {
+            url: 'https://cdn.example.com/server-report.pdf',
+            filename: 'server-report.pdf',
+            size: 4096,
+            mimeType: 'application/pdf',
+          },
+        })}
+        isOwnMessage={false}
+      />
+    );
+
+    expect(screen.getByText('server-report.pdf')).toBeTruthy();
+    expect(screen.getByText('4096 B')).toBeTruthy();
+  });
+
   it('shows file extension badge', () => {
     render(<FileMessage message={makeMessage()} isOwnMessage={false} />);
     expect(screen.getByText('PDF')).toBeTruthy();
@@ -90,7 +109,7 @@ describe('FileMessage', () => {
     // Simulate image error
     const img = container.querySelector('img');
     if (img) {
-      img.dispatchEvent(new Event('error'));
+      fireEvent.error(img);
     }
   });
 

@@ -8,6 +8,8 @@
  * 4. App Themes — 8+ global app color schemes
  *
  */
+
+// Main component
 export { default } from './page';
 
 // Sub-components

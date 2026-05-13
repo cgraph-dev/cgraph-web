@@ -22,6 +22,9 @@ interface ThreadStatusFiltersProps {
   ) => void;
 }
 
+/**
+ * Thread Status Filters component.
+ */
 export function ThreadStatusFilters({ filters, updateFilter }: ThreadStatusFiltersProps) {
   return (
     <div>

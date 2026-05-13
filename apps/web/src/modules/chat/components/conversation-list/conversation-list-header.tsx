@@ -1,3 +1,6 @@
+/**
+ * ConversationListHeader component
+ */
 
 import { motion } from 'motion/react';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
@@ -13,6 +16,11 @@ interface ConversationListHeaderProps {
   onNewChat: () => void;
 }
 
+/**
+ */
+/**
+ * Conversation List Header component.
+ */
 export function ConversationListHeader({
   searchQuery,
   onSearchChange,

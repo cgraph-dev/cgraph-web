@@ -1,7 +1,8 @@
 /**
  * @heroicons/react/20/solid — lightweight mock for vitest.
  *
- * Kept explicit so icon imports cannot resolve to a thenable proxy.
+ * Currently unused in the codebase but aliased to prevent potential
+ * compilation hangs. Minimal placeholder.
  *
  */
 import React from 'react';
@@ -15,4 +16,5 @@ const icon = (name: string) => {
   return Icon;
 };
 
+// placeholder — add icons here as needed
 export const PlaceholderIcon = icon('PlaceholderIcon');

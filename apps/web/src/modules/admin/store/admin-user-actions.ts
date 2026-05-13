@@ -29,6 +29,8 @@ type Set = (
 type Get = () => AdminStore;
 
 /**
+ */
+/**
  * Creates a new user actions.
  *
  * @param set - The set.

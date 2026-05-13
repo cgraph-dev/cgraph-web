@@ -72,6 +72,8 @@ interface ReportPayload {
   };
 }
 /**
+ */
+/**
  * Hook for managing report form.
  *
  * @param targetType - The target type.

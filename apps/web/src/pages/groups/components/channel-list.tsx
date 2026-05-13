@@ -1,12 +1,10 @@
+/**
+ * ChannelList component
+ */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  ChevronDownIcon,
-  Cog6ToothIcon,
-  UserGroupIcon,
-  PlusIcon,
-} from '@heroicons/react/24/outline';
+import { ChevronDownIcon, UserGroupIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { http } from '@/lib/api-client';
 import { useGroupStore } from '@/modules/groups/store';
@@ -30,6 +28,7 @@ export function ChannelList({
   if (!activeGroup) {
     return (
       <div className="bg-[var(--token-card-bg)]/40 relative z-10 flex w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
+        {/* Ambient glow */}
         <div className="from-primary-500/5 to-purple-500/5 pointer-events-none absolute inset-0 bg-gradient-to-b via-black/20" />
 
         {/* Server Header */}
@@ -63,6 +62,7 @@ export function ChannelList({
 
   return (
     <div className="bg-[var(--token-card-bg)]/40 relative z-10 flex w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
+      {/* Ambient glow */}
       <div className="from-primary-500/5 to-purple-500/5 pointer-events-none absolute inset-0 bg-gradient-to-b via-black/20" />
 
       {/* Server Header */}
@@ -71,17 +71,11 @@ export function ChannelList({
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10"
       >
-        <motion.div
-          whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}
-          className="flex h-14 cursor-pointer items-center justify-between border-b border-[var(--token-border-muted)] p-5 px-4 pb-3 transition-colors"
-        >
+        <div className="flex h-14 items-center border-b border-[var(--token-border-muted)] p-5 px-4 pb-3">
           <h2 className="truncate bg-gradient-to-br from-white to-white/60 bg-clip-text font-bold tracking-tight text-transparent">
             {activeGroup.name}
           </h2>
-          <motion.div whileHover={{ rotate: 180 }} transition={tweens.standard}>
-            <ChevronDownIcon className="h-4 w-4 text-white/40" />
-          </motion.div>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* Channels */}
@@ -224,13 +218,6 @@ export function ChannelList({
             <p className="truncate text-[11px] font-medium text-white/40">Online</p>
           </div>
         </motion.div>
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          onClick={() => HapticFeedback.light()}
-          className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-[var(--token-card-bg)/0.6] hover:text-white/80"
-        >
-          <Cog6ToothIcon className="h-5 w-5" />
-        </motion.button>
       </motion.div>
     </div>
   );

@@ -131,7 +131,7 @@ describe('forumHostingStore initial state', () => {
 
 describe('fetchBoards', () => {
   it('fetches and maps boards', async () => {
-    mockedApi.get.mockResolvedValueOnce({ data: { data: [makeBoardApi()] } });
+    mockedApi.get.mockResolvedValueOnce({ data: [makeBoardApi()] });
     await useForumHostingStore.getState().fetchBoards('f1');
     expect(useForumHostingStore.getState().boards).toHaveLength(1);
     expect(useForumHostingStore.getState().boards[0]!.name).toBe('General');
@@ -156,7 +156,7 @@ describe('fetchBoard', () => {
 
 describe('createBoard', () => {
   it('creates and appends a board', async () => {
-    mockedApi.post.mockResolvedValueOnce({ data: { data: makeBoardApi({ id: 'b3' }) } });
+    mockedApi.post.mockResolvedValueOnce({ data: makeBoardApi({ id: 'b3' }) });
     const board = await useForumHostingStore.getState().createBoard('f1', { name: 'New' });
     expect(board.id).toBe('b3');
     expect(useForumHostingStore.getState().boards).toHaveLength(1);
@@ -166,7 +166,7 @@ describe('createBoard', () => {
 describe('updateBoard', () => {
   it('updates a board in the list', async () => {
     useForumHostingStore.setState({ boards: [{ id: 'b1', name: 'Old' }] as never });
-    mockedApi.patch.mockResolvedValueOnce({ data: { data: makeBoardApi({ name: 'Updated' }) } });
+    mockedApi.patch.mockResolvedValueOnce({ data: makeBoardApi({ name: 'Updated' }) });
     const board = await useForumHostingStore
       .getState()
       .updateBoard('f1', 'b1', { name: 'Updated' });
@@ -178,7 +178,7 @@ describe('updateBoard', () => {
 describe('deleteBoard', () => {
   it('removes a board from the list', async () => {
     useForumHostingStore.setState({ boards: [{ id: 'b1' }, { id: 'b2' }] as never });
-    mockedApi.delete.mockResolvedValueOnce({});
+    mockedApi.delete.mockResolvedValueOnce({ data: {} });
     await useForumHostingStore.getState().deleteBoard('f1', 'b1');
     expect(useForumHostingStore.getState().boards).toHaveLength(1);
     expect(useForumHostingStore.getState().boards[0]!.id).toBe('b2');
@@ -189,9 +189,7 @@ describe('deleteBoard', () => {
 
 describe('fetchThreads', () => {
   it('fetches threads for a board', async () => {
-    mockedApi.get.mockResolvedValueOnce({
-      data: { data: [makeThreadApi()], meta: { page: 1, perPage: 20, total: 1 } },
-    });
+    mockedApi.get.mockResolvedValueOnce({ data: [makeThreadApi()] });
     await useForumHostingStore.getState().fetchThreads('b1');
     expect(useForumHostingStore.getState().threads).toHaveLength(1);
     expect(useForumHostingStore.getState().isLoadingThreads).toBe(false);
@@ -200,7 +198,7 @@ describe('fetchThreads', () => {
 
 describe('createThread', () => {
   it('creates and prepends a thread', async () => {
-    mockedApi.post.mockResolvedValueOnce({ data: { data: makeThreadApi({ id: 't2' }) } });
+    mockedApi.post.mockResolvedValueOnce({ data: makeThreadApi({ id: 't2' }) });
     const thread = await useForumHostingStore
       .getState()
       .createThread('b1', { title: 'New', content: 'body' });
@@ -212,7 +210,7 @@ describe('createThread', () => {
 describe('deleteThread', () => {
   it('removes a thread from the list', async () => {
     useForumHostingStore.setState({ threads: [{ id: 't1' }] as never });
-    mockedApi.delete.mockResolvedValueOnce({});
+    mockedApi.delete.mockResolvedValueOnce({ data: {} });
     await useForumHostingStore.getState().deleteThread('t1');
     expect(useForumHostingStore.getState().threads).toHaveLength(0);
   });
@@ -221,7 +219,7 @@ describe('deleteThread', () => {
 describe('pinThread', () => {
   it('pins a thread', async () => {
     useForumHostingStore.setState({ threads: [{ id: 't1', isPinned: false }] as never });
-    mockedApi.post.mockResolvedValueOnce({});
+    mockedApi.post.mockResolvedValueOnce({ data: makeThreadApi({ id: 't1', is_pinned: true }) });
     await useForumHostingStore.getState().pinThread('t1', true);
     expect(useForumHostingStore.getState().threads[0]!.isPinned).toBe(true);
   });
@@ -230,7 +228,7 @@ describe('pinThread', () => {
 describe('lockThread', () => {
   it('locks a thread', async () => {
     useForumHostingStore.setState({ threads: [{ id: 't1', isLocked: false }] as never });
-    mockedApi.post.mockResolvedValueOnce({});
+    mockedApi.post.mockResolvedValueOnce({ data: makeThreadApi({ id: 't1', is_locked: true }) });
     await useForumHostingStore.getState().lockThread('t1', true);
     expect(useForumHostingStore.getState().threads[0]!.isLocked).toBe(true);
   });
@@ -240,9 +238,7 @@ describe('lockThread', () => {
 
 describe('fetchPosts', () => {
   it('fetches posts for a thread', async () => {
-    mockedApi.get.mockResolvedValueOnce({
-      data: { data: [makePostApi()], meta: { page: 1, per_page: 20, total: 1 } },
-    });
+    mockedApi.get.mockResolvedValueOnce({ data: [makePostApi()] });
     await useForumHostingStore.getState().fetchPosts('t1');
     expect(useForumHostingStore.getState().posts).toHaveLength(1);
     expect(useForumHostingStore.getState().isLoadingPosts).toBe(false);
@@ -251,7 +247,7 @@ describe('fetchPosts', () => {
 
 describe('createPost', () => {
   it('creates and appends a post', async () => {
-    mockedApi.post.mockResolvedValueOnce({ data: { data: makePostApi({ id: 'p2' }) } });
+    mockedApi.post.mockResolvedValueOnce({ data: makePostApi({ id: 'p2' }) });
     const post = await useForumHostingStore.getState().createPost('t1', { content: 'reply' });
     expect(post.id).toBe('p2');
     expect(useForumHostingStore.getState().posts).toHaveLength(1);
@@ -261,7 +257,7 @@ describe('createPost', () => {
 describe('deletePost', () => {
   it('removes a post', async () => {
     useForumHostingStore.setState({ posts: [{ id: 'p1' }] as never });
-    mockedApi.delete.mockResolvedValueOnce({});
+    mockedApi.delete.mockResolvedValueOnce({ data: {} });
     await useForumHostingStore.getState().deletePost('t1', 'p1');
     expect(useForumHostingStore.getState().posts).toHaveLength(0);
   });
@@ -284,12 +280,10 @@ describe('fetchMembers', () => {
       reputation: 0,
       role: 'member',
       is_banned: false,
-      joined_at: null,
+      joined_at: '2025-01-01T00:00:00Z',
       last_visit_at: null,
     };
-    mockedApi.get.mockResolvedValueOnce({
-      data: { data: [member], meta: { page: 1, per_page: 20, total: 1 } },
-    });
+    mockedApi.get.mockResolvedValueOnce({ data: [member] });
     await useForumHostingStore.getState().fetchMembers('f1');
     expect(useForumHostingStore.getState().members).toHaveLength(1);
     expect(useForumHostingStore.getState().isLoadingMembers).toBe(false);

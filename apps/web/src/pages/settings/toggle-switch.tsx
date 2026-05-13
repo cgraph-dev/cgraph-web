@@ -10,6 +10,11 @@ interface ToggleSwitchProps {
   disabled?: boolean;
 }
 
+/**
+ */
+/**
+ * Toggle Switch component.
+ */
 export function ToggleSwitch({ enabled, onToggle, disabled }: ToggleSwitchProps) {
   return (
     <motion.button

@@ -4,7 +4,6 @@
 
 import { useState, useEffect, RefObject } from 'react';
 
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import type { AnimatedEmojiMeta } from '@/lib/lottie';
 import { preloadAnimations } from '@/lib/lottie';
 import {
@@ -20,7 +19,7 @@ export function useRecentEmojis() {
 
   // Load recent emojis from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.emojiRecent);
+    const stored = localStorage.getItem('recentEmojis');
     if (stored) {
       setRecentEmojis(JSON.parse(stored));
     }
@@ -29,7 +28,7 @@ export function useRecentEmojis() {
   const addRecentEmoji = (emoji: string) => {
     const updated = [emoji, ...recentEmojis.filter((e) => e !== emoji)].slice(0, MAX_RECENT_EMOJIS);
     setRecentEmojis(updated);
-    localStorage.setItem(STORAGE_KEYS.emojiRecent, JSON.stringify(updated));
+    localStorage.setItem('recentEmojis', JSON.stringify(updated));
 
     // Update frequently used category
     EMOJI_CATEGORIES['Frequently Used'] = updated.slice(0, DISPLAY_RECENT_COUNT);

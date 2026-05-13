@@ -31,6 +31,9 @@ const SKIN_TONES: readonly SkinToneOption[] = [
   { value: 'dark', label: 'Dark', emoji: '👋🏿' },
 ];
 
+/**
+ * Stickers & Emoji settings panel component.
+ */
 export function StickersEmojiSettingsPanel(): ReactNode {
   const stickersEmoji = useSettingsStore((s) => s.settings.stickersEmoji);
   const updateStickersEmoji = useSettingsStore((s) => s.updateStickersEmojiSettings);

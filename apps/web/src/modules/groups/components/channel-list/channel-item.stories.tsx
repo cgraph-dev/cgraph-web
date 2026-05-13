@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the ChannelItem component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 
 /** Isolated channel item mock for Storybook */

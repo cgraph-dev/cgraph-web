@@ -15,6 +15,11 @@ interface MoveModalProps {
   onMove: (targetParentId: string) => void;
 }
 
+/**
+ */
+/**
+ * Move Modal dialog component.
+ */
 export function MoveModal({
   tree,
   movingForum,

@@ -27,6 +27,7 @@ const SIZE_MAP = {
   md: { icon: 20, text: 'text-xs', px: 'px-1.5', py: 'py-0.5', gap: 'gap-1' },
   lg: { icon: 24, text: 'text-sm', px: 'px-2', py: 'py-1', gap: 'gap-1.5' },
 } as const;
+/** Description. */
 /** Rank Badge component. */
 export function RankBadge({
   rankName,

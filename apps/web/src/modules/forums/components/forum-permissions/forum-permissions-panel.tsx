@@ -1,9 +1,9 @@
 /**
  * Forum Permissions Admin Panel
  *
- * Permission management for forums and boards.
+ * Discord-style permission management for forums and boards.
  * Supports tri-state permissions (Inherit / Allow / Deny) with
- * visual indicators for explicit overwrites.
+ * visual indicators matching Discord's overwrite UI pattern.
  *
  * Backend endpoints:
  *   GET    /api/v1/forums/:id/permissions
@@ -24,6 +24,11 @@ import { PermissionOverwriteCard } from './permission-overwrite-card';
 import { EmptyPermissions } from './empty-permissions';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Forum Permissions Panel component.
+ */
 export function ForumPermissionsPanel({
   targetType,
   targetId,

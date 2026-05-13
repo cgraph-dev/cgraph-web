@@ -6,7 +6,7 @@
  *
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { LockClosedIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { FADE_IN } from '@/lib/animations/transitions';
@@ -46,14 +46,6 @@ export function NodeGateModal({
 }: NodeGateModalProps): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
   async function handlePayAndJoin(): Promise<void> {
     setIsLoading(true);
@@ -68,10 +60,10 @@ export function NodeGateModal({
           : err instanceof Error
             ? err.message
             : 'Payment failed. Please try again.';
-      if (isMountedRef.current) setError(message);
+      setError(message);
       logger.error('Failed to subscribe to group:', err);
     } finally {
-      if (isMountedRef.current) setIsLoading(false);
+      setIsLoading(false);
     }
   }
 
@@ -136,11 +128,15 @@ export function NodeGateModal({
           {/* Recurring info */}
           <p className="mt-2 text-xs text-gray-400">{formatGateDescription(group.gate_type)}</p>
         </div>
+
+        {/* Error display */}
         {error && (
           <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3">
             <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
+
+        {/* Action buttons */}
         <div className="flex gap-3">
           <button
             onClick={onClose}

@@ -6,8 +6,8 @@
 import type { Channel } from 'phoenix';
 import { useAuthStore } from '@/modules/auth/store';
 import { socketLogger as logger } from '../logger';
-import { SOCKET_TOKEN_REFRESHED_EVENT } from './events';
 import { connectSocket, disconnectSocket, type SocketManagerState } from './connectionLifecycle';
+import { registerCustomizationChangeNotifier } from './customization-events';
 import {
   sendTypingDebounced as sendTypingDebouncedImpl,
   sendReaction as sendReactionImpl,
@@ -80,6 +80,10 @@ export class SocketManager {
   private peekTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
   constructor() {
+    registerCustomizationChangeNotifier(() => {
+      this.notifyCustomizationChanged();
+    });
+
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
         logger.info('Browser online event - resetting socket circuit breaker');
@@ -94,11 +98,6 @@ export class SocketManager {
           if (!this.isConnected() && useAuthStore.getState().token) {
             this.connect();
           }
-        }
-      });
-      window.addEventListener(SOCKET_TOKEN_REFRESHED_EVENT, () => {
-        if (this.isConnected()) {
-          void this.reconnectWithNewToken();
         }
       });
     }

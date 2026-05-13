@@ -15,6 +15,9 @@ import { ChannelCategoriesPanel } from './channel-categories-panel';
 import type { ChannelsTabProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Channels Tab component.
+ */
 export function ChannelsTab({ groupId }: ChannelsTabProps) {
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [loading, setLoading] = useState(true);

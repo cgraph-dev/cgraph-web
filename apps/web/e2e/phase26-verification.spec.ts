@@ -31,15 +31,17 @@ test.describe('Phase 26: Route Redirects', () => {
       await page.waitForTimeout(2000);
       const url = new URL(page.url());
 
-      // The deleted route must NOT remain as-is.
-      // Expected: either redirect to / (catch-all) or /auth (auth guard).
-      // Both are acceptable — what matters is that the gamification page is gone.
-      const landedOnDeletedRoute = url.pathname === route;
-      expect(landedOnDeletedRoute, `Route ${route} should no longer render`).toBe(false);
-
-      // Verify no gamification-specific content rendered
       const body = await page.textContent('body');
       const lowerBody = (body ?? '').toLowerCase();
+      const landedOnDeletedRoute = url.pathname === route;
+
+      if (landedOnDeletedRoute) {
+        expect(
+          lowerBody,
+          `Route ${route} should render a 404 when it stays on the old URL`
+        ).toContain('page not found');
+      }
+
       expect(lowerBody).not.toContain('gamification hub');
       expect(lowerBody).not.toContain('achievement progress');
       expect(lowerBody).not.toContain('quest tracker');

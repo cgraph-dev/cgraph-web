@@ -1,3 +1,6 @@
+/**
+ * Forum statistics dashboard component.
+ */
 import { useEffect, useState } from 'react';
 import {
   ChatBubbleLeftRightIcon,
@@ -37,6 +40,11 @@ const logger = createLogger('ForumStatistics');
  * - Active users
  */
 
+/**
+ */
+/**
+ * Forum Statistics component.
+ */
 export function ForumStatistics({
   forumId,
   showOnlineList = true,

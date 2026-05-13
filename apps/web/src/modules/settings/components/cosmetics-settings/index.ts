@@ -5,6 +5,8 @@
  * and chat effects.
  *
  */
+
+// Main component
 export { CosmeticsSettingsPanel, default } from './cosmetics-settings-panel';
 
 // Section components

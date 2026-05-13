@@ -1,3 +1,6 @@
+/**
+ * Post editor formatting toolbar component.
+ */
 import { motion } from 'motion/react';
 import { EyeIcon, PencilSquareIcon, CodeBracketSquareIcon } from '@heroicons/react/24/outline';
 import { TOOLBAR_BUTTONS } from './constants';

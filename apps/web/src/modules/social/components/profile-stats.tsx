@@ -1,3 +1,6 @@
+/**
+ * Profile statistics display component.
+ */
 import { motion } from 'motion/react';
 import { springs } from '@/lib/animation-presets';
 import {
@@ -22,6 +25,11 @@ interface ProfileStatsGridProps {
   profile: UserProfileData;
 }
 
+/**
+ */
+/**
+ * Profile Stats Grid component.
+ */
 export function ProfileStatsGrid({ profile }: ProfileStatsGridProps) {
   return (
     <GlassCard variant="frosted" className="p-6">
@@ -95,6 +103,11 @@ interface ProfileSidebarProps {
   isOwnProfile?: boolean;
 }
 
+/**
+ */
+/**
+ * Profile Sidebar component.
+ */
 export function ProfileSidebar({ profile, isOwnProfile }: ProfileSidebarProps) {
   const topCommunities = profile.topCommunities ?? [];
 

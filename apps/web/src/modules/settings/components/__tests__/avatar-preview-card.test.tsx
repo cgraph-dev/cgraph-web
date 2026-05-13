@@ -49,12 +49,6 @@ vi.mock('@/components/theme/themed-avatar', () => ({
   ),
 }));
 
-vi.mock('@/modules/settings/store/customization', () => ({
-  useCustomizationStore: vi.fn((selector: (state: { selectedBorderId: string }) => unknown) =>
-    selector({ selectedBorderId: 'default-border' })
-  ),
-}));
-
 vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   useCustomizationStore: vi.fn((selector: (state: { selectedBorderId: string }) => unknown) =>
     selector({ selectedBorderId: 'default-border' })

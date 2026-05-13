@@ -1,5 +1,5 @@
 /**
- * Animated tab bar for profile sections.
+ * ProfileTabs — Instagram-style animated tab bar for profile sections.
  */
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';

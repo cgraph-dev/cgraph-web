@@ -5,7 +5,7 @@
  *
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchStore } from '../store';
 
 /**
@@ -16,23 +16,23 @@ export function useGlobalSearch() {
   const { search, clearResults, query, setQuery, isLoading, users, groups, forums } =
     useSearchStore();
 
-  function open() {
+  const open = useCallback(() => {
     setIsOpen(true);
-  }
+  }, []);
 
-  function close() {
+  const close = useCallback(() => {
     setIsOpen(false);
     clearResults();
     setQuery('');
-  }
+  }, [clearResults, setQuery]);
 
-  function toggle() {
+  const toggle = useCallback(() => {
     if (isOpen) {
       close();
     } else {
       open();
     }
-  }
+  }, [close, isOpen, open]);
 
   // Keyboard shortcut
   useEffect(() => {

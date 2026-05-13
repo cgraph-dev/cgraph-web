@@ -18,6 +18,9 @@ interface GiveRepButtonProps {
   currentUserId: string;
 }
 
+/**
+ * GiveRepButton component.
+ */
 export function GiveRepButton({
   forumId,
   postId,

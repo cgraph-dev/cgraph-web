@@ -14,8 +14,16 @@ interface VideoEmbedProps {
   onExpand: () => void;
 }
 
+/**
+ * Video Embed component.
+ */
 export default function VideoEmbed({ embed, onExpand }: VideoEmbedProps) {
   const [showPlayer, setShowPlayer] = useState(false);
+  const videoLabel = embed.title || 'Video';
+  const playYouTubeVideo = () => {
+    setShowPlayer(true);
+    HapticFeedback.medium();
+  };
 
   // YouTube iframe embed
   if (embed.videoUrl?.includes('youtube.com/embed')) {
@@ -24,16 +32,22 @@ export default function VideoEmbed({ embed, onExpand }: VideoEmbedProps) {
         <GlassCard variant="crystal" className="p-0">
           {!showPlayer ? (
             <motion.div
+              role="button"
+              tabIndex={0}
+              aria-label={`Play video ${videoLabel}`}
               className="group relative cursor-pointer"
-              onClick={() => {
-                setShowPlayer(true);
-                HapticFeedback.medium();
+              onClick={playYouTubeVideo}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  playYouTubeVideo();
+                }
               }}
               whileHover={{ opacity: 0.9 }}
             >
               <img
                 src={embed.image || ''}
-                alt={embed.title || 'Video'}
+                alt={videoLabel}
                 className="aspect-video w-full object-cover"
                 loading="lazy"
               />
@@ -77,9 +91,18 @@ export default function VideoEmbed({ embed, onExpand }: VideoEmbedProps) {
   // Native video player
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open video ${videoLabel}`}
       className="relative max-w-sm cursor-pointer overflow-hidden rounded-xl"
       whileHover={{ opacity: 0.9 }}
       onClick={onExpand}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onExpand();
+        }
+      }}
     >
       <video
         src={embed.videoUrl || embed.url}
@@ -89,7 +112,7 @@ export default function VideoEmbed({ embed, onExpand }: VideoEmbedProps) {
       />
       <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-colors hover:bg-black/30">
         <motion.div
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-600/90"
+          className="bg-primary-600/90 flex h-16 w-16 items-center justify-center rounded-full"
           whileHover={{ opacity: 0.9 }}
         >
           <PlayCircleIcon className="ml-1 h-10 w-10 text-white" />

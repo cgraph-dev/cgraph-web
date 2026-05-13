@@ -44,6 +44,7 @@ const CATEGORY_LAYOUTS = [
   { value: 'list', label: 'List' },
 ];
 
+/** Description. */
 /** Layout Editor component. */
 export function LayoutEditor({ options, onSave, saving }: LayoutEditorProps) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});

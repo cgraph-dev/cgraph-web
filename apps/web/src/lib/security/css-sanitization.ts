@@ -44,7 +44,7 @@ const EXFILTRATION_PATTERNS = [
  * 4. Escape the style context
  *
  * @param css - Raw CSS string from user input
- * @returns Sanitized CSS safe for dangerouslySetInnerHTML
+ * @returns Sanitized CSS safe for audited style injection.
  */
 export function sanitizeCss(css: string): string {
   if (!css || typeof css !== 'string') {

@@ -13,6 +13,11 @@ import type { PostsListProps } from './types';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Posts List component.
+ */
 export function PostsList({
   posts,
   isLoading,

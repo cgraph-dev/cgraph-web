@@ -29,6 +29,9 @@ function toCallScreenStatus(status: string): CallStatus {
   }
 }
 
+/**
+ * Call Screen component.
+ */
 export default function CallScreen() {
   const {
     callState,

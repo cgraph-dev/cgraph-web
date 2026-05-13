@@ -9,6 +9,11 @@ interface TypingIndicatorProps {
   isVisible: boolean;
 }
 
+/**
+ */
+/**
+ * Typing Indicator component.
+ */
 export function TypingIndicator({ isVisible }: TypingIndicatorProps) {
   if (!isVisible) return null;
 

@@ -1,3 +1,6 @@
+/**
+ * Error state display component.
+ */
 import { durations } from '@cgraph/animation-constants';
 import { motion } from 'motion/react';
 import { tweens, staggerConfigs } from '@/lib/animation-presets';
@@ -87,6 +90,8 @@ export default function ErrorState({
 
 // Common error variants
 /**
+ */
+/**
  * Network Error — fallback UI for error states.
  */
 export function NetworkError({ onRetry }: { onRetry?: () => void }) {
@@ -100,6 +105,8 @@ export function NetworkError({ onRetry }: { onRetry?: () => void }) {
 }
 
 /**
+ */
+/**
  * Not Found Error — fallback UI for error states.
  */
 export function NotFoundError({ type = 'Content' }: { type?: string }) {
@@ -112,6 +119,8 @@ export function NotFoundError({ type = 'Content' }: { type?: string }) {
 }
 
 /**
+ */
+/**
  * Permission Error — fallback UI for error states.
  */
 export function PermissionError() {
@@ -120,6 +129,8 @@ export function PermissionError() {
   );
 }
 
+/**
+ */
 /**
  * Rate Limit Error — fallback UI for error states.
  */

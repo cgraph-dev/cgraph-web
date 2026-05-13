@@ -1,3 +1,6 @@
+/**
+ * Toggle switch component.
+ */
 import { motion } from 'motion/react';
 
 interface SwitchProps {
@@ -10,6 +13,9 @@ interface SwitchProps {
   className?: string;
 }
 
+/**
+ * Switch component.
+ */
 export default function Switch({
   checked,
   onChange,

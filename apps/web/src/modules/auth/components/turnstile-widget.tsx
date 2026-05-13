@@ -57,6 +57,10 @@ let scriptPromise: Promise<void> | null = null;
  * Returns whether the frontend has a Turnstile site key configured.
  */
 export function isTurnstileEnabled(): boolean {
+  if (import.meta.env.VITE_E2E_AUTH_BYPASS === 'true') {
+    return false;
+  }
+
   return Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
 }
 

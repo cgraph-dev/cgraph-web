@@ -1,3 +1,6 @@
+/**
+ * Progress bar component.
+ */
 interface ProgressBarProps {
   value: number;
   max?: number;
@@ -9,6 +12,9 @@ interface ProgressBarProps {
   className?: string;
 }
 
+/**
+ * Progress Bar component.
+ */
 export default function ProgressBar({
   value,
   max = 100,

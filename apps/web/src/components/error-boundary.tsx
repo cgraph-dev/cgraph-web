@@ -1,6 +1,8 @@
+/**
+ * Global error boundary component.
+ */
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { logger } from '@/lib/logger';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 interface Props {
   children: ReactNode;
@@ -48,7 +50,7 @@ class ErrorBoundary extends Component<Props, State> {
       error.name === 'ChunkLoadError';
 
     if (isChunkError) {
-      const KEY = STORAGE_KEYS.routeReload;
+      const KEY = 'chunk_reload_ts';
       const lastReload = sessionStorage.getItem(KEY);
       const now = Date.now();
 
@@ -60,7 +62,10 @@ class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-    render() {
+  /**
+   * Renders the component.
+   */
+  render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;

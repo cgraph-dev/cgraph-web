@@ -3,6 +3,8 @@
  *
  * Profile card with hover and click triggers
  */
+
+// Main component
 export { default as UserProfileCard } from './user-profile-card';
 
 // V2 profile card

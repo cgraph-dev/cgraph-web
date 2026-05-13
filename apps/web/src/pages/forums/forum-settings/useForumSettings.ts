@@ -7,6 +7,8 @@ import { useForumStore } from '@/modules/forums/store';
 import { useAuthStore } from '@/modules/auth/store';
 
 /**
+ */
+/**
  * Hook for managing forum settings.
  */
 export function useForumSettings() {

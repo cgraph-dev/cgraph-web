@@ -75,6 +75,7 @@ export function ForumUserPopover({ user, children }: ForumUserPopoverProps) {
         </PopoverTrigger>
         <PopoverContent align="start" className="w-[260px] p-3">
           <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            {/* Avatar + Name */}
             <div className="mb-3 flex items-center gap-3">
               <div className="relative flex-shrink-0">
                 <ThemedAvatar

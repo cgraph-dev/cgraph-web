@@ -1,6 +1,7 @@
 import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { SafeHtml } from '@/shared/components/security/safe-html';
 import { ThreadLine } from './thread-line';
 import { CommentHeader } from './comment-header';
 import { CommentActions } from './comment-actions';
@@ -8,7 +9,6 @@ import { countDescendants } from './utils';
 import type { ThreadedCommentProps } from './types';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
-import { SafeHtml } from '@/shared/components/security';
 
 export const ThreadedComment = memo(function ThreadedComment({
   comment,
@@ -31,16 +31,16 @@ export const ThreadedComment = memo(function ThreadedComment({
   const isOwnComment = currentUserId === comment.authorId;
 
   const handleVote = async (value: 1 | -1) => {
-      if (isVoting) return;
-      setIsVoting(true);
-      try {
-        const currentVote = comment.myVote ?? comment.userVote ?? null;
-        const newValue = currentVote === value ? null : value;
-        await onVote(comment.id, newValue, currentVote);
-      } finally {
-        setIsVoting(false);
-      }
-    };
+    if (isVoting) return;
+    setIsVoting(true);
+    try {
+      const currentVote = comment.myVote ?? comment.userVote ?? null;
+      const newValue = currentVote === value ? null : value;
+      await onVote(comment.id, newValue, currentVote);
+    } finally {
+      setIsVoting(false);
+    }
+  };
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => !prev);

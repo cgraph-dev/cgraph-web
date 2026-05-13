@@ -25,6 +25,11 @@ import type { PostCardProps } from './types';
 import { tweens, springs } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Post Card display component.
+ */
 export function PostCard({ post, onVote }: PostCardProps) {
   return (
     <motion.div

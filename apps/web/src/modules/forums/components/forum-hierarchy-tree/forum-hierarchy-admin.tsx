@@ -1,7 +1,7 @@
 /**
  * Forum Hierarchy Admin Panel
  *
- * Admin interface for managing forum hierarchy:
+ * Discord/Meta-style admin interface for managing forum hierarchy:
  * - Create subforums under any parent
  * - Move forums between parents (drag-and-drop ready)
  * - Reorder forums within a level
@@ -28,6 +28,11 @@ interface ForumHierarchyAdminProps {
   onRefresh: () => void;
 }
 
+/**
+ */
+/**
+ * Forum Hierarchy Admin administration component.
+ */
 export function ForumHierarchyAdmin({ tree, onRefresh }: ForumHierarchyAdminProps) {
   const {
     selectedParent,

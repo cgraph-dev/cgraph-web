@@ -179,6 +179,8 @@ function LocationShareControls(props: LocationShareControlsProps): ReactNode {
                 </div>
               )}
             </div>
+
+            {/* Error message */}
             {geoError && <p className="text-xs text-red-500">{geoError}</p>}
 
             {/* Share button */}

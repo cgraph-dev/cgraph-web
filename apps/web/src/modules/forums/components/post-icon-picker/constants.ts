@@ -3,9 +3,8 @@
  */
 
 import type { PostIcon } from './types';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
-export const LOCAL_STORAGE_KEY = STORAGE_KEYS.postIconRecentPrefix;
+export const LOCAL_STORAGE_KEY = 'cgraph_recent_post_icons';
 export const MAX_RECENT_ICONS = 8;
 
 export const SIZE_CLASSES = {

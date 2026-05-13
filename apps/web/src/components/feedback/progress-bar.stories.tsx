@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the ProgressBar feedback component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import ProgressBar from './progress-bar';
 

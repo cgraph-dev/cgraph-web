@@ -116,7 +116,7 @@ describe('initBroadcastChannel', () => {
 
 describe('constants', () => {
   it('should export expected storage key', () => {
-    expect(STORAGE_KEY).toBe('cgraph:v1:theme:preferences');
+    expect(STORAGE_KEY).toBe('cgraph-theme-preferences');
   });
 
   // NOTE: BROADCAST_CHANNEL test removed — no longer exported from preferences (batch 2)

@@ -152,7 +152,7 @@ describe('NotificationStore', () => {
 
     it('calculates unreadCount from notifications', async () => {
       mockedApi.get.mockResolvedValueOnce({
-        data: { notifications: [notif1, notif2, notifRead] },
+        data: { notifications: [notif1, notif2, { ...notifRead, is_read: true }] },
       });
 
       await useNotificationStore.getState().fetchNotifications(null);

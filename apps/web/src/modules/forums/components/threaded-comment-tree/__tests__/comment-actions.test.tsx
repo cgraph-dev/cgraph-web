@@ -33,17 +33,21 @@ describe('CommentActions', () => {
 
   it('renders upvote icon', () => {
     render(<CommentActions {...defaultProps} />);
-    expect(screen.getByTestId('icon-ArrowUpIcon')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /upvote/i }).querySelector('svg')
+    ).toBeInTheDocument();
   });
 
   it('renders downvote icon', () => {
     render(<CommentActions {...defaultProps} />);
-    expect(screen.getByTestId('icon-ArrowDownIcon')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /downvote/i }).querySelector('svg')
+    ).toBeInTheDocument();
   });
 
   it('renders reply icon', () => {
     render(<CommentActions {...defaultProps} />);
-    expect(screen.getByTestId('icon-ChatBubbleLeftIcon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reply/i }).querySelector('svg')).toBeInTheDocument();
   });
 
   it('calls onReply when reply button is clicked', () => {

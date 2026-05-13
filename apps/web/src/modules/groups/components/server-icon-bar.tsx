@@ -1,3 +1,16 @@
+/**
+ * Server Icon Bar — Discord far-left sidebar
+ *
+ * Vertical bar (72px) showing server icons with:
+ * - Home (DM) button at top with separator
+ * - Server icons with squircle hover transition
+ * - Unread pill indicators on left edge
+ * - Active server highlight (squircle border-radius)
+ * - Add Server / Discover buttons at bottom
+ * - Tooltip on hover (right side)
+ *
+ */
+
 import { motion, AnimatePresence } from 'motion/react';
 import { NavLink, useParams, useNavigate } from 'react-router-dom';
 import { ChatBubbleLeftRightIcon, PlusIcon, GlobeAltIcon } from '@heroicons/react/24/solid';
@@ -5,8 +18,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Tooltip from '@/components/ui/tooltip';
 import { springs } from '@/lib/animation-presets';
 import { cn } from '@/lib/utils';
-import { useGroupStore } from '../store';
-import type { Group } from '../store';
 
 interface ServerIconBarProps {
   className?: string;
@@ -90,6 +101,7 @@ function ServerIcon({ server, isActive }: { server: ServerEntry; isActive: boole
           )}
         </motion.div>
 
+        {/* Mention badge */}
         {(server.mentionCount ?? 0) > 0 && (
           <motion.div
             initial={{ scale: 0 }}
@@ -136,23 +148,19 @@ function ActionButton({
   );
 }
 
-function toServerEntry(group: Group): ServerEntry {
-  const unreadCount = group.channels.reduce((total, channel) => total + channel.unreadCount, 0);
+/** Mock servers — replace with store data */
+const MOCK_SERVERS: ServerEntry[] = [
+  { id: '1', name: 'Gaming', hasUnread: true },
+  { id: '2', name: 'Design Team', mentionCount: 3 },
+  { id: '3', name: 'CGraph Dev' },
+  { id: '4', name: 'Music Lovers', hasUnread: true },
+];
 
-  return {
-    id: group.id,
-    name: group.name,
-    iconUrl: group.iconUrl ?? undefined,
-    hasUnread: unreadCount > 0,
-    mentionCount: unreadCount,
-  };
-}
-
+/** Description. */
+/** Server Icon Bar component. */
 export function ServerIconBar({ className }: ServerIconBarProps) {
   const { groupId } = useParams();
   const navigate = useNavigate();
-  const groups = useGroupStore((state) => state.groups);
-  const servers = groups.filter((group) => group.myMember !== null).map(toServerEntry);
 
   const handleHome = () => {
     navigate('/chat');
@@ -165,6 +173,7 @@ export function ServerIconBar({ className }: ServerIconBarProps) {
         className
       )}
     >
+      {/* Home / DMs button */}
       <Tooltip content="Direct Messages" side="right">
         <motion.button
           onClick={handleHome}
@@ -184,18 +193,22 @@ export function ServerIconBar({ className }: ServerIconBarProps) {
         </motion.button>
       </Tooltip>
 
+      {/* Separator */}
       <div className="my-2 h-[2px] w-8 rounded-full bg-[var(--token-card-bg)]" />
 
+      {/* Server List (scrollable) */}
       <ScrollArea className="w-full flex-1">
         <div className="flex flex-col items-center gap-2 px-3">
-          {servers.map((server) => (
+          {MOCK_SERVERS.map((server) => (
             <ServerIcon key={server.id} server={server} isActive={groupId === server.id} />
           ))}
         </div>
       </ScrollArea>
 
+      {/* Separator */}
       <div className="my-2 h-[2px] w-8 rounded-full bg-[var(--token-card-bg)]" />
 
+      {/* Action buttons */}
       <div className="flex flex-col items-center gap-2">
         <ActionButton
           icon={PlusIcon}

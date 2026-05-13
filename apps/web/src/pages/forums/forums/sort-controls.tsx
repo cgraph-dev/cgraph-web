@@ -9,6 +9,11 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { sortOptions, timeRangeOptions } from './constants';
 import type { SortControlsProps } from './types';
 
+/**
+ */
+/**
+ * Sort Controls component.
+ */
 export function SortControls({
   sortBy,
   timeRange,

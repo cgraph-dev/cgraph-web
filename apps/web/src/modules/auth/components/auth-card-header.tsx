@@ -1,3 +1,6 @@
+/**
+ * Authentication card header component.
+ */
 import React from 'react';
 import { motion } from 'motion/react';
 
@@ -10,6 +13,11 @@ export interface AuthCardHeaderProps {
   animated?: boolean;
 }
 
+/**
+ */
+/**
+ * Auth Card Header display component.
+ */
 export function AuthCardHeader({
   title,
   subtitle,

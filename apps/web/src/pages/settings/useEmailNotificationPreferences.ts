@@ -15,6 +15,8 @@ import {
 const logger = createLogger('EmailNotificationSettings');
 
 /**
+ */
+/**
  * Hook for managing email notification preferences.
  */
 export function useEmailNotificationPreferences() {

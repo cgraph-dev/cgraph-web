@@ -42,6 +42,11 @@ function aggregatePulse(profile: UserProfileData): AggregatedPulse | null {
   return { score: total, tier: bestTier };
 }
 
+/**
+ */
+/**
+ * Profile Name Section section component.
+ */
 export function ProfileNameSection({ profile }: ProfileNameSectionProps) {
   const pulse = aggregatePulse(profile);
 

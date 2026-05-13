@@ -1,3 +1,6 @@
+/**
+ * Toast notification component.
+ */
 import { create } from 'zustand';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
@@ -130,12 +133,19 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
   );
 }
 
+/**
+ */
+/**
+ * Toast Container wrapper component.
+ */
 export function ToastContainer() {
   const { toasts, removeToast } = useToastStore();
 
   return (
     <div
+      role="status"
       aria-label="Notifications"
+      aria-live="polite"
       className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2"
     >
       <AnimatePresence mode="popLayout">

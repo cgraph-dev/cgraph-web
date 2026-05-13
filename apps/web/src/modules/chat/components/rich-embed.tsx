@@ -27,7 +27,9 @@ interface RichEmbedProps {
   className?: string;
 }
 
-/** Rich preview card for Open Graph metadata and bot-provided embeds. */
+/**
+ * Discord-style rich embed card (OG preview / bot embed).
+ */
 export function RichEmbed({
   color = '#5865F2',
   provider,

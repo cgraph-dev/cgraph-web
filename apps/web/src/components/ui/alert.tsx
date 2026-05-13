@@ -23,6 +23,11 @@ const variantStyles: Record<AlertVariant, string> = {
   destructive: 'bg-error/10 border-error/30 text-error',
 };
 
+/**
+ */
+/**
+ * Alert component.
+ */
 export function Alert({ children, variant = 'default', className = '' }: AlertProps) {
   return (
     <div role="alert" className={`rounded-lg border p-4 ${variantStyles[variant]} ${className} `}>
@@ -36,6 +41,11 @@ interface AlertDescriptionProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Alert Description component.
+ */
 export function AlertDescription({ children, className = '' }: AlertDescriptionProps) {
   return <div className={`text-sm ${className}`}>{children}</div>;
 }
@@ -45,6 +55,11 @@ interface AlertTitleProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Alert Title component.
+ */
 export function AlertTitle({ children, className = '' }: AlertTitleProps) {
   return <h4 className={`mb-1 font-medium ${className}`}>{children}</h4>;
 }

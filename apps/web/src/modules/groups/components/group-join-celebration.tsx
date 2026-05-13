@@ -28,6 +28,9 @@ export interface GroupJoinCelebrationProps {
   onComplete?: () => void;
 }
 
+/**
+ * Group Join Celebration component.
+ */
 export function GroupJoinCelebration({ groupName, show, onComplete }: GroupJoinCelebrationProps) {
   const fireCelebration = () => {
     // Big center burst

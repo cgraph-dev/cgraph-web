@@ -16,6 +16,11 @@ import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('PrivacySettingsPanel');
 
+/**
+ */
+/**
+ * Privacy Settings Panel component.
+ */
 export function PrivacySettingsPanel() {
   const { settings, updatePrivacySettings, isSaving } = useSettingsStore();
   const [fieldVisExpanded, setFieldVisExpanded] = useState(false);
@@ -153,7 +158,7 @@ export function PrivacySettingsPanel() {
           </select>
         </GlassCard>
 
-        {/* Per-field profile visibility controls */}
+        {/* Per-field profile visibility (Discord/Meta-style granular controls) */}
         <GlassCard variant="default" className="aurora-social-panel p-4">
           <button
             onClick={() => setFieldVisExpanded((v) => !v)}

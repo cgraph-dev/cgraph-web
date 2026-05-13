@@ -119,6 +119,8 @@ function BatchActionBar(props: BatchActionBarProps): ReactNode {
             </div>
             <span className="text-text-secondary text-xs">selected</span>
           </div>
+
+          {/* Action buttons */}
           <ActionButton
             label="Forward"
             icon="↗"

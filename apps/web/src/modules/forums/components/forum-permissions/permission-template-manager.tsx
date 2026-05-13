@@ -31,6 +31,8 @@ interface PermissionTemplateManagerProps {
   boardId?: string;
 }
 
+/** Description. */
+/** Permission Template Manager component. */
 export function PermissionTemplateManager({ forumId, boardId }: PermissionTemplateManagerProps) {
   const {
     templates,

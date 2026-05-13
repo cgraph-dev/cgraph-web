@@ -16,7 +16,6 @@ export interface EnhancedMessageBubbleProps {
 export interface ConversationHeaderProps {
   conversationName: string;
   isTyping: boolean;
-  onGenerateTheme?: () => void;
   canStartCall?: boolean;
   onStartVoiceCall?: () => void;
   onStartVideoCall?: () => void;
@@ -24,8 +23,11 @@ export interface ConversationHeaderProps {
 
 export interface MessageInputAreaProps {
   messageInput: string;
+  attachment: File | null;
   isSending: boolean;
   onMessageChange: (value: string) => void;
+  onFileSelect: (file: File) => void;
+  onClearAttachment: () => void;
   onSend: () => void;
 }
 

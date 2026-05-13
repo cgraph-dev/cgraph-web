@@ -8,7 +8,6 @@ import { PermissionRequests } from '@/modules/auth/components/permission-request
 import { PinEntry } from '@/modules/auth/components/pin-entry';
 import { PhoneEntry } from '@/modules/auth/components/phone-entry';
 import { ProfileSetup } from '@/modules/auth/components/profile-setup';
-import { useAuthStore } from '@/modules/auth/store';
 import {
   usePhoneRegistrationStore,
   type RegistrationStep,
@@ -76,7 +75,6 @@ function StepProgress({
 export default function PhoneRegister(): ReactElement {
   const step = usePhoneRegistrationStore((state) => state.step);
   const sessionId = usePhoneRegistrationStore((state) => state.sessionId);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate = useNavigate();
   const location = useLocation();
   const isPhoneLogin = location.pathname.startsWith('/login/phone');
@@ -90,12 +88,6 @@ export default function PhoneRegister(): ReactElement {
       usePhoneRegistrationStore.getState().reset();
     };
   }, []);
-
-  useEffect(() => {
-    if (isPhoneLogin && isAuthenticated) {
-      navigate('/messages', { replace: true });
-    }
-  }, [isAuthenticated, isPhoneLogin, navigate]);
 
   const handleComplete = async () => {
     const success = await usePhoneRegistrationStore.getState().completeRegistration();

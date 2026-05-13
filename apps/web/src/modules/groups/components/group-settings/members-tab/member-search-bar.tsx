@@ -7,6 +7,9 @@ interface MemberSearchBarProps {
   onRoleFilterChange: (value: string) => void;
 }
 
+/**
+ * Member Search Bar component.
+ */
 export function MemberSearchBar({
   search,
   onSearchChange,

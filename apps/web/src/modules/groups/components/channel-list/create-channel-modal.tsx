@@ -13,6 +13,11 @@ import type { CreateChannelModalProps } from './types';
 import { apiClient } from '@/lib/api-client';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Create Channel Modal dialog component.
+ */
 export function CreateChannelModal({ groupId, categoryId, onClose }: CreateChannelModalProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState<Channel['type']>('text');

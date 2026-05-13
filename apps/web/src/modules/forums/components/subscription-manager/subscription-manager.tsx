@@ -1,4 +1,7 @@
 
+/**
+ * Forum subscription management component.
+ */
 import React, { useState } from 'react';
 import {
   Card,
@@ -36,6 +39,12 @@ function getSubscriptionTab(value: string): 'all' | SubscriptionType | null {
   return SUBSCRIPTION_TABS.find((tab) => tab === value) ?? null;
 }
 
+/**
+ */
+/**
+ * Subscription Manager component.
+ * @returns The rendered JSX element.
+ */
 export function SubscriptionManager({ className }: SubscriptionManagerProps): React.ReactElement {
   const {
     subscriptions,

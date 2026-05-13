@@ -55,6 +55,10 @@ function formatDate(dateStr: string): string {
     day: 'numeric',
   });
 }
+/**
+ *
+ * Description.
+ */
 export function SubscriberPerksWall({ forumId }: SubscriberPerksWallProps) {
   const queryClient = useQueryClient();
   const [subscribingTierId, setSubscribingTierId] = useState<string | null>(null);

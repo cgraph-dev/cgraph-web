@@ -19,6 +19,11 @@ function getThemeColorKeys(): ThemeColorPreset[] {
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Bubbles Tab component.
+ */
 export function BubblesTab({
   selectedStyle,
   selectedColor,

@@ -3,10 +3,14 @@
  */
 import { useState, useEffect, useMemo, useRef } from 'react';
 import debounce from 'lodash.debounce';
-import { apiClient } from '@/lib/api-client';
+import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('useUserSearch');
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
 
 export interface UserSearchResult {
   id: string;
@@ -20,6 +24,41 @@ export interface UseUserSearchReturn {
   results: UserSearchResult[];
   isLoading: boolean;
   error: string | null;
+}
+
+function getUsersFromResponse(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data;
+  if (typeof data !== 'object' || data === null) return [];
+
+  if ('users' in data && Array.isArray(data.users)) return data.users;
+  if ('data' in data && Array.isArray(data.data)) return data.data;
+  if (
+    'data' in data &&
+    typeof data.data === 'object' &&
+    data.data !== null &&
+    'users' in data.data &&
+    Array.isArray(data.data.users)
+  ) {
+    return data.data.users;
+  }
+
+  return [];
+}
+
+function toUserSearchResult(value: unknown): UserSearchResult | null {
+  if (!isRecord(value)) return null;
+  const record = value;
+  const id = record.id;
+  const username = record.username;
+  if (typeof id !== 'string' || typeof username !== 'string') return null;
+
+  return {
+    id,
+    username,
+    display_name: typeof record.display_name === 'string' ? record.display_name : null,
+    avatar_url: typeof record.avatar_url === 'string' ? record.avatar_url : null,
+    status: typeof record.status === 'string' ? record.status : 'offline',
+  };
 }
 
 /**
@@ -51,24 +90,14 @@ export function useUserSearch(query: string): UseUserSearchReturn {
         setError(null);
 
         try {
-          const result = await apiClient.search.searchUsers(q);
+          const response = await http.get('/api/v1/search/users', { params: { q } });
+          const users = getUsersFromResponse(response.data)
+            .map(toUserSearchResult)
+            .filter((user): user is UserSearchResult => user !== null);
 
           // Only update if query hasn't changed during the request
           if (q === latestQuery.current) {
-            if (result.ok) {
-              setResults(
-                result.data.map((u) => ({
-                  id: u.id,
-                  username: u.username,
-                  display_name: u.display_name ?? null,
-                  avatar_url: u.avatar_url ?? null,
-                  status: u.status ?? 'offline',
-                }))
-              );
-            } else {
-              setError('Failed to search users');
-              setResults([]);
-            }
+            setResults(users);
           }
         } catch (err) {
           logger.error('User search failed:', err);

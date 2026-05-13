@@ -133,6 +133,7 @@ export function DiscoverTab() {
           <div className="relative">
             <AdjustmentsHorizontalIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
             <select
+              aria-label="Sort communities"
               value={sort}
               onChange={(e) => {
                 if (isSortOption(e.target.value)) setSort(e.target.value);

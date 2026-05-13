@@ -1,3 +1,6 @@
+/**
+ * Toast notification feedback component.
+ */
 import React, { createContext, use, useState, useRef, useEffect } from 'react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -178,7 +181,7 @@ function showStandaloneToast(type: ToastType, message: string) {
   const toastEl = document.createElement('div');
   const id = `standalone-toast-${Date.now()}`;
   toastEl.id = id;
-  toastEl.appendChild(createToastElement(type, message));
+  toastEl.appendChild(createToastBody(type, message));
   toastEl.classList.add('animate-slide-in');
   container.appendChild(toastEl);
 
@@ -203,7 +206,7 @@ function getOrCreateContainer(): HTMLElement {
   return container;
 }
 
-function createToastElement(type: ToastType, message: string): HTMLElement {
+function createToastBody(type: ToastType, message: string): HTMLElement {
   const colors: Record<ToastType, string> = {
     success: 'bg-green-50 border-green-200',
     error: 'bg-red-50 border-red-200',
@@ -211,15 +214,15 @@ function createToastElement(type: ToastType, message: string): HTMLElement {
     info: 'bg-blue-50 border-blue-200',
   };
 
-  const wrapper = document.createElement('div');
-  wrapper.className = `flex items-center gap-3 p-4 rounded-lg border shadow-lg ${colors[type]}`;
+  const body = document.createElement('div');
+  body.className = `flex items-center gap-3 p-4 rounded-lg border shadow-lg ${colors[type]}`;
 
   const messageEl = document.createElement('span');
   messageEl.className = 'text-sm text-gray-800';
   messageEl.textContent = message;
-  wrapper.appendChild(messageEl);
+  body.appendChild(messageEl);
 
-  return wrapper;
+  return body;
 }
 
 export default ToastProvider;

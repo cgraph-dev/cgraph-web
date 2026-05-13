@@ -5,6 +5,8 @@
  * LogoIcon is the primary logo component.
  *
  */
+
+// Main component
 export { LogoIcon } from './logo-icon';
 
 // Types

@@ -1,5 +1,13 @@
+/**
+ * Admin progress bar component.
+ */
 import clsx from 'clsx';
 
+/**
+ */
+/**
+ * Progress Bar component.
+ */
 export function ProgressBar({
   label,
   value,

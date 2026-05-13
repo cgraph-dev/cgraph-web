@@ -6,8 +6,8 @@
  *
  */
 
-import React, { useState, useEffect } from 'react';
-import type { FeatureFlag, FlagType, FlagHistoryEntry } from '@/modules/platform/store';
+import React, { useState, useEffect, useCallback } from 'react';
+import type { FeatureFlag, FlagType, FlagHistoryEntry } from '@/stores/featureFlagStore';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('FeatureFlags');
@@ -20,7 +20,12 @@ interface CreateFlagPayload {
   description?: string;
 }
 const ADMIN_FLAGS_URL = '/api/v1/admin/feature-flags';
-const FLAG_TYPES = ['boolean', 'percentage', 'variant', 'targeted'] as const satisfies readonly FlagType[];
+const FLAG_TYPES = [
+  'boolean',
+  'percentage',
+  'variant',
+  'targeted',
+] as const satisfies readonly FlagType[];
 
 function getFlagType(value: string): FlagType | null {
   return FLAG_TYPES.find((type) => type === value) ?? null;
@@ -306,7 +311,7 @@ export function FeatureFlagsPanel() {
   const [showCreate, setShowCreate] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const loadFlags = async () => {
+  const loadFlags = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchAdminFlags();
@@ -318,7 +323,7 @@ export function FeatureFlagsPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadFlags();

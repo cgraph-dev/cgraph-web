@@ -228,7 +228,7 @@ export default function Avatar({
         )}
       </div>
 
-      {/* Status indicator dot */}
+      {/* Status indicator dot — Discord style */}
       {status && status !== 'invisible' && (
         <span
           className={cn(

@@ -25,6 +25,11 @@ import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('RoleManager');
 
+/**
+ */
+/**
+ * Role Manager component.
+ */
 export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   const { groups, createRole, updateRole, deleteRole } = useGroupStore();
 

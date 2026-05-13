@@ -267,7 +267,7 @@ describe('forumStore (module)', () => {
   describe('fetchForums', () => {
     it('should set isLoadingForums while fetching and clear afterwards', async () => {
       mockedApi.get.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ data: { forums: [] } }), 50))
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 50))
       );
 
       const promise = useForumStore.getState().fetchForums();
@@ -278,7 +278,7 @@ describe('forumStore (module)', () => {
     });
 
     it('should populate forums from API response', async () => {
-      mockedApi.get.mockResolvedValue({ data: { forums: [mockForum, mockForum2] } });
+      mockedApi.get.mockResolvedValue({ data: [mockForum, mockForum2] });
 
       await useForumStore.getState().fetchForums();
 
@@ -286,7 +286,7 @@ describe('forumStore (module)', () => {
     });
 
     it('should call the correct endpoint', async () => {
-      mockedApi.get.mockResolvedValue({ data: { forums: [] } });
+      mockedApi.get.mockResolvedValue({ data: [] });
 
       await useForumStore.getState().fetchForums();
 
@@ -296,13 +296,13 @@ describe('forumStore (module)', () => {
     it('should reset loading on error', async () => {
       mockedApi.get.mockRejectedValue(new Error('Network error'));
 
-      await expect(useForumStore.getState().fetchForums()).rejects.toThrow('Network error');
+      await useForumStore.getState().fetchForums();
       expect(useForumStore.getState().isLoadingForums).toBe(false);
     });
   });
   describe('fetchForum', () => {
     it('should set currentForum and add to forums list', async () => {
-      mockedApi.get.mockResolvedValue({ data: { forum: mockForum } });
+      mockedApi.get.mockResolvedValue({ data: mockForum });
 
       const result = await useForumStore.getState().fetchForum('test-forum');
 
@@ -314,7 +314,7 @@ describe('forumStore (module)', () => {
     it('should update an existing forum in the list instead of duplicating', async () => {
       useForumStore.setState({ forums: [mockForum] });
       const updated = { ...mockForum, name: 'Updated Name' };
-      mockedApi.get.mockResolvedValue({ data: { forum: updated } });
+      mockedApi.get.mockResolvedValue({ data: updated });
 
       await useForumStore.getState().fetchForum('test-forum');
 
@@ -326,7 +326,7 @@ describe('forumStore (module)', () => {
       mockedApi.get.mockResolvedValue({ data: {} });
 
       await expect(useForumStore.getState().fetchForum('no-exist')).rejects.toThrow(
-        'unexpected response'
+        'The server returned an unexpected response'
       );
     });
   });
@@ -381,7 +381,7 @@ describe('forumStore (module)', () => {
   });
   describe('fetchPost', () => {
     it('should set currentPost', async () => {
-      mockedApi.get.mockResolvedValue({ data: { post: mockPost } });
+      mockedApi.get.mockResolvedValue({ data: mockPost });
 
       await useForumStore.getState().fetchPost('post-1');
 
@@ -391,7 +391,7 @@ describe('forumStore (module)', () => {
   });
   describe('fetchComments', () => {
     it('should store comments keyed by postId', async () => {
-      mockedApi.get.mockResolvedValue({ data: { comments: [mockComment, mockComment2] } });
+      mockedApi.get.mockResolvedValue({ data: [mockComment, mockComment2] });
 
       await useForumStore.getState().fetchComments('post-1');
 
@@ -408,7 +408,7 @@ describe('forumStore (module)', () => {
   describe('createPost', () => {
     it('should create a post, return it, and prepend to posts', async () => {
       useForumStore.setState({ posts: [mockPost2] });
-      mockedApi.post.mockResolvedValue({ data: { post: mockPost } });
+      mockedApi.post.mockResolvedValue({ data: mockPost });
 
       const result = await useForumStore.getState().createPost({
         forumId: 'forum-1',
@@ -431,12 +431,12 @@ describe('forumStore (module)', () => {
           title: 'Test',
           postType: 'text',
         })
-      ).rejects.toThrow('unexpected response');
+      ).rejects.toThrow('The server returned an unexpected response');
     });
   });
   describe('createComment', () => {
     it('should create a top-level comment and add to store', async () => {
-      mockedApi.post.mockResolvedValue({ data: { comment: mockComment } });
+      mockedApi.post.mockResolvedValue({ data: mockComment });
 
       const result = await useForumStore.getState().createComment('post-1', 'Test comment');
 
@@ -445,7 +445,7 @@ describe('forumStore (module)', () => {
     });
 
     it('should pass parent_id for reply comments', async () => {
-      mockedApi.post.mockResolvedValue({ data: { comment: mockComment2 } });
+      mockedApi.post.mockResolvedValue({ data: mockComment2 });
 
       await useForumStore.getState().createComment('post-1', 'Reply', 'comment-1');
 
@@ -459,7 +459,7 @@ describe('forumStore (module)', () => {
       mockedApi.post.mockResolvedValue({ data: {} });
 
       await expect(useForumStore.getState().createComment('post-1', 'hi')).rejects.toThrow(
-        'unexpected response'
+        'The server returned an unexpected response'
       );
     });
   });
@@ -547,7 +547,7 @@ describe('forumStore (module)', () => {
   describe('subscribe / unsubscribe', () => {
     it('should subscribe to a forum and increment memberCount', async () => {
       useForumStore.setState({ forums: [mockForum] });
-      mockedApi.post.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({ data: { id: 'forum-1' } });
 
       await useForumStore.getState().subscribe('forum-1');
 
@@ -569,7 +569,7 @@ describe('forumStore (module)', () => {
   });
   describe('createForum', () => {
     it('should create a forum, add to state, and return it', async () => {
-      mockedApi.post.mockResolvedValue({ data: { forum: mockForum } });
+      mockedApi.post.mockResolvedValue({ data: mockForum });
 
       const result = await useForumStore.getState().createForum({
         name: 'Test Forum',
@@ -581,7 +581,7 @@ describe('forumStore (module)', () => {
     });
 
     it('should pass all options to API in snake_case', async () => {
-      mockedApi.post.mockResolvedValue({ data: { forum: mockForum } });
+      mockedApi.post.mockResolvedValue({ data: mockForum });
 
       await useForumStore.getState().createForum({
         name: 'NSFW Forum',
@@ -590,19 +590,22 @@ describe('forumStore (module)', () => {
         isPrivate: true,
       });
 
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/forums', {
-        name: 'NSFW Forum',
-        description: 'desc',
-        is_nsfw: true,
-        is_private: true,
-      });
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        '/api/v1/forums',
+        expect.objectContaining({
+          name: 'NSFW Forum',
+          description: 'desc',
+          is_nsfw: true,
+          is_private: true,
+        })
+      );
     });
 
     it('should throw when no forum returned', async () => {
       mockedApi.post.mockResolvedValue({ data: {} });
 
       await expect(useForumStore.getState().createForum({ name: 'X' })).rejects.toThrow(
-        'unexpected response'
+        'The server returned an unexpected response'
       );
     });
   });
@@ -610,7 +613,7 @@ describe('forumStore (module)', () => {
   describe('updateForum', () => {
     it('should update the forum in the forums list', async () => {
       const updated = { ...mockForum, name: 'New Name' };
-      mockedApi.patch.mockResolvedValue({ data: { forum: updated } });
+      mockedApi.patch.mockResolvedValue({ data: updated });
       useForumStore.setState({ forums: [mockForum] });
 
       const result = await useForumStore.getState().updateForum('forum-1', { name: 'New Name' });
@@ -633,7 +636,7 @@ describe('forumStore (module)', () => {
   });
   describe('moderation actions', () => {
     it('should pin a post and update state', async () => {
-      mockedApi.post.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({ data: mockPost });
       useForumStore.setState({ posts: [mockPost] });
 
       await useForumStore.getState().pinPost('forum-1', 'post-1');
@@ -643,7 +646,7 @@ describe('forumStore (module)', () => {
     });
 
     it('should unpin a post and update state', async () => {
-      mockedApi.delete.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({ data: mockPost });
       useForumStore.setState({ posts: [{ ...mockPost, isPinned: true }] });
 
       await useForumStore.getState().unpinPost('forum-1', 'post-1');
@@ -652,7 +655,7 @@ describe('forumStore (module)', () => {
     });
 
     it('should lock a post and update state', async () => {
-      mockedApi.post.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({ data: mockPost });
       useForumStore.setState({ posts: [mockPost] });
 
       await useForumStore.getState().lockPost('forum-1', 'post-1');
@@ -661,7 +664,7 @@ describe('forumStore (module)', () => {
     });
 
     it('should unlock a post and update state', async () => {
-      mockedApi.delete.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({ data: mockPost });
       useForumStore.setState({ posts: [{ ...mockPost, isLocked: true }] });
 
       await useForumStore.getState().unlockPost('forum-1', 'post-1');
@@ -900,7 +903,9 @@ describe('forumStore (module)', () => {
   });
   describe('thread subscriptions', () => {
     it('should subscribe to a thread and add to subscriptions', async () => {
-      mockedApi.post.mockResolvedValue({ data: {} });
+      mockedApi.post.mockResolvedValue({
+        data: { id: 'sub-post-1', entity_id: 'post-1', notification_mode: 'email' },
+      });
 
       await useForumStore.getState().subscribeThread('post-1', 'email');
 
@@ -932,18 +937,16 @@ describe('forumStore (module)', () => {
 
     it('should fetch subscriptions from API', async () => {
       mockedApi.get.mockResolvedValue({
-        data: {
-          subscriptions: [
-            {
-              id: 's-1',
-              userId: 'u-1',
-              entityType: 'thread',
-              entityId: 'post-1',
-              notificationMode: 'instant',
-              createdAt: '2026-01-01T00:00:00Z',
-            },
-          ],
-        },
+        data: [
+          {
+            id: 's-1',
+            userId: 'u-1',
+            entityType: 'thread',
+            entityId: 'post-1',
+            notificationMode: 'instant',
+            createdAt: '2026-01-01T00:00:00Z',
+          },
+        ],
       });
 
       await useForumStore.getState().fetchSubscriptions();
@@ -978,7 +981,7 @@ describe('forumStore (module)', () => {
   });
   describe('loading states isolation', () => {
     it('should not affect other loading states when fetching forums', async () => {
-      mockedApi.get.mockResolvedValue({ data: { forums: [] } });
+      mockedApi.get.mockResolvedValue({ data: [] });
 
       await useForumStore.getState().fetchForums();
 

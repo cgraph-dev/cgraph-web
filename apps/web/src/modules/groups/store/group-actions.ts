@@ -154,6 +154,41 @@ function normalizeGroupMember(raw: Record<string, unknown>): Member {
   };
 }
 
+function groupHasChannel(
+  group: Pick<Group, 'channels' | 'categories'>,
+  channelId: string
+): boolean {
+  return (
+    group.channels.some((channel) => channel.id === channelId) ||
+    group.categories.some((category) =>
+      category.channels.some((channel) => channel.id === channelId)
+    )
+  );
+}
+
+function getGroupIdForChannel(state: GroupState, channelId: string): string {
+  const activeGroup = state.groups.find((group) => group.id === state.activeGroupId);
+  if (activeGroup && groupHasChannel(activeGroup, channelId)) {
+    return activeGroup.id;
+  }
+
+  const matchingGroup = state.groups.find((group) => groupHasChannel(group, channelId));
+  if (matchingGroup) {
+    return matchingGroup.id;
+  }
+
+  if (state.activeGroupId) {
+    return state.activeGroupId;
+  }
+
+  throw new Error(`Cannot resolve group for channel ${channelId}`);
+}
+
+function channelMessagesPath(state: GroupState, channelId: string): string {
+  const groupId = getGroupIdForChannel(state, channelId);
+  return `/api/v1/groups/${groupId}/channels/${channelId}/messages`;
+}
+
 function normalizeGroups(rawList: unknown): Group[] {
   return ensureArray<Record<string, unknown>>(rawList).map(normalizeGroup);
 }
@@ -205,6 +240,16 @@ function normalizeToChannelMessage(raw: Record<string, unknown>): ChannelMessage
     isEdited: Boolean(raw.isEdited ?? raw.is_edited ?? false),
     deletedAt: asStringOrNull(raw.deletedAt ?? raw.deleted_at),
     metadata: asRecordOrEmpty(raw.metadata),
+    fileUrl: asStringOrNull(raw.fileUrl ?? raw.file_url),
+    fileName: asStringOrNull(raw.fileName ?? raw.file_name),
+    fileSize:
+      typeof raw.fileSize === 'number'
+        ? raw.fileSize
+        : typeof raw.file_size === 'number'
+          ? raw.file_size
+          : null,
+    fileMimeType: asStringOrNull(raw.fileMimeType ?? raw.file_mime_type),
+    thumbnailUrl: asStringOrNull(raw.thumbnailUrl ?? raw.thumbnail_url),
     reactions: Array.isArray(raw.reactions) ? raw.reactions : [],
     createdAt: String(raw.createdAt ?? raw.created_at ?? raw.insertedAt ?? raw.inserted_at ?? ''),
     // E2EE optional fields
@@ -220,6 +265,8 @@ function normalizeToChannelMessage(raw: Record<string, unknown>): ChannelMessage
 type SetState = StoreApi<GroupState>['setState'];
 type GetState = StoreApi<GroupState>['getState'];
 
+/**
+ */
 /**
  * Creates a new group actions.
  *
@@ -285,8 +332,12 @@ export function createGroupActions(
       set({ isLoadingMessages: true });
       try {
         const params = before ? { before, limit: 50 } : { limit: 50 };
-        const response = await http.get(`/api/v1/channels/${channelId}/messages`, { params });
-        const rawMessages = ensureArray<Record<string, unknown>>(response.data, 'messages');
+        const response = await http.get(channelMessagesPath(get(), channelId), { params });
+        const dataMessages = ensureArray<Record<string, unknown>>(response.data, 'data');
+        const rawMessages =
+          dataMessages.length > 0
+            ? dataMessages
+            : ensureArray<Record<string, unknown>>(response.data, 'messages');
         const newMessages = rawMessages.map(normalizeToChannelMessage);
         const hasMore = newMessages.length === 50;
 
@@ -346,17 +397,30 @@ export function createGroupActions(
       }));
     },
 
-    sendChannelMessage: async (channelId: string, content: string, replyToId?: string) => {
+    sendChannelMessage: async (
+      channelId: string,
+      content: string,
+      replyToId?: string,
+      options?
+    ) => {
       // Web is not a Signal-participant device (ADR-022). Group channels on
       // web send plaintext; sender-key E2EE lives on mobile/desktop only.
       const payload: Record<string, unknown> = {
         content,
+        content_type: options?.contentType ?? 'text',
         client_message_id: createIdempotencyKey(),
       };
       if (replyToId) payload.reply_to_id = replyToId;
+      if (options?.fileUrl) payload.file_url = options.fileUrl;
+      if (options?.fileName) payload.file_name = options.fileName;
+      if (options?.fileSize != null) payload.file_size = options.fileSize;
+      if (options?.fileMimeType) payload.file_mime_type = options.fileMimeType;
+      if (options?.thumbnailUrl) payload.thumbnail_url = options.thumbnailUrl;
 
-      const response = await http.post(`/api/v1/channels/${channelId}/messages`, payload);
-      const raw = ensureObject<Record<string, unknown>>(response.data, 'message');
+      const response = await http.post(channelMessagesPath(get(), channelId), payload);
+      const raw =
+        ensureObject<Record<string, unknown>>(response.data, 'data') ??
+        ensureObject<Record<string, unknown>>(response.data, 'message');
       const message = raw ? normalizeToChannelMessage(raw) : null;
       if (message) {
         get().addChannelMessage(message);
@@ -443,7 +507,7 @@ export function createGroupActions(
       }));
 
       try {
-        await http.post(`/api/v1/channels/${channelId}/messages/${messageId}/reactions`, { emoji });
+        await http.post(`/api/v1/messages/${messageId}/reactions`, { emoji });
       } catch (error) {
         // Revert optimistic update on failure
         logger.error('Failed to toggle reaction:', error);

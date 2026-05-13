@@ -33,6 +33,11 @@ interface UsernameChangeModalProps {
   onSuccess?: (newUsername: string) => void;
 }
 
+/**
+ */
+/**
+ * Username Change Modal dialog component.
+ */
 export function UsernameChangeModal({
   isOpen,
   onClose,

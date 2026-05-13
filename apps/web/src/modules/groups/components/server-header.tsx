@@ -52,6 +52,7 @@ const menuItems: MenuItem[] = [
   { id: 'leave', label: 'Leave Server', icon: ArrowRightStartOnRectangleIcon, danger: true },
 ];
 
+/** Description. */
 /** Server Header component. */
 export function ServerHeader({ serverName, className }: ServerHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);

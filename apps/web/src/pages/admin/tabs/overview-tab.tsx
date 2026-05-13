@@ -29,6 +29,11 @@ import {
   ChatBubbleIcon,
 } from '@/modules/admin/components';
 
+/**
+ */
+/**
+ * Overview Tab component.
+ */
 export function OverviewTab() {
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ['admin', 'metrics'],

@@ -8,6 +8,9 @@ interface UsersPaginationProps {
   loadedCount: number;
 }
 
+/**
+ * Users Pagination component.
+ */
 export function UsersPagination({
   hasNext,
   onLoadMore,

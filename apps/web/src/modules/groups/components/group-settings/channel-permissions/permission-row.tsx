@@ -9,6 +9,9 @@ interface PermissionRowProps {
   onToggle: (bit: number) => void;
 }
 
+/**
+ * Permission Row component.
+ */
 export function PermissionRow({ bit, label, description, state, onToggle }: PermissionRowProps) {
   return (
     <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-[var(--token-card-bg)/0.6]">

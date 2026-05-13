@@ -22,6 +22,11 @@ interface OnlineStatusIndicatorProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Online Status Indicator component.
+ */
 export function OnlineStatusIndicator({
   status,
   size = 'md',

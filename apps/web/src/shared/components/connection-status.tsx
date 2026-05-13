@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useConnectionStatusStore } from '@/lib/socket/connection-status-store';
+import {
+  useConnectionStatusStore,
+  type ConnectionStatus as SocketConnectionStatus,
+} from '@/lib/socket/connection-status-store';
 
 type ConnectionState = 'connected' | 'reconnecting' | 'offline';
 
@@ -10,24 +13,26 @@ const STATE_CONFIG: Record<ConnectionState, { color: string; label: string; puls
   offline: { color: 'bg-red-400', label: 'Offline', pulse: false },
 };
 
+function toConnectionState(status: SocketConnectionStatus, isOnline: boolean): ConnectionState {
+  if (!isOnline) return 'offline';
+  return status === 'connected' ? 'connected' : 'reconnecting';
+}
+
 /** Connection Status. */
 export function ConnectionStatus() {
-  const socketStatus = useConnectionStatusStore((store) => store.status);
+  const socketStatus = useConnectionStatusStore((s) => s.status);
   const [state, setState] = useState<ConnectionState>('connected');
   const [showLabel, setShowLabel] = useState(false);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    function resolveConnectionState(): ConnectionState {
-      const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-      if (!isOnline) return 'offline';
-      if (socketStatus === 'connected') return 'connected';
-      return 'reconnecting';
+    function applyConnectionState(): void {
+      const isOnline = typeof navigator === 'undefined' ? true : navigator.onLine;
+      setState(toConnectionState(socketStatus, isOnline));
     }
 
-    setState(resolveConnectionState());
-
-    const handleOnline = () => setState(resolveConnectionState());
+    applyConnectionState();
+    const handleOnline = () => applyConnectionState();
     const handleOffline = () => setState('offline');
 
     window.addEventListener('online', handleOnline);

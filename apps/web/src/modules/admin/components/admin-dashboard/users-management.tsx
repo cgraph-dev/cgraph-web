@@ -3,7 +3,7 @@
  * Search, filter, and manage user accounts
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { createLogger } from '@/lib/logger';
 
@@ -13,6 +13,11 @@ import { userManagementApi } from '../../api/userManagementApi';
 import type { AdminUser } from '../../api/types';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Users Management component.
+ */
 export function UsersManagement() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +26,7 @@ export function UsersManagement() {
   const [statusFilter, setStatusFilter] = useState('');
   const [sortBy, setSortBy] = useState('');
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -38,7 +43,7 @@ export function UsersManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, sortBy, statusFilter]);
 
   useEffect(() => {
     fetchUsers();

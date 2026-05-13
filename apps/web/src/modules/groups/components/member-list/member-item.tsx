@@ -28,6 +28,11 @@ function isStatusType(value: unknown): value is StatusType {
 }
 
 // Role Section Component
+/**
+ */
+/**
+ * Role Section section component.
+ */
 export function RoleSection({ role, members, onMemberClick }: RoleSectionProps) {
   return (
     <div className="mb-4">
@@ -48,6 +53,11 @@ export function RoleSection({ role, members, onMemberClick }: RoleSectionProps) 
 }
 
 // Member Item Component
+/**
+ */
+/**
+ * Member Item component.
+ */
 export function MemberItem({ member, roleColor, onClick }: MemberItemProps) {
   const status: StatusType = isStatusType(member.user.status) ? member.user.status : 'offline';
   const displayName = member.nickname || member.user.displayName || member.user.username;
@@ -94,6 +104,11 @@ export function MemberItem({ member, roleColor, onClick }: MemberItemProps) {
 }
 
 // Member Context Menu
+/**
+ */
+/**
+ * Member Context Menu component.
+ */
 export function MemberContextMenu({ member, position, isOwner, onClose }: MemberContextMenuProps) {
   const displayName = member.nickname || member.user.displayName || member.user.username;
 

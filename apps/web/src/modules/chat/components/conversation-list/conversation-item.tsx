@@ -1,3 +1,6 @@
+/**
+ * ConversationItem component
+ */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -17,6 +20,11 @@ import {
 } from './utils';
 import { tweens, loop } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Conversation Item component.
+ */
 export function ConversationItem({
   conversation,
   currentUserId,

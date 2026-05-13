@@ -1,3 +1,6 @@
+/**
+ * Individual channel item component.
+ */
 import { motion } from 'motion/react';
 import { NavLink, useParams } from 'react-router-dom';
 import { HashtagIcon } from '@heroicons/react/24/outline';
@@ -6,6 +9,11 @@ import { channelTypeIcons, channelTypeColors } from './constants';
 import type { ChannelItemProps } from './types';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Channel Item component.
+ */
 export function ChannelItem({ channel, isActive }: ChannelItemProps) {
   const { groupId } = useParams();
 

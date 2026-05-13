@@ -1,7 +1,8 @@
 /**
  * Tests for useAdaptiveInterval hook.
  *
- * Verifies that polling intervals adapt to document visibility.
+ * Verifies that polling intervals correctly adapt to document visibility,
+ * critical for reducing server load at 10M+ scale.
  *
  */
 

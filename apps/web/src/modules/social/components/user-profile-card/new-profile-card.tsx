@@ -115,6 +115,8 @@ export const NewProfileCard = memo(function NewProfileCard({
             />
           </>
         )}
+
+        {/* Action buttons (hidden in preview mode) */}
         {!isPreview && (
           <ActionButtons
             onMessage={onMessage}

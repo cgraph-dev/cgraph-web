@@ -32,6 +32,8 @@ function bool(val: unknown, fallback: boolean): boolean {
 }
 
 /**
+ */
+/**
  * Hook for managing member list.
  */
 export function useMemberList() {

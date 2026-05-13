@@ -25,6 +25,11 @@ interface CommentActionsProps {
   onMarkBestAnswer?: () => void;
 }
 
+/**
+ */
+/**
+ * Comment Actions component.
+ */
 export function CommentActions({
   score,
   currentVote,

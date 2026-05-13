@@ -19,6 +19,8 @@ type Get = () => ModerationState;
 const logger = createLogger('ModerationStore:Bulk');
 
 /**
+ */
+/**
  * Creates a new bulk actions.
  *
  * @param set - The set.

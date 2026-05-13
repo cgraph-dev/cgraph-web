@@ -15,6 +15,9 @@ import {
 import { useCreatePost } from './hooks';
 import PostTypeTabs from './post-type-tabs';
 
+/**
+ * Create Post component.
+ */
 export default function CreatePost() {
   const {
     forumSlug,

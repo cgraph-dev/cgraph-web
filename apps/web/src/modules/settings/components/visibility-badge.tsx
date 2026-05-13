@@ -1,3 +1,6 @@
+/**
+ * Visibility status badge component.
+ */
 import { EyeIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 
 interface VisibilityBadgeProps {

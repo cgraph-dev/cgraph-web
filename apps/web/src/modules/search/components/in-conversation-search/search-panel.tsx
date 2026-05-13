@@ -25,6 +25,9 @@ interface InConversationSearchPanelProps {
   participants?: Array<{ id: string; username: string; display_name: string }>;
 }
 
+/**
+ * In-conversation search panel component.
+ */
 export function InConversationSearchPanel({
   conversationId,
   isOpen,

@@ -29,6 +29,9 @@ import { FADE_IN, FADE_UP } from '@/lib/animations/transitions';
 
 const logger = createLogger('PremiumPage');
 
+/**
+ * Premium Page — route-level page component.
+ */
 export default function PremiumPage() {
   const navigate = useNavigate();
   useAuthStore(); // Ensure user is authenticated
@@ -125,7 +128,7 @@ export default function PremiumPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/premium/nodes')}
+              onClick={() => navigate('/me/wallet/shop')}
               className="ml-2 text-xs"
             >
               Get More
@@ -220,7 +223,7 @@ export default function PremiumPage() {
             <p className="mb-4 text-gray-400">
               Get nodes to unlock individual features and rewards!
             </p>
-            <Button onClick={() => navigate('/premium/nodes')}>Explore Node Shop</Button>
+            <Button onClick={() => navigate('/me/wallet/shop')}>Explore Node Shop</Button>
           </GlassCard>
         </motion.div>
       </div>

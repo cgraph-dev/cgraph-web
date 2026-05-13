@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the Avatar user component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import { Avatar } from './avatar';
 

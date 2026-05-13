@@ -1,3 +1,6 @@
+/**
+ * Group channel list component.
+ */
 ;
 import { AnimatePresence, LayoutGroup } from 'motion/react';
 import {

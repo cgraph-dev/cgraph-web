@@ -1,3 +1,6 @@
+/**
+ * Video call controls UI component.
+ */
 import {
   PhoneXMarkIcon,
   MicrophoneIcon,
@@ -16,6 +19,11 @@ interface VideoCallControlsProps {
   onToggleScreenShare?: () => void;
 }
 
+/**
+ */
+/**
+ * Video Call Controls component.
+ */
 export function VideoCallControls({
   isMuted,
   isVideoEnabled,

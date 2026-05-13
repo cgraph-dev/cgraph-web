@@ -19,6 +19,11 @@ interface CallControlsProps {
   onEndCall: () => void;
 }
 
+/**
+ */
+/**
+ * Call Controls component.
+ */
 export function CallControls({
   showControls,
   callType,

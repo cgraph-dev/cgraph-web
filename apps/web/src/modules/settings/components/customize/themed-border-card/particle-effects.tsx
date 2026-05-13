@@ -11,6 +11,11 @@ interface ParticleEffectsProps {
   colors: string[];
 }
 
+/**
+ */
+/**
+ * Particle Effects component.
+ */
 export function ParticleEffects({ colors }: ParticleEffectsProps) {
   return (
     <div className="pointer-events-none absolute inset-0">

@@ -1,6 +1,8 @@
 /** @module PostContent tests */
+import type { ComponentProps } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('@/stores/theme', () => ({
   useThemeStore: vi.fn((sel?: (s: Record<string, unknown>) => unknown) => {
@@ -195,10 +197,6 @@ vi.mock('@/lib/utils', () => ({
   formatTimeAgo: (date: string) => `${date} ago`,
 }));
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => vi.fn(),
-}));
-
 // NOTE: vi.mock('@/modules/gamification/components/user-stars') removed — module was deleted.
 // The test "renders user stars component" may need updating.
 
@@ -229,6 +227,14 @@ vi.mock('../comment-form', () => ({
 }));
 
 import { PostContent } from '../post-content';
+
+function renderPostContent(props: ComponentProps<typeof PostContent>) {
+  return render(
+    <MemoryRouter>
+      <PostContent {...props} />
+    </MemoryRouter>
+  );
+}
 
 const makePost = (overrides = {}) => ({
   id: 'p1',
@@ -296,38 +302,38 @@ describe('PostContent', () => {
   });
 
   it('renders post title', () => {
-    render(<PostContent {...defaultProps} />);
+    renderPostContent(defaultProps);
     expect(screen.getByText('Test Post Title')).toBeInTheDocument();
   });
 
   it('renders author display name', () => {
-    render(<PostContent {...defaultProps} />);
+    renderPostContent(defaultProps);
     const els = screen.getAllByText('Alice');
     expect(els.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders avatar with correct alt text', () => {
-    render(<PostContent {...defaultProps} />);
+    renderPostContent(defaultProps);
     expect(screen.getByTestId('avatar')).toHaveTextContent('Alice');
   });
 
   it('shows pinned badge when post is pinned', () => {
-    render(<PostContent {...defaultProps} post={makePost({ isPinned: true })} />);
+    renderPostContent({ ...defaultProps, post: makePost({ isPinned: true }) });
     expect(screen.getByText('Pinned')).toBeInTheDocument();
   });
 
   it('shows locked badge when post is locked', () => {
-    render(<PostContent {...defaultProps} post={makePost({ isLocked: true })} />);
+    renderPostContent({ ...defaultProps, post: makePost({ isLocked: true }) });
     expect(screen.getByText('Locked')).toBeInTheDocument();
   });
 
   it('shows prefix badge when prefix is present', () => {
-    render(<PostContent {...defaultProps} post={makePost({ prefix: 'Discussion' })} />);
+    renderPostContent({ ...defaultProps, post: makePost({ prefix: 'Discussion' }) });
     expect(screen.getByTestId('prefix-badge')).toHaveTextContent('Discussion');
   });
 
   it('does not show prefix badge when prefix is null', () => {
-    render(<PostContent {...defaultProps} />);
+    renderPostContent(defaultProps);
     expect(screen.queryByTestId('prefix-badge')).not.toBeInTheDocument();
   });
 });

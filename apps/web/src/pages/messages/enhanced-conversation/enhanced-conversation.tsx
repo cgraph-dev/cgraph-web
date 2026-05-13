@@ -15,6 +15,9 @@ import { LoadingSpinner } from './loading-spinner';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ * Enhanced Conversation component.
+ */
 export default function EnhancedConversation() {
   const {
     conversation,
@@ -22,8 +25,10 @@ export default function EnhancedConversation() {
     typing,
     user,
     messageInput,
-    setMessageInput,
+    attachment,
+    handleMessageChange,
     isSending,
+    setAttachment,
     setReplyTo,
     messagesEndRef,
     inputContainerRef,
@@ -49,7 +54,6 @@ export default function EnhancedConversation() {
         <ConversationHeader
           conversationName={conversation.name || 'Conversation'}
           isTyping={typing.length > 0}
-          onGenerateTheme={() => {}}
           canStartCall={Boolean(callRecipientId)}
           onStartVoiceCall={() => handleStartCall('audio')}
           onStartVideoCall={() => handleStartCall('video')}
@@ -85,9 +89,12 @@ export default function EnhancedConversation() {
         {/* Input Area */}
         <MessageInputArea
           messageInput={messageInput}
+          attachment={attachment}
           isSending={isSending}
           inputContainerRef={inputContainerRef}
-          onMessageChange={setMessageInput}
+          onMessageChange={handleMessageChange}
+          onFileSelect={setAttachment}
+          onClearAttachment={() => setAttachment(null)}
           onSend={handleSend}
         />
       </motion.div>

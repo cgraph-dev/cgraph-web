@@ -41,6 +41,9 @@ const ACTION_LABELS: Record<MemberAction, string> = {
   mute: 'Mute',
 };
 
+/**
+ * Confirm Action Modal dialog component.
+ */
 export function ConfirmActionModal({
   action,
   memberId,

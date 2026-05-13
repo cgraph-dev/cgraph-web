@@ -5,6 +5,11 @@
 import { motion } from 'motion/react';
 import type { CallControlProps } from './types';
 
+/**
+ */
+/**
+ * Call Control component.
+ */
 export function CallControl({ icon, label, onClick, active, danger, disabled }: CallControlProps) {
   return (
     <motion.button

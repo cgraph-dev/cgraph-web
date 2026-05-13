@@ -1,4 +1,14 @@
-import type { ReactNode } from 'react';
+/**
+ * Server Sidebar — Discord-style 240px server sidebar
+ *
+ * Full server navigation panel containing:
+ * - ServerHeader (top, with dropdown menu)
+ * - Optional ServerBanner (custom image)
+ * - ChannelList (scrollable, categories + channels)
+ * - UserBar (bottom: avatar + name + mic/headphone/settings)
+ *
+ */
+
 import { motion } from 'motion/react';
 import { MicrophoneIcon, SpeakerWaveIcon, Cog6ToothIcon } from '@heroicons/react/24/solid';
 import { MicrophoneIcon as MicOffIcon } from '@heroicons/react/24/outline';
@@ -7,17 +17,15 @@ import Tooltip from '@/components/ui/tooltip';
 import { ServerHeader } from './server-header';
 import { ServerBanner } from './server-banner';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/modules/auth/store';
 
 interface ServerSidebarProps {
   className?: string;
+  /** Server data — replace with store types */
   server?: {
     id: string;
     name: string;
     bannerUrl?: string;
   };
-  user?: UserBarUser | null;
-  children?: ReactNode;
 }
 
 interface UserBarUser {
@@ -36,12 +44,21 @@ const statusColors: Record<string, string> = {
   offline: 'bg-gray-500',
 };
 
-function UserBar({ user }: { readonly user: UserBarUser }) {
+function UserBar() {
+  // Mock user data — replace with auth store
+  const user: UserBarUser = {
+    id: 'self',
+    displayName: 'User',
+    username: 'user#0001',
+    status: 'online',
+  };
+
   const isMuted = false;
   const isDeafened = false;
 
   return (
     <div className="flex items-center gap-2 border-t border-[var(--token-border-muted)] bg-[var(--token-bg-tertiary)] px-2 py-1.5">
+      {/* Avatar + Name */}
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <div className="relative flex-shrink-0">
           <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[var(--color-brand-purple)]">
@@ -57,6 +74,7 @@ function UserBar({ user }: { readonly user: UserBarUser }) {
               </span>
             )}
           </div>
+          {/* Status dot */}
           <div
             className={cn(
               'absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-[2.5px] border-[#232428]',
@@ -70,12 +88,10 @@ function UserBar({ user }: { readonly user: UserBarUser }) {
         </div>
       </div>
 
+      {/* Control icons */}
       <div className="flex items-center gap-0.5">
         <Tooltip content={isMuted ? 'Unmute' : 'Mute'} side="top">
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            className="rounded p-1.5 hover:bg-[var(--token-card-bg)]"
-          >
+          <motion.button whileTap={{ scale: 0.88 }} className="rounded p-1.5 hover:bg-[var(--token-card-bg)]">
             {isMuted ? (
               <MicOffIcon className="h-4 w-4 text-red-400" />
             ) : (
@@ -85,10 +101,7 @@ function UserBar({ user }: { readonly user: UserBarUser }) {
         </Tooltip>
 
         <Tooltip content={isDeafened ? 'Undeafen' : 'Deafen'} side="top">
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            className="rounded p-1.5 hover:bg-[var(--token-card-bg)]"
-          >
+          <motion.button whileTap={{ scale: 0.88 }} className="rounded p-1.5 hover:bg-[var(--token-card-bg)]">
             <SpeakerWaveIcon
               className={cn('h-4 w-4', isDeafened ? 'text-red-400' : 'text-gray-400')}
             />
@@ -96,10 +109,7 @@ function UserBar({ user }: { readonly user: UserBarUser }) {
         </Tooltip>
 
         <Tooltip content="User Settings" side="top">
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            className="rounded p-1.5 hover:bg-[var(--token-card-bg)]"
-          >
+          <motion.button whileTap={{ scale: 0.88 }} className="rounded p-1.5 hover:bg-[var(--token-card-bg)]">
             <Cog6ToothIcon className="h-4 w-4 text-gray-400" />
           </motion.button>
         </Tooltip>
@@ -108,44 +118,35 @@ function UserBar({ user }: { readonly user: UserBarUser }) {
   );
 }
 
-function resolveUserBarUser(
-  user: ReturnType<typeof useAuthStore.getState>['user']
-): UserBarUser | null {
-  if (!user) {
-    return null;
-  }
-
-  return {
-    id: user.id,
-    displayName: user.displayName || user.username || 'CGraph user',
-    username: user.username || user.uid,
-    avatarUrl: user.avatarUrl ?? undefined,
-    status: user.status,
-    customStatus: user.statusMessage ?? undefined,
+/** Description. */
+/** Server Sidebar component. */
+export function ServerSidebar({ className, server }: ServerSidebarProps) {
+  const mockServer = server ?? {
+    id: '1',
+    name: 'CGraph Community',
   };
-}
-
-export function ServerSidebar({
-  className,
-  server,
-  user: userOverride,
-  children,
-}: ServerSidebarProps) {
-  const authUser = useAuthStore((state) => state.user);
-  const user = userOverride ?? resolveUserBarUser(authUser);
-  const serverName = server?.name ?? 'CGraph';
 
   return (
     <div className={cn('flex h-full w-60 flex-col bg-[var(--token-card-bg)]', className)}>
-      <ServerHeader serverName={serverName} />
+      {/* Server Header */}
+      <ServerHeader serverName={mockServer.name} />
 
-      {server?.bannerUrl && <ServerBanner imageUrl={server.bannerUrl} />}
+      {/* Optional Banner */}
+      {mockServer.bannerUrl && <ServerBanner imageUrl={mockServer.bannerUrl} />}
 
+      {/* Channel List — scrollable */}
       <ScrollArea className="flex-1">
-        <div className="py-2">{children}</div>
+        <div className="py-2">
+          {/* Channel list content is rendered by the existing ChannelList component */}
+          {/* Integrate with: <ChannelList /> from channel-list/ directory */}
+          <div className="px-2 py-1 text-xs text-gray-500">
+            {/* Placeholder — replaced by ChannelList integration */}
+          </div>
+        </div>
       </ScrollArea>
 
-      {user && <UserBar user={user} />}
+      {/* User Bar (bottom) */}
+      <UserBar />
     </div>
   );
 }

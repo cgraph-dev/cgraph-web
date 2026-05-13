@@ -18,6 +18,11 @@ interface BadgesListProps {
   badges: Badge[];
 }
 
+/**
+ */
+/**
+ * Badges List component.
+ */
 export function BadgesList({ badges }: BadgesListProps) {
   if (badges.length === 0) return null;
 

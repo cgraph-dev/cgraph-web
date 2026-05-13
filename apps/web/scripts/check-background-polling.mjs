@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -12,7 +12,10 @@ const files = [
 const violations = [];
 
 for (const file of files) {
-  const text = readFileSync(join(root, file), 'utf8');
+  const path = join(root, file);
+  if (!existsSync(path)) continue;
+
+  const text = readFileSync(path, 'utf8');
   if (/\bsetInterval\s*\(/.test(text) || /\bwindow\.setInterval\s*\(/.test(text)) {
     violations.push(`${file}: fixed interval polling is forbidden; use the adaptive scheduler`);
   }
@@ -34,9 +37,7 @@ if (!friendRequestHandler) {
     );
   }
   if (!handlerSource.includes('upsertIncomingRequest')) {
-    violations.push(
-      `${userChannelPath}: friend_request must upsert the incoming request into the social store`
-    );
+    violations.push(`${userChannelPath}: friend_request must upsert the incoming request into the social store`);
   }
 }
 

@@ -12,6 +12,9 @@ import {
   type TurnstileWidgetHandle,
 } from '@/modules/auth/components/turnstile-widget';
 
+/**
+ * Forgot Password component.
+ */
 export default function ForgotPassword() {
   const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');

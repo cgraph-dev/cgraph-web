@@ -60,12 +60,6 @@ vi.mock('@/modules/settings/store', () => ({
   ),
 }));
 
-vi.mock('@/modules/settings/store/customization', () => ({
-  useCustomizationStore: vi.fn((sel: (s: typeof mockCustomizationState) => unknown) =>
-    sel(mockCustomizationState)
-  ),
-}));
-
 vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   useCustomizationStore: vi.fn((sel: (s: typeof mockCustomizationState) => unknown) =>
     sel(mockCustomizationState)

@@ -16,6 +16,8 @@ interface RegisterFormState {
 }
 
 /**
+ */
+/**
  * Hook for managing register form.
  */
 export function useRegisterForm() {

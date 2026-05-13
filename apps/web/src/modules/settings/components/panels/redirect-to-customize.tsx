@@ -13,6 +13,11 @@ interface RedirectToCustomizeProps {
   section: string;
 }
 
+/**
+ */
+/**
+ * Redirect To Customize component.
+ */
 export function RedirectToCustomize({ section }: RedirectToCustomizeProps) {
   const navigate = useNavigate();
 

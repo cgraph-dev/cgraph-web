@@ -37,6 +37,8 @@ export const sizeConfig = {
 } as const;
 
 /**
+ */
+/**
  * Formats last active.
  *
  * @param dateStr - The date str.
@@ -59,6 +61,8 @@ export function formatLastActive(dateStr: string | null): string | null {
   return date.toLocaleDateString();
 }
 
+/**
+ */
 /**
  * Formats last active long.
  *

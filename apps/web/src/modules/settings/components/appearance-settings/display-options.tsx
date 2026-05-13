@@ -28,6 +28,11 @@ interface DisplayOptionsProps {
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Display Options component.
+ */
 export function DisplayOptions({
   fontScale,
   messageSpacing,

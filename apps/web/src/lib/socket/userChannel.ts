@@ -24,7 +24,6 @@ import { normalizeIncomingRequestEvent } from '@/modules/social/store/friend-nor
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { useSettingsStore } from '@/modules/settings/store/settingsStore.impl';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 import { socketLogger as logger } from '../logger';
 import { normalizeConversation, normalizeMessage } from '../api-utils';
 import { shouldDropIncomingCall } from './incomingCallDedup';
@@ -45,7 +44,7 @@ function updateSessionResumeState(
   if (typeof sequence === 'number') {
     sessionState.lastSequence = sequence;
     try {
-      sessionStorage.setItem(STORAGE_KEYS.socketLastSequence, String(sequence));
+      sessionStorage.setItem('ws_last_sequence', String(sequence));
     } catch {
       // sessionStorage unavailable — reconnect still works without persistence
     }
@@ -54,7 +53,7 @@ function updateSessionResumeState(
   if (typeof sessionId === 'string') {
     sessionState.sessionId = sessionId;
     try {
-      sessionStorage.setItem(STORAGE_KEYS.socketSessionId, sessionId);
+      sessionStorage.setItem('ws_session_id', sessionId);
     } catch {
       // sessionStorage unavailable — reconnect still works without persistence
     }
@@ -203,11 +202,8 @@ export function joinUserChannel(
   const joinParams: Record<string, unknown> = { include_contact_presence: true };
 
   try {
-    const savedSessionId =
-      sessionStorage.getItem(STORAGE_KEYS.socketSessionId) ?? sessionStorage.getItem('ws_session_id');
-    const savedLastSequence =
-      sessionStorage.getItem(STORAGE_KEYS.socketLastSequence) ??
-      sessionStorage.getItem('ws_last_sequence');
+    const savedSessionId = sessionStorage.getItem('ws_session_id');
+    const savedLastSequence = sessionStorage.getItem('ws_last_sequence');
 
     if (savedSessionId && savedLastSequence) {
       const parsedSequence = Number.parseInt(savedLastSequence, 10);
@@ -644,7 +640,7 @@ export function joinUserChannel(
       if (sessionId) {
         sessionState.sessionId = sessionId;
         try {
-          sessionStorage.setItem(STORAGE_KEYS.socketSessionId, sessionId);
+          sessionStorage.setItem('ws_session_id', sessionId);
         } catch {
           // sessionStorage unavailable — keep in memory only
         }

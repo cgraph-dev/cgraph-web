@@ -5,6 +5,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+
+vi.mock('@heroicons/react/24/outline', () => ({
+  MagnifyingGlassIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="icon-MagnifyingGlassIcon" {...props} />
+  ),
+  EllipsisVerticalIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="icon-EllipsisVerticalIcon" {...props} />
+  ),
+}));
+
 vi.mock('@/stores/theme', () => ({
   useThemeStore: vi.fn((sel?: (s: Record<string, unknown>) => unknown) => {
     const __ts = {

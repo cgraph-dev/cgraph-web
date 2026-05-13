@@ -8,6 +8,11 @@ interface MessageParticlesProps {
   isOwnMessage: boolean;
 }
 
+/**
+ */
+/**
+ * Message Particles component.
+ */
 export function MessageParticles({ isOwnMessage }: MessageParticlesProps) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">

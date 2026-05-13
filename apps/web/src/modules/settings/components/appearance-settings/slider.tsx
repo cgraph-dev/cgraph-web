@@ -8,6 +8,11 @@ import type { SliderProps } from './types';
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Slider component.
+ */
 export function Slider({
   value,
   min,

@@ -78,7 +78,7 @@ const mockNotification = {
   inserted_at: '2024-01-01T00:00:00Z',
 };
 
-const API_BASE = '*';
+const API_BASE = '';
 
 // Auth API Tests
 

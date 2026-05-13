@@ -11,6 +11,11 @@ import type { ThemeCardProps } from './types';
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Theme Card display component.
+ */
 export function ThemeCard({ theme, isActive, onSelect, onDelete, isPremium }: ThemeCardProps) {
   const previewColors = {
     bg: theme.colors.background,

@@ -7,6 +7,11 @@ import { motion } from 'motion/react';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { VideoTileProps } from './types';
 
+/**
+ */
+/**
+ * Video Tile component.
+ */
 export function VideoTile({
   stream,
   user,

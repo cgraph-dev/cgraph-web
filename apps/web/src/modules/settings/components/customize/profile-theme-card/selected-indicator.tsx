@@ -1,3 +1,6 @@
+/**
+ * Selected theme indicator component.
+ */
 import { motion } from 'motion/react';
 import { CheckIcon } from '@heroicons/react/24/solid';
 import type { ProfileThemeConfig } from '@/data/profileThemes';
@@ -6,6 +9,9 @@ interface SelectedIndicatorProps {
   theme: ProfileThemeConfig;
 }
 
+/**
+ * Selected Indicator component.
+ */
 export default function SelectedIndicator({ theme }: SelectedIndicatorProps) {
   return (
     <>

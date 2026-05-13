@@ -3,6 +3,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
+vi.mock('@heroicons/react/24/outline', () => ({
+  HashtagIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="icon-HashtagIcon" {...props} />
+  ),
+}));
+
 vi.mock('@/lib/animation-presets', () => ({
   tweens: { standard: {} },
   loop: () => ({}),
@@ -13,7 +19,7 @@ vi.mock('@/lib/animations/animation-engine', () => ({
   HapticFeedback: { light: vi.fn() },
 }));
 
-vi.mock('./constants', () => ({
+vi.mock('../constants', () => ({
   channelTypeIcons: {},
   channelTypeColors: {},
 }));

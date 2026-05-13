@@ -37,6 +37,7 @@ const LEVEL_LABELS: Record<PermLevel, string> = {
   inherit: '—',
 };
 
+/** Description. */
 /** Permission Matrix component. */
 export function PermissionMatrix({ forumId, boards }: PermissionMatrixProps) {
   const { groups, fetchGroups } = useUserGroupsStore();

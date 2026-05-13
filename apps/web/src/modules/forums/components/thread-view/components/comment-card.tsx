@@ -1,3 +1,6 @@
+/**
+ * Comment Card Component
+ */
 
 import { motion } from 'motion/react';
 import { ChevronUpIcon } from '@heroicons/react/24/outline';
@@ -15,6 +18,11 @@ interface CommentCardProps {
   onVote: (commentId: string, value: 1 | -1, currentVote: 1 | -1 | null) => void;
 }
 
+/**
+ */
+/**
+ * Comment Card display component.
+ */
 export function CommentCard({ comment, index, onVote }: CommentCardProps) {
   return (
     <motion.div key={comment.id} {...FADE_UP} transition={{ delay: index * 0.05 }}>

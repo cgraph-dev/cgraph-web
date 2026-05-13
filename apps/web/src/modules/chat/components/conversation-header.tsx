@@ -1,4 +1,13 @@
-/** Direct-message header with participant presence, security state, and call controls. */
+/**
+ * ConversationHeader Component
+ *
+ * Top bar for 1:1 DM conversations. Discord/Telegram-inspired layout:
+ * [Avatar + Name/Status] ────────── [Action Buttons]
+ *
+ * - Avatar is properly sized (40px) to fit within the 56px header
+ * - Buttons are grouped with consistent spacing
+ * - Status shows typing, online, or last seen
+ */
 
 import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -97,6 +106,7 @@ function ConversationHeaderComponent({
 
   return (
     <header className="z-10 flex h-14 flex-shrink-0 items-center border-b border-white/[0.06] bg-[rgba(12,14,20,0.85)] px-4 backdrop-blur-xl">
+      {/* ── Left: Avatar + Name/Status ──────────────────────────── */}
       <div className="flex min-w-0 items-center gap-3">
         <UserProfileCard
           userId={otherParticipant?.user?.id || ''}
@@ -115,6 +125,7 @@ function ConversationHeaderComponent({
               avatarBorderId={getAvatarBorderId(otherParticipant?.user)}
               className="h-10 w-10"
             />
+            {/* Online status dot */}
             <div
               className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[rgb(12,14,20)] ${
                 isOtherUserOnline ? 'bg-green-500' : 'bg-gray-500'
@@ -152,9 +163,15 @@ function ConversationHeaderComponent({
           </p>
         </div>
       </div>
+
+      {/* ── Center spacer ───────────────────────────────────────── */}
       <div className="flex-1" />
+
+      {/* ── Right: Action buttons ───────────────────────────────── */}
       <div className="flex items-center gap-1">
         <ConnectionStatus />
+
+        {/* E2EE badge */}
         <motion.button
           onClick={() => {
             onToggleE2EETester();

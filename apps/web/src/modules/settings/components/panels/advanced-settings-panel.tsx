@@ -17,6 +17,9 @@ import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('AdvancedSettingsPanel');
 
+/**
+ * Advanced settings panel component.
+ */
 export function AdvancedSettingsPanel(): ReactNode {
   const resetAllPreferences = useSettingsStore((s) => s.resetAllPreferences);
   const [confirming, setConfirming] = useState(false);

@@ -5,6 +5,8 @@
 import { GlassCard } from '@/shared/components/ui';
 
 /**
+ */
+/**
  * Thread Loading Skeleton — loading placeholder.
  */
 export function ThreadLoadingSkeleton() {

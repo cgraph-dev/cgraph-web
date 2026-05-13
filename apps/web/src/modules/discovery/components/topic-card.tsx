@@ -13,6 +13,7 @@ interface TopicCardProps {
   className?: string;
 }
 
+/** Description. */
 /** Topic Card component. */
 export function TopicCard({ topic, selected, onToggle, className }: TopicCardProps) {
   return (

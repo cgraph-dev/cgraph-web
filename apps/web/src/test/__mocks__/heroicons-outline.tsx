@@ -142,7 +142,6 @@ export const BriefcaseIcon = icon('BriefcaseIcon');
 export const ChatBubbleBottomCenterTextIcon = icon('ChatBubbleBottomCenterTextIcon');
 export const CircleStackIcon = icon('CircleStackIcon');
 export const CloudArrowUpIcon = icon('CloudArrowUpIcon');
-export const CloudIcon = icon('CloudIcon');
 export const CodeBracketIcon = icon('CodeBracketIcon');
 export const CpuChipIcon = icon('CpuChipIcon');
 export const FilmIcon = icon('FilmIcon');

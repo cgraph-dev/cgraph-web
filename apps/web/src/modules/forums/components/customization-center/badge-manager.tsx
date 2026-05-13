@@ -37,6 +37,7 @@ const DEFAULT_BADGE: BadgeConfig = {
   color: '#3B82F6',
 };
 
+/** Description. */
 /** Badge Manager component. */
 export function BadgeManager({ forumId, onSave, saving }: BadgeManagerProps) {
   const [badges, setBadges] = useState<BadgeConfig[]>([]);

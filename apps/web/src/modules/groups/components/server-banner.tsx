@@ -17,6 +17,7 @@ interface ServerBannerProps {
   className?: string;
 }
 
+/** Description. */
 /** Server Banner component. */
 export function ServerBanner({ imageUrl, alt = 'Server banner', className }: ServerBannerProps) {
   return (

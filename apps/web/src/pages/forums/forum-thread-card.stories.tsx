@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the ForumThreadCard component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 
 /** Isolated forum thread card mock for Storybook */

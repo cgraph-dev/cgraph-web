@@ -19,6 +19,11 @@ interface CommentHeaderProps {
   onToggleCollapse: () => void;
 }
 
+/**
+ */
+/**
+ * Comment Header component.
+ */
 export function CommentHeader({
   comment,
   isOwnComment,

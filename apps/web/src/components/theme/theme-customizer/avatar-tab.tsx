@@ -19,6 +19,11 @@ function getThemeColorKeys(): ThemeColorPreset[] {
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Avatar Tab component.
+ */
 export function AvatarTab({
   selectedBorder,
   selectedColor,

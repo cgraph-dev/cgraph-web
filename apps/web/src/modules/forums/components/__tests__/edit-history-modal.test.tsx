@@ -62,17 +62,14 @@ describe('EditHistoryModal', () => {
   it('renders close button', () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
-    expect(screen.getByTestId('icon-XMarkIcon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /close edit history/i })).toBeInTheDocument();
   });
 
   it('calls onClose when close button is clicked', () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
-    const closeButton = screen.getByTestId('icon-XMarkIcon').closest('button');
-    if (closeButton) {
-      fireEvent.click(closeButton);
-      expect(onClose).toHaveBeenCalledOnce();
-    }
+    fireEvent.click(screen.getByRole('button', { name: /close edit history/i }));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it('calls onClose when backdrop is clicked', () => {

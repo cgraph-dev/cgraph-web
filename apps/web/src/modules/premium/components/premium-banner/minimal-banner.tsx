@@ -9,6 +9,12 @@ import { FADE_IN } from '@/lib/animations/transitions';
 
 type MinimalBannerProps = Pick<BannerVariantProps, 'className' | 'onUpgrade'>;
 
+/**
+ */
+/**
+ * Minimal Banner component.
+ * @returns The rendered JSX element.
+ */
 export function MinimalBanner({ className, onUpgrade }: MinimalBannerProps): React.ReactElement {
   return (
     <motion.div

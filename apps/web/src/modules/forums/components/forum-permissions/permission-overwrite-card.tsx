@@ -17,6 +17,11 @@ interface PermissionOverwriteCardProps {
   onCyclePerm: (groupId: string, permKey: string) => void;
 }
 
+/**
+ */
+/**
+ * Permission Overwrite Card display component.
+ */
 export function PermissionOverwriteCard({
   overwrite,
   perms,

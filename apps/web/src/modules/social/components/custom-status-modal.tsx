@@ -94,6 +94,11 @@ function computeExpiresInSeconds(option: string): number | null {
   }
 }
 
+/**
+ */
+/**
+ * Custom Status Modal dialog component.
+ */
 export function CustomStatusModal({
   isOpen,
   onClose,

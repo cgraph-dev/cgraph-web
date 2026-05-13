@@ -23,6 +23,11 @@ interface QuickActionsProps {
   onReportClick: () => void;
 }
 
+/**
+ */
+/**
+ * Quick Actions component.
+ */
 export function QuickActions({
   isMuted,
   isBlocking,

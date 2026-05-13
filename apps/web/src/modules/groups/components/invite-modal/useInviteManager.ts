@@ -43,9 +43,15 @@ export const MAX_USES_OPTIONS = [
 ];
 
 /**
+ */
+/**
  * Hook for managing invite manager.
  *
  * @param groupId - The group id.
+ */
+/**
+ *
+ * Description.
  */
 export function useInviteManager(groupId?: string) {
   const [activeTab, setActiveTab] = useState<'create' | 'manage'>('create');
@@ -65,7 +71,7 @@ export function useInviteManager(groupId?: string) {
         if (!result.ok) return;
         setInvites(
           result.data.map((inv) => ({
-            id: inv.id ?? inv.code,
+            id: inv.id,
             code: inv.code,
             url: `${window.location.origin}/invite/${inv.code}`,
             maxUses: inv.max_uses ?? inv.maxUses ?? null,

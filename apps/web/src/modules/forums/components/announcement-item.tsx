@@ -1,6 +1,9 @@
+/**
+ * Individual announcement item component.
+ */
 import { XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { SafeHtml, escapeHtml } from '@/shared/components/security/safe-html';
 import type { Announcement } from '@/modules/forums/store';
-import { SafeHtml, textToSafeHtml } from '@/shared/components/security';
 import {
   getAnnouncementStyle,
   getStyleClasses,
@@ -15,6 +18,11 @@ export interface AnnouncementItemProps {
   collapsible: boolean;
 }
 
+/**
+ */
+/**
+ * Announcement Item component.
+ */
 export function AnnouncementItem({
   announcement,
   isExpanded,
@@ -70,7 +78,11 @@ export function AnnouncementItem({
       >
         <SafeHtml
           className="prose prose-sm dark:prose-invert max-w-none"
-          html={announcement.allowHtml ? announcement.content : textToSafeHtml(announcement.content)}
+          html={
+            announcement.allowHtml
+              ? announcement.content
+              : escapeHtml(announcement.content).replace(/\n/g, '<br/>')
+          }
         />
 
         {/* Fade overlay for collapsed long content */}

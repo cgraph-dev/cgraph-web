@@ -4,6 +4,9 @@ import { InviteModal } from '../invite-modal';
 import type { InvitesTabProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Invites Tab component.
+ */
 export function InvitesTab({ groupId, groupName }: InvitesTabProps) {
   const [showModal, setShowModal] = useState(false);
 

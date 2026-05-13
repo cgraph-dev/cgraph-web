@@ -30,6 +30,9 @@ interface CategoryListItemProps {
   onMoveDown: (index: number) => void;
 }
 
+/**
+ * Category List Item component.
+ */
 export function CategoryListItem({
   category,
   index,

@@ -8,9 +8,9 @@
 import React, { useState, lazy, Suspense, type ReactNode } from 'react';
 import {
   FaceSmileIcon,
-  EllipsisVerticalIcon,
   ChatBubbleLeftRightIcon,
   FlagIcon,
+  PaperClipIcon,
 } from '@heroicons/react/24/outline';
 import { DisplayName } from '@/shared/components/ui';
 import type { ChannelMessageItemProps } from './types';
@@ -21,6 +21,9 @@ const EmojiPicker = lazy(() =>
   import('@/modules/chat/components/emoji-picker').then((m) => ({ default: m.EmojiPicker }))
 );
 
+/**
+ * Channel Message Item component.
+ */
 export function ChannelMessageItem({
   message,
   showHeader,
@@ -108,6 +111,7 @@ export function ChannelMessageItem({
         )}
 
         <ChannelMarkdown content={message.content} />
+        <MessageAttachment message={message} />
 
         {/* Reactions */}
         {message.reactions.length > 0 && (
@@ -180,12 +184,6 @@ export function ChannelMessageItem({
               <FlagIcon className="h-4 w-4" />
             </button>
           )}
-          <button
-            className="p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-white"
-            title="More"
-          >
-            <EllipsisVerticalIcon className="h-4 w-4" />
-          </button>
         </div>
       )}
 
@@ -238,6 +236,9 @@ function RoleBadge({ role }: { readonly role: Role | null }): React.ReactElement
   );
 }
 
+/**
+ * Reply icon SVG component
+ */
 function ReplyIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,7 +253,7 @@ function ReplyIcon() {
 }
 
 // ---------------------------------------------------------------------------
-// Lightweight markdown renderer for channel messages.
+// Lightweight Discord-style markdown renderer for channel messages.
 // Handles: **bold**, *italic*, ~~strikethrough~~, `inline code`,
 //          ```code blocks```, and > blockquotes.
 // Intentionally does NOT use react-markdown / remark-gfm — too heavy for
@@ -315,8 +316,62 @@ function renderInline(text: string, baseKey: string): ReactNode {
   return nodes.length > 0 ? nodes : text;
 }
 
+function formatFileSize(bytes: number | null | undefined): string | null {
+  if (!bytes || bytes <= 0) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function metadataString(metadata: Record<string, unknown>, key: string): string | null {
+  const value = metadata[key];
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function metadataNumber(metadata: Record<string, unknown>, key: string): number | null {
+  const value = metadata[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function MessageAttachment({ message }: { readonly message: ChannelMessageItemProps['message'] }) {
+  const url = message.fileUrl ?? metadataString(message.metadata, 'url');
+  if (!url) return null;
+
+  const fileName =
+    message.fileName ?? metadataString(message.metadata, 'filename') ?? 'Attached file';
+  const mimeType = message.fileMimeType ?? metadataString(message.metadata, 'mimeType');
+  const size = message.fileSize ?? metadataNumber(message.metadata, 'size');
+  const displaySize = formatFileSize(size);
+
+  if (message.messageType === 'image' || mimeType?.startsWith('image/')) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 block max-w-sm overflow-hidden rounded-lg border border-white/10 bg-black/20"
+      >
+        <img src={url} alt={fileName} className="max-h-80 w-full object-cover" loading="lazy" />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-2 flex max-w-sm items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-gray-100 transition-colors hover:bg-white/[0.08]"
+    >
+      <PaperClipIcon className="h-5 w-5 shrink-0 text-gray-400" />
+      <span className="min-w-0 flex-1 truncate">{fileName}</span>
+      {displaySize && <span className="shrink-0 text-xs text-gray-500">{displaySize}</span>}
+    </a>
+  );
+}
+
 /**
- * ChannelMarkdown renders a message string with chat formatting.
+ * ChannelMarkdown renders a message string with Discord-style formatting.
  */
 function ChannelMarkdown({ content }: { readonly content: string }): ReactNode {
   const blocks = splitCodeBlocks(content);

@@ -36,6 +36,9 @@ interface CategoryTabsProps {
   onCategoryChange: (category: ThemeCategory) => void;
 }
 
+/**
+ * Category Tabs component.
+ */
 export function CategoryTabs({ activeCategory, onCategoryChange }: CategoryTabsProps) {
   return (
     <div className="flex gap-2 rounded-2xl border border-white/8 bg-slate-950/35 p-2 backdrop-blur-xl">

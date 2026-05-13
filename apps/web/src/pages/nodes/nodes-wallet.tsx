@@ -18,6 +18,7 @@ const filterTabs: Array<{ label: string; value: TransactionType | undefined }> =
   { label: 'Unlocks', value: 'content_unlock' },
 ];
 
+/** Description. */
 /** Nodes Wallet Page component. */
 export function NodesWalletPage(): React.ReactElement {
   const [activeFilter, setActiveFilter] = useState<TransactionType | undefined>(undefined);

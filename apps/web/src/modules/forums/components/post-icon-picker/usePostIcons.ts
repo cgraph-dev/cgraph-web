@@ -8,6 +8,10 @@ import { http } from '@/lib/api-client';
 
 import { getDefaultIcons } from './constants';
 import type { PostIcon } from './types';
+/**
+ *
+ * Description.
+ */
 export function usePostIcons(forumId?: string, boardId?: string) {
   const [icons, setIcons] = useState<PostIcon[]>([]);
   const [loading, setLoading] = useState(true);

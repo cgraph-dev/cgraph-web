@@ -68,6 +68,9 @@ function groupByAlbum(messages: ReadonlyArray<Message>): ReadonlyArray<Message |
   return result;
 }
 
+/**
+ * Convert album group messages to MediaAlbumItem array for the MediaAlbum component.
+ */
 function toAlbumItems(messages: ReadonlyArray<Message>): ReadonlyArray<MediaAlbumItem> {
   return messages.map((msg) => ({
     id: msg.id,
@@ -115,6 +118,9 @@ type VirtualRow =
   | { type: 'message'; message: Message; groupMessages: Message[]; msgIndex: number; key: string }
   | { type: 'album'; album: AlbumGroup; key: string };
 // MessageList Component
+/**
+ * Message List component.
+ */
 export function MessageList({
   messages,
   userId,

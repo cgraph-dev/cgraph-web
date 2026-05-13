@@ -1,4 +1,12 @@
+/**
+ * HelpText component
+ */
 
+/**
+ */
+/**
+ * Help Text component.
+ */
 export function HelpText() {
   return (
     <div className="mt-6 space-y-1 text-xs text-gray-500 dark:text-gray-400">

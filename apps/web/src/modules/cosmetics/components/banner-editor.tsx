@@ -249,6 +249,8 @@ export function BannerEditor({
           </AnimatePresence>
         </div>
       </form>
+
+      {/* Error message */}
       {state.error && (
         <motion.p
           initial={{ opacity: 0, y: -4 }}

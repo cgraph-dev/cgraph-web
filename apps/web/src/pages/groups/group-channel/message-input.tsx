@@ -34,6 +34,9 @@ function isImageFile(file: File): boolean {
   return file.type.startsWith('image/');
 }
 
+/**
+ * Message Input component.
+ */
 export function MessageInput({
   channelName,
   messageInput,
@@ -217,6 +220,9 @@ export function MessageInput({
   );
 }
 
+/**
+ * Close icon SVG component
+ */
 function CloseIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

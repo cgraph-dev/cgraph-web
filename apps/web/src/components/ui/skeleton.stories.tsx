@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the Skeleton loading placeholder component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import Skeleton, { PostCardSkeleton } from './skeleton';
 
@@ -102,6 +105,9 @@ export const ProfilePlaceholder: Story = {
   ),
 };
 
+/**
+ * Pre-built PostCardSkeleton component.
+ */
 export const PostCard: Story = {
   render: () => (
     <div className="w-96">

@@ -37,11 +37,7 @@ describe('ReplyPreview', () => {
 
   beforeEach(() => {
     scrollSpy = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      writable: true,
-      value: scrollSpy,
-    });
+    Element.prototype.scrollIntoView = scrollSpy;
   });
 
   afterEach(() => {

@@ -10,6 +10,11 @@ interface AttachmentsPreviewProps {
   onRemove: (index: number) => void;
 }
 
+/**
+ */
+/**
+ * Attachments Preview component.
+ */
 export function AttachmentsPreview({ attachments, onRemove }: AttachmentsPreviewProps) {
   return (
     <AnimatePresence>

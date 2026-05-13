@@ -1,5 +1,15 @@
 /**
- * Compact channel row with unread, mention, privacy, and muted states.
+ * Channel List Item — Discord-exact channel row
+ *
+ * Features:
+ * - Icon by type: # text, speaker voice, megaphone announcements, lock private
+ * - Truncated channel name
+ * - Unread: bold name + white dot
+ * - Mentions: brand badge with count
+ * - Muted: dimmed text + mute icon
+ * - Hover: action icons (invite, settings) slide in
+ * - Active: brighter bg + bold name
+ *
  */
 
 import { useState } from 'react';
@@ -39,6 +49,7 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   forum: ChatBubbleLeftRightIcon,
 };
 
+/** Description. */
 /** Channel List Item component. */
 export function ChannelListItem({ channel, className }: ChannelListItemProps) {
   const { groupId } = useParams();

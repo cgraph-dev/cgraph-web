@@ -9,6 +9,11 @@ import { GlassCard } from '@/shared/components/ui';
 import { FAQ_ITEMS } from './constants';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * F A Q Section section component.
+ */
 export function FAQSection() {
   return (
     <motion.div

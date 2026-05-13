@@ -24,6 +24,9 @@ interface ChannelCategoriesPanelProps {
   groupId: string;
 }
 
+/**
+ * Channel Categories Panel component.
+ */
 export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);

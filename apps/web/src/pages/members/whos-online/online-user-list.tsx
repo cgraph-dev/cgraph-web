@@ -1,3 +1,6 @@
+/**
+ * Online User List Component
+ */
 
 import { Link } from 'react-router-dom';
 import {
@@ -23,6 +26,11 @@ function DeviceIcon({ device }: { device: OnlineUser['device'] }) {
   }
 }
 
+/**
+ */
+/**
+ * Online User List component.
+ */
 export function OnlineUserList({
   users,
   isLoading,

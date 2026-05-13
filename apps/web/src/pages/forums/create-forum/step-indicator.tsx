@@ -8,6 +8,11 @@ interface StepIndicatorProps {
   currentStep: number;
 }
 
+/**
+ */
+/**
+ * Step Indicator component.
+ */
 export function StepIndicator({ currentStep }: StepIndicatorProps) {
   return (
     <div className="border-b border-[var(--token-card-border)] bg-[var(--token-bg-secondary)]">

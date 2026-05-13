@@ -10,6 +10,11 @@ interface AppearanceStepProps {
   onUpdateField: <K extends keyof ForumFormData>(key: K, value: ForumFormData[K]) => void;
 }
 
+/**
+ */
+/**
+ * Appearance Step component.
+ */
 export function AppearanceStep({ formData, onUpdateField }: AppearanceStepProps) {
   return (
     <div className="space-y-6">

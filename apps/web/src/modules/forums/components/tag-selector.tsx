@@ -55,8 +55,8 @@ export default function TagSelector({
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
-        containerRef.current &&
         e.target instanceof Node &&
+        containerRef.current &&
         !containerRef.current.contains(e.target)
       ) {
         setIsOpen(false);

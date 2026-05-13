@@ -28,6 +28,7 @@ interface SecondaryGroupPanelProps {
   forumId: string;
 }
 
+/** Description. */
 /** Secondary Group Panel component. */
 export function SecondaryGroupPanel({ forumId }: SecondaryGroupPanelProps) {
   const {

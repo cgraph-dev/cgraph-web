@@ -126,6 +126,9 @@ function ActivitySummary({
   );
 }
 
+/**
+ * User Profile component.
+ */
 export function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();

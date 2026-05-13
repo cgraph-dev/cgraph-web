@@ -1,3 +1,6 @@
+/**
+ * Admin user row component.
+ */
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { formatTimeAgo } from '@/lib/utils';
@@ -14,6 +17,11 @@ interface UserRowProps {
   isUnbanning: boolean;
 }
 
+/**
+ */
+/**
+ * User Row component.
+ */
 export function UserRow({ user, onBan, onUnban, isBanning, isUnbanning }: UserRowProps) {
   const [showBanModal, setShowBanModal] = useState(false);
 

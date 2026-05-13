@@ -13,7 +13,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeLocalStorage } from '@/lib/safeStorage';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 import type { ThemeStore } from './types';
 import { createThemeActions } from './actions';
@@ -22,7 +21,7 @@ import { createThemeActions } from './actions';
 
 export const useThemeStore = create<ThemeStore>()(
   persist(createThemeActions, {
-    name: STORAGE_KEYS.themeStore,
+    name: 'cgraph-theme',
     storage: createJSONStorage(() => safeLocalStorage),
     partialize: (state) => ({
       colorPreset: state.colorPreset,

@@ -1,3 +1,6 @@
+/**
+ * Auth page logo component.
+ */
 import React from 'react';
 import { LogoIcon } from '@/components/logo';
 
@@ -9,6 +12,12 @@ const LOGO_SIZES: Record<LogoSize, number> = {
   lg: 192,
 };
 
+/**
+ */
+/**
+ * Auth Logo component.
+ * @returns The rendered JSX element.
+ */
 export function AuthLogo({ size }: { size: LogoSize }): React.ReactElement {
   return (
     <a href="https://www.cgraph.org" className="group inline-flex items-center gap-3">

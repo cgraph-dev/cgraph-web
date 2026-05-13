@@ -59,11 +59,17 @@ function transformRealtimeResponse(data: ApiRealtimeResponse): RealtimeStats {
 }
 // API Functions
 export const metricsApi = {
+  /**
+   * Get comprehensive system metrics
+   */
   async getMetrics(): Promise<SystemMetrics> {
     const response = await http.get('/api/v1/admin/metrics');
     return transformMetricsResponse(response.data);
   },
 
+  /**
+   * Get real-time system stats
+   */
   async getRealtimeStats(): Promise<RealtimeStats> {
     const response = await http.get('/api/v1/admin/realtime');
     return transformRealtimeResponse(response.data);

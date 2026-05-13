@@ -14,6 +14,11 @@ export interface SwitchProps {
   id?: string;
 }
 
+/**
+ */
+/**
+ * Switch component.
+ */
 export function Switch({
   checked = false,
   onCheckedChange,

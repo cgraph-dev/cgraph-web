@@ -13,6 +13,11 @@ interface ReorderModalProps {
   onSave: (parentId: string, childIds: string[]) => void;
 }
 
+/**
+ */
+/**
+ * Reorder Modal dialog component.
+ */
 export function ReorderModal({ parent, onClose, onSave }: ReorderModalProps): React.ReactElement {
   const [items, setItems] = useState(parent.children ?? []);
   const [saving, setSaving] = useState(false);

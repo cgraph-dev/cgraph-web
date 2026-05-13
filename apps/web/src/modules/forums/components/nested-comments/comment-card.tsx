@@ -36,6 +36,11 @@ interface CommentCardProps {
   renderComment: (comment: Comment, depth: number) => React.ReactElement;
 }
 
+/**
+ */
+/**
+ * Comment Card display component.
+ */
 export function CommentCard({
   comment,
   depth,

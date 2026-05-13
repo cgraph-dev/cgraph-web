@@ -35,6 +35,10 @@ interface BundleCreatorModalProps {
 const MAX_NAME_LENGTH = 100;
 const MAX_DESCRIPTION_LENGTH = 500;
 const MAX_THREADS_PER_BUNDLE = 20;
+/**
+ *
+ * Description.
+ */
 export function BundleCreatorModal({
   isOpen,
   onClose,

@@ -11,6 +11,11 @@ interface ThreadReplyCountProps {
   onClick: () => void;
 }
 
+/**
+ */
+/**
+ * Thread Reply Count component.
+ */
 export function ThreadReplyCount({ replyCount, lastReplyAt, onClick }: ThreadReplyCountProps) {
   if (replyCount <= 0) return null;
 

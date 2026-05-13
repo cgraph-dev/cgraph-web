@@ -4,7 +4,11 @@ import { render, screen } from '@testing-library/react';
 import type { ProfileCardUser } from '../../profile-card/types';
 
 vi.mock('react-router-dom', () => ({
-  Link: ({ children, to, ...rest }: Record<string, unknown> & { children?: React.ReactNode; to: string }) => (
+  Link: ({
+    children,
+    to,
+    ...rest
+  }: Record<string, unknown> & { children?: React.ReactNode; to: string }) => (
     <a href={to} {...rest}>
       {children}
     </a>
@@ -37,6 +41,7 @@ vi.mock('../constants', () => ({
 
 vi.mock('@/shared/components/ui', () => ({
   AnimatedAvatar: ({ alt }: { alt: string }) => <div data-testid="avatar">{alt}</div>,
+  InlineTitle: ({ titleId }: { titleId: string }) => <span>{titleId}</span>,
   GlassCard: ({ children, className }: React.PropsWithChildren<{ className?: string }>) => (
     <div className={className} data-testid="glass-card">
       {children}
@@ -48,6 +53,29 @@ vi.mock('@/shared/components/ui', () => ({
 
 vi.mock('@/components/theme/themed-avatar', () => ({
   ThemedAvatar: ({ alt }: { alt: string }) => <div data-testid="themed-avatar">{alt}</div>,
+}));
+
+vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
+  useCustomizationStore: (selector?: (state: Record<string, unknown>) => unknown) => {
+    const state = {
+      selectedBorderId: null,
+      equippedTitle: null,
+      equippedBadges: [],
+    };
+    return typeof selector === 'function' ? selector(state) : state;
+  },
+}));
+
+vi.mock('@/modules/settings/store/customization/mappings', () => ({
+  BADGE_DISPLAY_MAP: {},
+}));
+
+vi.mock('@/modules/nodes/components/tip-button', () => ({
+  TipButton: ({ recipientId, recipientName }: { recipientId: string; recipientName: string }) => (
+    <button data-testid="tip-button" data-recipient={recipientId}>
+      Tip @{recipientName}
+    </button>
+  ),
 }));
 
 import { FullProfileCard } from '../full-profile-card';

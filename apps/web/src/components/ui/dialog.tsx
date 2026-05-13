@@ -13,13 +13,13 @@ interface DialogProps {
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
   const reducedMotion = useReducedMotion();
 
-  const handleEscape = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onOpenChange(false);
-    }
-  };
-
   useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onOpenChange(false);
+      }
+    };
+
     if (open) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
@@ -28,7 +28,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
     };
-  }, [open, handleEscape]);
+  }, [open, onOpenChange]);
 
   return createPortal(
     <AnimatePresence>
@@ -105,6 +105,7 @@ interface DialogDescriptionProps {
   readonly children: ReactNode;
   readonly className?: string;
 }
+/** Dialog Description. */
 export function DialogDescription({ children, className = '' }: DialogDescriptionProps) {
   return <p className={`text-textMuted mt-1 text-sm ${className}`}>{children}</p>;
 }

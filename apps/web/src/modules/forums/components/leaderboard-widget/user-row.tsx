@@ -9,6 +9,11 @@ import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 import type { UserRowProps } from './types';
 import { formatPulse, getRankIcon, deriveUserDisplayInfo } from './utils';
 
+/**
+ */
+/**
+ * User Row component.
+ */
 export function UserRow({
   rank,
   userId,

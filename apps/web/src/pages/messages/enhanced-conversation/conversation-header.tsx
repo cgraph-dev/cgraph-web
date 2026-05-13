@@ -3,21 +3,20 @@
  */
 
 import { motion } from 'motion/react';
-import {
-  PhoneIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-  VideoCameraIcon,
-} from '@heroicons/react/24/outline';
+import { PhoneIcon, ShieldCheckIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
 import { GlassCardNeon } from '@/shared/components/ui';
 import { ConnectionStatus } from '@/shared/components/connection-status';
 import type { ConversationHeaderProps } from './types';
 import { tweens, loop } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Conversation Header component.
+ */
 export function ConversationHeader({
   conversationName,
   isTyping,
-  onGenerateTheme,
   canStartCall = false,
   onStartVoiceCall,
   onStartVideoCall,
@@ -73,18 +72,6 @@ export function ConversationHeader({
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        {/* Theme Button */}
-        <motion.button
-          type="button"
-          onClick={onGenerateTheme}
-          className="bg-primary-500/20 hover:bg-primary-500/30 rounded-lg p-2 text-primary-400 transition-colors"
-          whileTap={{ scale: 0.88 }}
-          aria-label="Refresh theme styling"
-          title="Refresh Theme Styling"
-        >
-          <SparklesIcon className="h-5 w-5" />
-        </motion.button>
-
         {canStartCall && (
           <>
             <motion.button

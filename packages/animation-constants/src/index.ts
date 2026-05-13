@@ -2,7 +2,7 @@
  * @cgraph/animation-constants
  *
  * Platform-agnostic animation constants consumed by both
- * web clients (Framer Motion) and mobile clients (Reanimated).
+ * apps/web (Framer Motion) and apps/mobile shared mobile surfaces (Reanimated).
  *
  * Only raw numeric / string values live here — no framework imports.
  */

@@ -82,11 +82,8 @@ export function createIdempotencyKey(): string {
  */
 function getCsrfTokenFromCookie(): string | null {
   // Guard for non-browser environments (React Native, SSR)
-  if (typeof globalThis === 'undefined') return null;
-  const win = globalThis as Record<string, unknown>;
-  if (!win['document']) return null;
-  const doc = win['document'] as { cookie?: string };
-  const cookieString = doc.cookie;
+  if (typeof document === 'undefined') return null;
+  const cookieString = document.cookie;
   if (typeof cookieString !== 'string') return null;
   const match = cookieString.match(/(?:^|;\s*)csrf_token=([^;]*)/);
   return match && match[1] ? decodeURIComponent(match[1]) : null;

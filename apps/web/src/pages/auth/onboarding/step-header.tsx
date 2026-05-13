@@ -10,6 +10,9 @@ interface StepHeaderProps {
   currentStep: number;
 }
 
+/**
+ * Step Header component.
+ */
 export function StepHeader({ currentStep }: StepHeaderProps) {
   const step = ONBOARDING_STEPS[currentStep - 1];
 

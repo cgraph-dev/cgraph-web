@@ -43,6 +43,8 @@ interface InitDeps {
 }
 
 /**
+ */
+/**
  * Hook for managing forum admin init.
  *
  * @param deps - The deps.

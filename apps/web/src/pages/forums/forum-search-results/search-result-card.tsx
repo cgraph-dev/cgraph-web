@@ -57,6 +57,7 @@ interface SearchResultCardProps {
   result: ForumSearchResult;
 }
 
+/** Description. */
 /** Search Result Card component. */
 export function SearchResultCard({ result }: SearchResultCardProps) {
   const badge = TYPE_BADGE_STYLES[result.type];

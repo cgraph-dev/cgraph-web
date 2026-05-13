@@ -2,6 +2,11 @@ import { motion } from 'motion/react';
 import { springs } from '@/lib/animation-presets';
 import type { ToggleProps } from './types';
 
+/**
+ */
+/**
+ * Toggle component.
+ */
 export function Toggle({ value, onChange }: ToggleProps) {
   return (
     <motion.button

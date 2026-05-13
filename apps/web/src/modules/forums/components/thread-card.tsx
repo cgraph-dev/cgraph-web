@@ -221,6 +221,7 @@ function CompactThreadRow({ thread, className }: { thread: ThreadCardData; class
     </Link>
   );
 }
+/** Description. */
 /** Thread Card component. */
 export function ThreadCard({ thread, compact = false, className }: ThreadCardProps) {
   if (compact) {

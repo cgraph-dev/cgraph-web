@@ -19,6 +19,8 @@ export interface ConversationItemProps {
   isActive: boolean;
   currentUserId: string;
   onlineStatus: OnlineStatusMap;
+  onMarkAsRead: (conversationId: string) => void;
+  onArchive: (conversationId: string) => void;
 }
 
 /**
@@ -41,6 +43,8 @@ export interface ConversationSidebarProps {
   onSearchChange: (query: string) => void;
   onOpenSearch: () => void;
   onNewConversation: () => void;
+  onMarkAsRead: (conversationId: string) => void;
+  onArchive: (conversationId: string) => void;
 }
 
 // Re-export store types for convenience

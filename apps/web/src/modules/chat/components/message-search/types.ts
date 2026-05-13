@@ -27,6 +27,9 @@ export interface SearchFilters {
   messageType?: string;
 }
 
+/**
+ * Props for the main MessageSearch component
+ */
 export interface MessageSearchProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,11 +38,17 @@ export interface MessageSearchProps {
   className?: string;
 }
 
+/**
+ * Props for SearchResultCard sub-component
+ */
 export interface SearchResultCardProps {
   result: MessageSearchResult;
   onJumpToMessage: (conversationId: string, messageId: string) => void;
 }
 
+/**
+ * Props for SearchFiltersPanel sub-component
+ */
 export interface SearchFiltersPanelProps {
   filters: SearchFilters;
   showFilters: boolean;
@@ -47,6 +56,9 @@ export interface SearchFiltersPanelProps {
   onFiltersChange: (filters: SearchFilters) => void;
 }
 
+/**
+ * Props for SearchHeader sub-component
+ */
 export interface SearchHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -55,6 +67,9 @@ export interface SearchHeaderProps {
   inputRef: RefObject<HTMLInputElement | null>;
 }
 
+/**
+ * Props for SearchResults sub-component
+ */
 export interface SearchResultsProps {
   isLoading: boolean;
   searchQuery: string;

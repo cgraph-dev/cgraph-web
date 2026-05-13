@@ -3,7 +3,7 @@
  * Main admin dashboard overview with stats and moderation queue
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { createLogger } from '@/lib/logger';
 
@@ -31,13 +31,18 @@ function toModerationStatus(status: ModerationReport['status']): ModerationItem[
   return status === 'pending' ? 'pending' : 'reviewed';
 }
 
+/**
+ */
+/**
+ * Dashboard Overview component.
+ */
 export function DashboardOverview() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [moderationQueue, setModerationQueue] = useState<ModerationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -72,18 +77,14 @@ export function DashboardOverview() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   return (
-    <motion.div
-      {...FADE_UP}
-      exit={{ opacity: 0, y: -20 }}
-      className="p-8"
-    >
+    <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="p-8">
       <h1 className="mb-8 text-3xl font-bold">Dashboard Overview</h1>
 
       {error && (

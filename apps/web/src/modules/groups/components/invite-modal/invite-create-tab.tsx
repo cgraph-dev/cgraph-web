@@ -1,3 +1,6 @@
+/**
+ * Invite link creation tab component.
+ */
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ClockIcon,
@@ -21,6 +24,11 @@ interface InviteCreateTabProps {
   onCopyLink: (link: string) => void;
 }
 
+/**
+ */
+/**
+ * Invite Create Tab component.
+ */
 export function InviteCreateTab({
   expiration,
   setExpiration,

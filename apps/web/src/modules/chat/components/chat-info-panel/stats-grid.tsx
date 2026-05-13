@@ -26,6 +26,11 @@ const STATS_CONFIG = [
   },
 ] as const;
 
+/**
+ */
+/**
+ * Stats Grid component.
+ */
 export function StatsGrid({ pulse, streak }: StatsGridProps) {
   const values = { pulse, streak };
 

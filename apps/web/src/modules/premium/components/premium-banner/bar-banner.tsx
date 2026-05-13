@@ -1,3 +1,6 @@
+/**
+ * Premium bar-style banner component.
+ */
 import React from 'react';
 import { motion } from 'motion/react';
 import { SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -19,6 +22,11 @@ type BarBannerProps = Pick<
   | 'onDismiss'
 >;
 
+/**
+ */
+/**
+ * Bar Banner component.
+ */
 export function BarBanner({
   title,
   description,

@@ -3,12 +3,8 @@ import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const sourceRoot = join(root, 'src');
-const allowedDangerousFiles = new Set([
-  'src/shared/components/security/safe-html.tsx',
-  'src/modules/forums/components/forum-theme-renderer/forum-theme-provider.tsx',
-]);
+const allowedDangerousFiles = new Set(['src/shared/components/security/safe-html.tsx']);
 const allowedDomPurifyFiles = new Set(['src/shared/components/security/safe-html.tsx']);
-
 const sourceExtensions = new Set(['.ts', '.tsx']);
 const violations = [];
 
@@ -38,7 +34,7 @@ function checkFile(path) {
     const lineNumber = index + 1;
 
     if (/dangerouslySetInnerHTML\s*=/.test(line) && !allowedDangerousFiles.has(rel)) {
-      violations.push(`${rel}:${lineNumber} raw dangerouslySetInnerHTML must use SafeHtml`);
+      violations.push(`${rel}:${lineNumber} raw HTML injection must use SafeHtml`);
     }
 
     if (/\binnerHTML\s*=|\binsertAdjacentHTML\s*\(/.test(line) && !allowedDangerousFiles.has(rel)) {

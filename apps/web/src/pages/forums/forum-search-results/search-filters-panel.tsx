@@ -31,6 +31,8 @@ interface SearchFiltersPanelProps {
   onFiltersChange: (filters: ForumSearchFilters) => void;
 }
 
+/** Description. */
+/** Search Filters Panel component. */
 export function SearchFiltersPanel({ filters, onFiltersChange }: SearchFiltersPanelProps) {
   const updateFilter = <K extends keyof ForumSearchFilters>(
     key: K,

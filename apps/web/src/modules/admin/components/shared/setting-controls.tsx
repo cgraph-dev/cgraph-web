@@ -3,6 +3,11 @@
  */
 import clsx from 'clsx';
 
+/**
+ */
+/**
+ * Setting Toggle component.
+ */
 export function SettingToggle({
   label,
   description,
@@ -38,6 +43,11 @@ export function SettingToggle({
   );
 }
 
+/**
+ */
+/**
+ * Setting Number component.
+ */
 export function SettingNumber({
   label,
   description,

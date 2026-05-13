@@ -312,7 +312,7 @@ describe('Social profileStore', () => {
       expect(s.mySignature?.content).toBe('[b]My Sig[/b]');
     });
 
-    it('should call /api/v1/me', async () => {
+    it('should call /api/v1/users/me', async () => {
       mockedApi.get.mockResolvedValue(mockApiResponse);
       await useProfileStore.getState().fetchMyProfile();
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/me');
@@ -417,12 +417,12 @@ describe('Social profileStore', () => {
 
       await useProfileStore.getState().updatePrivacySettings({
         isProfilePrivate: true,
-        showEmail: true,
+        showOnlineStatus: false,
       });
 
       expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/settings/privacy', {
         profile_visibility: 'private',
-        show_email: true,
+        show_online_status: false,
       });
     });
 

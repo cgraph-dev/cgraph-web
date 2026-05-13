@@ -7,7 +7,6 @@
  */
 
 import type { CosmeticItem, Entitlement } from '@cgraph/shared-types';
-import type { KeyboardEvent } from 'react';
 import { RarityBadge } from './rarity-badge';
 import { EntitlementBadge } from './entitlement-badge';
 
@@ -71,16 +70,6 @@ export function CosmeticCard({
   const expiryText =
     !entitlement?.expiresAt || expired ? null : formatCountdown(entitlement.expiresAt);
 
-  const selectItem = () => onSelect?.(item);
-  const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) {
-      return;
-    }
-
-    event.preventDefault();
-    selectItem();
-  };
-
   const cardClasses = equipped
     ? 'border-cyan-500/60 bg-cyan-950/20 shadow-lg shadow-cyan-500/10'
     : expired
@@ -90,12 +79,9 @@ export function CosmeticCard({
         : 'border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] hover:border-white/20 hover:bg-[var(--token-card-bg)]';
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={item.name}
-      onClick={selectItem}
-      onKeyDown={handleCardKeyDown}
+    <button
+      type="button"
+      onClick={() => onSelect?.(item)}
       className={`group relative flex flex-col overflow-hidden rounded-xl border transition-all duration-200 ${cardClasses}`}
     >
       {/* Thumbnail area */}
@@ -164,6 +150,6 @@ export function CosmeticCard({
           </button>
         )}
       </div>
-    </div>
+    </button>
   );
 }

@@ -14,11 +14,72 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function getStringField(value: Record<string, unknown> | undefined, field: string): string | null {
-  const fieldValue = value?.[field];
-  return typeof fieldValue === 'string' ? fieldValue : null;
+function stringField(record: Record<string, unknown>, key: string): string | null {
+  const value = record[key];
+  return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
+function getResponseData(error: unknown): Record<string, unknown> | null {
+  if (!isRecord(error) || !isRecord(error.response)) {
+    return null;
+  }
+
+  return isRecord(error.response.data) ? error.response.data : null;
+}
+
+function getDetailsMessage(details: unknown): string | null {
+  if (!isRecord(details)) {
+    return null;
+  }
+
+  const detailMessages = Object.entries(details)
+    .map(([field, msgs]) => {
+      const fieldName = field.replace(/_/g, ' ');
+      const msgArray = Array.isArray(msgs) ? msgs.map(String) : [String(msgs)];
+      return `${fieldName}: ${msgArray.join(', ')}`;
+    })
+    .join('; ');
+
+  return detailMessages.length > 0 ? detailMessages : null;
+}
+
+function getCreateForumErrorMessage(error: unknown): string {
+  const fallback = 'Failed to create forum. Please try again.';
+  const responseData = getResponseData(error);
+  const errorData = responseData?.error;
+
+  if (typeof errorData === 'string') {
+    const responseMessage = responseData ? stringField(responseData, 'message') : null;
+    return responseMessage ? `${errorData}: ${responseMessage}` : errorData;
+  }
+
+  if (isRecord(errorData)) {
+    return getDetailsMessage(errorData.details) ?? stringField(errorData, 'message') ?? fallback;
+  }
+
+  if (responseData) {
+    const responseMessage = stringField(responseData, 'message');
+    if (responseMessage) {
+      return responseMessage;
+    }
+  }
+
+  if (error instanceof Error && error.message.length > 0) {
+    return error.message;
+  }
+
+  if (isRecord(error)) {
+    const message = stringField(error, 'message');
+    if (message) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
+/**
+ */
 /**
  * Hook for managing create forum.
  */
@@ -112,41 +173,7 @@ export function useCreateForum() {
       navigate(`/forums/${forum.slug}`);
     } catch (err: unknown) {
       logger.error('[CreateForum] Error:', err);
-      const response = isRecord(err) && isRecord(err.response) ? err.response : undefined;
-      const data = response && isRecord(response.data) ? response.data : undefined;
-      const errorData = data?.error;
-
-      let message = 'Failed to create forum. Please try again.';
-
-      if (typeof errorData === 'string') {
-        message = errorData;
-        const dataMessage = getStringField(data, 'message');
-        if (dataMessage) {
-          message += `: ${dataMessage}`;
-        }
-      } else if (isRecord(errorData)) {
-        if (typeof errorData.message === 'string') {
-          message = errorData.message;
-        }
-        if (isRecord(errorData.details)) {
-          const detailMessages = Object.entries(errorData.details)
-            .map(([field, msgs]) => {
-              const fieldName = field.replace(/_/g, ' ');
-              const msgArray = Array.isArray(msgs) ? msgs : [String(msgs)];
-              return `${fieldName}: ${msgArray.join(', ')}`;
-            })
-            .join('; ');
-          if (detailMessages) {
-            message = detailMessages;
-          }
-        }
-      } else if (getStringField(data, 'message')) {
-        message = getStringField(data, 'message') ?? message;
-      } else if (getStringField(isRecord(err) ? err : undefined, 'message')) {
-        message = getStringField(isRecord(err) ? err : undefined, 'message') ?? message;
-      }
-
-      setError(message);
+      setError(getCreateForumErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

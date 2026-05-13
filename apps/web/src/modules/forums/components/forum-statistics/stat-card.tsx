@@ -1,6 +1,11 @@
 /** StatCard — icon-labeled statistic display for forum statistics. */
 import type { StatCardProps } from '@/modules/forums/components/forum-statistics/forum-statistics.types';
 
+/**
+ */
+/**
+ * Stat Card display component.
+ */
 export function StatCard({
   icon,
   label,

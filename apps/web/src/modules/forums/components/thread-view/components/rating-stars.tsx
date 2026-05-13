@@ -1,3 +1,6 @@
+/**
+ * Rating Stars Component
+ */
 
 import { motion } from 'motion/react';
 import { StarIcon } from '@heroicons/react/24/outline';
@@ -13,6 +16,11 @@ interface RatingStarsProps {
   onRate: (rating: number) => void;
 }
 
+/**
+ */
+/**
+ * Rating Stars component.
+ */
 export function RatingStars({
   rating,
   myRating,

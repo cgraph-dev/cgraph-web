@@ -4,6 +4,11 @@ import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { formatTimeAgo } from '@/lib/utils';
 import type { SearchResultItemProps } from './types';
 
+/**
+ */
+/**
+ * Search Result Item component.
+ */
 export function SearchResultItem({
   result,
   index,

@@ -14,6 +14,9 @@ import { LogoIcon } from '@/components/logo';
 
 // COMPONENT
 
+/**
+ * Verify Email component.
+ */
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const { state, isResending, resendSuccess, handleResend } = useVerifyEmail();

@@ -55,6 +55,7 @@ export function ModeratorLeaderboard({ data }: ModeratorLeaderboardProps) {
                     {index + 1}
                   </div>
 
+                  {/* Avatar placeholder + name */}
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white">
                       {(mod.display_name || mod.username || '?').charAt(0).toUpperCase()}

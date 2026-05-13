@@ -16,6 +16,9 @@ import { ProfileInfoCard } from './profile-info-card';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Avatar Settings component.
+ */
 export default function AvatarSettings() {
   const { user } = useAuthStore();
   const {

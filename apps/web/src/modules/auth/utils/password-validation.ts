@@ -1,8 +1,8 @@
 /**
  * Shared password validation utility.
  *
- * Mirrors the complexity rules enforced by the mobile client so both clients
- * reject weak passwords identically.
+ * Mirrors the shared password complexity policy so every supported client rejects weak passwords
+ * identically.
  *
  */
 

@@ -5,6 +5,8 @@
  * Supports multiple display variants: hero, bar, card, floating, and minimal.
  *
  */
+
+// Main component
 export { PremiumBanner, default } from './premium-banner';
 
 // Variant sub-components

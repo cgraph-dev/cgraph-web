@@ -10,6 +10,8 @@ import type { Breadcrumb } from './types';
 const logger = createLogger('ForumHierarchyTree');
 
 /**
+ */
+/**
  * Hook for managing forum breadcrumbs.
  *
  * @param forumId - The forum id.

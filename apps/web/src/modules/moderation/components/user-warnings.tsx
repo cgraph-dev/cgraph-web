@@ -56,6 +56,11 @@ interface UserWarningsProps {
   userId: string;
 }
 
+/**
+ */
+/**
+ * User Warnings component.
+ */
 export function UserWarnings({ userId }: UserWarningsProps) {
   const { currentUserWarnings, currentUserStats, fetchUserWarnings, revokeWarning } =
     useModerationStore();

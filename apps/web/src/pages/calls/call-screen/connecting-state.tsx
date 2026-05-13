@@ -13,6 +13,11 @@ interface ConnectingStateProps {
   callStatus: CallStatus;
 }
 
+/**
+ */
+/**
+ * Connecting State component.
+ */
 export function ConnectingState({ recipient, callStatus }: ConnectingStateProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center">

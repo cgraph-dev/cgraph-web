@@ -4,7 +4,7 @@
  * Returns state, controls, and data needed by the VoiceMessageRecorder UI.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { createLogger } from '@/lib/logger';
 import { generatePlaceholderWaveform } from './waveform';
 
@@ -18,6 +18,8 @@ interface UseVoiceRecorderOptions {
   onCancel?: () => void;
 }
 
+/**
+ */
 /**
  * Hook for managing voice recorder.
  */
@@ -39,7 +41,7 @@ export function useVoiceRecorder({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
 
-  function cleanup() {
+  const cleanup = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -54,7 +56,7 @@ export function useVoiceRecorder({
     }
     mediaRecorderRef.current = null;
     analyserRef.current = null;
-  }
+  }, []);
 
   useEffect(() => () => cleanup(), [cleanup]);
 

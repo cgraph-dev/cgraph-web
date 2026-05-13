@@ -1,6 +1,9 @@
+/**
+ * Groups Page - Main component
+ */
 
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { useGroupStore } from '@/modules/groups/store';
 import {
   ServerList,
@@ -11,9 +14,11 @@ import {
 } from './components';
 import { getGroupRoute } from '@/modules/groups/routing';
 
+/**
+ * Groups component.
+ */
 export default function Groups() {
   const { groupId, channelId } = useParams();
-  const navigate = useNavigate();
   const { groups, isLoadingGroups, fetchGroups, fetchGroup, setActiveGroup, setActiveChannel } =
     useGroupStore();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -34,18 +39,24 @@ export default function Groups() {
   }, [groupId, channelId, setActiveGroup, fetchGroup, setActiveChannel]);
 
   const activeGroup = groups.find((g) => g.id === groupId);
+  const defaultGroupRoute = activeGroup ? getGroupRoute(activeGroup) : null;
 
+  // Initialize all categories as expanded
   useEffect(() => {
-    if (!activeGroup || channelId) {
-      return;
+    if (activeGroup?.categories) {
+      setExpandedCategories(new Set(activeGroup.categories.map((c) => c.id)));
     }
+  }, [activeGroup?.id, activeGroup?.categories]);
 
-    const groupRoute = getGroupRoute(activeGroup);
-
-    if (groupRoute !== `/groups/${activeGroup.id}`) {
-      navigate(groupRoute, { replace: true });
-    }
-  }, [activeGroup, channelId, navigate]);
+  if (
+    groupId &&
+    !channelId &&
+    activeGroup &&
+    defaultGroupRoute &&
+    defaultGroupRoute !== `/groups/${activeGroup.id}`
+  ) {
+    return <Navigate to={defaultGroupRoute} replace />;
+  }
 
   // Toggle category expansion
   const toggleCategory = (categoryId: string) => {
@@ -60,13 +71,6 @@ export default function Groups() {
     });
   };
 
-  // Initialize all categories as expanded
-  useEffect(() => {
-    if (activeGroup?.categories) {
-      setExpandedCategories(new Set(activeGroup.categories.map((c) => c.id)));
-    }
-  }, [activeGroup?.id, activeGroup?.categories]);
-
   return (
     <div className="aurora-hub-shell">
       {/* Loading state */}
@@ -74,6 +78,8 @@ export default function Groups() {
 
       {/* Ambient particles */}
       <AmbientParticles />
+
+      {/* Server List */}
       <ServerList groups={groups} activeGroupId={groupId} />
 
       {/* Channel List */}

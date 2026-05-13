@@ -41,17 +41,14 @@ export const NotificationSchema = z.object({
   message: z.string().optional(),
   image_url: z.string().nullable().optional(),
   action_url: z.string().nullable().optional(),
-  actionUrl: z.string().nullable().optional(),
   action: z.unknown().nullable().optional(),
   data: z.record(z.unknown()).optional(),
   read: z.boolean().optional(),
   is_read: z.boolean().optional(),
-  isRead: z.boolean().optional(),
   created_at: z.string().optional(),
-  createdAt: z.string().optional(),
   expires_at: z.string().nullable().optional(),
   sender: z.unknown().nullable().optional(),
-}).passthrough();
+});
 
 export type Notification = z.infer<typeof NotificationSchema>;
 

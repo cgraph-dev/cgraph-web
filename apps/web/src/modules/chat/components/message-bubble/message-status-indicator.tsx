@@ -67,6 +67,9 @@ function DoubleCheck({ color }: { color: string }) {
   );
 }
 
+/**
+ * Message Status Indicator component.
+ */
 export function MessageStatusIndicator({ status }: MessageStatusIndicatorProps) {
   return (
     <span className="inline-flex items-center">

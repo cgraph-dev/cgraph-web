@@ -10,6 +10,11 @@ interface CornerBracketsProps {
   color: string;
 }
 
+/**
+ */
+/**
+ * Corner Brackets component.
+ */
 export function CornerBrackets({ color }: CornerBracketsProps) {
   return (
     <>

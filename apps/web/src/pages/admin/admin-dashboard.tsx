@@ -21,6 +21,9 @@ import { FADE_IN } from '@/lib/animations/transitions';
 
 // Main Admin Dashboard Component
 
+/**
+ * Admin Dashboard administration component.
+ */
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const queryClient = useQueryClient();

@@ -19,6 +19,11 @@ interface LoginFormFieldsProps {
   reduced: boolean;
 }
 
+/**
+ */
+/**
+ * Login Form Fields component.
+ */
 export function LoginFormFields({
   email,
   setEmail,

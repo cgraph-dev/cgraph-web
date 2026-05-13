@@ -14,6 +14,11 @@ interface ReplyCountFilterProps {
   ) => void;
 }
 
+/**
+ */
+/**
+ * Reply Count Filter component.
+ */
 export function ReplyCountFilter({ filters, updateFilter }: ReplyCountFilterProps) {
   return (
     <div>

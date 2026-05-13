@@ -1,9 +1,9 @@
 /**
  * File attachment message component.
  *
- * Web renders file attachments from forums, hubs, broadcasts, and group chats
- * only. Direct-message encrypted files are not decrypted here (ADR-022) — that
- * surface is mobile/desktop-only.
+ * Web renders plaintext file attachments from forums, hubs, broadcasts, group
+ * chats, and Cloud DMs. Secret Chat encrypted files are not decrypted here
+ * (ADR-022) — that surface is mobile/desktop-only.
  */
 import { useState } from 'react';
 import { motion } from 'motion/react';
@@ -48,12 +48,26 @@ export function FileMessage({ message, isOwnMessage, className = '' }: FileMessa
   const [imageError, setImageError] = useState(false);
 
   // Extract file metadata from message with safe type helpers
-  const fileUrl = metaStr(message.metadata?.fileUrl) ?? metaStr(message.metadata?.file_url);
+  const fileUrl =
+    metaStr(message.metadata?.fileUrl) ??
+    metaStr(message.metadata?.file_url) ??
+    metaStr(message.metadata?.url);
   const fileName =
-    metaStr(message.metadata?.fileName) ?? metaStr(message.metadata?.file_name) ?? 'Unknown file';
-  const fileSize = metaNum(message.metadata?.fileSize) ?? metaNum(message.metadata?.file_size) ?? 0;
+    metaStr(message.metadata?.fileName) ??
+    metaStr(message.metadata?.file_name) ??
+    metaStr(message.metadata?.filename) ??
+    'Unknown file';
+  const fileSize =
+    metaNum(message.metadata?.fileSize) ??
+    metaNum(message.metadata?.file_size) ??
+    metaNum(message.metadata?.size) ??
+    0;
   const fileMimeType =
-    metaStr(message.metadata?.fileMimeType) ?? metaStr(message.metadata?.file_mime_type) ?? '';
+    metaStr(message.metadata?.fileMimeType) ??
+    metaStr(message.metadata?.file_mime_type) ??
+    metaStr(message.metadata?.mimeType) ??
+    metaStr(message.metadata?.mime_type) ??
+    '';
   const thumbnailUrl =
     metaStr(message.metadata?.thumbnailUrl) ?? metaStr(message.metadata?.thumbnail_url);
 

@@ -1,3 +1,6 @@
+/**
+ * Voice call modal dialog component.
+ */
 import { durations } from '@cgraph/animation-constants';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,6 +25,11 @@ interface VoiceCallModalProps {
   incomingRoomId?: string;
 }
 
+/**
+ */
+/**
+ * Voice Call Modal dialog component.
+ */
 export function VoiceCallModal({
   isOpen,
   onClose,

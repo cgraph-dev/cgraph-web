@@ -16,33 +16,33 @@ export interface SpringConfig {
  *
  * Sources reconciled from:
  *   apps/web/src/lib/animation-presets/presets.ts  (springs)
- *   mobile client spring presets
+ *   apps/mobile/src/lib/animations/AnimationLibrary.ts (SPRING_PRESETS)
  */
 export const springs = {
   /** Slow, soft motion — tooltips, subtle reveals */
-  gentle:      { stiffness: 120, damping: 14, mass: 1 },
+  gentle: { stiffness: 120, damping: 14, mass: 1 },
   /** General-purpose motion */
-  default:     { stiffness: 170, damping: 26, mass: 1 },
+  default: { stiffness: 170, damping: 26, mass: 1 },
   /** Noticeable overshoot — toggles, switches */
-  bouncy:      { stiffness: 300, damping: 10, mass: 1 },
+  bouncy: { stiffness: 300, damping: 10, mass: 1 },
   /** Fast settle, crisp feel — tabs, selections */
-  snappy:      { stiffness: 400, damping: 30, mass: 1 },
+  snappy: { stiffness: 400, damping: 30, mass: 1 },
   /** Heavy overshoot — celebrations, badges */
-  superBouncy: { stiffness: 500, damping: 8,  mass: 1 },
+  superBouncy: { stiffness: 500, damping: 8, mass: 1 },
   /** Cinematic / hero transitions */
-  dramatic:    { stiffness: 200, damping: 20, mass: 2 },
+  dramatic: { stiffness: 200, damping: 20, mass: 2 },
   /** Playful wobble — alerts, warnings */
-  wobbly:      { stiffness: 180, damping: 12, mass: 1 },
+  wobbly: { stiffness: 180, damping: 12, mass: 1 },
   /** Rigid, minimal overshoot — snackbars */
-  stiff:       { stiffness: 300, damping: 30, mass: 0.8 },
+  stiff: { stiffness: 300, damping: 30, mass: 0.8 },
   /** Gentle deceleration — modals, drawers */
-  smooth:      { stiffness: 150, damping: 20, mass: 1 },
+  smooth: { stiffness: 150, damping: 20, mass: 1 },
   /** Very gentle deceleration — background layers */
   ultraSmooth: { stiffness: 100, damping: 18, mass: 1 },
   /** Near-instant — micro-interactions */
-  instant:     { stiffness: 500, damping: 35, mass: 0.5 },
+  instant: { stiffness: 500, damping: 35, mass: 0.5 },
   /** Gradual approach — parallax, scrolling */
-  slow:        { stiffness: 80,  damping: 20, mass: 1.5 },
+  slow: { stiffness: 80, damping: 20, mass: 1.5 },
   /** Rubber-band overstretch — pull-to-refresh */
-  elastic:     { stiffness: 400, damping: 6,  mass: 0.8 },
+  elastic: { stiffness: 400, damping: 6, mass: 0.8 },
 } as const satisfies Record<string, SpringConfig>;

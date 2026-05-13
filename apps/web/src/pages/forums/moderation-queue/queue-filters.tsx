@@ -1,3 +1,6 @@
+/**
+ * QueueFilters component
+ */
 
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
@@ -8,8 +11,8 @@ interface QueueFiltersProps {
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
 }
 
-const STATUS_OPTIONS: FilterState['status'][] = ['pending', 'all'];
-const ITEM_TYPE_OPTIONS: FilterState['itemType'][] = [
+const STATUS_VALUES: FilterState['status'][] = ['pending', 'all'];
+const ITEM_TYPE_VALUES: FilterState['itemType'][] = [
   'all',
   'thread',
   'post',
@@ -17,8 +20,8 @@ const ITEM_TYPE_OPTIONS: FilterState['itemType'][] = [
   'user',
   'attachment',
 ];
-const PRIORITY_OPTIONS: FilterState['priority'][] = ['all', 'critical', 'high', 'normal', 'low'];
-const REASON_OPTIONS: FilterState['reason'][] = [
+const PRIORITY_VALUES: FilterState['priority'][] = ['all', 'critical', 'high', 'normal', 'low'];
+const REASON_VALUES: FilterState['reason'][] = [
   'all',
   'new_user',
   'flagged',
@@ -26,27 +29,28 @@ const REASON_OPTIONS: FilterState['reason'][] = [
   'reported',
   'manual',
 ];
-const STATUS_VALUES = new Set<string>(STATUS_OPTIONS);
-const ITEM_TYPE_VALUES = new Set<string>(ITEM_TYPE_OPTIONS);
-const PRIORITY_VALUES = new Set<string>(PRIORITY_OPTIONS);
-const REASON_VALUES = new Set<string>(REASON_OPTIONS);
 
 function isStatus(value: string): value is FilterState['status'] {
-  return STATUS_VALUES.has(value);
+  return STATUS_VALUES.some((option) => option === value);
 }
 
 function isItemType(value: string): value is FilterState['itemType'] {
-  return ITEM_TYPE_VALUES.has(value);
+  return ITEM_TYPE_VALUES.some((option) => option === value);
 }
 
 function isPriority(value: string): value is FilterState['priority'] {
-  return PRIORITY_VALUES.has(value);
+  return PRIORITY_VALUES.some((option) => option === value);
 }
 
 function isReason(value: string): value is FilterState['reason'] {
-  return REASON_VALUES.has(value);
+  return REASON_VALUES.some((option) => option === value);
 }
 
+/**
+ */
+/**
+ * Queue Filters component.
+ */
 export function QueueFilters({ filters, setFilters }: QueueFiltersProps) {
   return (
     <GlassCard className="p-4">
@@ -67,9 +71,9 @@ export function QueueFilters({ filters, setFilters }: QueueFiltersProps) {
         <select
           value={filters.status}
           onChange={(e) => {
-            const status = e.target.value;
-            if (isStatus(status)) {
-              setFilters((prev) => ({ ...prev, status }));
+            const value = e.target.value;
+            if (isStatus(value)) {
+              setFilters((prev) => ({ ...prev, status: value }));
             }
           }}
           className="rounded-lg border border-dark-500 bg-[var(--token-card-bg)] px-3 py-2 text-sm text-white outline-none focus:border-primary-500"
@@ -82,9 +86,9 @@ export function QueueFilters({ filters, setFilters }: QueueFiltersProps) {
         <select
           value={filters.itemType}
           onChange={(e) => {
-            const itemType = e.target.value;
-            if (isItemType(itemType)) {
-              setFilters((prev) => ({ ...prev, itemType }));
+            const value = e.target.value;
+            if (isItemType(value)) {
+              setFilters((prev) => ({ ...prev, itemType: value }));
             }
           }}
           className="rounded-lg border border-dark-500 bg-[var(--token-card-bg)] px-3 py-2 text-sm text-white outline-none focus:border-primary-500"
@@ -101,9 +105,9 @@ export function QueueFilters({ filters, setFilters }: QueueFiltersProps) {
         <select
           value={filters.priority}
           onChange={(e) => {
-            const priority = e.target.value;
-            if (isPriority(priority)) {
-              setFilters((prev) => ({ ...prev, priority }));
+            const value = e.target.value;
+            if (isPriority(value)) {
+              setFilters((prev) => ({ ...prev, priority: value }));
             }
           }}
           className="rounded-lg border border-dark-500 bg-[var(--token-card-bg)] px-3 py-2 text-sm text-white outline-none focus:border-primary-500"
@@ -119,9 +123,9 @@ export function QueueFilters({ filters, setFilters }: QueueFiltersProps) {
         <select
           value={filters.reason}
           onChange={(e) => {
-            const reason = e.target.value;
-            if (isReason(reason)) {
-              setFilters((prev) => ({ ...prev, reason }));
+            const value = e.target.value;
+            if (isReason(value)) {
+              setFilters((prev) => ({ ...prev, reason: value }));
             }
           }}
           className="rounded-lg border border-dark-500 bg-[var(--token-card-bg)] px-3 py-2 text-sm text-white outline-none focus:border-primary-500"

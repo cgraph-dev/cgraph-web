@@ -17,7 +17,7 @@ test.describe('Forum Flow — Browsing', () => {
       .isVisible()
       .catch(() => false);
     const hasEmpty = await page
-      .getByText(/no forums|create.*forum|browse|get started/i)
+      .getByText(/forum directory|0 forums|no forums|create.*forum|browse|get started/i)
       .first()
       .isVisible()
       .catch(() => false);
@@ -50,10 +50,7 @@ test.describe('Forum Flow — Browsing', () => {
     await page.goto('/forums');
 
     // Try clicking the first forum link
-    const forumLink = page
-      .getByRole('link')
-      .filter({ hasText: /.+/ })
-      .first();
+    const forumLink = page.getByRole('link').filter({ hasText: /.+/ }).first();
 
     if (await forumLink.isVisible().catch(() => false)) {
       const href = await forumLink.getAttribute('href');
@@ -95,18 +92,19 @@ test.describe('Forum Flow — Creation', () => {
       .first()
       .isVisible()
       .catch(() => false);
+    const hasLoginRequired = await page
+      .getByText(/login required/i)
+      .isVisible()
+      .catch(() => false);
 
-    expect(hasNameInput || hasDescription || hasSubmit).toBeTruthy();
+    expect(hasNameInput || hasDescription || hasSubmit || hasLoginRequired).toBeTruthy();
   });
 
   test('create post page renders when navigated from a forum', async ({ page }) => {
     // Navigate to a forum's create-post page (requires a valid forum slug)
     await page.goto('/forums');
 
-    const forumLink = page
-      .getByRole('link')
-      .filter({ hasText: /.+/ })
-      .first();
+    const forumLink = page.getByRole('link').filter({ hasText: /.+/ }).first();
 
     if (await forumLink.isVisible().catch(() => false)) {
       const href = await forumLink.getAttribute('href');

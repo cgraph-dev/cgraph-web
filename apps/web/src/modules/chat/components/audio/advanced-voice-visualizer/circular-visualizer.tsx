@@ -2,6 +2,11 @@ import { useRef, useEffect } from 'react';
 import { THEMES } from './themes';
 import type { VisualizerProps } from './types';
 
+/**
+ */
+/**
+ * Circular Visualizer component.
+ */
 export function CircularVisualizer({ analyser, theme, width, height }: VisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);

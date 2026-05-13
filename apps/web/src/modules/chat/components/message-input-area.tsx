@@ -140,7 +140,10 @@ export function MessageInputArea({
                   style={{ minHeight: '42px' }}
                 />
               </div>
+
+              {/* Action buttons */}
               <div className="flex flex-shrink-0 items-center gap-0.5">
+                {/* Emoji Button */}
                 <motion.button
                   onClick={() => {
                     setShowEmojiPicker(!showEmojiPicker);

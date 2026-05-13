@@ -206,10 +206,7 @@ vi.mock('framer-motion', () => ({
 }));
 
 vi.mock('@/shared/components/ui', () => ({
-  GlassCard: ({
-    children,
-    className,
-  }: { children?: React.ReactNode; className?: string }) => (
+  GlassCard: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
     <div data-testid="glass-card" className={className}>
       {children}
     </div>
@@ -233,7 +230,7 @@ describe('TypingIndicator', () => {
     expect(screen.getByText('Alice is typing...')).toBeInTheDocument();
   });
 
-  it('shows participant names for multiple users', () => {
+  it('shows generic typing text for multiple users', () => {
     render(<TypingIndicator typing={['Alice', 'Bob']} />);
     expect(screen.getByText('Alice and Bob are typing...')).toBeInTheDocument();
   });

@@ -31,6 +31,9 @@ function hasParticleAnimation(animationType: string): boolean {
   return PARTICLE_ANIMATION_TYPES.some((type) => type === animationType);
 }
 
+/**
+ * Themed Border Card display component.
+ */
 export default function ThemedBorderCard({
   border,
   isSelected,

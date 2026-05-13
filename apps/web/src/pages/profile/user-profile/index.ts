@@ -4,6 +4,8 @@
  * Modular components for the user profile page.
  * Main export is the UserProfile component.
  */
+
+// Main component
 export { UserProfile } from './user-profile';
 
 // Sub-components

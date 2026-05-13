@@ -18,6 +18,9 @@ import { QueueList } from './queue-list';
 import { RejectModal } from './reject-modal';
 import { AccessRestricted } from './access-restricted';
 
+/**
+ * Moderation Queue component.
+ */
 export default function ModerationQueue() {
   const { user } = useAuthStore();
   const {

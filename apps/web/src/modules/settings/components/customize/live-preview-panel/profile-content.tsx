@@ -156,6 +156,9 @@ function StyledDisplayName({
   }
 }
 
+/**
+ * Profile Content component.
+ */
 export function ProfileContent({
   displayName,
   settings,

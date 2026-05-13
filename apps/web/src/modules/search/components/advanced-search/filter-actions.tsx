@@ -23,6 +23,9 @@ function parseResultsPerPage(value: string): AdvancedSearchFilters['resultsPerPa
   return match ?? null;
 }
 
+/**
+ * Filter Actions component.
+ */
 export function FilterActions({
   filters,
   updateFilter,

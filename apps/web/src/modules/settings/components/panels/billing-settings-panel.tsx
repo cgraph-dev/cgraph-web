@@ -168,6 +168,9 @@ function MeshHero({ tier, isPremium }: { tier: string; isPremium: boolean }) {
   );
 }
 
+/**
+ * BillingSettingsPanel component.
+ */
 export function BillingSettingsPanel() {
   const navigate = useNavigate();
   const { user } = useAuthStore();

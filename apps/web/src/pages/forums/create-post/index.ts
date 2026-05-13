@@ -5,6 +5,8 @@
  * (text, image, link, video, poll), attachment uploads, and markdown editing.
  *
  */
+
+// Main component
 export { default } from './create-post';
 
 // Sub-components

@@ -10,6 +10,7 @@
 import { safeRedirect } from '@/lib/security';
 import { useCreatorStore } from '../store';
 
+/** Description. */
 /** Hook for creator. */
 export function useCreator() {
   const isCreator = useCreatorStore((s) => s.isCreator);

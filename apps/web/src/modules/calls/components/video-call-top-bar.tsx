@@ -12,6 +12,11 @@ interface VideoCallTopBarProps {
   onClose: () => void;
 }
 
+/**
+ */
+/**
+ * Video Call Top Bar component.
+ */
 export function VideoCallTopBar({
   otherParticipantName,
   otherParticipantAvatar,

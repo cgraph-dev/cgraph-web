@@ -8,6 +8,9 @@ interface PaginationProps {
   isLoading?: boolean;
 }
 
+/**
+ * Pagination component.
+ */
 export function Pagination({ hasNextPage, onNext, isLoading }: PaginationProps) {
   if (!hasNextPage) return null;
 

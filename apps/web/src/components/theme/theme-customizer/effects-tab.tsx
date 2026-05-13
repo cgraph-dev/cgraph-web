@@ -13,6 +13,11 @@ import { FADE_UP } from '@/lib/animations/transitions';
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Effects Tab component.
+ */
 export function EffectsTab({
   selectedEffect,
   animationSpeed,

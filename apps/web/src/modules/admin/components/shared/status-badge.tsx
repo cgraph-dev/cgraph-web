@@ -1,5 +1,13 @@
+/**
+ * Admin status badge component.
+ */
 import clsx from 'clsx';
 
+/**
+ */
+/**
+ * Status Badge component.
+ */
 export function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     active: 'bg-green-100 text-green-700',

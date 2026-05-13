@@ -2,6 +2,9 @@ import type { Forum } from '@/modules/forums/store';
 
 export type { Forum };
 
+/**
+ * Props for the ForumHeader component
+ */
 export interface ForumHeaderProps {
   forum: Forum;
   onVote?: (value: 1 | -1 | null) => Promise<void>;
@@ -20,6 +23,9 @@ export interface ForumHeaderProps {
   className?: string;
 }
 
+/**
+ * Props for the VoteButtons sub-component
+ */
 export interface VoteButtonsProps {
   userVote: 0 | 1 | -1 | null | undefined;
   score: number;
@@ -27,11 +33,17 @@ export interface VoteButtonsProps {
   isVoting: boolean;
 }
 
+/**
+ * Props for the ForumStats sub-component
+ */
 export interface ForumStatsProps {
   memberCount: number;
   featured?: boolean;
 }
 
+/**
+ * Props for the ForumActions sub-component
+ */
 export interface ForumActionsProps {
   primaryColor: string;
   isMember: boolean;
@@ -48,6 +60,9 @@ export interface ForumActionsProps {
   onToggleMenu: () => void;
 }
 
+/**
+ * Props for the ForumIcon sub-component
+ */
 export interface ForumIconProps {
   iconUrl?: string | null;
   name: string;

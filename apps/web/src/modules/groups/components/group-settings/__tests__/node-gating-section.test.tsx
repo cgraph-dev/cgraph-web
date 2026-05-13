@@ -17,15 +17,13 @@ vi.mock('motion/react', () => ({
       children,
       onClick,
       className,
-      animate: _animate,
-      initial: _initial,
-      exit: _exit,
+      ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: (e: unknown) => void;
       className?: string;
     }) => (
-      <div onClick={onClick} className={className}>
+      <div onClick={onClick} className={className} {...rest}>
         {children}
       </div>
     ),
@@ -35,8 +33,7 @@ vi.mock('motion/react', () => ({
       disabled,
       className,
       'aria-label': ariaLabel,
-      whileTap: _whileTap,
-      animate: _animate,
+      ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: () => void;
@@ -49,6 +46,7 @@ vi.mock('motion/react', () => ({
         disabled={disabled}
         className={className}
         aria-label={ariaLabel}
+        {...rest}
       >
         {children}
       </button>
@@ -57,17 +55,14 @@ vi.mock('motion/react', () => ({
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
-vi.mock(
-  '@heroicons/react/24/outline',
-  () => ({
-    CurrencyDollarIcon: (props: Record<string, unknown>) => (
-      <svg data-testid="CurrencyDollarIcon" {...props} />
-    ),
-    InformationCircleIcon: (props: Record<string, unknown>) => (
-      <svg data-testid="InformationCircleIcon" {...props} />
-    ),
-  })
-);
+vi.mock('@heroicons/react/24/outline', () => ({
+  CurrencyDollarIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="CurrencyDollarIcon" {...props} />
+  ),
+  InformationCircleIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="InformationCircleIcon" {...props} />
+  ),
+}));
 
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({

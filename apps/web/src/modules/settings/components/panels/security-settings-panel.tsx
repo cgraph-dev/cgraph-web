@@ -9,6 +9,11 @@ import { GlassCard } from '@/shared/components/ui';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Security Settings Panel component.
+ */
 export function SecuritySettingsPanel() {
   const { user } = useAuthStore();
 

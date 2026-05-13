@@ -16,6 +16,8 @@ const logger = createLogger('VerifyEmail');
 export type VerificationState = 'verifying' | 'success' | 'expired' | 'error' | 'already-verified';
 
 /**
+ */
+/**
  * Hook for managing verify email.
  */
 export function useVerifyEmail() {

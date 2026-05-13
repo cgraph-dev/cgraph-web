@@ -39,6 +39,8 @@ function SingleMessageSkeleton({ isOwn = false }: { isOwn?: boolean }) {
 }
 
 /**
+ */
+/**
  * Message Skeleton — loading placeholder.
  */
 export function MessageSkeleton({

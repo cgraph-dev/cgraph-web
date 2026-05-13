@@ -14,6 +14,11 @@ interface ProfileSectionProps {
   user: UserInfo;
 }
 
+/**
+ */
+/**
+ * Profile Section section component.
+ */
 export function ProfileSection({ user }: ProfileSectionProps) {
   // Calculate XP progress
   const levelXpRequired = 1000 * (user.level || 1);

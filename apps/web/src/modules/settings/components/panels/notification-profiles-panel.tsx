@@ -3,6 +3,7 @@
  *
  * Lists all notification profiles with create/edit/delete, active profile
  * indicator, and manual enable/disable toggle with duration picker.
+ * Replaces the old DndSchedulePanel placeholder.
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +38,9 @@ function getScheduleStatusColor(profile: NotificationProfile, activeId: string |
   return 'bg-zinc-500';
 }
 
+/**
+ * Notification Profiles Panel component.
+ */
 export function NotificationProfilesPanel(): React.ReactNode {
   const navigate = useNavigate();
   const {

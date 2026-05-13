@@ -20,6 +20,10 @@ export interface ForwardMessageHandlers {
 
 export interface UseForwardMessageReturn extends ForwardMessageState, ForwardMessageHandlers {}
 
+/**
+ *
+ * Description.
+ */
 export function useForwardMessage(closeMenu: () => void): UseForwardMessageReturn {
   const [messageToForward, setMessageToForward] = useState<Message | null>(null);
   const [showForwardModal, setShowForwardModal] = useState(false);
@@ -88,6 +92,10 @@ export interface MessageActionsHandlers {
 
 export interface UseMessageActionsReturn extends MessageActionsState, MessageActionsHandlers {}
 
+/**
+ *
+ * Description.
+ */
 export function useMessageActions(): UseMessageActionsReturn {
   const [activeMessageMenu, setActiveMessageMenu] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);

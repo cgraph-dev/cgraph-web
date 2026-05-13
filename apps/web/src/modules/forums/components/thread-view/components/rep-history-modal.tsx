@@ -35,6 +35,9 @@ interface RepHistoryModalProps {
   username: string;
 }
 
+/**
+ * RepHistoryModal component.
+ */
 export function RepHistoryModal({
   isOpen,
   onClose,

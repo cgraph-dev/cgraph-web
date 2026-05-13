@@ -66,6 +66,9 @@ const EMOJI_CATEGORIES = {
   Symbols: ['✅', '❌', '⚠️', '❓', '❗', '💬', '💭', '🔔', '📌', '🎯', '📍', '🔗'],
 };
 
+/**
+ * Message Reactions component.
+ */
 export default function MessageReactions({
   messageId,
   reactions,

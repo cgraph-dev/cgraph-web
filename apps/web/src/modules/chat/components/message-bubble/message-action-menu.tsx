@@ -9,6 +9,9 @@ import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import type { MessageActionMenuProps } from './types';
 import { ReplyIcon, EditIcon, PinIcon, ForwardIcon, DeleteIcon } from './icons';
 
+/**
+ * Message Action Menu component.
+ */
 export function MessageActionMenu({
   onReply,
   onEdit,

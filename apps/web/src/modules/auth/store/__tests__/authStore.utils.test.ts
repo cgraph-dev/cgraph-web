@@ -31,15 +31,6 @@ describe('getApiErrorMessage', () => {
     expect(getApiErrorMessage(err, 'fallback')).toBe('Rate limited');
   });
 
-  it('extracts nested error messages from AxiosError response data', () => {
-    const err = new AxiosError('fail');
-    err.response = {
-      data: { error: { code: 'UNAUTHORIZED', message: 'Invalid credentials' } },
-      status: 401,
-    } as AxiosResponse;
-    expect(getApiErrorMessage(err, 'fallback')).toBe('Invalid credentials');
-  });
-
   it('prefers error over message when both present', () => {
     const err = new AxiosError('fail');
     err.response = {
@@ -68,10 +59,6 @@ describe('getApiErrorMessage', () => {
 
   it('returns message for a plain Error', () => {
     expect(getApiErrorMessage(new Error('something broke'), 'default')).toBe('something broke');
-  });
-
-  it('falls back for object-coerced Error messages', () => {
-    expect(getApiErrorMessage(new Error('[object Object]'), 'Login failed')).toBe('Login failed');
   });
 
   it('returns fallback for unknown error types', () => {

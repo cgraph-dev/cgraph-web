@@ -39,7 +39,7 @@ export interface NotificationState {
   hasMore: boolean;
 
   // Actions
-  fetchNotifications: (cursor?: string | number | null) => Promise<void>;
+  fetchNotifications: (cursor?: string | null) => Promise<void>;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
@@ -56,14 +56,11 @@ export const useNotificationStore = create<NotificationState>()(
       isLoading: false,
       hasMore: true,
 
-      fetchNotifications: async (cursor: string | number | null = null) => {
+      fetchNotifications: async (cursor: string | null = null) => {
         set({ isLoading: true });
-        const isLegacyPage = typeof cursor === 'number';
-        const shouldAppend = isLegacyPage ? cursor > 1 : cursor !== null;
         const result = await apiClient.notifications.list({
           limit: 20,
-          ...(isLegacyPage && cursor > 1 ? { page: cursor } : {}),
-          ...(!isLegacyPage && cursor ? { cursor } : {}),
+          ...(cursor ? { cursor } : {}),
         });
         if (!result.ok) {
           logger.warn('Failed to fetch notifications:', result.error.message);
@@ -89,15 +86,9 @@ export const useNotificationStore = create<NotificationState>()(
                 displayName:
                   typeof n['sender']['display_name'] === 'string'
                     ? n['sender']['display_name']
-                    : typeof n['sender']['displayName'] === 'string'
-                      ? n['sender']['displayName']
-                      : null,
+                    : null,
                 avatarUrl:
-                  typeof n['sender']['avatar_url'] === 'string'
-                    ? n['sender']['avatar_url']
-                    : typeof n['sender']['avatarUrl'] === 'string'
-                      ? n['sender']['avatarUrl']
-                      : null,
+                  typeof n['sender']['avatar_url'] === 'string' ? n['sender']['avatar_url'] : null,
               }
             : undefined;
           return {
@@ -105,30 +96,24 @@ export const useNotificationStore = create<NotificationState>()(
             type,
             title: asString(n['title']),
             body: asString(n['body'] ?? n['message']),
-            isRead: Boolean(n['is_read'] ?? n['isRead'] ?? n['read'] ?? false),
+            isRead: Boolean(n['is_read'] ?? n['read'] ?? false),
             action: isRecord(n['action']) ? n['action'] : null,
-            actionUrl:
-              typeof n['action_url'] === 'string'
-                ? n['action_url']
-                : typeof n['actionUrl'] === 'string'
-                  ? n['actionUrl']
-                  : null,
+            actionUrl: typeof n['action_url'] === 'string' ? n['action_url'] : null,
             data: isRecord(n['data']) ? n['data'] : {},
             sender,
-            createdAt: asString(n['created_at'] ?? n['createdAt']),
+            createdAt: asString(n['created_at']),
           };
         });
         // Derive pagination from the raw array length (cursor support via store state)
         const hasMore = newNotifications.length === 20;
-        const calculatedUnreadCount = newNotifications.filter((n) => !n.isRead).length;
 
         set((state) => {
-          const merged = shouldAppend
-            ? [...state.notifications, ...newNotifications]
-            : newNotifications;
+          const merged =
+            cursor === null ? newNotifications : [...state.notifications, ...newNotifications];
+          const capped = merged.slice(0, MAX_NOTIFICATIONS);
           return {
-            notifications: merged.slice(0, MAX_NOTIFICATIONS),
-            unreadCount: calculatedUnreadCount,
+            notifications: capped,
+            unreadCount: capped.filter((n) => !n.isRead).length,
             hasMore,
             isLoading: false,
           };

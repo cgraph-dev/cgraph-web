@@ -34,6 +34,9 @@ interface EditHistoryModalProps {
   editCount: number;
 }
 
+/**
+ * EditHistoryModal component.
+ */
 export function EditHistoryModal({
   isOpen,
   onClose,

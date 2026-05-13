@@ -30,6 +30,11 @@ interface ResetPasswordFormProps {
   onSubmit: (e: React.FormEvent) => void;
 }
 
+/**
+ */
+/**
+ * Reset Password Form component.
+ */
 export function ResetPasswordForm({
   password,
   confirmPassword,

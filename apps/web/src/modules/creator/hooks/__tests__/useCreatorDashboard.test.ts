@@ -14,9 +14,6 @@ const mockStoreState = {
   earningsData: null as Record<string, unknown> | null,
   subscriberAnalytics: null as Record<string, unknown> | null,
   contentAnalytics: null as Record<string, unknown> | null,
-  revenueBreakdown: null as Record<string, unknown> | null,
-  subscriberGrowth: null as Record<string, unknown> | null,
-  contentAnalyticsEnhanced: null as Record<string, unknown> | null,
   isLoadingBalance: false,
   isLoadingPayouts: false,
   isLoadingAnalytics: false,
@@ -53,9 +50,6 @@ describe('useCreatorDashboard', () => {
     mockStoreState.earningsData = null;
     mockStoreState.subscriberAnalytics = null;
     mockStoreState.contentAnalytics = null;
-    mockStoreState.revenueBreakdown = null;
-    mockStoreState.subscriberGrowth = null;
-    mockStoreState.contentAnalyticsEnhanced = null;
     mockStoreState.isLoadingBalance = false;
     mockStoreState.isLoadingPayouts = false;
     mockStoreState.isLoadingAnalytics = false;
@@ -112,6 +106,9 @@ describe('useCreatorDashboard', () => {
     expect(typeof result.current.fetchAnalyticsEarnings).toBe('function');
     expect(typeof result.current.fetchAnalyticsSubscribers).toBe('function');
     expect(typeof result.current.fetchAnalyticsContent).toBe('function');
+    expect(typeof result.current.fetchAnalyticsRevenue).toBe('function');
+    expect(typeof result.current.fetchSubscriberGrowth).toBe('function');
+    expect(typeof result.current.fetchContentAnalyticsEnhanced).toBe('function');
     expect(typeof result.current.fetchAllAnalytics).toBe('function');
     expect(typeof result.current.requestPayout).toBe('function');
   });

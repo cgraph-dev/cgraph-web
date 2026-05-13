@@ -9,6 +9,7 @@ import { GlassCard } from '@/shared/components/ui';
 import { categories, type CategoryId } from '@/pages/customize/customizeCategories';
 import { Sidebar, LoadingSkeleton } from '@/pages/customize/customize-sidebar';
 
+// Lazy load heavy customization components for better performance
 const IdentityCustomization = lazy(() => import('./identity-customization'));
 const ThemeCustomization = lazy(() => import('./theme-customization'));
 const BubblesCustomization = lazy(() => import('./bubbles-customization'));
@@ -16,13 +17,29 @@ const EffectsCustomization = lazy(() => import('./effects-customization'));
 const CosmeticsInventoryPage = lazy(() => import('@/modules/cosmetics/pages/inventory-page'));
 const CosmeticsShopPage = lazy(() => import('@/modules/cosmetics/pages/shop-page'));
 
+// New V2 panels for enhanced experience (optional use)
 import { LivePreviewPanel } from '@/modules/settings/components/customize';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ * Customize Hub - Main Page
+ *
+ * Revolutionary customization interface with 5 comprehensive categories:
+ * 1. Identity - Avatar borders (44), titles (26), badges (36), name styles, nameplates, profile effects
+ * 2. Themes - Aurora, Dark, Light app themes
+ * 3. Chat Styling - Bubble customization, effects, reactions
+ *
+ * Layout: 3-panel design (sidebar, main content, live preview)
+ */
+
+/**
+ * Customize component.
+ */
 export default function Customize() {
   const { category: urlCategory } = useParams<{ category?: string }>();
   const navigate = useNavigate();
 
+  // Validate URL category or default to 'identity'
   const isValidCategory = (cat: string | undefined): cat is CategoryId => {
     return categories.some((c) => c.id === cat);
   };
@@ -43,7 +60,7 @@ export default function Customize() {
       <Sidebar activeCategory={activeCategory} onCategoryChange={handleCategoryChange} />
 
       {/* Main Content Area */}
-      <main className="aurora-hub-main">
+      <section className="aurora-hub-main" aria-labelledby="customize-page-title">
         <div className="mx-auto max-w-4xl p-8">
           {/* Page Header */}
           <motion.div
@@ -56,7 +73,9 @@ export default function Customize() {
                 <CategoryIcon className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="aurora-page-title text-3xl">{category.label}</h2>
+                <h2 id="customize-page-title" className="aurora-page-title text-3xl">
+                  {category.label}
+                </h2>
                 <p className="text-sm text-[var(--token-text-secondary)]">{category.description}</p>
               </div>
             </div>
@@ -81,11 +100,14 @@ export default function Customize() {
             </GlassCard>
           </motion.div>
         </div>
-      </main>
+      </section>
 
       {/* Right Panel - Live Preview */}
       <aside className="aurora-hub-preview overflow-y-auto">
         <div className="p-4">
+          {/* Header is handled inside LivePreviewPanel */}
+
+          {/* Use the enhanced LivePreviewPanel if available, fallback to placeholder */}
           <Suspense
             fallback={
               <GlassCard variant="crystal" glow glowColor="var(--glow-accent)" className="p-4">

@@ -24,6 +24,11 @@ export interface AppearancePanelProps {
   memberCount: number;
 }
 
+/**
+ */
+/**
+ * Appearance Panel component.
+ */
 export function AppearancePanel({
   appearance,
   setAppearance,

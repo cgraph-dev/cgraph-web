@@ -21,6 +21,7 @@ interface FrequencyPickerProps {
   onSaved?: () => void;
 }
 
+/** Description. */
 /** Frequency Picker component. */
 export function FrequencyPicker({ className, onSaved }: FrequencyPickerProps) {
   const { data: topics = [], isLoading: topicsLoading } = useTopics();

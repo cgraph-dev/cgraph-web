@@ -15,6 +15,11 @@ interface RulesPanelProps {
   onRemoveRule: (ruleId: string) => void;
 }
 
+/**
+ */
+/**
+ * Rules Panel component.
+ */
 export function RulesPanel({
   rules,
   editingRule,

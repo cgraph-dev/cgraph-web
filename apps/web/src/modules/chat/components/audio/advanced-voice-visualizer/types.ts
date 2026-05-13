@@ -18,6 +18,9 @@ export type ThemeName = 'matrix-green' | 'cyber-blue' | 'neon-pink' | 'amber';
  */
 export type VisualizerVariant = 'waveform' | 'spectrum' | 'circular' | 'particles' | 'all';
 
+/**
+ * Props for the main AdvancedVoiceVisualizer component
+ */
 export interface AdvancedVoiceVisualizerProps {
   audioUrl?: string;
   audioStream?: MediaStream;

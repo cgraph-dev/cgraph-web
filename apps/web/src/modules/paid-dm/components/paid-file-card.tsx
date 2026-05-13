@@ -22,6 +22,7 @@ function FileIcon({ type }: { type: string }) {
   };
   return <span className="text-2xl">{label[type] ?? '📎'}</span>;
 }
+/** Description. */
 /** Paid File Card component. */
 export function PaidFileCard({
   fileUrl,

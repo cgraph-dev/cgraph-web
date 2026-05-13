@@ -12,6 +12,9 @@ interface WelcomeStepProps {
   onDisplayNameChange: (name: string) => void;
 }
 
+/**
+ * Welcome Step component.
+ */
 export function WelcomeStep({
   avatarPreview,
   displayName,

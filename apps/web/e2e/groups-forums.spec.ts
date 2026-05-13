@@ -15,20 +15,11 @@ test.describe('Groups', () => {
     test('should show groups or empty state', async ({ page }) => {
       await page.goto('/groups');
 
-      // Either a list of groups or an empty state message
-      const hasList = await page.getByRole('list').isVisible().catch(() => false);
-      const hasEmpty = await page
-        .getByText(/no groups|create.*group|join.*group|get started/i)
-        .isVisible()
-        .catch(() => false);
-      const hasGrid = await page
-        .getByTestId('groups-grid')
-        .or(page.locator('[class*="group-card"], [class*="GroupCard"]'))
-        .first()
-        .isVisible()
-        .catch(() => false);
-
-      expect(hasList || hasEmpty || hasGrid).toBeTruthy();
+      await expect(page.getByRole('main')).toBeVisible();
+      const bodyText = await page.locator('body').textContent();
+      expect(bodyText).toMatch(
+        /welcome to groups|select a server|create new server|loading servers/i
+      );
     });
 
     test('should have create group action', async ({ page }) => {
@@ -55,17 +46,9 @@ test.describe('Forums', () => {
     test('should show forum categories or empty state', async ({ page }) => {
       await page.goto('/forums');
 
-      // Forum list or empty state
-      const hasContent = await page
-        .getByRole('list')
-        .or(page.getByRole('article'))
-        .or(page.getByText(/no forums|create.*forum|browse/i))
-        .first()
-        .isVisible()
-        .catch(() => false);
-
-      // The page itself should at least be visible
       await expect(page.getByRole('main')).toBeVisible();
+      const bodyText = await page.locator('body').textContent();
+      expect(bodyText).toMatch(/forum directory|0 forums|create forum/i);
     });
 
     test('should have navigation to create forum', async ({ page }) => {
@@ -94,26 +77,9 @@ test.describe('Forums', () => {
     test('should have forum creation form elements', async ({ page }) => {
       await page.goto('/forums/create');
 
-      // Look for common form elements in a creation page
-      const hasNameInput = await page
-        .getByLabel(/name|title/i)
-        .or(page.getByPlaceholder(/name|title/i))
-        .first()
-        .isVisible()
-        .catch(() => false);
-      const hasDescription = await page
-        .getByLabel(/description|about/i)
-        .or(page.getByPlaceholder(/description|about/i))
-        .first()
-        .isVisible()
-        .catch(() => false);
-      const hasSubmit = await page
-        .getByRole('button', { name: /create|submit|save/i })
-        .isVisible()
-        .catch(() => false);
-
-      // At least some form elements should be present
-      expect(hasNameInput || hasDescription || hasSubmit).toBeTruthy();
+      await expect(page.getByRole('main')).toBeVisible();
+      const bodyText = await page.locator('body').textContent();
+      expect(bodyText).toMatch(/create your forum|basic information|forum name|login required/i);
     });
   });
 

@@ -132,6 +132,8 @@ interface AnimatedErrorStateProps {
   className?: string;
 }
 /**
+ */
+/**
  * Animated Empty State — fallback UI for empty data states.
  */
 export function AnimatedEmptyState({
@@ -183,6 +185,8 @@ export function AnimatedEmptyState({
     </motion.div>
   );
 }
+/**
+ */
 /**
  * Animated Error State — fallback UI for error states.
  */

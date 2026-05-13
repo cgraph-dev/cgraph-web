@@ -4,6 +4,8 @@
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 /**
+ */
+/**
  * Empty State — fallback UI for empty data states.
  */
 export function EmptyState({ message }: { message: string }) {

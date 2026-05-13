@@ -18,6 +18,8 @@ interface UseProfileActionsReturn {
 }
 
 /**
+ */
+/**
  * Hook for managing profile actions.
  *
  * @param profile - The profile.

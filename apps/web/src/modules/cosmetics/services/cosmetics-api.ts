@@ -285,7 +285,7 @@ export const cosmeticsApi = {
         params: { ...params, type: 'theme' },
       });
       return {
-        themes: (data.listings ?? data.data ?? []).map(themeToCosmeticItem),
+        themes: (data.listings ?? data.themes ?? data.data ?? []).map(themeToCosmeticItem),
         presets: data.presets ?? [],
         rarities: data.rarities ?? [],
       };
@@ -299,14 +299,15 @@ export const cosmeticsApi = {
   async getActiveTheme(): Promise<UserCosmeticInventory | null> {
     // Active profile-theme is part of the equipped cosmetics bundle.
     const { data } = await http.get('/api/v1/cosmetics/equipped');
-    return data.profile_theme ? userThemeToInventory(data.profile_theme) : null;
+    const theme = data.profile_theme ?? data.theme ?? null;
+    return theme ? userThemeToInventory(theme) : null;
   },
 
   async activateTheme(themeId: string): Promise<UserCosmeticInventory> {
     // Equip via the unified cosmetics/equip endpoint with type metadata.
     const response = await http.put('/api/v1/cosmetics/equip', {
-      type: 'profile_theme',
-      id: themeId,
+      item_type: 'profile_theme',
+      item_id: themeId,
     });
     return userThemeToInventory(response.data.equipped ?? response.data);
   },

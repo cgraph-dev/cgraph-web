@@ -1,4 +1,7 @@
-import { SafeHtml } from '@/shared/components/security';
+/**
+ * Post content preview component.
+ */
+import { SafeHtml } from '@/shared/components/security/safe-html';
 
 interface ContentPreviewProps {
   title: string;

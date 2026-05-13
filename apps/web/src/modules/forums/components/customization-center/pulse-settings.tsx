@@ -25,6 +25,7 @@ const DEFAULT_THRESHOLDS: RankThreshold[] = [
   { name: 'Elite', minPulse: 500, imageUrl: '' },
 ];
 
+/** Description. */
 /** Pulse Settings component. */
 export function PulseSettings({ options, onSave, saving }: PulseSettingsProps) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});

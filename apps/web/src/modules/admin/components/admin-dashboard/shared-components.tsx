@@ -210,6 +210,9 @@ export function MetricCard({
   );
 }
 
+/**
+ * Toggle switch component
+ */
 export function ToggleSwitch({ defaultChecked = false }: { defaultChecked?: boolean }) {
   const [checked, setChecked] = useState(defaultChecked);
   return (

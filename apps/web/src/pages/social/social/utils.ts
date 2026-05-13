@@ -5,6 +5,8 @@
 // NOTIFICATION HELPERS
 
 /**
+ */
+/**
  * Retrieves notification icon.
  *
  * @param type - The type.
@@ -30,6 +32,8 @@ export function getNotificationIcon(type: string): string {
 // SEARCH HELPERS
 
 /**
+ */
+/**
  * Retrieves search result icon.
  *
  * @param type - The type.
@@ -50,6 +54,8 @@ export function getSearchResultIcon(type: string): string {
 
 // TIME FORMATTING
 
+/**
+ */
 /**
  * Formats time ago.
  *

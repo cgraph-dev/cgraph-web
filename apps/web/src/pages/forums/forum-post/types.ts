@@ -4,6 +4,9 @@
 
 import type { Comment } from '@/modules/forums/store';
 
+/**
+ * Props for the CommentItem component
+ */
 export interface CommentItemProps {
   comment: Comment;
   onVote: (id: string, value: 1 | -1, currentVote: 1 | -1 | null) => void;

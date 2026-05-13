@@ -17,6 +17,8 @@ interface UseForumOrderingOptions {
 }
 
 /**
+ */
+/**
  * Hook for managing forum ordering.
  */
 export function useForumOrdering({ initialItems, onOrderChange }: UseForumOrderingOptions) {

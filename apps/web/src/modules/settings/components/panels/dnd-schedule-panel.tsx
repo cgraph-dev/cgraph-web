@@ -23,6 +23,9 @@ const BASE_TIMEZONES = [
   'Asia/Kolkata',
 ];
 
+/**
+ * DND Schedule Panel component.
+ */
 export function DndSchedulePanel() {
   const navigate = useNavigate();
   const { settings, updateNotificationSettings, updateLocaleSettings, isSaving } =

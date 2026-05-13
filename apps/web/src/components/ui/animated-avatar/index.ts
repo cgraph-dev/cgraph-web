@@ -5,6 +5,8 @@
  * CSS border system removed — all borders use the Lottie system via ThemedAvatar.
  *
  */
+
+// Main component
 export { default as AnimatedAvatar, default } from './animated-avatar';
 
 // Types

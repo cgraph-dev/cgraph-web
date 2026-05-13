@@ -12,6 +12,9 @@ interface NotificationsStepProps {
   onToggle: (key: NotificationKey) => void;
 }
 
+/**
+ * Notifications Step component.
+ */
 export function NotificationsStep({ profileData, onToggle }: NotificationsStepProps) {
   return (
     <motion.div

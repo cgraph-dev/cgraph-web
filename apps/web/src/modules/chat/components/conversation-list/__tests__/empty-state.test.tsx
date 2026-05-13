@@ -66,8 +66,8 @@ describe('ConversationList EmptyState', () => {
   });
 
   it('renders chat icon', () => {
-    render(<EmptyState searchQuery="" onNewChat={vi.fn()} />);
-    expect(screen.getByTestId('icon-ChatBubbleLeftRightIcon')).toBeInTheDocument();
+    const { container } = render(<EmptyState searchQuery="" onNewChat={vi.fn()} />);
+    expect(container.querySelector('svg[data-slot="icon"]')).toBeInTheDocument();
   });
 
   it('renders centered layout', () => {

@@ -1,5 +1,5 @@
 /**
- * Status row at the top of the conversation list.
+ * StoriesRow — Instagram DM-style stories/status row at the top of conversation list.
  */
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,7 @@ interface StoriesRowProps {
 }
 
 /**
- * Horizontal scrollable ring row for status previews.
+ * Horizontal scrollable story ring row like Instagram DMs.
  */
 export function StoriesRow({ stories, onStoryPress, onCreateStory, className }: StoriesRowProps) {
   if (stories.length === 0) return null;

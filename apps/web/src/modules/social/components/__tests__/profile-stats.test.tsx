@@ -198,7 +198,6 @@ vi.mock('@heroicons/react/24/outline', () => ({
   SparklesIcon: (p: React.SVGProps<SVGSVGElement>) => <svg data-testid="sparkles-icon" {...p} />,
   BoltIcon: (p: React.SVGProps<SVGSVGElement>) => <svg data-testid="bolt-icon" {...p} />,
   FireIcon: (p: React.SVGProps<SVGSVGElement>) => <svg data-testid="fire-icon" {...p} />,
-  GiftIcon: (p: React.SVGProps<SVGSVGElement>) => <svg data-testid="gift-icon" {...p} />,
   ChartBarIcon: (p: React.SVGProps<SVGSVGElement>) => <svg data-testid="chart-icon" {...p} />,
   ArrowTrendingUpIcon: (p: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="trending-icon" {...p} />
@@ -232,6 +231,20 @@ vi.mock('@/modules/nodes/components/tip-button', () => ({
   TipButton: ({ recipientId, recipientName }: { recipientId: string; recipientName: string }) => (
     <button data-testid="tip-button" data-recipient={recipientId}>
       Tip @{recipientName}
+    </button>
+  ),
+}));
+
+vi.mock('@/modules/nodes/components/gift-button', () => ({
+  GiftButton: ({
+    recipientId,
+    recipientUsername,
+  }: {
+    recipientId: string;
+    recipientUsername: string;
+  }) => (
+    <button data-testid="gift-button" data-recipient={recipientId}>
+      Gift @{recipientUsername}
     </button>
   ),
 }));

@@ -9,6 +9,9 @@ interface TierBadgeProps {
   theme: ProfileThemeConfig;
 }
 
+/**
+ * Tier Badge component.
+ */
 export default function TierBadge({ theme }: TierBadgeProps) {
   const tierColor = TIER_COLORS[theme.tier];
 

@@ -29,8 +29,17 @@ function asStringArray(v: unknown, fallback: string[]): string[] {
 }
 
 function asRecord(v: unknown): Record<string, boolean> {
-  if (typeof v !== 'object' || v === null || Array.isArray(v)) return {};
-  return Object.fromEntries(Object.entries(v).filter(([, value]) => typeof value === 'boolean'));
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) {
+    return {};
+  }
+
+  const result: Record<string, boolean> = {};
+  for (const [key, value] of Object.entries(v)) {
+    if (typeof value === 'boolean') {
+      result[key] = value;
+    }
+  }
+  return result;
 }
 
 interface WidgetConfig {
@@ -69,6 +78,8 @@ const WIDGETS: WidgetConfig[] = [
   },
 ];
 
+/** Description. */
+/** Widget Configurator component. */
 export function WidgetConfigurator({ options, onSave, saving }: WidgetConfiguratorProps) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   const [widgetOrder, setWidgetOrder] = useState<string[]>([]);

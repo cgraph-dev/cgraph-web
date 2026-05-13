@@ -7,6 +7,7 @@
 
 import { FrequencyPicker } from '@/modules/discovery';
 
+/** Description. */
 /** Discovery Settings component. */
 export function DiscoverySettings() {
   return (

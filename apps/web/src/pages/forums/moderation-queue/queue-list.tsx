@@ -1,3 +1,6 @@
+/**
+ * QueueList component
+ */
 
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -16,6 +19,11 @@ interface QueueListProps {
   onReject: (id: string) => void;
 }
 
+/**
+ */
+/**
+ * Queue List component.
+ */
 export function QueueList({
   items,
   selectedItems,

@@ -14,6 +14,9 @@ interface AddOverrideFormProps {
   onCancel: () => void;
 }
 
+/**
+ * Add Override Form component.
+ */
 export function AddOverrideForm({
   show,
   addType,

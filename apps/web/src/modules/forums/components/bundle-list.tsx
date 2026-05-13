@@ -29,6 +29,10 @@ interface BundleListProps {
   readonly forumId: string;
   readonly isOwner?: boolean;
 }
+/**
+ *
+ * Description.
+ */
 export function BundleList({ forumId, isOwner = false }: BundleListProps) {
   const queryClient = useQueryClient();
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);

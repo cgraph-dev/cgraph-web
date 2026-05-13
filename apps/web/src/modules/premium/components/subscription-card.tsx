@@ -33,6 +33,11 @@ export interface SubscriptionCardProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Subscription Card display component.
+ */
 export function SubscriptionCard({
   plan,
   isCurrentPlan = false,

@@ -12,6 +12,11 @@ import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('LanguageSettingsPanel');
 
+/**
+ */
+/**
+ * Language Settings Panel component.
+ */
 export function LanguageSettingsPanel() {
   const { settings, updateLocaleSettings, isSaving } = useSettingsStore();
   const [language, setLanguage] = useState(settings.locale.language);

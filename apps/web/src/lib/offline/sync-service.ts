@@ -54,8 +54,7 @@ let onlineHandler: (() => void) | null = null;
 let offlineHandler: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
 
-const SYNC_INTERVAL_MS = 60_000; // 1 minute background sync
-const HIDDEN_SYNC_MULTIPLIER = 4;
+const VISIBLE_SYNC_DELAY_MS = 60_000;
 
 type SyncListener = (stats: SyncStats) => void;
 type StatusListener = (isOnline: boolean) => void;
@@ -63,11 +62,19 @@ type StatusListener = (isOnline: boolean) => void;
 const syncListeners = new Set<SyncListener>();
 const statusListeners = new Set<StatusListener>();
 
+/**
+ *
+ * Description.
+ */
 export function onSyncComplete(listener: SyncListener): () => void {
   syncListeners.add(listener);
   return () => syncListeners.delete(listener);
 }
 
+/**
+ *
+ * Description.
+ */
 export function onStatusChange(listener: StatusListener): () => void {
   statusListeners.add(listener);
   return () => statusListeners.delete(listener);
@@ -236,40 +243,68 @@ export async function runSync(): Promise<SyncStats | null> {
   }
 }
 
-/** Start automatic background syncing (interval + network reconnect). */
+function canScheduleSync(): boolean {
+  if (!navigator.onLine) return false;
+  return typeof document === 'undefined' || document.visibilityState === 'visible';
+}
+
+function clearScheduledSync(): void {
+  if (syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = null;
+  }
+}
+
+function scheduleNextSync(delayMs = VISIBLE_SYNC_DELAY_MS): void {
+  clearScheduledSync();
+  if (!canScheduleSync()) return;
+
+  syncTimer = setTimeout(() => {
+    runSync().finally(() => scheduleNextSync());
+  }, delayMs);
+}
+
+function runVisibleSync(): void {
+  if (!canScheduleSync()) {
+    clearScheduledSync();
+    return;
+  }
+
+  runSync().finally(() => scheduleNextSync());
+}
+
+/** Start automatic syncing on startup, network reconnect, and visible-tab regain. */
 export function startAutoSync(): void {
   stopAutoSync();
 
   onlineHandler = () => {
     notifyStatusChange(true);
-    runSync();
-    scheduleNextSync();
+    runVisibleSync();
   };
 
   offlineHandler = () => {
     notifyStatusChange(false);
-    scheduleNextSync();
+    clearScheduledSync();
   };
 
   visibilityHandler = () => {
-    if (!document.hidden) runSync();
-    scheduleNextSync();
+    if (document.visibilityState === 'visible') {
+      runVisibleSync();
+    } else {
+      clearScheduledSync();
+    }
   };
 
   window.addEventListener('online', onlineHandler);
   window.addEventListener('offline', offlineHandler);
   document.addEventListener('visibilitychange', visibilityHandler);
 
-  runSync();
-  scheduleNextSync();
+  runVisibleSync();
 }
 
 /** Stop automatic syncing and clean up listeners. */
 export function stopAutoSync(): void {
-  if (syncTimer) {
-    clearTimeout(syncTimer);
-    syncTimer = null;
-  }
+  clearScheduledSync();
 
   if (onlineHandler) {
     window.removeEventListener('online', onlineHandler);
@@ -290,21 +325,4 @@ export function stopAutoSync(): void {
 /** Check if sync is currently running. */
 export function isSyncInProgress(): boolean {
   return isSyncing;
-}
-
-function scheduleNextSync(): void {
-  if (syncTimer) clearTimeout(syncTimer);
-
-  syncTimer = setTimeout(async () => {
-    await runSync();
-    scheduleNextSync();
-  }, getSyncDelayMs());
-}
-
-function getSyncDelayMs(): number {
-  if (!navigator.onLine) return SYNC_INTERVAL_MS * HIDDEN_SYNC_MULTIPLIER;
-  if (typeof document !== 'undefined' && document.hidden) {
-    return SYNC_INTERVAL_MS * HIDDEN_SYNC_MULTIPLIER;
-  }
-  return SYNC_INTERVAL_MS;
 }

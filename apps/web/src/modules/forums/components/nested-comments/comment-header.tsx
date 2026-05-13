@@ -21,6 +21,11 @@ interface CommentHeaderProps {
   onMarkBestAnswer: () => void;
 }
 
+/**
+ */
+/**
+ * Comment Header component.
+ */
 export function CommentHeader({
   comment,
   canEdit,

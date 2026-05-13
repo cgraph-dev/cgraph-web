@@ -16,6 +16,11 @@ interface MembersPanelProps {
   onUpdateMemberRole: (memberId: string, role: string) => void;
 }
 
+/**
+ */
+/**
+ * Members Panel component.
+ */
 export function MembersPanel({
   members,
   memberSearch,

@@ -9,12 +9,45 @@
 
 import { useEffect } from 'react';
 import { useAuthStore } from '@/modules/auth/store';
+import type { User } from '@/modules/auth/store';
 import { useThemeStore, THEME_COLORS } from '@/stores/theme';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { themeEngine } from '@/lib/theme/theme-engine';
 import { STORAGE_KEY as THEME_PREFERENCES_KEY } from '@/lib/theme/preferences';
 import { useCustomizationApplication } from '@/modules/settings/hooks/useCustomizationApplication';
 import { authLogger, themeLogger } from '@/lib/logger';
+
+const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
+const PUBLIC_AUTH_ROUTE_PATTERN =
+  /^\/(login|register|forgot-password|reset-password|verify-email)(\/|$)/;
+
+const E2E_USER: User = {
+  id: 'e2e-user',
+  uid: '1000000000',
+  userId: 1,
+  userIdDisplay: '#1000000000',
+  email: 'e2e@cgraph.local',
+  username: 'e2e-user',
+  displayName: 'E2E User',
+  avatarUrl: null,
+  walletAddress: null,
+  emailVerifiedAt: '2026-01-01T00:00:00.000Z',
+  twoFactorEnabled: false,
+  status: 'online',
+  statusMessage: null,
+  pulse: 0,
+  isVerified: true,
+  isPremium: false,
+  isAdmin: true,
+  canChangeUsername: true,
+  usernameNextChangeAt: null,
+  phoneNumber: null,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  subscription: {
+    tier: 'free',
+    status: 'active',
+  },
+};
 
 /**
  * Initializes authentication, gamification, customization, and theme state.
@@ -33,6 +66,20 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
 
   // Auth check — runs once on mount only
   useEffect(() => {
+    if (isE2EAuthBypass) {
+      if (!PUBLIC_AUTH_ROUTE_PATTERN.test(window.location.pathname)) {
+        useAuthStore.setState({
+          user: E2E_USER,
+          token: 'e2e-access-token',
+          refreshToken: 'e2e-refresh-token',
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      }
+      return;
+    }
+
     authLogger.debug('Starting auth check on mount');
     checkAuth()
       .catch((error) => {
@@ -44,6 +91,10 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   }, [checkAuth]);
 
   useEffect(() => {
+    if (isE2EAuthBypass) {
+      return;
+    }
+
     if (isAuthenticated) {
       fetchCustomizations().catch((error) => {
         authLogger.error('Customization initialization failed:', error);
@@ -72,6 +123,10 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
 
   // Sync theme with server when user logs in
   useEffect(() => {
+    if (isE2EAuthBypass) {
+      return;
+    }
+
     if (isAuthenticated && userId) {
       themeLogger.debug('Syncing theme with server for user:', userId);
       syncWithServer(userId).catch((error) => {

@@ -13,6 +13,11 @@ interface PostsPanelProps {
   onRemoveFlair: (flairId: string) => void;
 }
 
+/**
+ */
+/**
+ * Posts Panel component.
+ */
 export function PostsPanel({ flairs, onAddFlair, onUpdateFlair, onRemoveFlair }: PostsPanelProps) {
   return (
     <motion.div

@@ -1,5 +1,13 @@
+/**
+ * Premium tier badge component.
+ */
 import { tierConfig, type PremiumTier } from './tier-config';
 
+/**
+ */
+/**
+ * Tier Badge component.
+ */
 export function TierBadge({ tier }: { tier: PremiumTier }) {
   const config = tierConfig[tier];
   const TierIcon = config.icon;

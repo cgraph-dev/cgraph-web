@@ -16,3 +16,4 @@ export { PostsPanel } from './posts-panel';
 export { RulesPanel } from './rules-panel';
 export { BbcodeManagerPanel } from './bbcode-manager-panel';
 export { CalendarManagerPanel } from './calendar-manager-panel';
+export { NodeGatingPanel } from './node-gating-panel';

@@ -9,6 +9,9 @@ import type { Post, Comment, ThreadPrefix } from '@/modules/forums/store';
  */
 export type CommentViewMode = 'linear' | 'threaded';
 
+/**
+ * Props for the ThreadView component
+ */
 export interface ThreadViewProps {
   post: Post;
   comments: Comment[];
@@ -44,6 +47,9 @@ export interface ThreadPrefixBadgeProps {
   prefix: ThreadPrefix;
 }
 
+/**
+ * Props for rating stars component
+ */
 export interface RatingStarsProps {
   rating?: number;
   myRating?: number;
@@ -54,6 +60,9 @@ export interface RatingStarsProps {
   onRate: (rating: number) => void;
 }
 
+/**
+ * Props for comment card component
+ */
 export interface CommentCardProps {
   comment: Comment;
   index: number;

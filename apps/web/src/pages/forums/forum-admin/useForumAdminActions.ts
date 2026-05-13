@@ -22,6 +22,8 @@ interface ActionDeps {
 }
 
 /**
+ */
+/**
  * Hook for managing forum admin actions.
  *
  * @param deps - The deps.

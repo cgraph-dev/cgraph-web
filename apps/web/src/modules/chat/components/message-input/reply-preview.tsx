@@ -11,6 +11,11 @@ interface ReplyPreviewProps {
   onCancel?: () => void;
 }
 
+/**
+ */
+/**
+ * Reply Preview component.
+ */
 export function ReplyPreview({ replyTo, onCancel }: ReplyPreviewProps) {
   return (
     <AnimatePresence>

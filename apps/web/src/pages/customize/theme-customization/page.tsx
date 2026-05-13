@@ -12,6 +12,9 @@ import { ProfileThemePicker } from './profile-theme-picker';
 import { SaveButton } from '@/modules/settings/components/customize/ui/save-button';
 import { ThemePicker } from '@/components/theme-picker/theme-picker';
 
+/**
+ * Theme customization page component.
+ */
 export default function ThemeCustomization() {
   const {
     searchQuery,

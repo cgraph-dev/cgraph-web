@@ -7,6 +7,9 @@ interface SaveBarProps {
   onReset: () => void;
 }
 
+/**
+ * Save Bar component.
+ */
 export function SaveBar({ hasChanges, isSaving, onSave, onReset }: SaveBarProps) {
   return (
     <AnimatePresence>

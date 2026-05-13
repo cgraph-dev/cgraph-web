@@ -20,6 +20,9 @@ interface EditHistoryModalProps {
   onClose: () => void;
 }
 
+/**
+ * Edit History Modal dialog component.
+ */
 export default function EditHistoryModal({ postId, isOpen, onClose }: EditHistoryModalProps) {
   const { fetchEditHistory } = useForumStore();
   const [history, setHistory] = useState<PostEditHistory[]>([]);
@@ -73,6 +76,7 @@ export default function EditHistoryModal({ postId, isOpen, onClose }: EditHistor
               <h2 className="text-2xl font-bold text-white">Edit History</h2>
               <button
                 onClick={onClose}
+                aria-label="Close edit history"
                 className="rounded-lg p-2 transition-colors hover:bg-[var(--token-card-bg)]"
               >
                 <XMarkIcon className="h-6 w-6 text-gray-400" />

@@ -32,6 +32,8 @@ interface UseProfileDataReturn {
 }
 
 /**
+ */
+/**
  * Hook for managing profile data.
  */
 export function useProfileData({

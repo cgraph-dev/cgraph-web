@@ -116,12 +116,8 @@ export const ProfilePanel = memo(function ProfilePanel() {
               }}
             />
             <div>
-              <h4 className="font-medium capitalize text-[var(--token-text-primary)]">
-                {themePreset} Theme
-              </h4>
-              <p className="text-sm text-[var(--token-text-muted)]">
-                Profile colors match your selected theme
-              </p>
+              <h4 className="font-medium capitalize text-[var(--token-text-primary)]">{themePreset} Theme</h4>
+              <p className="text-sm text-[var(--token-text-muted)]">Profile colors match your selected theme</p>
             </div>
           </div>
           <p className="mt-3 text-xs text-[var(--token-text-muted)]">
@@ -130,11 +126,12 @@ export const ProfilePanel = memo(function ProfilePanel() {
         </div>
       </section>
 
+      {/* Pro Tips */}
       <section className="rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-4">
         <div className="flex items-start gap-3">
           <span className="text-2xl">💡</span>
           <div>
-            <h4 className="font-medium text-amber-300">Profile Notes</h4>
+            <h4 className="font-medium text-amber-300">Pro Tips</h4>
             <ul className="mt-2 space-y-1 text-sm text-[var(--token-text-secondary)]">
               <li>• Premium card style unlocks exclusive animations</li>
               <li>• Combine animated borders with glow effects for maximum impact</li>

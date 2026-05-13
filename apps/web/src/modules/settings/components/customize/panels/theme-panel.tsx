@@ -162,7 +162,7 @@ export const ThemePanel = memo(function ThemePanel() {
         <div className="flex items-start gap-3">
           <span className="text-2xl">💡</span>
           <div>
-            <h4 className="font-semibold text-[var(--token-text-primary)]">Theme Scope</h4>
+            <h4 className="font-semibold text-[var(--token-text-primary)]">Pro Tip</h4>
             <p className="mt-1 text-xs text-[var(--token-text-muted)]">
               Effects are applied across your entire profile, chat bubbles, and forum posts. Premium
               users get access to exclusive effect combinations!

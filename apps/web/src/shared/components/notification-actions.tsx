@@ -22,6 +22,9 @@ interface NotificationActionsProps {
   onAction?: (action: string) => void;
 }
 
+/**
+ * Notification Actions component.
+ */
 export function NotificationActions({
   type,
   notificationId,

@@ -3,6 +3,9 @@
  */
 import type { Board, Thread, ForumMember, Forum } from '@/modules/forums/store';
 
+/**
+ * Props for the main ForumBoardView component
+ */
 export interface ForumBoardViewProps {
   className?: string;
 }
@@ -17,6 +20,9 @@ export type ForumTab = 'boards' | 'threads' | 'members';
  */
 export type MemberSortOption = 'recent' | 'reputation' | 'posts' | 'alphabetical';
 
+/**
+ * Props for the BoardsList component
+ */
 export interface BoardsListProps {
   boards: Board[];
   forumSlug: string;
@@ -32,6 +38,9 @@ export interface BoardRowProps {
   forumSlug: string;
 }
 
+/**
+ * Props for the ThreadsList component
+ */
 export interface ThreadsListProps {
   threads: Thread[];
   forumSlug: string;
@@ -46,6 +55,9 @@ export interface ThreadRowProps {
   forumSlug: string;
 }
 
+/**
+ * Props for the MembersList component
+ */
 export interface MembersListProps {
   members: ForumMember[];
   isLoading: boolean;
@@ -62,6 +74,9 @@ export interface MemberCardProps {
   member: ForumMember;
 }
 
+/**
+ * Props for the ForumHeader component
+ */
 export interface ForumHeaderProps {
   forum: Forum;
   user: { id: string } | null;

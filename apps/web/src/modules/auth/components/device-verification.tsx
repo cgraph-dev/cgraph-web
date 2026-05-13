@@ -3,8 +3,8 @@
  *
  * Per ADR-022, web is not a Signal-participant device — device-key
  * attestation needs the libsignal session state that only lives on
- * mobile/desktop. This component routes users to a native client for
- * device-key setup.
+ * mobile/desktop. This component renders the canonical MobileOnly
+ * placeholder so the phone-register flow doesn't break the build.
  */
 import type { ReactNode } from 'react';
 import { MobileOnlyFeature } from '@/components/mobile-only-feature';

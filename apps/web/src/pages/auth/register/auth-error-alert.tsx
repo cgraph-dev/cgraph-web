@@ -10,6 +10,8 @@ interface AuthErrorAlertProps {
 }
 
 /**
+ */
+/**
  * Auth Error Alert — fallback UI for error states.
  */
 export function AuthErrorAlert({ error }: AuthErrorAlertProps) {

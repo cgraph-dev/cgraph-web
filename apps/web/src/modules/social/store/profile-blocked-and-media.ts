@@ -5,7 +5,6 @@ import { http } from '@/lib/api-client';
 import { ensureArray, isRecord, asString, asBool, asOptionalString, asEnum } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
 import type { StoreApi } from 'zustand';
-import { useFriendStore } from './friendStore.impl';
 import type { ProfileField, ProfileState } from './profileStore.types';
 
 const logger = createLogger('profileStore');
@@ -19,7 +18,7 @@ export function createFetchBlockedUsers(set: Set) {
     set({ isLoadingBlocked: true });
     try {
       const response = await http.get('/api/v1/friends/blocked');
-      const blockedUsers = ensureArray(response.data)
+      const blockedUsers = ensureArray(response.data, 'blocked')
         .filter(isRecord)
         .map((entry) => {
           const user = isRecord(entry.user) ? entry.user : entry;
@@ -56,12 +55,19 @@ export function createBlockUser(set: Set, get: Get) {
         set({ currentProfile: { ...current, isBlocked: true } });
       }
 
-      const friendState = useFriendStore.getState();
-      useFriendStore.setState({
-        friends: friendState.friends.filter((f) => f.id !== userId),
-        pendingRequests: friendState.pendingRequests.filter((r) => r.user.id !== userId),
-        sentRequests: friendState.sentRequests.filter((r) => r.user.id !== userId),
-      });
+      // Remove blocked user from friend store (friends list + pending requests + presence)
+      try {
+        const { useFriendStore } = await import('./friendStore.impl');
+        const friendState = useFriendStore.getState();
+        useFriendStore.setState({
+          friends: friendState.friends.filter((f) => f.id !== userId),
+          pendingRequests: friendState.pendingRequests.filter((r) => r.user.id !== userId),
+          sentRequests: friendState.sentRequests.filter((r) => r.user.id !== userId),
+        });
+      } catch {
+        // friendStore import failure is non-critical
+        logger.warn('Could not update friend store after block');
+      }
     } catch (error) {
       logger.error('Failed to block user:', error);
       throw error;

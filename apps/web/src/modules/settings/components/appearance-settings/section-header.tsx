@@ -8,6 +8,11 @@ import type { SectionHeaderProps } from './types';
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Section Header component.
+ */
 export function SectionHeader({ icon, title, description }: SectionHeaderProps) {
   return (
     <div className="mb-4 flex items-center gap-3">

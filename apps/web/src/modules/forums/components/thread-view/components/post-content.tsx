@@ -21,8 +21,8 @@ import {
 import { BookmarkIcon as BookmarkIconSolid } from '@heroicons/react/24/solid';
 import { formatTimeAgo } from '@/lib/utils';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
+import { SafeHtml } from '@/shared/components/security/safe-html';
 import { InlineTitle } from '@/shared/components/ui/inline-title';
-import { SafeHtml } from '@/shared/components/security';
 import type { Post } from '@/modules/forums/store';
 // Import siblings directly to avoid circular dep through barrel
 import { PrefixBadge } from './prefix-badge';
@@ -58,6 +58,11 @@ interface PostContentProps {
   onSubmitComment: () => void;
 }
 
+/**
+ */
+/**
+ * Post Content component.
+ */
 export function PostContent({
   post,
   primaryColor,

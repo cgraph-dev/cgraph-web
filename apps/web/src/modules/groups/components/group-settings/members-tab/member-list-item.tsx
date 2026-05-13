@@ -22,6 +22,9 @@ interface MemberListItemProps {
   onUnmute: (memberId: string) => void;
 }
 
+/**
+ * Member List Item component.
+ */
 export function MemberListItem({
   member,
   index,

@@ -1,0 +1,326 @@
+/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+const NODE_MODULES_SEGMENT = '/node_modules/';
+
+function normalizeModuleId(id) {
+  return id.replace(/\\/g, '/');
+}
+
+function getPackageNameFromModuleId(id) {
+  const normalized = normalizeModuleId(id);
+  const nodeModulesIndex = normalized.lastIndexOf(NODE_MODULES_SEGMENT);
+  if (nodeModulesIndex < 0) {
+    return null;
+  }
+
+  const packagePath = normalized.slice(nodeModulesIndex + NODE_MODULES_SEGMENT.length);
+  const segments = packagePath.split('/');
+
+  if (segments[0] && segments[0].startsWith('@')) {
+    return `${segments[0]}/${segments[1] || ''}`;
+  }
+
+  return segments[0] || null;
+}
+
+function isWorkspacePackageModule(id, packageName) {
+  return normalizeModuleId(id).includes(`/packages/${packageName}/`);
+}
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [
+    react(),
+    // Bundle analyzer - generates stats.html after build
+    visualizer({
+      filename: 'dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+      template: 'treemap',
+    }),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist'],
+    // Coverage configuration with thresholds (matching mobile at 60%)
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        '**/*.d.ts',
+        '**/*.test.{ts,tsx}',
+        '**/*.spec.{ts,tsx}',
+        '**/test/**',
+        '**/mocks/**',
+      ],
+      thresholds: {
+        statements: 60,
+        branches: 60,
+        functions: 60,
+        lines: 60,
+      },
+    },
+  },
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_DEV_API_TARGET || 'https://cgraph-backend-prod-v2.fly.dev',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/socket': {
+        target: process.env.VITE_DEV_WS_TARGET || 'wss://cgraph-backend-prod-v2.fly.dev',
+        ws: true,
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          const normalizedId = normalizeModuleId(id);
+
+          // Keep store barrels and implementations in one chunk to avoid execution-order issues.
+          if (
+            normalizedId.includes('/settings/store/customization/') ||
+            normalizedId.includes('/chat/store/')
+          ) {
+            return 'app-runtime';
+          }
+
+          // Workspace packages that heavily contribute to common index chunks.
+          if (isWorkspacePackageModule(normalizedId, 'api-client')) {
+            return 'api-client';
+          }
+          if (isWorkspacePackageModule(normalizedId, 'animation-constants')) {
+            return 'animation-constants';
+          }
+
+          // Conversation-heavy UI slices.
+          if (normalizedId.includes('/src/modules/chat/components/message-bubble/')) {
+            return 'chat-message-bubble';
+          }
+          if (normalizedId.includes('/src/modules/chat/components/chat-info-panel/')) {
+            return 'chat-info-panel';
+          }
+          if (normalizedId.includes('/src/modules/chat/components/audio/')) {
+            return 'chat-audio';
+          }
+          if (normalizedId.includes('/src/modules/chat/components/rich-media-embed')) {
+            return 'chat-media-embed';
+          }
+          if (normalizedId.includes('/src/modules/') && normalizedId.includes('/store/')) {
+            return 'app-runtime';
+          }
+          if (normalizedId.includes('/src/lib/socket/')) {
+            return 'app-runtime';
+          }
+          if (normalizedId.includes('/src/layouts/app-layout/')) {
+            return 'app-runtime';
+          }
+          if (normalizedId.includes('/src/modules/auth/components/auth-effects/')) {
+            return 'app-runtime';
+          }
+          if (normalizedId.includes('/src/modules/onboarding/')) {
+            return 'app-runtime';
+          }
+          if (
+            normalizedId.includes('/src/lib/theme/') ||
+            normalizedId.includes('/src/providers/theme-enhanced/')
+          ) {
+            return 'app-runtime';
+          }
+          if (normalizedId.includes('/src/lib/lottie/')) {
+            return 'app-runtime';
+          }
+          if (normalizedId.includes('/src/modules/social/components/avatar/')) {
+            return 'app-runtime';
+          }
+
+          const packageName = getPackageNameFromModuleId(normalizedId);
+          if (!packageName) {
+            return undefined;
+          }
+
+          if (
+            packageName === 'i18next' ||
+            packageName.startsWith('i18next-') ||
+            packageName === 'react-i18next' ||
+            packageName === 'intl-messageformat' ||
+            packageName.startsWith('@formatjs/')
+          ) {
+            return 'i18n';
+          }
+
+          if (packageName === 'react-hot-toast' || packageName === 'goober') {
+            return 'toast-vendor';
+          }
+
+          if (
+            packageName === 'react' ||
+            packageName === 'react-dom' ||
+            packageName === 'scheduler'
+          ) {
+            return 'react-vendor';
+          }
+
+          if (packageName === 'react-router' || packageName === 'react-router-dom') {
+            return 'router';
+          }
+
+          if (packageName.startsWith('@radix-ui/')) {
+            return 'radix-ui';
+          }
+
+          if (packageName === '@headlessui/react') {
+            return 'headless-ui';
+          }
+
+          if (
+            packageName === 'framer-motion' ||
+            packageName === 'motion-dom' ||
+            packageName === 'motion-utils'
+          ) {
+            return 'animation-motion';
+          }
+
+          if (packageName === 'gsap') {
+            return 'animation-gsap';
+          }
+
+          if (
+            packageName === '@tanstack/react-query' ||
+            packageName === '@tanstack/query-core' ||
+            packageName === '@tanstack/query-sync-storage-persister' ||
+            packageName === '@tanstack/query-persist-client-core'
+          ) {
+            return 'tanstack-query';
+          }
+
+          if (
+            packageName === '@tanstack/react-virtual' ||
+            packageName === '@tanstack/virtual-core'
+          ) {
+            return 'tanstack-virtual';
+          }
+
+          if (packageName === 'zustand') {
+            return 'state';
+          }
+
+          if (
+            packageName === 'react-markdown' ||
+            packageName.startsWith('remark-') ||
+            packageName.startsWith('rehype-') ||
+            packageName === 'unified' ||
+            packageName.startsWith('mdast') ||
+            packageName.startsWith('hast') ||
+            packageName.startsWith('micromark')
+          ) {
+            return 'markdown';
+          }
+
+          if (packageName === 'date-fns') {
+            return 'utils-date';
+          }
+
+          if (packageName === 'lodash' || packageName === 'lodash-es') {
+            return 'utils-lodash';
+          }
+
+          if (packageName === 'lucide-react' || packageName === '@heroicons/react') {
+            return 'icons';
+          }
+
+          if (packageName === 'recharts' || packageName === 'recharts-scale') {
+            return 'charts-recharts';
+          }
+
+          if (
+            packageName.startsWith('d3-') ||
+            packageName === 'd3' ||
+            packageName === 'internmap' ||
+            packageName === 'delaunator' ||
+            packageName === 'robust-predicates'
+          ) {
+            return 'charts-d3';
+          }
+
+          if (packageName === 'victory-vendor' || packageName.startsWith('victory-')) {
+            return 'charts-victory';
+          }
+
+          if (
+            packageName === 'viem' ||
+            packageName === 'wagmi' ||
+            packageName.startsWith('@wagmi/') ||
+            packageName === 'mipd'
+          ) {
+            return 'web3';
+          }
+
+          if (
+            packageName === '@sentry/core' ||
+            packageName === '@sentry/browser' ||
+            packageName === '@sentry/react' ||
+            packageName.startsWith('@sentry-internal/')
+          ) {
+            return 'sentry';
+          }
+
+          if (packageName === 'dompurify') {
+            return 'sanitize';
+          }
+
+          if (packageName === 'axios') {
+            return 'http';
+          }
+
+          if (packageName === 'phoenix') {
+            return 'socket';
+          }
+
+          if (packageName.startsWith('@opentelemetry/')) {
+            return 'tracing';
+          }
+
+          if (packageName === 'livekit-client') {
+            return 'livekit';
+          }
+
+          if (packageName.startsWith('@use-gesture/')) {
+            return 'gesture';
+          }
+
+          if (packageName === 'lottie-web') {
+            return 'lottie-web';
+          }
+
+          return undefined;
+        },
+      },
+    },
+  },
+});

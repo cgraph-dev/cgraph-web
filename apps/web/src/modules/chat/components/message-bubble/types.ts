@@ -12,6 +12,9 @@ import type { UIPreferences } from '@/pages/messages/conversation/types';
  */
 export type { UIPreferences } from '@/pages/messages/conversation/types';
 
+/**
+ * Props for the MessageBubble component
+ */
 export interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
@@ -43,6 +46,9 @@ export interface ReadByEntry {
   username?: string;
 }
 
+/**
+ * Props for MessageEditForm component
+ */
 export interface MessageEditFormProps {
   editContent: string;
   onEditContentChange?: (content: string) => void;
@@ -50,6 +56,9 @@ export interface MessageEditFormProps {
   onCancelEdit?: () => void;
 }
 
+/**
+ * Props for MessageActionMenu component
+ */
 export interface MessageActionMenuProps {
   onReply: () => void;
   onEdit?: () => void;

@@ -13,6 +13,11 @@ interface BlockConfirmModalProps {
   onCancel: () => void;
 }
 
+/**
+ */
+/**
+ * Block Confirm Modal dialog component.
+ */
 export function BlockConfirmModal({
   isOpen,
   userName,
@@ -75,6 +80,11 @@ interface ReportModalProps {
   onCancel: () => void;
 }
 
+/**
+ */
+/**
+ * Report Modal dialog component.
+ */
 export function ReportModal({
   isOpen,
   userName,

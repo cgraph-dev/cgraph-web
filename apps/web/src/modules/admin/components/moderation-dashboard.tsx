@@ -17,7 +17,6 @@ import { AppealsStats } from '@/modules/moderation/components/appeals-stats';
 import { AnimatedEmptyState, AnimatedErrorState } from '@/shared/components';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
-import { useAdaptiveInterval } from '@/hooks/useAdaptiveInterval';
 
 const logger = createLogger('ModerationDashboard');
 interface ModerationStats {
@@ -61,6 +60,9 @@ function StatCard({ title, value, unit, color = 'text-white' }: StatCardProps) {
     </Card>
   );
 }
+/**
+ * Admin moderation dashboard with comprehensive metrics.
+ */
 export function ModerationDashboard() {
   const [stats, setStats] = useState<ModerationStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,9 +83,21 @@ export function ModerationDashboard() {
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
 
-  useAdaptiveInterval(fetchStats, 60_000, { hiddenMultiplier: 6, enabled: !loading });
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') {
+        fetchStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    window.addEventListener('online', refreshWhenVisible);
+
+    return () => {
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+      window.removeEventListener('online', refreshWhenVisible);
+    };
+  }, [fetchStats]);
 
   if (loading) {
     return (

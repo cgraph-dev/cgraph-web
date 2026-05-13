@@ -1,3 +1,6 @@
+/**
+ * OrderableItem component
+ */
 
 import { memo } from 'react';
 import { motion, Reorder, useDragControls } from 'motion/react';

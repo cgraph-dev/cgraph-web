@@ -19,6 +19,9 @@ import { SearchFiltersPanel } from './search-filters-panel';
 import { SearchResults } from './search-results';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ * Message search modal component
+ */
 export function MessageSearch({
   isOpen,
   onClose,

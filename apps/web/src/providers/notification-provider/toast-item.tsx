@@ -12,22 +12,27 @@ import { NOTIFICATION_ICONS, NOTIFICATION_COLORS, DEFAULT_NOTIFICATION_COLOR } f
 import type { ToastItemProps } from './types';
 import { springs } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Toast Item component.
+ */
 export function ToastItem({ notification, index: _index, onDismiss }: ToastItemProps) {
   const [progress, setProgress] = useState(100);
   const colors = NOTIFICATION_COLORS[notification.type] ?? DEFAULT_NOTIFICATION_COLOR;
   const icon = NOTIFICATION_ICONS[notification.type];
   const prefersReducedMotion = useReducedMotion();
+  const notificationDuration = notification.duration;
 
   // Auto-dismiss timer
   useEffect(() => {
-    if (!notification.duration || notification.duration === 0) return;
+    if (!notificationDuration || notificationDuration === 0) return;
 
     const startTime = Date.now();
-    const { duration } = notification;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+      const remaining = Math.max(0, 100 - (elapsed / notificationDuration) * 100);
       setProgress(remaining);
 
       if (remaining <= 0) {
@@ -37,7 +42,7 @@ export function ToastItem({ notification, index: _index, onDismiss }: ToastItemP
     }, 50);
 
     return () => clearInterval(interval);
-  }, [notification.duration, onDismiss]);
+  }, [notificationDuration, onDismiss]);
 
   // Standard toast rendering
   return (

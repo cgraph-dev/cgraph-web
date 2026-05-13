@@ -27,6 +27,8 @@ type Set = (
 const logger = createLogger('ModerationStore:Log');
 
 /**
+ */
+/**
  * Creates a new log actions.
  *
  * @param set - The set.

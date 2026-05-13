@@ -24,6 +24,9 @@ import { SaveButton } from '@/modules/settings/components/customize/ui/save-butt
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Identity Customization component.
+ */
 export default function IdentityCustomization() {
   const {
     activeSection,

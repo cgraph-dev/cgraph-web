@@ -16,6 +16,11 @@ interface EquippedBadgesShowcaseProps {
   editMode: boolean;
 }
 
+/**
+ */
+/**
+ * Equipped Badges Showcase component.
+ */
 export function EquippedBadgesShowcase({
   equippedBadges,
   achievements,
@@ -136,6 +141,11 @@ interface AchievementsShowcaseProps {
   onToggleShowAll: () => void;
 }
 
+/**
+ */
+/**
+ * Achievements Showcase component.
+ */
 export function AchievementsShowcase({
   achievements,
   totalUnlocked,

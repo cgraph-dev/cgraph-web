@@ -20,6 +20,11 @@ const floatingIndicator = {
   transition: { duration: durations.dramatic.ms / 1000, ease: 'easeOut' as const },
 };
 
+/**
+ */
+/**
+ * Post Vote Sidebar component.
+ */
 export function PostVoteSidebar({ score, myVote, onVote }: PostVoteSidebarProps) {
   const [voteAnim, setVoteAnim] = useState<'+1' | '-1' | null>(null);
 

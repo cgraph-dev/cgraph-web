@@ -38,18 +38,30 @@ function normalizePremiumPost(raw: unknown): PremiumPost {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export async function listPremiumPosts(groupId: string): Promise<PremiumPost[]> {
   const res = await http.get(`/api/v1/groups/${groupId}/premium-posts`);
   const rawPosts = ensureArray<Record<string, unknown>>(res.data);
   return rawPosts.map(normalizePremiumPost);
 }
 
+/**
+ *
+ * Description.
+ */
 export async function getPremiumPost(postId: string): Promise<PremiumPost> {
   const res = await http.get(`/api/v1/premium-posts/${postId}`);
   const raw = ensureObject<Record<string, unknown>>(res.data);
   return normalizePremiumPost(raw);
 }
 
+/**
+ *
+ * Description.
+ */
 export async function createPremiumPost(
   groupId: string,
   payload: CreatePremiumPostPayload
@@ -65,6 +77,10 @@ export async function createPremiumPost(
   return normalizePremiumPost(raw);
 }
 
+/**
+ *
+ * Description.
+ */
 export async function purchasePremiumPost(postId: string): Promise<PremiumPost> {
   const res = await http.post(`/api/v1/premium-posts/${postId}/purchase`);
   const raw = ensureObject<Record<string, unknown>>(res.data);

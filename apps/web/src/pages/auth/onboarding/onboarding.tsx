@@ -18,6 +18,9 @@ import { NavigationButtons } from './navigation-buttons';
 import { pageVariants } from './animations';
 import { tweens } from '@/lib/animation-presets';
 
+/**
+ * Onboarding component.
+ */
 export default function Onboarding() {
   const {
     currentStep,

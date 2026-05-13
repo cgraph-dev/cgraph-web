@@ -24,6 +24,8 @@ type Set = (
 const logger = createLogger('ModerationStore:Users');
 
 /**
+ */
+/**
  * Creates a new user actions.
  *
  * @param set - The set.

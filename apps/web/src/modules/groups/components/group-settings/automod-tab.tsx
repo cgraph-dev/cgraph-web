@@ -268,6 +268,9 @@ function RuleForm({ initial, onSubmit, onCancel, submitLabel, loading }: RuleFor
     </div>
   );
 }
+
+// ─── Main component ────────────────────────────────────────────────────────────
+
 /**
  * AutoMod Tab component.
  * Manages automated moderation rules for a group.

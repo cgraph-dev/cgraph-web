@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the Card UI component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import Card, { CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from './card';
 import { Button } from './button';

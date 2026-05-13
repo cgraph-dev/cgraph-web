@@ -23,6 +23,11 @@ interface CategoriesPanelProps {
   onRemoveCategory: (categoryId: string) => void;
 }
 
+/**
+ */
+/**
+ * Categories Panel component.
+ */
 export function CategoriesPanel({
   categories,
   newCategoryName,

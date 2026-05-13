@@ -1,3 +1,6 @@
+/**
+ * Theme-aware avatar component.
+ */
 import { durations } from '@cgraph/animation-constants';
 import { motion } from 'motion/react';
 
@@ -54,6 +57,11 @@ const ANIMATION_SPEED_MULTIPLIERS: Record<'slow' | 'normal' | 'fast', number> = 
   fast: 0.5,
 };
 
+/**
+ */
+/**
+ * Themed Avatar component.
+ */
 export function ThemedAvatar({
   src,
   alt = 'Avatar',

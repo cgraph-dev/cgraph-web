@@ -12,7 +12,6 @@
  * - Connection timeout
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 const mockToken = vi.hoisted(() => ({ value: 'test-token' }));
 
 vi.mock('phoenix', () => {
@@ -206,9 +205,10 @@ describe('connectSocket', () => {
     mockSocketInstance.onOpenCb!();
     await promise;
 
-    // Simulate reaching the production circuit-breaker ceiling.
+    // Simulate reaching max attempts (connection resets to 0 on open, so set it high)
     state.reconnectAttempts = 63;
 
+    // This close should trip the circuit breaker (63 + 1 = 64)
     mockSocketInstance.onCloseCb!();
 
     expect(state.reconnectAttempts).toBe(64);
@@ -233,14 +233,8 @@ describe('connectSocket', () => {
 
     mockSocketInstance.onCloseCb!();
 
-    expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-      STORAGE_KEYS.socketSessionId,
-      'sess-123'
-    );
-    expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-      STORAGE_KEYS.socketLastSequence,
-      '42'
-    );
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('ws_session_id', 'sess-123');
+    expect(mockSessionStorage.setItem).toHaveBeenCalledWith('ws_last_sequence', '42');
 
     vi.unstubAllGlobals();
   });

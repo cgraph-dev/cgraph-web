@@ -5,6 +5,8 @@
  * notification badges, shader background, and toast container.
  *
  */
+
+// Main component
 export { default } from './app-layout';
 
 // Sub-components

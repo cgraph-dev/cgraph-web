@@ -2,6 +2,11 @@
  * Custom icon components for the forum post editor.
  */
 import React from 'react';
+/**
+ */
+/**
+ * Underline Icon component.
+ */
 export function UnderlineIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg

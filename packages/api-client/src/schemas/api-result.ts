@@ -2,8 +2,8 @@
  * Discriminated union for API responses.
  * Eliminates the response.data?.x ?? response.data?.y guessing pattern.
  *
- * CGraph endpoints return { data: T } on success and
- * { error: { code, message } } on failure.
+ * Discord standard: every endpoint returns { data: T } on success
+ * and { error: { code, message } } on failure.
  */
 import { ZodError, type ZodType } from 'zod';
 
@@ -111,49 +111,14 @@ function extractMessage(value: unknown, fallback: string): string {
   return fallback;
 }
 
-function humanizeDetailKey(key: string): string {
-  return key.replace(/_/g, ' ').replace(/^\w/, (char) => char.toUpperCase());
-}
-
-function extractDetailMessages(value: unknown, fieldName?: string): string[] {
-  if (typeof value === 'string') {
-    const message = value.trim();
-    return message ? [fieldName ? `${fieldName} ${message}` : message] : [];
-  }
-
-  if (Array.isArray(value)) {
-    return value.flatMap((item) => extractDetailMessages(item, fieldName));
-  }
-
-  if (isRecordBody(value)) {
-    return Object.entries(value).flatMap(([key, item]) =>
-      extractDetailMessages(item, humanizeDetailKey(key))
-    );
-  }
-
-  return [];
-}
-
-function extractDetailsMessage(value: unknown): string | undefined {
-  const message = extractDetailMessages(value).join('. ');
-  return message || undefined;
-}
-
-function isGenericValidationMessage(message: string, code: string): boolean {
-  const normalized = message.trim().toLowerCase();
-
-  return (
-    normalized === 'validation failed' ||
-    normalized === 'invalid request' ||
-    normalized === 'unprocessable entity' ||
-    normalized === 'request failed' ||
-    code.toLowerCase() === 'validation_error'
-  );
-}
-
 function extractErrorsMessage(value: unknown): string | undefined {
   if (Array.isArray(value)) {
-    return value.map((item) => extractMessage(item, '')).filter(Boolean).join(', ') || undefined;
+    return (
+      value
+        .map((item) => extractMessage(item, ''))
+        .filter(Boolean)
+        .join(', ') || undefined
+    );
   }
 
   if (isRecordBody(value)) {
@@ -167,27 +132,6 @@ function extractErrorsMessage(value: unknown): string | undefined {
   }
 
   return undefined;
-}
-
-function extractErrorMessage(body: unknown, fallback: string): string {
-  const message = extractMessage(body, fallback);
-
-  if (!isErrorBody(body)) {
-    return message;
-  }
-
-  const code = extractCode(body);
-  const detailsMessage = extractDetailsMessage(body.error.details);
-
-  if (!detailsMessage) {
-    return message;
-  }
-
-  if (isGenericValidationMessage(message, code)) {
-    return detailsMessage;
-  }
-
-  return `${message}: ${detailsMessage}`;
 }
 
 function extractCode(value: unknown): string {
@@ -232,6 +176,9 @@ function extractErrorDetails(error: ErrorPayload): unknown {
  */
 export function extractData(response: { data: unknown }): unknown {
   const body = response.data;
+  if (body === undefined || body === null) {
+    return {};
+  }
   if (isWrappedBody(body)) {
     return body.data;
   }
@@ -299,11 +246,11 @@ export async function apiCall<S extends ZodType>(
         details === undefined
           ? {
               code: extractCode(body),
-              message: extractErrorMessage(body, 'Request failed'),
+              message: extractMessage(body, 'Request failed'),
             }
           : {
               code: extractCode(body),
-              message: extractErrorMessage(body, 'Request failed'),
+              message: extractMessage(body, 'Request failed'),
               details,
             };
 

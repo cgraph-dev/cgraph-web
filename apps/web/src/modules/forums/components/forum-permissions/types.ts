@@ -74,6 +74,8 @@ export const BOARD_PERMISSIONS: readonly PermissionDef[] = [
  * ============================================================ */
 
 /**
+ */
+/**
  * extract Permissions for the forums module.
  *
  * @param raw - The raw.

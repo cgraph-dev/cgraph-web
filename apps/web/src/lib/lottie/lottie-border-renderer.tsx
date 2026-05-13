@@ -12,7 +12,7 @@
  *
  */
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useEffect, useState, memo } from 'react';
 import type { AnimationItem } from 'lottie-web';
 export interface LottieBorderConfig {
   /** Loop the animation. @default true */
@@ -40,7 +40,7 @@ export interface LottieBorderProps {
   className?: string;
 }
 let activeAnimationCount = 0;
-const MAX_CONCURRENT_ANIMATIONS = 100;
+const MAX_CONCURRENT_ANIMATIONS = 100; // Increased to allow all grid items and live preview to play without freezing
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -81,7 +81,7 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
   const prefersReducedMotion = usePrefersReducedMotion();
 
   const totalSize = avatarSize + borderWidth * 2;
-  // Canvas keeps dense border animations off the SVG layout path.
+  // Use canvas for all Lottie borders to prevent browser freezing with heavily layered AI-traced SVGs
   const renderer = 'canvas';
 
   // IntersectionObserver: track visibility
@@ -109,7 +109,8 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
 
     async function init() {
       try {
-        const lottie = (await import('lottie-web/build/player/lottie_light_canvas')).default;
+        // Dynamically import full lottie-web (supports embedded image assets)
+        const lottie = (await import('lottie-web')).default;
         if (cancelled) return;
 
         const rendererType: 'svg' | 'canvas' = renderer;
@@ -158,20 +159,20 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
   }, [lottieUrl, prefersReducedMotion]);
 
   // Play/pause based on visibility + concurrency budget
-  const playAnim = useCallback(() => {
+  function playAnim() {
     const anim = animRef.current;
     if (!anim || anim.isPaused === false) return;
     if (activeAnimationCount >= MAX_CONCURRENT_ANIMATIONS) return;
     activeAnimationCount++;
     anim.play();
-  }, []);
+  }
 
-  const pauseAnim = useCallback(() => {
+  function pauseAnim() {
     const anim = animRef.current;
     if (!anim || anim.isPaused) return;
     activeAnimationCount = Math.max(0, activeAnimationCount - 1);
     anim.pause();
-  }, []);
+  }
 
   useEffect(() => {
     if (!isLoaded) return;

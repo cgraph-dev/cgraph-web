@@ -466,6 +466,8 @@ export const TITLE_CATEGORIES: TitleCategory[] = [
 
 // Helper functions
 /**
+ */
+/**
  * Retrieves title by id.
  *
  * @param id - Unique identifier.
@@ -476,6 +478,8 @@ export function getTitleById(id: string): TitleDefinition | undefined {
 }
 
 /**
+ */
+/**
  * Retrieves titles by rarity.
  *
  * @param rarity - The rarity.
@@ -485,6 +489,8 @@ export function getTitlesByRarity(rarity: TitleRarity): TitleDefinition[] {
   return ALL_TITLES.filter((t) => t.rarity === rarity);
 }
 
+/**
+ */
 /**
  * Retrieves unlocked titles.
  * @returns The unlocked titles.

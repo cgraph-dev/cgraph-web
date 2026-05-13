@@ -17,6 +17,7 @@ interface CssEditorProps {
   saving: boolean;
 }
 
+/** Description. */
 /** Css Editor component. */
 export function CssEditor({ options, onSave, saving }: CssEditorProps) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});

@@ -19,6 +19,7 @@ import { GlassCard } from '@/shared/components/ui';
 import { InlineTitle } from '@/shared/components/ui';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import AdvancedVoiceVisualizer from '@/modules/chat/components/audio/advanced-voice-visualizer';
+import { FileMessage } from '@/modules/chat/components/file-message';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { getAvatarBorderId } from '@/lib/utils';
 import { createLogger } from '@/lib/logger';
@@ -27,6 +28,11 @@ import { FADE_IN } from '@/lib/animations/transitions';
 
 const logger = createLogger('EnhancedMessageBubble');
 
+/**
+ */
+/**
+ * Enhanced Message Bubble component.
+ */
 export function EnhancedMessageBubble({
   message,
   isOwn,
@@ -42,6 +48,10 @@ export function EnhancedMessageBubble({
   const { addReaction } = useChatStore();
   const { user } = useAuthStore();
   const [isReacting, setIsReacting] = useState(false);
+  const hasFileAttachment =
+    message.messageType === 'image' ||
+    message.messageType === 'video' ||
+    message.messageType === 'file';
 
   // React 19 useOptimistic: show new reactions immediately before the API responds.
   // When the parent re-renders with updated message.reactions from the store,
@@ -220,6 +230,10 @@ export function EnhancedMessageBubble({
                     className="my-2"
                   />
                 )}
+
+              {hasFileAttachment && (
+                <FileMessage message={message} isOwnMessage={isOwn} className="mt-2" />
+              )}
 
               {/* Timestamp and status */}
               <div

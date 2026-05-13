@@ -46,6 +46,9 @@ async function readPushState(): Promise<PushState> {
   };
 }
 
+/**
+ * Notification Settings Panel component.
+ */
 export function NotificationSettingsPanel() {
   const navigate = useNavigate();
   const { settings, updateNotificationSettings, isSaving, fetchSettings } = useSettingsStore();

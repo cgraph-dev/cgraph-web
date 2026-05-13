@@ -1,3 +1,6 @@
+/**
+ * QueueItemCard component
+ */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,6 +17,11 @@ import { formatDistanceToNow } from 'date-fns';
 import type { QueueItemCardProps } from './types';
 import { ITEM_TYPE_ICONS, PRIORITY_COLORS, REASON_LABELS } from './constants';
 
+/**
+ */
+/**
+ * Queue Item Card display component.
+ */
 export function QueueItemCard({
   item,
   isSelected,

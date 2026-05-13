@@ -20,6 +20,9 @@ interface UseChatInfoPanelParams {
   onClose: () => void;
 }
 
+/**
+ * State and event handlers for the ChatInfoPanel component.
+ */
 export function useChatInfoPanel({
   userId,
   conversationId,

@@ -63,16 +63,15 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
   },
 
   upsertIncomingRequest: (request) => {
-    set((state) => {
-      const pendingRequests = state.pendingRequests.filter(
-        (existing) => existing.id !== request.id && existing.user.id !== request.user.id
-      );
-
-      return {
-        pendingRequests: [request, ...pendingRequests],
-        error: null,
-      };
-    });
+    set((state) => ({
+      pendingRequests: [
+        request,
+        ...state.pendingRequests.filter(
+          (existing) => existing.id !== request.id && existing.user.id !== request.user.id
+        ),
+      ],
+      error: null,
+    }));
   },
 
   sendRequest: async (usernameOrIdOrEmail: string) => {
@@ -85,9 +84,9 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
     const identifier = isUuid ? input : isEmail ? input : isUid ? cleaned : input;
 
     // Force a fresh idempotency key per request to avoid reuse conflicts in dev
-    void createIdempotencyKey();
+    const idempotencyKey = createIdempotencyKey();
 
-    const result = await apiClient.friends.sendRequest(identifier);
+    const result = await apiClient.friends.sendRequest(identifier, undefined, idempotencyKey);
     if (!result.ok) {
       logger.error('Failed to send friend request', result.error);
       set({ error: result.error.message, isLoading: false });

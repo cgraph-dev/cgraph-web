@@ -19,6 +19,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+/**
+ * Members Tab component.
+ */
 export function MembersTab({ groupId }: MembersTabProps) {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,12 +99,15 @@ export function MembersTab({ groupId }: MembersTabProps) {
         const inner = isRecord(resData) && 'data' in resData ? resData.data : resData;
         const roles = Array.isArray(inner) ? inner : [];
         setAvailableRoles(
-          roles.map((r: Record<string, unknown>) => ({
-            id: String(r.id ?? ''),
-            name: String(r.name ?? ''),
-            color: String(r.color ?? '#808080'),
-            position: Number(r.position ?? 0),
-          }))
+          roles.map((role) => {
+            const record = isRecord(role) ? role : {};
+            return {
+              id: String(record.id ?? ''),
+              name: String(record.name ?? ''),
+              color: String(record.color ?? '#808080'),
+              position: Number(record.position ?? 0),
+            };
+          })
         );
       })
       .catch((error: unknown) => {

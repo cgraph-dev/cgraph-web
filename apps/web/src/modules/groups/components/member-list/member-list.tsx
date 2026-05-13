@@ -25,6 +25,11 @@ import type { MemberListProps } from './types';
  * - Themed avatars
  */
 
+/**
+ */
+/**
+ * Member List component.
+ */
 export function MemberList({ groupId, className = '' }: MemberListProps) {
   const { groups, members: membersByGroup, fetchMembers } = useGroupStore();
   const { theme } = useThemeStore();

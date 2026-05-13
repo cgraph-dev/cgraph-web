@@ -102,6 +102,11 @@ export interface ChannelMessage {
   isEdited: boolean;
   deletedAt: string | null;
   metadata: Record<string, unknown>;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  fileMimeType?: string | null;
+  thumbnailUrl?: string | null;
   reactions: { emoji: string; count: number; hasReacted: boolean }[];
   author: {
     id: string;
@@ -145,7 +150,19 @@ export interface GroupState {
   fetchGroup: (groupId: string) => Promise<void>;
   fetchChannelMessages: (channelId: string, before?: string) => Promise<void>;
   fetchMembers: (groupId: string) => Promise<void>;
-  sendChannelMessage: (channelId: string, content: string, replyToId?: string) => Promise<void>;
+  sendChannelMessage: (
+    channelId: string,
+    content: string,
+    replyToId?: string,
+    options?: {
+      contentType?: ChannelMessage['messageType'];
+      fileUrl?: string | null;
+      fileName?: string | null;
+      fileSize?: number | null;
+      fileMimeType?: string | null;
+      thumbnailUrl?: string | null;
+    }
+  ) => Promise<void>;
   setActiveGroup: (groupId: string | null) => void;
   setActiveChannel: (channelId: string | null) => void;
   addChannelMessage: (message: ChannelMessage) => void;

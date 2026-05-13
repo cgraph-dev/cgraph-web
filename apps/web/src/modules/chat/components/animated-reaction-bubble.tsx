@@ -53,6 +53,11 @@ export interface AnimatedReactionBubbleProps {
   isSuperReaction?: boolean;
 }
 // COMPONENT
+/**
+ */
+/**
+ * Animated Reaction Bubble component.
+ */
 export function AnimatedReactionBubble({
   reaction,
   isOwnMessage,

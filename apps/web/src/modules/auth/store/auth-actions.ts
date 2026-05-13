@@ -1,11 +1,12 @@
 import { apiClient, http } from '@/lib/api-client';
 import { authLogger } from '@/lib/logger';
-import { clearAuthScopedStorage } from '@/lib/storage/namespaces';
+import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { AxiosError } from 'axios';
 
 import type { User, WalletChallenge, AuthState, TwoFactorRequired } from './authStore.types';
 import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
-import { resetUserScopedStores } from './user-session-cleanup';
+
+const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 
 type Set = (
   partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>),
@@ -14,6 +15,10 @@ type Set = (
 ) => void;
 type Get = () => AuthState;
 
+/**
+ *
+ * Description.
+ */
 export function createLoginAction(set: Set, _get: Get) {
   return async (
     email: string,
@@ -21,6 +26,13 @@ export function createLoginAction(set: Set, _get: Get) {
     turnstileToken?: string | null
   ): Promise<TwoFactorRequired | void> => {
     set({ isLoading: true, error: null }, false, 'login/start');
+
+    if (isE2EAuthBypass) {
+      const message = 'Invalid credentials';
+      set({ error: message, isLoading: false }, false, 'login/e2e_error');
+      throw new Error(message);
+    }
+
     try {
       authLogger.info('[Auth] Attempting login...', { identifier: email });
       const result = await apiClient.auth.login(email, password, turnstileToken);
@@ -40,7 +52,7 @@ export function createLoginAction(set: Set, _get: Get) {
       }
 
       // Full login response
-      if (!('user' in data) || !('tokens' in data) || !data.user || !data.tokens) {
+      if (!('user' in data) || !data.user || !('tokens' in data) || !data.tokens) {
         authLogger.error('[Auth] Invalid response structure', { data });
         throw new Error('Invalid login response: missing user or tokens');
       }
@@ -153,6 +165,10 @@ export function createVerifyLoginTwoFactorAction(set: Set, _get: Get) {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export function createGetWalletChallengeAction(set: Set, _get: Get) {
   return async (walletAddress: string): Promise<WalletChallenge> => {
     try {
@@ -174,6 +190,10 @@ export function createGetWalletChallengeAction(set: Set, _get: Get) {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export function createLoginWithWalletAction(set: Set, _get: Get) {
   return async (walletAddress: string, signature: string, message?: string) => {
     set({ isLoading: true, error: null });
@@ -203,6 +223,10 @@ export function createLoginWithWalletAction(set: Set, _get: Get) {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export function createRegisterAction(set: Set, _get: Get) {
   return async (
     email: string,
@@ -242,6 +266,10 @@ export function createRegisterAction(set: Set, _get: Get) {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export function createLogoutAction(set: Set, get: Get) {
   return async () => {
     // Attempt server-side logout to invalidate tokens
@@ -256,8 +284,8 @@ export function createLogoutAction(set: Set, get: Get) {
       }
     }
 
-    resetUserScopedStores();
-    clearAuthScopedStorage();
+    // Clear customizations to prevent persistence bleed to the next user
+    useCustomizationStore.getState().resetToDefaults();
 
     // Clear all client-side auth state
     set({
@@ -270,6 +298,10 @@ export function createLogoutAction(set: Set, get: Get) {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export function createRefreshSessionAction(set: Set, get: Get) {
   return async () => {
     const { refreshToken } = get();
@@ -305,6 +337,10 @@ export function createRefreshSessionAction(set: Set, get: Get) {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export function createUpdateUserAction(_set: Set, get: Get) {
   return (data: Partial<User>) => {
     const { user } = get();
@@ -315,6 +351,10 @@ export function createUpdateUserAction(_set: Set, get: Get) {
   };
 }
 
+/**
+ *
+ * Description.
+ */
 export function createCheckAuthAction(set: Set, get: Get) {
   return async () => {
     const { token } = get();

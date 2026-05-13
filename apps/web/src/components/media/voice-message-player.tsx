@@ -1,3 +1,6 @@
+/**
+ * Voice message playback component.
+ */
 import { useState, useRef, useEffect } from 'react';
 import { PlayIcon, PauseIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
 import { Waveform, generatePlaceholderWaveform } from './waveform';

@@ -1,3 +1,6 @@
+/**
+ * Dropdown menu component.
+ */
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,6 +17,9 @@ function isNode(value: EventTarget | null): value is Node {
   return value instanceof Node;
 }
 
+/**
+ * Dropdown component.
+ */
 export default function Dropdown({
   trigger,
   children,
@@ -118,6 +124,11 @@ function getDropdownItemClass(disabled: boolean | undefined, danger: boolean | u
   return 'text-gray-200 hover:bg-[var(--token-card-bg)]';
 }
 
+/**
+ */
+/**
+ * Dropdown Item component.
+ */
 export function DropdownItem({ children, onClick, icon, danger, disabled }: DropdownItemProps) {
   return (
     <button
@@ -131,6 +142,11 @@ export function DropdownItem({ children, onClick, icon, danger, disabled }: Drop
   );
 }
 
+/**
+ */
+/**
+ * Dropdown Divider component.
+ */
 export function DropdownDivider() {
   return <div className="my-1 border-t border-[var(--token-card-border)]" />;
 }

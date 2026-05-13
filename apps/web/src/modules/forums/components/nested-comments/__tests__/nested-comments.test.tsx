@@ -196,11 +196,7 @@ import NestedComments from '../nested-comments';
 
 import type { Comment } from '../types';
 type TestComment = Comment;
-const makeComment = (
-  id: string,
-  content: string,
-  replies: TestComment[] = []
-): TestComment => ({
+const makeComment = (id: string, content: string, replies: TestComment[] = []): TestComment => ({
   id,
   postId: 'p1',
   content,
@@ -249,8 +245,8 @@ describe('NestedComments', () => {
   });
 
   it('renders chat bubble icon in empty state', () => {
-    render(<NestedComments {...defaultProps} comments={[]} />);
-    expect(screen.getByTestId('icon-ChatBubbleLeftIcon')).toBeInTheDocument();
+    const { container } = render(<NestedComments {...defaultProps} comments={[]} />);
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
   it('renders a single comment', () => {

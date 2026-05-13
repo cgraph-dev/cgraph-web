@@ -1,3 +1,6 @@
+/**
+ * Empty state placeholder component.
+ */
 import { motion } from 'motion/react';
 import { springs, tweens, staggerConfigs } from '@/lib/animation-presets';
 import {
@@ -84,6 +87,8 @@ export default function EmptyState({
 
 // Common empty state variants
 /**
+ */
+/**
  * No Posts Empty — fallback UI for empty data states.
  */
 export function NoPostsEmpty({ onCreatePost }: { onCreatePost?: () => void }) {
@@ -98,6 +103,8 @@ export function NoPostsEmpty({ onCreatePost }: { onCreatePost?: () => void }) {
 }
 
 /**
+ */
+/**
  * No Comments Empty — fallback UI for empty data states.
  */
 export function NoCommentsEmpty() {
@@ -111,6 +118,8 @@ export function NoCommentsEmpty() {
 }
 
 /**
+ */
+/**
  * No Members Empty — fallback UI for empty data states.
  */
 export function NoMembersEmpty() {
@@ -123,6 +132,8 @@ export function NoMembersEmpty() {
   );
 }
 
+/**
+ */
 /**
  * No Messages Empty — fallback UI for empty data states.
  */
@@ -138,6 +149,8 @@ export function NoMessagesEmpty({ onStartChat }: { onStartChat?: () => void }) {
 }
 
 /**
+ */
+/**
  * No Friends Empty — fallback UI for empty data states.
  */
 export function NoFriendsEmpty({ onAddFriend }: { onAddFriend?: () => void }) {
@@ -151,6 +164,11 @@ export function NoFriendsEmpty({ onAddFriend }: { onAddFriend?: () => void }) {
   );
 }
 
+/**
+ */
+/**
+ * Search No Results component.
+ */
 export function SearchNoResults({ query }: { query?: string }) {
   return (
     <EmptyState

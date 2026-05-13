@@ -7,6 +7,9 @@ interface DeleteCategoryModalProps {
   onCancel: () => void;
 }
 
+/**
+ * Delete Category Modal dialog component.
+ */
 export function DeleteCategoryModal({
   deleteConfirmId,
   onConfirm,

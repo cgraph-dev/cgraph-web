@@ -69,10 +69,16 @@ function KeyBadge({ children }: { children: string }) {
   );
 }
 
+/**
+ */
+/**
+ * Keyboard Shortcuts Modal dialog component.
+ */
 export function KeyboardShortcutsModal() {
   const [isOpen, setIsOpen] = useState(false);
 
-  function handleKeyDown(e: KeyboardEvent) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
       // ? key (not in input/textarea)
       if (
         e.key === '?' &&
@@ -96,10 +102,9 @@ export function KeyboardShortcutsModal() {
       }
     }
 
-  useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  }, [isOpen]);
 
   return (
     <AnimatePresence>

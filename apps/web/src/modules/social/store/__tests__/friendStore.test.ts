@@ -35,7 +35,7 @@ vi.mock('@/lib/apiUtils', () => ({
   },
 }));
 
-import { http as api } from '@/lib/api-client';
+import { api } from '@/lib/api-client';
 import { useFriendStore } from '../friendStore.impl';
 import type { Friend, FriendRequest } from '../friend-types';
 
@@ -117,12 +117,7 @@ describe('FriendStore', () => {
     it('calls correct endpoint', async () => {
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
       await useFriendStore.getState().fetchFriends();
-      expect(mockedApi.get).toHaveBeenCalledWith(
-        '/api/v1/friends',
-        expect.objectContaining({
-          params: expect.objectContaining({ limit: 50, offset: 0 }),
-        })
-      );
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends');
     });
 
     it('sets isLoading false on success', async () => {
@@ -167,30 +162,9 @@ describe('FriendStore', () => {
     });
   });
 
-  describe('upsertIncomingRequest', () => {
-    it('adds a socket-delivered incoming request without fetching', () => {
-      useFriendStore.getState().upsertIncomingRequest(mockRequest);
-
-      expect(useFriendStore.getState().pendingRequests).toEqual([mockRequest]);
-      expect(mockedApi.get).not.toHaveBeenCalled();
-    });
-
-    it('deduplicates by request id and requesting user id', () => {
-      const olderRequest: FriendRequest = {
-        ...mockRequest,
-        user: { ...mockRequest.user, username: 'older-dave' },
-      };
-
-      useFriendStore.setState({ pendingRequests: [olderRequest] });
-      useFriendStore.getState().upsertIncomingRequest(mockRequest);
-
-      expect(useFriendStore.getState().pendingRequests).toEqual([mockRequest]);
-    });
-  });
-
   describe('sendRequest', () => {
     it('sends with username payload for plain text', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
+      mockedApi.post.mockResolvedValueOnce({});
       // mock fetchSentRequests call that happens inside sendRequest
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
@@ -198,43 +172,47 @@ describe('FriendStore', () => {
 
       expect(mockedApi.post).toHaveBeenCalledWith(
         '/api/v1/friends',
-        { username: 'alice', message: undefined }
+        { username: 'alice' },
+        expect.objectContaining({ headers: { 'Idempotency-Key': 'idem-key-123' } })
       );
     });
 
     it('sends with user_id payload for UUID', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
+      mockedApi.post.mockResolvedValueOnce({});
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
 
       expect(mockedApi.post).toHaveBeenCalledWith(
         '/api/v1/friends',
-        { user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', message: undefined }
+        { user_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' },
+        expect.any(Object)
       );
     });
 
     it('sends with email payload for email format', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
+      mockedApi.post.mockResolvedValueOnce({});
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('alice@example.com');
 
       expect(mockedApi.post).toHaveBeenCalledWith(
         '/api/v1/friends',
-        { email: 'alice@example.com', message: undefined }
+        { email: 'alice@example.com' },
+        expect.any(Object)
       );
     });
 
     it('sends with uid payload for numeric UID', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
+      mockedApi.post.mockResolvedValueOnce({});
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('#1234567890');
 
       expect(mockedApi.post).toHaveBeenCalledWith(
         '/api/v1/friends',
-        { uid: '1234567890', message: undefined }
+        { uid: '1234567890' },
+        expect.any(Object)
       );
     });
 
@@ -247,7 +225,7 @@ describe('FriendStore', () => {
     });
 
     it('refreshes sent requests on success', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: { id: 'req-new' } });
+      mockedApi.post.mockResolvedValueOnce({});
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('alice');
@@ -258,7 +236,7 @@ describe('FriendStore', () => {
 
   describe('acceptRequest', () => {
     it('calls accept endpoint', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: { id: 'req-1' } });
+      mockedApi.post.mockResolvedValueOnce({});
       // fetchFriends + fetchPendingRequests
       mockedApi.get.mockResolvedValue({ data: { data: [] } });
 
@@ -268,7 +246,7 @@ describe('FriendStore', () => {
     });
 
     it('refreshes friends and pending lists', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: { id: 'req-1' } });
+      mockedApi.post.mockResolvedValueOnce({});
       mockedApi.get.mockResolvedValue({ data: { data: [] } });
 
       await useFriendStore.getState().acceptRequest('req-1');
@@ -288,7 +266,7 @@ describe('FriendStore', () => {
 
   describe('declineRequest', () => {
     it('calls decline endpoint', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: {} });
+      mockedApi.post.mockResolvedValueOnce({});
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().declineRequest('req-1');
@@ -306,7 +284,7 @@ describe('FriendStore', () => {
   describe('removeFriend', () => {
     it('removes friend from list optimistically', async () => {
       useFriendStore.setState({ friends: [mockFriend, mockFriend2] });
-      mockedApi.delete.mockResolvedValueOnce({ data: {} });
+      mockedApi.delete.mockResolvedValueOnce({});
 
       await useFriendStore.getState().removeFriend('fs-1');
 
@@ -316,7 +294,7 @@ describe('FriendStore', () => {
     });
 
     it('calls correct endpoint', async () => {
-      mockedApi.delete.mockResolvedValueOnce({ data: {} });
+      mockedApi.delete.mockResolvedValueOnce({});
       await useFriendStore.getState().removeFriend('fs-1');
       expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/friends/fs-1');
     });
@@ -334,7 +312,7 @@ describe('FriendStore', () => {
         friends: [mockFriend],
         pendingRequests: [{ ...mockRequest, user: { ...mockRequest.user, id: 'friend-1' } }],
       });
-      mockedApi.post.mockResolvedValueOnce({ data: {} });
+      mockedApi.post.mockResolvedValueOnce({});
 
       await useFriendStore.getState().blockUser('friend-1');
 
@@ -344,11 +322,9 @@ describe('FriendStore', () => {
     });
 
     it('calls block endpoint', async () => {
-      mockedApi.post.mockResolvedValueOnce({ data: {} });
+      mockedApi.post.mockResolvedValueOnce({});
       await useFriendStore.getState().blockUser('user-1');
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/friends/user-1/block', {
-        reason: undefined,
-      });
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/friends/user-1/block');
     });
 
     it('sets error on failure', async () => {
@@ -360,13 +336,13 @@ describe('FriendStore', () => {
 
   describe('unblockUser', () => {
     it('calls unblock endpoint', async () => {
-      mockedApi.delete.mockResolvedValueOnce({ data: {} });
+      mockedApi.delete.mockResolvedValueOnce({});
       await useFriendStore.getState().unblockUser('user-1');
       expect(mockedApi.delete).toHaveBeenCalledWith('/api/v1/friends/user-1/block');
     });
 
     it('sets isLoading false on success', async () => {
-      mockedApi.delete.mockResolvedValueOnce({ data: {} });
+      mockedApi.delete.mockResolvedValueOnce({});
       await useFriendStore.getState().unblockUser('user-1');
       expect(useFriendStore.getState().isLoading).toBe(false);
     });

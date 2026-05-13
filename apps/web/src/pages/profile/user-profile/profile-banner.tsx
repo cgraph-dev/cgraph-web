@@ -21,6 +21,11 @@ interface ProfileBannerProps {
   onBannerChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+/**
+ */
+/**
+ * Profile Banner component.
+ */
 export function ProfileBanner({
   bannerUrl,
   isOwnProfile,

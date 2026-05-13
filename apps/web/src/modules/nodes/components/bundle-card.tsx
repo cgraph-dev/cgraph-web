@@ -10,6 +10,7 @@ interface BundleCardProps {
   isLoading?: boolean;
 }
 
+/** Description. */
 /** Bundle Card component. */
 export function BundleCard({ bundle, onBuy, isLoading }: BundleCardProps) {
   const nodeAmount = bundle.nodes ?? bundle.node_amount ?? 0;

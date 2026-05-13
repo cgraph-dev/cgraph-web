@@ -15,6 +15,11 @@ interface AdminNodeListProps {
   onMoveDirection: (id: string, parent: ForumNode, dir: 'up' | 'down') => void;
 }
 
+/**
+ */
+/**
+ * Admin Node List component.
+ */
 export function AdminNodeList({
   nodes,
   depth,

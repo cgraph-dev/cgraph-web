@@ -14,6 +14,11 @@ interface CallHeaderProps {
   showControls: boolean;
 }
 
+/**
+ */
+/**
+ * Call Header component.
+ */
 export function CallHeader({
   recipient,
   callStatus,

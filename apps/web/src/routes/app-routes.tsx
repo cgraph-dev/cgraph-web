@@ -65,6 +65,14 @@ function CustomizeCategoryRedirect(): React.ReactNode {
   return <Navigate to={`/me/appearance/${category ?? 'identity'}`} replace />;
 }
 
+/**
+ * Redirect helper for /conversations/:conversationId -> /messages/:conversationId.
+ */
+function LegacyConversationRedirect(): React.ReactNode {
+  const { conversationId } = useParams<{ conversationId?: string }>();
+  return <Navigate to={conversationId ? `/messages/${conversationId}` : '/messages'} replace />;
+}
+
 /** Complete application route tree */
 export function AppRoutes() {
   return (
@@ -84,8 +92,13 @@ export function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        {/* Default authenticated landing: direct messages. */}
+        {/* Default: redirect to messages (same as Discord/Signal landing on DMs) */}
         <Route index element={<Navigate to="/messages" replace />} />
+
+        {/* Legacy dashboard/conversation routes */}
+        <Route path="dashboard" element={<Navigate to="/messages" replace />} />
+        <Route path="conversations" element={<LegacyConversationRedirect />} />
+        <Route path="conversations/:conversationId" element={<LegacyConversationRedirect />} />
 
         {/* Messages */}
         <Route path="messages" element={<Messages />}>
@@ -159,6 +172,8 @@ export function AppRoutes() {
 
         {/* Premium → Me subscription */}
         <Route path="premium" element={<Navigate to="/me/subscription" replace />} />
+        <Route path="premium/coins" element={<Navigate to="/me/wallet/shop" replace />} />
+        <Route path="premium/nodes" element={<Navigate to="/me/wallet/shop" replace />} />
 
         {/* Customize → Me appearance */}
         <Route path="customize" element={<Navigate to="/me/appearance/identity" replace />} />
@@ -170,6 +185,12 @@ export function AppRoutes() {
 
         {/* Customization Redirects */}
         <Route path="titles" element={<Navigate to="/me/appearance/identity" replace />} />
+
+        {/* Removed gamification routes → current destinations */}
+        <Route path="gamification/*" element={<Navigate to="/explore" replace />} />
+        <Route path="leaderboard" element={<Navigate to="/pulse" replace />} />
+        <Route path="achievements" element={<Navigate to="/me/appearance/identity" replace />} />
+        <Route path="quests" element={<Navigate to="/explore" replace />} />
 
         {/* Search → Explore */}
         <Route path="search" element={<Navigate to="/explore" replace />} />

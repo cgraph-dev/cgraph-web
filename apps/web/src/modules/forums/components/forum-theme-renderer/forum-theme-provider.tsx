@@ -1,11 +1,18 @@
+/**
+ * ForumThemeProvider component
+ */
 
 import { memo } from 'react';
 import { cn } from '@/lib/utils';
-import { sanitizeCss } from '@/lib/security';
+import { SafeStyle } from '@/shared/components/security/safe-html';
 import type { ForumThemeProviderProps } from './types';
 import { RADIUS_MAP, SHADOW_MAP, FONT_SIZE_MAP } from './constants';
 
 type ForumCssVariables = React.CSSProperties & Record<`--forum-${string}`, string>;
+
+function mapCssValue(map: Record<string, string>, key: string, fallback: string): string {
+  return map[key] ?? fallback;
+}
 
 export const ForumThemeProvider = memo(function ForumThemeProvider({
   theme,
@@ -35,12 +42,12 @@ export const ForumThemeProvider = memo(function ForumThemeProvider({
       '--forum-mod-color': colors.modColor,
       '--forum-admin-color': colors.adminColor,
       '--forum-owner-color': colors.ownerColor,
-      '--forum-radius': RADIUS_MAP[borderRadius] ?? RADIUS_MAP.md ?? '0.5rem',
+      '--forum-radius': mapCssValue(RADIUS_MAP, borderRadius, '0.5rem'),
       '--forum-border-width': `${borderWidth}px`,
-      '--forum-shadow': SHADOW_MAP[shadows] ?? SHADOW_MAP.subtle ?? 'none',
+      '--forum-shadow': mapCssValue(SHADOW_MAP, shadows, '0 1px 3px rgba(0,0,0,0.1)'),
       '--forum-font-family': fontFamily,
       '--forum-header-font-family': headerFontFamily,
-      '--forum-font-size': FONT_SIZE_MAP[fontSize] ?? FONT_SIZE_MAP.md ?? '1rem',
+      '--forum-font-size': mapCssValue(FONT_SIZE_MAP, fontSize, '1rem'),
       backgroundColor: colors.background,
       color: colors.textPrimary,
       fontFamily: fontFamily,
@@ -49,9 +56,8 @@ export const ForumThemeProvider = memo(function ForumThemeProvider({
 
   return (
     <div className={cn('forum-theme-container min-h-screen', className)} style={cssVariables()}>
-      {theme.customCss && (
-        <style dangerouslySetInnerHTML={{ __html: sanitizeCss(theme.customCss) }} />
-      )}
+      {/* Inject custom CSS - sanitized to prevent CSS injection attacks */}
+      {theme.customCss && <SafeStyle css={theme.customCss} />}
 
       {/* Glassmorphism backdrop */}
       {theme.glassmorphism && (

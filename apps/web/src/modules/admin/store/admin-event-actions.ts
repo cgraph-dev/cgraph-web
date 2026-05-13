@@ -21,6 +21,8 @@ type Set = (
 type Get = () => AdminStore;
 
 /**
+ */
+/**
  * Creates a new event actions.
  *
  * @param set - The set.

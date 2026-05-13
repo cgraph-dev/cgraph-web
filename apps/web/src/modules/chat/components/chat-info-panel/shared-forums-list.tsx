@@ -13,6 +13,11 @@ interface SharedForumsListProps {
   onForumClick: (forumId: string) => void;
 }
 
+/**
+ */
+/**
+ * Shared Forums List component.
+ */
 export function SharedForumsList({ forums, onForumClick }: SharedForumsListProps) {
   if (forums.length === 0) return null;
 

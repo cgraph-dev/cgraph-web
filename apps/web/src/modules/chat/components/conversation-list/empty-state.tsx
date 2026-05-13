@@ -1,3 +1,6 @@
+/**
+ * EmptyState component
+ */
 
 import { AnimatedEmptyState } from '@/shared/components';
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';

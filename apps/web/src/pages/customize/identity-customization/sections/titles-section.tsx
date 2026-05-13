@@ -153,6 +153,11 @@ function AnimatedTitleText({
   );
 }
 
+/**
+ */
+/**
+ * Titles Section section component.
+ */
 export function TitlesSection({
   titles,
   selectedTitle,

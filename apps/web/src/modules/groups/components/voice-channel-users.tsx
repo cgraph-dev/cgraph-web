@@ -93,6 +93,7 @@ function VoiceUserRow({ user }: { user: VoiceUser }) {
   );
 }
 
+/** Description. */
 /** Voice Channel Users component. */
 export function VoiceChannelUsers({ users, className }: VoiceChannelUsersProps) {
   if (users.length === 0) return null;

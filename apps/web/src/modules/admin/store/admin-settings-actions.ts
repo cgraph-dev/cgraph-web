@@ -10,6 +10,8 @@ type Set = (
 ) => void;
 
 /**
+ */
+/**
  * Creates a new settings actions.
  *
  * @param set - The set.

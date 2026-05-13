@@ -1,3 +1,6 @@
+/**
+ * PaymentModal Component - Main component
+ */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,6 +13,11 @@ import { PaymentStep } from './payment-step';
 import { ProcessingStep, SuccessStep, ErrorStep } from './result-steps';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Payment Modal dialog component.
+ */
 export function PaymentModal({
   isOpen,
   onClose,

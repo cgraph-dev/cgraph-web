@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { useExperimentStore } from '@/modules/platform/store';
+import { useExperimentStore } from '@/stores/experimentStore';
 
 interface UseExperimentResult {
   /** The variant assigned to this user (e.g. "control", "treatment") */

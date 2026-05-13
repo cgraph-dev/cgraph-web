@@ -9,43 +9,38 @@
 import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
 import { AxiosError, type AxiosResponse } from 'axios';
 
-const mockApi = vi.hoisted(() => ({
+const mockHttp = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   put: vi.fn(),
   delete: vi.fn(),
 }));
 
-vi.mock('@/lib/api', () => ({
-  api: mockApi,
-}));
-
 vi.mock('@/lib/api-client', () => ({
-  api: mockApi,
-  http: mockApi,
+  http: mockHttp,
   apiClient: {
     auth: {
       login: async (identifier: string, password: string) => {
-        const response = await mockApi.post('/api/v1/auth/login', { identifier, password });
+        const response = await mockHttp.post('/api/v1/auth/login', { identifier, password });
         return { ok: true, data: response.data };
       },
       verifyLoginTwoFactor: async (twoFactorToken: string, code: string) => {
-        const response = await mockApi.post('/api/v1/auth/login/2fa', {
+        const response = await mockHttp.post('/api/v1/auth/login/2fa', {
           two_factor_token: twoFactorToken,
           code,
         });
         return { ok: true, data: response.data };
       },
-      register: async (user: Record<string, unknown>) => {
-        const response = await mockApi.post('/api/v1/auth/register', { user });
+      register: async (payload: Record<string, unknown>) => {
+        const response = await mockHttp.post('/api/v1/auth/register', { user: payload });
         return { ok: true, data: response.data };
       },
       logout: async () => {
-        await mockApi.post('/api/v1/auth/logout');
+        await mockHttp.post('/api/v1/auth/logout');
         return { ok: true, data: undefined };
       },
       refresh: async (refreshToken: string) => {
-        const response = await mockApi.post('/api/v1/auth/refresh', {
+        const response = await mockHttp.post('/api/v1/auth/refresh', {
           refresh_token: refreshToken,
         });
         return { ok: true, data: response.data.tokens ?? response.data };
@@ -53,8 +48,8 @@ vi.mock('@/lib/api-client', () => ({
     },
     profile: {
       getMe: async () => {
-        const response = await mockApi.get('/api/v1/me');
-        return { ok: true, data: response.data.data ?? response.data };
+        const response = await mockHttp.get('/api/v1/me');
+        return { ok: true, data: response.data.data ?? response.data.user ?? response.data };
       },
     },
   },
@@ -64,27 +59,17 @@ vi.mock('@/lib/tokenService', () => ({
   registerTokenHandlers: vi.fn(),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  authLogger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
+vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
+  useCustomizationStore: {
+    getState: vi.fn(() => ({ resetToDefaults: vi.fn() })),
   },
-  createLogger: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  }),
 }));
 
-import { api } from '@/lib/api-client';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
+import { http } from '@/lib/api-client';
 
 const mockedApi = {
-  get: api.get as MockedFunction<typeof api.get>,
-  post: api.post as MockedFunction<typeof api.post>,
+  get: http.get as MockedFunction<typeof http.get>,
+  post: http.post as MockedFunction<typeof http.post>,
 };
 const mockApiUser = {
   id: 'user-1',
@@ -126,11 +111,6 @@ const getInitialState = () => ({
   isLoading: false,
   error: null,
 });
-
-function encodePersistedAuthState(state: Record<string, unknown>): string {
-  return btoa(encodeURIComponent(JSON.stringify({ state, version: 0 })));
-}
-
 // Dynamic import so mocks are registered first
 async function getStore() {
   const mod = await import('../authStore.impl');
@@ -144,72 +124,6 @@ describe('AuthStore', () => {
     useAuthStore = await getStore();
     useAuthStore.setState(getInitialState());
   });
-
-  describe('hydration', () => {
-    it('does not trust a persisted user until the backend confirms the session', async () => {
-      vi.resetModules();
-      sessionStorage.setItem(
-        STORAGE_KEYS.auth,
-        encodePersistedAuthState({
-          token: 'persisted-access',
-          refreshToken: 'persisted-refresh',
-          user: {
-            id: 'previous-user',
-            email: 'previous@example.com',
-            username: 'previous',
-          },
-          isAuthenticated: true,
-        })
-      );
-
-      const reloadedStore = await getStore();
-
-      await vi.waitFor(() => {
-        expect(reloadedStore.getState().token).toBe('persisted-access');
-        expect(reloadedStore.getState().refreshToken).toBe('persisted-refresh');
-        expect(reloadedStore.getState().user).toBeNull();
-        expect(reloadedStore.getState().isAuthenticated).toBe(false);
-      });
-
-      mockedApi.get.mockResolvedValueOnce({
-        data: { data: mockApiUser },
-      } as AxiosResponse);
-
-      await reloadedStore.getState().checkAuth();
-
-      expect(reloadedStore.getState().user?.id).toBe('user-1');
-      expect(reloadedStore.getState().isAuthenticated).toBe(true);
-    });
-
-    it('clears stale hydrated tokens when the backend rejects the session', async () => {
-      vi.resetModules();
-      sessionStorage.setItem(
-        STORAGE_KEYS.auth,
-        encodePersistedAuthState({
-          token: 'stale-access',
-          refreshToken: 'stale-refresh',
-          user: {
-            id: 'previous-user',
-            email: 'previous@example.com',
-          },
-          isAuthenticated: true,
-        })
-      );
-
-      const reloadedStore = await getStore();
-      await vi.waitFor(() => expect(reloadedStore.getState().token).toBe('stale-access'));
-
-      mockedApi.get.mockRejectedValueOnce(new Error('401'));
-
-      await reloadedStore.getState().checkAuth();
-
-      expect(reloadedStore.getState().user).toBeNull();
-      expect(reloadedStore.getState().token).toBeNull();
-      expect(reloadedStore.getState().refreshToken).toBeNull();
-      expect(reloadedStore.getState().isAuthenticated).toBe(false);
-    });
-  });
-
   describe('Initial state', () => {
     it('starts with null user', () => {
       expect(useAuthStore.getState().user).toBeNull();

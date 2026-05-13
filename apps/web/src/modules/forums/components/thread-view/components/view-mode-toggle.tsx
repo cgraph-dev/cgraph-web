@@ -1,3 +1,6 @@
+/**
+ * View Mode Toggle Component
+ */
 
 import { ListBulletIcon, Bars3BottomLeftIcon } from '@heroicons/react/24/outline';
 import type { CommentViewMode } from '../types';
@@ -7,6 +10,11 @@ interface ViewModeToggleProps {
   onViewModeChange: (mode: CommentViewMode) => void;
 }
 
+/**
+ */
+/**
+ * View Mode Toggle component.
+ */
 export function ViewModeToggle({ viewMode, onViewModeChange }: ViewModeToggleProps) {
   return (
     <div className="flex rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] p-0.5">

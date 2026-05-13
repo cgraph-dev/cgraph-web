@@ -185,7 +185,9 @@ describe('sanitizeImageUrl – edge cases', () => {
   });
 });
 
-describe('escapeHtml edge cases', () => {
+// escapeHtml — comprehensive
+
+describe('escapeHtml – comprehensive', () => {
   it('escapes all dangerous characters in one string', () => {
     expect(escapeHtml('<img src="x" onerror=\'alert(1)\'>')).toBe(
       '&lt;img src=&quot;x&quot; onerror=&#x27;alert(1)&#x27;&gt;'

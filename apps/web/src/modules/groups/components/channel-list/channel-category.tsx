@@ -1,3 +1,6 @@
+/**
+ * Channel category grouping component.
+ */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDownIcon, PlusIcon } from '@heroicons/react/24/outline';
@@ -5,6 +8,11 @@ import { SortableChannel } from './sortable-channel';
 import type { CategorySectionProps } from './types';
 import { springs } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Category Section section component.
+ */
 export function CategorySection({
   category,
   isExpanded,

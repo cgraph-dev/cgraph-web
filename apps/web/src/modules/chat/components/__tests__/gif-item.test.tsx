@@ -38,8 +38,7 @@ describe('GifItem', () => {
 
   it('calls onSelect when clicked', () => {
     render(<GifItem {...defaultProps} />);
-    const img = screen.getByRole('img');
-    fireEvent.click(img.closest('div')!);
+    fireEvent.click(screen.getByRole('button', { name: /select gif funny cat/i }));
     expect(defaultProps.onSelect).toHaveBeenCalledWith(sampleGif);
   });
 
@@ -47,21 +46,21 @@ describe('GifItem', () => {
     render(<GifItem {...defaultProps} isFavorite={false} />);
     const container = screen.getByRole('img').closest('div')!;
     fireEvent.mouseEnter(container);
-    expect(screen.getByTestId('icon-HeartIcon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add gif to favorites/i })).toBeInTheDocument();
   });
 
   it('shows solid heart when favorited', () => {
     render(<GifItem {...defaultProps} isFavorite={true} />);
     const container = screen.getByRole('img').closest('div')!;
     fireEvent.mouseEnter(container);
-    expect(screen.getByTestId('icon-HeartIcon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /remove gif from favorites/i })).toBeInTheDocument();
   });
 
   it('calls onToggleFavorite when heart clicked', () => {
     render(<GifItem {...defaultProps} />);
     const container = screen.getByRole('img').closest('div')!;
     fireEvent.mouseEnter(container);
-    const heartBtn = screen.getByTestId('icon-HeartIcon').closest('button')!;
+    const heartBtn = screen.getByRole('button', { name: /add gif to favorites/i });
     fireEvent.click(heartBtn);
     expect(defaultProps.onToggleFavorite).toHaveBeenCalledWith(sampleGif);
   });

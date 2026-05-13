@@ -2,7 +2,7 @@
  * @cgraph/design-tokens
  *
  * Platform-agnostic design tokens consumed by both
- * web clients (CSS variables) and mobile clients (JS objects).
+ * apps/web (CSS variables) and apps/mobile (JS objects).
  *
  * Only raw values live here — no framework imports.
  */
@@ -28,7 +28,14 @@ export type { ZIndex, Shadows } from './layers';
 export { gradients } from './gradients';
 export type { Gradients } from './gradients';
 
-export { darkTheme, lightTheme, auroraTheme, bubbleTheme, themes, applyCustomTheme } from './themes';
+export {
+  darkTheme,
+  lightTheme,
+  auroraTheme,
+  bubbleTheme,
+  themes,
+  applyCustomTheme,
+} from './themes';
 export type { ThemePalette, ThemeId, CustomThemeOverrides } from './themes';
 
 export { colorPresets, ghostChatThemes, chatBubblePresets, themeProfiles } from './presets';

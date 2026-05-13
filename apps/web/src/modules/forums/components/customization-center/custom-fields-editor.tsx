@@ -46,6 +46,7 @@ function getOptionValue<T extends string>(options: readonly T[], value: string):
   return match ?? null;
 }
 
+/** Description. */
 /** Custom Fields Editor component. */
 export function CustomFieldsEditor({ forumId }: CustomFieldsEditorProps) {
   const [fields, setFields] = useState<CustomField[]>([]);

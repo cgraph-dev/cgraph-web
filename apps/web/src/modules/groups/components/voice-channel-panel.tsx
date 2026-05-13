@@ -19,11 +19,12 @@ import {
   SignalIcon,
 } from '@heroicons/react/24/solid';
 import { MicrophoneIcon as MicOffIcon } from '@heroicons/react/24/outline';
-import { useVoiceStateStore } from '@/modules/calls/store/voiceStateStore';
+import { useVoiceStateStore } from '@/stores/voiceStateStore';
 import { useVoiceChannel } from '@/modules/calls/hooks/useVoiceChannel';
 import { EncryptionIndicator } from '@/modules/calls/components/encryption-indicator';
 import { springs } from '@/lib/animation-presets';
 
+/** Description. */
 /** Voice Channel Panel component. */
 export function VoiceChannelPanel() {
   const currentChannelId = useVoiceStateStore((s) => s.currentChannelId);

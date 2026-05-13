@@ -30,25 +30,6 @@ import type {
 
 const EmptySchema = z.object({}).passthrough();
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function unwrapListPayload(value: unknown, keys: readonly string[]): unknown {
-  if (Array.isArray(value)) return value;
-  if (!isRecord(value)) return value;
-  for (const key of keys) {
-    const candidate = value[key];
-    if (Array.isArray(candidate)) return candidate;
-  }
-  return value;
-}
-
-const SearchUserListSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['users', 'data', 'results']),
-  SearchUserSchema.array()
-);
-
 export type {
   GlobalSearchResponse,
   SearchSuggestion,
@@ -141,7 +122,7 @@ export function createSearchEndpoints(http: AxiosInstance) {
       }
     ): Promise<ApiResult<SearchUser[]>> {
       const params = { q: query, ...options };
-      return apiCall(() => http.get('/api/v1/search/users', { params }), SearchUserListSchema);
+      return apiCall(() => http.get('/api/v1/search/users', { params }), SearchUserSchema.array());
     },
 
     /** Search groups. */

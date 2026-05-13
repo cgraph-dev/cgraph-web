@@ -23,6 +23,8 @@ interface ThemeProviderEnhancedProps {
 }
 
 /**
+ */
+/**
  * Theme Provider Enhanced — context provider wrapper.
  */
 export function ThemeProviderEnhanced({ children, initialTheme }: ThemeProviderEnhancedProps) {

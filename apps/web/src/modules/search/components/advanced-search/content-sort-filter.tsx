@@ -30,6 +30,11 @@ function getLiteralOptionValue<T extends string>(options: readonly T[], value: s
   return match ?? null;
 }
 
+/**
+ */
+/**
+ * Content Sort Filter component.
+ */
 export function ContentSortFilter({ filters, updateFilter }: ContentSortFilterProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

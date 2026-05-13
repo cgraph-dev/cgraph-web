@@ -37,6 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const MINIMUM_PAYOUT_CENTS = 1000; // $10
 
+/** Description. */
 /** Earnings Page component. */
 export function EarningsPage(): React.ReactElement {
   const {

@@ -22,6 +22,11 @@ interface LivePreviewProps {
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Live Preview component.
+ */
 export function LivePreview({ theme, fontScale, messageSpacing }: LivePreviewProps) {
   return (
     <section>

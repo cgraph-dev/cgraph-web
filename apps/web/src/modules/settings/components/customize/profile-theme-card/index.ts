@@ -5,6 +5,8 @@
  * particle effects, holographic shine, tier badges, and lock overlays.
  *
  */
+
+// Main component
 export { default } from './profile-theme-card';
 
 // Sub-components

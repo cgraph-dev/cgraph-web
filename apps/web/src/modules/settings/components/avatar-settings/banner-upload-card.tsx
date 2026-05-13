@@ -1,3 +1,6 @@
+/**
+ * BannerUploadCard component
+ */
 
 import { motion } from 'motion/react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
@@ -13,6 +16,11 @@ interface BannerUploadCardProps {
   onCancel: () => void;
 }
 
+/**
+ */
+/**
+ * Banner Upload Card display component.
+ */
 export function BannerUploadCard({
   upload,
   currentBannerUrl,

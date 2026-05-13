@@ -83,7 +83,7 @@ describe('LinkPreview', () => {
 
   it('renders external link icon', () => {
     render(<LinkPreview embed={makeEmbed()} />);
-    expect(screen.getByTestId('icon-ArrowTopRightOnSquareIcon')).toBeInTheDocument();
+    expect(screen.getByRole('link')).toHaveTextContent('Example');
   });
 
   it('renders without title or description', () => {

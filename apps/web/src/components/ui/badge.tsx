@@ -72,6 +72,9 @@ export default function Badge({
 }
 
 // Predefined badge variants for common use cases
+/**
+ * New Badge component.
+ */
 export function NewBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="success" size="sm" className={className}>
@@ -80,6 +83,9 @@ export function NewBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Hot Badge component.
+ */
 export function HotBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="danger" size="sm" className={className}>
@@ -88,6 +94,9 @@ export function HotBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Nsfw Badge component.
+ */
 export function NsfwBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="danger" size="sm" className={className}>
@@ -96,6 +105,9 @@ export function NsfwBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Pinned Badge component.
+ */
 export function PinnedBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="success" size="sm" className={className}>
@@ -104,6 +116,9 @@ export function PinnedBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Private Badge component.
+ */
 export function PrivateBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="warning" size="sm" className={className}>
@@ -112,6 +127,9 @@ export function PrivateBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Public Badge component.
+ */
 export function PublicBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="info" size="sm" className={className}>
@@ -120,6 +138,9 @@ export function PublicBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Owner Badge component.
+ */
 export function OwnerBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="primary" size="sm" className={className}>
@@ -128,6 +149,9 @@ export function OwnerBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Moderator Badge component.
+ */
 export function ModeratorBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="success" size="sm" className={className}>
@@ -136,6 +160,9 @@ export function ModeratorBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Member Badge component.
+ */
 export function MemberBadge({ className = '' }: { className?: string }) {
   return (
     <Badge variant="default" size="sm" className={className}>
@@ -144,6 +171,9 @@ export function MemberBadge({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Count Badge component.
+ */
 export function CountBadge({ count, className = '' }: { count: number; className?: string }) {
   const displayCount = count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count.toString();
   return (

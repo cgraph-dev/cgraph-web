@@ -17,6 +17,11 @@ interface MentionAutocompleteProps {
 
 // User search is handled via API exclusively
 
+/**
+ */
+/**
+ * Mention Autocomplete component.
+ */
 export function MentionAutocomplete({
   query,
   onSelect,

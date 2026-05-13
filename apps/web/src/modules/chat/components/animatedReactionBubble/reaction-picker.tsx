@@ -13,6 +13,11 @@ export interface ReactionPickerProps {
   onClose: () => void;
 }
 
+/**
+ */
+/**
+ * Reaction Picker component.
+ */
 export function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
   return (
     <motion.div

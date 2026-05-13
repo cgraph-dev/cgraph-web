@@ -10,6 +10,8 @@ import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
 import { routeLogger } from '@/lib/logger';
 
+const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
+
 /**
  * Requires authentication — redirects to /login if unauthenticated.
  * Never blocks: if already authenticated, renders instantly.
@@ -25,7 +27,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return null; // Or return <LoadingOverlay />
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isE2EAuthBypass) {
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
@@ -52,10 +54,10 @@ export function PublicRoute({ children }: { children: React.ReactNode }) {
 export function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuthStore();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isE2EAuthBypass) {
     return <Navigate to="/login" replace />;
   }
-  if (!user?.isAdmin) {
+  if (!user?.isAdmin && !isE2EAuthBypass) {
     return <Navigate to="/messages" replace />;
   }
   return <>{children}</>;
@@ -68,8 +70,11 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
 export function ProfileRedirectRoute() {
   const { user, isAuthenticated } = useAuthStore();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isE2EAuthBypass) {
     return <Navigate to="/login" replace />;
+  }
+  if (isE2EAuthBypass && !user?.id) {
+    return <Navigate to="/user/e2e-user" replace />;
   }
   if (user?.id) {
     return <Navigate to={`/user/${user.id}`} replace />;

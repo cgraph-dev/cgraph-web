@@ -34,6 +34,9 @@ function getOverwriteColor(o: PermissionOverwrite, roles: RoleOption[]): string 
   return '#718096';
 }
 
+/**
+ * Overwrite Card display component.
+ */
 export function OverwriteCard({
   overwrite,
   roles,

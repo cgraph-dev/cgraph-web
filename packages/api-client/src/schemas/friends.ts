@@ -189,7 +189,7 @@ export type BlockedUser = z.infer<typeof BlockedUserSchema>;
 // ---------------------------------------------------------------------------
 
 export const SendRequestResponseSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   status: z.string().optional(),
   message: z.string().nullable().optional(),
   from: FriendRequestUserSchema.optional(),

@@ -13,6 +13,11 @@ interface UpgradeModalProps {
   onClose: () => void;
 }
 
+/**
+ */
+/**
+ * Upgrade Modal dialog component.
+ */
 export function UpgradeModal({ requiredTier, onClose }: UpgradeModalProps) {
   const plans = [
     {

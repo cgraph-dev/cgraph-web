@@ -1,3 +1,6 @@
+/**
+ * TreeNode component
+ */
 
 import { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';

@@ -1,8 +1,13 @@
+/**
+ * LoadingState component
+ */
 
 interface LoadingStateProps {
   className?: string;
 }
 
+/**
+ */
 /**
  * Loading State — loading placeholder.
  */

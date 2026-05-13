@@ -1,3 +1,6 @@
+/**
+ * Comment Form Component
+ */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -12,6 +15,11 @@ interface CommentFormProps {
   onCancel: () => void;
 }
 
+/**
+ */
+/**
+ * Comment Form component.
+ */
 export function CommentForm({
   isOpen,
   content,

@@ -1,7 +1,7 @@
 /**
  * Active sessions management panel.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   DevicePhoneMobileIcon,
@@ -69,12 +69,17 @@ function getDeviceIcon(device: string) {
   return GlobeAltIcon;
 }
 
+/**
+ */
+/**
+ * Sessions Settings Panel component.
+ */
 export function SessionsSettingsPanel() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRevoking, setIsRevoking] = useState<string | null>(null);
 
-  const fetchSessions = useCallback(async () => {
+  async function fetchSessions() {
     try {
       const response = await http.get('/api/v1/me/sessions');
       const data = response.data?.data || response.data?.sessions || [];
@@ -83,14 +88,9 @@ export function SessionsSettingsPanel() {
         id: asString(s.id),
         device: asString(s.device) || asString(s.user_agent) || 'Unknown Device',
         location: asString(s.location) || asString(s.ip_location) || 'Unknown Location',
-        lastActive: formatLastActive(
-          asString(s.last_active_at) ||
-            asString(s.last_seen_at) ||
-            asString(s.created_at) ||
-            asString(s.inserted_at)
-        ),
+        lastActive: formatLastActive(asString(s.last_seen_at) || asString(s.inserted_at)),
         current: asBool(s.current),
-        ipAddress: asString(s.ip_address) || asString(s.ip),
+        ipAddress: asString(s.ip_address),
         browser: parseBrowser(asString(s.user_agent)),
       }));
 
@@ -101,7 +101,7 @@ export function SessionsSettingsPanel() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
     fetchSessions();
@@ -111,7 +111,7 @@ export function SessionsSettingsPanel() {
     setIsRevoking(sessionId);
     try {
       await http.delete(`/api/v1/me/sessions/${sessionId}`);
-      setSessions((current) => current.filter((s) => s.id !== sessionId));
+      setSessions(sessions.filter((s) => s.id !== sessionId));
       toast.success('Session revoked');
     } catch (error) {
       logger.error('Failed to revoke session', error);
@@ -124,8 +124,10 @@ export function SessionsSettingsPanel() {
   const revokeAllOtherSessions = async () => {
     setIsRevoking('all');
     try {
-      await http.delete('/api/v1/me/sessions');
-      setSessions((current) => current.filter((s) => s.current));
+      // Revoke all non-current sessions
+      const otherSessions = sessions.filter((s) => !s.current);
+      await Promise.all(otherSessions.map((s) => http.delete(`/api/v1/me/sessions/${s.id}`)));
+      setSessions(sessions.filter((s) => s.current));
       toast.success('All other sessions revoked');
     } catch (error) {
       logger.error('Failed to revoke all other sessions', error);

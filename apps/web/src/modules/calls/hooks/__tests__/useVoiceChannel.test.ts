@@ -27,7 +27,7 @@ const mockVoiceState = {
   setChannelMembers: vi.fn(),
 };
 
-vi.mock('@/modules/calls/store/voiceStateStore', () => ({
+vi.mock('@/stores/voiceStateStore', () => ({
   useVoiceStateStore: Object.assign(
     vi.fn(() => mockVoiceState),
     {

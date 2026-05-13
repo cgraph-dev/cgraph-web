@@ -181,6 +181,8 @@ function ConversationInputComponent({
               style={{ minHeight: '48px' }}
             />
           </div>
+
+          {/* Emoji Button */}
           <motion.button
             onClick={() => {
               setShowEmojiPicker(!showEmojiPicker);

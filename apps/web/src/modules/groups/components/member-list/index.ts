@@ -5,6 +5,8 @@
  * search filtering, and context menu actions.
  *
  */
+
+// Main component
 export { MemberList, default } from './member-list';
 
 // Sub-components

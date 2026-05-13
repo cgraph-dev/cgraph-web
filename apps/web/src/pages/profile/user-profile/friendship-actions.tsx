@@ -1,3 +1,7 @@
+/**
+ * FriendshipActions - Action buttons based on friendship status
+ */
+
 import { motion } from 'motion/react';
 import {
   UserPlusIcon,
@@ -24,6 +28,9 @@ interface FriendshipActionsProps {
   onMessage: () => void;
 }
 
+/**
+ * Friendship Actions component.
+ */
 export function FriendshipActions({
   friendshipStatus,
   isActioning,

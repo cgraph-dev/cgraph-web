@@ -16,6 +16,8 @@ export interface CallModalHandlers {
 }
 
 /**
+ */
+/**
  * Hook for managing call modals.
  *
  * @param conversationId - The conversation id.

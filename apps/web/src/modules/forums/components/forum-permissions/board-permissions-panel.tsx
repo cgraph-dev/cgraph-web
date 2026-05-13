@@ -21,9 +21,8 @@ import {
 } from '../../store/forumStore.permissions';
 import { useUserGroupsStore } from '../../store/forumStore.userGroups';
 import { BOARD_PERMISSIONS, type PermissionDef } from '../forum-permissions/types';
-
-const PERM_LEVELS: PermLevel[] = ['inherit', 'allow', 'deny'];
 const PERM_KEYS = BOARD_PERMISSIONS.map((p) => p.key);
+const PERM_LEVELS: PermLevel[] = ['inherit', 'allow', 'deny'];
 const PERM_BY_CATEGORY = BOARD_PERMISSIONS.reduce<Record<string, PermissionDef[]>>((acc, p) => {
   if (!acc[p.category]) acc[p.category] = [];
   acc[p.category]!.push(p);
@@ -36,6 +35,8 @@ interface BoardPermissionsPanelProps {
   boardName?: string;
 }
 
+/** Description. */
+/** Board Permissions Panel component. */
 export function BoardPermissionsPanel({ forumId, boardId, boardName }: BoardPermissionsPanelProps) {
   const {
     boardPermissions,

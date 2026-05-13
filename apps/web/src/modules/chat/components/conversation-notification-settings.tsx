@@ -64,6 +64,7 @@ const MUTE_DURATIONS = [
   { label: 'Forever', seconds: null },
 ] as const;
 
+/** Description. */
 /** Conversation Notification Settings component. */
 export function ConversationNotificationSettings({
   conversationId,

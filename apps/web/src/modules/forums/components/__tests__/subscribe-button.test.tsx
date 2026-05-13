@@ -20,18 +20,18 @@ describe('SubscribeButton', () => {
   });
 
   it('renders bell icon', () => {
-    render(<SubscribeButton {...defaultProps} />);
-    expect(screen.getByTestId('icon-BellIcon')).toBeInTheDocument();
+    const { container } = render(<SubscribeButton {...defaultProps} />);
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
   it('renders with initial subscription level', () => {
-    render(
+    const { container } = render(
       <SubscribeButton
         {...defaultProps}
         subscription={{ id: 'sub-1', notification_level: 'all' }}
       />
     );
-    expect(screen.getByTestId('icon-BellIcon')).toBeInTheDocument();
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
   it('shows dropdown on button click', () => {
@@ -48,12 +48,12 @@ describe('SubscribeButton', () => {
   });
 
   it('renders chevron down icon when subscribed', () => {
-    render(
+    const { container } = render(
       <SubscribeButton
         {...defaultProps}
         subscription={{ id: 'sub-1', notification_level: 'all' }}
       />
     );
-    expect(screen.getByTestId('icon-ChevronDownIcon')).toBeInTheDocument();
+    expect(container.querySelectorAll('button svg')).toHaveLength(2);
   });
 });

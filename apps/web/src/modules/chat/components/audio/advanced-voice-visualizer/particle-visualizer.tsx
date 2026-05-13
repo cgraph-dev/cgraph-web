@@ -22,6 +22,11 @@ function createParticle(x: number, y: number, energy: number): Particle {
   };
 }
 
+/**
+ */
+/**
+ * Particle Visualizer component.
+ */
 export function ParticleVisualizer({ analyser, theme, width, height }: VisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);

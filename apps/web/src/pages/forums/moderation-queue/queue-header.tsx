@@ -1,3 +1,6 @@
+/**
+ * QueueHeader component
+ */
 
 import { ShieldCheckIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
@@ -9,6 +12,11 @@ interface QueueHeaderProps {
   onRefresh: () => void;
 }
 
+/**
+ */
+/**
+ * Queue Header component.
+ */
 export function QueueHeader({ queueCounts, isLoading, onRefresh }: QueueHeaderProps) {
   return (
     <div className="flex items-center justify-between">

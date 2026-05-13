@@ -24,6 +24,8 @@ type Get = () => ModerationState;
 const logger = createLogger('ModerationStore:Threads');
 
 /**
+ */
+/**
  * Creates a new thread actions.
  *
  * @param set - The set.

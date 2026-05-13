@@ -7,19 +7,25 @@ import { test, expect } from '@playwright/test';
 test.describe('Messaging', () => {
   test.describe('Conversations List', () => {
     test('should display conversations list', async ({ page }) => {
-      await page.goto('/conversations');
+      await page.goto('/messages');
 
       await expect(page.getByRole('main')).toBeVisible();
 
-      // Should show list or empty state
-      const hasList = await page.getByRole('list').isVisible();
-      const hasEmpty = await page.getByText(/no conversations|start a conversation/i).isVisible();
+      const hasList = await page
+        .getByRole('list')
+        .isVisible()
+        .catch(() => false);
+      const hasEmpty = await page
+        .getByText(/no messages|your messages|start a new conversation/i)
+        .first()
+        .isVisible()
+        .catch(() => false);
 
       expect(hasList || hasEmpty).toBeTruthy();
     });
 
     test('should have new conversation button', async ({ page }) => {
-      await page.goto('/conversations');
+      await page.goto('/messages');
 
       const newButton = page
         .getByRole('button', { name: /new|compose|create/i })
@@ -29,7 +35,7 @@ test.describe('Messaging', () => {
     });
 
     test('should search conversations', async ({ page }) => {
-      await page.goto('/conversations');
+      await page.goto('/messages');
 
       const searchInput = page.getByRole('searchbox').or(page.getByPlaceholder(/search/i));
 
@@ -47,7 +53,7 @@ test.describe('Messaging', () => {
 
   test.describe('Conversation View', () => {
     test('should show message composer', async ({ page }) => {
-      await page.goto('/conversations');
+      await page.goto('/messages');
 
       // Click on first conversation if exists
       const firstConvo = page
@@ -72,7 +78,7 @@ test.describe('Messaging', () => {
 
   test.describe('New Conversation', () => {
     test('should open new conversation dialog', async ({ page }) => {
-      await page.goto('/conversations');
+      await page.goto('/messages');
 
       const newButton = page
         .getByRole('button', { name: /new|compose|create/i })
@@ -103,9 +109,15 @@ test.describe('Groups', () => {
 
     await expect(page.getByRole('main')).toBeVisible();
 
-    // Should show list or empty state
-    const hasList = await page.getByRole('list').isVisible();
-    const hasEmpty = await page.getByText(/no groups|create.*group|join.*group/i).isVisible();
+    const hasList = await page
+      .getByRole('list')
+      .isVisible()
+      .catch(() => false);
+    const hasEmpty = await page
+      .getByText(/welcome to groups|select a server|create.*server|join.*server|loading servers/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(hasList || hasEmpty).toBeTruthy();
   });

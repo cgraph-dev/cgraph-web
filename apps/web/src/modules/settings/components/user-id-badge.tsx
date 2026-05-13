@@ -1,3 +1,6 @@
+/**
+ * User ID display badge component.
+ */
 import { GlassCard } from '@/shared/components/ui';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { getAvatarBorderId } from '@/lib/utils';
@@ -7,6 +10,11 @@ interface UserIdBadgeProps {
   user: User | null;
 }
 
+/**
+ */
+/**
+ * User Id Badge component.
+ */
 export function UserIdBadge({ user }: UserIdBadgeProps) {
   return (
     <GlassCard

@@ -6,8 +6,12 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useLocation: () => ({ pathname: '/', search: '', hash: '', state: null }),
   useParams: () => ({}),
-  Link: ({ children, ...props }: Record<string, unknown> & { children?: React.ReactNode }) => <a {...props}>{children}</a>,
-  NavLink: ({ children, ...props }: Record<string, unknown> & { children?: React.ReactNode }) => <a {...props}>{children}</a>,
+  Link: ({ children, ...props }: Record<string, unknown> & { children?: React.ReactNode }) => (
+    <a {...props}>{children}</a>
+  ),
+  NavLink: ({ children, ...props }: Record<string, unknown> & { children?: React.ReactNode }) => (
+    <a {...props}>{children}</a>
+  ),
 }));
 
 vi.mock('../sortable-channel', () => ({
@@ -82,6 +86,8 @@ describe('CategorySection', () => {
 
   it('renders chevron icon', () => {
     render(<CategorySection {...defaultProps} />);
-    expect(screen.getByTestId('icon-ChevronDownIcon')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /text channels/i }).querySelector('svg')
+    ).toBeInTheDocument();
   });
 });

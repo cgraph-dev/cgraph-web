@@ -163,7 +163,7 @@ describe('group-actions (extended)', () => {
       await useGroupStore.getState().fetchDiscoverableGroups({
         search: 'gaming',
         sort: 'popular',
-        page: 2,
+        cursor: 'cursor-2',
         limit: 10,
       });
 
@@ -171,7 +171,7 @@ describe('group-actions (extended)', () => {
         params: {
           q: 'gaming',
           sort: 'popular',
-          cursor: null,
+          cursor: 'cursor-2',
           limit: 10,
         },
       });

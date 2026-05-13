@@ -13,29 +13,7 @@ import type { ApiResult } from '../schemas/api-result';
 // Schemas
 // ---------------------------------------------------------------------------
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function unwrapPayload(value: unknown, keys: readonly string[]): unknown {
-  if (!isRecord(value)) return value;
-  for (const key of keys) {
-    if (key in value) return value[key];
-  }
-  return value;
-}
-
-function unwrapListPayload(value: unknown, keys: readonly string[]): unknown {
-  if (Array.isArray(value)) return value;
-  if (!isRecord(value)) return value;
-  for (const key of keys) {
-    const candidate = value[key];
-    if (Array.isArray(candidate)) return candidate;
-  }
-  return value;
-}
-
-const ForumEntitySchema = z
+const ForumSchema = z
   .object({
     id: z.string(),
     name: z.string().optional(),
@@ -50,9 +28,7 @@ const ForumEntitySchema = z
   })
   .passthrough();
 
-const ForumSchema = z.preprocess((value) => unwrapPayload(value, ['forum', 'data']), ForumEntitySchema);
-
-const BoardEntitySchema = z
+const BoardSchema = z
   .object({
     id: z.string(),
     forum_id: z.string().optional(),
@@ -64,9 +40,7 @@ const BoardEntitySchema = z
   })
   .passthrough();
 
-const BoardSchema = z.preprocess((value) => unwrapPayload(value, ['board', 'data']), BoardEntitySchema);
-
-const PostEntitySchema = z
+const PostSchema = z
   .object({
     id: z.string(),
     title: z.string().optional(),
@@ -83,12 +57,7 @@ const PostEntitySchema = z
   })
   .passthrough();
 
-const PostSchema = z.preprocess(
-  (value) => unwrapPayload(value, ['post', 'thread', 'data']),
-  PostEntitySchema
-);
-
-const CommentEntitySchema = z
+const CommentSchema = z
   .object({
     id: z.string(),
     content: z.string().optional(),
@@ -100,11 +69,6 @@ const CommentEntitySchema = z
     updated_at: z.string().optional(),
   })
   .passthrough();
-
-const CommentSchema = z.preprocess(
-  (value) => unwrapPayload(value, ['comment', 'data']),
-  CommentEntitySchema
-);
 
 const VoteResultSchema = z
   .object({
@@ -132,7 +96,7 @@ const PollResultSchema = z
   })
   .passthrough();
 
-const SubscriptionEntitySchema = z
+const SubscriptionSchema = z
   .object({
     id: z.string(),
     user_id: z.string().optional(),
@@ -148,11 +112,6 @@ const SubscriptionEntitySchema = z
   })
   .passthrough();
 
-const SubscriptionSchema = z.preprocess(
-  (value) => unwrapPayload(value, ['subscription', 'data']),
-  SubscriptionEntitySchema
-);
-
 export type Subscription = z.infer<typeof SubscriptionSchema>;
 
 const ForumMemberApiSchema = z
@@ -161,7 +120,7 @@ const ForumMemberApiSchema = z
     user_id: z.string().optional(),
     forum_id: z.string().optional(),
     role: z.string().optional(),
-    joined_at: z.string().nullable().optional(),
+    joined_at: z.string().optional(),
     username: z.string().optional(),
   })
   .passthrough();
@@ -536,33 +495,16 @@ export interface FacetedSearchParams extends ForumCursorParams {
 // List schemas
 // ---------------------------------------------------------------------------
 
-const ForumListSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['forums', 'data', 'results']),
-  z.array(ForumSchema)
-);
-const BoardListSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['boards', 'data', 'results']),
-  z.array(BoardSchema)
-);
-const PostListSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['posts', 'threads', 'data', 'results']),
-  z.array(PostSchema)
-);
-const CommentListSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['comments', 'data', 'results']),
-  z.array(CommentSchema)
-);
-const SubscriptionListSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['subscriptions', 'data', 'results']),
-  z.array(SubscriptionSchema)
-);
-const ForumMemberListSchema = z.preprocess(
-  (value) => unwrapListPayload(value, ['members', 'data', 'results']),
-  z.array(ForumMemberApiSchema)
-);
+const ForumListSchema = z.array(ForumSchema);
+const BoardListSchema = z.array(BoardSchema);
+const PostListSchema = z.array(PostSchema);
+const CommentListSchema = z.array(CommentSchema);
+const SubscriptionListSchema = z.array(SubscriptionSchema);
+const ForumMemberListSchema = z.array(ForumMemberApiSchema);
 
 const EmptySchema = z
-  .preprocess((value) => value ?? {}, z.object({}).passthrough())
+  .object({})
+  .passthrough()
   .transform((): Record<string, never> => ({}));
 
 /** Flexible param type that accepts both interfaces and plain records. */
@@ -626,40 +568,22 @@ export function createForumsEndpoints(http: AxiosInstance) {
     async deletePost(postId: string): Promise<ApiResult<Record<string, never>>> {
       return apiCall(() => http.delete(`/api/v1/posts/${postId}`), EmptySchema);
     },
-    async pinPost(
-      forumId: string,
-      postId: string
-    ): Promise<ApiResult<Record<string, never>>> {
-      return apiCall(
-        () => http.post(`/api/v1/forums/${forumId}/posts/${postId}/pin`),
-        EmptySchema
-      );
+    async pinPost(forumId: string, postId: string): Promise<ApiResult<Post>> {
+      return apiCall(() => http.post(`/api/v1/forums/${forumId}/posts/${postId}/pin`), PostSchema);
     },
-    async unpinPost(
-      forumId: string,
-      postId: string
-    ): Promise<ApiResult<Record<string, never>>> {
+    async unpinPost(forumId: string, postId: string): Promise<ApiResult<Post>> {
       return apiCall(
         () => http.post(`/api/v1/forums/${forumId}/posts/${postId}/unpin`),
-        EmptySchema
+        PostSchema
       );
     },
-    async lockPost(
-      forumId: string,
-      postId: string
-    ): Promise<ApiResult<Record<string, never>>> {
-      return apiCall(
-        () => http.post(`/api/v1/forums/${forumId}/posts/${postId}/lock`),
-        EmptySchema
-      );
+    async lockPost(forumId: string, postId: string): Promise<ApiResult<Post>> {
+      return apiCall(() => http.post(`/api/v1/forums/${forumId}/posts/${postId}/lock`), PostSchema);
     },
-    async unlockPost(
-      forumId: string,
-      postId: string
-    ): Promise<ApiResult<Record<string, never>>> {
+    async unlockPost(forumId: string, postId: string): Promise<ApiResult<Post>> {
       return apiCall(
         () => http.post(`/api/v1/forums/${forumId}/posts/${postId}/unlock`),
-        EmptySchema
+        PostSchema
       );
     },
     async createPostDirect(data: Params): Promise<ApiResult<Post>> {
@@ -752,17 +676,11 @@ export function createForumsEndpoints(http: AxiosInstance) {
     async deleteThread(threadId: string): Promise<ApiResult<Record<string, never>>> {
       return apiCall(() => http.delete(`/api/v1/threads/${threadId}`), EmptySchema);
     },
-    async pinThread(
-      threadId: string,
-      pinned: boolean
-    ): Promise<ApiResult<Record<string, never>>> {
-      return apiCall(() => http.post(`/api/v1/threads/${threadId}/pin`, { pinned }), EmptySchema);
+    async pinThread(threadId: string, pinned: boolean): Promise<ApiResult<Post>> {
+      return apiCall(() => http.post(`/api/v1/threads/${threadId}/pin`, { pinned }), PostSchema);
     },
-    async lockThread(
-      threadId: string,
-      locked: boolean
-    ): Promise<ApiResult<Record<string, never>>> {
-      return apiCall(() => http.post(`/api/v1/threads/${threadId}/lock`, { locked }), EmptySchema);
+    async lockThread(threadId: string, locked: boolean): Promise<ApiResult<Post>> {
+      return apiCall(() => http.post(`/api/v1/threads/${threadId}/lock`, { locked }), PostSchema);
     },
     async voteThread(threadId: string, value: 1 | -1): Promise<ApiResult<VoteResult>> {
       return apiCall(
@@ -853,8 +771,8 @@ export function createForumsEndpoints(http: AxiosInstance) {
       const url = forumSlug ? `/api/v1/forums/${forumSlug}/feed` : '/api/v1/posts/feed';
       return apiCall(() => http.get(url, { params }), PostPageResponseSchema);
     },
-    async subscribeForum(forumId: string): Promise<ApiResult<Record<string, never>>> {
-      return apiCall(() => http.post(`/api/v1/forums/${forumId}/subscribe`), EmptySchema);
+    async subscribeForum(forumId: string): Promise<ApiResult<Forum>> {
+      return apiCall(() => http.post(`/api/v1/forums/${forumId}/subscribe`), ForumSchema);
     },
     async unsubscribeForum(forumId: string): Promise<ApiResult<Record<string, never>>> {
       return apiCall(() => http.delete(`/api/v1/forums/${forumId}/subscribe`), EmptySchema);
@@ -862,13 +780,13 @@ export function createForumsEndpoints(http: AxiosInstance) {
     async subscribeThread(
       threadId: string,
       notificationMode: string
-    ): Promise<ApiResult<Record<string, never>>> {
+    ): Promise<ApiResult<Subscription>> {
       return apiCall(
         () =>
           http.post(`/api/v1/threads/${threadId}/subscribe`, {
             notification_mode: notificationMode,
           }),
-        EmptySchema
+        SubscriptionSchema
       );
     },
     async unsubscribeThread(threadId: string): Promise<ApiResult<Record<string, never>>> {

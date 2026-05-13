@@ -1,3 +1,6 @@
+/**
+ * Active invites management tab component.
+ */
 import { motion } from 'motion/react';
 import {
   LinkIcon,
@@ -16,6 +19,11 @@ interface InviteManageTabProps {
   formatExpiration: (expiresAt: string | null) => string;
 }
 
+/**
+ */
+/**
+ * Invite Manage Tab component.
+ */
 export function InviteManageTab({
   invites,
   onCopyLink,

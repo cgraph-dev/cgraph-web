@@ -10,6 +10,11 @@ interface LastSeenBadgeProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Last Seen Badge component.
+ */
 export function LastSeenBadge({
   lastSeenAt,
   status,

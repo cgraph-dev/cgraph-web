@@ -20,6 +20,9 @@ export interface FileUploadState {
   isUploadingBanner: boolean;
 }
 
+/**
+ * Props for ProfileBanner component
+ */
 export interface ProfileBannerProps {
   bannerUrl?: string;
   isOwnProfile: boolean;
@@ -34,6 +37,9 @@ export interface ProfileBannerProps {
   onBannerChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+/**
+ * Props for ProfileHeader component
+ */
 export interface ProfileHeaderProps {
   profile: UserProfileData;
   isOwnProfile: boolean;
@@ -44,6 +50,9 @@ export interface ProfileHeaderProps {
   onAvatarClick: () => void;
 }
 
+/**
+ * Props for FriendshipActions component
+ */
 export interface FriendshipActionsProps {
   profile: UserProfileData;
   friendshipStatus: FriendshipStatus;
@@ -57,11 +66,17 @@ export interface FriendshipActionsProps {
   onMessage: () => void;
 }
 
+/**
+ * Props for ProfileEditActions component
+ */
 export interface ProfileEditActionsProps {
   editMode: boolean;
   onNavigateCustomize: () => void;
 }
 
+/**
+ * Props for ProfileAbout component
+ */
 export interface ProfileAboutProps {
   bio?: string;
   isOwnProfile: boolean;
@@ -70,6 +85,9 @@ export interface ProfileAboutProps {
   onBioChange: (value: string) => void;
 }
 
+/**
+ * Props for ProfileAvatar component
+ */
 export interface ProfileAvatarProps {
   avatarUrl?: string;
   displayName?: string;
@@ -81,6 +99,9 @@ export interface ProfileAvatarProps {
   onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+/**
+ * Props for ProfileNameSection component
+ */
 export interface ProfileNameSectionProps {
   displayName?: string;
   username: string;

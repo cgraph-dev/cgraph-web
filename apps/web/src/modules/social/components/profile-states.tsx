@@ -13,6 +13,11 @@ interface AmbientParticlesProps {
   count?: number;
 }
 
+/**
+ */
+/**
+ * Ambient Particles component.
+ */
 export function AmbientParticles({ count = 10 }: AmbientParticlesProps) {
   return (
     <>
@@ -42,6 +47,8 @@ export function AmbientParticles({ count = 10 }: AmbientParticlesProps) {
 }
 
 /**
+ */
+/**
  * Profile Loading State — loading placeholder.
  */
 export function ProfileLoadingState() {
@@ -68,6 +75,8 @@ interface ProfileErrorStateProps {
   error: string | null;
 }
 
+/**
+ */
 /**
  * Profile Error State — fallback UI for error states.
  */
@@ -99,6 +108,11 @@ interface ProfileInvalidUserProps {
   onGoBack: () => void;
 }
 
+/**
+ */
+/**
+ * Profile Invalid User component.
+ */
 export function ProfileInvalidUser({ onGoBack }: ProfileInvalidUserProps) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--token-card-bg)] p-8">

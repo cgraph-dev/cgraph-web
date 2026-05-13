@@ -3,12 +3,11 @@
  * Different sounds for messages, mentions, calls, friend requests
  */
 
-import { useState } from 'react';
+import { useState} from 'react';
 import { motion } from 'motion/react';
 import { entranceVariants, springs } from '@/lib/animation-presets';
 import { SpeakerWaveIcon, PlayIcon } from '@heroicons/react/24/outline';
 import { createLogger } from '@/lib/logger';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 const logger = createLogger('NotificationSoundSettings');
 
@@ -39,6 +38,11 @@ const SOUNDS = [
   { id: 'none', name: 'None (Silent)' },
 ];
 
+/**
+ */
+/**
+ * Notification Sound Settings component.
+ */
 export function NotificationSoundSettings() {
   const [selectedSounds, setSelectedSounds] = useState<Record<string, string>>({
     message: 'default',
@@ -51,27 +55,30 @@ export function NotificationSoundSettings() {
 
   function handleSoundChange(category: string, soundId: string) {
     setSelectedSounds((prev) => ({ ...prev, [category]: soundId }));
-    const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.notificationSounds) || '{}');
+    // Persist to localStorage
+    const settings = JSON.parse(localStorage.getItem('notification_sounds') || '{}');
     settings[category] = soundId;
-    localStorage.setItem(STORAGE_KEYS.notificationSounds, JSON.stringify(settings));
+    localStorage.setItem('notification_sounds', JSON.stringify(settings));
   }
 
   function handlePreview(_soundId: string) {
-    try {
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      gain.gain.value = (volume / 100) * 0.3;
-      osc.frequency.value = 800;
-      osc.type = 'sine';
-      osc.start();
-      osc.stop(ctx.currentTime + 0.15);
-    } catch (error) {
-      logger.warn('Audio context blocked or unavailable', error);
+      // In a real implementation, play the audio file
+      // For now, use Web Audio API to generate a simple beep
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.value = (volume / 100) * 0.3;
+        osc.frequency.value = 800;
+        osc.type = 'sine';
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      } catch (error) {
+        logger.warn('Audio context blocked or unavailable', error);
+      }
     }
-  }
 
   return (
     <div className="mx-auto max-w-2xl">

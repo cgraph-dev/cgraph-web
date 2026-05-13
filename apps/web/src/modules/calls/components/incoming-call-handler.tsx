@@ -6,7 +6,7 @@
  *
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
 import { IncomingCallModal } from './incoming-call-modal';
@@ -33,29 +33,32 @@ export function IncomingCallHandler() {
     }
   }, [incomingCall]);
 
-  const handleAccept = async (roomId: string, isVideo: boolean) => {
-    if (!incomingCall) return;
+  const handleAccept = useCallback(
+    async (roomId: string, isVideo: boolean) => {
+      if (!incomingCall) return;
 
-    // Find the conversation with the caller to navigate there
-    const { conversations } = useChatStore.getState();
-    const conversation = conversations.find((conv) =>
-      conv.participants.some((p) => p.userId === incomingCall.callerId)
-    );
+      // Find the conversation with the caller to navigate there
+      const { conversations } = useChatStore.getState();
+      const conversation = conversations.find((conv) =>
+        conv.participants.some((p) => p.userId === incomingCall.callerId)
+      );
 
-    if (conversation) {
-      // The conversation page will handle answering the call
-      // We pass the incoming room ID via URL query params
-      const url = `/messages/${conversation.id}?incomingCall=${roomId}&callType=${isVideo ? 'video' : 'voice'}`;
-      navigate(url);
-    }
+      if (conversation) {
+        // The conversation page will handle answering the call
+        // We pass the incoming room ID via URL query params
+        const url = `/messages/${conversation.id}?incomingCall=${roomId}&callType=${isVideo ? 'video' : 'voice'}`;
+        navigate(url);
+      }
 
-    // Clear the incoming call from store
+      // Clear the incoming call from store
+      declineCall();
+    },
+    [declineCall, incomingCall, navigate]
+  );
+
+  const handleDecline = useCallback(() => {
     declineCall();
-  };
-
-  const handleDecline = () => {
-    declineCall();
-  };
+  }, [declineCall]);
 
   // Keyboard shortcuts
   useEffect(() => {

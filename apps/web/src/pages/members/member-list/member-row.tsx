@@ -20,6 +20,11 @@ interface MemberRowProps {
   member: Member;
 }
 
+/**
+ */
+/**
+ * Member Row component.
+ */
 export function MemberRow({ member }: MemberRowProps) {
   return (
     <tr className="border-border hover:bg-muted/30 border-b transition-colors last:border-0">

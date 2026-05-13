@@ -41,6 +41,7 @@ export function InputToolbar({
 }: InputToolbarProps) {
   return (
     <>
+      {/* Emoji Button */}
       <motion.button
         whileHover={{ opacity: 0.9 }}
         whileTap={{ scale: 0.9 }}

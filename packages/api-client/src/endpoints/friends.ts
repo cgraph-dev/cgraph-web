@@ -50,7 +50,47 @@ export type {
 };
 
 /** Schema for endpoints that return an empty body (204 / `{}`). */
-const EmptySchema = z.object({}).passthrough();
+const EmptySchema = z.preprocess((value) => value ?? {}, z.object({}).passthrough());
+
+const FriendListResponseSchema = z
+  .union([
+    FriendRawSchema.array(),
+    z
+      .object({
+        data: FriendRawSchema.array().optional(),
+        friends: FriendRawSchema.array().optional(),
+      })
+      .passthrough(),
+  ])
+  .transform((value) => (Array.isArray(value) ? value : (value.data ?? value.friends ?? [])));
+
+const FriendRequestListResponseSchema = z
+  .union([
+    FriendRequestRawSchema.array(),
+    z
+      .object({
+        data: FriendRequestRawSchema.array().optional(),
+        requests: FriendRequestRawSchema.array().optional(),
+      })
+      .passthrough(),
+  ])
+  .transform((value) => (Array.isArray(value) ? value : (value.data ?? value.requests ?? [])));
+
+const FriendRequestResponseSchema = FriendRequestRawSchema.partial()
+  .passthrough()
+  .transform((value): FriendRequestRaw => ({ ...value, id: value.id ?? '' }));
+
+const BlockedUserListResponseSchema = z
+  .union([
+    BlockedUserSchema.array(),
+    z
+      .object({
+        blocked: BlockedUserSchema.array().optional(),
+        data: BlockedUserSchema.array().optional(),
+      })
+      .passthrough(),
+  ])
+  .transform((value) => (Array.isArray(value) ? value : (value.data ?? value.blocked ?? [])));
 
 /**
  * Creates friends endpoints for managing the friend list, requests, and user actions.
@@ -73,7 +113,10 @@ export function createFriendsEndpoints(http: AxiosInstance) {
         status: options?.status !== 'all' ? options?.status : undefined,
         search: options?.search,
       };
-      return apiCall(() => http.get('/api/v1/friends', { params }), FriendRawSchema.array());
+      return apiCall(
+        () => (options ? http.get('/api/v1/friends', { params }) : http.get('/api/v1/friends')),
+        FriendListResponseSchema
+      );
     },
 
     /** Get online friends count. */
@@ -83,7 +126,7 @@ export function createFriendsEndpoints(http: AxiosInstance) {
 
     /** Get favorite friends. */
     async getFavorites(): Promise<ApiResult<FriendRaw[]>> {
-      return apiCall(() => http.get('/api/v1/friends/favorites'), FriendRawSchema.array());
+      return apiCall(() => http.get('/api/v1/friends/favorites'), FriendListResponseSchema);
     },
 
     /** Toggle favorite status. */
@@ -112,32 +155,40 @@ export function createFriendsEndpoints(http: AxiosInstance) {
 
     /** Get incoming friend requests. */
     async getIncomingRequests(): Promise<ApiResult<FriendRequestRaw[]>> {
-      return apiCall(() => http.get('/api/v1/friends/requests'), FriendRequestRawSchema.array());
+      return apiCall(() => http.get('/api/v1/friends/requests'), FriendRequestListResponseSchema);
     },
 
     /** Get outgoing friend requests. */
     async getOutgoingRequests(): Promise<ApiResult<FriendRequestRaw[]>> {
-      return apiCall(() => http.get('/api/v1/friends/sent'), FriendRequestRawSchema.array());
+      return apiCall(() => http.get('/api/v1/friends/sent'), FriendRequestListResponseSchema);
     },
 
     /** Send friend request. */
-    async sendRequest(identifier: string, message?: string): Promise<ApiResult<SendRequestResponse>> {
+    async sendRequest(
+      identifier: string,
+      message?: string,
+      idempotencyKey?: string
+    ): Promise<ApiResult<SendRequestResponse>> {
       const value = identifier.trim();
       const withoutHash = value.replace('#', '');
-      const isUuid =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
       const isUid = /^\d{1,10}$/.test(withoutHash);
       const body = isUuid
-        ? { user_id: value, message }
+        ? { user_id: value, ...(message !== undefined ? { message } : {}) }
         : isEmail
-          ? { email: value, message }
+          ? { email: value, ...(message !== undefined ? { message } : {}) }
           : isUid
-            ? { uid: withoutHash, message }
-            : { username: value, message };
+            ? { uid: withoutHash, ...(message !== undefined ? { message } : {}) }
+            : { username: value, ...(message !== undefined ? { message } : {}) };
 
       return apiCall(
-        () => http.post('/api/v1/friends', body),
+        () =>
+          http.post(
+            '/api/v1/friends',
+            body,
+            idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined
+          ),
         SendRequestResponseSchema
       );
     },
@@ -146,7 +197,7 @@ export function createFriendsEndpoints(http: AxiosInstance) {
     async acceptRequest(requestId: string): Promise<ApiResult<FriendRequestRaw>> {
       return apiCall(
         () => http.post(`/api/v1/friends/${requestId}/accept`),
-        FriendRequestRawSchema
+        FriendRequestResponseSchema
       );
     },
 
@@ -192,7 +243,13 @@ export function createFriendsEndpoints(http: AxiosInstance) {
 
     /** Block a user. */
     async blockUser(userId: string, reason?: string): Promise<ApiResult<Record<string, unknown>>> {
-      return apiCall(() => http.post(`/api/v1/friends/${userId}/block`, { reason }), EmptySchema);
+      return apiCall(
+        () =>
+          reason === undefined
+            ? http.post(`/api/v1/friends/${userId}/block`)
+            : http.post(`/api/v1/friends/${userId}/block`, { reason }),
+        EmptySchema
+      );
     },
 
     /** Unblock a user. */
@@ -202,7 +259,7 @@ export function createFriendsEndpoints(http: AxiosInstance) {
 
     /** Get blocked users. */
     async getBlockedUsers(): Promise<ApiResult<BlockedUser[]>> {
-      return apiCall(() => http.get('/api/v1/friends/blocked'), BlockedUserSchema.array());
+      return apiCall(() => http.get('/api/v1/friends/blocked'), BlockedUserListResponseSchema);
     },
 
     /** Report a user. */

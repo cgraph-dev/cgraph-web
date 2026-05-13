@@ -24,6 +24,8 @@ interface UseProfileActionsParams {
 }
 
 /**
+ */
+/**
  * Hook for managing profile actions.
  */
 export function useProfileActions({

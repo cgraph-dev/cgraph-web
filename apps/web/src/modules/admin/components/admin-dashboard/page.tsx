@@ -43,6 +43,11 @@ function NavItemButton({
     </button>
   );
 }
+/**
+ */
+/**
+ * Admin Dashboard administration component.
+ */
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
 

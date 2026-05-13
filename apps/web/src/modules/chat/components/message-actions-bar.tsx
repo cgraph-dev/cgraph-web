@@ -1,4 +1,6 @@
-/** Floating toolbar for message-level actions. */
+/**
+ * MessageActionsBar — floating toolbar on message hover, Discord-style.
+ */
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Tooltip } from '@/components/ui';

@@ -1,4 +1,6 @@
-/** Profile header with banner, avatar, status, roles, and account stats. */
+/**
+ * ProfileHeader — Instagram/Discord-style profile header with banner, avatar, stats.
+ */
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui';
 
@@ -30,7 +32,9 @@ interface ProfileHeaderProps {
   className?: string;
 }
 
-/** Large profile masthead with overlapping avatar and primary actions. */
+/**
+ * ProfileHeader — large banner + overlapping avatar + stats row + action buttons.
+ */
 export function ProfileHeader({
   displayName,
   username,
@@ -76,6 +80,8 @@ export function ProfileHeader({
             className="ring-4 ring-[rgb(18,18,24)]"
           />
         </div>
+
+        {/* Action buttons (top right) */}
         <div className="flex justify-end gap-2 pt-3">
           {isOwnProfile ? (
             <button

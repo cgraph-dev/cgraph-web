@@ -2,6 +2,9 @@ import { motion } from 'motion/react';
 import type { ConfirmModalProps } from './types';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ * Confirm Modal dialog component.
+ */
 export function ConfirmModal({
   title,
   message,

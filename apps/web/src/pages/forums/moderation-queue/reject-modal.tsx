@@ -1,3 +1,6 @@
+/**
+ * RejectModal component
+ */
 
 import { motion, AnimatePresence } from 'motion/react';
 import { FADE_IN } from '@/lib/animations/transitions';
@@ -10,6 +13,11 @@ interface RejectModalProps {
   onCancel: () => void;
 }
 
+/**
+ */
+/**
+ * Reject Modal dialog component.
+ */
 export function RejectModal({
   isOpen,
   reason,

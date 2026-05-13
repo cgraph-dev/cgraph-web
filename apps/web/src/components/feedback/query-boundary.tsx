@@ -1,3 +1,22 @@
+/**
+ * QueryBoundary — Composable Suspense + ErrorBoundary for React Query
+ *
+ * Eliminates per-page `if (isLoading)` / `if (isError)` boilerplate by
+ * combining React's `<Suspense>` with an `<ErrorBoundary>`, providing
+ * query-aware loading and error fallbacks.
+ *
+ * Usage:
+ * ```tsx
+ * <QueryBoundary
+ *   loadingFallback={<ConversationSkeleton />}
+ *   errorFallback={({ error, reset }) => <ErrorState error={error} onRetry={reset} />}
+ * >
+ *   <MyQueryComponent />
+ * </QueryBoundary>
+ * ```
+ *
+ */
+
 import { Component, type ErrorInfo, type ReactNode, Suspense } from 'react';
 import { useQueryErrorResetBoundary } from '@tanstack/react-query';
 import { LoadingSpinner } from '@/components/feedback/loading-spinner';
@@ -11,11 +30,11 @@ interface ErrorFallbackProps {
 
 interface QueryBoundaryProps {
   children: ReactNode;
-  /** Defaults to LoadingSpinner. */
+  /** Custom loading fallback — defaults to LoadingSpinner */
   loadingFallback?: ReactNode;
-  /** Receives the thrown error and React Query reset callback. */
+  /** Render prop for error state — receives error + reset function */
   errorFallback?: (props: ErrorFallbackProps) => ReactNode;
-  /** Label included in error logs. */
+  /** Optional component name for logging context */
   componentName?: string;
 }
 interface ErrorBoundaryState {

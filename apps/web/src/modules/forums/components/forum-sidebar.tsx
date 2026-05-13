@@ -144,6 +144,7 @@ function CategorySection({
     </div>
   );
 }
+/** Description. */
 /** Forum Sidebar component. */
 export function ForumSidebar({
   categories = [],

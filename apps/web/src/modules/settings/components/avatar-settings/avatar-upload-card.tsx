@@ -1,3 +1,6 @@
+/**
+ * AvatarUploadCard component
+ */
 
 import { motion } from 'motion/react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
@@ -12,6 +15,11 @@ interface AvatarUploadCardProps {
   onCancel: () => void;
 }
 
+/**
+ */
+/**
+ * Avatar Upload Card display component.
+ */
 export function AvatarUploadCard({ upload, onChange, onUpload, onCancel }: AvatarUploadCardProps) {
   return (
     <GlassCard className="aurora-social-panel p-6" variant="crystal" glow>

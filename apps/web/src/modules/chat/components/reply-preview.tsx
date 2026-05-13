@@ -1,3 +1,6 @@
+/**
+ * Message reply preview component.
+ */
 import { motion } from 'motion/react';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';

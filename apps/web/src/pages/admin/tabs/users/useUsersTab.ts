@@ -8,6 +8,8 @@ import { adminApi } from '@/modules/admin/api';
 const PER_PAGE = 20;
 
 /**
+ */
+/**
  * Hook for managing users tab.
  */
 export function useUsersTab() {

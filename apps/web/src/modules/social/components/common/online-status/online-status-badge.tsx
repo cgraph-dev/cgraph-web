@@ -12,6 +12,11 @@ interface OnlineStatusBadgeProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Online Status Badge component.
+ */
 export function OnlineStatusBadge({ status, lastActive, className = '' }: OnlineStatusBadgeProps) {
   const config = statusConfig[status];
 

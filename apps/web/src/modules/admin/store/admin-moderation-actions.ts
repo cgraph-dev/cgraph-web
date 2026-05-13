@@ -24,6 +24,8 @@ type Set = (
 ) => void;
 
 /**
+ */
+/**
  * Creates a new moderation actions.
  *
  * @param set - The set.

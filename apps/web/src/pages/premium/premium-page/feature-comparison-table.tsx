@@ -13,6 +13,11 @@ interface FeatureComparisonTableProps {
   isVisible: boolean;
 }
 
+/**
+ */
+/**
+ * Feature Comparison Table component.
+ */
 export function FeatureComparisonTable({ isVisible }: FeatureComparisonTableProps) {
   return (
     <AnimatePresence>

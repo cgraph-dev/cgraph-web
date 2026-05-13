@@ -44,6 +44,10 @@ interface CreatorShelfProps {
   readonly forumId: string;
   readonly isOwner?: boolean;
 }
+/**
+ *
+ * Description.
+ */
 export function CreatorShelf({ forumId, isOwner = false }: CreatorShelfProps) {
   const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);

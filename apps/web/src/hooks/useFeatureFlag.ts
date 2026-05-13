@@ -13,7 +13,7 @@
  */
 
 import { useEffect } from 'react';
-import { useFeatureFlagStore } from '@/modules/platform/store';
+import { useFeatureFlagStore } from '@/stores/featureFlagStore';
 import { useAuthStore } from '@/modules/auth/store';
 
 interface UseFeatureFlagResult {

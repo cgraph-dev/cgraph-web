@@ -9,6 +9,11 @@ interface EmojiSearchProps {
   onSearchChange: (query: string) => void;
 }
 
+/**
+ */
+/**
+ * Emoji Search component.
+ */
 export function EmojiSearch({ searchQuery, onSearchChange }: EmojiSearchProps) {
   return (
     <div className="border-b border-[var(--token-card-border)] p-3">

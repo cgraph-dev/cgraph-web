@@ -1,3 +1,6 @@
+/**
+ * Admin audit log tab component.
+ */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
@@ -10,6 +13,11 @@ import { FADE_UP } from '@/lib/animations/transitions';
 
 // Audit Log Tab - View system audit logs
 
+/**
+ */
+/**
+ * Audit Tab component.
+ */
 export function AuditTab() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [cursor, setCursor] = useState<string | undefined>(undefined);

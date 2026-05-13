@@ -28,6 +28,11 @@ function SortIcon({
   );
 }
 
+/**
+ */
+/**
+ * Member Table Header component.
+ */
 export function MemberTableHeader({ sortField, sortOrder, onSort }: MemberTableHeaderProps) {
   return (
     <thead>

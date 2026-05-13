@@ -17,6 +17,11 @@ export interface ScrollToBottomButtonProps {
   onClick: () => void;
 }
 
+/**
+ */
+/**
+ * Scroll To Bottom Button component.
+ */
 export function ScrollToBottomButton({
   visible,
   newCount = 0,

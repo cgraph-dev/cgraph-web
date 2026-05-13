@@ -18,6 +18,11 @@ import type { ConversationSidebarProps } from './types';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Conversation Sidebar component.
+ */
 export function ConversationSidebar({
   conversations,
   activeConversationId,
@@ -28,6 +33,8 @@ export function ConversationSidebar({
   onSearchChange,
   onOpenSearch,
   onNewConversation,
+  onMarkAsRead,
+  onArchive,
 }: ConversationSidebarProps) {
   return (
     <div className="bg-[var(--token-card-bg)]/40 relative flex h-full w-80 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
@@ -85,7 +92,7 @@ export function ConversationSidebar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             aria-label="Search conversations"
-            className="peer w-full rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] py-2.5 pl-10 pr-4 text-[13px] text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:border-primary-500/40 focus:bg-[var(--token-card-bg)/0.6] focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+            className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] py-2.5 pl-10 pr-4 text-[13px] text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:bg-[var(--token-card-bg)/0.6] focus:outline-none focus:ring-4"
           />
           <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
         </motion.div>
@@ -111,6 +118,8 @@ export function ConversationSidebar({
                   isActive={conv.id === activeConversationId}
                   currentUserId={currentUserId}
                   onlineStatus={onlineStatus}
+                  onMarkAsRead={onMarkAsRead}
+                  onArchive={onArchive}
                 />
               </motion.div>
             ))}

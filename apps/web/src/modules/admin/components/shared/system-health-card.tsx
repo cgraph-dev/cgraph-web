@@ -2,6 +2,11 @@
 import type { SystemMetrics } from '@/types/admin.types';
 import { ProgressBar } from './progress-bar';
 
+/**
+ */
+/**
+ * System Health Card display component.
+ */
 export function SystemHealthCard({ metrics }: { metrics?: SystemMetrics }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-bg-secondary)]">

@@ -1,3 +1,8 @@
+/**
+ */
+/**
+ * Reply Icon component.
+ */
 export function ReplyIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -11,6 +16,11 @@ export function ReplyIcon() {
   );
 }
 
+/**
+ */
+/**
+ * Edit Icon component.
+ */
 export function EditIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,6 +34,11 @@ export function EditIcon() {
   );
 }
 
+/**
+ */
+/**
+ * Pin Icon component.
+ */
 export function PinIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -37,6 +52,11 @@ export function PinIcon() {
   );
 }
 
+/**
+ */
+/**
+ * Forward Icon component.
+ */
 export function ForwardIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -50,6 +70,11 @@ export function ForwardIcon() {
   );
 }
 
+/**
+ */
+/**
+ * Delete Icon component.
+ */
 export function DeleteIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,6 +115,11 @@ export function BookmarkFilledIcon() {
   );
 }
 
+/**
+ */
+/**
+ * File Icon component.
+ */
 export function FileIcon() {
   return (
     <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

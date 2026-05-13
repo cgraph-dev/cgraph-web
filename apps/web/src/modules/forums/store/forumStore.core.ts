@@ -93,6 +93,16 @@ function toVote(v: unknown): 1 | -1 | 0 {
   return 0;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getArrayField(data: unknown, key: string): unknown[] | null {
+  if (!isRecord(data) || !(key in data)) return null;
+  const value = data[key];
+  return Array.isArray(value) ? value : null;
+}
+
 /** Create core CRUD + voting actions for the forum store. */
 export function createCoreActions(set: Set, get: Get) {
   return {
@@ -102,9 +112,15 @@ export function createCoreActions(set: Set, get: Get) {
       if (!result.ok) {
         set({ isLoadingForums: false });
         logger.error(new Error(result.error.message), 'fetchForums');
-        throw new Error(result.error.message);
+        return;
       }
-      const forums = result.data.map((f) => mapForumFromApi(Object.fromEntries(Object.entries(f))));
+      const responseData: unknown = result.data;
+      const rawForums = Array.isArray(responseData)
+        ? responseData
+        : (getArrayField(responseData, 'forums') ?? getArrayField(responseData, 'data') ?? []);
+      const forums = rawForums
+        .filter((f): f is Record<string, unknown> => typeof f === 'object' && f !== null)
+        .map((f) => mapForumFromApi(Object.fromEntries(Object.entries(f))));
       set({ forums, isLoadingForums: false });
     },
 

@@ -111,6 +111,7 @@ function HeadingIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+/** Description. */
 /** Post Composer component. */
 export function PostComposer({
   availableTags = [],

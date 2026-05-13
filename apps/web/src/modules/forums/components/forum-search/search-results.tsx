@@ -35,6 +35,9 @@ interface SearchResultsProps {
   onSuggestionClick: (suggestion: string) => void;
 }
 
+/**
+ * Search Results component.
+ */
 export function SearchResults({
   isOpen,
   isLoading,

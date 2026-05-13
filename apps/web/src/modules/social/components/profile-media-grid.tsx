@@ -1,5 +1,5 @@
 /**
- * Three-column media grid for profile posts.
+ * ProfileMediaGrid — Instagram-style 3-column media grid.
  */
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui';
@@ -21,7 +21,7 @@ interface ProfileMediaGridProps {
 }
 
 /**
- * Square thumbnails with hover zoom and a play indicator for videos.
+ * 3-column Instagram grid with square thumbnails, hover zoom, play icon for video.
  */
 export function ProfileMediaGrid({
   items,

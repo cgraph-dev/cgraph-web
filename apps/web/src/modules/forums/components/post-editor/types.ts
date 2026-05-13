@@ -29,6 +29,9 @@ export interface PostEditorData {
   isNsfw: boolean;
 }
 
+/**
+ * Props for the PostEditor component
+ */
 export interface PostEditorProps {
   initialTitle?: string;
   initialContent?: string;
@@ -58,6 +61,9 @@ export interface ToolbarButton {
   label?: string;
 }
 
+/**
+ * Props for PollCreator component
+ */
 export interface PollCreatorProps {
   pollQuestion: string;
   setPollQuestion: (question: string) => void;
@@ -78,17 +84,26 @@ export interface PollCreatorProps {
  */
 export type EditorMode = 'source' | 'visual' | 'preview';
 
+/**
+ * Props for EditorToolbar component
+ */
 export interface EditorToolbarProps {
   editorMode: EditorMode;
   setEditorMode: (mode: EditorMode) => void;
   onInsertFormatting: (tag: string) => void;
 }
 
+/**
+ * Props for AttachmentsList component
+ */
 export interface AttachmentsListProps {
   attachments: File[];
   onRemove: (index: number) => void;
 }
 
+/**
+ * Props for EditorActions component
+ */
 export interface EditorActionsProps {
   allowAttachments: boolean;
   allowPoll: boolean;

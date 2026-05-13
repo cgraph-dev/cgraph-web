@@ -54,6 +54,11 @@ const BanRow = memo(function BanRow({ ban, onLift }: BanRowProps) {
     </tr>
   );
 });
+/**
+ */
+/**
+ * Ban Manager component.
+ */
 export function BanManager() {
   const { bans, isLoadingBans, fetchBans, liftBan } = useModerationStore();
 

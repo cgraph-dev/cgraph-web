@@ -49,6 +49,9 @@ interface UseForumPermissionsReturn {
   cyclePerm: (groupId: string, permKey: string) => void;
 }
 
+/**
+ * Description.
+ */
 export function useForumPermissions({
   targetType,
   targetId,

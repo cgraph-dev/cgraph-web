@@ -13,6 +13,8 @@
     "./permissions": "./src/permissions.ts"
   },
   "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

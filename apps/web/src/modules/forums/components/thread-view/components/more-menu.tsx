@@ -1,3 +1,6 @@
+/**
+ * More Options Menu Component
+ */
 
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -22,6 +25,11 @@ interface MoreMenuProps {
   onReport?: () => void;
 }
 
+/**
+ */
+/**
+ * More Menu component.
+ */
 export function MoreMenu({
   isOpen,
   onClose,

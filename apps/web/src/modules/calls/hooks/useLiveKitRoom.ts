@@ -65,6 +65,7 @@ export interface UseLiveKitRoomReturn {
   error: string | null;
 }
 // Hook
+/** Description. */
 /** Hook for live kit room. */
 export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomReturn {
   const {

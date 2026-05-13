@@ -19,6 +19,11 @@ import { getAvatarBorderId } from '@/lib/utils';
 import type { FriendsTabProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ */
+/**
+ * Friends Tab component.
+ */
 export function FriendsTab({
   friends,
   pendingRequests,

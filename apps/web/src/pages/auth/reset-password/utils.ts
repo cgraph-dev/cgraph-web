@@ -19,12 +19,13 @@ const STRENGTH_LABELS = {
   5: { label: 'Very Strong', color: 'bg-emerald-500' },
 } as const;
 
-type StrengthScore = keyof typeof STRENGTH_LABELS;
-
-function clampStrengthScore(score: number): StrengthScore {
+function toScoreKey(score: number): keyof typeof STRENGTH_LABELS {
   if (score <= 0) return 0;
-  if (score >= 5) return 5;
-  return score === 1 ? 1 : score === 2 ? 2 : score === 3 ? 3 : 4;
+  if (score === 1) return 1;
+  if (score === 2) return 2;
+  if (score === 3) return 3;
+  if (score === 4) return 4;
+  return 5;
 }
 
 /**
@@ -51,7 +52,7 @@ export function calculatePasswordStrength(password: string): PasswordStrength {
   };
 
   const score = Object.values(requirements).filter(Boolean).length;
-  const scoreKey = clampStrengthScore(score);
+  const scoreKey = toScoreKey(score);
   const scoreData = STRENGTH_LABELS[scoreKey];
 
   return {

@@ -9,6 +9,11 @@ interface SearchBarProps {
   onChange: (value: string) => void;
 }
 
+/**
+ */
+/**
+ * Search Bar component.
+ */
 export function SearchBar({ value, onChange }: SearchBarProps) {
   return (
     <div className="relative group">

@@ -18,6 +18,11 @@ interface FilterPanelProps {
   forums: Forum[];
 }
 
+/**
+ */
+/**
+ * Filter Panel component.
+ */
 export function FilterPanel({
   filters,
   updateFilter,

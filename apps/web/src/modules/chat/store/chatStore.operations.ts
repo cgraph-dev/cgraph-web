@@ -135,6 +135,15 @@ export function createOperationsActions(set: Set, get: Get) {
       }
     },
 
+    archiveConversation: async (conversationId: string) => {
+      await http.post(`/api/v1/conversations/${conversationId}/archive`);
+      set((state) => ({
+        activeConversationId:
+          state.activeConversationId === conversationId ? null : state.activeConversationId,
+        conversations: state.conversations.filter((conv) => conv.id !== conversationId),
+      }));
+    },
+
     createConversation: async (
       userIds: string[],
       options?: { readonly type?: 'secret' | 'cloud' }

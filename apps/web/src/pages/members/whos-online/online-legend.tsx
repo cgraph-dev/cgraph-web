@@ -4,6 +4,11 @@
 
 import { EyeIcon, ComputerDesktopIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 
+/**
+ */
+/**
+ * Online Legend component.
+ */
 export function OnlineLegend() {
   return (
     <div className="bg-card border-border mt-6 rounded-lg border p-4">

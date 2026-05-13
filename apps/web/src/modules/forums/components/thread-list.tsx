@@ -103,6 +103,7 @@ function ThreadSkeleton({ compact }: { compact: boolean }) {
     </div>
   );
 }
+/** Description. */
 /** Thread List component. */
 export function ThreadList({
   threads = [],

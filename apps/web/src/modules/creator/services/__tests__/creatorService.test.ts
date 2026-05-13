@@ -29,20 +29,6 @@ describe('creatorService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-
-  const payoutFixture = (overrides: Record<string, unknown> = {}) => ({
-    id: 'payout-1',
-    amount: 100,
-    amountCents: 10000,
-    status: 'pending',
-    currency: 'USD',
-    requestedAt: '2026-01-15T12:00:00Z',
-    completedAt: null,
-    failureReason: null,
-    createdAt: '2026-01-15T12:00:00Z',
-    ...overrides,
-  });
-
   describe('onboard', () => {
     it('should POST to /api/v1/creator/onboard and return data', async () => {
       const responseData = {
@@ -110,7 +96,17 @@ describe('creatorService', () => {
   });
   describe('requestPayout', () => {
     it('should POST to /api/v1/creator/payout with amount', async () => {
-      const payoutData = payoutFixture();
+      const payoutData = {
+        id: 'payout-1',
+        amount: 100,
+        amountCents: 10000,
+        status: 'pending',
+        currency: 'USD',
+        requestedAt: '2026-01-15T12:00:00Z',
+        completedAt: null,
+        failureReason: null,
+        createdAt: '2026-01-15T12:00:00Z',
+      };
       mockApi.post.mockResolvedValueOnce(wrapResponse(payoutData));
 
       const result = await creatorService.requestPayout(100);
@@ -122,7 +118,11 @@ describe('creatorService', () => {
     });
 
     it('should POST without amount when not provided', async () => {
-      mockApi.post.mockResolvedValueOnce(wrapResponse(payoutFixture({ id: 'payout-2' })));
+      const payoutData = {
+        id: 'payout-2',
+        status: 'pending' as const,
+      };
+      mockApi.post.mockResolvedValueOnce(wrapResponse(payoutData));
 
       await creatorService.requestPayout();
 
@@ -134,7 +134,10 @@ describe('creatorService', () => {
 
   describe('listPayouts', () => {
     it('should GET /api/v1/creator/payouts with cursor parameter', async () => {
-      const payoutsData = [payoutFixture({ id: 'p1' }), payoutFixture({ id: 'p2' })];
+      const payoutsData = [
+        { id: 'p1', status: 'completed' as const },
+        { id: 'p2', status: 'pending' as const },
+      ];
       mockApi.get.mockResolvedValueOnce(wrapResponse(payoutsData));
 
       const result = await creatorService.listPayouts('cursor-abc');
@@ -319,11 +322,11 @@ describe('creatorService', () => {
       const result = await creatorService.createTier(attrs);
 
       expect(mockApi.post).toHaveBeenCalledWith('/api/v1/creator/tiers', {
-        forum_id: 'forum-1',
-        max_subscribers: 50,
         name: 'Platinum',
-        perks: ['exclusiveContent', 'earlyAccess'],
         price_cents: 200,
+        forum_id: 'forum-1',
+        perks: ['exclusiveContent', 'earlyAccess'],
+        max_subscribers: 50,
       });
       expect(result).toEqual(created);
     });

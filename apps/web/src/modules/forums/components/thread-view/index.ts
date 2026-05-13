@@ -17,6 +17,8 @@
  * - Export/print functionality
  *
  */
+
+// Main component
 export { ThreadView, default } from './thread-view';
 
 // Types

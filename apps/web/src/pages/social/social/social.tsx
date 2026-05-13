@@ -6,8 +6,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { UsersIcon, BellIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import {
+  UsersIcon,
+  BellIcon,
+  MagnifyingGlassIcon,
+  UserPlusIcon,
+} from '@heroicons/react/24/outline';
 import { useFriendStore } from '@/modules/social/store';
+import type { Friend, FriendRequest } from '@/modules/social/store';
 import { useNotificationStore } from '@/modules/social/store';
 import { useSearchStore } from '@/modules/search/store';
 import { FriendsTab } from './friends-tab';
@@ -15,7 +21,9 @@ import { NotificationsTab } from './notifications-tab';
 import { DiscoverTab } from './discover-tab';
 import { ContactsPresenceList } from '@/modules/social/components/contacts-presence-list';
 import { getNotificationActionUrl } from './notification-routing';
+import { getDiscoverResultRoute } from './discover-routing';
 import type { SocialTab, Notification, NotificationType, SearchResult } from './types';
+import { tweens } from '@/lib/animation-presets';
 
 function isNotificationType(value: string): value is NotificationType {
   return (
@@ -30,19 +38,156 @@ function isNotificationType(value: string): value is NotificationType {
 function toNotificationType(value: string): NotificationType {
   return isNotificationType(value) ? value : 'message';
 }
-import { tweens } from '@/lib/animation-presets';
 
-/**
- * Social Hub - Unified Social Interface
- *
- * Consolidates 3 major social features into one tab:
- * 1. Friends - Friend list, requests, online status
- * 2. Notifications - All app notifications in one place
- * 3. Discover - Global search for users, forums, groups
- *
- * This replaces the old /friends, /notifications, and /search routes.
- */
-import { SocialHubPlaceholder } from './placeholders';
+interface SocialMainPaneProps {
+  tab: SocialTab;
+  friends: readonly Friend[];
+  pendingRequests: readonly FriendRequest[];
+  notifications: readonly Notification[];
+  searchResults: readonly SearchResult[];
+  onOpenRoute: (route: string) => void;
+  onAcceptRequest: (requestId: string) => void;
+  onDeclineRequest: (requestId: string) => void;
+  onMarkNotificationRead: (notificationId: string) => void;
+}
+
+function SocialMainPane({
+  tab,
+  friends,
+  pendingRequests,
+  notifications,
+  searchResults,
+  onOpenRoute,
+  onAcceptRequest,
+  onDeclineRequest,
+  onMarkNotificationRead,
+}: SocialMainPaneProps) {
+  if (tab === 'notifications') {
+    const unread = notifications.filter((notification) => !notification.read);
+    const visible = (unread.length > 0 ? unread : notifications).slice(0, 8);
+
+    return (
+      <div className="flex h-full flex-col px-10 py-8">
+        <div className="mb-6 flex items-center gap-3">
+          <BellIcon className="h-6 w-6 text-primary-400" />
+          <h2 className="text-xl font-black tracking-tight text-white">Notifications</h2>
+        </div>
+        <div className="grid max-w-3xl gap-3">
+          {visible.map((notification) => (
+            <button
+              key={notification.id}
+              type="button"
+              onClick={() => {
+                onMarkNotificationRead(notification.id);
+                if (notification.actionUrl) onOpenRoute(notification.actionUrl);
+              }}
+              className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] px-4 py-3 text-left transition-colors hover:bg-[var(--token-bg-secondary)]"
+            >
+              <span className="block text-sm font-bold text-white">{notification.title}</span>
+              <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-white/45">
+                {notification.message}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (tab === 'discover') {
+    return (
+      <div className="flex h-full flex-col px-10 py-8">
+        <div className="mb-6 flex items-center gap-3">
+          <MagnifyingGlassIcon className="h-6 w-6 text-primary-400" />
+          <h2 className="text-xl font-black tracking-tight text-white">Discover</h2>
+        </div>
+        <div className="grid max-w-3xl gap-3">
+          {searchResults.slice(0, 10).map((result) => (
+            <button
+              key={`${result.type}-${result.id}`}
+              type="button"
+              onClick={() => onOpenRoute(getDiscoverResultRoute(result))}
+              className="bg-[var(--token-card-bg)]/45 flex items-center justify-between rounded-2xl border border-[var(--token-card-border)] px-4 py-3 text-left transition-colors hover:bg-[var(--token-bg-secondary)]"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-bold text-white">{result.name}</span>
+                <span className="mt-1 block truncate text-xs text-white/40">
+                  {result.description || result.type}
+                </span>
+              </span>
+              <span className="bg-primary-500/10 ml-4 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-300">
+                Open
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const onlineFriends = friends.filter((friend) => friend.status === 'online');
+
+  return (
+    <div className="flex h-full flex-col px-10 py-8">
+      <div className="mb-6 flex items-center gap-3">
+        <UsersIcon className="h-6 w-6 text-primary-400" />
+        <h2 className="text-xl font-black tracking-tight text-white">Friends</h2>
+      </div>
+
+      <div className="mb-8 grid max-w-3xl grid-cols-3 gap-3">
+        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
+          <span className="block text-2xl font-black text-white">{friends.length}</span>
+          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
+            Friends
+          </span>
+        </div>
+        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
+          <span className="block text-2xl font-black text-white">{onlineFriends.length}</span>
+          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
+            Online
+          </span>
+        </div>
+        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
+          <span className="block text-2xl font-black text-white">{pendingRequests.length}</span>
+          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
+            Requests
+          </span>
+        </div>
+      </div>
+
+      <div className="grid max-w-3xl gap-3">
+        {pendingRequests.slice(0, 6).map((request) => (
+          <div
+            key={request.id}
+            className="bg-[var(--token-card-bg)]/45 flex items-center gap-3 rounded-2xl border border-[var(--token-card-border)] px-4 py-3"
+          >
+            <UserPlusIcon className="h-5 w-5 text-primary-400" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold text-white">
+                {request.user.displayName || request.user.username}
+              </span>
+              <span className="block truncate text-xs text-white/35">@{request.user.username}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => onAcceptRequest(request.id)}
+              className="rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-white"
+            >
+              Accept
+            </button>
+            <button
+              type="button"
+              onClick={() => onDeclineRequest(request.id)}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-white/50"
+            >
+              Decline
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Social Hub - Unified Social Interface
@@ -306,9 +451,19 @@ export function Social() {
         </div>
       </aside>
 
-      {/* Main Content Pane - Holographic Landing State */}
+      {/* Main Content Pane */}
       <main className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
-        <SocialHubPlaceholder />
+        <SocialMainPane
+          tab={tab}
+          friends={filteredFriends}
+          pendingRequests={pendingRequests}
+          notifications={notifications}
+          searchResults={searchResults}
+          onOpenRoute={navigate}
+          onAcceptRequest={acceptRequest}
+          onDeclineRequest={declineRequest}
+          onMarkNotificationRead={handleMarkAsRead}
+        />
       </main>
 
       {/* Right Sidebar - Presence */}

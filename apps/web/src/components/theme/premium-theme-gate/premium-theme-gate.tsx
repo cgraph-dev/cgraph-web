@@ -1,3 +1,6 @@
+/**
+ * Premium theme access gate component.
+ */
 import { type ReactNode, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LockClosedIcon, SparklesIcon } from '@heroicons/react/24/outline';
@@ -30,6 +33,11 @@ interface PremiumThemeGateProps {
   onUpgradeClick?: () => void;
 }
 
+/**
+ */
+/**
+ * Premium Theme Gate component.
+ */
 export function PremiumThemeGate({
   children,
   requiredTier,

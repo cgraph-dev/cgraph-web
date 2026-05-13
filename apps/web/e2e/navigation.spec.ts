@@ -5,26 +5,23 @@ import { test, expect } from '@playwright/test';
  * Verifies main app navigation flows work correctly
  */
 test.describe('Navigation', () => {
-  test('should load landing page', async ({ page }) => {
+  test('should load app entry page', async ({ page }) => {
     await page.goto('/');
 
-    // Verify landing page elements
     await expect(page).toHaveTitle(/CGraph/i);
-    await expect(page.getByRole('link', { name: /sign in|log in/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /sign up|register/i })).toBeVisible();
+    await expect(page.getByRole('main')).toBeVisible();
+    await expect(page.getByRole('link', { name: /chats/i })).toBeVisible();
   });
 
   test('should navigate to login page', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: /sign in|log in/i }).click();
+    await page.goto('/login');
 
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole('heading', { name: /sign in|log in/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome back|sign in|log in/i })).toBeVisible();
   });
 
   test('should navigate to register page', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('link', { name: /sign up|register|get started/i }).click();
+    await page.goto('/register');
 
     await expect(page).toHaveURL(/\/register/);
     await expect(page.getByRole('heading', { name: /sign up|register|create/i })).toBeVisible();
@@ -35,26 +32,26 @@ test.describe('Authenticated Navigation', () => {
   test('should access dashboard when authenticated', async ({ page }) => {
     await page.goto('/dashboard');
 
-    // Should not redirect to login if authenticated
     await expect(page).not.toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/messages/);
 
-    // Should show dashboard content
     await expect(page.getByRole('main')).toBeVisible();
   });
 
   test('should navigate to conversations', async ({ page }) => {
     await page.goto('/conversations');
 
-    await expect(page).toHaveURL(/\/conversations/);
-    // Verify conversation list or empty state
-    await expect(page.getByRole('list').or(page.getByText(/no conversations/i))).toBeVisible();
+    await expect(page).toHaveURL(/\/messages/);
+    await expect(page.getByText(/messages|your messages|no messages/i).first()).toBeVisible();
   });
 
   test('should navigate to groups', async ({ page }) => {
     await page.goto('/groups');
 
     await expect(page).toHaveURL(/\/groups/);
-    await expect(page.getByRole('list').or(page.getByText(/no groups/i))).toBeVisible();
+    await expect(
+      page.getByText(/welcome to groups|select a server|loading servers/i).first()
+    ).toBeVisible();
   });
 
   test('should navigate to settings', async ({ page }) => {
@@ -67,8 +64,8 @@ test.describe('Authenticated Navigation', () => {
   test('should navigate to profile', async ({ page }) => {
     await page.goto('/profile');
 
-    await expect(page).toHaveURL(/\/profile/);
-    await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/user\/e2e-user/);
+    await expect(page.getByRole('main')).toBeVisible();
   });
 });
 

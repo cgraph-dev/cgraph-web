@@ -14,25 +14,10 @@ test.describe('Premium Page', () => {
   test('should display subscription plans or upgrade prompt', async ({ page }) => {
     await page.goto('/premium');
 
-    // Should show plan cards, pricing, or upgrade UI
-    const hasPlans = await page
-      .getByText(/premium|enterprise|free|plan/i)
-      .first()
-      .isVisible()
-      .catch(() => false);
-    const hasPricing = await page
-      .getByText(/\$|price|month|year|subscribe/i)
-      .first()
-      .isVisible()
-      .catch(() => false);
-    const hasUpgrade = await page
-      .getByRole('button', { name: /upgrade|subscribe|get.*premium/i })
-      .first()
-      .isVisible()
-      .catch(() => false);
-
-    // At least one premium-related element should be visible
-    expect(hasPlans || hasPricing || hasUpgrade).toBeTruthy();
+    await expect(page.getByRole('main')).toBeVisible();
+    await expect(page.locator('body')).toContainText(
+      /premium|enterprise|free|plan|subscription|manage your plan|upgrade/i
+    );
   });
 
   test('should show current subscription status', async ({ page }) => {
@@ -96,6 +81,7 @@ test.describe('Coin Shop', () => {
   test('should load coin shop page', async ({ page }) => {
     await page.goto('/premium/coins');
 
+    await expect(page).toHaveURL(/\/me\/wallet\/shop/);
     await expect(page.getByRole('main')).toBeVisible();
   });
 
@@ -113,7 +99,7 @@ test.describe('Coin Shop', () => {
       .isVisible()
       .catch(() => false);
 
-    // Coin shop should render content
+    await expect(page).toHaveURL(/\/me\/wallet\/shop/);
     await expect(page.getByRole('main')).toBeVisible();
   });
 
@@ -127,6 +113,7 @@ test.describe('Coin Shop', () => {
       .isVisible()
       .catch(() => false);
 
+    await expect(page).toHaveURL(/\/me\/wallet\/shop/);
     await expect(page.getByRole('main')).toBeVisible();
   });
 });
@@ -144,10 +131,10 @@ test.describe('Premium Navigation Flow', () => {
 
     if (await coinLink.isVisible().catch(() => false)) {
       await coinLink.click();
-      await expect(page).toHaveURL(/\/premium\/coins/);
+      await expect(page).toHaveURL(/\/me\/wallet\/shop|\/premium\/coins/);
     } else {
-      // Direct navigation fallback
       await page.goto('/premium/coins');
+      await expect(page).toHaveURL(/\/me\/wallet\/shop/);
       await expect(page.getByRole('main')).toBeVisible();
     }
   });

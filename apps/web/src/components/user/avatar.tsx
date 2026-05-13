@@ -1,3 +1,6 @@
+/**
+ * User avatar display component.
+ */
 interface AvatarProps {
   src?: string | null;
   alt: string;

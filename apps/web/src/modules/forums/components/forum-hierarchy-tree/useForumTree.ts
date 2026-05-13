@@ -10,6 +10,8 @@ import type { ForumNode } from './types';
 const logger = createLogger('ForumHierarchyTree');
 
 /**
+ */
+/**
  * Hook for managing forum tree.
  *
  * @param rootForumId - The root forum id.

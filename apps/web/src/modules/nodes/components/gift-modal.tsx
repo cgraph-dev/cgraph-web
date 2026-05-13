@@ -32,30 +32,13 @@ export function GiftModal({
   recipientUsername,
   recipientAvatarUrl,
 }: GiftModalProps) {
-  if (!isOpen) return null;
-
-  return (
-    <GiftModalContent
-      onClose={onClose}
-      recipientId={recipientId}
-      recipientUsername={recipientUsername}
-      recipientAvatarUrl={recipientAvatarUrl}
-    />
-  );
-}
-
-function GiftModalContent({
-  onClose,
-  recipientId,
-  recipientUsername,
-  recipientAvatarUrl,
-}: Omit<GiftModalProps, 'isOpen'>) {
   const [amount, setAmount] = useState<number>(MIN_GIFT);
   const [message, setMessage] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-
   const { data: wallet } = useNodeWallet();
   const giftMutation = useSendGift();
+
+  if (!isOpen) return null;
 
   const available = wallet?.available_balance ?? 0;
   const belowMinimum = amount < MIN_GIFT;

@@ -1,3 +1,12 @@
+/**
+ * GifPicker Component
+ *
+ * A comprehensive GIF selection interface for chat messaging.
+ * Features GIF search via Klipy API, trending GIFs, categories,
+ * favorites, and recently used GIFs.
+ *
+ */
+
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createLogger } from '@/lib/logger';
@@ -16,6 +25,11 @@ import { tweens, loop } from '@/lib/animation-presets';
 
 const logger = createLogger('GifPicker');
 
+/**
+ */
+/**
+ * Gif Picker component.
+ */
 export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('trending');

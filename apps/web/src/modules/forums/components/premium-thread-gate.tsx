@@ -12,6 +12,7 @@ interface PremiumThreadGateProps {
   isUnlocked: boolean;
   onUnlock: () => void;
 }
+/** Description. */
 /** Premium Thread Gate component. */
 export function PremiumThreadGate({
   content,

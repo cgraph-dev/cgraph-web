@@ -1,3 +1,6 @@
+/**
+ * Voice message recording component.
+ */
 import {
   MicrophoneIcon,
   StopIcon,

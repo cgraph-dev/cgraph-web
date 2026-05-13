@@ -1,3 +1,6 @@
+/**
+ * Tab navigation component.
+ */
 interface Tab {
   id: string;
   label: string;
@@ -15,6 +18,9 @@ interface TabsProps {
   className?: string;
 }
 
+/**
+ * Tabs component.
+ */
 export default function Tabs({
   tabs,
   activeTab,

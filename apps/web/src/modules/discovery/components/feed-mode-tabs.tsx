@@ -20,6 +20,7 @@ interface FeedModeTabsProps {
   className?: string;
 }
 
+/** Description. */
 /** Feed Mode Tabs component. */
 export function FeedModeTabs({ activeMode, onModeChange, className }: FeedModeTabsProps) {
   return (

@@ -2,6 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { RoleManager } from '../role-manager/role-manager';
+const { mockCreateRole, mockUpdateRole, mockDeleteRole } = vi.hoisted(() => ({
+  mockCreateRole: vi.fn().mockResolvedValue({ id: 'role-new' }),
+  mockUpdateRole: vi.fn().mockResolvedValue(undefined),
+  mockDeleteRole: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@heroicons/react/24/outline', () => ({
+  ShieldCheckIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="icon-ShieldCheckIcon" {...props} />
+  ),
+  PlusIcon: (props: Record<string, unknown>) => <svg data-testid="icon-PlusIcon" {...props} />,
+}));
+
 const mockRoles = [
   {
     id: 'role-admin',
@@ -37,9 +50,9 @@ const mockGroups = [{ id: 'grp-1', name: 'My Group', roles: mockRoles }];
 vi.mock('@/modules/groups/store', () => ({
   useGroupStore: vi.fn(() => ({
     groups: mockGroups,
-    createRole: vi.fn(() => Promise.resolve({ id: 'role-created' })),
-    updateRole: vi.fn(() => Promise.resolve()),
-    deleteRole: vi.fn(() => Promise.resolve()),
+    createRole: mockCreateRole,
+    updateRole: mockUpdateRole,
+    deleteRole: mockDeleteRole,
   })),
 }));
 
@@ -61,7 +74,15 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('../role-manager/RoleEditor', () => ({
-  RoleEditor: ({ role, isNew, onDelete }: { role: { name: string }; isNew?: boolean; onDelete?: () => void }) => (
+  RoleEditor: ({
+    role,
+    isNew,
+    onDelete,
+  }: {
+    role: { name: string };
+    isNew?: boolean;
+    onDelete?: () => void;
+  }) => (
     <div data-testid="role-editor">
       <span data-testid="editing-role">{role.name}</span>
       {isNew && <span data-testid="is-new">new</span>}
@@ -73,7 +94,15 @@ vi.mock('../role-manager/RoleEditor', () => ({
 }));
 
 vi.mock('../role-manager/role-editor', () => ({
-  RoleEditor: ({ role, isNew, onDelete }: { role: { name: string }; isNew?: boolean; onDelete?: () => void }) => (
+  RoleEditor: ({
+    role,
+    isNew,
+    onDelete,
+  }: {
+    role: { name: string };
+    isNew?: boolean;
+    onDelete?: () => void;
+  }) => (
     <div data-testid="role-editor">
       <span data-testid="editing-role">{role.name}</span>
       {isNew && <span data-testid="is-new">new</span>}

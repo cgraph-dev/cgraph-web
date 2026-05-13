@@ -39,6 +39,11 @@ export interface FeatureComparisonProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Feature Comparison component.
+ */
 export function FeatureComparison({
   plans,
   categories = DEFAULT_CATEGORIES,

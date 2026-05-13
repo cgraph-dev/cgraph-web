@@ -6,6 +6,8 @@ import { durations } from '@cgraph/animation-constants';
 import { motion } from 'motion/react';
 
 /**
+ */
+/**
  * Loading Overlay — loading placeholder.
  */
 export function LoadingOverlay() {
@@ -19,6 +21,11 @@ export function LoadingOverlay() {
   );
 }
 
+/**
+ */
+/**
+ * Ambient Particles component.
+ */
 export function AmbientParticles() {
   return (
     <>

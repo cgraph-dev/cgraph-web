@@ -112,12 +112,8 @@ const PRESETS = {
   },
 };
 
-type PresetKey = keyof typeof PRESETS;
-
-function isPresetKey(key: string): key is PresetKey {
-  return Object.hasOwn(PRESETS, key);
-}
-
+/** Description. */
+/** Theme Editor component. */
 export function ThemeEditor({ options, onSave, saving }: ThemeEditorProps) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});
 
@@ -130,8 +126,8 @@ export function ThemeEditor({ options, onSave, saving }: ThemeEditorProps) {
   };
 
   const applyPreset = (presetKey: string) => {
-    if (isPresetKey(presetKey)) {
-      const preset = PRESETS[presetKey];
+    const preset = Object.entries(PRESETS).find(([key]) => key === presetKey)?.[1];
+    if (preset) {
       setDraft((prev) => ({ ...prev, ...preset }));
     }
   };

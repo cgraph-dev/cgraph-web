@@ -83,6 +83,11 @@ interface VideoGridProps {
   isMuted: boolean;
 }
 
+/**
+ */
+/**
+ * Video Grid component.
+ */
 export function VideoGrid({
   localStream,
   remoteStreams,

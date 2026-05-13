@@ -3,7 +3,7 @@
  * Create, manage, and monitor events — backed by real API
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createLogger } from '@/lib/logger';
 
@@ -87,6 +87,11 @@ function CreateEventModal({ onClose, onSubmit }: CreateEventModalProps) {
   );
 }
 
+/**
+ */
+/**
+ * Events Management component.
+ */
 export function EventsManagement() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -94,7 +99,7 @@ export function EventsManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchEvents() {
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -106,7 +111,7 @@ export function EventsManagement() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     fetchEvents();
@@ -128,11 +133,7 @@ export function EventsManagement() {
   }
 
   return (
-    <motion.div
-      {...FADE_UP}
-      exit={{ opacity: 0, y: -20 }}
-      className="p-8"
-    >
+    <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="p-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Events Management</h1>
         <button

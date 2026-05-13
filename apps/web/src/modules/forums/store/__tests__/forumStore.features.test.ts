@@ -318,7 +318,9 @@ describe('createFeatureActions', () => {
   describe('subscribeThread', () => {
     it('should subscribe and add to subscriptions list', async () => {
       const { state, actions } = createTestStore();
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({
+        data: { id: 'sub-post-1', entity_id: 'post-1', notification_mode: 'email' },
+      });
 
       await actions.subscribeThread('post-1', 'email');
 
@@ -340,7 +342,7 @@ describe('createFeatureActions', () => {
         createdAt: '2026-01-01T00:00:00Z',
       };
       const { state, actions } = createTestStore({ subscriptions: [sub] });
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.delete.mockResolvedValue({ data: {} });
 
       await actions.unsubscribeThread('post-1');
 
@@ -360,7 +362,7 @@ describe('createFeatureActions', () => {
       };
       const { state, actions } = createTestStore({ subscriptions: [sub] });
       mockedApi.patch.mockResolvedValue({
-        data: { id: 'sub-1', notification_mode: 'instant' },
+        data: { id: 'sub-1', entity_id: 'post-1', notification_mode: 'instant' },
       });
 
       await actions.updateSubscription('sub-1', 'instant');
@@ -373,18 +375,16 @@ describe('createFeatureActions', () => {
     it('should fetch and store subscriptions', async () => {
       const { state, actions } = createTestStore();
       mockedApi.get.mockResolvedValue({
-        data: {
-          subscriptions: [
-            {
-              id: 's-1',
-              userId: 'u-1',
-              entityType: 'thread',
-              entityId: 'post-1',
-              notificationMode: 'instant',
-              createdAt: '2026-01-01T00:00:00Z',
-            },
-          ],
-        },
+        data: [
+          {
+            id: 's-1',
+            userId: 'u-1',
+            entityType: 'thread',
+            entityId: 'post-1',
+            notificationMode: 'instant',
+            createdAt: '2026-01-01T00:00:00Z',
+          },
+        ],
       });
 
       await actions.fetchSubscriptions();

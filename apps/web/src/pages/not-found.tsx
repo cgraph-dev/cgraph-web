@@ -9,6 +9,9 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Not Found component.
+ */
 export default function NotFound() {
   const { t } = useTranslation('common');
   return (

@@ -10,8 +10,10 @@ import {
   useRef,
   useEffect,
   useId,
+  useCallback,
   type ReactNode,
-  type KeyboardEvent} from 'react';
+  type KeyboardEvent,
+} from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { springPreset } from './shared';
@@ -58,7 +60,7 @@ export function LGTabs({ tabs, value, onChange, children, className, size = 'md'
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  function updateIndicator() {
+  const updateIndicator = useCallback(() => {
     const idx = tabs.findIndex((t) => t.value === activeTab);
     const el = tabRefs.current[idx];
     const container = containerRef.current;
@@ -70,7 +72,7 @@ export function LGTabs({ tabs, value, onChange, children, className, size = 'md'
         width: elRect.width,
       });
     }
-  }
+  }, [activeTab, tabs]);
 
   useEffect(updateIndicator, [updateIndicator]);
   useEffect(() => {
@@ -79,28 +81,28 @@ export function LGTabs({ tabs, value, onChange, children, className, size = 'md'
   }, [updateIndicator]);
 
   function selectTab(t: LGTab) {
-      if (t.disabled) return;
-      setActiveTab(t.value);
-      onChange?.(t.value);
-    }
+    if (t.disabled) return;
+    setActiveTab(t.value);
+    onChange?.(t.value);
+  }
 
   /* Keyboard navigation */
   function handleKeyDown(e: KeyboardEvent, idx: number) {
-      let next = idx;
-      if (e.key === 'ArrowRight') next = Math.min(idx + 1, tabs.length - 1);
-      else if (e.key === 'ArrowLeft') next = Math.max(idx - 1, 0);
-      else if (e.key === 'Home') next = 0;
-      else if (e.key === 'End') next = tabs.length - 1;
-      else return;
+    let next = idx;
+    if (e.key === 'ArrowRight') next = Math.min(idx + 1, tabs.length - 1);
+    else if (e.key === 'ArrowLeft') next = Math.max(idx - 1, 0);
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = tabs.length - 1;
+    else return;
 
-      e.preventDefault();
-      // Skip disabled tabs
-      while (tabs[next]?.disabled && next !== idx) {
-        next += e.key === 'ArrowLeft' || e.key === 'Home' ? 1 : -1;
-      }
-      tabRefs.current[next]?.focus();
-      selectTab(tabs[next]!);
+    e.preventDefault();
+    // Skip disabled tabs
+    while (tabs[next]?.disabled && next !== idx) {
+      next += e.key === 'ArrowLeft' || e.key === 'Home' ? 1 : -1;
     }
+    tabRefs.current[next]?.focus();
+    selectTab(tabs[next]!);
+  }
 
   return (
     <div className={cn('w-full', className)}>
@@ -174,4 +176,3 @@ export function LGTabs({ tabs, value, onChange, children, className, size = 'md'
     </div>
   );
 }
-

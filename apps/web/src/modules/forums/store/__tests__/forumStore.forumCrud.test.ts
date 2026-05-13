@@ -56,6 +56,31 @@ const makeForum = (overrides: Partial<Forum> = {}): Forum => ({
   ...overrides,
 });
 
+const makeForumApi = (overrides: Record<string, unknown> = {}) => ({
+  id: 'forum-1',
+  name: 'Test Forum',
+  slug: 'test-forum',
+  description: 'A test forum',
+  icon: null,
+  banner: null,
+  is_nsfw: false,
+  is_private: false,
+  member_count: 100,
+  score: 50,
+  upvotes: 60,
+  downvotes: 10,
+  hot_score: 40,
+  weekly_score: 75,
+  featured: false,
+  user_vote: 0,
+  categories: [],
+  is_subscribed: false,
+  is_member: false,
+  owner: { id: 'user-1' },
+  created_at: '2026-01-01T00:00:00Z',
+  ...overrides,
+});
+
 function createTestStore() {
   const state: Partial<ForumState> = {
     forums: [],
@@ -83,7 +108,7 @@ describe('createForumCrudActions', () => {
       const forum = makeForum({ id: 'f-1', isSubscribed: false, memberCount: 10 });
       const { state, actions } = createTestStore();
       state.forums = [forum];
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({ data: makeForumApi({ id: 'f-1' }) });
 
       await actions.subscribe('f-1');
 
@@ -97,7 +122,7 @@ describe('createForumCrudActions', () => {
       const forum2 = makeForum({ id: 'f-2', isSubscribed: false, memberCount: 20 });
       const { state, actions } = createTestStore();
       state.forums = [forum1, forum2];
-      mockedApi.post.mockResolvedValue({});
+      mockedApi.post.mockResolvedValue({ data: makeForumApi({ id: 'f-1' }) });
 
       await actions.subscribe('f-1');
 
@@ -111,7 +136,7 @@ describe('createForumCrudActions', () => {
       const forum = makeForum({ id: 'f-1', isSubscribed: true, memberCount: 10 });
       const { state, actions } = createTestStore();
       state.forums = [forum];
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.delete.mockResolvedValue({ data: {} });
 
       await actions.unsubscribe('f-1');
 
@@ -125,8 +150,7 @@ describe('createForumCrudActions', () => {
     it('should create a forum and prepend it to the forums list', async () => {
       const { state, actions } = createTestStore();
       state.forums = [makeForum({ id: 'existing' })];
-      const newForum = makeForum({ id: 'new-forum' });
-      mockedApi.post.mockResolvedValue({ data: { forum: newForum } });
+      mockedApi.post.mockResolvedValue({ data: makeForumApi({ id: 'new-forum' }) });
 
       const result = await actions.createForum({ name: 'New Forum' });
 
@@ -141,7 +165,7 @@ describe('createForumCrudActions', () => {
 
     it('should pass all create options to the API', async () => {
       const { actions } = createTestStore();
-      mockedApi.post.mockResolvedValue({ data: { forum: makeForum() } });
+      mockedApi.post.mockResolvedValue({ data: makeForumApi() });
 
       await actions.createForum({
         name: 'Test',
@@ -176,7 +200,9 @@ describe('createForumCrudActions', () => {
       const { actions } = createTestStore();
       mockedApi.post.mockResolvedValue({ data: {} });
 
-      await expect(actions.createForum({ name: 'X' })).rejects.toThrow('unexpected response');
+      await expect(actions.createForum({ name: 'X' })).rejects.toThrow(
+        'The server returned an unexpected response'
+      );
     });
 
     it('should propagate API errors', async () => {
@@ -193,7 +219,7 @@ describe('createForumCrudActions', () => {
       const { state, actions } = createTestStore();
       state.forums = [existing];
       mockedApi.patch.mockResolvedValue({
-        data: { forum: { id: 'f-1', name: 'New Name', slug: 'new' } },
+        data: makeForumApi({ id: 'f-1', name: 'New Name', slug: 'new' }),
       });
 
       const result = await actions.updateForum('f-1', { name: 'New Name' });
@@ -211,7 +237,7 @@ describe('createForumCrudActions', () => {
       mockedApi.patch.mockResolvedValue({ data: {} });
 
       await expect(actions.updateForum('f-1', { name: 'X' })).rejects.toThrow(
-        'unexpected response'
+        'The server returned an unexpected response'
       );
     });
 
@@ -227,7 +253,7 @@ describe('createForumCrudActions', () => {
     it('should remove the forum from the list', async () => {
       const { state, actions } = createTestStore();
       state.forums = [makeForum({ id: 'f-1' }), makeForum({ id: 'f-2' })];
-      mockedApi.delete.mockResolvedValue({});
+      mockedApi.delete.mockResolvedValue({ data: {} });
 
       await actions.deleteForum('f-1');
 

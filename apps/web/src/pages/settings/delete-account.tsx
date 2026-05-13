@@ -12,6 +12,9 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { tweens, springs, entranceVariants } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Delete Account component.
+ */
 export function DeleteAccount() {
   const { logout } = useAuthStore();
   const [showConfirm, setShowConfirm] = useState(false);

@@ -19,6 +19,11 @@ import { LivePreview } from './live-preview';
 
 // MAIN COMPONENT
 
+/**
+ */
+/**
+ * Appearance Settings Enhanced component.
+ */
 export function AppearanceSettingsEnhanced() {
   const {
     theme,

@@ -1,3 +1,6 @@
+/**
+ * Admin user search bar component.
+ */
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface UserSearchBarProps {
@@ -7,6 +10,11 @@ interface UserSearchBarProps {
   onStatusChange: (value: string) => void;
 }
 
+/**
+ */
+/**
+ * User Search Bar component.
+ */
 export function UserSearchBar({
   searchTerm,
   onSearchChange,

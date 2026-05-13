@@ -2,14 +2,13 @@ import type { MessageSearchResult, SearchFilters } from './types';
 import { http } from '@/lib/api-client';
 import axios from 'axios';
 import { createLogger } from '@/lib/logger';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
 const logger = createLogger('messageSearch');
 
 /**
  * LocalStorage key for recent searches
  */
-export const RECENT_SEARCHES_KEY = STORAGE_KEYS.messageSearchRecent;
+export const RECENT_SEARCHES_KEY = 'cgraph-message-search-recent';
 
 /**
  * Maximum recent searches to store

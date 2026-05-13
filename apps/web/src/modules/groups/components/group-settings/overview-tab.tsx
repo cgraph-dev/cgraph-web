@@ -15,6 +15,9 @@ const logger = createLogger('OverviewTab');
 const MAX_ICON_SIZE = 5 * 1024 * 1024; // 5 MB
 const MAX_BANNER_SIZE = 10 * 1024 * 1024; // 10 MB
 
+/**
+ * Overview Tab component.
+ */
 export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabProps) {
   const iconInputRef = useRef<HTMLInputElement | null>(null);
   const bannerInputRef = useRef<HTMLInputElement | null>(null);

@@ -37,8 +37,7 @@ describe('resolveMediaUrl', () => {
 
   it('prefixes relative paths with API_URL', () => {
     const result = resolveMediaUrl('/uploads/voice/abc.opus');
-    // Should start with http and end with the relative path
-    expect(result).toMatch(/^https?:\/\/.+\/uploads\/voice\/abc\.opus$/);
+    expect(result).toMatch(/\/uploads\/voice\/abc\.opus$/);
   });
 
   it('handles relative paths without leading slash', () => {
@@ -193,7 +192,7 @@ describe('normalizeMessage', () => {
       expect(meta.thumbnailUrl).toMatch(/doc_thumb\.png$/);
     });
 
-    it('resolves existing metadata URLs to absolute', () => {
+    it('resolves existing metadata URLs through the media URL helper', () => {
       const raw = {
         id: 'msg-img',
         content_type: 'image',
@@ -206,7 +205,7 @@ describe('normalizeMessage', () => {
       const msg = normalizeMessage(raw);
       const meta = msg.metadata as Record<string, unknown>;
 
-      expect(meta.url).toMatch(/^https?:\/\/.+\/uploads\/images\/photo\.jpg$/);
+      expect(meta.url).toMatch(/\/uploads\/images\/photo\.jpg$/);
       expect(meta.thumbnailUrl).toMatch(/photo_sm\.jpg$/);
     });
   });

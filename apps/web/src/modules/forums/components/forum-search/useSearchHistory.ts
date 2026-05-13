@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
 
-const STORAGE_KEY = STORAGE_KEYS.forumSearchHistory;
+const STORAGE_KEY = 'forumSearchHistory';
 const MAX_HISTORY_ITEMS = 10;
 
 /** Use Search History.

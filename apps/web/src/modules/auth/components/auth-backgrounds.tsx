@@ -5,6 +5,12 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { loop } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Grid Background component.
+ * @returns The rendered JSX element.
+ */
 export function GridBackground(): React.ReactElement | null {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -22,6 +28,12 @@ export function GridBackground(): React.ReactElement | null {
   );
 }
 
+/**
+ */
+/**
+ * Gradient Background component.
+ * @returns The rendered JSX element.
+ */
 export function GradientBackground(): React.ReactElement | null {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -40,6 +52,12 @@ export function GradientBackground(): React.ReactElement | null {
   );
 }
 
+/**
+ */
+/**
+ * Particles Background component.
+ * @returns The rendered JSX element.
+ */
 export function ParticlesBackground(): React.ReactElement | null {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -70,6 +88,12 @@ export function ParticlesBackground(): React.ReactElement | null {
 
 export type BackgroundEffect = 'gradient' | 'particles' | 'grid' | 'none';
 
+/**
+ */
+/**
+ * Auth Background component.
+ * @returns The rendered JSX element.
+ */
 export function AuthBackground({
   effect,
 }: {

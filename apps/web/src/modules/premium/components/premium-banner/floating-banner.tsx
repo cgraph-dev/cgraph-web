@@ -23,6 +23,11 @@ type FloatingBannerProps = Pick<
   | 'onDismiss'
 >;
 
+/**
+ */
+/**
+ * Floating Banner component.
+ */
 export function FloatingBanner({
   title,
   dismissible,

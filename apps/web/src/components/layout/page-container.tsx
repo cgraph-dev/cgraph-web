@@ -26,6 +26,11 @@ export interface PageContainerProps {
   className?: string;
 }
 
+/**
+ */
+/**
+ * Page Container — route-level page component.
+ */
 export function PageContainer({
   children,
   title,

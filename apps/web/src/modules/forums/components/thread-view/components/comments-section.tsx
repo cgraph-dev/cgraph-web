@@ -40,6 +40,11 @@ interface CommentsSectionProps {
   canMarkBestAnswer: boolean;
 }
 
+/**
+ */
+/**
+ * Comments Section section component.
+ */
 export function CommentsSection({
   comments,
   sortedComments,

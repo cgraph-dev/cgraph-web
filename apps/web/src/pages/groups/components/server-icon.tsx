@@ -1,3 +1,6 @@
+/**
+ * ServerIcon component
+ */
 
 import { motion } from 'motion/react';
 import { NavLink } from 'react-router-dom';
@@ -6,6 +9,11 @@ import type { ServerIconProps } from './types';
 import { tweens, springs } from '@/lib/animation-presets';
 import { getGroupRoute } from '@/modules/groups/routing';
 
+/**
+ */
+/**
+ * Server Icon component.
+ */
 export function ServerIcon({ group, isActive }: ServerIconProps) {
   return (
     <NavLink

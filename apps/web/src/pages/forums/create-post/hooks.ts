@@ -12,6 +12,8 @@ import type { PostType } from './types';
 const logger = createLogger('CreatePost');
 
 /**
+ */
+/**
  * Hook for managing create post.
  */
 export function useCreatePost() {

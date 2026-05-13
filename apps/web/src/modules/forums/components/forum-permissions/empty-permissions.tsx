@@ -6,6 +6,12 @@
 import { UserGroupIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 
+/**
+ */
+/**
+ * Empty Permissions — fallback UI for empty data states.
+ * @returns The rendered JSX element.
+ */
 export function EmptyPermissions(): React.ReactElement {
   return (
     <GlassCard variant="default" className="p-8 text-center">

@@ -1,3 +1,18 @@
+/**
+ * EmojiPicker Component
+ *
+ * A comprehensive emoji picker for message input with search and categories.
+ *
+ * Features:
+ * - Categorized emoji selection
+ * - Search functionality
+ * - Frequently used tracking
+ * - Smooth animations
+ * - Glassmorphism design
+ * - Animated Noto emojis via Lottie (hover-to-play)
+ *
+ */
+
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -12,6 +27,9 @@ import { CategoryTabs } from './category-tabs';
 import { EmojiGrid } from './emoji-grid';
 import { springs } from '@/lib/animation-presets';
 
+/**
+ * Emoji Picker with Lottie animated emoji support.
+ */
 export function EmojiPicker({
   isOpen,
   onClose,
@@ -54,11 +72,11 @@ export function EmojiPicker({
   }, [isOpen, onClose]);
 
   const handleEmojiClick = (emoji: string) => {
-    onSelect(emoji);
-    HapticFeedback.light();
-    addRecentEmoji(emoji);
-    onClose();
-  };
+      onSelect(emoji);
+      HapticFeedback.light();
+      addRecentEmoji(emoji);
+      onClose();
+    };
 
   return createPortal(
     <AnimatePresence>

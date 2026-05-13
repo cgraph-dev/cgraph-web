@@ -24,6 +24,11 @@ interface PricingCardProps {
   onSubscribe: (tierId: string) => void;
 }
 
+/**
+ */
+/**
+ * Pricing Card display component.
+ */
 export function PricingCard({
   tier,
   index,

@@ -1,4 +1,6 @@
-/** Hover card for compact user profile previews. */
+/**
+ * UserCardPopover — Discord-style hover card on username.
+ */
 import { type ReactNode } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { cn } from '@/lib/utils';
@@ -28,7 +30,8 @@ interface UserCardPopoverProps {
 }
 
 /**
- * Wraps a trigger element and shows detailed user info on hover or click.
+ * Discord-style user card popover — wraps a trigger element,
+ * shows detailed user info on hover/click.
  */
 export function UserCardPopover({
   user,

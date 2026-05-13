@@ -20,6 +20,7 @@ interface FileUnlockModalProps {
   userBalance: number;
   onConfirm: () => void;
 }
+/** Description. */
 /** File Unlock Modal component. */
 export function FileUnlockModal({
   isOpen,

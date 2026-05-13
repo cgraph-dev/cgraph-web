@@ -17,6 +17,11 @@ interface GeneralSectionProps {
   setDescription: (v: string) => void;
 }
 
+/**
+ */
+/**
+ * General Section section component.
+ */
 export function GeneralSection({
   name,
   setName,
@@ -59,6 +64,11 @@ interface PrivacySectionProps {
   setIsPublic: (v: boolean) => void;
 }
 
+/**
+ */
+/**
+ * Privacy Section section component.
+ */
 export function PrivacySection({ isPublic, setIsPublic }: PrivacySectionProps) {
   return (
     <section className="rounded-xl bg-[var(--token-bg-secondary)] p-6">
@@ -112,6 +122,11 @@ interface ContentSectionProps {
   setIsNsfw: (v: boolean) => void;
 }
 
+/**
+ */
+/**
+ * Content Section section component.
+ */
 export function ContentSection({ isNsfw, setIsNsfw }: ContentSectionProps) {
   return (
     <section className="rounded-xl bg-[var(--token-bg-secondary)] p-6">
@@ -143,6 +158,11 @@ interface DangerZoneProps {
   onDelete: () => void;
 }
 
+/**
+ */
+/**
+ * Danger Zone component.
+ */
 export function DangerZone({
   forumName,
   showDeleteConfirm,

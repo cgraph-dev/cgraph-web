@@ -1,3 +1,7 @@
+/**
+ * ServerList component
+ */
+
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -18,6 +22,9 @@ import { tweens, springs, loop } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 import { getGroupRoute } from '@/modules/groups/routing';
 
+/**
+ * Server List component with create group and join-by-invite support.
+ */
 export function ServerList({ groups, activeGroupId }: ServerListProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -48,13 +55,21 @@ export function ServerList({ groups, activeGroupId }: ServerListProps) {
   };
   return (
     <div className="bg-[var(--token-card-bg)]/40 relative z-10 flex w-[72px] shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-[var(--token-card-border)] py-3 backdrop-blur-3xl transition-all duration-300">
+      {/* Ambient glow */}
       <div className="from-primary-500/5 to-purple-500/5 pointer-events-none absolute inset-0 bg-gradient-to-b via-black/20" />
+
+      {/* Home/DMs button */}
       <motion.div
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={springs.bouncy}
       >
-        <NavLink to="/messages" onClick={() => HapticFeedback.medium()} className="group relative">
+        <NavLink
+          to="/messages"
+          onClick={() => HapticFeedback.medium()}
+          className="group relative"
+          aria-label="Open direct messages"
+        >
           <motion.div className="group-hover:border-primary-500/30 group-hover:bg-primary-600/20 relative z-10 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)/0.3] shadow-[0_4px_16px_rgba(0,0,0,0.3),rgba(255,255,255,0.02)_0px_1px_1px_inset] backdrop-blur-md transition-all duration-300">
             <ChatBubbleLeftRightIcon className="h-6 w-6 text-white/50 transition-colors group-hover:text-white" />
           </motion.div>
@@ -66,6 +81,8 @@ export function ServerList({ groups, activeGroupId }: ServerListProps) {
       </motion.div>
 
       <div className="mx-auto h-[1px] w-8 rounded-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+      {/* Server list */}
       {groups.map((group) => (
         <motion.div
           key={group.id}

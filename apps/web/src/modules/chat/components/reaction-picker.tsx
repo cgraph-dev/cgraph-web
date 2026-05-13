@@ -146,7 +146,7 @@ interface ReactionPickerProps {
 }
 
 /**
- * ReactionPicker — emoji picker with quick-react row,
+ * ReactionPicker — Discord-style emoji picker with quick-react row,
  * categories, and search.
  */
 export function ReactionPicker({ onSelect, onClose, isOpen, className }: ReactionPickerProps) {

@@ -15,6 +15,9 @@ interface MarkBoardReadButtonProps {
   onMarked?: () => void;
 }
 
+/**
+ * MarkBoardReadButton component.
+ */
 export function MarkBoardReadButton({ boardId, onMarked }: MarkBoardReadButtonProps) {
   const [isMarking, setIsMarking] = useState(false);
   const [done, setDone] = useState(false);
@@ -52,6 +55,9 @@ interface MarkForumReadButtonProps {
   onMarked?: () => void;
 }
 
+/**
+ * MarkForumReadButton component.
+ */
 export function MarkForumReadButton({ forumId, onMarked }: MarkForumReadButtonProps) {
   const [isMarking, setIsMarking] = useState(false);
   const [done, setDone] = useState(false);

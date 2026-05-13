@@ -2,6 +2,11 @@
  * MemberTableSkeleton component - loading state for member table
  */
 
+/**
+ */
+/**
+ * Member Table Skeleton component.
+ */
 export function MemberTableSkeleton() {
   return (
     <>

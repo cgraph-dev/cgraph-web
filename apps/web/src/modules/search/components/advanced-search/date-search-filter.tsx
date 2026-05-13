@@ -26,6 +26,11 @@ function getOptionValue<T extends string>(options: ReadonlyArray<{ value: T; lab
   return match?.value ?? null;
 }
 
+/**
+ */
+/**
+ * Date Search Filter component.
+ */
 export function DateSearchFilter({ filters, updateFilter }: DateSearchFilterProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

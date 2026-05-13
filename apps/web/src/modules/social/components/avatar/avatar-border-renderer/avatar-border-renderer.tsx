@@ -9,10 +9,11 @@
  */
 
 import { durations } from '@cgraph/animation-constants';
-import { lazy, memo, Suspense, useMemo, useRef, type CSSProperties } from 'react';
+import { memo, useMemo, useRef, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { THEME_COLORS } from '@/types/avatar-borders';
+import { LottieBorderRenderer } from '@/lib/lottie/lottie-border-renderer';
 import type { AvatarBorderRendererProps, BorderColors } from './types';
 import {
   ANIMATION_KEYFRAMES,
@@ -21,12 +22,6 @@ import {
   getThemeStyles,
 } from './animations';
 import { Particle } from './particle';
-
-const LottieBorderRenderer = lazy(() =>
-  import('@/lib/lottie/lottie-border-renderer').then((module) => ({
-    default: module.LottieBorderRenderer,
-  }))
-);
 
 /** Type guard: is the value a lottie animation config object? */
 function isLottieConfig(
@@ -122,18 +117,16 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
     const lottieAvatarSize = Math.round(size * 0.65);
     const lottieBorderWidth = Math.round(size * 0.18);
     return (
-      <Suspense fallback={avatarContent}>
-        <LottieBorderRenderer
-          lottieUrl={lottieUrl}
-          avatarSize={lottieAvatarSize}
-          borderWidth={lottieBorderWidth}
-          lottieConfig={lottieConfig}
-          fallbackColor={colors.primary}
-          className={className}
-        >
-          {avatarContent}
-        </LottieBorderRenderer>
-      </Suspense>
+      <LottieBorderRenderer
+        lottieUrl={lottieUrl}
+        avatarSize={lottieAvatarSize}
+        borderWidth={lottieBorderWidth}
+        lottieConfig={lottieConfig}
+        fallbackColor={colors.primary}
+        className={className}
+      >
+        {avatarContent}
+      </LottieBorderRenderer>
     );
   }
 

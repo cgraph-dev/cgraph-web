@@ -1,3 +1,6 @@
+/**
+ * Real-time statistic display component.
+ */
 export function RealtimeStat({
   icon: Icon,
   label,

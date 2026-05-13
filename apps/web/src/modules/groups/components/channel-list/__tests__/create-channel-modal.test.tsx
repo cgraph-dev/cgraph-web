@@ -19,12 +19,14 @@ vi.mock('motion/react', () => ({
       initial: _initial,
       animate: _animate,
       exit: _exit,
+      whileTap: _whileTap,
+      ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: (e: unknown) => void;
       className?: string;
     }) => (
-      <div onClick={onClick} className={className}>
+      <div onClick={onClick} className={className} {...rest}>
         {children}
       </div>
     ),
@@ -33,29 +35,27 @@ vi.mock('motion/react', () => ({
       onClick,
       disabled,
       className,
-      whileTap: _whileTap,
+      initial: _initial,
       animate: _animate,
+      exit: _exit,
+      whileTap: _whileTap,
+      ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: () => void;
       disabled?: boolean;
       className?: string;
     }) => (
-      <button onClick={onClick} disabled={disabled} className={className}>
+      <button onClick={onClick} disabled={disabled} className={className} {...rest}>
         {children}
       </button>
     ),
   },
 }));
 
-vi.mock(
-  '@heroicons/react/24/outline',
-  () => ({
-    SparklesIcon: (props: Record<string, unknown>) => (
-      <svg data-testid="SparklesIcon" {...props} />
-    ),
-  })
-);
+vi.mock('@heroicons/react/24/outline', () => ({
+  SparklesIcon: (props: Record<string, unknown>) => <svg data-testid="SparklesIcon" {...props} />,
+}));
 
 vi.mock('@/lib/animations/animation-engine', () => ({
   HapticFeedback: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
@@ -69,13 +69,9 @@ vi.mock('@/lib/animations/transitions', () => ({
   FADE_IN: { initial: { opacity: 0 }, animate: { opacity: 1 } },
 }));
 
-const mockCreateChannel = vi.fn();
-vi.mock('@/lib/api-client', () => ({
-  apiClient: {
-    groups: {
-      createChannel: (...args: unknown[]) => mockCreateChannel(...args),
-    },
-  },
+const mockApiPost = vi.fn();
+vi.mock('@/lib/api', () => ({
+  api: { post: (...args: unknown[]) => mockApiPost(...args) },
 }));
 
 const mockFetchGroup = vi.fn().mockResolvedValue(undefined);
@@ -128,6 +124,8 @@ import { CreateChannelModal } from '../create-channel-modal';
 // --- Tests ---
 
 describe('CreateChannelModal', () => {
+  const getCreateButton = () => screen.getByRole('button', { name: 'Create Channel' });
+
   const defaultProps = {
     groupId: 'g-1',
     categoryId: 'cat-1',
@@ -136,7 +134,6 @@ describe('CreateChannelModal', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFetchGroup.mockResolvedValue(undefined);
   });
 
   it('renders the modal with title', () => {
@@ -166,14 +163,14 @@ describe('CreateChannelModal', () => {
 
   it('disables create button when name is empty', () => {
     render(<CreateChannelModal {...defaultProps} />);
-    const createBtn = screen.getByRole('button', { name: 'Create Channel' });
+    const createBtn = getCreateButton();
     expect(createBtn).toBeDisabled();
   });
 
   it('enables create button when name is entered', () => {
     render(<CreateChannelModal {...defaultProps} />);
     fireEvent.change(screen.getByPlaceholderText('general'), { target: { value: 'test' } });
-    const createBtn = screen.getByRole('button', { name: 'Create Channel' });
+    const createBtn = getCreateButton();
     expect(createBtn).not.toBeDisabled();
   });
 
@@ -192,14 +189,16 @@ describe('CreateChannelModal', () => {
   });
 
   it('submits channel creation to API', async () => {
-    mockCreateChannel.mockResolvedValueOnce({ ok: true, data: { id: 'ch-new' } });
+    mockApiPost.mockResolvedValueOnce({
+      data: { data: { id: 'ch-new', name: 'test-channel', type: 'text' } },
+    });
 
     render(<CreateChannelModal {...defaultProps} />);
     fireEvent.change(screen.getByPlaceholderText('general'), { target: { value: 'test-channel' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create Channel' }));
+    fireEvent.click(getCreateButton());
 
     await waitFor(() => {
-      expect(mockCreateChannel).toHaveBeenCalledWith('g-1', {
+      expect(mockApiPost).toHaveBeenCalledWith('/api/v1/groups/g-1/channels', {
         name: 'test-channel',
         type: 'text',
         category_id: 'cat-1',
@@ -211,17 +210,14 @@ describe('CreateChannelModal', () => {
   });
 
   it('handles API error without crashing', async () => {
-    mockCreateChannel.mockResolvedValueOnce({
-      ok: false,
-      error: { message: 'Server error' },
-    });
+    mockApiPost.mockRejectedValueOnce(new Error('Server error'));
 
     render(<CreateChannelModal {...defaultProps} />);
     fireEvent.change(screen.getByPlaceholderText('general'), { target: { value: 'fail-channel' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create Channel' }));
+    fireEvent.click(getCreateButton());
 
     await waitFor(() => {
-      expect(mockCreateChannel).toHaveBeenCalled();
+      expect(mockApiPost).toHaveBeenCalled();
     });
     // Modal should not close on error
     expect(defaultProps.onClose).not.toHaveBeenCalled();
@@ -232,18 +228,20 @@ describe('CreateChannelModal', () => {
     expect(screen.getByText('Age-Restricted')).toBeInTheDocument();
   });
 
-  it('omits category_id when categoryId is null', async () => {
-    mockCreateChannel.mockResolvedValueOnce({ ok: true, data: { id: 'ch-new' } });
+  it('sends undefined category_id when categoryId is null', async () => {
+    mockApiPost.mockResolvedValueOnce({
+      data: { data: { id: 'ch-new', name: 'uncategorized', type: 'text' } },
+    });
 
     render(<CreateChannelModal {...defaultProps} categoryId={null} />);
     fireEvent.change(screen.getByPlaceholderText('general'), {
       target: { value: 'uncategorized' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Create Channel' }));
+    fireEvent.click(getCreateButton());
 
     await waitFor(() => {
-      expect(mockCreateChannel).toHaveBeenCalledWith(
-        'g-1',
+      expect(mockApiPost).toHaveBeenCalledWith(
+        expect.any(String),
         expect.objectContaining({ category_id: undefined })
       );
     });

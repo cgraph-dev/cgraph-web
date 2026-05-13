@@ -4,17 +4,8 @@
  */
 
 import { api as http } from './api';
-import { STORAGE_KEYS } from './storage/namespaces';
 
 export type OAuthProvider = 'google' | 'apple' | 'facebook' | 'tiktok';
-
-export const ALL_OAUTH_PROVIDERS: readonly OAuthProvider[] = [
-  'google',
-  'apple',
-  'facebook',
-  'tiktok',
-] as const;
-const OAUTH_PROVIDER_IDS = new Set<string>(ALL_OAUTH_PROVIDERS);
 
 interface OAuthAuthorizationResponse {
   authorization_url: string;
@@ -43,24 +34,6 @@ interface OAuthTokenResponse {
     refresh_token: string;
     expires_in: number;
   };
-}
-
-interface OAuthProvidersResponse {
-  data?: {
-    providers?: Array<{ id: string; name?: string }>;
-  };
-  providers?: Array<{ id: string; name?: string }>;
-}
-
-function isOAuthProvider(value: string): value is OAuthProvider {
-  return OAUTH_PROVIDER_IDS.has(value);
-}
-
-export async function listConfiguredOAuthProviders(): Promise<OAuthProvider[]> {
-  const response = await http.get<OAuthProvidersResponse>('/api/v1/auth/oauth/providers');
-  const providers = response.data.data?.providers ?? response.data.providers ?? [];
-
-  return providers.map((provider) => provider.id).filter(isOAuthProvider);
 }
 
 /**
@@ -96,8 +69,8 @@ export function openOAuthPopup(provider: OAuthProvider): Promise<OAuthTokenRespo
     startOAuthFlow(provider)
       .then(({ authorization_url, state }) => {
         // Store state for verification
-        sessionStorage.setItem(STORAGE_KEYS.oauthState, state);
-        sessionStorage.setItem(STORAGE_KEYS.oauthProvider, provider);
+        sessionStorage.setItem('oauth_state', state);
+        sessionStorage.setItem('oauth_provider', provider);
 
         // Calculate popup position (center of screen)
         const width = 500;

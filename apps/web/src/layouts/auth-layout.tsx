@@ -36,8 +36,8 @@ const FeatureCard = memo(function FeatureCard({
   return (
     <TiltCard className="auth-feature-card from-violet-500/10 hover:from-violet-500/15 group rounded-xl border border-white/10 bg-gradient-to-br to-[color-mix(in_srgb,var(--color-brand-purple)_5%,transparent)] p-4 text-center backdrop-blur-md transition-all duration-300 hover:border-[color-mix(in_srgb,var(--color-brand-purple)_30%,transparent)] hover:bg-gradient-to-br hover:to-[color-mix(in_srgb,var(--color-brand-purple)_10%,transparent)]">
       <motion.div
-        initial={reduced ? {} : { opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={reduced ? {} : { y: 20 }}
+        animate={{ y: 0 }}
         transition={{ ...tweens.emphatic, delay }}
       >
         <div className="auth-feature-card-title text-2xl font-bold transition-colors group-hover:text-violet-300">
@@ -229,18 +229,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         </div>
 
         {/* Footer */}
-        <motion.div
-          className="auth-footer-copy relative z-10 text-sm text-white/50"
-          initial={reduced ? {} : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ...tweens.slow, delay: 1.2 }}
-        >
+        <motion.div className="auth-footer-copy relative z-10 text-sm text-white/75">
           © 2026 CGraph. All rights reserved.
         </motion.div>
       </div>
 
       {/* Right side — Auth form with flowing gradient border card */}
-      <div className="auth-layout-form flex flex-1 items-center justify-center p-8">
+      <main className="auth-layout-form flex flex-1 items-center justify-center p-8">
         <motion.div
           className="w-full max-w-md"
           initial={reduced ? {} : { opacity: 0, scale: 0.95, y: 20 }}
@@ -254,7 +249,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             {children}
           </TiltCard>
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }

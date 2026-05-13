@@ -1,3 +1,6 @@
+/**
+ * Rich text post editor component.
+ */
 import { type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 

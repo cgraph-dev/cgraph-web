@@ -18,44 +18,13 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
-  return isRecord(value);
-}
-
-function extractMessage(value: unknown): string | null {
-  if (typeof value === 'string' && value.trim() !== '') {
-    return value;
-  }
-
-  if (!isRecord(value)) {
-    return null;
-  }
-
-  const candidates = [value.error, value.message, value.detail];
-  for (const candidate of candidates) {
-    const message = extractMessage(candidate);
-    if (message) return message;
-  }
-
-  const errors = value.errors;
-  if (Array.isArray(errors)) {
-    const messages = errors.map(extractMessage).filter(Boolean);
-    if (messages.length > 0) return messages.join(', ');
-  }
-
-  if (isRecord(errors)) {
-    const messages = Object.values(errors)
-      .flatMap((item) => (Array.isArray(item) ? item : [item]))
-      .map(extractMessage)
-      .filter(Boolean);
-    if (messages.length > 0) return messages.join(', ');
-  }
-
-  return null;
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = Object.fromEntries(Object.entries(value));
+  return (
+    (obj.error === undefined || typeof obj.error === 'string') &&
+    (obj.message === undefined || typeof obj.message === 'string')
+  );
 }
 
 type UserStatus = 'online' | 'idle' | 'dnd' | 'offline';
@@ -72,16 +41,12 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
     const data: unknown = error.response?.data;
     if (isApiErrorResponse(data)) {
-      return extractMessage(data) ?? fallback;
+      return data.error || data.message || fallback;
     }
     return fallback;
   }
   if (error instanceof Error) {
-    return error.message === '[object Object]' ? fallback : error.message;
-  }
-  if (isRecord(error)) {
-    const message = extractMessage(error);
-    if (message) return message;
+    return error.message;
   }
   return fallback;
 }

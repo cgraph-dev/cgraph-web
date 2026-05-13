@@ -17,6 +17,11 @@ interface AddGroupSectionProps {
   onAdd: () => void;
 }
 
+/**
+ */
+/**
+ * Add Group Section section component.
+ */
 export function AddGroupSection({
   showAdd,
   selectedGroupId,

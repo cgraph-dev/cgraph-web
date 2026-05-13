@@ -35,6 +35,11 @@ const SHADER_VARIANTS: ShaderVariant[] = ['matrix', 'fluid', 'particles', 'waves
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Background Effects component.
+ */
 export function BackgroundEffects({
   backgroundEffect,
   shaderVariant,

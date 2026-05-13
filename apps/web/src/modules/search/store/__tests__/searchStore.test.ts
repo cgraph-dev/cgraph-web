@@ -25,26 +25,28 @@ vi.mock('@/lib/api', () => ({
 }));
 
 // Mock apiClient so search methods return ApiResult values
-vi.mock('@/lib/api-client', () => ({
-  apiClient: {
-    search: {
-      searchUsers: vi.fn(),
-      searchGroups: vi.fn(),
-      searchForums: vi.fn(),
-      searchPosts: vi.fn(),
-      searchMessages: vi.fn(),
+vi.mock('@/lib/api-client', () => {
+  const rawApi = { get: vi.fn() };
+  return {
+    api: rawApi,
+    http: rawApi,
+    apiClient: {
+      search: {
+        searchUsers: vi.fn(),
+        searchGroups: vi.fn(),
+        searchForums: vi.fn(),
+        searchPosts: vi.fn(),
+        searchMessages: vi.fn(),
+      },
     },
-  },
-  http: {
-    get: vi.fn(),
-  },
-}));
+  };
+});
 
-import { http } from '@/lib/api-client';
+import { api } from '@/lib/api-client';
 import { apiClient } from '@/lib/api-client';
 
 // Typed mock helpers — vi.mocked() is the assertion-free Vitest idiom
-const mockedApiGet = vi.mocked(http.get);
+const mockedApiGet = vi.mocked(api.get);
 const mockedSearch = {
   searchUsers: vi.mocked(apiClient.search.searchUsers),
   searchGroups: vi.mocked(apiClient.search.searchGroups),

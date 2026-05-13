@@ -104,6 +104,11 @@ const QueueItemCard = memo(function QueueItemCard({
 });
 type FilterStatus = 'pending' | 'all';
 type FilterPriority = 'all' | 'low' | 'normal' | 'high' | 'critical';
+/**
+ */
+/**
+ * Moderation Queue component.
+ */
 export function ModerationQueue() {
   const {
     queue,

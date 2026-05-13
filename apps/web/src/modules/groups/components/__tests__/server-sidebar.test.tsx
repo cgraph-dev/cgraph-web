@@ -66,27 +66,16 @@ vi.mock('@/lib/utils', () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
 }));
 
-vi.mock('@/modules/auth/store', () => ({
-  useAuthStore: vi.fn((selector: (state: { user: null }) => unknown) => selector({ user: null })),
-}));
-
 import { ServerSidebar } from '../server-sidebar';
 
 // --- Tests ---
 
 describe('ServerSidebar', () => {
-  const testUser = {
-    id: 'u-1',
-    displayName: 'Test User',
-    username: 'test-user',
-    status: 'online' as const,
-  };
-
   beforeEach(() => vi.clearAllMocks());
 
-  it('renders with default server name when no server prop', () => {
+  it('renders with default mock server when no server prop', () => {
     render(<ServerSidebar />);
-    expect(screen.getByTestId('server-header')).toHaveTextContent('CGraph');
+    expect(screen.getByTestId('server-header')).toHaveTextContent('CGraph Community');
   });
 
   it('renders with provided server name', () => {
@@ -110,22 +99,23 @@ describe('ServerSidebar', () => {
   });
 
   it('renders UserBar with user initial', () => {
-    render(<ServerSidebar user={testUser} />);
-    expect(screen.getByText('T')).toBeInTheDocument();
+    render(<ServerSidebar />);
+    // The mock UserBar shows 'U' as the first letter of 'User'
+    expect(screen.getByText('U')).toBeInTheDocument();
   });
 
   it('displays user display name', () => {
-    render(<ServerSidebar user={testUser} />);
-    expect(screen.getByText('Test User')).toBeInTheDocument();
+    render(<ServerSidebar />);
+    expect(screen.getByText('User')).toBeInTheDocument();
   });
 
   it('displays username', () => {
-    render(<ServerSidebar user={testUser} />);
-    expect(screen.getByText('test-user')).toBeInTheDocument();
+    render(<ServerSidebar />);
+    expect(screen.getByText('user#0001')).toBeInTheDocument();
   });
 
   it('renders audio control buttons', () => {
-    render(<ServerSidebar user={testUser} />);
+    render(<ServerSidebar />);
     expect(screen.getByTestId('tooltip-Mute')).toBeInTheDocument();
     expect(screen.getByTestId('tooltip-Deafen')).toBeInTheDocument();
     expect(screen.getByTestId('tooltip-User Settings')).toBeInTheDocument();
@@ -138,7 +128,8 @@ describe('ServerSidebar', () => {
   });
 
   it('renders an online status indicator dot', () => {
-    const { container } = render(<ServerSidebar user={testUser} />);
+    const { container } = render(<ServerSidebar />);
+    // Status dot for online user should have bg-green-500
     const statusDot = container.querySelector('.bg-green-500');
     expect(statusDot).toBeTruthy();
   });

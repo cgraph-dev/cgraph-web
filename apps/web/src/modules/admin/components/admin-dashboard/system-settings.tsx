@@ -8,6 +8,9 @@ import { motion } from 'motion/react';
 import { ToggleSwitch, SettingsSection, SettingRow } from './shared-components';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * System Settings component.
+ */
 export function SystemSettings() {
   return (
     <motion.div

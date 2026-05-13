@@ -2,6 +2,11 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import type { CategoryButtonProps } from './types';
 
+/**
+ */
+/**
+ * Category Button component.
+ */
 export function CategoryButton({ category, isActive, onClick }: CategoryButtonProps) {
   return (
     <motion.button

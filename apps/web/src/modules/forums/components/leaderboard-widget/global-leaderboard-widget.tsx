@@ -12,6 +12,9 @@ import { UserRow } from './user-row';
 
 const logger = createLogger('LeaderboardWidget');
 
+/**
+ * Global Leaderboard Widget component.
+ */
 export function GlobalLeaderboardWidget({
   limit = 5,
   showTitle = true,

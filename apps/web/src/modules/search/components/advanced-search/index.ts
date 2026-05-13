@@ -6,6 +6,8 @@
  * filter panel with real-time search.
  *
  */
+
+// Main component
 export { default as AdvancedSearch, default } from './advanced-search';
 
 // Sub-components

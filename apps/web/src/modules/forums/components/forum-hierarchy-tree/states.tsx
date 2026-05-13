@@ -9,6 +9,8 @@ interface LoadingStateProps {
 }
 
 /**
+ */
+/**
  * Loading State — loading placeholder.
  */
 export function LoadingState({ className = '' }: LoadingStateProps) {
@@ -28,6 +30,8 @@ interface ErrorStateProps {
 }
 
 /**
+ */
+/**
  * Error State — fallback UI for error states.
  */
 export function ErrorState({ error, className = '' }: ErrorStateProps) {
@@ -42,6 +46,8 @@ interface EmptyStateProps {
   className?: string;
 }
 
+/**
+ */
 /**
  * Empty State — fallback UI for empty data states.
  */

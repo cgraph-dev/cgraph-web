@@ -7,6 +7,11 @@
 import { MemberItem } from './member-item';
 import type { MembersSidebarProps } from './types';
 
+/**
+ */
+/**
+ * Members Sidebar component.
+ */
 export function MembersSidebar({ onlineMembers, offlineMembers }: MembersSidebarProps) {
   return (
     <div className="w-60 overflow-y-auto border-l border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4]">

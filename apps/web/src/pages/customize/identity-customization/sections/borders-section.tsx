@@ -24,6 +24,11 @@ export interface BordersSectionProps {
   hasActiveFilter?: boolean;
 }
 
+/**
+ */
+/**
+ * Borders Section section component.
+ */
 export function BordersSection({
   borders,
   selectedBorder,

@@ -1,3 +1,6 @@
+/**
+ * Admin reports tab component.
+ */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
@@ -11,6 +14,11 @@ import { FADE_UP } from '@/lib/animations/transitions';
 
 // Reports Tab - Moderation reports management
 
+/**
+ */
+/**
+ * Reports Tab component.
+ */
 export function ReportsTab() {
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const queryClient = useQueryClient();

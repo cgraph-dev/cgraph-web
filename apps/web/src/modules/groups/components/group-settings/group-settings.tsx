@@ -29,6 +29,9 @@ import { ConfirmModal } from './confirm-modal';
 import { SaveBar } from './save-bar';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+/**
+ * Group Settings component.
+ */
 export function GroupSettings({ groupId, onClose: _onClose }: GroupSettingsProps) {
   const {
     activeGroup,

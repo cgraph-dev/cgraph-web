@@ -1,3 +1,13 @@
+/**
+ * PremiumPostCard
+ *
+ * Displays a premium (node-gated) post within a group. Shows a truncated
+ * preview with blur gradient for locked posts, or the full content for
+ * purchased / author-owned posts. Includes an unlock CTA that triggers
+ * the purchase API flow.
+ *
+ */
+
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import {
@@ -36,6 +46,10 @@ function truncateContent(content: string, length: number): string {
   return content.slice(0, length) + '...';
 }
 
+/**
+ * Card component for a premium post.
+ * Handles locked preview, full-content display, and unlock purchase flow.
+ */
 export function PremiumPostCard({
   post,
   onPurchaseSuccess,
@@ -71,6 +85,7 @@ export function PremiumPostCard({
       animate={{ opacity: 1, y: 0 }}
       className="overflow-hidden rounded-xl border border-dark-700 bg-dark-800"
     >
+      {/* Header: author + date + price badge */}
       <div className="flex items-center justify-between gap-3 border-b border-dark-700 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {post.author.avatarUrl ? (
@@ -90,26 +105,32 @@ export function PremiumPostCard({
           </div>
         </div>
 
+        {/* Price badge */}
         <span className="flex shrink-0 items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-400">
           <CurrencyDollarIcon className="h-3.5 w-3.5" />
           {post.priceNodes} Nodes
         </span>
       </div>
 
+      {/* Title */}
       <div className="px-4 pt-3">
         <h3 className="text-base font-semibold text-white">{post.title}</h3>
       </div>
 
+      {/* Content area */}
       <div className="relative px-4 pb-4 pt-2">
         {isUnlocked ? (
+          /* Full content */
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
             {post.content}
           </p>
         ) : (
+          /* Truncated preview with blur fade */
           <div className="relative">
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
               {truncateContent(post.content, post.previewLength)}
             </p>
+            {/* Gradient blur overlay */}
             <div
               className="pointer-events-none absolute inset-x-0 bottom-0 h-20"
               style={{
@@ -123,6 +144,7 @@ export function PremiumPostCard({
         )}
       </div>
 
+      {/* Footer: purchase count + unlock button */}
       <div className="flex items-center justify-between border-t border-dark-700 px-4 py-3">
         <span className="text-xs text-gray-500">
           {post.purchaseCount} {post.purchaseCount === 1 ? 'unlock' : 'unlocks'}
@@ -146,6 +168,7 @@ export function PremiumPostCard({
         )}
       </div>
 
+      {/* Error display */}
       {error && (
         <div className="border-t border-red-500/20 bg-red-500/10 px-4 py-2">
           <p className="text-xs text-red-400">{error}</p>

@@ -1,3 +1,6 @@
+/**
+ * Individual call history item component.
+ */
 import { Phone, Video, PhoneIncoming, PhoneOutgoing, PhoneMissed } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +18,9 @@ const directionConfig = {
   missed: { icon: PhoneMissed, color: 'text-red-400', label: 'Missed' },
 } as const;
 
+/**
+ * Call Item component.
+ */
 export default function CallItem({ call }: CallItemProps) {
   const navigate = useNavigate();
   const dir = directionConfig[call.direction];

@@ -1,3 +1,6 @@
+/**
+ * ForumSidebarNav component
+ */
 
 import { memo } from 'react';
 import type { ForumSidebarNavProps } from './types';

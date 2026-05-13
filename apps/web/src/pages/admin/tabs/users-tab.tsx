@@ -12,6 +12,11 @@ import { FADE_UP } from '@/lib/animations/transitions';
 
 // Users Tab - User management with search, ban/unban functionality
 
+/**
+ */
+/**
+ * Users Tab component.
+ */
 export function UsersTab() {
   const {
     searchTerm,

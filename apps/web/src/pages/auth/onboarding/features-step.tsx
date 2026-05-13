@@ -6,6 +6,9 @@ import { motion } from 'motion/react';
 import { containerVariants, itemVariants } from './animations';
 import { FEATURES } from './constants';
 
+/**
+ * Features Step component.
+ */
 export function FeaturesStep() {
   return (
     <motion.div

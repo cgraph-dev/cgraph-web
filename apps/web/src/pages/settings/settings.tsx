@@ -112,6 +112,9 @@ const settingsSections = [
   },
 ];
 
+/**
+ * Settings component.
+ */
 export default function Settings() {
   const navigate = useNavigate();
   const { section = 'account' } = useParams();

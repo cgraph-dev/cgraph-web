@@ -72,6 +72,7 @@ function DownArrow({ className }: { className?: string }) {
     </svg>
   );
 }
+/** Description. */
 /** Vote Button component. */
 export function VoteButton({
   count,

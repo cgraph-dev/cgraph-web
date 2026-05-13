@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
-import { SafeHtml } from '@/shared/components/security';
+import { SafeHtml } from '@/shared/components/security/safe-html';
 import type { SearchResultCardProps } from './types';
 
 /**

@@ -1,3 +1,6 @@
+/**
+ * EmptyState component
+ */
 
 import { FolderIcon } from '@heroicons/react/24/outline';
 import type { ItemType } from './types';
@@ -6,6 +9,8 @@ interface EmptyStateProps {
   itemType: ItemType;
 }
 
+/**
+ */
 /**
  * Empty State — fallback UI for empty data states.
  */

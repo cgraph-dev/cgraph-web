@@ -1,3 +1,6 @@
+/**
+ * ProfileInfoCard component
+ */
 
 import { motion } from 'motion/react';
 import {
@@ -18,6 +21,11 @@ interface ProfileInfoCardProps {
   onSave: () => void;
 }
 
+/**
+ */
+/**
+ * Profile Info Card display component.
+ */
 export function ProfileInfoCard({ formData, onChange, onSave }: ProfileInfoCardProps) {
   return (
     <GlassCard className="aurora-social-panel p-6" variant="holographic" glow>

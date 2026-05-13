@@ -233,6 +233,36 @@ describe('sendMessage', () => {
       expect.objectContaining({ reply_to_id: 'original-id' })
     );
   });
+
+  it('sends file metadata as root fields plus metadata', async () => {
+    mockApi.post.mockResolvedValueOnce({ data: { message: makeMsg({ messageType: 'image' }) } });
+    const metadata = {
+      fileUrl: 'https://cdn.example.com/photo.png',
+      fileName: 'photo.png',
+      fileSize: 2048,
+      fileMimeType: 'image/png',
+      thumbnailUrl: 'https://cdn.example.com/thumb.png',
+    };
+
+    await useChatStore.getState().sendMessage('conv-1', 'photo.png', undefined, {
+      type: 'image',
+      metadata,
+    });
+
+    expect(mockApi.post).toHaveBeenCalledWith(
+      '/api/v1/conversations/conv-1/messages',
+      expect.objectContaining({
+        content: 'photo.png',
+        content_type: 'image',
+        file_url: metadata.fileUrl,
+        file_name: metadata.fileName,
+        file_size: metadata.fileSize,
+        file_mime_type: metadata.fileMimeType,
+        thumbnail_url: metadata.thumbnailUrl,
+        metadata,
+      })
+    );
+  });
 });
 
 // 4. Edit / Delete Message
@@ -401,6 +431,20 @@ describe('conversation management', () => {
     useChatStore.setState({ conversations: [makeConv()] });
     useChatStore.getState().updateConversation({ id: 'conv-1', name: 'Renamed' });
     expect(useChatStore.getState().conversations[0]!.name).toBe('Renamed');
+  });
+
+  it('archiveConversation posts archive and removes the conversation from sidebar state', async () => {
+    useChatStore.setState({
+      activeConversationId: 'conv-1',
+      conversations: [makeConv({ id: 'conv-1' }), makeConv({ id: 'conv-2' })],
+    });
+    mockApi.post.mockResolvedValueOnce({ data: { data: { archived: true } } });
+
+    await useChatStore.getState().archiveConversation('conv-1');
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/conversations/conv-1/archive');
+    expect(useChatStore.getState().activeConversationId).toBeNull();
+    expect(useChatStore.getState().conversations.map((conv) => conv.id)).toEqual(['conv-2']);
   });
 
   it('getRecipientId returns other participant for direct chats', () => {

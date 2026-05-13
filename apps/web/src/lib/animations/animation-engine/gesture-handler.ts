@@ -1,3 +1,11 @@
+/**
+ * Gesture Handler Module
+ *
+ * Handles drag-style gestures with configurable direction constraints,
+ * threshold, bounds, and optional haptic feedback.
+ *
+ */
+
 import gsap from 'gsap';
 
 import type { GestureConfig } from '../animation-engine.types';
@@ -5,6 +13,11 @@ import type { GestureConfig } from '../animation-engine.types';
 import { SpringPhysics } from './spring-physics';
 import { HapticFeedback } from './haptic-feedback';
 
+// GESTURE HANDLER
+
+/**
+ * Gesture Handler — event/request handler.
+ */
 export class GestureHandler {
   private element: HTMLElement;
   private config: Required<GestureConfig>;
@@ -54,10 +67,12 @@ export class GestureHandler {
     const deltaX = point.clientX - this.startX;
     const deltaY = point.clientY - this.startY;
 
+    // Apply threshold
     if (Math.abs(deltaX) < this.config.threshold && Math.abs(deltaY) < this.config.threshold) {
       return;
     }
 
+    // Apply bounds and direction constraints
     let x = 0;
     let y = 0;
 
@@ -75,6 +90,7 @@ export class GestureHandler {
   private handleEnd = (): void => {
     this.isDragging = false;
 
+    // Spring back to original position
     SpringPhysics.animate(this.element, { x: 0, y: 0 }, { tension: 200, friction: 20 });
 
     if (this.config.enableHaptic) {
@@ -87,6 +103,10 @@ export class GestureHandler {
     document.removeEventListener('touchend', this.handleEnd);
   };
 
+  /**
+   * destroy for the animations module.
+   * @returns The result.
+   */
   destroy(): void {
     this.element.removeEventListener('mousedown', this.handleStart);
     this.element.removeEventListener('touchstart', this.handleStart);

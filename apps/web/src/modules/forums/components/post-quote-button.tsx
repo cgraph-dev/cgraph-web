@@ -4,7 +4,8 @@
  * "Add to quote" button that appears on each post in a thread.
  * Toggles the post in/out of the multi-quote buffer.
  *
- * Small action icon rendered in the post action bar.
+ * Follows Discord's "Reply" button pattern — small action icon
+ * that appears in the post action bar.
  *
  */
 

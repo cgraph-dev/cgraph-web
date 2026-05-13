@@ -8,11 +8,17 @@ interface PasswordToggleButtonProps {
   onToggle: () => void;
 }
 
+/**
+ */
+/**
+ * Password Toggle Button component.
+ */
 export function PasswordToggleButton({ show, onToggle }: PasswordToggleButtonProps) {
   return (
     <button
       type="button"
       onClick={onToggle}
+      aria-label={show ? 'Hide password' : 'Show password'}
       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-all duration-200 hover:scale-110 hover:text-primary-400 active:scale-90"
     >
       {show ? (

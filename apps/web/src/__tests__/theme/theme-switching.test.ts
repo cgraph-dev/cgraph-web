@@ -99,7 +99,7 @@ describe('professional theme switching', () => {
 
     themeEngine.setTheme('aurora');
 
-    const stored = localStorageMock.getItem('cgraph:v1:theme:preferences');
+    const stored = localStorageMock.getItem('cgraph-theme-preferences');
     expect(stored).not.toBeNull();
     expect(JSON.parse(stored ?? '{}').activeThemeId).toBe('aurora');
   });

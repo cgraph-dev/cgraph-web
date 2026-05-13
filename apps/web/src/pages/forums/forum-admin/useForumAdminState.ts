@@ -20,6 +20,8 @@ import type {
 } from './types';
 
 /**
+ */
+/**
  * Hook for managing forum admin state.
  */
 export function useForumAdminState() {

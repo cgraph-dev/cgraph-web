@@ -108,7 +108,6 @@ describe('useInviteManager', () => {
     });
 
     expect(mockApiPost).toHaveBeenCalledWith('/api/v1/groups/g-1/invites', {
-      max_uses: undefined,
       expires_in: 86400,
     });
     expect(result.current.inviteLink).toContain('NEWCODE');

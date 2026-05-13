@@ -7,7 +7,6 @@ import { useNotificationStore } from '@/modules/social/store';
 import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
 import { socketManager } from '@/lib/socket';
 import { captureError } from '@/lib/error-tracking';
-import { CUSTOMIZATION_CHANGED_EVENT } from '@/lib/events/customization-events';
 
 /** Use App Layout. */
 export function useAppLayout() {
@@ -47,17 +46,6 @@ export function useAppLayout() {
       socketManager.leaveUserChannel(user.id);
     };
   }, [fetchConversations, fetchGroups, fetchNotifications, user?.id]);
-
-  useEffect(() => {
-    const notifyCustomizationChanged = () => {
-      socketManager.notifyCustomizationChanged();
-    };
-
-    window.addEventListener(CUSTOMIZATION_CHANGED_EVENT, notifyCustomizationChanged);
-    return () => {
-      window.removeEventListener(CUSTOMIZATION_CHANGED_EVENT, notifyCustomizationChanged);
-    };
-  }, []);
 
   const handleLogout = async () => {
     socketManager.disconnect();

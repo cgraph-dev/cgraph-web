@@ -54,6 +54,9 @@ export interface PDFExportOptions {
   footerText?: string;
 }
 // COMPONENT PROPS
+/**
+ * Props for the ThreadPDFExport component
+ */
 export interface ThreadPDFExportProps {
   /** Thread data to export */
   thread: ThreadData;
@@ -67,6 +70,9 @@ export interface ThreadPDFExportProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
+/**
+ * Props for the ExportModal component
+ */
 export interface ExportModalProps {
   /** Whether the modal is open */
   isOpen: boolean;
@@ -78,6 +84,9 @@ export interface ExportModalProps {
   onExport: (options: PDFExportOptions) => Promise<void>;
 }
 
+/**
+ * Props for the OptionToggle component
+ */
 export interface OptionToggleProps {
   /** Label for the toggle */
   label: string;
@@ -89,6 +98,9 @@ export interface OptionToggleProps {
   onChange: (checked: boolean) => void;
 }
 
+/**
+ * Props for the OptionSelect component
+ */
 export interface OptionSelectProps<T extends string> {
   /** Label for the select */
   label: string;

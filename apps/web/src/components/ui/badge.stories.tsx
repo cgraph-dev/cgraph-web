@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the Badge UI component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import Badge, {
   NewBadge,

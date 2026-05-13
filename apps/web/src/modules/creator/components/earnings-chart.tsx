@@ -22,6 +22,7 @@ type Period = 'daily' | 'weekly' | 'monthly';
 const PERIODS: Period[] = ['daily', 'weekly', 'monthly'];
 const CHART_HEIGHT = 200;
 const BAR_GAP = 4;
+/** Description. */
 /** Earnings Chart component. */
 export function EarningsChart({ data, period: initialPeriod = 'monthly' }: EarningsChartProps) {
   const [period, setPeriod] = useState<Period>(initialPeriod);

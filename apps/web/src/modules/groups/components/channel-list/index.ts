@@ -5,6 +5,8 @@
  * channel type icons, and a modal for creating new channels.
  *
  */
+
+// Main component
 export { ChannelList, default } from './channel-list';
 
 // Sub-components

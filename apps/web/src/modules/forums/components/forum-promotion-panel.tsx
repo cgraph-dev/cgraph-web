@@ -62,6 +62,10 @@ const PROMOTION_TYPE_CONFIG: Record<
 };
 
 const PROMOTION_TYPES: PromotionType[] = ['boost', 'highlight', 'spotlight', 'bump'];
+/**
+ *
+ * Description.
+ */
 export function ForumPromotionPanel({ forumId }: ForumPromotionPanelProps) {
   const queryClient = useQueryClient();
   const [editingType, setEditingType] = useState<PromotionType | null>(null);

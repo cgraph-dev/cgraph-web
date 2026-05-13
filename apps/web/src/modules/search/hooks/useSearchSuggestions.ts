@@ -1,21 +1,30 @@
-import { useEffect, useState } from 'react';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
+/**
+ * Search Suggestions Hook
+ *
+ * Hook for search suggestions and recent search history.
+ *
+ */
 
-function parseStringArray(raw: string): string[] {
-  const parsed: unknown = JSON.parse(raw);
-  return Array.isArray(parsed) && parsed.every((value) => typeof value === 'string') ? parsed : [];
+import { useEffect, useState } from 'react';
+
+function parseStoredSearches(value: string): string[] {
+  const parsed: unknown = JSON.parse(value);
+  return Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'string') ? parsed : [];
 }
 
+/**
+ * Hook for search suggestions/autocomplete
+ */
 export function useSearchSuggestions() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Load recent searches from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.searchRecent);
+    const stored = localStorage.getItem('cgraph_recent_searches');
     if (stored) {
       try {
-        setRecentSearches(parseStringArray(stored));
+        setRecentSearches(parseStoredSearches(stored));
       } catch {
         // Invalid JSON, ignore
       }
@@ -43,20 +52,20 @@ export function useSearchSuggestions() {
     setRecentSearches((prev) => {
       const filtered = prev.filter((s) => s !== query);
       const updated = [query, ...filtered].slice(0, 10);
-      localStorage.setItem(STORAGE_KEYS.searchRecent, JSON.stringify(updated));
+      localStorage.setItem('cgraph_recent_searches', JSON.stringify(updated));
       return updated;
     });
   }
 
   function clearRecentSearches() {
     setRecentSearches([]);
-    localStorage.removeItem(STORAGE_KEYS.searchRecent);
+    localStorage.removeItem('cgraph_recent_searches');
   }
 
   function removeRecentSearch(query: string) {
     setRecentSearches((prev) => {
       const updated = prev.filter((s) => s !== query);
-      localStorage.setItem(STORAGE_KEYS.searchRecent, JSON.stringify(updated));
+      localStorage.setItem('cgraph_recent_searches', JSON.stringify(updated));
       return updated;
     });
   }

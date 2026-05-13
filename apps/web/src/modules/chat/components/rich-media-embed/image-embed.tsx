@@ -11,15 +11,28 @@ interface ImageEmbedProps {
   onExpand: () => void;
 }
 
+/**
+ * Image Embed component.
+ */
 export default function ImageEmbed({ embed, onExpand }: ImageEmbedProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const imageLabel = embed.title || 'Image';
 
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open image ${imageLabel}`}
       className="group relative max-w-sm cursor-pointer overflow-hidden rounded-xl"
       whileHover={{ opacity: 0.9 }}
       whileTap={{ scale: 0.98 }}
       onClick={onExpand}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onExpand();
+        }
+      }}
     >
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-[var(--token-card-bg)/0.4] backdrop-blur-sm">
@@ -28,7 +41,7 @@ export default function ImageEmbed({ embed, onExpand }: ImageEmbedProps) {
       )}
       <img
         src={embed.url}
-        alt={embed.title || 'Image'}
+        alt={imageLabel}
         className="h-auto max-h-96 w-full object-cover"
         loading="lazy"
         onLoad={() => setIsLoaded(true)}

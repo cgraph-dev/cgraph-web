@@ -6,6 +6,11 @@ interface ReadReceiptsProps {
   readBy: ReadByEntry[];
 }
 
+/**
+ */
+/**
+ * Read Receipts component.
+ */
 export function ReadReceipts({ readBy }: ReadReceiptsProps) {
   return (
     <motion.div

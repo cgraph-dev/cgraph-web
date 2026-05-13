@@ -1,4 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
+
+async function expectInvalid(locator: Locator) {
+  expect(await locator.evaluate((element: HTMLInputElement) => element.checkValidity())).toBe(
+    false
+  );
+}
 
 /**
  * Full User Journey E2E Tests
@@ -15,9 +21,7 @@ test.describe('User Flow — Registration & Onboarding', () => {
 
     // Required form fields
     const emailField = page.getByLabel(/email/i);
-    const usernameField = page
-      .getByLabel(/username/i)
-      .or(page.getByPlaceholder(/username/i));
+    const usernameField = page.getByLabel(/username/i).or(page.getByPlaceholder(/username/i));
     const passwordField = page.getByLabel(/^password$/i);
 
     await expect(emailField).toBeVisible();
@@ -27,9 +31,7 @@ test.describe('User Flow — Registration & Onboarding', () => {
     const hasUsername = await usernameField.isVisible().catch(() => false);
 
     // Submit button should exist
-    await expect(
-      page.getByRole('button', { name: /sign up|register|create/i })
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /sign up|register|create/i })).toBeVisible();
   });
 
   test('register form validates required fields before submit', async ({ page }) => {
@@ -37,11 +39,8 @@ test.describe('User Flow — Registration & Onboarding', () => {
 
     await page.getByRole('button', { name: /sign up|register|create/i }).click();
 
-    // Should show at least one validation error
-    const hasEmailError = await page.getByText(/email.*required|enter.*email/i).isVisible().catch(() => false);
-    const hasPasswordError = await page.getByText(/password.*required|enter.*password/i).isVisible().catch(() => false);
-
-    expect(hasEmailError || hasPasswordError).toBeTruthy();
+    await expectInvalid(page.locator('#email'));
+    await expectInvalid(page.locator('#password'));
   });
 
   test('login page allows navigation to register', async ({ page }) => {
@@ -87,7 +86,10 @@ test.describe('User Flow — Authenticated Journey', () => {
     } else {
       // Empty state is acceptable
       const hasEmpty = await page
-        .getByText(/no conversations|start.*conversation|no messages/i)
+        .getByText(
+          /no conversations|start.*conversation|start a new conversation|your messages|no messages/i
+        )
+        .first()
         .isVisible()
         .catch(() => false);
 
@@ -132,6 +134,6 @@ test.describe('User Flow — Authenticated Journey', () => {
     const isDashboard = page.url().includes('/dashboard');
 
     expect(isOnboarding || isMessages || isDashboard).toBeTruthy();
-    await expect(page.getByRole('main').or(page.locator('body'))).toBeVisible();
+    await expect(page.getByRole('main').first()).toBeVisible();
   });
 });

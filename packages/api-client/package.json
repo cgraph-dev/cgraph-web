@@ -10,7 +10,10 @@
     "./endpoints": "./src/endpoints/index.ts"
   },
   "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/ scripts/",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist",
     "extract-contracts": "tsx scripts/extract-zod-shape.ts"
   },

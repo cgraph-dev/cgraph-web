@@ -36,6 +36,11 @@ interface ThemeSelectionProps {
 
 // COMPONENT
 
+/**
+ */
+/**
+ * Theme Selection component.
+ */
 export function ThemeSelection({
   theme,
   availableThemes,

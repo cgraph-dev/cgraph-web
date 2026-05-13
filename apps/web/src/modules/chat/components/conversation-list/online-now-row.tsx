@@ -1,5 +1,5 @@
 /**
- * Horizontal row of online friends.
+ * OnlineNowRow — Messenger-style horizontal row of online friends.
  */
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';

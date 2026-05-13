@@ -1,4 +1,6 @@
-/** Groups consecutive messages by the same author. */
+/**
+ * MessageGroup — Discord cozy-mode grouping of consecutive messages by same author.
+ */
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { useChatIdentity } from '../hooks/useChatIdentity';

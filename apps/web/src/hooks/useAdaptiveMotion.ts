@@ -15,7 +15,7 @@
  * />
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface AdaptiveMotionConfig {
   /** Minimum acceptable FPS before reducing motion (default: 30) */
@@ -109,7 +109,7 @@ export function useAdaptiveMotion(config: AdaptiveMotionConfig = {}): AdaptiveMo
   const rafIdRef = useRef<number | null>(null);
 
   // Monitor FPS
-  function measureFps() {
+  const measureFps = useCallback(() => {
     const now = performance.now();
     const delta = now - lastFrameTimeRef.current;
     lastFrameTimeRef.current = now;
@@ -121,7 +121,7 @@ export function useAdaptiveMotion(config: AdaptiveMotionConfig = {}): AdaptiveMo
     }
 
     rafIdRef.current = requestAnimationFrame(measureFps);
-  }
+  }, [sampleSize]);
 
   // Calculate and update FPS periodically
   useEffect(() => {

@@ -18,7 +18,8 @@ import {
   Cog6ToothIcon,
   NewspaperIcon,
   PlusCircleIcon,
-  GlobeAltIcon} from '@heroicons/react/24/outline';
+  GlobeAltIcon,
+} from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { FADE_IN } from '@/lib/animations/transitions';
 
@@ -122,6 +123,11 @@ interface QuickSwitcherProps {
   items?: QuickSwitcherItem[];
 }
 
+/**
+ */
+/**
+ * Quick Switcher component.
+ */
 export function QuickSwitcher({ isOpen, onClose, items = [] }: QuickSwitcherProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -164,37 +170,37 @@ export function QuickSwitcher({ isOpen, onClose, items = [] }: QuickSwitcherProp
   // Scroll selected item into view
   useEffect(() => {
     const child = listRef.current?.children[selectedIndex];
-    if (child instanceof HTMLElement) {
+    if (child instanceof HTMLElement && typeof child.scrollIntoView === 'function') {
       child.scrollIntoView({ block: 'nearest' });
     }
   }, [selectedIndex]);
 
   function handleSelect(item: QuickSwitcherItem) {
-      navigate(item.path);
-      onClose();
-    }
+    navigate(item.path);
+    onClose();
+  }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1));
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedIndex((i) => Math.max(i - 1, 0));
-          break;
-        case 'Enter':
-          e.preventDefault();
-          if (filtered[selectedIndex]) {
-            handleSelect(filtered[selectedIndex]);
-          }
-          break;
-        case 'Escape':
-          onClose();
-          break;
-      }
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex((i) => Math.max(i - 1, 0));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (filtered[selectedIndex]) {
+          handleSelect(filtered[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        onClose();
+        break;
     }
+  }
 
   // Global Cmd+K / Ctrl+K handler
   useEffect(() => {

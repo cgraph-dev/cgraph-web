@@ -32,51 +32,53 @@ export const GroupFeaturesSchema = z.object({
 
 export type GroupFeatures = z.infer<typeof GroupFeaturesSchema>;
 
-export const GroupSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable().optional(),
-  // Backend sends icon_url for groups (NOT avatar_url — that's for users).
-  // Normalization to camelCase (iconUrl) happens in the consumer's transform layer.
-  icon_url: z.string().nullable().optional(),
-  banner_url: z.string().nullable().optional(),
-  owner_id: z.string().optional(),
-  ownerId: z.string().optional(),
-  owner_username: z.string().optional(),
-  ownerUsername: z.string().optional(),
-  member_count: z.number().optional(),
-  memberCount: z.number().optional(),
-  online_count: z.number().optional(),
-  onlineCount: z.number().optional(),
-  channel_count: z.number().optional(),
-  channelCount: z.number().optional(),
-  is_public: z.boolean().optional(),
-  isPublic: z.boolean().optional(),
-  is_verified: z.boolean().optional(),
-  isVerified: z.boolean().optional(),
-  is_featured: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
-  is_node_gated: z.boolean().optional(),
-  isNodeGated: z.boolean().optional(),
-  gate_type: GateTypeSchema.nullable().optional(),
-  gateType: GateTypeSchema.nullable().optional(),
-  gate_price_nodes: z.number().nullable().optional(),
-  gatePriceNodes: z.number().nullable().optional(),
-  category: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  features: GroupFeaturesSchema.optional(),
-  created_at: z.string().optional(),
-  createdAt: z.string().optional(),
-  joined_at: z.string().nullable().optional(),
-  joinedAt: z.string().nullable().optional(),
-  role: GroupRoleSchema.nullable().optional(),
-  // Web-only nested fields
-  slug: z.string().optional(),
-  categories: z.array(z.unknown()).optional(),
-  channels: z.array(z.unknown()).optional(),
-  roles: z.array(z.unknown()).optional(),
-  myMember: z.unknown().nullable().optional(),
-});
+export const GroupSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().nullable().optional(),
+    // Backend sends icon_url for groups (NOT avatar_url — that's for users).
+    // Normalization to camelCase (iconUrl) happens in the consumer's transform layer.
+    icon_url: z.string().nullable().optional(),
+    banner_url: z.string().nullable().optional(),
+    owner_id: z.string().optional(),
+    ownerId: z.string().optional(),
+    owner_username: z.string().optional(),
+    ownerUsername: z.string().optional(),
+    member_count: z.number().optional(),
+    memberCount: z.number().optional(),
+    online_count: z.number().optional(),
+    onlineCount: z.number().optional(),
+    channel_count: z.number().optional(),
+    channelCount: z.number().optional(),
+    is_public: z.boolean().optional(),
+    isPublic: z.boolean().optional(),
+    is_verified: z.boolean().optional(),
+    isVerified: z.boolean().optional(),
+    is_featured: z.boolean().optional(),
+    isFeatured: z.boolean().optional(),
+    is_node_gated: z.boolean().optional(),
+    isNodeGated: z.boolean().optional(),
+    gate_type: GateTypeSchema.nullable().optional(),
+    gateType: GateTypeSchema.nullable().optional(),
+    gate_price_nodes: z.number().nullable().optional(),
+    gatePriceNodes: z.number().nullable().optional(),
+    category: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+    features: GroupFeaturesSchema.optional(),
+    created_at: z.string().optional(),
+    createdAt: z.string().optional(),
+    joined_at: z.string().nullable().optional(),
+    joinedAt: z.string().nullable().optional(),
+    role: GroupRoleSchema.nullable().optional(),
+    // Web-only nested fields
+    slug: z.string().optional(),
+    categories: z.array(z.unknown()).optional(),
+    channels: z.array(z.unknown()).optional(),
+    roles: z.array(z.unknown()).optional(),
+    myMember: z.unknown().nullable().optional(),
+  })
+  .passthrough();
 
 export type Group = z.infer<typeof GroupSchema>;
 
@@ -84,32 +86,34 @@ export type Group = z.infer<typeof GroupSchema>;
 // Group member
 // ---------------------------------------------------------------------------
 
-export const GroupMemberSchema = z.object({
-  id: z.string(),
-  user_id: z.string().optional(),
-  userId: z.string().optional(),
-  username: z.string().optional(),
-  display_name: z.string().nullable().optional(),
-  displayName: z.string().nullable().optional(),
-  avatar_url: z.string().nullable().optional(),
-  avatarUrl: z.string().nullable().optional(),
-  role: GroupRoleSchema.optional(),
-  status: z.enum(['online', 'offline', 'idle', 'dnd']).optional(),
-  custom_status: z.string().nullable().optional(),
-  customStatus: z.string().nullable().optional(),
-  joined_at: z.string().optional(),
-  joinedAt: z.string().optional(),
-  nickname: z.string().nullable().optional(),
-  level: z.number().optional(),
-  xp_in_group: z.number().optional(),
-  xpInGroup: z.number().optional(),
-  // Web shape: nested user + roles array
-  user: z.unknown().optional(),
-  roles: z.array(z.unknown()).optional(),
-  notifications: z.enum(['all', 'mentions', 'none']).optional(),
-  suppress_everyone: z.boolean().optional(),
-  suppressEveryone: z.boolean().optional(),
-});
+export const GroupMemberSchema = z
+  .object({
+    id: z.string(),
+    user_id: z.string().optional(),
+    userId: z.string().optional(),
+    username: z.string().optional(),
+    display_name: z.string().nullable().optional(),
+    displayName: z.string().nullable().optional(),
+    avatar_url: z.string().nullable().optional(),
+    avatarUrl: z.string().nullable().optional(),
+    role: GroupRoleSchema.optional(),
+    status: z.enum(['online', 'offline', 'idle', 'dnd']).optional(),
+    custom_status: z.string().nullable().optional(),
+    customStatus: z.string().nullable().optional(),
+    joined_at: z.string().optional(),
+    joinedAt: z.string().optional(),
+    nickname: z.string().nullable().optional(),
+    level: z.number().optional(),
+    xp_in_group: z.number().optional(),
+    xpInGroup: z.number().optional(),
+    // Web shape: nested user + roles array
+    user: z.unknown().optional(),
+    roles: z.array(z.unknown()).optional(),
+    notifications: z.enum(['all', 'mentions', 'none']).optional(),
+    suppress_everyone: z.boolean().optional(),
+    suppressEveryone: z.boolean().optional(),
+  })
+  .passthrough();
 
 export type GroupMember = z.infer<typeof GroupMemberSchema>;
 
@@ -117,30 +121,32 @@ export type GroupMember = z.infer<typeof GroupMemberSchema>;
 // Group invite
 // ---------------------------------------------------------------------------
 
-export const GroupInviteSchema = z.object({
-  id: z.string().optional(),
-  code: z.string(),
-  group_id: z.string().optional(),
-  groupId: z.string().optional(),
-  group_name: z.string().optional(),
-  groupName: z.string().optional(),
-  group_avatar: z.string().nullable().optional(),
-  groupAvatar: z.string().nullable().optional(),
-  creator_id: z.string().optional(),
-  creatorId: z.string().optional(),
-  creator_username: z.string().optional(),
-  creatorUsername: z.string().optional(),
-  uses: z.number().optional(),
-  max_uses: z.number().nullable().optional(),
-  maxUses: z.number().nullable().optional(),
-  expires_at: z.string().nullable().optional(),
-  expiresAt: z.string().nullable().optional(),
-  created_at: z.string().optional(),
-  createdAt: z.string().optional(),
-  // Nested objects from the API
-  group: z.unknown().optional(),
-  creator: z.unknown().optional(),
-});
+export const GroupInviteSchema = z
+  .object({
+    id: z.string(),
+    code: z.string(),
+    group_id: z.string().optional(),
+    groupId: z.string().optional(),
+    group_name: z.string().optional(),
+    groupName: z.string().optional(),
+    group_avatar: z.string().nullable().optional(),
+    groupAvatar: z.string().nullable().optional(),
+    creator_id: z.string().optional(),
+    creatorId: z.string().optional(),
+    creator_username: z.string().optional(),
+    creatorUsername: z.string().optional(),
+    uses: z.number().optional(),
+    max_uses: z.number().nullable().optional(),
+    maxUses: z.number().nullable().optional(),
+    expires_at: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+    created_at: z.string().optional(),
+    createdAt: z.string().optional(),
+    // Nested objects from the API
+    group: z.unknown().optional(),
+    creator: z.unknown().optional(),
+  })
+  .passthrough();
 
 export type GroupInvite = z.infer<typeof GroupInviteSchema>;
 

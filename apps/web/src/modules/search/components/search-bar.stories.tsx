@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the SearchBar component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 
 /** Standalone search bar mock for story isolation */

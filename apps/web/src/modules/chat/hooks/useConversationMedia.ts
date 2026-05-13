@@ -44,6 +44,10 @@ interface MediaResponse {
     };
   };
 }
+/**
+ *
+ * Description.
+ */
 export function useConversationMedia(conversationId: string | undefined) {
   const [media, setMedia] = useState<MediaMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);

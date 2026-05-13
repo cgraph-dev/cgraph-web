@@ -1,9 +1,17 @@
+/**
+ * TreeControls component
+ */
 
 interface TreeControlsProps {
   onExpandAll: () => void;
   onCollapseAll: () => void;
 }
 
+/**
+ */
+/**
+ * Tree Controls component.
+ */
 export function TreeControls({ onExpandAll, onCollapseAll }: TreeControlsProps) {
   return (
     <div className="mb-2 flex items-center justify-between px-2 py-1 text-xs text-gray-500">

@@ -25,6 +25,7 @@ import {
   RulesPanel,
   BbcodeManagerPanel,
   CalendarManagerPanel,
+  NodeGatingPanel,
 } from './panels';
 
 interface AdminContentProps {
@@ -98,6 +99,11 @@ interface AdminContentProps {
   onModQueueAction: (itemId: string, action: 'approve' | 'reject') => void;
 }
 
+/**
+ */
+/**
+ * Admin Content administration component.
+ */
 export function AdminContent({
   activeTab,
   error,
@@ -283,6 +289,8 @@ export function AdminContent({
           {activeTab === 'bbcode' && <BbcodeManagerPanel forumId={forumId} />}
 
           {activeTab === 'calendar' && <CalendarManagerPanel forumId={forumId} />}
+
+          {activeTab === 'node-gating' && <NodeGatingPanel forumId={forumId} />}
         </AnimatePresence>
       </div>
     </main>

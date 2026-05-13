@@ -124,7 +124,8 @@ declare module 'livekit-client' {
   /** ExternalE2EEKeyProvider class. */
   export class ExternalE2EEKeyProvider {
     constructor();
-        setKey(key: CryptoKey | Uint8Array, participantIdentity?: string): void;
+    /** Description. */
+    setKey(key: CryptoKey | Uint8Array, participantIdentity?: string): void;
   }
 
   /** Room class. */
@@ -136,9 +137,12 @@ declare module 'livekit-client' {
     remoteParticipants: Map<string, RemoteParticipant>;
     activeSpeakers: Participant[];
     isE2EEEnabled: boolean;
-        setE2EEEnabled(enabled: boolean, options?: E2EEOptions): Promise<void>;
-        connect(url: string, token: string): Promise<void>;
-        disconnect(stopTracks?: boolean | string): Promise<void>;
+    /** Description. */
+    setE2EEEnabled(enabled: boolean, options?: E2EEOptions): Promise<void>;
+    /** Description. */
+    connect(url: string, token: string): Promise<void>;
+    /** Description. */
+    disconnect(stopTracks?: boolean | string): Promise<void>;
     /** Register typed event handler. */
     on<E extends keyof RoomEventCallbacks>(event: E, handler: RoomEventCallbacks[E]): this;
     /** Remove typed event handler. */

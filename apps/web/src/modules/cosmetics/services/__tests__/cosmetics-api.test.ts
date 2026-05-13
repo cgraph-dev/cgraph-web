@@ -149,7 +149,7 @@ describe('cosmeticsApi', () => {
     mockApi.get
       .mockResolvedValueOnce({
         data: {
-          listings: [
+          themes: [
             {
               id: 'theme-1',
               slug: 'midnight',
@@ -177,7 +177,7 @@ describe('cosmeticsApi', () => {
       })
       .mockResolvedValueOnce({
         data: {
-          profile_theme: {
+          theme: {
             id: 'owned-theme-1',
             themeId: 'theme-1',
             isActive: true,
@@ -210,7 +210,7 @@ describe('cosmeticsApi', () => {
           },
         },
       })
-      .mockResolvedValueOnce({ data: { profile_theme: null } });
+      .mockResolvedValueOnce({ data: { theme: null } });
 
     const listed = await cosmeticsApi.listProfileThemes({ preset: 'midnight' });
     const active = await cosmeticsApi.getActiveTheme();
@@ -267,8 +267,8 @@ describe('cosmeticsApi', () => {
     const result = await cosmeticsApi.activateTheme('theme-2');
 
     expect(mockApi.put).toHaveBeenCalledWith('/api/v1/cosmetics/equip', {
-      type: 'profile_theme',
-      id: 'theme-2',
+      item_type: 'profile_theme',
+      item_id: 'theme-2',
     });
     expect(result).toEqual(
       expect.objectContaining({

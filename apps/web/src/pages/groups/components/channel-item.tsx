@@ -1,3 +1,6 @@
+/**
+ * ChannelItem component
+ */
 
 import { motion, AnimatePresence } from 'motion/react';
 import { NavLink } from 'react-router-dom';
@@ -12,6 +15,11 @@ import {
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import type { ChannelItemProps } from './types';
 
+/**
+ */
+/**
+ * Channel Item component.
+ */
 export function ChannelItem({ channel, groupId, isActive }: ChannelItemProps) {
   const getIcon = () => {
     switch (channel.type) {

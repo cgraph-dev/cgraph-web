@@ -6,13 +6,14 @@ import { extname, join, relative, sep } from 'node:path';
 const packageRoots = [
   'packages/animation-constants',
   'packages/api-client',
+  'packages/crypto',
   'packages/design-tokens',
   'packages/shared-types',
   'packages/utils',
 ];
 
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.mjs']);
-const allowedExternalImports = new Set(['axios', 'zod']);
+const allowedExternalImports = new Set(['@signalapp/libsignal-client', 'axios', 'zod']);
 const wildcardExportPattern = /^\s*export\s+\*\s+from\s+['"][^'"]+['"];?/m;
 const snapshotManifestPath = 'packages/CGRAPH_PACKAGES_SNAPSHOT.json';
 const canonicalPackagesRepository = 'cgraph-dev/cgraph-packages';
@@ -43,16 +44,15 @@ const forbiddenGlobals = new Map([
   ['document', 'Browser DOM access belongs in a web adapter.'],
   ['indexedDB', 'Browser persistence belongs in a web adapter.'],
   ['localStorage', 'Browser persistence belongs in a web adapter.'],
-  ['navigator', 'Runtime detection belongs in an app adapter.'],
+  ['navigator', 'Runtime detection must stay explicitly allowlisted.'],
   ['sessionStorage', 'Browser persistence belongs in a web adapter.'],
   ['window', 'Browser globals belong in a web or desktop adapter.'],
 ]);
 
 const allowedGlobalsByFile = new Map([
-  [
-    'packages/utils/src/httpClient.ts',
-    new Set(['document']),
-  ],
+  ['packages/crypto/src/browser.ts', new Set(['navigator', 'window'])],
+  ['packages/crypto/src/libsignal-bridge.ts', new Set(['navigator', 'window'])],
+  ['packages/utils/src/httpClient.ts', new Set(['document'])],
 ]);
 
 const importSourcePattern =
@@ -91,10 +91,17 @@ function walk(dir) {
 }
 
 function sourceFiles() {
-  return packageRoots.flatMap((root) => walk(join(process.cwd(), root, 'src'))).filter((file) => {
-    const rel = relativePath(file);
-    return !rel.includes('/__tests__/') && !/[.]test[.]/.test(rel) && !/[.]spec[.]/.test(rel);
-  });
+  return packageRoots
+    .flatMap((root) => {
+      const files = walk(join(process.cwd(), root, 'src'));
+      const scriptsDir = join(process.cwd(), root, 'scripts');
+      if (existsSync(scriptsDir)) files.push(...walk(scriptsDir));
+      return files;
+    })
+    .filter((file) => {
+      const rel = relativePath(file);
+      return !rel.includes('/__tests__/') && !/[.]test[.]/.test(rel) && !/[.]spec[.]/.test(rel);
+    });
 }
 
 function isInternalImport(source) {
@@ -102,7 +109,13 @@ function isInternalImport(source) {
 }
 
 function isForbiddenImport(source) {
-  return forbiddenImportPrefixes.some((prefix) => source === prefix || source.startsWith(`${prefix}/`));
+  return forbiddenImportPrefixes.some(
+    (prefix) => source === prefix || source.startsWith(`${prefix}/`)
+  );
+}
+
+function isAllowedNodeImport(rel, source) {
+  return rel.startsWith('packages/api-client/scripts/') && source.startsWith('node:');
 }
 
 const findings = [];
@@ -123,11 +136,7 @@ function validateSnapshotManifest() {
     return;
   }
 
-  if (
-    typeof manifest !== 'object' ||
-    manifest === null ||
-    Array.isArray(manifest)
-  ) {
+  if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) {
     findings.push(`${snapshotManifestPath}: manifest must be a JSON object.`);
     return;
   }
@@ -169,7 +178,7 @@ for (const file of sourceFiles()) {
 
   if (wildcardExportPattern.test(content)) {
     findings.push(
-      `${rel}: wildcard public re-exports hide package ownership; mirror named exports from cgraph-packages.`,
+      `${rel}: wildcard public re-exports hide package ownership; mirror named exports from cgraph-packages.`
     );
   }
 
@@ -186,6 +195,7 @@ for (const file of sourceFiles()) {
     if (!source) continue;
     if (isInternalImport(source)) continue;
     if (allowedExternalImports.has(source)) continue;
+    if (isAllowedNodeImport(rel, source)) continue;
 
     if (isForbiddenImport(source)) {
       findings.push(`${rel}: imports "${source}", which belongs in app code.`);

@@ -1,4 +1,6 @@
-/** Member list panel for groups and channels. */
+/**
+ * MemberList — Discord-style member list panel for groups/channels.
+ */
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Avatar, Tooltip, ScrollArea } from '@/components/ui';
@@ -22,7 +24,7 @@ interface MemberListProps {
 }
 
 /**
- * Member list grouped by online/offline state with role badges.
+ * Discord-style member list grouped by online/offline with role badges.
  */
 export function MemberList({
   members,

@@ -6,6 +6,11 @@ import { PERMISSIONS, ROLE_COLORS } from './constants';
 import { Toggle } from './toggle';
 import type { RoleEditorProps } from './types';
 
+/**
+ */
+/**
+ * Role Editor component.
+ */
 export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEditorProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['general', 'permissions'])

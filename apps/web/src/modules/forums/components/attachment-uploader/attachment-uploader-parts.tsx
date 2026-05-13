@@ -20,6 +20,8 @@ import { SCALE_IN } from '@/lib/animations/transitions';
 /* ─── helpers ─── */
 
 /**
+ */
+/**
  * Formats file size.
  *
  * @param bytes - The bytes.
@@ -48,6 +50,11 @@ interface DropzoneProps {
   onOpenPicker: () => void;
 }
 
+/**
+ */
+/**
+ * Dropzone component.
+ */
 export function Dropzone({
   isDragging,
   maxFiles,
@@ -100,6 +107,11 @@ export function Dropzone({
 
 /* ─── ErrorList ─── */
 
+/**
+ */
+/**
+ * Error List component.
+ */
 export function ErrorList({ errors }: { errors: string[] }) {
   return (
     <AnimatePresence>
@@ -124,6 +136,11 @@ export function ErrorList({ errors }: { errors: string[] }) {
 
 /* ─── UploadProgressList ─── */
 
+/**
+ */
+/**
+ * Upload Progress List component.
+ */
 export function UploadProgressList({ progress }: { progress: Record<string, number> }) {
   return (
     <AnimatePresence>
@@ -167,6 +184,11 @@ interface AttachmentListProps {
   onDelete: (id: string) => void;
 }
 
+/**
+ */
+/**
+ * Attachment List component.
+ */
 export function AttachmentList({ attachments, onDelete }: AttachmentListProps) {
   if (attachments.length === 0) return null;
 

@@ -52,6 +52,11 @@ const LogEntryRow = memo(function LogEntryRow({ entry }: LogEntryRowProps) {
     </div>
   );
 });
+/**
+ */
+/**
+ * Moderation Log component.
+ */
 export function ModerationLog() {
   const { moderationLog, isLoadingLog, fetchModerationLog } = useModerationStore();
 

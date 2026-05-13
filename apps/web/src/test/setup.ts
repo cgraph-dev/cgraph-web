@@ -246,11 +246,6 @@ Object.defineProperty(window, 'ResizeObserver', {
   value: MockResizeObserver,
 });
 
-Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
-  configurable: true,
-  value: vi.fn(),
-});
-
 // Silence console errors/warnings in tests unless specifically testing them
 const originalError = console.error;
 const originalWarn = console.warn;

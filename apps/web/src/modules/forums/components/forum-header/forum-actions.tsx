@@ -1,3 +1,9 @@
+/**
+ * Forum Actions Component
+ *
+ * Action buttons for forum header (join, subscribe, menu)
+ */
+
 import { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {

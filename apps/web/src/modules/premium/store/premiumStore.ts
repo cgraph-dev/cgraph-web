@@ -7,9 +7,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeLocalStorage } from '@/lib/safeStorage';
-import { STORAGE_KEYS } from '@/lib/storage/namespaces';
-import { apiClient } from '@/lib/api-client';
 import { safeRedirect } from '@/lib/security';
+import { billingService } from '@/services/billing';
 import type { SubscriptionTier, PurchaseHistory } from './types';
 
 export interface Invoice {
@@ -99,19 +98,14 @@ export const usePremiumStore = create<PremiumState>()(
       fetchBillingStatus: async () => {
         set({ isLoading: true });
         try {
-          const result = await apiClient.billing.getStatus();
-          if (!('ok' in result) || !result.ok) {
-            set({ isLoading: false });
-            return;
-          }
-          const billing = result.data;
+          const billing = await billingService.getStatus();
           const tier: SubscriptionTier | null = billing.tier === 'free' ? null : billing.tier;
           set({
             isSubscribed: billing.status === 'active' || billing.status === 'trialing',
             currentTier: tier,
-            expiresAt: billing.current_period_end ?? null,
+            expiresAt: billing.currentPeriodEnd ?? billing.current_period_end ?? null,
             status: billing.status,
-            cancelAtPeriodEnd: billing.cancel_at_period_end ?? false,
+            cancelAtPeriodEnd: billing.cancelAtPeriodEnd ?? billing.cancel_at_period_end ?? false,
             isLoading: false,
           });
         } catch {
@@ -122,16 +116,14 @@ export const usePremiumStore = create<PremiumState>()(
       // Fetch invoice history
       fetchInvoices: async () => {
         try {
-          const result = await apiClient.billing.getInvoices();
-          if ('ok' in result && result.ok) {
-            set({
-              invoices: result.data.map((inv) => ({
-                ...inv,
-                createdAt: inv.createdAt ?? inv.created_at ?? new Date().toISOString(),
-                pdfUrl: inv.pdfUrl ?? inv.pdf_url ?? null,
-              })),
-            });
-          }
+          const invoices = await billingService.getInvoices();
+          set({
+            invoices: invoices.map((inv) => ({
+              ...inv,
+              createdAt: inv.createdAt ?? inv.created_at ?? new Date().toISOString(),
+              pdfUrl: inv.pdfUrl ?? inv.pdf_url ?? null,
+            })),
+          });
         } catch {
           // Silently fail — invoices are non-critical
         }
@@ -139,14 +131,14 @@ export const usePremiumStore = create<PremiumState>()(
 
       // Subscribe to a tier via Stripe Checkout redirect
       subscribe: async (tier: SubscriptionTier) => {
-        const result = await apiClient.billing.createCheckout(tier);
-        if ('ok' in result && result.ok && result.data.url) safeRedirect(result.data.url);
+        const session = await billingService.createCheckout(tier);
+        if (session.url) safeRedirect(session.url);
       },
 
       // Open Stripe Billing Portal
       openBillingPortal: async () => {
-        const result = await apiClient.billing.createPortal();
-        if ('ok' in result && result.ok && result.data.url) safeRedirect(result.data.url);
+        const portal = await billingService.createPortal();
+        if (portal.url) safeRedirect(portal.url);
       },
 
       // Actions
@@ -222,7 +214,7 @@ export const usePremiumStore = create<PremiumState>()(
         }),
     }),
     {
-      name: STORAGE_KEYS.premiumStore,
+      name: 'cgraph-premium',
       storage: createJSONStorage(() => safeLocalStorage),
     }
   )

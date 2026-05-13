@@ -3,6 +3,11 @@ import { LockClosedIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import type { GroupListItemProps } from './types';
 
+/**
+ */
+/**
+ * Group List Item component.
+ */
 export function GroupListItem({ group, onClick }: GroupListItemProps) {
   return (
     <motion.div

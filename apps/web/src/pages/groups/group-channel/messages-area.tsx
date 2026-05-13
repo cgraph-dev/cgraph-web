@@ -8,6 +8,11 @@ import { HashtagIcon } from '@heroicons/react/24/outline';
 import { ChannelMessageItem } from './channel-message-item';
 import type { MessagesAreaProps } from './types';
 
+/**
+ */
+/**
+ * Messages Area component.
+ */
 export function MessagesArea({
   groupedMessages,
   hasMoreMessages,

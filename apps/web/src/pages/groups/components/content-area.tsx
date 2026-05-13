@@ -1,3 +1,6 @@
+/**
+ * ContentArea component
+ */
 
 import { durations } from '@cgraph/animation-constants';
 import { motion } from 'motion/react';
@@ -7,6 +10,11 @@ import { GlassCard } from '@/shared/components/ui';
 import type { ContentAreaProps } from './types';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 
+/**
+ */
+/**
+ * Content Area component.
+ */
 export function ContentArea({ activeGroup, groupId, channelId }: ContentAreaProps) {
   // Has channel selected
   if (channelId) {

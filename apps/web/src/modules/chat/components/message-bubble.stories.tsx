@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the MessageBubble component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 
 /** Minimal mock to render message bubble variants in isolation */

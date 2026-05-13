@@ -1,3 +1,6 @@
+/**
+ * Storybook stories for the ErrorBoundary / ErrorFallback component.
+ */
 import type { Meta, StoryObj } from '@storybook/react';
 import { ErrorFallback } from '@/shared/components/error-fallback';
 

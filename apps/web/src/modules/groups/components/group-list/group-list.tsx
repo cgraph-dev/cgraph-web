@@ -12,6 +12,11 @@ import { CreateGroupModal } from './create-group-modal';
 import { getGroupRoute } from '@/modules/groups/routing';
 import type { Group, GroupListProps, GroupListVariant } from './types';
 
+/**
+ */
+/**
+ * Group List component.
+ */
 export function GroupList({
   variant = 'grid',
   showSearch = true,

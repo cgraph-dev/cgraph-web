@@ -14,7 +14,7 @@ import {
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
 import { tweens, springs, entranceVariants } from '@/lib/animation-presets';
-import { clearCGraphCacheStorage } from '@/lib/storage/namespaces';
+import { secureClear } from '@/lib/security';
 
 interface StorageBreakdown {
   messages: number; // bytes
@@ -57,13 +57,24 @@ interface StorageManagementAutoDownload {
   documents: AutoDownloadOption;
 }
 
-const AUTO_DOWNLOAD_TYPES = ['images', 'videos', 'documents'] as const satisfies readonly AutoDownloadType[];
-const AUTO_DOWNLOAD_OPTIONS = ['always', 'wifi', 'never'] as const satisfies readonly AutoDownloadOption[];
+const AUTO_DOWNLOAD_TYPES = [
+  'images',
+  'videos',
+  'documents',
+] as const satisfies readonly AutoDownloadType[];
+const AUTO_DOWNLOAD_OPTIONS = [
+  'always',
+  'wifi',
+  'never',
+] as const satisfies readonly AutoDownloadOption[];
 
 function getAutoDownloadOption(value: string): AutoDownloadOption | null {
   return AUTO_DOWNLOAD_OPTIONS.find((option) => option === value) ?? null;
 }
 
+/**
+ * Storage Management component.
+ */
 export function StorageManagement() {
   const [storage, setStorage] = useState<StorageBreakdown>({
     messages: 0,
@@ -108,7 +119,7 @@ export function StorageManagement() {
         const names = await caches.keys();
         await Promise.all(names.map((name) => caches.delete(name)));
       }
-      clearCGraphCacheStorage();
+      secureClear();
 
       setStorage((prev) => ({ ...prev, cache: 0, total: prev.total - prev.cache }));
     } finally {

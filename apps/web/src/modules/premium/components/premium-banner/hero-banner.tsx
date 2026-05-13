@@ -1,3 +1,6 @@
+/**
+ * Premium hero-style banner component.
+ */
 import { durations } from '@cgraph/animation-constants';
 import React from 'react';
 import { motion } from 'motion/react';
@@ -23,6 +26,11 @@ type HeroBannerProps = Pick<
   | 'onDismiss'
 >;
 
+/**
+ */
+/**
+ * Hero Banner component.
+ */
 export function HeroBanner({
   title,
   description,

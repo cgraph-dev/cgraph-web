@@ -5,6 +5,11 @@
 import { UserGroupIcon, UserIcon, EyeIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import type { StatsCardsProps } from './types';
 
+/**
+ */
+/**
+ * Stats Cards display component.
+ */
 export function StatsCards({ stats, formatDate }: StatsCardsProps) {
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">

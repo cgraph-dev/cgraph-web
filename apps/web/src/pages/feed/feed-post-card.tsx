@@ -35,6 +35,7 @@ function formatCount(n: number): string {
   return String(n);
 }
 
+/** Description. */
 /** Feed Post Card component. */
 export function FeedPostCard({ thread, className }: FeedPostCardProps) {
   return (

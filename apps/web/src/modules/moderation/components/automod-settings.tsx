@@ -35,6 +35,9 @@ const ACTIONS = [
   { value: 'flag_for_review', label: 'Flag for review' },
 ];
 
+/**
+ * Automod Settings component.
+ */
 export function AutomodSettings({ groupId }: { groupId: string }) {
   const [rules, setRules] = useState<AutomodRule[]>([]);
   const [loading, setLoading] = useState(true);

@@ -19,8 +19,8 @@ describe('GifPicker EmptyState', () => {
   });
 
   it('renders heart icon for favorites', () => {
-    render(<EmptyState type="favorites" />);
-    expect(screen.getByTestId('icon-HeartIcon')).toBeInTheDocument();
+    const { container } = render(<EmptyState type="favorites" />);
+    expect(container.querySelector('svg[data-slot="icon"]')).toBeInTheDocument();
   });
 
   it('renders recent empty state', () => {
@@ -34,8 +34,8 @@ describe('GifPicker EmptyState', () => {
   });
 
   it('renders clock icon for recent', () => {
-    render(<EmptyState type="recent" />);
-    expect(screen.getByTestId('icon-ClockIcon')).toBeInTheDocument();
+    const { container } = render(<EmptyState type="recent" />);
+    expect(container.querySelector('svg[data-slot="icon"]')).toBeInTheDocument();
   });
 
   it('renders search empty state', () => {
@@ -49,7 +49,7 @@ describe('GifPicker EmptyState', () => {
   });
 
   it('renders search icon for search', () => {
-    render(<EmptyState type="search" />);
-    expect(screen.getByTestId('icon-MagnifyingGlassIcon')).toBeInTheDocument();
+    const { container } = render(<EmptyState type="search" />);
+    expect(container.querySelector('svg[data-slot="icon"]')).toBeInTheDocument();
   });
 });

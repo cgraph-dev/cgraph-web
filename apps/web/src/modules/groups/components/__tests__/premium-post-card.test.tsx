@@ -1,7 +1,16 @@
+/**
+ * PremiumPostCard Component Tests
+ *
+ * Tests for the premium post card component.
+ * Covers: preview/full content display, unlock flow, price badge,
+ * purchase count, author view, and error handling.
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import type { PremiumPost } from '@/modules/groups/types/premium-post';
+
+// --- Mocks ---
 
 vi.mock('motion/react', () => ({
   motion: {
@@ -30,9 +39,7 @@ vi.mock('@heroicons/react/24/outline', () => ({
   LockClosedIcon: (props: Record<string, unknown>) => (
     <svg data-testid="LockClosedIcon" {...props} />
   ),
-  LockOpenIcon: (props: Record<string, unknown>) => (
-    <svg data-testid="LockOpenIcon" {...props} />
-  ),
+  LockOpenIcon: (props: Record<string, unknown>) => <svg data-testid="LockOpenIcon" {...props} />,
   UserCircleIcon: (props: Record<string, unknown>) => (
     <svg data-testid="UserCircleIcon" {...props} />
   ),
@@ -54,13 +61,15 @@ vi.mock('@/modules/groups/services/premium-post-api', () => ({
 
 import { PremiumPostCard } from '../premium-post-card';
 
+// --- Helpers ---
+
 function createMockPost(overrides: Partial<PremiumPost> = {}): PremiumPost {
   return {
     id: 'pp-1',
     groupId: 'g-1',
-    title: 'Exclusive Studio Notes',
+    title: 'Exclusive Tutorial',
     content:
-      'This is the full content of the premium post. It contains production notes, reference links, and release details available only to paying members.',
+      'This is the full content of the premium post. It contains detailed information that only paying members can see. Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     mediaUrls: [],
     priceNodes: 50,
     previewLength: 40,
@@ -78,6 +87,8 @@ function createMockPost(overrides: Partial<PremiumPost> = {}): PremiumPost {
   };
 }
 
+// --- Tests ---
+
 describe('PremiumPostCard', () => {
   const onPurchaseSuccess = vi.fn();
 
@@ -88,7 +99,7 @@ describe('PremiumPostCard', () => {
 
   it('renders the post title', () => {
     render(<PremiumPostCard post={createMockPost()} onPurchaseSuccess={onPurchaseSuccess} />);
-    expect(screen.getByText('Exclusive Studio Notes')).toBeInTheDocument();
+    expect(screen.getByText('Exclusive Tutorial')).toBeInTheDocument();
   });
 
   it('renders the author display name', () => {
@@ -123,6 +134,7 @@ describe('PremiumPostCard', () => {
   it('shows truncated preview content for non-purchased posts', () => {
     const post = createMockPost();
     render(<PremiumPostCard post={post} onPurchaseSuccess={onPurchaseSuccess} />);
+    // Content should be truncated at previewLength (40 chars) + "..."
     const truncated = post.content.slice(0, 40) + '...';
     expect(screen.getByText(truncated)).toBeInTheDocument();
   });

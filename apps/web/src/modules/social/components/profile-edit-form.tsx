@@ -68,6 +68,7 @@ async function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
 
 // Component
 
+/** Description. */
 /** Profile Edit Form component. */
 export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProps) {
   // Form state

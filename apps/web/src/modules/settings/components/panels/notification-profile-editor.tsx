@@ -44,6 +44,9 @@ const PRESET_COLORS = [
   '#06b6d4',
 ] as const;
 
+/**
+ * Profile Editor component.
+ */
 export function NotificationProfileEditor(): React.ReactNode {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();

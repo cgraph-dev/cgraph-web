@@ -23,6 +23,11 @@ interface SearchBarProps {
   isLoading: boolean;
 }
 
+/**
+ */
+/**
+ * Search Bar component.
+ */
 export function SearchBar({
   filters,
   updateFilter,

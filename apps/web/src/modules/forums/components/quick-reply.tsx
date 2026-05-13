@@ -41,6 +41,11 @@ const logger = createLogger('QuickReply');
  * - Quote selected text
  */
 
+/**
+ */
+/**
+ * Quick Reply component.
+ */
 export function QuickReply({
   threadId,
   onSubmit,
@@ -81,8 +86,8 @@ export function QuickReply({
   };
 
   const insertBBCode = (tag: string, value?: string) => {
-    const textarea = document.querySelector<HTMLTextAreaElement>(`#quick-reply-${threadId}`);
-    if (!textarea) return;
+    const textarea = document.querySelector(`#quick-reply-${threadId}`);
+    if (!(textarea instanceof HTMLTextAreaElement)) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;

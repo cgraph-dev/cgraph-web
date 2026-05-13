@@ -1,4 +1,6 @@
-/** Three-column media grid for chat attachments, links, and files. */
+/**
+ * SharedMediaGrid — Instagram-style 3-column media grid in chat info panel.
+ */
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -49,6 +51,7 @@ const TABS: { key: MediaTab; label: string }[] = [
   { key: 'links', label: 'Links' },
 ];
 
+/** Description. */
 /** Shared Media Grid component. */
 export function SharedMediaGrid({
   media = [],

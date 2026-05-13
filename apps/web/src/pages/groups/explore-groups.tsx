@@ -31,6 +31,9 @@ const SORT_OPTIONS = [
   { value: 'name', label: 'Name' },
 ] as const;
 
+/**
+ * Explore Groups page component.
+ */
 export default function ExploreGroups() {
   const navigate = useNavigate();
   const {

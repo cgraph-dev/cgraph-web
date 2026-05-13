@@ -21,13 +21,22 @@ import type { OnlineStatusMap } from './types';
 
 const logger = createLogger('Messages');
 
+/**
+ * Messages component.
+ */
 export default function Messages() {
   const { conversationId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { conversations, isLoadingConversations, fetchConversations, createConversation } =
-    useChatStore();
+  const {
+    conversations,
+    isLoadingConversations,
+    fetchConversations,
+    createConversation,
+    markAsRead,
+    archiveConversation,
+  } = useChatStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
@@ -109,6 +118,28 @@ export default function Messages() {
     }
   }
 
+  async function handleMarkConversationRead(convId: string) {
+    try {
+      await markAsRead(convId);
+    } catch (error) {
+      logger.error('Failed to mark conversation read:', error);
+      toast.error('Failed to mark conversation read.');
+    }
+  }
+
+  async function handleArchiveConversation(convId: string) {
+    try {
+      await archiveConversation(convId);
+      if (conversationId === convId) {
+        navigate('/messages', { replace: true });
+      }
+      toast.success('Conversation archived.');
+    } catch (error) {
+      logger.error('Failed to archive conversation:', error);
+      toast.error('Failed to archive conversation.');
+    }
+  }
+
   // Handle userId query param (from friends page)
   useEffect(() => {
     const userId = searchParams.get('userId');
@@ -133,6 +164,8 @@ export default function Messages() {
         onSearchChange={setSearchQuery}
         onOpenSearch={() => setIsSearchOpen(true)}
         onNewConversation={() => setShowNewChatModal(true)}
+        onMarkAsRead={handleMarkConversationRead}
+        onArchive={handleArchiveConversation}
       />
 
       {/* Conversation Content */}

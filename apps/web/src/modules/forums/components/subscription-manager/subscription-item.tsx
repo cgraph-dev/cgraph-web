@@ -12,10 +12,10 @@ import { MessageSquare, Layout, Folder, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import type { Subscription, SubscriptionType, NotificationMode } from './types';
 
-const NOTIFICATION_MODES = new Set(['instant', 'daily', 'weekly', 'none']);
+const NOTIFICATION_MODES: NotificationMode[] = ['instant', 'daily', 'weekly', 'none'];
 
 function isNotificationMode(value: string): value is NotificationMode {
-  return NOTIFICATION_MODES.has(value);
+  return NOTIFICATION_MODES.some((mode) => mode === value);
 }
 
 function getTypeIcon(type: SubscriptionType) {
@@ -46,6 +46,11 @@ interface SubscriptionItemProps {
   onDelete: (id: string) => void;
 }
 
+/**
+ */
+/**
+ * Subscription Item component.
+ */
 export function SubscriptionItem({
   subscription,
   onUpdate,

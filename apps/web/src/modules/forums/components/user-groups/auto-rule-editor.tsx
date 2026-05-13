@@ -23,9 +23,6 @@ import {
   type AutoRule,
   type CreateAutoRuleData,
 } from '../../store/forumStore.userGroups';
-
-type RuleType = CreateAutoRuleData['ruleType'];
-
 const RULE_TEMPLATES: { name: string; data: Partial<CreateAutoRuleData> }[] = [
   {
     name: '100 Posts Milestone',
@@ -45,10 +42,7 @@ const RULE_TEMPLATES: { name: string; data: Partial<CreateAutoRuleData> }[] = [
   },
 ];
 
-const RULE_TYPES: RuleType[] = ['milestone', 'time_based', 'subscription', 'custom'];
-const RULE_TYPE_VALUES = new Set<string>(RULE_TYPES);
-
-const RULE_TYPE_LABELS: Record<RuleType, { label: string; description: string }> = {
+const RULE_TYPE_LABELS: Record<string, { label: string; description: string }> = {
   milestone: {
     label: 'Milestone',
     description: 'Triggered when user reaches a threshold (posts, reputation, etc.)',
@@ -60,15 +54,22 @@ const RULE_TYPE_LABELS: Record<RuleType, { label: string; description: string }>
   subscription: { label: 'Subscription', description: 'Triggered by active subscription status' },
   custom: { label: 'Custom', description: 'Custom criteria-based rule' },
 };
+const RULE_TYPES: CreateAutoRuleData['ruleType'][] = [
+  'milestone',
+  'time_based',
+  'subscription',
+  'custom',
+];
 
-function isRuleType(value: string): value is RuleType {
-  return RULE_TYPE_VALUES.has(value);
+function isRuleType(value: string): value is CreateAutoRuleData['ruleType'] {
+  return RULE_TYPES.some((type) => type === value);
 }
 
 interface AutoRuleEditorProps {
   forumId: string;
 }
 
+/** Description. */
 /** Auto Rule Editor component. */
 export function AutoRuleEditor({ forumId }: AutoRuleEditorProps) {
   const {
@@ -381,9 +382,9 @@ function RuleForm({ groups, rule, onSave, onClose }: RuleFormProps) {
                 }}
                 className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-3 py-2 text-white"
               >
-                {RULE_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {RULE_TYPE_LABELS[type].label}
+                {Object.entries(RULE_TYPE_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v.label}
                   </option>
                 ))}
               </select>

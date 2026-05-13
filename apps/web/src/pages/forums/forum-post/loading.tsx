@@ -10,6 +10,8 @@ interface PostSkeletonProps {
 }
 
 /**
+ */
+/**
  * Post Skeleton — loading placeholder.
  */
 export function PostSkeleton({ forumSlug: _forumSlug }: PostSkeletonProps) {
@@ -59,6 +61,11 @@ interface BackButtonProps {
   forumSlug: string;
 }
 
+/**
+ */
+/**
+ * Back Button component.
+ */
 export function BackButton({ forumSlug }: BackButtonProps) {
   return (
     <div className="sticky top-0 z-10 border-b border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3">

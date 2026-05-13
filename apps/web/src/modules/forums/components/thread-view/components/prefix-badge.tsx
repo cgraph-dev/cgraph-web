@@ -1,3 +1,6 @@
+/**
+ * ThreadPrefix Badge Component
+ */
 
 import type { ThreadPrefix } from '@/modules/forums/store';
 
@@ -5,6 +8,11 @@ interface PrefixBadgeProps {
   prefix: ThreadPrefix;
 }
 
+/**
+ */
+/**
+ * Prefix Badge component.
+ */
 export function PrefixBadge({ prefix }: PrefixBadgeProps) {
   return (
     <span

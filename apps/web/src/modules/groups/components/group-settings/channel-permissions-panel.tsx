@@ -33,6 +33,9 @@ import type {
 
 export type { ChannelPermissionsPanelProps } from './channel-permissions/types';
 
+/**
+ * Channel Permissions Panel component.
+ */
 export function ChannelPermissionsPanel({
   groupId,
   channelId,

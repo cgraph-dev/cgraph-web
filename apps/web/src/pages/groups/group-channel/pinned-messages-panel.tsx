@@ -33,6 +33,11 @@ interface PinnedMessagesPanelProps {
   onUnpin?: (pinId: string) => void;
 }
 
+/**
+ */
+/**
+ * Pinned Messages Panel component.
+ */
 export function PinnedMessagesPanel({
   groupId,
   channelId,

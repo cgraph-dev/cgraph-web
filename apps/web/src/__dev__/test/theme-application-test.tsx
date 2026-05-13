@@ -20,6 +20,9 @@ import {
 // Reserved for advanced border styling
 void getAvatarBorderStyle;
 
+/**
+ * Theme Application Test component.
+ */
 export default function ThemeApplicationTest() {
   const {
     avatarBorder,

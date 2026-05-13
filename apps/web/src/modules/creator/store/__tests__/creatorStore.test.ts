@@ -173,7 +173,6 @@ afterEach(() => {
 // Tests
 
 describe('creatorStore', () => {
-
   describe('initial state', () => {
     it('should have correct default values', () => {
       const s = useCreatorStore.getState();
@@ -375,15 +374,15 @@ describe('creatorStore', () => {
       expect(s.isLoadingPayouts).toBe(false);
     });
 
-    it('should pass page parameter', async () => {
+    it('should pass cursor parameter', async () => {
       mockCreatorService.listPayouts.mockResolvedValueOnce([]);
 
-      await useCreatorStore.getState().fetchPayouts(3);
+      await useCreatorStore.getState().fetchPayouts('cursor-3');
 
-      expect(mockCreatorService.listPayouts).toHaveBeenCalledWith(3);
+      expect(mockCreatorService.listPayouts).toHaveBeenCalledWith('cursor-3');
     });
 
-    it('should default to the initial cursor', async () => {
+    it('should default to no cursor', async () => {
       mockCreatorService.listPayouts.mockResolvedValueOnce([]);
 
       await useCreatorStore.getState().fetchPayouts();

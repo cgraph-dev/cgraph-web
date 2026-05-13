@@ -16,7 +16,8 @@ export type AdminTab =
   | 'analytics'
   | 'modqueue'
   | 'bbcode'
-  | 'calendar';
+  | 'calendar'
+  | 'node-gating';
 
 export interface TabConfig {
   id: AdminTab;

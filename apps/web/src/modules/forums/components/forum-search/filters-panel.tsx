@@ -8,6 +8,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { SORT_OPTIONS, TIME_RANGE_OPTIONS, CONTENT_TYPE_OPTIONS } from './constants';
 import type { FiltersPanelProps } from './types';
 
+/**
+ */
+/**
+ * Filters Panel component.
+ */
 export function FiltersPanel({
   isOpen,
   filters,

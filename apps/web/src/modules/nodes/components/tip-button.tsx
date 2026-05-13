@@ -10,6 +10,7 @@ interface TipButtonProps {
   className?: string;
 }
 
+/** Description. */
 /** Tip Button component. */
 export function TipButton({ recipientId, recipientName, className }: TipButtonProps) {
   const [showTip, setShowTip] = useState(false);

@@ -44,6 +44,11 @@ function generateChartData(range: TimeRange, seed: number): ChartPoint[] {
   return points;
 }
 
+/**
+ */
+/**
+ * Analytics Dashboard component.
+ */
 export function AnalyticsDashboard() {
   const [range, setRange] = useState<TimeRange>('7d');
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);

@@ -52,22 +52,25 @@ beforeEach(() => {
 });
 
 describe('theme performance budgets', () => {
-  it('switches theme synchronously with bounded DOM writes', async () => {
+  it('switches theme within a 16ms frame budget', async () => {
     const root = document.documentElement;
     const setPropertySpy = vi.spyOn(root.style, 'setProperty').mockImplementation(() => undefined);
     const { themeEngine } = await import('../../lib/theme/theme-engine');
 
+    const start = performance.now();
     themeEngine.setTheme('dark');
+    const elapsed = performance.now() - start;
 
+    expect(elapsed).toBeLessThan(16);
     expect(setPropertySpy).toHaveBeenCalled();
-    expect(setPropertySpy.mock.calls.length).toBeLessThanOrEqual(160);
     expect(root.classList.contains('dark')).toBe(true);
   });
 
-  it('injects CSS variables with bounded DOM writes', () => {
+  it('injects CSS variables within 5ms', () => {
     const root = document.documentElement;
     const setPropertySpy = vi.spyOn(root.style, 'setProperty').mockImplementation(() => undefined);
 
+    const start = performance.now();
     injectCSSVariables(THEME_AURORA, {
       syncAcrossDevices: false,
       respectSystemPreference: false,
@@ -80,13 +83,14 @@ describe('theme performance budgets', () => {
       shaderVariant: 'matrix',
       backgroundIntensity: 0.6,
     });
+    const elapsed = performance.now() - start;
 
+    expect(elapsed).toBeLessThan(5);
     expect(setPropertySpy).toHaveBeenCalledWith(
       '--font-family',
       THEME_AURORA.typography.fontFamily
     );
     expect(setPropertySpy.mock.calls.length).toBeGreaterThan(20);
-    expect(setPropertySpy.mock.calls.length).toBeLessThanOrEqual(80);
     expect(ensureThemeColorMeta().content).toBe(THEME_AURORA.colors.background);
   });
 });

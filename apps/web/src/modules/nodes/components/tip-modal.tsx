@@ -29,21 +29,12 @@ export function TipModal({
   onClose,
   context: _context,
 }: TipModalProps) {
-  if (!isOpen) return null;
-
-  return <TipModalContent recipientId={recipientId} recipientName={recipientName} onClose={onClose} />;
-}
-
-function TipModalContent({
-  recipientId,
-  recipientName,
-  onClose,
-}: Pick<TipModalProps, 'recipientId' | 'recipientName' | 'onClose'>) {
   const [amount, setAmount] = useState<number>(PRESETS[0]);
   const [customMode, setCustomMode] = useState(false);
-
   const { data: wallet } = useNodeWallet();
   const tipMutation = useSendTip();
+
+  if (!isOpen) return null;
 
   const available = wallet?.available_balance ?? 0;
   const belowMinimum = amount < MIN_TIP;

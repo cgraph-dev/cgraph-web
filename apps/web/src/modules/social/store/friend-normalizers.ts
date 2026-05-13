@@ -65,10 +65,7 @@ export function normalizeRequest(
 }
 
 /**
- * Normalize the compact payload sent over `user:<id>` for a new incoming
- * friend request. The event intentionally carries only the requesting user's
- * public profile fields, so the client can update state without refetching the
- * full pending-request collection.
+ * Normalize a realtime incoming friend-request event into store state.
  */
 export function normalizeIncomingRequestEvent(data: Record<string, unknown>): FriendRequest | null {
   const requestId = str(data, 'request_id') || str(data, 'id');
@@ -85,7 +82,12 @@ export function normalizeIncomingRequestEvent(data: Record<string, unknown>): Fr
       username: str(data, 'from_username') || str(data, 'username', 'Unknown'),
       displayName: strOrNull(data, 'from_display_name', 'display_name', 'displayName'),
       avatarUrl: strOrNull(data, 'from_avatar_url', 'avatar_url', 'avatarUrl'),
-      avatarBorderId: strOrNull(data, 'from_avatar_border_id', 'avatar_border_id', 'avatarBorderId'),
+      avatarBorderId: strOrNull(
+        data,
+        'from_avatar_border_id',
+        'avatar_border_id',
+        'avatarBorderId'
+      ),
       avatar_border_id: strOrNull(data, 'from_avatar_border_id', 'avatar_border_id'),
     },
     createdAt: str(data, 'created_at') || str(data, 'sent_at') || new Date().toISOString(),

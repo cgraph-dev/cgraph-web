@@ -51,6 +51,9 @@ export interface Comment {
  */
 export type CommentSortOption = 'best' | 'new' | 'old' | 'controversial';
 
+/**
+ * Props for NestedComments component
+ */
 export interface NestedCommentsProps {
   postId: string;
   comments: Comment[];
@@ -65,6 +68,9 @@ export interface NestedCommentsProps {
   maxDepth?: number;
 }
 
+/**
+ * Props for CommentCard component
+ */
 export interface CommentCardProps {
   comment: Comment;
   depth: number;
@@ -90,11 +96,17 @@ export interface CommentCardProps {
   renderComment: (comment: Comment, depth: number) => React.ReactElement;
 }
 
+/**
+ * Props for CommentVoteButtons component
+ */
 export interface CommentVoteButtonsProps {
   comment: Comment;
   onVote: (commentId: string, value: 1 | -1 | null) => void;
 }
 
+/**
+ * Props for CommentActions component
+ */
 export interface CommentActionsProps {
   comment: Comment;
   canEdit: boolean;
@@ -105,6 +117,9 @@ export interface CommentActionsProps {
   onMarkBestAnswer: (commentId: string) => void;
 }
 
+/**
+ * Props for ReplyForm component
+ */
 export interface ReplyFormProps {
   authorUsername: string;
   content: string;
@@ -113,6 +128,9 @@ export interface ReplyFormProps {
   onCancel: () => void;
 }
 
+/**
+ * Props for EditForm component
+ */
 export interface EditFormProps {
   content: string;
   onContentChange: (content: string) => void;

@@ -51,6 +51,7 @@ function Stat({
     </div>
   );
 }
+/** Description. */
 /** Board Header component. */
 export function BoardHeader({
   name,

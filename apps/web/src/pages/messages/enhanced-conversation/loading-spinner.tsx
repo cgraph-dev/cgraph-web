@@ -6,6 +6,8 @@ import { motion } from 'motion/react';
 import { tweens, loop } from '@/lib/animation-presets';
 
 /**
+ */
+/**
  * Loading Spinner — loading placeholder.
  */
 export function LoadingSpinner() {

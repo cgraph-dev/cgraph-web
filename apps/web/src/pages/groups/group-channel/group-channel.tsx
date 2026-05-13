@@ -26,6 +26,58 @@ import type { ChannelMessage } from './types';
 
 const logger = createLogger('GroupChannel');
 
+interface UploadedAttachment {
+  url: string;
+  filename: string;
+  contentType: string;
+  size: number;
+  thumbnailUrl: string | null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function numberValue(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function messageTypeForFile(file: File): ChannelMessage['messageType'] {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'audio';
+  return 'file';
+}
+
+async function uploadAttachment(file: File): Promise<UploadedAttachment> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('context', 'message');
+
+  const response = await http.post('/api/v1/uploads', formData);
+  const data = isRecord(response.data) && isRecord(response.data.data) ? response.data.data : null;
+  const url = stringValue(data?.url);
+
+  if (!data || !url) {
+    throw new Error('Upload response did not include a file URL');
+  }
+
+  return {
+    url,
+    filename: stringValue(data.original_filename) ?? stringValue(data.filename) ?? file.name,
+    contentType: stringValue(data.content_type) ?? file.type,
+    size: numberValue(data.size) ?? file.size,
+    thumbnailUrl: stringValue(data.thumbnail_url),
+  };
+}
+
+/**
+ * Group Channel component.
+ */
 export default function GroupChannel() {
   const { groupId, channelId } = useParams<{ groupId: string; channelId: string }>();
   const currentUserId = useAuthStore((s) => s.user?.id);
@@ -92,8 +144,10 @@ export default function GroupChannel() {
   useEffect(() => {
     if (!channelId || messages.length === 0) return;
     const messageIds = messages.map((m) => m.id);
-    fetchReplyCounts(channelId, messageIds);
-  }, [channelId, messages.length, fetchReplyCounts]);
+    if (groupId) {
+      fetchReplyCounts(groupId, channelId, messageIds);
+    }
+  }, [channelId, groupId, messages.length, fetchReplyCounts]);
 
   // Handle typing indicator
   function handleTyping() {
@@ -117,21 +171,20 @@ export default function GroupChannel() {
 
     setIsSending(true);
     try {
+      const trimmedContent = messageInput.trim();
+
       if (attachment) {
-        // Upload file with message via multipart/form-data
-        const formData = new FormData();
-        formData.append('file', attachment);
-        if (messageInput.trim()) {
-          formData.append('content', messageInput.trim());
-        }
-        if (replyTo?.id) {
-          formData.append('reply_to_id', replyTo.id);
-        }
-        await http.post(`/api/v1/channels/${channelId}/messages`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+        const uploaded = await uploadAttachment(attachment);
+        await sendChannelMessage(channelId, trimmedContent || uploaded.filename, replyTo?.id, {
+          contentType: messageTypeForFile(attachment),
+          fileUrl: uploaded.url,
+          fileName: uploaded.filename,
+          fileSize: uploaded.size,
+          fileMimeType: uploaded.contentType,
+          thumbnailUrl: uploaded.thumbnailUrl,
         });
       } else {
-        await sendChannelMessage(channelId, messageInput.trim(), replyTo?.id);
+        await sendChannelMessage(channelId, trimmedContent, replyTo?.id);
       }
 
       setMessageInput('');
@@ -227,7 +280,7 @@ export default function GroupChannel() {
           messagesEndRef={messagesEndRef}
           onLoadMore={handleLoadMore}
           onReply={setReplyTo}
-          onOpenThread={(msg) => channelId && openThread(channelId, msg)}
+          onOpenThread={(msg) => groupId && channelId && openThread(groupId, channelId, msg)}
           onReaction={handleReaction}
           onToggleReaction={handleToggleReaction}
           threadReplyCounts={replyCounts}
