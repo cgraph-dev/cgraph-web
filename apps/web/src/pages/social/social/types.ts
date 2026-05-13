@@ -70,4 +70,6 @@ export interface DiscoverTabProps {
   searchQuery: string;
   searchResults: SearchResult[];
   onSearchChange: (query: string) => void;
+  onJoinGroup: (result: SearchResult) => Promise<void>;
+  joiningGroupId: string | null;
 }
