@@ -136,8 +136,8 @@ The live web app still diverges from that in six concrete ways:
 6. Conversation-list parity is weaker than both Signal and Telegram. Signal Desktop keeps inbox tab
    ownership inside one canonical inbox owner, and Telegram's chat-list context menu owns pin, mute,
    mark read, archive, and folder actions from the live list itself. CGraph's routed conversation
-   list now exposes mark-read and archive actions, but mute, pin, mark-unread, and folder-style
-   organization remain missing.
+   list now exposes mark-read, mark-unread, pin, mute, archive, archived-list recovery, and
+   unarchive actions, but per-chat Space move or folder-style organization remains missing.
 
 ## Database and schema verdict
 
@@ -184,7 +184,7 @@ Status meanings:
 | Cloud DM read receipts / mark-as-read               | Partial | The routed conversation now calls `markAsRead(conversationId)` after history fetch, but read-receipt rendering and richer read-state controls are still not route-owned.                                                                                                                                                                                                                                                                                                                                                                      |
 | Cloud DM edit / delete / forward actions            | Ready   | `EnhancedConversation` now mounts `useMessageActions(...)` through the routed message action menu, with edit, delete, and forward browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                                                                                                                                                                                                                                               |
 | Cloud DM message requests / block / report          | Ready   | The routed DM page now loads pending request state, mounts `MessageRequestBanner`, and browser-verifies accept, reject/delete, and block-and-report actions in `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                                                                                                                                                                                                                                      |
-| Conversation list management                        | Partial | `conversation-sidebar.tsx` and `conversation-item.tsx` now expose a routed action menu for mark-read and archive, and `/api/v1/conversations/:conversation_id/archive` is mounted. Mute, pin conversation, mark-unread, archived-list recovery, and per-chat Space move controls are still missing.                                                                                                                                                                                                                                           |
+| Conversation list management                        | Partial | `conversation-sidebar.tsx` and `conversation-item.tsx` now expose routed actions for mark-read, mark-unread, pin/unpin, mute/unmute, archive, archived-list recovery, and unarchive. Backend routes are mounted for those participant controls and covered by focused controller/store tests. Per-chat Space move controls and final browser verification are still missing.                                                                                                                                                              |
 | Vault / Saved Messages                              | Ready   | `/vault` now creates or fetches the authenticated user's backend Note-to-Self conversation through `/api/v1/conversations/note-to-self`, preserves `isNoteToSelf` through backend JSON and web normalization, redirects to `/vault/:conversationId`, and renders the real cloud-message history/composer. Browser-verified by `apps/web/e2e/vault.spec.ts`.                                                                                                                                                                                   |
 | Spaces / conversation folders                       | Partial | `/spaces` and `/spaces/:spaceId` now mount a first-class routed Space surface backed by `/api/v1/spaces`, with list/create/filter behavior and sidebar navigation. Browser-verified by `apps/web/e2e/spaces.spec.ts`. The remaining gap is explicit per-chat add/remove management from the live conversation list.                                                                                                                                                                                                                           |
 | Direct call launch from DM route                    | Partial | `conversation-header.tsx` now routes voice/video buttons through `getDirectCallRoute(...)` to `/call/:recipientId/:callType`, and `apps/web/e2e/web-owner-uat.spec.ts` browser-verifies that the manual call route mounts controls. Full media negotiation, incoming-call, and call-end behavior still need end-to-end coverage.                                                                                                                                                                                                              |
@@ -610,8 +610,8 @@ Compared against the basic day-to-day capability set users expect from Signal/Di
 messaging, this strict pass still undercounted several route-owned actions:
 
 1. Conversation list management is still incomplete. The live message sidebar can search, open, mark
-   read, and archive conversations, but mute, pin conversation, mark-unread, archived-list recovery,
-   and folder controls are still missing from the routed sidebar surface.
+   read, mark unread, pin, mute, archive, open archived conversations, and unarchive from the routed
+   sidebar surface. Per-chat Space move/folder controls and final browser verification remain open.
 
 2. Routed DM search is only partially verified. The search modal can navigate to a `scrollTo` query
    param and the opened conversation route now consumes it, but guarded scroll and unread-jump
@@ -654,8 +654,8 @@ green.
 3. Routed DM parity
    - Browser-verify the current typing emit and search-jump behavior, then add read-state,
      edit/delete/forward, and message-request handling.
-   - Finish conversation-list actions for mute, pin, mark unread, archived-list recovery, and any
-     folder-style organization the product keeps.
+   - Finish per-chat Space move/folder controls and final browser verification for the routed
+     conversation list.
    - Bring file/photo/voice/GIF/sticker send, pinned-message UI, guarded autoscroll, and call launch
      onto the routed surface.
 
@@ -763,9 +763,10 @@ Use this as the concrete implementation checklist for the web recovery pass.
 - [x] Surface routed message-request accept, reject, block, and report flows where the backend
       contract already exists.
 - [x] Add routed conversation-list mark-read and archive actions.
-- [ ] Add routed conversation-list management controls for mute, pin, mark unread, archived-list
-      recovery, and any folder-style organization the product keeps, or explicitly remove those
-      expectations from the product.
+- [x] Add routed conversation-list controls for mute, pin, mark unread, archived-list recovery, and
+      unarchive.
+- [ ] Add per-chat Space move/folder controls to the routed conversation list, or explicitly remove
+      those expectations from the product.
 - [ ] Decide whether `apps/web/src/modules/chat/hooks/use-media-upload.ts` should be wired into the
       live DM/group send flow or removed now that routed DMs/groups use upload-first metadata
       helpers.

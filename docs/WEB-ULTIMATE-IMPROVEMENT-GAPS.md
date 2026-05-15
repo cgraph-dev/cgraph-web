@@ -52,6 +52,12 @@ new autosave. Remaining settings risk is routed reload and real multi-tab/device
 HTTP client directly, avoids leaking real `/api/v1/users/check-username` requests, and passes
 quietly in the focused Vitest run.
 
+2026-05-16 update: routed conversation-list participant controls are now real for the core inbox
+actions. The backend mounts current-user routes for mark-unread, archive, unarchive, pin/unpin, and
+mute/unmute; the web sidebar exposes those actions plus archived-list recovery, and focused
+controller/store tests cover the path. Per-chat Space move controls remain part of the
+conversation-list management gap.
+
 2026-05-15 update: the runtime-neutral user settings contract is no longer web-local.
 `packages/shared-types/src/settings.ts` owns user setting types and defaults, and the web
 `settingsStore.types.ts` re-exports that package contract for compatibility.

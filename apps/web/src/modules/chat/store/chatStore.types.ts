@@ -173,6 +173,8 @@ export interface Conversation {
   isGroup?: boolean;
   isPinned?: boolean;
   isMuted?: boolean;
+  mutedUntil?: string | null;
+  isArchived?: boolean;
   isNoteToSelf?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -219,10 +221,12 @@ export interface TypingUserInfo {
 
 export interface ChatState {
   readonly conversations: readonly Conversation[];
+  readonly archivedConversations: readonly Conversation[];
   readonly activeConversationId: string | null;
   readonly messages: Readonly<Record<string, readonly Message[]>>;
   readonly messageIdSets: Readonly<Record<string, Set<string>>>;
   readonly isLoadingConversations: boolean;
+  readonly isLoadingArchivedConversations: boolean;
   readonly isLoadingMessages: boolean;
   readonly typingUsers: Readonly<Record<string, readonly string[]>>;
   readonly typingUsersInfo: Readonly<Record<string, readonly TypingUserInfo[]>>;
@@ -232,6 +236,7 @@ export interface ChatState {
 
   // Actions
   fetchConversations: () => Promise<void>;
+  fetchArchivedConversations: () => Promise<void>;
   fetchMessages: (conversationId: string, before?: string) => Promise<void>;
   sendMessage: (
     conversationId: string,
@@ -274,7 +279,11 @@ export interface ChatState {
     readAt: string
   ) => void;
   markAsRead: (conversationId: string) => Promise<void>;
+  markAsUnread: (conversationId: string) => Promise<void>;
   archiveConversation: (conversationId: string) => Promise<void>;
+  unarchiveConversation: (conversationId: string) => Promise<void>;
+  pinConversation: (conversationId: string, pinned: boolean) => Promise<void>;
+  muteConversation: (conversationId: string, muted: boolean) => Promise<void>;
   createConversation: (
     userIds: string[],
     options?: { readonly type?: 'secret' | 'cloud' }

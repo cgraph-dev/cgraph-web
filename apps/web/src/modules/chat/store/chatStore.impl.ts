@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, http } from '@/lib/api-client';
 import { ensureArray, normalizeMessage, normalizeConversations } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
 import type { Message, Conversation, ChatState, ConversationParticipant } from './chatStore.types';
@@ -97,6 +97,10 @@ export function toConversation(raw: Record<string, unknown>): Conversation {
         ? toTypedMessage(Object.fromEntries(Object.entries(raw.lastMessage)))
         : null,
     unreadCount: typeof raw.unreadCount === 'number' ? raw.unreadCount : 0,
+    isMuted: raw.isMuted === true,
+    mutedUntil: typeof raw.mutedUntil === 'string' ? raw.mutedUntil : null,
+    isArchived: raw.isArchived === true,
+    isPinned: raw.isPinned === true,
     isNoteToSelf: raw.isNoteToSelf === true,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
@@ -119,10 +123,12 @@ export const useChatStore = create<ChatState>()(
   devtools(
     (set, get) => ({
       conversations: [],
+      archivedConversations: [],
       activeConversationId: null,
       messages: {},
       messageIdSets: {},
       isLoadingConversations: false,
+      isLoadingArchivedConversations: false,
       isLoadingMessages: false,
       typingUsers: {},
       typingUsersInfo: {},
@@ -157,6 +163,27 @@ export const useChatStore = create<ChatState>()(
           });
         } catch (error: unknown) {
           set({ isLoadingConversations: false });
+          throw error;
+        }
+      },
+
+      fetchArchivedConversations: async () => {
+        const { isLoadingArchivedConversations } = get();
+        if (isLoadingArchivedConversations) return;
+
+        set({ isLoadingArchivedConversations: true });
+        try {
+          const response = await http.get('/api/v1/conversations/archived');
+          const rawConversations: Record<string, unknown>[] = ensureArray(response.data, 'data');
+          const archivedConversations = normalizeConversations(rawConversations)
+            .map(toConversation)
+            .slice(0, MAX_CONVERSATIONS);
+          set({
+            archivedConversations,
+            isLoadingArchivedConversations: false,
+          });
+        } catch (error: unknown) {
+          set({ isLoadingArchivedConversations: false });
           throw error;
         }
       },
@@ -240,10 +267,12 @@ export const useChatStore = create<ChatState>()(
       reset: () =>
         set({
           conversations: [],
+          archivedConversations: [],
           activeConversationId: null,
           messages: {},
           messageIdSets: {},
           isLoadingConversations: false,
+          isLoadingArchivedConversations: false,
           isLoadingMessages: false,
           typingUsers: {},
           typingUsersInfo: {},

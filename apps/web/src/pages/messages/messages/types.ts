@@ -20,7 +20,12 @@ export interface ConversationItemProps {
   currentUserId: string;
   onlineStatus: OnlineStatusMap;
   onMarkAsRead: (conversationId: string) => void;
+  onMarkAsUnread: (conversationId: string) => void;
   onArchive: (conversationId: string) => void;
+  onUnarchive: (conversationId: string) => void;
+  onPin: (conversationId: string, pinned: boolean) => void;
+  onMute: (conversationId: string, muted: boolean) => void;
+  showArchived: boolean;
 }
 
 /**
@@ -44,7 +49,13 @@ export interface ConversationSidebarProps {
   onOpenSearch: () => void;
   onNewConversation: () => void;
   onMarkAsRead: (conversationId: string) => void;
+  onMarkAsUnread: (conversationId: string) => void;
   onArchive: (conversationId: string) => void;
+  onUnarchive: (conversationId: string) => void;
+  onPin: (conversationId: string, pinned: boolean) => void;
+  onMute: (conversationId: string, muted: boolean) => void;
+  showArchived: boolean;
+  onShowArchivedChange: (showArchived: boolean) => void;
 }
 
 // Re-export store types for convenience

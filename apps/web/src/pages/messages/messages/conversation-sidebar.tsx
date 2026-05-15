@@ -6,10 +6,12 @@
 
 import { motion } from 'motion/react';
 import {
+  ArchiveBoxIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   MagnifyingGlassPlusIcon,
   ChatBubbleLeftRightIcon,
+  InboxIcon,
 } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { ConversationItem } from './conversation-item';
@@ -34,7 +36,13 @@ export function ConversationSidebar({
   onOpenSearch,
   onNewConversation,
   onMarkAsRead,
+  onMarkAsUnread,
   onArchive,
+  onUnarchive,
+  onPin,
+  onMute,
+  showArchived,
+  onShowArchivedChange,
 }: ConversationSidebarProps) {
   return (
     <div className="bg-[var(--token-card-bg)]/40 relative flex h-full w-80 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
@@ -79,6 +87,35 @@ export function ConversationSidebar({
           </div>
         </motion.div>
 
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onShowArchivedChange(false)}
+            aria-pressed={!showArchived}
+            className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              !showArchived
+                ? 'border-primary-500/30 bg-primary-500/15 text-white'
+                : 'border-[var(--token-border-muted)] bg-transparent text-white/50 hover:text-white'
+            }`}
+          >
+            <InboxIcon className="h-4 w-4" />
+            Inbox
+          </button>
+          <button
+            type="button"
+            onClick={() => onShowArchivedChange(true)}
+            aria-pressed={showArchived}
+            className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              showArchived
+                ? 'border-primary-500/30 bg-primary-500/15 text-white'
+                : 'border-[var(--token-border-muted)] bg-transparent text-white/50 hover:text-white'
+            }`}
+          >
+            <ArchiveBoxIcon className="h-4 w-4" />
+            Archived
+          </button>
+        </div>
+
         {/* Enhanced Search */}
         <motion.div
           className="relative"
@@ -119,7 +156,12 @@ export function ConversationSidebar({
                   currentUserId={currentUserId}
                   onlineStatus={onlineStatus}
                   onMarkAsRead={onMarkAsRead}
+                  onMarkAsUnread={onMarkAsUnread}
                   onArchive={onArchive}
+                  onUnarchive={onUnarchive}
+                  onPin={onPin}
+                  onMute={onMute}
+                  showArchived={showArchived}
                 />
               </motion.div>
             ))}

@@ -237,9 +237,8 @@ correctness work below before feature expansion or scale items.
 - Browser-verified now: routed file/photo send, voice-note send, reply, search jump,
   edit/delete/forward, message-request accept/reject/block-report, pin, and loaded pinned-message
   panel.
-- Still open: canonical DM surface convergence, typing browser proof, read-receipt UI,
-  mute/pin/mark-unread list actions, GIF/sticker send, guarded autoscroll, and call-flow
-  verification.
+- Still open: canonical DM surface convergence, typing browser proof, read-receipt UI, per-chat
+  Space move controls, GIF/sticker send, guarded autoscroll, and call-flow verification.
 
 4. Routed group parity
 
@@ -307,7 +306,9 @@ Checklist:
 - [x] Ship browser-verified routed DM reply, search jump, edit/delete/forward, message-request, pin,
       and loaded pinned-panel behavior on the live DM route.
 - [ ] Browser-verify typing emit and ship read-receipt UI/read-state controls on the live DM route.
-- [ ] Ship mute/archive/pin/mark-unread conversation-list actions on the routed sidebar.
+- [x] Ship mute/archive/pin/mark-unread conversation-list actions and archived-list recovery on the
+      routed sidebar.
+- [ ] Ship per-chat Space move controls on the routed sidebar.
 - [x] Ship browser-verified file/photo and voice-note send on the routed DM surface.
 - [ ] Ship GIF/sticker send, guarded autoscroll, and call launch on the routed DM surface.
 
@@ -841,10 +842,10 @@ Unify the attachment/send contract across DMs and groups, eliminate the remainin
 
 ### Wave 2 — Routed DM parity (weeks 2–3)
 
-Ship the remaining typing proof, read-state UI, conversation-list actions, GIF/sticker send, guarded
-autoscroll, and call launch on the live DM route. File/photo, voice-note, reply, search jump,
-edit/delete/forward, request actions, pin, and loaded pinned-panel behavior are already
-browser-verified.
+Ship the remaining typing proof, read-state UI, per-chat Space move controls, GIF/sticker send,
+guarded autoscroll, and call launch on the live DM route. File/photo, voice-note, reply, search
+jump, edit/delete/forward, request actions, pin, loaded pinned-panel behavior, and core
+conversation-list participant actions are already covered by focused tests or browser proof.
 
 ### Wave 3 — Routed group parity and admin surfaces (weeks 3–4)
 

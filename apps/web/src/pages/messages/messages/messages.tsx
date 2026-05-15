@@ -31,17 +31,25 @@ export default function Messages() {
   const { user } = useAuthStore();
   const {
     conversations,
+    archivedConversations,
     isLoadingConversations,
+    isLoadingArchivedConversations,
     fetchConversations,
+    fetchArchivedConversations,
     createConversation,
     markAsRead,
+    markAsUnread,
     archiveConversation,
+    unarchiveConversation,
+    pinConversation,
+    muteConversation,
   } = useChatStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatusMap>({});
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Handle search result click - navigate to conversation and scroll to message
   function handleSearchResultClick(convId: string, messageId: string) {
@@ -91,6 +99,12 @@ export default function Messages() {
     fetchConversations();
   }, [fetchConversations]);
 
+  useEffect(() => {
+    if (showArchived) {
+      fetchArchivedConversations();
+    }
+  }, [fetchArchivedConversations, showArchived]);
+
   // Memoized handler for starting conversation with user
   async function handleStartConversationWithUser(userId: string) {
     // Check if conversation already exists with this user
@@ -127,6 +141,15 @@ export default function Messages() {
     }
   }
 
+  async function handleMarkConversationUnread(convId: string) {
+    try {
+      await markAsUnread(convId);
+    } catch (error) {
+      logger.error('Failed to mark conversation unread:', error);
+      toast.error('Failed to mark conversation unread.');
+    }
+  }
+
   async function handleArchiveConversation(convId: string) {
     try {
       await archiveConversation(convId);
@@ -140,6 +163,36 @@ export default function Messages() {
     }
   }
 
+  async function handleUnarchiveConversation(convId: string) {
+    try {
+      await unarchiveConversation(convId);
+      toast.success('Conversation restored.');
+    } catch (error) {
+      logger.error('Failed to unarchive conversation:', error);
+      toast.error('Failed to restore conversation.');
+    }
+  }
+
+  async function handlePinConversation(convId: string, pinned: boolean) {
+    try {
+      await pinConversation(convId, pinned);
+      toast.success(pinned ? 'Conversation pinned.' : 'Conversation unpinned.');
+    } catch (error) {
+      logger.error('Failed to update conversation pin:', error);
+      toast.error('Failed to update conversation pin.');
+    }
+  }
+
+  async function handleMuteConversation(convId: string, muted: boolean) {
+    try {
+      await muteConversation(convId, muted);
+      toast.success(muted ? 'Conversation muted.' : 'Conversation unmuted.');
+    } catch (error) {
+      logger.error('Failed to update conversation mute:', error);
+      toast.error('Failed to update conversation mute.');
+    }
+  }
+
   // Handle userId query param (from friends page)
   useEffect(() => {
     const userId = searchParams.get('userId');
@@ -149,7 +202,10 @@ export default function Messages() {
   }, [searchParams, isCreatingConversation, handleStartConversationWithUser]);
 
   // Filter conversations by search query
-  const filteredConversations = filterConversations(conversations, searchQuery, user?.id || '');
+  const visibleConversations = showArchived ? archivedConversations : conversations;
+  const filteredConversations = [
+    ...filterConversations(visibleConversations, searchQuery, user?.id || ''),
+  ].sort((a, b) => Number(b.isPinned === true) - Number(a.isPinned === true));
 
   return (
     <div className="aurora-hub-shell max-h-screen flex-1">
@@ -160,12 +216,18 @@ export default function Messages() {
         currentUserId={user?.id || ''}
         onlineStatus={onlineStatus}
         searchQuery={searchQuery}
-        isLoading={isLoadingConversations}
+        isLoading={showArchived ? isLoadingArchivedConversations : isLoadingConversations}
         onSearchChange={setSearchQuery}
         onOpenSearch={() => setIsSearchOpen(true)}
         onNewConversation={() => setShowNewChatModal(true)}
         onMarkAsRead={handleMarkConversationRead}
+        onMarkAsUnread={handleMarkConversationUnread}
         onArchive={handleArchiveConversation}
+        onUnarchive={handleUnarchiveConversation}
+        onPin={handlePinConversation}
+        onMute={handleMuteConversation}
+        showArchived={showArchived}
+        onShowArchivedChange={setShowArchived}
       />
 
       {/* Conversation Content */}

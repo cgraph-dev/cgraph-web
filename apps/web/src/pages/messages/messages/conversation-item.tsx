@@ -10,8 +10,13 @@ import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArchiveBoxIcon,
+  ArchiveBoxXMarkIcon,
+  BellIcon,
+  BellSlashIcon,
   CheckCircleIcon,
   EllipsisHorizontalIcon,
+  EnvelopeIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { formatTimeAgo } from '@/lib/utils';
@@ -32,7 +37,12 @@ export function ConversationItem({
   currentUserId,
   onlineStatus,
   onMarkAsRead,
+  onMarkAsUnread,
   onArchive,
+  onUnarchive,
+  onPin,
+  onMute,
+  showArchived,
 }: ConversationItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,9 +61,29 @@ export function ConversationItem({
     onMarkAsRead(conversation.id);
   }
 
+  function handleMarkAsUnread(): void {
+    setIsMenuOpen(false);
+    onMarkAsUnread(conversation.id);
+  }
+
   function handleArchive(): void {
     setIsMenuOpen(false);
     onArchive(conversation.id);
+  }
+
+  function handleUnarchive(): void {
+    setIsMenuOpen(false);
+    onUnarchive(conversation.id);
+  }
+
+  function handlePinToggle(): void {
+    setIsMenuOpen(false);
+    onPin(conversation.id, !conversation.isPinned);
+  }
+
+  function handleMuteToggle(): void {
+    setIsMenuOpen(false);
+    onMute(conversation.id, !conversation.isMuted);
   }
 
   return (
@@ -131,7 +161,7 @@ export function ConversationItem({
         <div className="relative z-10 min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <span
-              className={`truncate font-semibold transition-colors ${
+              className={`flex min-w-0 items-center gap-1.5 truncate font-semibold transition-colors ${
                 conversation.unreadCount > 0
                   ? 'text-white'
                   : isActive
@@ -139,7 +169,9 @@ export function ConversationItem({
                     : 'text-white/70'
               }`}
             >
-              {name}
+              {conversation.isPinned && <MapPinIcon className="h-3.5 w-3.5 flex-shrink-0" />}
+              <span className="truncate">{name}</span>
+              {conversation.isMuted && <BellSlashIcon className="h-3.5 w-3.5 flex-shrink-0" />}
             </span>
             {conversation.lastMessage && (
               <span
@@ -225,11 +257,43 @@ export function ConversationItem({
               </button>
               <button
                 type="button"
-                onClick={handleArchive}
+                onClick={handleMarkAsUnread}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/[0.08]"
               >
-                <ArchiveBoxIcon className="h-4 w-4" />
-                Archive
+                <EnvelopeIcon className="h-4 w-4" />
+                Mark as unread
+              </button>
+              <button
+                type="button"
+                onClick={handlePinToggle}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/[0.08]"
+              >
+                <MapPinIcon className="h-4 w-4" />
+                {conversation.isPinned ? 'Unpin' : 'Pin'}
+              </button>
+              <button
+                type="button"
+                onClick={handleMuteToggle}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/[0.08]"
+              >
+                {conversation.isMuted ? (
+                  <BellIcon className="h-4 w-4" />
+                ) : (
+                  <BellSlashIcon className="h-4 w-4" />
+                )}
+                {conversation.isMuted ? 'Unmute' : 'Mute'}
+              </button>
+              <button
+                type="button"
+                onClick={showArchived ? handleUnarchive : handleArchive}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/[0.08]"
+              >
+                {showArchived ? (
+                  <ArchiveBoxXMarkIcon className="h-4 w-4" />
+                ) : (
+                  <ArchiveBoxIcon className="h-4 w-4" />
+                )}
+                {showArchived ? 'Unarchive' : 'Archive'}
               </button>
             </motion.div>
           )}

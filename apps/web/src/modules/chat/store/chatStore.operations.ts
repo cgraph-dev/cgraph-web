@@ -16,6 +16,13 @@ import { createMessageOpsActions } from './chatStore.message-ops';
 import { useAuthStore } from '@/modules/auth/store';
 import type { Conversation, ChatState } from './chatStore.types';
 
+function updateConversationState(
+  conversation: Conversation,
+  updates: Partial<Conversation>
+): Conversation {
+  return { ...conversation, ...updates };
+}
+
 type Set = (
   partial: ChatState | Partial<ChatState> | ((s: ChatState) => ChatState | Partial<ChatState>)
 ) => void;
@@ -135,12 +142,95 @@ export function createOperationsActions(set: Set, get: Get) {
       }
     },
 
+    markAsUnread: async (conversationId: string) => {
+      await http.post(`/api/v1/conversations/${conversationId}/unread`);
+      set((state) => ({
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId
+            ? updateConversationState(conv, {
+                unreadCount: Math.max(conv.unreadCount, 1),
+              })
+            : conv
+        ),
+        archivedConversations: state.archivedConversations.map((conv) =>
+          conv.id === conversationId
+            ? updateConversationState(conv, {
+                unreadCount: Math.max(conv.unreadCount, 1),
+              })
+            : conv
+        ),
+      }));
+    },
+
     archiveConversation: async (conversationId: string) => {
       await http.post(`/api/v1/conversations/${conversationId}/archive`);
       set((state) => ({
         activeConversationId:
           state.activeConversationId === conversationId ? null : state.activeConversationId,
+        archivedConversations: [
+          ...state.conversations
+            .filter((conv) => conv.id === conversationId)
+            .map((conv) => updateConversationState(conv, { isArchived: true })),
+          ...state.archivedConversations.filter((conv) => conv.id !== conversationId),
+        ],
         conversations: state.conversations.filter((conv) => conv.id !== conversationId),
+      }));
+    },
+
+    unarchiveConversation: async (conversationId: string) => {
+      await http.post(`/api/v1/conversations/${conversationId}/unarchive`);
+      set((state) => ({
+        conversations: [
+          ...state.archivedConversations
+            .filter((conv) => conv.id === conversationId)
+            .map((conv) => updateConversationState(conv, { isArchived: false })),
+          ...state.conversations.filter((conv) => conv.id !== conversationId),
+        ],
+        archivedConversations: state.archivedConversations.filter(
+          (conv) => conv.id !== conversationId
+        ),
+      }));
+    },
+
+    pinConversation: async (conversationId: string, pinned: boolean) => {
+      if (pinned) {
+        await http.post(`/api/v1/conversations/${conversationId}/pin`);
+      } else {
+        await http.delete(`/api/v1/conversations/${conversationId}/pin`);
+      }
+      set((state) => ({
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId ? updateConversationState(conv, { isPinned: pinned }) : conv
+        ),
+        archivedConversations: state.archivedConversations.map((conv) =>
+          conv.id === conversationId ? updateConversationState(conv, { isPinned: pinned }) : conv
+        ),
+      }));
+    },
+
+    muteConversation: async (conversationId: string, muted: boolean) => {
+      if (muted) {
+        await http.post(`/api/v1/conversations/${conversationId}/mute`);
+      } else {
+        await http.delete(`/api/v1/conversations/${conversationId}/mute`);
+      }
+      set((state) => ({
+        conversations: state.conversations.map((conv) =>
+          conv.id === conversationId
+            ? updateConversationState(conv, {
+                isMuted: muted,
+                mutedUntil: null,
+              })
+            : conv
+        ),
+        archivedConversations: state.archivedConversations.map((conv) =>
+          conv.id === conversationId
+            ? updateConversationState(conv, {
+                isMuted: muted,
+                mutedUntil: null,
+              })
+            : conv
+        ),
       }));
     },
 

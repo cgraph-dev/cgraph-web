@@ -159,6 +159,16 @@ function validateSnapshotManifest() {
   }
 
   if (
+    manifest.sync_status !== 'source-sync' &&
+    manifest.sync_status !== 'source-drift' &&
+    manifest.sync_status !== 'unverified'
+  ) {
+    findings.push(
+      `${snapshotManifestPath}: sync_status must be "source-sync", "source-drift", or "unverified".`
+    );
+  }
+
+  if (
     typeof manifest.sync_policy !== 'string' ||
     !manifest.sync_policy.includes('cgraph-packages')
   ) {
@@ -214,4 +224,10 @@ if (findings.length > 0) {
   process.exit(1);
 }
 
-console.log('Package snapshot validation passed.');
+const syncStatus = manifestSyncStatus();
+console.log(`Package snapshot validation passed (${syncStatus}).`);
+
+function manifestSyncStatus() {
+  const manifest = JSON.parse(readFileSync(join(process.cwd(), snapshotManifestPath), 'utf8'));
+  return `sync_status: ${manifest.sync_status}`;
+}

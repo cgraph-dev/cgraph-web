@@ -87,6 +87,10 @@ const makeConv = (overrides: Partial<Conversation> = {}): Conversation => ({
   ],
   lastMessage: null,
   unreadCount: 0,
+  isMuted: false,
+  mutedUntil: null,
+  isArchived: false,
+  isPinned: false,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
   ...overrides,
@@ -95,10 +99,12 @@ const makeConv = (overrides: Partial<Conversation> = {}): Conversation => ({
 beforeEach(() => {
   useChatStore.setState({
     conversations: [],
+    archivedConversations: [],
     activeConversationId: null,
     messages: {},
     messageIdSets: {},
     isLoadingConversations: false,
+    isLoadingArchivedConversations: false,
     isLoadingMessages: false,
     typingUsers: {},
     typingUsersInfo: {},
@@ -114,7 +120,7 @@ describe('fetchConversations', () => {
     const convs = [makeConv()];
     mockApi.get.mockResolvedValueOnce({ data: { conversations: convs } });
     await useChatStore.getState().fetchConversations();
-    expect(useChatStore.getState().conversations).toEqual(convs);
+    expect(useChatStore.getState().conversations.map((conv) => conv.id)).toEqual(['conv-1']);
     expect(useChatStore.getState().isLoadingConversations).toBe(false);
   });
 
@@ -167,6 +173,26 @@ describe('toConversation', () => {
     });
     expect(legacy.conversationType).toBeUndefined();
   });
+
+  it('preserves current-user conversation flags from server payloads', () => {
+    const conversation = toConversation({
+      id: 'c-flags',
+      type: 'direct',
+      isMuted: true,
+      mutedUntil: '2026-05-16T12:00:00Z',
+      isArchived: true,
+      isPinned: true,
+      unreadCount: 3,
+      createdAt: '2026-04-19T00:00:00Z',
+      updatedAt: '2026-04-19T00:00:00Z',
+    });
+
+    expect(conversation.isMuted).toBe(true);
+    expect(conversation.mutedUntil).toBe('2026-05-16T12:00:00Z');
+    expect(conversation.isArchived).toBe(true);
+    expect(conversation.isPinned).toBe(true);
+    expect(conversation.unreadCount).toBe(3);
+  });
 });
 
 // 2. Fetch Messages
@@ -175,7 +201,7 @@ describe('fetchMessages', () => {
     const msgs = [makeMsg()];
     mockApi.get.mockResolvedValueOnce({ data: { messages: msgs } });
     await useChatStore.getState().fetchMessages('conv-1');
-    expect(useChatStore.getState().messages['conv-1']).toEqual(msgs);
+    expect(useChatStore.getState().messages['conv-1']?.map((msg) => msg.id)).toEqual(['msg-1']);
     expect(useChatStore.getState().isLoadingMessages).toBe(false);
   });
 
@@ -445,6 +471,62 @@ describe('conversation management', () => {
     expect(mockApi.post).toHaveBeenCalledWith('/api/v1/conversations/conv-1/archive');
     expect(useChatStore.getState().activeConversationId).toBeNull();
     expect(useChatStore.getState().conversations.map((conv) => conv.id)).toEqual(['conv-2']);
+    expect(useChatStore.getState().archivedConversations[0]!.isArchived).toBe(true);
+  });
+
+  it('fetchArchivedConversations loads archived sidebar recovery state', async () => {
+    const archived = makeConv({ id: 'archived-1', isArchived: true });
+    mockApi.get.mockResolvedValueOnce({ data: { data: [archived] } });
+
+    await useChatStore.getState().fetchArchivedConversations();
+
+    expect(mockApi.get).toHaveBeenCalledWith('/api/v1/conversations/archived');
+    expect(useChatStore.getState().archivedConversations.map((conv) => conv.id)).toEqual([
+      'archived-1',
+    ]);
+  });
+
+  it('unarchiveConversation restores archived conversations to the inbox state', async () => {
+    useChatStore.setState({
+      archivedConversations: [makeConv({ id: 'conv-1', isArchived: true })],
+      conversations: [makeConv({ id: 'conv-2' })],
+    });
+    mockApi.post.mockResolvedValueOnce({});
+
+    await useChatStore.getState().unarchiveConversation('conv-1');
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/conversations/conv-1/unarchive');
+    expect(useChatStore.getState().archivedConversations).toHaveLength(0);
+    expect(useChatStore.getState().conversations[0]!.id).toBe('conv-1');
+    expect(useChatStore.getState().conversations[0]!.isArchived).toBe(false);
+  });
+
+  it('pinConversation and muteConversation persist conversation list flags', async () => {
+    useChatStore.setState({ conversations: [makeConv({ id: 'conv-1' })] });
+    mockApi.post.mockResolvedValue({});
+    mockApi.delete.mockResolvedValue({});
+
+    await useChatStore.getState().pinConversation('conv-1', true);
+    await useChatStore.getState().muteConversation('conv-1', true);
+    expect(useChatStore.getState().conversations[0]!.isPinned).toBe(true);
+    expect(useChatStore.getState().conversations[0]!.isMuted).toBe(true);
+
+    await useChatStore.getState().pinConversation('conv-1', false);
+    await useChatStore.getState().muteConversation('conv-1', false);
+    expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/conversations/conv-1/pin');
+    expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/conversations/conv-1/mute');
+    expect(useChatStore.getState().conversations[0]!.isPinned).toBe(false);
+    expect(useChatStore.getState().conversations[0]!.isMuted).toBe(false);
+  });
+
+  it('markAsUnread persists a visible unread badge locally', async () => {
+    useChatStore.setState({ conversations: [makeConv({ id: 'conv-1', unreadCount: 0 })] });
+    mockApi.post.mockResolvedValueOnce({});
+
+    await useChatStore.getState().markAsUnread('conv-1');
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/conversations/conv-1/unread');
+    expect(useChatStore.getState().conversations[0]!.unreadCount).toBe(1);
   });
 
   it('getRecipientId returns other participant for direct chats', () => {
