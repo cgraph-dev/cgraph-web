@@ -10,13 +10,7 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import { ProtectedRoute, AdminRoute } from './guards';
-import {
-  DevRoutes,
-  AuthRoutes,
-  ForumRoutes,
-  SettingsRoutes,
-  MeRoutes,
-} from './route-groups';
+import { DevRoutes, AuthRoutes, ForumRoutes, SettingsRoutes, MeRoutes } from './route-groups';
 import {
   // Core
   Messages,
@@ -32,6 +26,13 @@ import {
   ExploreGroups,
   // Explore (unified)
   ExplorePage,
+  // Broadcasts
+  BroadcastsPage,
+  BroadcastDetail,
+  // Vault
+  VaultPage,
+  // Spaces
+  SpacesPage,
   // Profile & Community
   UserProfile,
   // Calls
@@ -80,12 +81,7 @@ function CustomizeCategoryRedirect(): React.ReactNode {
  */
 function LegacyConversationRedirect(): React.ReactNode {
   const { conversationId } = useParams<{ conversationId?: string }>();
-  return (
-    <Navigate
-      to={conversationId ? `/messages/${conversationId}` : '/messages'}
-      replace
-    />
-  );
+  return <Navigate to={conversationId ? `/messages/${conversationId}` : '/messages'} replace />;
 }
 
 /** Complete application route tree */
@@ -113,10 +109,7 @@ export function AppRoutes() {
         {/* Legacy dashboard/conversation routes */}
         <Route path="dashboard" element={<Navigate to="/messages" replace />} />
         <Route path="conversations" element={<LegacyConversationRedirect />} />
-        <Route
-          path="conversations/:conversationId"
-          element={<LegacyConversationRedirect />}
-        />
+        <Route path="conversations/:conversationId" element={<LegacyConversationRedirect />} />
 
         {/* Messages */}
         <Route path="messages" element={<Messages />}>
@@ -124,43 +117,19 @@ export function AppRoutes() {
         </Route>
 
         {/* Social Hub */}
-        <Route
-          path="social"
-          element={<Navigate to="/social/friends" replace />}
-        />
+        <Route path="social" element={<Navigate to="/social/friends" replace />} />
         <Route path="social/:tab" element={<Social />} />
-        <Route
-          path="friends"
-          element={<Navigate to="/social/friends" replace />}
-        />
-        <Route
-          path="notifications"
-          element={<Navigate to="/social/notifications" replace />}
-        />
+        <Route path="friends" element={<Navigate to="/social/friends" replace />} />
+        <Route path="notifications" element={<Navigate to="/social/notifications" replace />} />
 
         {/* Groups */}
         <Route path="groups" element={<Groups />}>
           <Route path=":groupId" element={null} />
-          <Route
-            path=":groupId/channels/:channelId"
-            element={<GroupChannel />}
-          />
-          <Route
-            path=":groupId/voice/:channelId"
-            element={<GroupCallChannel />}
-          />
-          <Route
-            path=":groupId/video/:channelId"
-            element={<GroupCallChannel />}
-          />
-          <Route
-            path=":groupId/announcements/:channelId"
-            element={<GroupAnnouncementChannel />}
-          />
-          <Route
-            path=":groupId/forums/:channelId"
-            element={<GroupForumChannel />}
-          />
+          <Route path=":groupId/channels/:channelId" element={<GroupChannel />} />
+          <Route path=":groupId/voice/:channelId" element={<GroupCallChannel />} />
+          <Route path=":groupId/video/:channelId" element={<GroupCallChannel />} />
+          <Route path=":groupId/announcements/:channelId" element={<GroupAnnouncementChannel />} />
+          <Route path=":groupId/forums/:channelId" element={<GroupForumChannel />} />
           <Route path=":groupId/settings" element={<GroupSettingsPage />} />
         </Route>
         <Route path="groups/explore" element={<ExploreGroups />} />
@@ -171,6 +140,18 @@ export function AppRoutes() {
 
         {/* Legacy feed redirect → explore/feed tab */}
         <Route path="feed" element={<Navigate to="/explore/feed" replace />} />
+
+        {/* Broadcasts */}
+        <Route path="broadcasts" element={<BroadcastsPage />} />
+        <Route path="broadcasts/:broadcastId" element={<BroadcastDetail />} />
+
+        {/* Vault / Saved Messages */}
+        <Route path="vault" element={<VaultPage />} />
+        <Route path="vault/:conversationId" element={<VaultPage />} />
+
+        {/* Spaces / Conversation folders */}
+        <Route path="spaces" element={<SpacesPage />} />
+        <Route path="spaces/:spaceId" element={<SpacesPage />} />
 
         {/* Forums */}
         {ForumRoutes()}
@@ -187,10 +168,7 @@ export function AppRoutes() {
           element={<Navigate to="/me/settings/discovery" replace />}
         />
         {/* Invite Friends (Phase 23) */}
-        <Route
-          path="settings/invite-friends"
-          element={<Navigate to="/me/invites" replace />}
-        />
+        <Route path="settings/invite-friends" element={<Navigate to="/me/invites" replace />} />
 
         {/* Members */}
         <Route path="members" element={<MemberList />} />
@@ -218,61 +196,28 @@ export function AppRoutes() {
 
         {/* Nodes → Me wallet */}
         <Route path="nodes" element={<Navigate to="/me/wallet" replace />} />
-        <Route
-          path="nodes/shop"
-          element={<Navigate to="/me/wallet/shop" replace />}
-        />
+        <Route path="nodes/shop" element={<Navigate to="/me/wallet/shop" replace />} />
 
         {/* Premium → Me subscription */}
-        <Route
-          path="premium"
-          element={<Navigate to="/me/subscription" replace />}
-        />
-        <Route
-          path="premium/coins"
-          element={<Navigate to="/me/wallet/shop" replace />}
-        />
-        <Route
-          path="premium/nodes"
-          element={<Navigate to="/me/wallet/shop" replace />}
-        />
+        <Route path="premium" element={<Navigate to="/me/subscription" replace />} />
+        <Route path="premium/coins" element={<Navigate to="/me/wallet/shop" replace />} />
+        <Route path="premium/nodes" element={<Navigate to="/me/wallet/shop" replace />} />
 
         {/* Customize → Me appearance */}
-        <Route
-          path="customize"
-          element={<Navigate to="/me/appearance/identity" replace />}
-        />
-        <Route
-          path="customize/:category"
-          element={<CustomizeCategoryRedirect />}
-        />
+        <Route path="customize" element={<Navigate to="/me/appearance/identity" replace />} />
+        <Route path="customize/:category" element={<CustomizeCategoryRedirect />} />
 
         {/* Cosmetics → Me appearance */}
-        <Route
-          path="cosmetics"
-          element={<Navigate to="/me/appearance/inventory" replace />}
-        />
-        <Route
-          path="cosmetics/shop"
-          element={<Navigate to="/me/appearance/shop" replace />}
-        />
+        <Route path="cosmetics" element={<Navigate to="/me/appearance/inventory" replace />} />
+        <Route path="cosmetics/shop" element={<Navigate to="/me/appearance/shop" replace />} />
 
         {/* Customization Redirects */}
-        <Route
-          path="titles"
-          element={<Navigate to="/me/appearance/identity" replace />}
-        />
+        <Route path="titles" element={<Navigate to="/me/appearance/identity" replace />} />
 
         {/* Removed gamification routes → current destinations */}
-        <Route
-          path="gamification/*"
-          element={<Navigate to="/explore" replace />}
-        />
+        <Route path="gamification/*" element={<Navigate to="/explore" replace />} />
         <Route path="leaderboard" element={<Navigate to="/pulse" replace />} />
-        <Route
-          path="achievements"
-          element={<Navigate to="/me/appearance/identity" replace />}
-        />
+        <Route path="achievements" element={<Navigate to="/me/appearance/identity" replace />} />
         <Route path="quests" element={<Navigate to="/explore" replace />} />
 
         {/* Search → Explore */}

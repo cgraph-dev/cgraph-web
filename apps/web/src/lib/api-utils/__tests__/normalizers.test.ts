@@ -107,6 +107,14 @@ describe('normalizeMessage', () => {
           display_name: 'Bob',
           avatar_url: '/avatars/bob.png',
           avatar_border_id: 'border-gold',
+          title_id: 'title-founder',
+          equipped_badges: ['badge-founder'],
+          preset_name: 'nameplate-aurora',
+          profile_theme: 'theme-cosmic',
+          chat_theme: 'chat-neon',
+          font_family: 'Inter',
+          entrance_animation: 'spark',
+          text_color: '#fff',
         },
       };
 
@@ -125,6 +133,14 @@ describe('normalizeMessage', () => {
       expect(sender?.displayName).toBe('Bob');
       expect(sender?.avatarUrl).toBe('/avatars/bob.png');
       expect(sender?.avatarBorderId).toBe('border-gold');
+      expect(sender?.equippedTitleId).toBe('title-founder');
+      expect(sender?.equippedBadgeIds).toEqual(['badge-founder']);
+      expect(sender?.equippedNameplateId).toBe('nameplate-aurora');
+      expect(sender?.profileTheme).toBe('theme-cosmic');
+      expect(sender?.chatTheme).toBe('chat-neon');
+      expect(sender?.displayNameFont).toBe('Inter');
+      expect(sender?.displayNameEffect).toBe('spark');
+      expect(sender?.displayNameColor).toBe('#fff');
     });
   });
 
@@ -292,6 +308,9 @@ describe('normalizeParticipant', () => {
         display_name: 'Alice',
         avatar_url: '/avatars/alice.png',
         avatar_border_id: 'gold',
+        equipped_title_id: 'title-1',
+        equipped_badge_ids: ['badge-1'],
+        equipped_nameplate_id: 'nameplate-1',
         status: 'online',
       },
     };
@@ -303,6 +322,9 @@ describe('normalizeParticipant', () => {
     expect(p.isMuted).toBe(false);
     expect((p.user as Record<string, unknown>)?.displayName).toBe('Alice');
     expect((p.user as Record<string, unknown>)?.avatarBorderId).toBe('gold');
+    expect((p.user as Record<string, unknown>)?.equippedTitleId).toBe('title-1');
+    expect((p.user as Record<string, unknown>)?.equippedBadgeIds).toEqual(['badge-1']);
+    expect((p.user as Record<string, unknown>)?.equippedNameplateId).toBe('nameplate-1');
   });
 
   it('extracts userId from nested user when user_id is missing', () => {

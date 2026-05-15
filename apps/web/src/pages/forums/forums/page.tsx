@@ -55,7 +55,7 @@ function ForumRow({ forum }: { forum: Forum }) {
             className="mt-0.5 h-10 w-10 shrink-0 rounded-lg object-cover"
           />
         ) : (
-          <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-600/20">
+          <div className="bg-primary-600/20 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
             <FolderIcon className="h-5 w-5 text-primary-400" />
           </div>
         )}
@@ -71,7 +71,9 @@ function ForumRow({ forum }: { forum: Forum }) {
                   key={cat.id}
                   className="rounded-full px-2 py-0.5 text-xs"
                   style={{
-                    backgroundColor: cat.color ? `${cat.color}20` : 'color-mix(in srgb, var(--color-brand-purple) 12%, transparent)',
+                    backgroundColor: cat.color
+                      ? `${cat.color}20`
+                      : 'color-mix(in srgb, var(--color-brand-purple) 12%, transparent)',
                     color: cat.color ?? 'color-mix(in srgb, var(--color-brand-purple) 70%, white)',
                   }}
                 >
@@ -154,9 +156,13 @@ export default function Forums() {
   const totalMembers = forums.reduce((sum, f) => sum + f.memberCount, 0);
 
   return (
-    <div className="aurora-hub-main relative bg-transparent">
+    <div
+      className="aurora-hub-main relative bg-transparent"
+      aria-label="Forum directory"
+      tabIndex={0}
+    >
       {/* Header bar */}
-      <div className="border-b border-[var(--token-card-border)] bg-[var(--token-bg-primary)]/60 px-6 py-6 backdrop-blur-2xl">
+      <div className="bg-[var(--token-bg-primary)]/60 border-b border-[var(--token-card-border)] px-6 py-6 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div>
             <h1 className="aurora-page-title text-2xl">Forum Directory</h1>
@@ -185,7 +191,9 @@ export default function Forums() {
         ) : forums.length === 0 ? (
           <div className="py-16 text-center">
             <ChatBubbleLeftRightIcon className="mx-auto mb-4 h-16 w-16 text-gray-600" />
-            <h2 className="mb-2 text-xl font-bold text-[var(--token-text-primary)]">No Forums Yet</h2>
+            <h2 className="mb-2 text-xl font-bold text-[var(--token-text-primary)]">
+              No Forums Yet
+            </h2>
             <p className="mb-6 text-[var(--token-text-muted)]">
               {isAuthenticated
                 ? 'Be the first to create a forum and start a community.'
@@ -203,54 +211,53 @@ export default function Forums() {
           </div>
         ) : (
           <>
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
-            {groups.map((group) => (
-              <div
-                key={group.label}
-                className="aurora-section-card overflow-hidden rounded-2xl"
-              >
-                {/* Category header */}
-                <div className="flex items-center gap-2 bg-[var(--token-bg-secondary)]/70 px-4 py-3">
-                  <FolderIcon className="h-4 w-4 text-primary-400" />
-                  <span className="text-sm font-semibold uppercase tracking-wider text-primary-300">
-                    {group.label}
-                  </span>
-                  <span className="text-xs text-[var(--token-text-muted)]">({group.forums.length})</span>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              {groups.map((group) => (
+                <div key={group.label} className="aurora-section-card overflow-hidden rounded-2xl">
+                  {/* Category header */}
+                  <div className="bg-[var(--token-bg-secondary)]/70 flex items-center gap-2 px-4 py-3">
+                    <FolderIcon className="h-4 w-4 text-primary-400" />
+                    <span className="text-sm font-semibold uppercase tracking-wider text-primary-300">
+                      {group.label}
+                    </span>
+                    <span className="text-xs text-[var(--token-text-muted)]">
+                      ({group.forums.length})
+                    </span>
+                  </div>
+
+                  {/* Table header */}
+                  <div className="bg-[var(--token-bg-primary)]/80 grid grid-cols-12 gap-4 border-t border-[var(--token-card-border)] px-4 py-2 text-xs font-medium uppercase tracking-wider text-[var(--token-text-muted)]">
+                    <div className="col-span-6">Forum</div>
+                    <div className="col-span-2 text-center">Threads</div>
+                    <div className="col-span-2 text-center">Posts</div>
+                    <div className="col-span-2 text-right">Members</div>
+                  </div>
+
+                  {/* Forum rows */}
+                  {group.forums.map((forum) => (
+                    <ForumRow key={forum.id} forum={forum} />
+                  ))}
                 </div>
+              ))}
+            </motion.div>
 
-                {/* Table header */}
-                <div className="grid grid-cols-12 gap-4 border-t border-[var(--token-card-border)] bg-[var(--token-bg-primary)]/80 px-4 py-2 text-xs font-medium uppercase tracking-wider text-[var(--token-text-muted)]">
-                  <div className="col-span-6">Forum</div>
-                  <div className="col-span-2 text-center">Threads</div>
-                  <div className="col-span-2 text-center">Posts</div>
-                  <div className="col-span-2 text-right">Members</div>
-                </div>
+            {/* Shoutbox */}
+            <Shoutbox forumId="global" className="mt-6" />
 
-                {/* Forum rows */}
-                {group.forums.map((forum) => (
-                  <ForumRow key={forum.id} forum={forum} />
-                ))}
-              </div>
-            ))}
-          </motion.div>
+            {/* Social widgets row */}
+            <div className="mt-6 grid gap-6 lg:grid-cols-3">
+              <WhosOnline forumId="global" />
+              <PopularContributors forumId="global" />
+              <PopularTags forumId="global" />
+            </div>
 
-          {/* Shoutbox */}
-          <Shoutbox forumId="global" className="mt-6" />
-
-          {/* Social widgets row */}
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            <WhosOnline forumId="global" />
-            <PopularContributors forumId="global" />
-            <PopularTags forumId="global" />
-          </div>
-
-          {/* Forum Statistics Footer */}
-          <ForumStatistics compact className="mt-6" />
+            {/* Forum Statistics Footer */}
+            <ForumStatistics compact className="mt-6" />
           </>
         )}
       </div>

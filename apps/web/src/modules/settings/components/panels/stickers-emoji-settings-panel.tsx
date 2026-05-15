@@ -5,8 +5,7 @@
  * sticker suggestions, animated-sticker looping, default emoji skin
  * tone, plus a list of installed sticker packs with remove buttons.
  *
- * Local-only (no backend sync); preferences live in the persisted
- * Zustand settings store.
+ * Server-synced through the settings store.
  */
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';

@@ -15,6 +15,8 @@ import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 
 import type {
+  AnimationSpeed,
+  ColorPreset,
   LegacyTheme,
   ThemeStore,
   AvatarBorderType,
@@ -31,6 +33,227 @@ import {
 } from './presets';
 
 const logger = createLogger('ThemeStore');
+
+const ANIMATION_SPEEDS: Readonly<Record<AnimationSpeed, true>> = {
+  slow: true,
+  normal: true,
+  fast: true,
+};
+const CHAT_BUBBLE_STYLES: Readonly<Record<ChatBubbleStylePreset, true>> = {
+  default: true,
+  rounded: true,
+  sharp: true,
+  cloud: true,
+  modern: true,
+  retro: true,
+  bubble: true,
+  glassmorphism: true,
+};
+const EFFECT_PRESETS: Readonly<Record<EffectPreset, true>> = {
+  glassmorphism: true,
+  neon: true,
+  holographic: true,
+  minimal: true,
+  aurora: true,
+  cyberpunk: true,
+};
+const AVATAR_BORDERS: Readonly<Record<AvatarBorderType, true>> = {
+  none: true,
+  static: true,
+  glow: true,
+  pulse: true,
+  rotate: true,
+  fire: true,
+  ice: true,
+  electric: true,
+  legendary: true,
+  mythic: true,
+};
+
+function getStringField(record: Record<string, unknown>, keys: readonly string[]): string | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'string') return value;
+  }
+  return null;
+}
+
+function getBooleanField(record: Record<string, unknown>, keys: readonly string[]): boolean | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'boolean') return value;
+  }
+  return null;
+}
+
+function getNumberField(record: Record<string, unknown>, keys: readonly string[]): number | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+  }
+  return null;
+}
+
+function hasKnownKey<T extends string>(
+  record: Readonly<Record<T, unknown>>,
+  value: string | null
+): value is T {
+  return Boolean(value && Object.prototype.hasOwnProperty.call(record, value));
+}
+
+function isColorPreset(value: string | null): value is ColorPreset {
+  return hasKnownKey(COLORS, value);
+}
+
+function isAvatarBorder(value: string | null): value is AvatarBorderType {
+  return hasKnownKey(AVATAR_BORDERS, value);
+}
+
+function isChatBubbleStyle(value: string | null): value is ChatBubbleStylePreset {
+  return hasKnownKey(CHAT_BUBBLE_STYLES, value);
+}
+
+function isEffectPreset(value: string | null): value is EffectPreset {
+  return hasKnownKey(EFFECT_PRESETS, value);
+}
+
+function isAnimationSpeed(value: string | null): value is AnimationSpeed {
+  return hasKnownKey(ANIMATION_SPEEDS, value);
+}
+
+function normalizeServerTheme(
+  rawTheme: Record<string, unknown>,
+  state: ThemeStore
+): Partial<ThemeStore> {
+  const next: Partial<ThemeStore> = {};
+
+  const colorPreset = getStringField(rawTheme, [
+    'colorPreset',
+    'color_preset',
+    'mode',
+    'app_theme',
+  ]);
+  if (isColorPreset(colorPreset)) next.colorPreset = colorPreset;
+
+  const profileThemeId = getStringField(rawTheme, [
+    'profileThemeId',
+    'profile_theme_id',
+    'profileTheme',
+    'profile_theme',
+    'accent',
+  ]);
+  if (profileThemeId) next.profileThemeId = profileThemeId;
+
+  const profileCardLayout = getStringField(rawTheme, ['profileCardLayout', 'profile_card_layout']);
+  if (profileCardLayout) next.profileCardLayout = profileCardLayout;
+
+  const avatarBorder = getStringField(rawTheme, ['avatarBorder', 'avatar_border']);
+  if (isAvatarBorder(avatarBorder)) next.avatarBorder = avatarBorder;
+
+  const avatarBorderColor = getStringField(rawTheme, ['avatarBorderColor', 'avatar_border_color']);
+  if (isColorPreset(avatarBorderColor)) next.avatarBorderColor = avatarBorderColor;
+
+  const chatBubbleStyle = getStringField(rawTheme, [
+    'chatBubbleStyle',
+    'chat_bubble_style',
+    'bubbleStyle',
+    'bubble_style',
+  ]);
+  if (isChatBubbleStyle(chatBubbleStyle)) next.chatBubbleStyle = chatBubbleStyle;
+
+  const chatBubbleColor = getStringField(rawTheme, [
+    'chatBubbleColor',
+    'chat_bubble_color',
+    'bubbleColor',
+    'bubble_color',
+  ]);
+  if (isColorPreset(chatBubbleColor)) next.chatBubbleColor = chatBubbleColor;
+
+  const effectPreset = getStringField(rawTheme, [
+    'effectPreset',
+    'effect_preset',
+    'visualEffect',
+    'visual_effect',
+  ]);
+  if (isEffectPreset(effectPreset)) next.effectPreset = effectPreset;
+
+  const animationSpeed = getStringField(rawTheme, ['animationSpeed', 'animation_speed']);
+  if (isAnimationSpeed(animationSpeed)) next.animationSpeed = animationSpeed;
+
+  const particlesEnabled = getBooleanField(rawTheme, ['particlesEnabled', 'particles_enabled']);
+  if (particlesEnabled !== null) next.particlesEnabled = particlesEnabled;
+
+  const glowEnabled = getBooleanField(rawTheme, ['glowEnabled', 'glow_enabled']);
+  if (glowEnabled !== null) next.glowEnabled = glowEnabled;
+
+  const animatedBackground = getBooleanField(rawTheme, [
+    'animatedBackground',
+    'animated_background',
+  ]);
+  if (animatedBackground !== null) next.animatedBackground = animatedBackground;
+
+  const isPremium = getBooleanField(rawTheme, ['isPremium', 'is_premium']);
+  if (isPremium !== null) next.isPremium = isPremium;
+
+  const chatBubbleRadius = getNumberField(rawTheme, [
+    'chatBubbleRadius',
+    'chat_bubble_radius',
+    'bubbleBorderRadius',
+    'bubble_border_radius',
+    'bubble_radius',
+  ]);
+  const chatBubbleTail = getBooleanField(rawTheme, [
+    'chatBubbleTail',
+    'chat_bubble_tail',
+    'bubbleShowTail',
+    'bubble_show_tail',
+  ]);
+  const entranceAnimation = getStringField(rawTheme, [
+    'entranceAnimation',
+    'entrance_animation',
+    'bubbleEntranceAnimation',
+    'bubble_entrance_animation',
+  ]);
+
+  if (chatBubbleRadius !== null || chatBubbleTail !== null || entranceAnimation) {
+    next.chatBubble = {
+      ...state.chatBubble,
+      borderRadius: chatBubbleRadius ?? state.chatBubble.borderRadius,
+      showTail: chatBubbleTail ?? state.chatBubble.showTail,
+      entranceAnimation:
+        entranceAnimation === 'none' ||
+        entranceAnimation === 'slide' ||
+        entranceAnimation === 'fade' ||
+        entranceAnimation === 'scale' ||
+        entranceAnimation === 'bounce' ||
+        entranceAnimation === 'flip'
+          ? entranceAnimation
+          : state.chatBubble.entranceAnimation,
+    };
+  }
+
+  return next;
+}
+
+function serializeThemeForApi(state: ThemeStore): Record<string, unknown> {
+  return {
+    colorPreset: state.colorPreset,
+    avatarBorder: state.avatarBorder,
+    avatarBorderColor: state.avatarBorderColor,
+    chatBubbleStyle: state.chatBubbleStyle,
+    chatBubbleRadius: state.chatBubble.borderRadius,
+    chatBubbleShadow: state.chatBubble.shadowIntensity > 0,
+    chatBubbleTail: state.chatBubble.showTail,
+    entranceAnimation: state.chatBubble.entranceAnimation,
+    visualEffect: state.effectPreset,
+    animationSpeed: state.animationSpeed,
+    glowEnabled: state.glowEnabled,
+    particlesEnabled: state.particlesEnabled,
+    isPremium: state.isPremium,
+    profileThemeId: state.profileThemeId,
+    profileCardLayout: state.profileCardLayout,
+  };
+}
 
 // ACTION CREATOR
 
@@ -87,19 +310,11 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
     try {
       const response = await http.get('/api/v1/me/theme');
       const data = response.data?.data;
-      if (data) {
-        set({
-          colorPreset: data.color_preset || DEFAULT_THEME_STATE.colorPreset,
-          profileThemeId: data.profile_theme_id || DEFAULT_THEME_STATE.profileThemeId,
-          profileCardLayout: data.profile_card_layout || DEFAULT_THEME_STATE.profileCardLayout,
-          effectPreset: data.effect_preset || DEFAULT_THEME_STATE.effectPreset,
-          animationSpeed: data.animation_speed || DEFAULT_THEME_STATE.animationSpeed,
-          particlesEnabled: data.particles_enabled ?? DEFAULT_THEME_STATE.particlesEnabled,
-          glowEnabled: data.glow_enabled ?? DEFAULT_THEME_STATE.glowEnabled,
-          animatedBackground: data.animated_background ?? DEFAULT_THEME_STATE.animatedBackground,
-          isLoading: false,
-          lastSyncedAt: Date.now(),
-        });
+      const theme = data?.theme && typeof data.theme === 'object' ? data.theme : data;
+
+      if (theme && typeof theme === 'object' && !Array.isArray(theme)) {
+        get().applyServerTheme({ ...theme });
+        set({ isLoading: false });
       } else {
         set({ isLoading: false });
       }
@@ -122,21 +337,17 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
     const state = get();
     set({ isSaving: true, error: null });
     try {
-      await http.put('/api/v1/me/theme', {
-        color_preset: state.colorPreset,
-        profile_theme_id: state.profileThemeId,
-        profile_card_layout: state.profileCardLayout,
-        effect_preset: state.effectPreset,
-        animation_speed: state.animationSpeed,
-        particles_enabled: state.particlesEnabled,
-        glow_enabled: state.glowEnabled,
-        animated_background: state.animatedBackground,
-      });
+      await http.put('/api/v1/me/theme', { theme: serializeThemeForApi(state) });
       set({ isSaving: false, lastSyncedAt: Date.now() });
     } catch (error) {
       logger.warn('Failed to save theme:', error);
       set({ isSaving: false });
     }
+  },
+
+  applyServerTheme: (theme) => {
+    const updates = normalizeServerTheme(theme, get());
+    set({ ...updates, lastSyncedAt: Date.now(), error: null });
   },
 
   clearError: () => set({ error: null }),

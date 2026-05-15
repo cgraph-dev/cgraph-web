@@ -23,12 +23,7 @@ import { DiscoverTab } from './discover-tab';
 import { ContactsPresenceList } from '@/modules/social/components/contacts-presence-list';
 import { getNotificationActionUrl } from './notification-routing';
 import { getDiscoverResultRoute } from './discover-routing';
-import type {
-  SocialTab,
-  Notification,
-  NotificationType,
-  SearchResult,
-} from './types';
+import type { SocialTab, Notification, NotificationType, SearchResult } from './types';
 import { getGroupRoute } from '@/modules/groups/routing';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { captureError } from '@/lib/error-tracking';
@@ -83,9 +78,7 @@ function SocialMainPane({
       <div className="flex h-full flex-col px-10 py-8">
         <div className="mb-6 flex items-center gap-3">
           <BellIcon className="h-6 w-6 text-primary-400" />
-          <h2 className="text-xl font-black tracking-tight text-white">
-            Notifications
-          </h2>
+          <h2 className="text-xl font-black tracking-tight text-white">Notifications</h2>
         </div>
         <div className="grid max-w-3xl gap-3">
           {visible.map((notification) => (
@@ -98,9 +91,7 @@ function SocialMainPane({
               }}
               className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] px-4 py-3 text-left transition-colors hover:bg-[var(--token-bg-secondary)]"
             >
-              <span className="block text-sm font-bold text-white">
-                {notification.title}
-              </span>
+              <span className="block text-sm font-bold text-white">{notification.title}</span>
               <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-white/45">
                 {notification.message}
               </span>
@@ -116,9 +107,7 @@ function SocialMainPane({
       <div className="flex h-full flex-col px-10 py-8">
         <div className="mb-6 flex items-center gap-3">
           <MagnifyingGlassIcon className="h-6 w-6 text-primary-400" />
-          <h2 className="text-xl font-black tracking-tight text-white">
-            Discover
-          </h2>
+          <h2 className="text-xl font-black tracking-tight text-white">Discover</h2>
         </div>
         <div className="grid max-w-3xl gap-3">
           {searchResults.slice(0, 10).map((result) => (
@@ -131,9 +120,7 @@ function SocialMainPane({
                 onClick={() => onOpenRoute(getDiscoverResultRoute(result))}
                 className="min-w-0 flex-1 text-left"
               >
-                <span className="block truncate text-sm font-bold text-white">
-                  {result.name}
-                </span>
+                <span className="block truncate text-sm font-bold text-white">{result.name}</span>
                 <span className="mt-1 block truncate text-xs text-white/40">
                   {result.description || result.type}
                 </span>
@@ -145,7 +132,7 @@ function SocialMainPane({
                     void onJoinGroup(result);
                   }}
                   disabled={joiningGroupId === result.id}
-                  className="bg-primary-500/10 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-300 transition-colors hover:bg-primary-500/20 disabled:cursor-wait disabled:bg-primary-500/5 disabled:text-primary-300/60"
+                  className="bg-primary-500/10 hover:bg-primary-500/20 disabled:bg-primary-500/5 disabled:text-primary-300/60 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-300 transition-colors disabled:cursor-wait"
                 >
                   {joiningGroupId === result.id ? 'Joining' : 'Join'}
                 </button>
@@ -153,7 +140,7 @@ function SocialMainPane({
                 <button
                   type="button"
                   onClick={() => onOpenRoute(getDiscoverResultRoute(result))}
-                  className="bg-primary-500/10 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-300 transition-colors hover:bg-primary-500/20"
+                  className="bg-primary-500/10 hover:bg-primary-500/20 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-300 transition-colors"
                 >
                   Open
                 </button>
@@ -171,32 +158,24 @@ function SocialMainPane({
     <div className="flex h-full flex-col px-10 py-8">
       <div className="mb-6 flex items-center gap-3">
         <UsersIcon className="h-6 w-6 text-primary-400" />
-        <h2 className="text-xl font-black tracking-tight text-white">
-          Friends
-        </h2>
+        <h2 className="text-xl font-black tracking-tight text-white">Friends</h2>
       </div>
 
       <div className="mb-8 grid max-w-3xl grid-cols-3 gap-3">
         <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
-          <span className="block text-2xl font-black text-white">
-            {friends.length}
-          </span>
+          <span className="block text-2xl font-black text-white">{friends.length}</span>
           <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
             Friends
           </span>
         </div>
         <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
-          <span className="block text-2xl font-black text-white">
-            {onlineFriends.length}
-          </span>
+          <span className="block text-2xl font-black text-white">{onlineFriends.length}</span>
           <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
             Online
           </span>
         </div>
         <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
-          <span className="block text-2xl font-black text-white">
-            {pendingRequests.length}
-          </span>
+          <span className="block text-2xl font-black text-white">{pendingRequests.length}</span>
           <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
             Requests
           </span>
@@ -214,9 +193,7 @@ function SocialMainPane({
               <span className="block truncate text-sm font-bold text-white">
                 {request.user.displayName || request.user.username}
               </span>
-              <span className="block truncate text-xs text-white/35">
-                @{request.user.username}
-              </span>
+              <span className="block truncate text-xs text-white/35">@{request.user.username}</span>
             </span>
             <button
               type="button"
@@ -294,12 +271,7 @@ export function Social() {
     fetchPendingRequests();
     fetchSentRequests();
     fetchNotifications();
-  }, [
-    fetchFriends,
-    fetchPendingRequests,
-    fetchSentRequests,
-    fetchNotifications,
-  ]);
+  }, [fetchFriends, fetchPendingRequests, fetchSentRequests, fetchNotifications]);
 
   // Adapt store notifications → UI Notification type
   const notifications: Notification[] = useMemo(
@@ -314,7 +286,7 @@ export function Social() {
         actionUrl: getNotificationActionUrl(n),
         avatarUrl: n.sender?.avatarUrl ?? undefined,
       })),
-    [storeNotifications],
+    [storeNotifications]
   );
 
   // Adapt store search results → UI SearchResult type
@@ -359,7 +331,7 @@ export function Social() {
   const filteredFriends = friends.filter(
     (friend) =>
       friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.displayName?.toLowerCase().includes(searchQuery.toLowerCase()),
+      friend.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Handle search via real search store
@@ -380,11 +352,7 @@ export function Social() {
   }
 
   async function handleJoinGroupResult(result: SearchResult) {
-    if (
-      result.type !== 'group' ||
-      result.isJoined ||
-      joiningGroupId === result.id
-    ) {
+    if (result.type !== 'group' || result.isJoined || joiningGroupId === result.id) {
       navigate(getDiscoverResultRoute(result));
       return;
     }
@@ -393,22 +361,13 @@ export function Social() {
     try {
       const joinedGroup = await joinPublicGroup(result.id);
       HapticFeedback.success();
-      navigate(
-        joinedGroup
-          ? getGroupRoute(joinedGroup)
-          : getDiscoverResultRoute(result),
-      );
+      navigate(joinedGroup ? getGroupRoute(joinedGroup) : getDiscoverResultRoute(result));
     } catch (error: unknown) {
       HapticFeedback.error();
-      captureError(
-        error instanceof Error
-          ? error
-          : new Error('Failed to join social group'),
-        {
-          source: 'social_discover_join',
-          groupId: result.id,
-        },
-      );
+      captureError(error instanceof Error ? error : new Error('Failed to join social group'), {
+        source: 'social_discover_join',
+        groupId: result.id,
+      });
     } finally {
       setJoiningGroupId(null);
     }
@@ -588,9 +547,7 @@ export function Social() {
           </div>
           <div className="flex-1 overflow-y-auto px-3">
             <ContactsPresenceList
-              onContactClick={(friend) =>
-                navigate(`/messages?userId=${friend.id}`)
-              }
+              onContactClick={(friend) => navigate(`/messages?userId=${friend.id}`)}
               className="space-y-1"
             />
           </div>

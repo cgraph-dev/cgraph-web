@@ -21,6 +21,7 @@ import { NameplateRenderer } from '@/components/ui/nameplate-renderer';
 export interface NameplatesSectionProps {
   selectedNameplate: string | null;
   onEquip: (nameplateId: string | null) => void;
+  ownedNameplateIds: readonly string[];
 }
 
 const RARITY_COLORS: Record<NameplateRarity, string> = {
@@ -63,20 +64,22 @@ const CATEGORY_ICONS: Record<string, string> = {
 function NameplateRow({
   plate,
   isSelected,
+  isOwned,
   onSelect,
 }: {
   plate: NameplateEntry;
   isSelected: boolean;
+  isOwned: boolean;
   onSelect: () => void;
 }) {
   return (
     <motion.button
-      onClick={onSelect}
+      onClick={() => isOwned && onSelect()}
       className={`group relative w-full overflow-hidden rounded-2xl border p-5 text-left backdrop-blur-3xl transition-all duration-300 ${
         isSelected
           ? 'border-[var(--token-interactive-primary)]/20 bg-[var(--token-interactive-primary)]/10 ring-[var(--token-interactive-primary)]/50 scale-[1.01] ring-2'
           : 'border-[var(--token-border-muted)] bg-[var(--token-bg-primary)/0.3] hover:border-[var(--token-card-border)] hover:bg-[var(--token-card-bg)/0.4]'
-      }`}
+      } ${isOwned ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
     >
       <div className="flex items-center gap-4">
         {/* Live nameplate preview */}
@@ -108,6 +111,11 @@ function NameplateRow({
             {plate.textEffect !== 'none' && (
               <span className="rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-tertiary)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--token-text-muted)]">
                 {plate.textEffect}
+              </span>
+            )}
+            {!isOwned && (
+              <span className="rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-tertiary)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--token-text-muted)]">
+                Locked
               </span>
             )}
           </div>
@@ -154,8 +162,13 @@ function NameplateRow({
 /**
  * Nameplates section with category filtering and advanced previews.
  */
-export function NameplatesSection({ selectedNameplate, onEquip }: NameplatesSectionProps) {
+export function NameplatesSection({
+  selectedNameplate,
+  onEquip,
+  ownedNameplateIds,
+}: NameplatesSectionProps) {
   const [activeCategory, setActiveCategory] = useState<NameplateCategory>('all');
+  const ownedNameplates = useMemo(() => new Set(ownedNameplateIds), [ownedNameplateIds]);
 
   const filteredPlates = useMemo(() => {
     if (activeCategory === 'all') return NAMEPLATE_REGISTRY;
@@ -193,7 +206,7 @@ export function NameplatesSection({ selectedNameplate, onEquip }: NameplatesSect
             onClick={() => setActiveCategory(cat)}
             className={`group flex shrink-0 items-center justify-center rounded-2xl px-6 py-3 transition-all duration-300 ${
               activeCategory === cat
-                ? 'aurora-social-button border-primary-400/30 bg-gradient-to-r from-primary-500/70 via-violet-500/60 to-primary-400/45 text-white ring-0 scale-[1.05] shadow-[0_12px_30px_rgba(76,29,149,0.35)]'
+                ? 'aurora-social-button border-primary-400/30 from-primary-500/70 via-violet-500/60 to-primary-400/45 scale-[1.05] bg-gradient-to-r text-white shadow-[0_12px_30px_rgba(76,29,149,0.35)] ring-0'
                 : 'aurora-social-button-muted text-white/72 hover:scale-[1.05] hover:text-white'
             }`}
           >
@@ -208,25 +221,28 @@ export function NameplatesSection({ selectedNameplate, onEquip }: NameplatesSect
       {/* Nameplate list */}
       <div className="space-y-2">
         <AnimatePresence mode="popLayout">
-          {filteredPlates.map((plate, index) => (
-            <motion.div
-              key={plate.id}
-              layout
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ delay: Math.min(index * 0.02, 0.3) }}
-            >
-              <NameplateRow
-                plate={plate}
-                isSelected={
-                  selectedNameplate === plate.id ||
-                  (!selectedNameplate && plate.id === 'plate_none')
-                }
-                onSelect={() => onEquip(plate.id)}
-              />
-            </motion.div>
-          ))}
+          {filteredPlates.map((plate, index) => {
+            const isNonePlate = plate.id === 'plate_none';
+            const isOwned = isNonePlate || ownedNameplates.has(plate.id);
+
+            return (
+              <motion.div
+                key={plate.id}
+                layout
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ delay: Math.min(index * 0.02, 0.3) }}
+              >
+                <NameplateRow
+                  plate={plate}
+                  isOwned={isOwned}
+                  isSelected={selectedNameplate === plate.id || (!selectedNameplate && isNonePlate)}
+                  onSelect={() => onEquip(isNonePlate ? null : plate.id)}
+                />
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 

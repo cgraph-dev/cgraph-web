@@ -14,6 +14,16 @@ export interface User {
   username: string | null;
   displayName: string | null;
   avatarUrl: string | null;
+  avatarBorderId?: string | null;
+  equippedTitleId?: string | null;
+  equippedBadgeIds?: readonly string[];
+  equippedNameplateId?: string | null;
+  profileTheme?: string | null;
+  chatTheme?: string | null;
+  displayNameFont?: string | null;
+  displayNameEffect?: string | null;
+  displayNameColor?: string | null;
+  displayNameSecondaryColor?: string | null;
   walletAddress: string | null;
   emailVerifiedAt: string | null;
   twoFactorEnabled: boolean;

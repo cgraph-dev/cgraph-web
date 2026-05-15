@@ -39,6 +39,7 @@ export function BordersSection({
   hasActiveFilter = false,
 }: BordersSectionProps) {
   const [showAnimations, setShowAnimations] = useState(true);
+  const ownedBorderById = useMemo(() => new Map(borders.map((b) => [b.id, b])), [borders]);
 
   // Get borders from the new collection system
   const themedBorders = useMemo(() => {
@@ -89,6 +90,9 @@ export function BordersSection({
           {displayBorders.map((border, index) => {
             const isSelected = selectedBorder === border.id;
             const isPreviewing = previewingBorder === border.id;
+            const ownedBorder = ownedBorderById.get(border.id);
+            const isUnlocked = ownedBorder?.unlocked ?? false;
+            const cardBorder = { ...border, unlocked: isUnlocked };
 
             return (
               <motion.div
@@ -103,7 +107,7 @@ export function BordersSection({
                 }}
               >
                 <ThemedBorderCard
-                  border={border}
+                  border={cardBorder}
                   isSelected={isSelected || isPreviewing}
                   onSelect={() => {
                     // Map to old border format for handler
@@ -114,7 +118,7 @@ export function BordersSection({
                       rarity: border.rarity === 'free' ? 'common' : border.rarity,
                       animation: border.animationType,
                       colors: border.colors,
-                      unlocked: border.unlocked,
+                      unlocked: isUnlocked,
                       unlockRequirement: border.unlockRequirement,
                     };
                     onEquip(border.id, oldBorder);

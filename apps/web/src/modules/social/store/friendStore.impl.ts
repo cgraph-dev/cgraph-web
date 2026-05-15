@@ -14,8 +14,13 @@ import { logger } from '@/lib/logger';
 // Re-export types so existing consumers keep working
 export type { Friend, FriendRequest, FriendState } from './friend-types';
 
-import type { FriendState } from './friend-types';
+import type { FriendIdentityPatch, FriendState } from './friend-types';
 import { normalizeFriend, normalizeRequest } from './friend-normalizers';
+
+function patchRequestUser(userId: string, patch: FriendIdentityPatch) {
+  return (request: FriendState['pendingRequests'][number]) =>
+    request.user.id === userId ? { ...request, user: { ...request.user, ...patch } } : request;
+}
 
 export const useFriendStore = create<FriendState>()((set, get) => ({
   friends: [],
@@ -159,6 +164,16 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       throw new Error(result.error.message);
     }
     set({ isLoading: false });
+  },
+
+  applyIdentityPatch: (userId, patch) => {
+    set((state) => ({
+      friends: state.friends.map((friend) =>
+        friend.id === userId ? { ...friend, ...patch } : friend
+      ),
+      pendingRequests: state.pendingRequests.map(patchRequestUser(userId, patch)),
+      sentRequests: state.sentRequests.map(patchRequestUser(userId, patch)),
+    }));
   },
 
   clearError: () => set({ error: null }),

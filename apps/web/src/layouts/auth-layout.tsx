@@ -218,8 +218,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           {/* Feature cards with 3D tilt + staggered animation */}
           <motion.div
             className="grid grid-cols-3 gap-4 pt-6"
-            initial={reduced ? {} : { opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={reduced ? {} : { y: 30 }}
+            animate={{ y: 0 }}
             transition={{ ...tweens.dramatic, delay: 0.6 }}
           >
             <FeatureCard title="E2E" subtitle="Encrypted" delay={0.7} />

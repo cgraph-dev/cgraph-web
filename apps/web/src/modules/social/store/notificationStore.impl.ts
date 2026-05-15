@@ -79,16 +79,18 @@ export const useNotificationStore = create<NotificationState>()(
         const newNotifications: Notification[] = result.data.filter(isRecord).map((n) => {
           const rawType = asString(n['type']);
           const type: Notification['type'] = knownTypes.find((t) => t === rawType) ?? 'system';
-          const sender = isRecord(n['sender'])
+          const actor = isRecord(n['actor'])
+            ? n['actor']
+            : isRecord(n['sender'])
+              ? n['sender']
+              : null;
+          const sender = actor
             ? {
-                id: asString(n['sender']['id']),
-                username: asString(n['sender']['username']),
+                id: asString(actor['id']),
+                username: asString(actor['username']),
                 displayName:
-                  typeof n['sender']['display_name'] === 'string'
-                    ? n['sender']['display_name']
-                    : null,
-                avatarUrl:
-                  typeof n['sender']['avatar_url'] === 'string' ? n['sender']['avatar_url'] : null,
+                  typeof actor['display_name'] === 'string' ? actor['display_name'] : null,
+                avatarUrl: typeof actor['avatar_url'] === 'string' ? actor['avatar_url'] : null,
               }
             : undefined;
           return {

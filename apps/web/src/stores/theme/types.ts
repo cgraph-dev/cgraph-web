@@ -242,6 +242,7 @@ export interface ThemeActions {
   // Sync
   syncWithBackend: () => Promise<void>;
   saveToBackend: () => Promise<void>;
+  applyServerTheme: (theme: Record<string, unknown>) => void;
   clearError: () => void;
 
   // Legacy backward compatibility

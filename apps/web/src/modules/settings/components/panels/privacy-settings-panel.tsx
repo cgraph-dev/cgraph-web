@@ -4,6 +4,12 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { EyeIcon } from '@heroicons/react/24/outline';
+import type { SelectivePrivacyMode, SelectivePrivacyRule } from '@cgraph/shared-types';
+import {
+  DEFAULT_SELECTIVE_PRIVACY_SETTINGS,
+  normalizeSelectivePrivacyRule,
+  normalizeSelectivePrivacySettings,
+} from '@cgraph/shared-types';
 import { useSettingsStore } from '@/modules/settings/store';
 import { toast } from '@/shared/components/ui';
 import { GlassCard } from '@/shared/components/ui';
@@ -15,6 +21,13 @@ import { FADE_UP } from '@/lib/animations/transitions';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('PrivacySettingsPanel');
+type SelectivePrivacyKey = keyof typeof DEFAULT_SELECTIVE_PRIVACY_SETTINGS;
+
+const SELECTIVE_PRIVACY_OPTIONS: Array<{ value: SelectivePrivacyMode; label: string }> = [
+  { value: 'everyone', label: 'Everyone' },
+  { value: 'contacts', label: 'Contacts Only' },
+  { value: 'nobody', label: 'Nobody' },
+];
 
 /**
  */
@@ -24,6 +37,9 @@ const logger = createLogger('PrivacySettingsPanel');
 export function PrivacySettingsPanel() {
   const { settings, updatePrivacySettings, isSaving } = useSettingsStore();
   const [fieldVisExpanded, setFieldVisExpanded] = useState(false);
+  const selectivePrivacy = normalizeSelectivePrivacySettings(
+    settings.privacy.selectivePrivacy ?? DEFAULT_SELECTIVE_PRIVACY_SETTINGS
+  );
 
   /** Safely read a boolean privacy field by dynamic key. */
   function privacyBool(key: string): boolean {
@@ -31,15 +47,75 @@ export function PrivacySettingsPanel() {
     return entry ? entry[1] !== false : true;
   }
 
-  const handleSelectChange = async (key: keyof typeof settings.privacy, value: string) => {
+  const updateSelectivePrivacy = async (
+    key: SelectivePrivacyKey,
+    patch: Partial<SelectivePrivacyRule>,
+    successMessage: string
+  ) => {
     try {
-      await updatePrivacySettings({ [key]: value });
-      toast.success('Privacy settings updated');
+      const currentRule = normalizeSelectivePrivacyRule(selectivePrivacy[key]);
+
+      await updatePrivacySettings({
+        selectivePrivacy: {
+          ...selectivePrivacy,
+          [key]: {
+            ...currentRule,
+            ...patch,
+          },
+        },
+      });
+      toast.success(successMessage);
     } catch (error) {
       logger.error('Failed to update privacy settings', error);
       toast.error('Failed to update privacy settings');
     }
   };
+
+  const renderSelectivePrivacyExceptions = (
+    key: SelectivePrivacyKey,
+    rule: SelectivePrivacyRule
+  ) => (
+    <div className="mt-3 grid gap-3 md:grid-cols-2">
+      <label className="block text-xs font-semibold uppercase text-[var(--token-text-muted)]">
+        Always allow user IDs
+        <input
+          type="text"
+          defaultValue={rule.alwaysAllowUserIds.join(', ')}
+          onBlur={(e) =>
+            updateSelectivePrivacy(
+              key,
+              { alwaysAllowUserIds: parseUserIds(e.currentTarget.value) },
+              'Privacy exceptions updated'
+            )
+          }
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur();
+          }}
+          disabled={isSaving}
+          className="aurora-social-input mt-1 w-full rounded-xl px-4 py-2 text-sm text-[var(--token-text-primary)] outline-none disabled:opacity-50"
+        />
+      </label>
+      <label className="block text-xs font-semibold uppercase text-[var(--token-text-muted)]">
+        Never allow user IDs
+        <input
+          type="text"
+          defaultValue={rule.neverAllowUserIds.join(', ')}
+          onBlur={(e) =>
+            updateSelectivePrivacy(
+              key,
+              { neverAllowUserIds: parseUserIds(e.currentTarget.value) },
+              'Privacy exceptions updated'
+            )
+          }
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur();
+          }}
+          disabled={isSaving}
+          className="aurora-social-input mt-1 w-full rounded-xl px-4 py-2 text-sm text-[var(--token-text-primary)] outline-none disabled:opacity-50"
+        />
+      </label>
+    </div>
+  );
 
   return (
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} transition={tweens.standard}>
@@ -67,20 +143,30 @@ export function PrivacySettingsPanel() {
             Who can send you direct messages
           </h3>
           <select
-            value={settings.privacy.allowMessageRequests ? 'everyone' : 'nobody'}
-            onChange={(e) =>
-              handleSelectChange(
-                'allowMessageRequests',
-                e.target.value === 'everyone' ? 'true' : 'false'
-              )
-            }
+            value={selectivePrivacy.messageRequests.mode}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (isSelectivePrivacyMode(value)) {
+                updateSelectivePrivacy(
+                  'messageRequests',
+                  { mode: value },
+                  'Message request privacy updated'
+                );
+              }
+            }}
             disabled={isSaving}
             className="aurora-social-select w-full rounded-xl px-4 py-2 text-[var(--token-text-primary)] outline-none disabled:opacity-50"
           >
-            <option value="everyone">Everyone</option>
-            <option value="friends">Friends Only</option>
-            <option value="nobody">No One</option>
+            {SELECTIVE_PRIVACY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
+          {renderSelectivePrivacyExceptions(
+            'messageRequests',
+            normalizeSelectivePrivacyRule(selectivePrivacy.messageRequests)
+          )}
         </GlassCard>
 
         <GlassCard variant="default" className="aurora-social-panel p-4">
@@ -285,23 +371,26 @@ export function PrivacySettingsPanel() {
             Who can see your phone number
           </p>
           <select
-            value={privacyBool('showPhone') ? 'everyone' : 'nobody'}
-            onChange={async (e) => {
-              try {
-                await updatePrivacySettings({ showPhone: e.target.value === 'everyone' });
-                toast.success('Phone visibility updated');
-              } catch (error) {
-                logger.error('Failed to update phone visibility', error);
-                toast.error('Failed to update settings');
+            value={selectivePrivacy.phoneNumber.mode}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (isSelectivePrivacyMode(value)) {
+                updateSelectivePrivacy('phoneNumber', { mode: value }, 'Phone visibility updated');
               }
             }}
             disabled={isSaving}
             className="aurora-social-select w-full rounded-xl px-4 py-2 text-[var(--token-text-primary)] outline-none disabled:opacity-50"
           >
-            <option value="everyone">Everyone</option>
-            <option value="contacts">Contacts Only</option>
-            <option value="nobody">Nobody</option>
+            {SELECTIVE_PRIVACY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
+          {renderSelectivePrivacyExceptions(
+            'phoneNumber',
+            normalizeSelectivePrivacyRule(selectivePrivacy.phoneNumber)
+          )}
         </GlassCard>
 
         {/* Forwarded messages visibility (Telegram parity) */}
@@ -333,26 +422,26 @@ export function PrivacySettingsPanel() {
             Control who can start voice and video calls with you
           </p>
           <select
-            value={privacyBool('allowCalls') ? 'everyone' : 'nobody'}
-            onChange={async (e) => {
-              try {
-                const value = e.target.value;
-                if (value === 'everyone' || value === 'contacts' || value === 'nobody') {
-                  await updatePrivacySettings({ allowCalls: value === 'everyone' });
-                }
-                toast.success('Call privacy updated');
-              } catch (error) {
-                logger.error('Failed to update call privacy', error);
-                toast.error('Failed to update settings');
+            value={selectivePrivacy.calls.mode}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (isSelectivePrivacyMode(value)) {
+                updateSelectivePrivacy('calls', { mode: value }, 'Call privacy updated');
               }
             }}
             disabled={isSaving}
             className="aurora-social-select w-full rounded-xl px-4 py-2 text-[var(--token-text-primary)] outline-none disabled:opacity-50"
           >
-            <option value="everyone">Everyone</option>
-            <option value="contacts">Contacts Only</option>
-            <option value="nobody">Nobody</option>
+            {SELECTIVE_PRIVACY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
+          {renderSelectivePrivacyExceptions(
+            'calls',
+            normalizeSelectivePrivacyRule(selectivePrivacy.calls)
+          )}
         </GlassCard>
 
         {/* Auto-delete / Vanish messages default (Telegram parity) */}
@@ -380,12 +469,27 @@ export function PrivacySettingsPanel() {
             className="aurora-social-select w-full rounded-xl px-4 py-2 text-[var(--token-text-primary)] outline-none disabled:opacity-50"
           >
             <option value="off">Off</option>
-            <option value="1day">1 Day</option>
-            <option value="1week">1 Week</option>
-            <option value="1month">1 Month</option>
+            <option value="86400">1 Day</option>
+            <option value="604800">1 Week</option>
+            <option value="2592000">1 Month</option>
           </select>
         </GlassCard>
       </div>
     </motion.div>
+  );
+}
+
+function isSelectivePrivacyMode(value: string): value is SelectivePrivacyMode {
+  return value === 'everyone' || value === 'contacts' || value === 'nobody';
+}
+
+function parseUserIds(value: string): readonly string[] {
+  return Array.from(
+    new Set(
+      value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+    )
   );
 }

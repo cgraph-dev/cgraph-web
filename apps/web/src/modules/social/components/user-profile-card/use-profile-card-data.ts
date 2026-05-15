@@ -167,19 +167,25 @@ export function useProfileCardData(
       equippedTitle,
       accentTheme,
       nameplateVariant,
-      nameplateId: isOwnProfile ? (ownCustomization?.nameplate ?? null) : null,
+      nameplateId: isOwnProfile
+        ? (ownCustomization?.nameplate ?? null)
+        : (user.equipped_nameplate ?? null),
       profileBadges,
       bannerType,
       energyRingTier,
       pulseTier: getPulseTier(pulseScore),
       pulseFilled: getPulseFilled(pulseScore),
-      avatarBorderId: isOwnProfile ? (ownCustomization?.borderId ?? undefined) : undefined,
-      displayNameFont: isOwnProfile ? ownCustomization?.displayNameFont : undefined,
-      displayNameEffect: isOwnProfile ? ownCustomization?.displayNameEffect : undefined,
-      displayNameColor: isOwnProfile ? ownCustomization?.displayNameColor : undefined,
+      avatarBorderId: isOwnProfile
+        ? (ownCustomization?.borderId ?? undefined)
+        : (user.avatarBorderId ?? undefined),
+      displayNameFont: isOwnProfile ? ownCustomization?.displayNameFont : user.display_name_font,
+      displayNameEffect: isOwnProfile
+        ? ownCustomization?.displayNameEffect
+        : user.display_name_effect,
+      displayNameColor: isOwnProfile ? ownCustomization?.displayNameColor : user.display_name_color,
       displayNameSecondaryColor: isOwnProfile
         ? ownCustomization?.displayNameSecondaryColor
-        : undefined,
+        : user.display_name_secondary_color,
     };
   }, [user, isOwnProfile, ownCustomization]);
 }

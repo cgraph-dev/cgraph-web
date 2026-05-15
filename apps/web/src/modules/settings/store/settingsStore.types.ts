@@ -6,230 +6,61 @@
  *
  */
 
-// Types & Interfaces
+import type {
+  AppearanceSettings,
+  AutoDownloadPolicy,
+  CallsSettings,
+  DateFormat,
+  EmojiSkinTone,
+  FontSize,
+  GroupInvitePermission,
+  KeyboardSettings,
+  LocaleSettings,
+  MediaSettings,
+  MessageDensity,
+  NotificationSettings,
+  PrivacySettings,
+  ProfileVisibility,
+  StickersEmojiSettings,
+  Theme,
+  TimeFormat,
+  UserSettings,
+  VideoResolution,
+} from '@cgraph/shared-types';
 
-export type ProfileVisibility = 'public' | 'friends' | 'private';
-export type GroupInvitePermission = 'anyone' | 'friends' | 'nobody';
-export type Theme = 'light' | 'dark' | 'system';
-export type FontSize = 'small' | 'medium' | 'large';
-export type MessageDensity = 'comfortable' | 'compact';
-export type DateFormat = 'mdy' | 'dmy' | 'ymd';
-export type TimeFormat = 'twelve_hour' | 'twenty_four_hour';
-export type AutoDownloadPolicy = 'always' | 'wifi' | 'never';
-export type EmojiSkinTone =
-  | 'neutral'
-  | 'light'
-  | 'medium-light'
-  | 'medium'
-  | 'medium-dark'
-  | 'dark';
-export type VideoResolution = 'auto' | '720p' | '1080p';
+export type {
+  AppearanceSettings,
+  AutoDownloadPolicy,
+  CallsSettings,
+  DateFormat,
+  EmojiSkinTone,
+  FontSize,
+  GroupInvitePermission,
+  KeyboardSettings,
+  LocaleSettings,
+  MediaSettings,
+  MessageDensity,
+  NotificationSettings,
+  PrivacySettings,
+  ProfileVisibility,
+  StickersEmojiSettings,
+  Theme,
+  TimeFormat,
+  UserSettings,
+  VideoResolution,
+} from '@cgraph/shared-types';
 
-export interface MediaSettings {
-  autoDownloadPhotos: AutoDownloadPolicy;
-  autoDownloadVideos: AutoDownloadPolicy;
-  autoDownloadFiles: AutoDownloadPolicy;
-  dataSaverMode: boolean;
-}
-
-/**
- * Stickers and emoji preferences — local-only (persisted in localStorage
- * via the settings store). No backend sync.
- */
-export interface StickersEmojiSettings {
-  suggestStickers: boolean;
-  loopAnimatedStickers: boolean;
-  defaultSkinTone: EmojiSkinTone;
-  installedPackIds: readonly string[];
-}
-
-/**
- * Voice/video call defaults — local-only. Active call settings remain
- * owned by `voiceStateStore`; these apply at the next call start.
- */
-export interface CallsSettings {
-  echoCancellation: boolean;
-  noiseSuppression: boolean;
-  autoGainControl: boolean;
-  defaultVideoResolution: VideoResolution;
-}
-
-export interface NotificationSettings {
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  notifyMessages: boolean;
-  notifyMentions: boolean;
-  notifyFriendRequests: boolean;
-  notifyGroupInvites: boolean;
-  notifyForumReplies: boolean;
-  notifyEconomy: boolean;
-  notifySystem: boolean;
-  notificationSound: boolean;
-  quietHoursEnabled: boolean;
-  quietHoursStart: string | null; // HH:MM format
-  quietHoursEnd: string | null;
-  dndUntil: string | null; // ISO 8601 datetime
-}
-
-export interface PrivacySettings {
-  showOnlineStatus: boolean;
-  showReadReceipts: boolean;
-  showTypingIndicators: boolean;
-  profileVisibility: ProfileVisibility;
-  allowFriendRequests: boolean;
-  allowMessageRequests: boolean;
-  showInSearch: boolean;
-  allowGroupInvites: GroupInvitePermission;
-  showBio: boolean;
-  showPostCount: boolean;
-  showJoinDate: boolean;
-  showLastActive: boolean;
-  showSocialLinks: boolean;
-  showActivity: boolean;
-  showInMemberList: boolean;
-  showPhone: boolean;
-  showForwardedFrom: boolean;
-  allowCalls: boolean;
-  autoDeleteDefault: number | null;
-}
-
-export interface AppearanceSettings {
-  theme: Theme;
-  compactMode: boolean;
-  fontSize: FontSize;
-  messageDensity: MessageDensity;
-  showAvatars: boolean;
-  animateEmojis: boolean;
-  reduceMotion: boolean;
-  highContrast: boolean;
-  screenReaderOptimized: boolean;
-}
-
-export interface LocaleSettings {
-  language: string;
-  timezone: string;
-  dateFormat: DateFormat;
-  timeFormat: TimeFormat;
-}
-
-export interface KeyboardSettings {
-  keyboardShortcutsEnabled: boolean;
-  customShortcuts: Record<string, string>;
-}
-
-export interface UserSettings {
-  notifications: NotificationSettings;
-  privacy: PrivacySettings;
-  appearance: AppearanceSettings;
-  locale: LocaleSettings;
-  keyboard: KeyboardSettings;
-  media: MediaSettings;
-  stickersEmoji: StickersEmojiSettings;
-  calls: CallsSettings;
-}
-
-// Default Settings Constants
-
-export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
-  emailNotifications: true,
-  pushNotifications: true,
-  notifyMessages: true,
-  notifyMentions: true,
-  notifyFriendRequests: true,
-  notifyGroupInvites: true,
-  notifyForumReplies: true,
-  notifyEconomy: true,
-  notifySystem: true,
-  notificationSound: true,
-  quietHoursEnabled: false,
-  quietHoursStart: null,
-  quietHoursEnd: null,
-  dndUntil: null,
-};
-
-export const DEFAULT_PRIVACY_SETTINGS: PrivacySettings = {
-  showOnlineStatus: true,
-  showReadReceipts: true,
-  showTypingIndicators: true,
-  profileVisibility: 'public',
-  allowFriendRequests: true,
-  allowMessageRequests: true,
-  showInSearch: true,
-  allowGroupInvites: 'anyone',
-  showBio: true,
-  showPostCount: true,
-  showJoinDate: true,
-  showLastActive: true,
-  showSocialLinks: true,
-  showActivity: true,
-  showInMemberList: true,
-  showPhone: false,
-  showForwardedFrom: true,
-  allowCalls: true,
-  autoDeleteDefault: null,
-};
-
-export const DEFAULT_APPEARANCE_SETTINGS: AppearanceSettings = {
-  theme: 'system',
-  compactMode: false,
-  fontSize: 'medium',
-  messageDensity: 'comfortable',
-  showAvatars: true,
-  animateEmojis: true,
-  reduceMotion: false,
-  highContrast: false,
-  screenReaderOptimized: false,
-};
-
-export const DEFAULT_LOCALE_SETTINGS: LocaleSettings = {
-  language: 'en',
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-  dateFormat: 'mdy',
-  timeFormat: 'twelve_hour',
-};
-
-export const DEFAULT_KEYBOARD_SETTINGS: KeyboardSettings = {
-  keyboardShortcutsEnabled: true,
-  customShortcuts: {},
-};
-
-// Mirrors Telegram's Data & Storage defaults: photos auto-download on any
-// connection, videos only on Wi-Fi, files always require manual download.
-export const DEFAULT_MEDIA_SETTINGS: MediaSettings = {
-  autoDownloadPhotos: 'always',
-  autoDownloadVideos: 'wifi',
-  autoDownloadFiles: 'never',
-  dataSaverMode: false,
-};
-
-// Telegram-iOS InstalledStickerPacksController defaults: sticker
-// suggestions on, loop animated stickers, neutral skin tone modifier.
-export const DEFAULT_STICKERS_EMOJI_SETTINGS: StickersEmojiSettings = {
-  suggestStickers: true,
-  loopAnimatedStickers: true,
-  defaultSkinTone: 'neutral',
-  installedPackIds: [],
-};
-
-// LiveKit/WebRTC defaults — match the active livekitService config so
-// the inactive settings panel and the live session agree at startup.
-export const DEFAULT_CALLS_SETTINGS: CallsSettings = {
-  echoCancellation: true,
-  noiseSuppression: true,
-  autoGainControl: true,
-  defaultVideoResolution: 'auto',
-};
-
-export const DEFAULT_SETTINGS: UserSettings = {
-  notifications: DEFAULT_NOTIFICATION_SETTINGS,
-  privacy: DEFAULT_PRIVACY_SETTINGS,
-  appearance: DEFAULT_APPEARANCE_SETTINGS,
-  locale: DEFAULT_LOCALE_SETTINGS,
-  keyboard: DEFAULT_KEYBOARD_SETTINGS,
-  media: DEFAULT_MEDIA_SETTINGS,
-  stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
-  calls: DEFAULT_CALLS_SETTINGS,
-};
+export {
+  DEFAULT_APPEARANCE_SETTINGS,
+  DEFAULT_CALLS_SETTINGS,
+  DEFAULT_KEYBOARD_SETTINGS,
+  DEFAULT_LOCALE_SETTINGS,
+  DEFAULT_MEDIA_SETTINGS,
+  DEFAULT_NOTIFICATION_SETTINGS,
+  DEFAULT_PRIVACY_SETTINGS,
+  DEFAULT_SETTINGS,
+  DEFAULT_STICKERS_EMOJI_SETTINGS,
+} from '@cgraph/shared-types';
 
 // API Response Mapping Types
 
@@ -271,6 +102,7 @@ export interface ApiSettings {
     show_forwarded_from?: boolean;
     allow_calls?: boolean;
     auto_delete_default?: number | null;
+    selective_privacy?: unknown;
   };
 
   appearance?: {
@@ -354,6 +186,7 @@ export interface ApiSettings {
   show_forwarded_from?: boolean;
   allow_calls?: boolean;
   auto_delete_default?: number | null;
+  selective_privacy?: unknown;
 
   // Appearance
   theme?: Theme;

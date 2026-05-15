@@ -6,3 +6,4 @@
 
 // Settings store
 export * from './settingsStore';
+export * from './preferenceOrchestrator';

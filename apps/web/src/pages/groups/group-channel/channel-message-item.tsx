@@ -178,7 +178,7 @@ export function ChannelMessageItem({
                   void handleSaveEdit();
                 }
               }}
-              className="min-h-20 w-full resize-y rounded border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-primary-400/60"
+              className="focus:border-primary-400/60 min-h-20 w-full resize-y rounded border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors"
               autoFocus
             />
             <div className="flex items-center gap-2">

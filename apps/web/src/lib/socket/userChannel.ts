@@ -24,8 +24,10 @@ import { normalizeIncomingRequestEvent } from '@/modules/social/store/friend-nor
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { useSettingsStore } from '@/modules/settings/store/settingsStore.impl';
+import { useThemeStore } from '@/stores/theme/store';
 import { socketLogger as logger } from '../logger';
 import { normalizeConversation, normalizeMessage } from '../api-utils';
+import { applyOwnItemEquipped, applyOwnItemUnequipped, applyOwnProfileUpdate } from '../identity';
 import { shouldDropIncomingCall } from './incomingCallDedup';
 
 interface SessionResumeState {
@@ -409,34 +411,7 @@ export function joinUserChannel(
 
     logger.log('Profile updated event received:', changesRecord);
 
-    // Update auth store for avatar/banner changes
-    const userUpdates: Record<string, unknown> = {};
-    if (typeof changesRecord['avatar_hash'] === 'string') {
-      userUpdates.avatarUrl = changesRecord['avatar_hash'];
-    }
-    if (typeof changesRecord['banner_hash'] === 'string') {
-      userUpdates.bannerUrl = changesRecord['banner_hash'];
-    }
-
-    if (Object.keys(userUpdates).length > 0) {
-      useAuthStore.getState().updateUser(userUpdates);
-    }
-
-    // Update customization store for cosmetic changes
-    const cosmeticUpdates: Record<string, unknown> = {};
-    if (typeof changesRecord['avatar_border_id'] === 'string') {
-      cosmeticUpdates.selectedBorderId = changesRecord['avatar_border_id'];
-    }
-    if (typeof changesRecord['nameplate_id'] === 'string') {
-      cosmeticUpdates.equippedNameplate = changesRecord['nameplate_id'];
-    }
-    if (typeof changesRecord['accent_color'] === 'string') {
-      cosmeticUpdates.avatarBorderColor = changesRecord['accent_color'];
-    }
-
-    if (Object.keys(cosmeticUpdates).length > 0) {
-      useCustomizationStore.getState().updateSettings(cosmeticUpdates);
-    }
+    applyOwnProfileUpdate(changesRecord);
   });
 
   // Item equipped — cosmetic item equipped on another device
@@ -447,17 +422,7 @@ export function joinUserChannel(
 
     if (typeof itemType === 'string' && typeof itemId === 'string') {
       logger.log('Item equipped event:', { itemType, itemId });
-
-      const updates: Record<string, unknown> = {};
-      if (itemType === 'border') updates.selectedBorderId = itemId;
-      if (itemType === 'title') updates.equippedTitle = itemId;
-      if (itemType === 'nameplate') updates.equippedNameplate = itemId;
-      if (itemType === 'name_style' || itemType === 'name_effect')
-        updates.displayNameEffect = itemId;
-
-      if (Object.keys(updates).length > 0) {
-        useCustomizationStore.getState().updateSettings(updates);
-      }
+      applyOwnItemEquipped(itemType, itemId);
     }
   });
 
@@ -465,19 +430,11 @@ export function joinUserChannel(
   channel.on('item_unequipped', (payload) => {
     const data = toRecord(payload);
     const itemType = typeof data['item_type'] === 'string' ? data['item_type'] : data['itemType'];
+    const itemId = typeof data['item_id'] === 'string' ? data['item_id'] : data['itemId'];
 
     if (typeof itemType === 'string') {
       logger.log('Item unequipped event:', { itemType });
-
-      const updates: Record<string, unknown> = {};
-      if (itemType === 'border') updates.selectedBorderId = null;
-      if (itemType === 'title') updates.equippedTitle = null;
-      if (itemType === 'nameplate') updates.equippedNameplate = null;
-      if (itemType === 'name_style' || itemType === 'name_effect') updates.displayNameEffect = null;
-
-      if (Object.keys(updates).length > 0) {
-        useCustomizationStore.getState().updateSettings(updates);
-      }
+      applyOwnItemUnequipped(itemType, typeof itemId === 'string' ? itemId : undefined);
     }
   });
 
@@ -510,6 +467,34 @@ export function joinUserChannel(
 
     logger.log('Settings synced from another device:', { section, changes: changesRecord });
     useSettingsStore.getState().mergeSettingsFromSync(section, changesRecord, incomingAt);
+  });
+
+  channel.on('customization_synced', (payload) => {
+    const data = updateSessionResumeState(payload, sessionState);
+    const changes = data['changes'] ?? data['customizations'];
+
+    if (typeof changes !== 'object' || changes === null || Array.isArray(changes)) {
+      logger.warn('Malformed customization_synced payload — missing changes:', payload);
+      return;
+    }
+
+    const changesRecord = objectToRecord(changes);
+    logger.log('Customizations synced from another device:', changesRecord);
+    useCustomizationStore.getState().applyServerSettings(changesRecord);
+  });
+
+  channel.on('theme_synced', (payload) => {
+    const data = updateSessionResumeState(payload, sessionState);
+    const theme = data['theme'] ?? data['changes'];
+
+    if (typeof theme !== 'object' || theme === null || Array.isArray(theme)) {
+      logger.warn('Malformed theme_synced payload — missing theme:', payload);
+      return;
+    }
+
+    const themeRecord = objectToRecord(theme);
+    logger.log('Theme synced from another device:', themeRecord);
+    useThemeStore.getState().applyServerTheme(themeRecord);
   });
 
   // === Task 5 (C5): Connection displacement ===

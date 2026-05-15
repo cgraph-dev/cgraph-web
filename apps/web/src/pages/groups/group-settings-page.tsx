@@ -19,9 +19,7 @@ export default function GroupSettingsPage() {
   return (
     <GroupSettings
       groupId={groupId}
-      onClose={() =>
-        navigate(group ? getGroupRoute(group) : `/groups/${groupId}`)
-      }
+      onClose={() => navigate(group ? getGroupRoute(group) : `/groups/${groupId}`)}
     />
   );
 }

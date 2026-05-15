@@ -34,22 +34,15 @@ export const FriendUserSchema = z.object({
 
 export type FriendUser = z.infer<typeof FriendUserSchema>;
 
-export const FriendRawSchema = z.object({
-  id: z.string(),
-  friend_id: z.string().optional(),
-  user_id: z.string().optional(),
-  user: FriendUserSchema.optional(),
-  friend: FriendUserSchema.optional(),
-  username: z.string().optional(),
-  display_name: z.string().nullable().optional(),
-  avatar_url: z.string().nullable().optional(),
-  status: FriendStatusSchema.optional(),
-  is_favorite: z.boolean().optional(),
-  nickname: z.string().nullable().optional(),
-  since: z.string().optional(),
-  created_at: z.string().optional(),
-  inserted_at: z.string().optional(),
-});
+export const FriendRawSchema = z
+  .object({
+    id: z.string(),
+    user: FriendUserSchema.optional(),
+    nickname: z.string().nullable().optional(),
+    is_favorite: z.boolean().optional(),
+    since: z.string().optional(),
+  })
+  .passthrough();
 
 export type FriendRaw = z.infer<typeof FriendRawSchema>;
 

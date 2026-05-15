@@ -101,3 +101,107 @@ export interface MediaUploadState {
   /** The upload identifier returned by the server. */
   readonly uploadId: string | null;
 }
+
+export const MESSAGE_ATTACHMENT_CONTENT_TYPES = [
+  'image',
+  'video',
+  'file',
+  'audio',
+  'voice',
+] as const;
+
+export type MessageAttachmentContentType = (typeof MESSAGE_ATTACHMENT_CONTENT_TYPES)[number];
+
+/** Uploaded file data after `/api/v1/uploads` accepts a message attachment. */
+export interface UploadedMessageAttachment {
+  readonly url: string;
+  readonly filename: string;
+  readonly contentType: string;
+  readonly size: number;
+  readonly thumbnailUrl: string | null;
+}
+
+/** Canonical metadata persisted on DM and group message attachments. */
+export interface MessageAttachmentMetadata extends Record<string, unknown> {
+  readonly fileUrl: string;
+  readonly fileName: string;
+  readonly fileSize: number;
+  readonly fileMimeType: string;
+  readonly url: string;
+  readonly filename: string;
+  readonly size: number;
+  readonly mimeType: string;
+  readonly thumbnailUrl?: string;
+}
+
+/** Canonical upload-first payload for routed DM and group message sends. */
+export interface MessageAttachmentSendPayload {
+  readonly contentType: MessageAttachmentContentType;
+  readonly fileUrl: string;
+  readonly fileName: string;
+  readonly fileSize: number;
+  readonly fileMimeType: string;
+  readonly thumbnailUrl: string | null;
+  readonly metadata: MessageAttachmentMetadata;
+}
+
+/**
+ * Maps an uploaded attachment MIME type to the message content type.
+ */
+export function messageContentTypeForMime(
+  mimeType: string,
+  filename = ''
+): MessageAttachmentContentType {
+  const normalizedMime = mimeType.toLowerCase();
+  const normalizedName = filename.toLowerCase();
+
+  if (normalizedMime.startsWith('image/')) return 'image';
+  if (normalizedMime.startsWith('video/')) return 'video';
+  if (normalizedMime.startsWith('audio/')) return 'audio';
+  if (/\.(png|jpe?g|gif|webp|avif)$/u.test(normalizedName)) return 'image';
+  if (/\.(mp4|mov|webm|mkv)$/u.test(normalizedName)) return 'video';
+  if (/\.(mp3|m4a|ogg|opus|wav|webm)$/u.test(normalizedName)) return 'audio';
+  return 'file';
+}
+
+/**
+ * Builds the persisted attachment metadata used by both DM and group messages.
+ */
+export function buildMessageAttachmentMetadata(
+  uploaded: UploadedMessageAttachment
+): MessageAttachmentMetadata {
+  const metadata: MessageAttachmentMetadata = {
+    fileUrl: uploaded.url,
+    fileName: uploaded.filename,
+    fileSize: uploaded.size,
+    fileMimeType: uploaded.contentType,
+    url: uploaded.url,
+    filename: uploaded.filename,
+    size: uploaded.size,
+    mimeType: uploaded.contentType,
+  };
+
+  if (uploaded.thumbnailUrl) {
+    return { ...metadata, thumbnailUrl: uploaded.thumbnailUrl };
+  }
+
+  return metadata;
+}
+
+/**
+ * Builds the complete upload-first send payload for a routed message composer.
+ */
+export function buildMessageAttachmentSendPayload(
+  uploaded: UploadedMessageAttachment,
+  contentType = messageContentTypeForMime(uploaded.contentType, uploaded.filename)
+): MessageAttachmentSendPayload {
+  return {
+    contentType,
+    fileUrl: uploaded.url,
+    fileName: uploaded.filename,
+    fileSize: uploaded.size,
+    fileMimeType: uploaded.contentType,
+    thumbnailUrl: uploaded.thumbnailUrl,
+    metadata: buildMessageAttachmentMetadata(uploaded),
+  };
+}

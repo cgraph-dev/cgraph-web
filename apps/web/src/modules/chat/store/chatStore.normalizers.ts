@@ -9,18 +9,27 @@
 
 import type { Message, MessageMetadata } from './chatStore.types';
 import { normalizeMessage } from '@/lib/api-utils';
+import { identityFieldsFromApi } from '@/lib/identity';
 
 function rawSender(raw: Record<string, unknown>): Message['sender'] {
   const s = raw.sender instanceof Object ? Object.fromEntries(Object.entries(raw.sender)) : {};
+  const identity = identityFieldsFromApi(s);
   const sender: Message['sender'] = {
-    id: typeof s.id === 'string' ? s.id : '',
-    username: typeof s.username === 'string' ? s.username : '',
-    displayName: typeof s.displayName === 'string' ? s.displayName : null,
-    avatarUrl: typeof s.avatarUrl === 'string' ? s.avatarUrl : null,
+    id: identity.id,
+    username: identity.username,
+    displayName: identity.displayName,
+    avatarUrl: identity.avatarUrl,
+    avatarBorderId: identity.avatarBorderId,
+    equippedTitleId: identity.equippedTitleId,
+    equippedBadgeIds: identity.equippedBadgeIds,
+    equippedNameplateId: identity.equippedNameplateId,
+    profileTheme: identity.profileTheme,
+    chatTheme: identity.chatTheme,
+    displayNameFont: identity.displayNameFont,
+    displayNameEffect: identity.displayNameEffect,
+    displayNameColor: identity.displayNameColor,
+    displayNameSecondaryColor: identity.displayNameSecondaryColor,
   };
-  if ('avatarBorderId' in s) {
-    sender.avatarBorderId = typeof s.avatarBorderId === 'string' ? s.avatarBorderId : null;
-  }
   return sender;
 }
 

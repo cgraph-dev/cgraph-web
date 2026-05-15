@@ -54,16 +54,12 @@ export function ChannelItem({ channel, isActive }: ChannelItemProps) {
             />
           )}
           {/* Channel icon */}
-          <Icon
-            className={`h-5 w-5 flex-shrink-0 ${routeActive ? 'text-white' : iconColor}`}
-          />
+          <Icon className={`h-5 w-5 flex-shrink-0 ${routeActive ? 'text-white' : iconColor}`} />
 
           {/* Channel name — bolder + glow pulse when unread */}
           <span
             className={`flex-1 truncate text-sm ${
-              channel.unreadCount > 0
-                ? 'font-semibold text-white'
-                : 'font-medium'
+              channel.unreadCount > 0 ? 'font-semibold text-white' : 'font-medium'
             }`}
           >
             {channel.name}

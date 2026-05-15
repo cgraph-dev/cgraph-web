@@ -8,10 +8,7 @@ import {
 } from '@/modules/groups/routing';
 import type { Group } from '@/modules/groups/store';
 
-function groupWithChannels(
-  channels: Group['channels'],
-  categories: Group['categories'] = [],
-) {
+function groupWithChannels(channels: Group['channels'], categories: Group['categories'] = []) {
   return {
     id: 'group-1',
     channels,
@@ -75,12 +72,10 @@ describe('group routing', () => {
             },
           ],
         },
-      ],
+      ]
     );
 
-    expect(getGroupRoute(group)).toBe(
-      '/groups/group-1/announcements/announcements-1',
-    );
+    expect(getGroupRoute(group)).toBe('/groups/group-1/announcements/announcements-1');
   });
 
   it('keeps the group root as a real fallback when no channels exist yet', () => {
@@ -93,28 +88,26 @@ describe('group routing', () => {
         groupId: 'group-1',
         channelId: 'channel-1',
         messageId: 'message 1',
-      }),
+      })
     ).toBe('/groups/group-1/channels/channel-1?scrollTo=message%201');
   });
 
   it('builds type-specific routes for non-text group channels', () => {
     expect(getGroupChannelRoute('group-1', 'voice-1', 'voice')).toBe(
-      '/groups/group-1/voice/voice-1',
+      '/groups/group-1/voice/voice-1'
     );
     expect(getGroupChannelRoute('group-1', 'video-1', 'video')).toBe(
-      '/groups/group-1/video/video-1',
+      '/groups/group-1/video/video-1'
     );
-    expect(
-      getGroupChannelRoute('group-1', 'announcement-1', 'announcement'),
-    ).toBe('/groups/group-1/announcements/announcement-1');
+    expect(getGroupChannelRoute('group-1', 'announcement-1', 'announcement')).toBe(
+      '/groups/group-1/announcements/announcement-1'
+    );
     expect(getGroupChannelRoute('group-1', 'forum-1', 'forum')).toBe(
-      '/groups/group-1/forums/forum-1',
+      '/groups/group-1/forums/forum-1'
     );
   });
 
   it('uses the backend-compatible room name for group call channels', () => {
-    expect(getGroupLiveKitRoomName('group-1', 'voice-1')).toBe(
-      'group_group-1_channel_voice-1',
-    );
+    expect(getGroupLiveKitRoomName('group-1', 'voice-1')).toBe('group_group-1_channel_voice-1');
   });
 });

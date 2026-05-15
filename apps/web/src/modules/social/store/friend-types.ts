@@ -13,6 +13,14 @@ export interface Friend {
   avatarBorderId?: string | null;
   avatar_border_id?: string | null;
   equippedTitleId?: string | null;
+  equippedBadgeIds?: readonly string[];
+  equippedNameplateId?: string | null;
+  profileTheme?: string | null;
+  chatTheme?: string | null;
+  displayNameFont?: string | null;
+  displayNameEffect?: string | null;
+  displayNameColor?: string | null;
+  displayNameSecondaryColor?: string | null;
   status: 'online' | 'idle' | 'dnd' | 'offline';
   statusMessage: string | null;
   friendshipId: string;
@@ -29,9 +37,32 @@ export interface FriendRequest {
     avatarUrl: string | null;
     avatarBorderId?: string | null;
     avatar_border_id?: string | null;
+    equippedTitleId?: string | null;
+    equippedBadgeIds?: readonly string[];
+    equippedNameplateId?: string | null;
+    profileTheme?: string | null;
+    chatTheme?: string | null;
+    displayNameFont?: string | null;
+    displayNameEffect?: string | null;
+    displayNameColor?: string | null;
+    displayNameSecondaryColor?: string | null;
   };
   createdAt: string;
   type: 'incoming' | 'outgoing';
+}
+
+export interface FriendIdentityPatch {
+  avatarBorderId?: string | null;
+  avatar_border_id?: string | null;
+  equippedTitleId?: string | null;
+  equippedBadgeIds?: readonly string[];
+  equippedNameplateId?: string | null;
+  profileTheme?: string | null;
+  chatTheme?: string | null;
+  displayNameFont?: string | null;
+  displayNameEffect?: string | null;
+  displayNameColor?: string | null;
+  displayNameSecondaryColor?: string | null;
 }
 
 export interface FriendState {
@@ -52,6 +83,7 @@ export interface FriendState {
   removeFriend: (friendId: string) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
+  applyIdentityPatch: (userId: string, patch: FriendIdentityPatch) => void;
   clearError: () => void;
   reset: () => void;
 }

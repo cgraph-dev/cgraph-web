@@ -5,8 +5,7 @@
  * start. Active call sessions remain owned by `voiceStateStore`; this
  * panel only configures the defaults.
  *
- * Local-only (no backend sync); preferences live in the persisted
- * Zustand settings store.
+ * Server-synced through the settings store.
  */
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';

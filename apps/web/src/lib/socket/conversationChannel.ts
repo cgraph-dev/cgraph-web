@@ -13,6 +13,7 @@ import { useAuthStore } from '@/modules/auth/store';
 import { http } from '../api-client';
 import { socketLogger as logger } from '../logger';
 import { normalizeMessage } from '../api-utils';
+import { identityFieldsFromApi } from '../identity';
 
 function isRecord(val: unknown): val is Record<string, unknown> {
   return val !== null && typeof val === 'object' && !Array.isArray(val);
@@ -166,6 +167,7 @@ export function _gapRepairInFlightHas(conversationId: string): boolean {
  */
 function recordToMessage(record: Record<string, unknown>): Message {
   const sender = isRecord(record['sender']) ? record['sender'] : {};
+  const identity = identityFieldsFromApi(sender);
   const rawReactions = Array.isArray(record['reactions']) ? record['reactions'] : [];
 
   return {
@@ -197,10 +199,20 @@ function recordToMessage(record: Record<string, unknown>): Message {
         isRecord(r) && typeof r['emoji'] === 'string' && typeof r['count'] === 'number'
     ),
     sender: {
-      id: typeof sender['id'] === 'string' ? sender['id'] : '',
-      username: typeof sender['username'] === 'string' ? sender['username'] : '',
-      displayName: typeof sender['displayName'] === 'string' ? sender['displayName'] : null,
-      avatarUrl: typeof sender['avatarUrl'] === 'string' ? sender['avatarUrl'] : null,
+      id: identity.id,
+      username: identity.username,
+      displayName: identity.displayName,
+      avatarUrl: identity.avatarUrl,
+      avatarBorderId: identity.avatarBorderId,
+      equippedTitleId: identity.equippedTitleId,
+      equippedBadgeIds: identity.equippedBadgeIds,
+      equippedNameplateId: identity.equippedNameplateId,
+      profileTheme: identity.profileTheme,
+      chatTheme: identity.chatTheme,
+      displayNameFont: identity.displayNameFont,
+      displayNameEffect: identity.displayNameEffect,
+      displayNameColor: identity.displayNameColor,
+      displayNameSecondaryColor: identity.displayNameSecondaryColor,
     },
     createdAt: typeof record['createdAt'] === 'string' ? record['createdAt'] : '',
     updatedAt: typeof record['updatedAt'] === 'string' ? record['updatedAt'] : '',

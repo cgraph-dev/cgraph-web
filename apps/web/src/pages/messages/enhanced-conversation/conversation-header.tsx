@@ -3,7 +3,12 @@
  */
 
 import { motion } from 'motion/react';
-import { PhoneIcon, ShieldCheckIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
+import {
+  BookmarkIcon,
+  PhoneIcon,
+  ShieldCheckIcon,
+  VideoCameraIcon,
+} from '@heroicons/react/24/outline';
 import { GlassCardNeon } from '@/shared/components/ui';
 import { ConnectionStatus } from '@/shared/components/connection-status';
 import type { ConversationHeaderProps } from './types';
@@ -18,6 +23,9 @@ export function ConversationHeader({
   conversationName,
   isTyping,
   canStartCall = false,
+  pinnedCount = 0,
+  showPinnedMessages = false,
+  onTogglePinnedMessages,
   onStartVoiceCall,
   onStartVideoCall,
 }: ConversationHeaderProps) {
@@ -72,6 +80,26 @@ export function ConversationHeader({
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
+        {pinnedCount > 0 && onTogglePinnedMessages && (
+          <motion.button
+            type="button"
+            onClick={onTogglePinnedMessages}
+            className={`relative rounded-lg p-2 transition-colors ${
+              showPinnedMessages
+                ? 'bg-primary-500/20 text-primary-200'
+                : 'text-gray-400 hover:bg-white/10 hover:text-white'
+            }`}
+            whileTap={{ scale: 0.88 }}
+            aria-label={showPinnedMessages ? 'Close pinned messages' : 'Open pinned messages'}
+            title="Pinned messages"
+          >
+            <BookmarkIcon className="h-5 w-5" />
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-[10px] font-semibold text-dark-950">
+              {pinnedCount}
+            </span>
+          </motion.button>
+        )}
+
         {canStartCall && (
           <>
             <motion.button

@@ -9,10 +9,7 @@ const navigate = vi.fn();
 const sendRequest = vi.fn();
 
 vi.mock('react-router-dom', async () => {
-  const actual =
-    await vi.importActual<typeof import('react-router-dom')>(
-      'react-router-dom',
-    );
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
     useNavigate: () => navigate,
@@ -58,9 +55,7 @@ describe('DiscoverTab', () => {
   });
 
   it('joins unjoined group results without treating Open as a fake action', () => {
-    const onJoinGroup = vi
-      .fn<() => Promise<void>>()
-      .mockResolvedValue(undefined);
+    const onJoinGroup = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
 
     render(
       <DiscoverTab
@@ -69,7 +64,7 @@ describe('DiscoverTab', () => {
         onSearchChange={vi.fn()}
         onJoinGroup={onJoinGroup}
         joiningGroupId={null}
-      />,
+      />
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Join Design Guild' }));
@@ -79,9 +74,7 @@ describe('DiscoverTab', () => {
   });
 
   it('keeps joined group results as route-open entries', () => {
-    const onJoinGroup = vi
-      .fn<() => Promise<void>>()
-      .mockResolvedValue(undefined);
+    const onJoinGroup = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
 
     render(
       <DiscoverTab
@@ -90,7 +83,7 @@ describe('DiscoverTab', () => {
         onSearchChange={vi.fn()}
         onJoinGroup={onJoinGroup}
         joiningGroupId={null}
-      />,
+      />
     );
 
     fireEvent.click(screen.getByText('Design Guild'));

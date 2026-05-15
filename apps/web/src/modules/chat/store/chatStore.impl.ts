@@ -11,6 +11,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { apiClient } from '@/lib/api-client';
 import { ensureArray, normalizeMessage, normalizeConversations } from '@/lib/api-utils';
+import { identityFieldsFromApi } from '@/lib/identity';
 import type { Message, Conversation, ChatState, ConversationParticipant } from './chatStore.types';
 import { createMessagingActions } from './chatStore.messaging';
 import { createOperationsActions } from './chatStore.operations';
@@ -52,6 +53,7 @@ export function toConversation(raw: Record<string, unknown>): Conversation {
         const pr = p instanceof Object ? Object.fromEntries(Object.entries(p)) : {};
         const userRaw =
           pr.user instanceof Object ? Object.fromEntries(Object.entries(pr.user)) : {};
+        const identity = identityFieldsFromApi(userRaw);
         return {
           id: typeof pr.id === 'string' ? pr.id : '',
           userId: typeof pr.userId === 'string' ? pr.userId : '',
@@ -60,11 +62,21 @@ export function toConversation(raw: Record<string, unknown>): Conversation {
           mutedUntil: typeof pr.mutedUntil === 'string' ? pr.mutedUntil : null,
           joinedAt: typeof pr.joinedAt === 'string' ? pr.joinedAt : '',
           user: {
-            id: typeof userRaw.id === 'string' ? userRaw.id : '',
-            username: typeof userRaw.username === 'string' ? userRaw.username : '',
-            displayName: typeof userRaw.displayName === 'string' ? userRaw.displayName : null,
-            avatarUrl: typeof userRaw.avatarUrl === 'string' ? userRaw.avatarUrl : null,
-            status: typeof userRaw.status === 'string' ? userRaw.status : 'offline',
+            id: identity.id,
+            username: identity.username,
+            displayName: identity.displayName,
+            avatarUrl: identity.avatarUrl,
+            avatarBorderId: identity.avatarBorderId,
+            equippedTitleId: identity.equippedTitleId,
+            equippedBadgeIds: identity.equippedBadgeIds,
+            equippedNameplateId: identity.equippedNameplateId,
+            profileTheme: identity.profileTheme,
+            chatTheme: identity.chatTheme,
+            displayNameFont: identity.displayNameFont,
+            displayNameEffect: identity.displayNameEffect,
+            displayNameColor: identity.displayNameColor,
+            displayNameSecondaryColor: identity.displayNameSecondaryColor,
+            status: identity.status,
           },
         };
       })
@@ -85,6 +97,7 @@ export function toConversation(raw: Record<string, unknown>): Conversation {
         ? toTypedMessage(Object.fromEntries(Object.entries(raw.lastMessage)))
         : null,
     unreadCount: typeof raw.unreadCount === 'number' ? raw.unreadCount : 0,
+    isNoteToSelf: raw.isNoteToSelf === true,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
   };

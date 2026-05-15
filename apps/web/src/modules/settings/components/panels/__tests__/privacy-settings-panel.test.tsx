@@ -20,13 +20,34 @@ vi.mock('@/modules/settings/store', () => ({
   useSettingsStore: vi.fn(() => ({
     settings: {
       privacy: {
-        allowMessageRequests: 'everyone',
-        showOnlineStatus: 'everyone',
+        allowMessageRequests: true,
+        showOnlineStatus: true,
         allowGroupInvites: 'anyone',
         profileVisibility: 'public',
         allowFriendRequests: true,
         showInSearch: true,
         showReadReceipts: true,
+        showPhone: false,
+        showForwardedFrom: true,
+        allowCalls: true,
+        autoDeleteDefault: null,
+        selectivePrivacy: {
+          messageRequests: {
+            mode: 'everyone',
+            alwaysAllowUserIds: [],
+            neverAllowUserIds: [],
+          },
+          phoneNumber: {
+            mode: 'nobody',
+            alwaysAllowUserIds: [],
+            neverAllowUserIds: [],
+          },
+          calls: {
+            mode: 'everyone',
+            alwaysAllowUserIds: [],
+            neverAllowUserIds: [],
+          },
+        },
       },
     },
     updatePrivacySettings: mockUpdatePrivacySettings,
@@ -102,9 +123,15 @@ describe('PrivacySettingsPanel', () => {
     render(<PrivacySettingsPanel />);
     const selects = screen.getAllByRole('combobox');
     if (selects.length > 0) {
-      fireEvent.change(selects[0]!, { target: { value: 'friends' } });
+      fireEvent.change(selects[0]!, { target: { value: 'contacts' } });
       await waitFor(() => {
-        expect(mockUpdatePrivacySettings).toHaveBeenCalled();
+        expect(mockUpdatePrivacySettings).toHaveBeenCalledWith(
+          expect.objectContaining({
+            selectivePrivacy: expect.objectContaining({
+              messageRequests: expect.objectContaining({ mode: 'contacts' }),
+            }),
+          })
+        );
       });
     }
   });

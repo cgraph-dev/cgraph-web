@@ -14,6 +14,7 @@ import type { Socket, Channel } from 'phoenix';
 import { useGroupStore, type ChannelMessage } from '@/modules/groups/store';
 import { socketLogger as logger } from '../logger';
 import { normalizeMessage } from '../api-utils';
+import { identityFieldsFromApi } from '../identity';
 
 function isRecord(val: unknown): val is Record<string, unknown> {
   return val !== null && typeof val === 'object';
@@ -53,6 +54,7 @@ function toMessageType(val: string): MessageType {
 function toChannelMessage(raw: Record<string, unknown>): ChannelMessage {
   const n = normalizeMessage(raw);
   const sender = isRecord(n.sender) ? n.sender : {};
+  const identity = identityFieldsFromApi(sender);
 
   return {
     id: getString(n['id']),
@@ -77,11 +79,21 @@ function toChannelMessage(raw: Record<string, unknown>): ChannelMessage {
       : [],
     createdAt: getString(n['createdAt'] ?? n['created_at']),
     author: {
-      id: getString(sender['id']),
-      username: getString(sender['username']),
-      displayName: getStringOrNull(sender['displayName'] ?? sender['display_name']),
-      avatarUrl: getStringOrNull(sender['avatarUrl'] ?? sender['avatar_url']),
+      id: identity.id,
+      username: identity.username,
+      displayName: identity.displayName,
+      avatarUrl: identity.avatarUrl,
       member: null,
+      avatarBorderId: identity.avatarBorderId,
+      equippedTitleId: identity.equippedTitleId,
+      equippedBadgeIds: identity.equippedBadgeIds,
+      equippedNameplateId: identity.equippedNameplateId,
+      profileTheme: identity.profileTheme,
+      chatTheme: identity.chatTheme,
+      displayNameFont: identity.displayNameFont,
+      displayNameEffect: identity.displayNameEffect,
+      displayNameColor: identity.displayNameColor,
+      displayNameSecondaryColor: identity.displayNameSecondaryColor,
     },
     // E2EE fields
     is_encrypted: n['is_encrypted'] === true || n['isEncrypted'] === true,

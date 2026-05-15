@@ -91,7 +91,11 @@ export default function Groups() {
       />
 
       {/* Channel Content */}
-      <div className="aurora-hub-main relative z-10 flex flex-col bg-transparent">
+      <div
+        className="aurora-hub-main relative z-10 flex flex-col bg-transparent"
+        aria-label="Group content"
+        tabIndex={0}
+      >
         <ContentArea activeGroup={activeGroup} groupId={groupId} channelId={channelId} />
       </div>
     </div>

@@ -7,6 +7,7 @@
  */
 
 import type { Friend, FriendRequest } from './friend-types';
+import { identityFieldsFromApi } from '@/lib/identity';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -19,16 +20,40 @@ function str(obj: Record<string, unknown> | undefined, key: string, fallback = '
   return typeof v === 'string' ? v : fallback;
 }
 
-function strOrNull(obj: Record<string, unknown> | undefined, ...keys: string[]): string | null {
-  for (const key of keys) {
-    const v = obj?.[key];
-    if (typeof v === 'string') return v;
-  }
-  return null;
-}
-
 function toRecord(val: unknown): Record<string, unknown> | undefined {
   return isRecord(val) ? val : undefined;
+}
+
+function normalizedFriendUser(
+  userData: Record<string, unknown> | undefined
+): FriendRequest['user'] {
+  if (!userData) {
+    return {
+      id: 'unknown',
+      username: 'Unknown User',
+      displayName: null,
+      avatarUrl: null,
+    };
+  }
+
+  const identity = identityFieldsFromApi(userData);
+  return {
+    id: identity.id,
+    username: identity.username || 'Unknown',
+    displayName: identity.displayName,
+    avatarUrl: identity.avatarUrl,
+    avatarBorderId: identity.avatarBorderId,
+    avatar_border_id: identity.avatarBorderId,
+    equippedTitleId: identity.equippedTitleId,
+    equippedBadgeIds: identity.equippedBadgeIds,
+    equippedNameplateId: identity.equippedNameplateId,
+    profileTheme: identity.profileTheme,
+    chatTheme: identity.chatTheme,
+    displayNameFont: identity.displayNameFont,
+    displayNameEffect: identity.displayNameEffect,
+    displayNameColor: identity.displayNameColor,
+    displayNameSecondaryColor: identity.displayNameSecondaryColor,
+  };
 }
 
 /**
@@ -44,21 +69,7 @@ export function normalizeRequest(
 
   return {
     id: str(data, 'id'),
-    user: userData
-      ? {
-          id: str(userData, 'id'),
-          username: str(userData, 'username', 'Unknown'),
-          displayName: strOrNull(userData, 'display_name', 'displayName'),
-          avatarUrl: strOrNull(userData, 'avatar_url', 'avatarUrl'),
-          avatarBorderId: strOrNull(userData, 'avatar_border_id', 'avatarBorderId'),
-          avatar_border_id: strOrNull(userData, 'avatar_border_id'),
-        }
-      : {
-          id: 'unknown',
-          username: 'Unknown User',
-          displayName: null,
-          avatarUrl: null,
-        },
+    user: normalizedFriendUser(userData),
     createdAt: str(data, 'sent_at') || str(data, 'created_at') || new Date().toISOString(),
     type,
   };
@@ -78,17 +89,8 @@ export function normalizeIncomingRequestEvent(data: Record<string, unknown>): Fr
   return {
     id: requestId,
     user: {
+      ...normalizedFriendUser(data),
       id: fromUserId,
-      username: str(data, 'from_username') || str(data, 'username', 'Unknown'),
-      displayName: strOrNull(data, 'from_display_name', 'display_name', 'displayName'),
-      avatarUrl: strOrNull(data, 'from_avatar_url', 'avatar_url', 'avatarUrl'),
-      avatarBorderId: strOrNull(
-        data,
-        'from_avatar_border_id',
-        'avatar_border_id',
-        'avatarBorderId'
-      ),
-      avatar_border_id: strOrNull(data, 'from_avatar_border_id', 'avatar_border_id'),
     },
     createdAt: str(data, 'created_at') || str(data, 'sent_at') || new Date().toISOString(),
     type: 'incoming',
@@ -100,14 +102,24 @@ export function normalizeIncomingRequestEvent(data: Record<string, unknown>): Fr
  */
 export function normalizeFriend(data: Record<string, unknown>): Friend {
   const userData = toRecord(data.user);
+  const identity = identityFieldsFromApi(userData ?? data);
 
   return {
-    id: str(userData, 'id') || str(data, 'id'),
-    username: str(userData, 'username', 'Unknown'),
-    displayName: strOrNull(userData, 'display_name', 'displayName'),
-    avatarUrl: strOrNull(userData, 'avatar_url', 'avatarUrl'),
-    avatarBorderId: strOrNull(userData, 'avatar_border_id', 'avatarBorderId'),
-    avatar_border_id: strOrNull(userData, 'avatar_border_id'),
+    id: identity.id || str(data, 'id'),
+    username: identity.username || 'Unknown',
+    displayName: identity.displayName,
+    avatarUrl: identity.avatarUrl,
+    avatarBorderId: identity.avatarBorderId,
+    avatar_border_id: identity.avatarBorderId,
+    equippedTitleId: identity.equippedTitleId,
+    equippedBadgeIds: identity.equippedBadgeIds,
+    equippedNameplateId: identity.equippedNameplateId,
+    profileTheme: identity.profileTheme,
+    chatTheme: identity.chatTheme,
+    displayNameFont: identity.displayNameFont,
+    displayNameEffect: identity.displayNameEffect,
+    displayNameColor: identity.displayNameColor,
+    displayNameSecondaryColor: identity.displayNameSecondaryColor,
     status: 'offline',
     statusMessage: null,
     friendshipId: str(data, 'id'),

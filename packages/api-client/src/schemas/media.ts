@@ -5,6 +5,7 @@
  */
 import { z } from 'zod';
 
+import { MESSAGE_ATTACHMENT_CONTENT_TYPES } from '@cgraph/shared-types';
 import { UserBasicSchema } from './common';
 
 // ---------------------------------------------------------------------------
@@ -13,6 +14,24 @@ import { UserBasicSchema } from './common';
 
 export const MediaTypeSchema = z.enum(['images', 'videos', 'files', 'voice', 'all']);
 export type MediaType = z.infer<typeof MediaTypeSchema>;
+
+export const MessageAttachmentContentTypeSchema = z.enum(MESSAGE_ATTACHMENT_CONTENT_TYPES);
+export type MessageAttachmentContentType = z.infer<typeof MessageAttachmentContentTypeSchema>;
+
+export const MessageAttachmentMetadataSchema = z
+  .object({
+    fileUrl: z.string(),
+    fileName: z.string(),
+    fileSize: z.number(),
+    fileMimeType: z.string(),
+    url: z.string(),
+    filename: z.string(),
+    size: z.number(),
+    mimeType: z.string(),
+    thumbnailUrl: z.string().optional(),
+  })
+  .passthrough();
+export type MessageAttachmentMetadata = z.infer<typeof MessageAttachmentMetadataSchema>;
 
 export const MediaItemSchema = z.object({
   id: z.string(),

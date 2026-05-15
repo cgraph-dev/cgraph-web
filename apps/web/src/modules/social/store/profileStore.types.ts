@@ -64,6 +64,7 @@ export interface ExtendedProfile {
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
+  avatarBorderId?: string | null;
   bannerUrl: string | null;
   bio: string | null;
   signature: UserSignature;
@@ -89,9 +90,18 @@ export interface ExtendedProfile {
 
   // Title & badges
   currentTitle: UserTitle | null;
+  equippedTitleId?: string | null;
   availableTitles: UserTitle[];
   badges: UserBadge[];
   equippedBadges: UserBadge[];
+  equippedBadgeIds?: readonly string[];
+  equippedNameplateId?: string | null;
+  profileTheme?: string | null;
+  chatTheme?: string | null;
+  displayNameFont?: string | null;
+  displayNameEffect?: string | null;
+  displayNameColor?: string | null;
+  displayNameSecondaryColor?: string | null;
   stars: UserStars;
 
   // Privacy settings

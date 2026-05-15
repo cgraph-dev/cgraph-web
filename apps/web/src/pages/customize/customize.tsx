@@ -60,7 +60,7 @@ export default function Customize() {
       <Sidebar activeCategory={activeCategory} onCategoryChange={handleCategoryChange} />
 
       {/* Main Content Area */}
-      <section className="aurora-hub-main" aria-labelledby="customize-page-title">
+      <section className="aurora-hub-main" aria-labelledby="customize-page-title" tabIndex={0}>
         <div className="mx-auto max-w-4xl p-8">
           {/* Page Header */}
           <motion.div

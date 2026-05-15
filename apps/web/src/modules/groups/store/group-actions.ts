@@ -7,6 +7,7 @@ import { apiClient, http } from '@/lib/api-client';
 import { createIdempotencyKey } from '@cgraph/utils';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
+import { identityFieldsFromApi } from '@/lib/identity';
 
 const logger = createLogger('GroupActions');
 import { ensureArray, ensureObject } from '@/lib/api-utils';
@@ -123,6 +124,11 @@ function normalizeChannel(raw: Record<string, unknown>): Channel {
 
 function normalizeGroupMember(raw: Record<string, unknown>): Member {
   const user = asRecordOrEmpty(raw.user);
+  const identity = identityFieldsFromApi({
+    ...raw,
+    ...user,
+    id: user.id ?? raw.user_id ?? raw.userId ?? '',
+  });
   const memberRoles = ensureArray<Record<string, unknown>>(raw.roles);
   return {
     id: String(raw.id ?? ''),
@@ -134,11 +140,21 @@ function normalizeGroupMember(raw: Record<string, unknown>): Member {
     })(),
     suppressEveryone: raw.suppress_everyone === true || raw.suppressEveryone === true || undefined,
     user: {
-      id: String(user.id ?? ''),
-      username: String(user.username ?? raw.username ?? ''),
-      displayName: asStringOrNull(user.display_name ?? user.displayName ?? raw.display_name),
-      avatarUrl: asStringOrNull(user.avatar_url ?? user.avatarUrl ?? raw.avatar_url),
-      status: String(user.status ?? raw.status ?? 'offline'),
+      id: identity.id,
+      username: identity.username,
+      displayName: identity.displayName,
+      avatarUrl: identity.avatarUrl,
+      status: identity.status,
+      avatarBorderId: identity.avatarBorderId,
+      equippedTitleId: identity.equippedTitleId,
+      equippedBadgeIds: identity.equippedBadgeIds,
+      equippedNameplateId: identity.equippedNameplateId,
+      profileTheme: identity.profileTheme,
+      chatTheme: identity.chatTheme,
+      displayNameFont: identity.displayNameFont,
+      displayNameEffect: identity.displayNameEffect,
+      displayNameColor: identity.displayNameColor,
+      displayNameSecondaryColor: identity.displayNameSecondaryColor,
     },
     roles: memberRoles.map((r) => ({
       id: String(r.id ?? ''),
@@ -215,17 +231,28 @@ const MESSAGE_TYPES = new Set<ChannelMessage['messageType']>([
 
 function normalizeToChannelMessage(raw: Record<string, unknown>): ChannelMessage {
   const sender = asRecordOrEmpty(raw.sender ?? raw.author);
+  const identity = identityFieldsFromApi(sender);
   const replyToRaw = asRecordOrUndef(raw.replyTo);
 
   const message: ChannelMessage = {
     id: String(raw.id ?? ''),
     authorId: String(raw.authorId ?? raw.senderId ?? raw.sender_id ?? sender.id ?? ''),
     author: {
-      id: String(sender.id ?? ''),
-      username: String(sender.username ?? ''),
-      displayName: asStringOrNull(sender.displayName ?? sender.display_name),
-      avatarUrl: asStringOrNull(sender.avatarUrl ?? sender.avatar_url),
+      id: identity.id,
+      username: identity.username,
+      displayName: identity.displayName,
+      avatarUrl: identity.avatarUrl,
       member: null,
+      avatarBorderId: identity.avatarBorderId,
+      equippedTitleId: identity.equippedTitleId,
+      equippedBadgeIds: identity.equippedBadgeIds,
+      equippedNameplateId: identity.equippedNameplateId,
+      profileTheme: identity.profileTheme,
+      chatTheme: identity.chatTheme,
+      displayNameFont: identity.displayNameFont,
+      displayNameEffect: identity.displayNameEffect,
+      displayNameColor: identity.displayNameColor,
+      displayNameSecondaryColor: identity.displayNameSecondaryColor,
     },
     channelId: String(raw.channelId ?? raw.channel_id ?? ''),
     content: String(raw.content ?? ''),

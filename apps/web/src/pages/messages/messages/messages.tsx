@@ -169,7 +169,11 @@ export default function Messages() {
       />
 
       {/* Conversation Content */}
-      <div className="aurora-hub-main flex h-full min-w-0 flex-col bg-transparent">
+      <div
+        className="aurora-hub-main flex h-full min-w-0 flex-col bg-transparent"
+        aria-label="Conversation content"
+        tabIndex={0}
+      >
         {conversationId ? <Outlet /> : <NoConversationSelected />}
       </div>
 

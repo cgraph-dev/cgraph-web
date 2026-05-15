@@ -188,8 +188,15 @@ function main(): void {
   const here = dirname(fileURLToPath(import.meta.url));
   const outputPath = resolve(here, '..', 'contracts', 'expected.json');
   const snapshot = build();
+  const json = JSON.stringify(snapshot, null, 2) + '\n';
+
+  if (process.argv.includes('--stdout')) {
+    process.stdout.write(json);
+    return;
+  }
+
   mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, JSON.stringify(snapshot, null, 2) + '\n', 'utf8');
+  writeFileSync(outputPath, json, 'utf8');
   console.log(
     `[extract-zod-shape] wrote ${Object.keys(snapshot).length} contract(s) to ${outputPath}`
   );

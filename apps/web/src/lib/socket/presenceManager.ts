@@ -8,7 +8,9 @@
 
 import type { Socket, Channel } from 'phoenix';
 import { Presence } from 'phoenix';
+import { useFriendStore } from '@/modules/social/store';
 import { socketLogger as logger } from '../logger';
+import { identityFieldsFromApi } from '../identity';
 
 /** Customization data received from presence broadcasts. */
 export interface FriendCustomization {
@@ -40,6 +42,25 @@ function getString(obj: Record<string, unknown>, key: string): string | undefine
 /** Type guard: validates FriendCustomization shape from unknown payload. */
 function isFriendCustomization(value: unknown): value is FriendCustomization {
   return isRecord(value);
+}
+
+function applyFriendCustomization(userId: string, customization: FriendCustomization): void {
+  const identity = identityFieldsFromApi({ id: userId, customization });
+  const patch = {
+    avatarBorderId: identity.avatarBorderId,
+    avatar_border_id: identity.avatarBorderId,
+    equippedTitleId: identity.equippedTitleId,
+    equippedBadgeIds: identity.equippedBadgeIds,
+    equippedNameplateId: identity.equippedNameplateId,
+    profileTheme: identity.profileTheme,
+    chatTheme: identity.chatTheme,
+    displayNameFont: identity.displayNameFont,
+    displayNameEffect: identity.displayNameEffect,
+    displayNameColor: identity.displayNameColor,
+    displayNameSecondaryColor: identity.displayNameSecondaryColor,
+  };
+
+  useFriendStore.getState().applyIdentityPatch(userId, patch);
 }
 
 /**
@@ -83,6 +104,7 @@ export function joinPresenceLobby(
       for (const [userId, info] of Object.entries(payload.users)) {
         if (isRecord(info) && isFriendCustomization(info.customization)) {
           friendCustomizations.set(userId, info.customization);
+          applyFriendCustomization(userId, info.customization);
         }
       }
     }
@@ -95,6 +117,7 @@ export function joinPresenceLobby(
     onlineUsers.get('lobby')?.add(userId);
     if (isFriendCustomization(payload.customization)) {
       friendCustomizations.set(userId, payload.customization);
+      applyFriendCustomization(userId, payload.customization);
     }
     notifyStatusChange('lobby', userId, true);
     logger.log('Friend came online:', userId);
@@ -116,6 +139,7 @@ export function joinPresenceLobby(
     if (!userId) return;
     if (isFriendCustomization(payload.customization)) {
       friendCustomizations.set(userId, payload.customization);
+      applyFriendCustomization(userId, payload.customization);
     }
     logger.log('Friend customization updated:', userId);
   });

@@ -30,8 +30,7 @@ export function DiscoverTab({
   joiningGroupId,
 }: DiscoverTabProps) {
   const navigate = useNavigate();
-  const { sendRequest, friends, sentRequests, pendingRequests } =
-    useFriendStore();
+  const { sendRequest, friends, sentRequests, pendingRequests } = useFriendStore();
   const { user: currentUser } = useAuthStore();
 
   return (
@@ -82,11 +81,7 @@ export function DiscoverTab({
             <span className="h-px flex-1 bg-gradient-to-l from-white/10 to-transparent" />
           </h3>
           {searchResults.map((result, index) => (
-            <motion.div
-              key={result.id}
-              {...FADE_UP}
-              transition={{ delay: index * 0.03 }}
-            >
+            <motion.div key={result.id} {...FADE_UP} transition={{ delay: index * 0.03 }}>
               <GlassCard
                 variant="crystal"
                 className="cursor-pointer space-y-3 p-3 transition-all duration-300 hover:border-[var(--token-card-border)] hover:bg-[var(--token-bg-primary)]"
@@ -99,12 +94,8 @@ export function DiscoverTab({
                     {getSearchResultIcon(result.type)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="truncate text-sm font-bold text-white">
-                      {result.name}
-                    </h4>
-                    <p className="truncate text-[11px] text-white/40">
-                      {result.description}
-                    </p>
+                    <h4 className="truncate text-sm font-bold text-white">{result.name}</h4>
+                    <p className="truncate text-[11px] text-white/40">{result.description}</p>
                   </div>
                 </div>
 
@@ -121,16 +112,10 @@ export function DiscoverTab({
 
                   {result.type === 'user' && result.id !== currentUser?.id ? (
                     (() => {
-                      const isFriend = friends.some(
-                        (f: Friend) => f.id === result.id,
-                      );
+                      const isFriend = friends.some((f: Friend) => f.id === result.id);
                       const isPending =
-                        sentRequests.some(
-                          (r: FriendRequest) => r.user.id === result.id,
-                        ) ||
-                        pendingRequests.some(
-                          (r: FriendRequest) => r.user.id === result.id,
-                        );
+                        sentRequests.some((r: FriendRequest) => r.user.id === result.id) ||
+                        pendingRequests.some((r: FriendRequest) => r.user.id === result.id);
                       return (
                         <button
                           onClick={async (e) => {
@@ -151,11 +136,7 @@ export function DiscoverTab({
                           }`}
                           disabled={isFriend || isPending}
                         >
-                          {isFriend
-                            ? 'Connected'
-                            : isPending
-                              ? 'Pending'
-                              : 'Add'}
+                          {isFriend ? 'Connected' : isPending ? 'Pending' : 'Add'}
                         </button>
                       );
                     })()
@@ -168,7 +149,7 @@ export function DiscoverTab({
                       }}
                       disabled={joiningGroupId === result.id}
                       aria-label={`Join ${result.name}`}
-                      className="bg-primary-500/10 hover:bg-primary-500/20 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-400 transition-all active:scale-[0.95] disabled:cursor-wait disabled:bg-primary-500/5 disabled:text-primary-300/60"
+                      className="bg-primary-500/10 hover:bg-primary-500/20 disabled:bg-primary-500/5 disabled:text-primary-300/60 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-400 transition-all active:scale-[0.95] disabled:cursor-wait"
                     >
                       {joiningGroupId === result.id ? 'Joining' : 'Join'}
                     </button>

@@ -15,6 +15,8 @@ import {
   AnimatedReactionBubble,
   ReactionPicker,
 } from '@/modules/chat/components/animated-reaction-bubble';
+import { MessageActionMenu } from '@/modules/chat/components/message-bubble/message-action-menu';
+import { MessageEditForm } from '@/modules/chat/components/message-bubble/message-edit-form';
 import { GlassCard } from '@/shared/components/ui';
 import { InlineTitle } from '@/shared/components/ui';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
@@ -38,6 +40,17 @@ export function EnhancedMessageBubble({
   isOwn,
   showAvatar,
   onReply,
+  onEdit,
+  onDelete,
+  onPin,
+  onForward,
+  isMenuOpen = false,
+  onToggleMenu,
+  isEditing = false,
+  editContent = '',
+  onEditContentChange,
+  onSaveEdit,
+  onCancelEdit,
   index,
   onAvatarClick,
 }: EnhancedMessageBubbleProps) {
@@ -158,29 +171,25 @@ export function EnhancedMessageBubble({
                   transition={springs.snappy}
                 >
                   <motion.button
-                    onClick={onReply}
-                    className="rounded-full border border-[var(--token-card-border)] bg-white/[0.08] p-2 text-gray-400 backdrop-blur-sm hover:text-white"
-                    whileTap={{ scale: 0.88 }}
-                    title="Reply"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                      />
-                    </svg>
-                  </motion.button>
-
-                  <motion.button
                     onClick={() => setShowReactionPicker(!showReactionPicker)}
                     className="rounded-full border border-[var(--token-card-border)] bg-white/[0.08] p-2 text-gray-400 backdrop-blur-sm hover:text-primary-400"
                     whileTap={{ scale: 0.88 }}
                     title="React"
+                    aria-label="React to message"
                   >
                     <FaceSmileIcon className="h-4 w-4" />
                   </motion.button>
+
+                  <MessageActionMenu
+                    onReply={onReply}
+                    onEdit={isOwn ? onEdit : undefined}
+                    onPin={onPin}
+                    onForward={onForward}
+                    onDelete={onDelete}
+                    isMenuOpen={isMenuOpen}
+                    onToggleMenu={onToggleMenu}
+                    isOwn={isOwn}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -205,34 +214,69 @@ export function EnhancedMessageBubble({
                   )}
                 </div>
               )}
-              {/* Text content */}
-              {message.content &&
-                message.messageType !== 'voice' &&
-                message.messageType !== 'audio' && (
-                  <motion.p
-                    className="whitespace-pre-wrap break-words text-white"
-                    {...FADE_IN}
-                    transition={{ delay: 0.1 }}
-                  >
-                    {message.content}
-                  </motion.p>
-                )}
 
-              {/* Voice message visualization */}
-              {(message.messageType === 'voice' || message.messageType === 'audio') &&
-                message.metadata?.url && (
-                  <AdvancedVoiceVisualizer
-                    audioUrl={message.metadata.url}
-                    variant="spectrum"
-                    theme="matrix-green"
-                    height={80}
-                    width={250}
-                    className="my-2"
-                  />
-                )}
+              {message.replyTo && (
+                <div className="mb-2 rounded-md border-l-2 border-primary-400 bg-white/[0.06] px-3 py-2">
+                  <p className="text-xs font-medium text-primary-200">
+                    {message.replyTo.sender?.displayName ||
+                      message.replyTo.sender?.username ||
+                      'Replied message'}
+                  </p>
+                  <p className="truncate text-xs text-white/60">
+                    {message.replyTo.content ||
+                      message.replyTo.metadata?.filename ||
+                      message.replyTo.messageType}
+                  </p>
+                </div>
+              )}
 
-              {hasFileAttachment && (
-                <FileMessage message={message} isOwnMessage={isOwn} className="mt-2" />
+              {message.isPinned && (
+                <div className="bg-primary-500/15 mb-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-primary-200">
+                  Pinned
+                </div>
+              )}
+
+              {message.deletedAt ? (
+                <p className="italic text-white/50">Message deleted</p>
+              ) : isEditing ? (
+                <MessageEditForm
+                  editContent={editContent}
+                  onEditContentChange={onEditContentChange}
+                  onSaveEdit={onSaveEdit}
+                  onCancelEdit={onCancelEdit}
+                />
+              ) : (
+                <>
+                  {/* Text content */}
+                  {message.content &&
+                    message.messageType !== 'voice' &&
+                    message.messageType !== 'audio' && (
+                      <motion.p
+                        className="whitespace-pre-wrap break-words text-white"
+                        {...FADE_IN}
+                        transition={{ delay: 0.1 }}
+                      >
+                        {message.content}
+                      </motion.p>
+                    )}
+
+                  {/* Voice message visualization */}
+                  {(message.messageType === 'voice' || message.messageType === 'audio') &&
+                    message.metadata?.url && (
+                      <AdvancedVoiceVisualizer
+                        audioUrl={message.metadata.url}
+                        variant="spectrum"
+                        theme="matrix-green"
+                        height={80}
+                        width={250}
+                        className="my-2"
+                      />
+                    )}
+
+                  {hasFileAttachment && (
+                    <FileMessage message={message} isOwnMessage={isOwn} className="mt-2" />
+                  )}
+                </>
               )}
 
               {/* Timestamp and status */}

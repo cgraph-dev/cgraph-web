@@ -18,6 +18,7 @@ import {
   Cog6ToothIcon,
   FaceSmileIcon,
   PhoneIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { GlassSearchInput } from '@/components/ui/glass-search-input';
 
@@ -41,7 +42,11 @@ import { NotificationProfilesPanel } from '@/modules/settings/components/panels/
 import { NotificationProfileEditor } from '@/modules/settings/components/panels/notification-profile-editor';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
-import { useSettingsStore } from '@/modules/settings/store';
+import { useAuthStore } from '@/modules/auth/store';
+import {
+  isPreferenceBootstrapReady,
+  usePreferenceOrchestrator,
+} from '@/modules/settings/store/preferenceOrchestrator';
 
 // Operational preferences only.
 // Moved to /me/appearance: appearance/theme
@@ -112,6 +117,55 @@ const settingsSections = [
   },
 ];
 
+function SettingsBootstrapGate({
+  hasError,
+  isLoading,
+  onRetry,
+}: {
+  readonly hasError: boolean;
+  readonly isLoading: boolean;
+  readonly onRetry: () => void;
+}) {
+  return (
+    <motion.div
+      key="settings-bootstrap"
+      className="flex min-h-[360px] items-center justify-center"
+      {...FADE_UP}
+      aria-busy={isLoading}
+      aria-live="polite"
+    >
+      <div className="bg-[var(--token-card-bg)]/50 w-full max-w-md space-y-5 rounded-2xl border border-[var(--token-card-border)] p-6 shadow-2xl shadow-black/10 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)]">
+            <ArrowPathIcon
+              className={`h-5 w-5 text-[var(--color-brand-purple)] ${isLoading ? 'animate-spin' : ''}`}
+            />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-[var(--token-text-primary)]">
+              {hasError ? 'Settings unavailable' : 'Loading settings'}
+            </h3>
+            <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+              {hasError ? 'Try again when the connection is ready.' : 'Just a moment.'}
+            </p>
+          </div>
+        </div>
+
+        {hasError && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition hover:bg-[var(--token-bg-primary)]"
+          >
+            <ArrowPathIcon className="h-4 w-4" />
+            Retry
+          </button>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 /**
  * Settings component.
  */
@@ -119,11 +173,31 @@ export default function Settings() {
   const navigate = useNavigate();
   const { section = 'account' } = useParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const fetchSettings = useSettingsStore((state) => state.fetchSettings);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userId = useAuthStore((state) => state.user?.id);
+  const bootstrapPreferences = usePreferenceOrchestrator((state) => state.bootstrapPreferences);
+  const isBootstrappingPreferences = usePreferenceOrchestrator((state) => state.isBootstrapping);
+  const preferenceResult = usePreferenceOrchestrator((state) => state.result);
+  const preferenceError = usePreferenceOrchestrator((state) => state.error);
+  const lastBootstrappedUserId = usePreferenceOrchestrator((state) => state.lastBootstrappedUserId);
 
   useEffect(() => {
-    void fetchSettings();
-  }, [fetchSettings]);
+    if (isAuthenticated) {
+      void bootstrapPreferences({ userId, includeTheme: Boolean(userId) });
+    }
+  }, [bootstrapPreferences, isAuthenticated, userId]);
+
+  const preferencesReady = isPreferenceBootstrapReady({
+    isAuthenticated,
+    userId,
+    includeTheme: Boolean(userId),
+    lastBootstrappedUserId,
+    result: preferenceResult,
+  });
+
+  const retryPreferenceBootstrap = () => {
+    void bootstrapPreferences({ userId, includeTheme: Boolean(userId), force: true });
+  };
 
   const filteredSections = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -237,25 +311,37 @@ export default function Settings() {
           transition={{ ...tweens.moderate, delay: 0.1 }}
         >
           <AnimatePresence mode="wait">
-            {section === 'account' && <AccountSettings key="account" />}
-            {section === 'security' && <SecuritySettingsPanel key="security" />}
-            {section === 'notifications' && <NotificationSettingsPanel key="notifications" />}
-            {section === 'dnd-schedule' && <DndSchedulePanel key="dnd-schedule" />}
-            {section === 'notification-profiles' && (
-              <NotificationProfilesPanel key="notification-profiles" />
+            {!preferencesReady ? (
+              <SettingsBootstrapGate
+                hasError={Boolean(preferenceError)}
+                isLoading={isBootstrappingPreferences}
+                onRetry={retryPreferenceBootstrap}
+              />
+            ) : (
+              <>
+                {section === 'account' && <AccountSettings key="account" />}
+                {section === 'security' && <SecuritySettingsPanel key="security" />}
+                {section === 'notifications' && <NotificationSettingsPanel key="notifications" />}
+                {section === 'dnd-schedule' && <DndSchedulePanel key="dnd-schedule" />}
+                {section === 'notification-profiles' && (
+                  <NotificationProfilesPanel key="notification-profiles" />
+                )}
+                {section?.startsWith('notification-profiles/') && (
+                  <NotificationProfileEditor key="notification-profile-editor" />
+                )}
+                {section === 'privacy' && <PrivacySettingsPanel key="privacy" />}
+                {section === 'data-storage' && <DataStoragePanel key="data-storage" />}
+                {section === 'stickers-emoji' && (
+                  <StickersEmojiSettingsPanel key="stickers-emoji" />
+                )}
+                {section === 'calls' && <CallsSettingsPanel key="calls" />}
+                {section === 'advanced' && <AdvancedSettingsPanel key="advanced" />}
+                {section === 'language' && <LanguageSettingsPanel key="language" />}
+                {section === 'sessions' && <SessionsSettingsPanel key="sessions" />}
+                {section === 'data-export' && <DataExport key="data-export" />}
+                {section === 'delete-account' && <DeleteAccount key="delete-account" />}
+              </>
             )}
-            {section?.startsWith('notification-profiles/') && (
-              <NotificationProfileEditor key="notification-profile-editor" />
-            )}
-            {section === 'privacy' && <PrivacySettingsPanel key="privacy" />}
-            {section === 'data-storage' && <DataStoragePanel key="data-storage" />}
-            {section === 'stickers-emoji' && <StickersEmojiSettingsPanel key="stickers-emoji" />}
-            {section === 'calls' && <CallsSettingsPanel key="calls" />}
-            {section === 'advanced' && <AdvancedSettingsPanel key="advanced" />}
-            {section === 'language' && <LanguageSettingsPanel key="language" />}
-            {section === 'sessions' && <SessionsSettingsPanel key="sessions" />}
-            {section === 'data-export' && <DataExport key="data-export" />}
-            {section === 'delete-account' && <DeleteAccount key="delete-account" />}
           </AnimatePresence>
         </motion.div>
       </div>

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 /**
@@ -33,11 +33,21 @@ const AUTH_PAGES_TO_AUDIT = [
   { name: 'Profile', path: '/profile' },
 ];
 
+async function waitForAccessiblePageReady(page: Page) {
+  await page.waitForLoadState('domcontentloaded');
+  await page.locator('main, [role="main"]').first().waitFor({ state: 'visible', timeout: 10000 });
+  await page
+    .locator('[data-testid="loading-spinner"]')
+    .first()
+    .waitFor({ state: 'hidden', timeout: 5000 })
+    .catch(() => undefined);
+}
+
 test.describe('Accessibility — Public Pages', () => {
   for (const page of PAGES_TO_AUDIT) {
     test(`${page.name} page passes axe WCAG 2.1 AA audit`, async ({ page: p }) => {
       await p.goto(page.path);
-      await p.waitForLoadState('networkidle');
+      await waitForAccessiblePageReady(p);
 
       const results = await new AxeBuilder({ page: p })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -60,7 +70,10 @@ test.describe('Accessibility — Public Pages', () => {
       const serious = results.violations.filter(
         (v) => v.impact === 'critical' || v.impact === 'serious'
       );
-      expect(serious, `${page.name} has ${serious.length} serious/critical a11y violations`).toHaveLength(0);
+      expect(
+        serious,
+        `${page.name} has ${serious.length} serious/critical a11y violations`
+      ).toHaveLength(0);
     });
   }
 });
@@ -71,7 +84,7 @@ test.describe('Accessibility — Authenticated Pages', () => {
   for (const page of AUTH_PAGES_TO_AUDIT) {
     test(`${page.name} page passes axe WCAG 2.1 AA audit`, async ({ page: p }) => {
       await p.goto(page.path);
-      await p.waitForLoadState('networkidle');
+      await waitForAccessiblePageReady(p);
 
       const results = await new AxeBuilder({ page: p })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -91,7 +104,10 @@ test.describe('Accessibility — Authenticated Pages', () => {
       const serious = results.violations.filter(
         (v) => v.impact === 'critical' || v.impact === 'serious'
       );
-      expect(serious, `${page.name} has ${serious.length} serious/critical a11y violations`).toHaveLength(0);
+      expect(
+        serious,
+        `${page.name} has ${serious.length} serious/critical a11y violations`
+      ).toHaveLength(0);
     });
   }
 });
@@ -99,7 +115,7 @@ test.describe('Accessibility — Authenticated Pages', () => {
 test.describe('Accessibility — Keyboard Navigation', () => {
   test('login form is fully keyboard-navigable', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // Tab through form — should reach email, password, submit
     await page.keyboard.press('Tab');
@@ -112,24 +128,28 @@ test.describe('Accessibility — Keyboard Navigation', () => {
       await page.keyboard.press('Tab');
       const tag = await page.evaluate(() => {
         const el = document.activeElement;
-        return el ? `${el.tagName}:${el.getAttribute('type') || el.getAttribute('role') || ''}` : 'NONE';
+        return el
+          ? `${el.tagName}:${el.getAttribute('type') || el.getAttribute('role') || ''}`
+          : 'NONE';
       });
       focusableElements.push(tag);
     }
 
     // Verify we hit at least email input, password input, and submit button
-    const hasInput = focusableElements.some(e => e.includes('INPUT'));
-    const hasButton = focusableElements.some(e => e.includes('BUTTON'));
+    const hasInput = focusableElements.some((e) => e.includes('INPUT'));
+    const hasButton = focusableElements.some((e) => e.includes('BUTTON'));
     expect(hasInput).toBeTruthy();
     expect(hasButton).toBeTruthy();
   });
 
   test('escape key closes modal dialogs', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // If there's a modal trigger, test escape closes it
-    const modalTrigger = page.locator('[data-testid="modal-trigger"], [aria-haspopup="dialog"]').first();
+    const modalTrigger = page
+      .locator('[data-testid="modal-trigger"], [aria-haspopup="dialog"]')
+      .first();
     if (await modalTrigger.isVisible().catch(() => false)) {
       await modalTrigger.click();
       await page.keyboard.press('Escape');
@@ -143,7 +163,7 @@ test.describe('Accessibility — Keyboard Navigation', () => {
 test.describe('Accessibility — ARIA Landmarks', () => {
   test('login page has proper landmark structure', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // Check for main landmark
     const main = page.locator('main, [role="main"]');
@@ -153,7 +173,7 @@ test.describe('Accessibility — ARIA Landmarks', () => {
 
   test('form inputs have associated labels', async ({ page }) => {
     await page.goto('/register');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // All visible inputs should have labels (via label element, aria-label, or aria-labelledby)
     const inputs = page.locator('input:visible:not([type="hidden"])');

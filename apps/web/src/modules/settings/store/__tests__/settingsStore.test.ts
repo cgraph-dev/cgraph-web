@@ -8,7 +8,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
-import { useSettingsStore } from '@/modules/settings/store';
+import {
+  DEFAULT_CALLS_SETTINGS,
+  DEFAULT_STICKERS_EMOJI_SETTINGS,
+  useSettingsStore,
+} from '@/modules/settings/store';
 import type { UserSettings } from '@/modules/settings/store';
 import { AxiosError } from 'axios';
 
@@ -95,6 +99,8 @@ const DEFAULT_SETTINGS: UserSettings = {
     autoDownloadFiles: 'never',
     dataSaverMode: false,
   },
+  stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
+  calls: DEFAULT_CALLS_SETTINGS,
 };
 
 const getCleanState = () => ({
@@ -521,6 +527,56 @@ describe('settingsStore (modules)', () => {
       // Should roll back to the pre-reset "dark" theme
       expect(useSettingsStore.getState().settings.appearance.theme).toBe('dark');
       expect(useSettingsStore.getState().error).toBe('Failed to reset settings');
+    });
+  });
+
+  describe('resetAllPreferences', () => {
+    it('resets calls and stickers through the settings API', async () => {
+      useSettingsStore.setState({
+        settings: {
+          ...DEFAULT_SETTINGS,
+          stickersEmoji: {
+            ...DEFAULT_SETTINGS.stickersEmoji,
+            suggestStickers: false,
+            installedPackIds: ['pack-1'],
+          },
+          calls: {
+            ...DEFAULT_SETTINGS.calls,
+            echoCancellation: false,
+            defaultVideoResolution: '1080p',
+          },
+        },
+      });
+      mockedApi.put.mockResolvedValue({});
+
+      await useSettingsStore.getState().resetAllPreferences();
+
+      expect(mockedApi.put).toHaveBeenCalledWith(
+        '/api/v1/settings',
+        expect.objectContaining({
+          suggest_stickers: DEFAULT_SETTINGS.stickersEmoji.suggestStickers,
+          echo_cancellation: DEFAULT_SETTINGS.calls.echoCancellation,
+          default_video_resolution: DEFAULT_SETTINGS.calls.defaultVideoResolution,
+        })
+      );
+      expect(useSettingsStore.getState().settings.stickersEmoji).toEqual(
+        DEFAULT_SETTINGS.stickersEmoji
+      );
+      expect(useSettingsStore.getState().settings.calls).toEqual(DEFAULT_SETTINGS.calls);
+    });
+
+    it('rolls back resetAllPreferences on failure', async () => {
+      const previousSettings = {
+        ...DEFAULT_SETTINGS,
+        calls: { ...DEFAULT_SETTINGS.calls, defaultVideoResolution: '1080p' as const },
+      };
+      useSettingsStore.setState({ settings: previousSettings });
+      mockedApi.put.mockRejectedValue(new Error('fail'));
+
+      await expect(useSettingsStore.getState().resetAllPreferences()).rejects.toThrow();
+
+      expect(useSettingsStore.getState().settings).toEqual(previousSettings);
+      expect(useSettingsStore.getState().error).toBe('Failed to reset preferences');
     });
   });
 

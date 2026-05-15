@@ -49,6 +49,7 @@ const mockMessage = (overrides: Partial<MockMessage> = {}): MockMessage => ({
 const mockConversation = (overrides: Partial<MockConversation> = {}): MockConversation => ({
   id: 'conv-1',
   type: 'direct',
+  conversationType: 'cloud',
   name: null,
   participants: [
     {
@@ -65,6 +66,7 @@ const mockConversation = (overrides: Partial<MockConversation> = {}): MockConver
   unreadCount: 0,
   isPinned: false,
   isMuted: false,
+  isNoteToSelf: false,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
   ...overrides,
@@ -116,6 +118,7 @@ interface MockMessage {
 interface MockConversation {
   id: string;
   type: string;
+  conversationType: 'secret' | 'cloud';
   name: string | null;
   participants: Array<{
     id: string;
@@ -130,6 +133,22 @@ interface MockConversation {
   unreadCount: number;
   isPinned: boolean;
   isMuted: boolean;
+  isNoteToSelf: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface MockSpace {
+  id: string;
+  name: string;
+  emoji: string;
+  position: number;
+  includeAllIndividual: boolean;
+  includeAllGroups: boolean;
+  showOnlyUnread: boolean;
+  showMuted: boolean;
+  includedConversationIds: string[];
+  excludedConversationIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -342,6 +361,52 @@ const authHandlers = [
 // Messages Handlers
 
 const messageHandlers = [
+  // List Spaces
+  http.get(`${API_BASE}/api/v1/spaces`, () => {
+    return HttpResponse.json({
+      data: [
+        {
+          id: 'space-1',
+          name: 'Unread',
+          emoji: '!',
+          position: 0,
+          includeAllIndividual: true,
+          includeAllGroups: true,
+          showOnlyUnread: true,
+          showMuted: true,
+          includedConversationIds: [],
+          excludedConversationIds: [],
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        } satisfies MockSpace,
+      ],
+    });
+  }),
+
+  // Create Space
+  http.post(`${API_BASE}/api/v1/spaces`, async ({ request }) => {
+    const body = await readJsonRecord(request);
+    return HttpResponse.json(
+      {
+        data: {
+          id: `space-${Date.now()}`,
+          name: readString(body, 'name') ?? 'New Space',
+          emoji: readString(body, 'emoji') ?? '',
+          position: 1,
+          includeAllIndividual: body.include_all_individual !== false,
+          includeAllGroups: body.include_all_groups !== false,
+          showOnlyUnread: body.show_only_unread === true,
+          showMuted: body.show_muted !== false,
+          includedConversationIds: [],
+          excludedConversationIds: [],
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        } satisfies MockSpace,
+      },
+      { status: 201 }
+    );
+  }),
+
   // List conversations
   http.get(`${API_BASE}/api/v1/conversations`, () => {
     return HttpResponse.json({
@@ -368,6 +433,17 @@ const messageHandlers = [
       },
       { status: 201 }
     );
+  }),
+
+  // Create or fetch web Vault / Note to Self conversation
+  http.post(`${API_BASE}/api/v1/conversations/note-to-self`, async () => {
+    return HttpResponse.json({
+      data: mockConversation({
+        id: 'vault-conv-1',
+        name: 'Vault',
+        isNoteToSelf: true,
+      }),
+    });
   }),
 
   // List messages in conversation
@@ -608,7 +684,13 @@ const forumHandlers = [
     const content = readString(body, 'content') ?? '';
     return HttpResponse.json(
       {
-        data: { id: 'post-new', title, content, authorId: 'user-1', createdAt: new Date().toISOString() },
+        data: {
+          id: 'post-new',
+          title,
+          content,
+          authorId: 'user-1',
+          createdAt: new Date().toISOString(),
+        },
       },
       { status: 201 }
     );

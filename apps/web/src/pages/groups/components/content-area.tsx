@@ -15,11 +15,7 @@ import { tweens, loop, springs } from '@/lib/animation-presets';
 /**
  * Content Area component.
  */
-export function ContentArea({
-  activeGroup,
-  groupId,
-  channelId,
-}: ContentAreaProps) {
+export function ContentArea({ activeGroup, groupId, channelId }: ContentAreaProps) {
   const outlet = useOutlet();
 
   if (outlet) {
@@ -48,7 +44,7 @@ export function ContentArea({
             >
               <MagnifyingGlassIcon className="mx-auto h-16 w-16 text-primary-400" />
               <motion.div
-                className="absolute inset-0 rounded-full border-2 border-primary-500/30"
+                className="border-primary-500/30 absolute inset-0 rounded-full border-2"
                 animate={{
                   scale: [1, 1.3, 1],
                   opacity: [0.5, 0, 0.5],
@@ -102,7 +98,7 @@ export function ContentArea({
           >
             <MagnifyingGlassIcon className="mx-auto h-20 w-20 text-primary-400" />
             <motion.div
-              className="absolute inset-0 rounded-full border-2 border-primary-500/30"
+              className="border-primary-500/30 absolute inset-0 rounded-full border-2"
               animate={{
                 scale: [1, 1.3, 1],
                 opacity: [0.5, 0, 0.5],

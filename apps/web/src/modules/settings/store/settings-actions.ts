@@ -415,17 +415,38 @@ export function createSettingsActions(
 
     resetAllPreferences: async () => {
       const previousSettings = get().settings;
+      const nextSettings = {
+        ...previousSettings,
+        stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
+        calls: DEFAULT_CALLS_SETTINGS,
+      };
 
-      // Local-only reset of stickers/emoji + calls + appearance niceties.
-      // Server-synced groups are left alone — for those, callers use
-      // `resetToDefaults`.
       set({
-        settings: {
-          ...previousSettings,
-          stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
-          calls: DEFAULT_CALLS_SETTINGS,
-        },
+        settings: nextSettings,
+        isSaving: true,
+        error: null,
       });
+
+      try {
+        await http.put(
+          '/api/v1/settings',
+          mapSettingsToApi({
+            stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
+            calls: DEFAULT_CALLS_SETTINGS,
+          })
+        );
+        set({ isSaving: false, lastSyncedAt: Date.now() });
+      } catch (error) {
+        set({
+          settings: previousSettings,
+          isSaving: false,
+          error:
+            error instanceof AxiosError
+              ? error.response?.data?.error?.message || 'Failed to reset preferences'
+              : 'Failed to reset preferences',
+        });
+        throw error;
+      }
     },
 
     resetMediaSettings: async () => {
@@ -482,10 +503,24 @@ export function createSettingsActions(
           ...prev,
           notifications: { ...prev.notifications, ...patched.notifications },
         }),
-        privacy: (prev) => ({
-          ...prev,
-          privacy: { ...prev.privacy, ...patched.privacy },
-        }),
+        privacy: (prev) => {
+          const includesSelectivePrivacyChange =
+            'selective_privacy' in changes ||
+            'allow_message_requests' in changes ||
+            'show_phone' in changes ||
+            'allow_calls' in changes;
+
+          return {
+            ...prev,
+            privacy: {
+              ...prev.privacy,
+              ...patched.privacy,
+              selectivePrivacy: includesSelectivePrivacyChange
+                ? patched.privacy.selectivePrivacy
+                : prev.privacy.selectivePrivacy,
+            },
+          };
+        },
         appearance: (prev) => ({
           ...prev,
           appearance: { ...prev.appearance, ...patched.appearance },

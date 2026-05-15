@@ -9,6 +9,7 @@ import {
   asBool,
   asOptionalString,
 } from '@/lib/api-utils';
+import { identityFieldsFromApi } from '@/lib/identity';
 import type { UserBadge, ExtendedProfile } from './profileStore.types';
 /** Safely extract a string or null from an unknown value */
 function asNullableString(v: unknown): string | null {
@@ -49,19 +50,22 @@ function mapBadge(b: Record<string, unknown>): UserBadge {
  */
 export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfile {
   const user: Record<string, unknown> = isRecord(data.user) ? data.user : data;
+  const identity = identityFieldsFromApi(user);
   const currentTitleObj: Record<string, unknown> | null = isRecord(user.current_title)
     ? user.current_title
     : null;
   return {
-    id: asString(user.id),
+    id: identity.id,
 
-    username: asString(user.username),
+    username: identity.username,
 
-    displayName: asNullableString(user.display_name),
+    displayName: identity.displayName,
 
-    avatarUrl: asNullableString(user.avatar_url),
+    avatarUrl: identity.avatarUrl,
 
-    bannerUrl: asNullableString(user.banner_url),
+    avatarBorderId: identity.avatarBorderId,
+
+    bannerUrl: identity.bannerUrl,
 
     bio: asNullableString(user.bio),
 
@@ -106,6 +110,8 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
         }
       : null,
 
+    equippedTitleId: identity.equippedTitleId,
+
     availableTitles: ensureArray(user.available_titles, 'available_titles')
       .filter(isRecord)
       .map((t) => ({
@@ -115,9 +121,7 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
         type: asOneOf(t.type, TITLE_TYPES, 'system'),
       })),
 
-    badges: ensureArray(user.badges, 'badges')
-      .filter(isRecord)
-      .map(mapBadge),
+    badges: ensureArray(user.badges, 'badges').filter(isRecord).map(mapBadge),
 
     equippedBadges: ensureArray(user.equipped_badges, 'equipped_badges')
       .filter(isRecord)
@@ -125,6 +129,22 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
         ...mapBadge(b),
         isEquipped: true as const,
       })),
+
+    equippedBadgeIds: identity.equippedBadgeIds,
+
+    equippedNameplateId: identity.equippedNameplateId,
+
+    profileTheme: identity.profileTheme,
+
+    chatTheme: identity.chatTheme,
+
+    displayNameFont: identity.displayNameFont,
+
+    displayNameEffect: identity.displayNameEffect,
+
+    displayNameColor: identity.displayNameColor,
+
+    displayNameSecondaryColor: identity.displayNameSecondaryColor,
 
     stars: {
       count: Math.min(5, Math.floor(asNumber(user.post_count) / 100) + 1),

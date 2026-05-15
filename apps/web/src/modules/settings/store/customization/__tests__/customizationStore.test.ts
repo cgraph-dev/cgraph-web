@@ -192,6 +192,28 @@ describe('batch and legacy actions', () => {
     expect(useCustomizationStore.getState().isDirty).toBe(true);
   });
 
+  it('applyServerSettings maps API patches without marking dirty', () => {
+    useCustomizationStore.setState({ ...DEFAULT_STATE, isDirty: true, lastSyncedAt: null });
+
+    useCustomizationStore.getState().applyServerSettings({
+      app_theme: 'emerald',
+      background_effect: 'neon',
+      chat_theme: 'cyan',
+      avatar_border_id: 'border-1',
+    });
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      themePreset: 'emerald',
+      appTheme: 'emerald',
+      effectPreset: 'neon',
+      chatBubbleColor: 'cyan',
+      chatTheme: 'cyan',
+      selectedBorderId: 'border-1',
+      isDirty: false,
+    });
+    expect(useCustomizationStore.getState().lastSyncedAt).toEqual(expect.any(Number));
+  });
+
   it('updateChatStyle sets a key', () => {
     useCustomizationStore.getState().updateChatStyle('chatBubbleStyle', 'cloud');
     expect(useCustomizationStore.getState().chatBubbleStyle).toBe('cloud');

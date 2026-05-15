@@ -307,10 +307,21 @@ export type {
 } from './forums';
 export {
   AllSettingsSchema,
+  PrivacySettingsSchema,
+  SelectivePrivacyModeSchema,
+  SelectivePrivacyRuleSchema,
+  SelectivePrivacySettingsSchema,
   SettingsCategorySchema,
   UpdateSettingsResponseSchema,
 } from './settings';
-export type { AllSettings, SettingsCategory, UpdateSettingsResponse } from './settings';
+export type {
+  AllSettings,
+  PrivacySettings,
+  SelectivePrivacyRule,
+  SelectivePrivacySettings,
+  SettingsCategory,
+  UpdateSettingsResponse,
+} from './settings';
 export { InviteSchema, RedeemInviteResponseSchema } from './invites';
 export type { Invite, RedeemInviteResponse } from './invites';
 export { SyncChangeSchema, SyncPullResponseSchema, SyncPushResponseSchema } from './sync';

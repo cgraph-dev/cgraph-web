@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === 'true';
+const retries = Number(process.env.PLAYWRIGHT_RETRIES ?? (process.env.CI ? 2 : 0));
 
 /**
  * Playwright E2E Test Configuration for CGraph Web
@@ -13,7 +14,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */

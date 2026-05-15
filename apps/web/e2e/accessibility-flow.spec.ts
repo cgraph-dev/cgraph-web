@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 /**
@@ -24,11 +24,21 @@ const ADDITIONAL_AUTH_PAGES = [
   { name: 'Feed', path: '/feed' },
 ];
 
+async function waitForAccessiblePageReady(page: Page) {
+  await page.waitForLoadState('domcontentloaded');
+  await page.locator('main, [role="main"]').first().waitFor({ state: 'visible', timeout: 10000 });
+  await page
+    .locator('[data-testid="loading-spinner"]')
+    .first()
+    .waitFor({ state: 'hidden', timeout: 5000 })
+    .catch(() => undefined);
+}
+
 test.describe('Accessibility — Additional Authenticated Pages', () => {
   for (const pg of ADDITIONAL_AUTH_PAGES) {
     test(`${pg.name} page passes axe WCAG 2.1 AA audit`, async ({ page }) => {
       await page.goto(pg.path);
-      await page.waitForLoadState('networkidle');
+      await waitForAccessiblePageReady(page);
 
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -60,7 +70,7 @@ test.describe('Accessibility — Additional Authenticated Pages', () => {
 test.describe('Accessibility — Keyboard Navigation (Authenticated)', () => {
   test('sidebar navigation is keyboard-accessible', async ({ page }) => {
     await page.goto('/messages');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // Focus should move through interactive elements via Tab
     const focusedTags: string[] = [];
@@ -85,7 +95,7 @@ test.describe('Accessibility — Keyboard Navigation (Authenticated)', () => {
 
   test('escape key closes open dialogs on messages page', async ({ page }) => {
     await page.goto('/messages');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // Try to open a dialog (new conversation, settings, etc.)
     const dialogTrigger = page
@@ -105,7 +115,7 @@ test.describe('Accessibility — Keyboard Navigation (Authenticated)', () => {
 
   test('settings page form inputs have accessible labels', async ({ page }) => {
     await page.goto('/settings');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     const inputs = page.locator('input:visible:not([type="hidden"])');
     const count = await inputs.count();
@@ -130,7 +140,7 @@ test.describe('Accessibility — Keyboard Navigation (Authenticated)', () => {
 test.describe('Accessibility — Focus Management', () => {
   test('focus is visible on interactive elements', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // Tab to first interactive element
     await page.keyboard.press('Tab');
@@ -155,7 +165,7 @@ test.describe('Accessibility — Focus Management', () => {
 
   test('skip-to-content link exists or main landmark is reachable', async ({ page }) => {
     await page.goto('/messages');
-    await page.waitForLoadState('networkidle');
+    await waitForAccessiblePageReady(page);
 
     // Check for skip-to-content link
     const skipLink = page.locator('a[href="#main"], a[href="#content"], [class*="skip"]').first();

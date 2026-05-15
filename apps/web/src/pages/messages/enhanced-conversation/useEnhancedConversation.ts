@@ -7,18 +7,28 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { createLogger } from '@/lib/logger';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
+import { useMessageActions } from '@/modules/chat/hooks/useMessageActions';
+import { useMessageRequestStore } from '@/modules/chat/store/message-request-store';
 import { socketManager } from '@/lib/socket';
-import { http } from '@/lib/api-client';
+import { apiClient, http } from '@/lib/api-client';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import {
+  buildMessageAttachmentMetadata,
+  messageContentTypeForMime,
+  type UploadedMessageAttachment,
+} from '@cgraph/shared-types';
 import { getDirectCallRoute, type DirectCallType } from './call-routing';
+import {
+  uploadVoiceMessage,
+  type UploadedVoiceMessage,
+  type VoiceRecordingData,
+} from './voice-message-upload';
 const logger = createLogger('EnhancedConversation');
 
-interface UploadedAttachment {
-  url: string;
-  filename: string;
-  contentType: string;
-  size: number;
-  thumbnailUrl: string | null;
+interface PendingMessageRequest {
+  requesterName: string;
+  requesterAvatar: string | null;
+  sharedGroupCount: number;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -33,14 +43,23 @@ function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-function messageTypeForFile(file: File): Message['messageType'] {
-  if (file.type.startsWith('image/')) return 'image';
-  if (file.type.startsWith('video/')) return 'video';
-  if (file.type.startsWith('audio/')) return 'audio';
-  return 'file';
+function pendingRequestInfo(value: unknown): PendingMessageRequest | null {
+  if (!isRecord(value) || value.status !== 'pending' || !isRecord(value.requester)) {
+    return null;
+  }
+
+  const requester = value.requester;
+  const displayName = stringValue(requester.display_name);
+  const username = stringValue(requester.username);
+
+  return {
+    requesterName: displayName ?? username ?? 'Unknown user',
+    requesterAvatar: stringValue(requester.avatar_url),
+    sharedGroupCount: numberValue(value.shared_group_count) ?? 0,
+  };
 }
 
-async function uploadAttachment(file: File): Promise<UploadedAttachment> {
+async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('context', 'message');
@@ -82,8 +101,13 @@ export function useEnhancedConversation() {
 
   const [messageInput, setMessageInput] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [messageRequest, setMessageRequest] = useState<PendingMessageRequest | null>(null);
+  const messageActions = useMessageActions();
+  const setRequestState = useMessageRequestStore((state) => state.setRequestState);
+  const removeRequestState = useMessageRequestStore((state) => state.removeRequestState);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -105,6 +129,44 @@ export function useEnhancedConversation() {
   const typing = conversationId
     ? (typingUsers[conversationId] || []).filter((userId) => userId !== user?.id)
     : [];
+
+  useEffect(() => {
+    if (!conversationId) {
+      setMessageRequest(null);
+      return;
+    }
+
+    let isActive = true;
+
+    void apiClient.messageRequests
+      .get(conversationId)
+      .then((result) => {
+        if (!isActive) return;
+
+        if (!result.ok) {
+          removeRequestState(conversationId);
+          setMessageRequest(null);
+          return;
+        }
+
+        const pending = pendingRequestInfo(result.data);
+        if (pending) {
+          setRequestState(conversationId, 'pending');
+          setMessageRequest(pending);
+          return;
+        }
+
+        removeRequestState(conversationId);
+        setMessageRequest(null);
+      })
+      .catch((error: unknown) => {
+        logger.warn('Failed to load message request state:', error);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [conversationId, removeRequestState, setRequestState]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -164,6 +226,7 @@ export function useEnhancedConversation() {
 
   const handleMessageChange = (value: string) => {
     setMessageInput(value);
+    if (value.trim()) setIsVoiceMode(false);
     if (!conversationId) return;
 
     const topic = `conversation:${conversationId}`;
@@ -183,6 +246,71 @@ export function useEnhancedConversation() {
     }, 5000);
   };
 
+  function addOptimisticVoiceMessage(uploaded: UploadedVoiceMessage) {
+    if (!conversationId) return;
+
+    addOptimisticMessage({
+      id: uploaded.messageId ?? uploaded.id ?? `optimistic-voice-${Date.now()}`,
+      conversationId,
+      senderId: user?.id ?? '',
+      content: '[Voice Message]',
+      encryptedContent: null,
+      isEncrypted: false,
+      messageType: 'voice',
+      replyToId: replyTo?.id ?? null,
+      replyTo: null,
+      isPinned: false,
+      isEdited: false,
+      deletedAt: null,
+      metadata: {
+        url: uploaded.url,
+        filename: 'voice-message.webm',
+        size: uploaded.size,
+        mimeType: uploaded.contentType,
+        duration: uploaded.duration,
+        waveform: uploaded.waveform,
+        voiceMessageId: uploaded.id,
+      },
+      reactions: [],
+      sender: {
+        id: user?.id ?? '',
+        username: user?.username ?? '',
+        displayName: user?.displayName ?? null,
+        avatarUrl: user?.avatarUrl ?? null,
+      },
+      deliveryStatus: 'sent',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } satisfies Message);
+  }
+
+  const handleVoiceComplete = async (recording: VoiceRecordingData) => {
+    if (!conversationId || isSending) return;
+
+    HapticFeedback.medium();
+    setIsSending(true);
+
+    try {
+      const uploaded = await uploadVoiceMessage(conversationId, recording);
+      addOptimisticVoiceMessage(uploaded);
+      setIsVoiceMode(false);
+      setReplyTo(null);
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      socketManager.sendTyping(`conversation:${conversationId}`, false);
+      await fetchMessages(conversationId).catch((error: unknown) => {
+        logger.warn('Failed to refresh conversation after voice message:', error);
+      });
+    } catch (error) {
+      logger.error('Failed to send voice message:', error);
+      HapticFeedback.error();
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   // Handle send message
   const handleSend = async () => {
     if (!conversationId || (!messageInput.trim() && !attachment) || isSending) return;
@@ -197,21 +325,8 @@ export function useEnhancedConversation() {
       if (attachment) {
         const uploaded = await uploadAttachment(attachment);
         content = content || uploaded.filename;
-        contentType = messageTypeForFile(attachment);
-        metadata = {
-          fileUrl: uploaded.url,
-          fileName: uploaded.filename,
-          fileSize: uploaded.size,
-          fileMimeType: uploaded.contentType,
-          url: uploaded.url,
-          filename: uploaded.filename,
-          size: uploaded.size,
-          mimeType: uploaded.contentType,
-        };
-
-        if (uploaded.thumbnailUrl) {
-          metadata.thumbnailUrl = uploaded.thumbnailUrl;
-        }
+        contentType = messageContentTypeForMime(uploaded.contentType, uploaded.filename);
+        metadata = buildMessageAttachmentMetadata(uploaded);
       }
 
       // Optimistic: show message in the list immediately with a sending indicator
@@ -275,6 +390,17 @@ export function useEnhancedConversation() {
     navigate(route);
   };
 
+  const handleMessageRequestAccepted = () => {
+    if (conversationId) removeRequestState(conversationId);
+    setMessageRequest(null);
+  };
+
+  const handleMessageRequestRejected = () => {
+    if (conversationId) removeRequestState(conversationId);
+    setMessageRequest(null);
+    navigate('/messages', { replace: true });
+  };
+
   return {
     // Data
     conversationId,
@@ -283,20 +409,27 @@ export function useEnhancedConversation() {
     typing,
     user,
     callRecipientId,
+    messageRequest,
     // State
     messageInput,
     attachment,
+    isVoiceMode,
     handleMessageChange,
     isSending,
     replyTo,
     setReplyTo,
     setAttachment,
+    setIsVoiceMode,
     // Refs
     messagesEndRef,
     inputContainerRef,
     // Handlers
     handleSend,
+    handleVoiceComplete,
     handleAvatarClick,
     handleStartCall,
+    handleMessageRequestAccepted,
+    handleMessageRequestRejected,
+    messageActions,
   };
 }

@@ -13,8 +13,11 @@
     "./cosmetics": "./src/cosmetics.ts",
     "./nodes": "./src/nodes.ts",
     "./forums": "./src/forums.ts",
+    "./identity": "./src/identity.ts",
     "./contact-card": "./src/contact-card.ts",
-    "./media-album": "./src/media-album.ts"
+    "./media-album": "./src/media-album.ts",
+    "./privacy": "./src/privacy.ts",
+    "./settings": "./src/settings.ts"
   },
   "scripts": {
     "build": "tsc",

@@ -3,7 +3,7 @@
  *
  * Non-blocking app bootstrapper that checks authentication,
  * fetches gamification data, applies theme CSS variables,
- * loads user customizations, and syncs theme with server.
+ * and coordinates user preference bootstrap.
  *
  */
 
@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/modules/auth/store';
 import type { User } from '@/modules/auth/store';
 import { useThemeStore, THEME_COLORS } from '@/stores/theme';
-import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { bootstrapUserPreferences } from '@/modules/settings/store/preferenceOrchestrator';
 import { themeEngine } from '@/lib/theme/theme-engine';
 import { STORAGE_KEY as THEME_PREFERENCES_KEY } from '@/lib/theme/preferences';
 import { useCustomizationApplication } from '@/modules/settings/hooks/useCustomizationApplication';
@@ -50,7 +50,7 @@ const E2E_USER: User = {
 };
 
 /**
- * Initializes authentication, gamification, customization, and theme state.
+ * Initializes authentication, gamification, preferences, and theme state.
  * Renders children immediately — never blocks rendering.
  */
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
@@ -58,8 +58,6 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const userId = useAuthStore((state) => state.user?.id);
   const colorPreset = useThemeStore((state) => state.theme.colorPreset);
-  const syncWithServer = useThemeStore((state) => state.syncWithServer);
-  const fetchCustomizations = useCustomizationStore((state) => state.fetchCustomizations);
 
   // Apply customization settings to UI
   useCustomizationApplication();
@@ -96,11 +94,11 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     }
 
     if (isAuthenticated) {
-      fetchCustomizations().catch((error) => {
-        authLogger.error('Customization initialization failed:', error);
+      bootstrapUserPreferences({ userId, includeTheme: Boolean(userId) }).catch((error) => {
+        authLogger.error('Preference initialization failed:', error);
       });
     }
-  }, [isAuthenticated, fetchCustomizations]);
+  }, [isAuthenticated, userId]);
   useEffect(() => {
     const hasProfessionalThemePreferences = Boolean(localStorage.getItem(THEME_PREFERENCES_KEY));
     const legacyThemeId = localStorage.getItem('cgraph-app-theme');
@@ -120,20 +118,6 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     }
     themeLogger.debug('Applied app theme:', appThemeId);
   }, [colorPreset]);
-
-  // Sync theme with server when user logs in
-  useEffect(() => {
-    if (isE2EAuthBypass) {
-      return;
-    }
-
-    if (isAuthenticated && userId) {
-      themeLogger.debug('Syncing theme with server for user:', userId);
-      syncWithServer(userId).catch((error) => {
-        themeLogger.error(error, 'Theme sync failed');
-      });
-    }
-  }, [isAuthenticated, userId, syncWithServer]);
 
   return <>{children}</>;
 }

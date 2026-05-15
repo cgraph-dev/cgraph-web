@@ -5,6 +5,12 @@
  *
  */
 
+import {
+  boolToSelectivePrivacyRule,
+  selectivePrivacyRuleEnabled,
+  selectivePrivacySettingsFromApi,
+  selectivePrivacySettingsToApi,
+} from '@cgraph/shared-types';
 import type {
   ApiSettings,
   UserSettings,
@@ -48,6 +54,23 @@ export function mapSettingsFromApi(data: ApiSettings): UserSettings {
   const media = data.media ?? {};
   const stickersEmoji = data.stickers_emoji ?? {};
   const calls = data.calls ?? {};
+  const legacySelectivePrivacy = {
+    messageRequests: boolToSelectivePrivacyRule(
+      privacy.allow_message_requests ??
+        data.allow_message_requests ??
+        DEFAULT_PRIVACY_SETTINGS.allowMessageRequests
+    ),
+    phoneNumber: boolToSelectivePrivacyRule(
+      privacy.show_phone ?? data.show_phone ?? DEFAULT_PRIVACY_SETTINGS.showPhone
+    ),
+    calls: boolToSelectivePrivacyRule(
+      privacy.allow_calls ?? data.allow_calls ?? DEFAULT_PRIVACY_SETTINGS.allowCalls
+    ),
+  };
+  const selectivePrivacy = selectivePrivacySettingsFromApi(
+    privacy.selective_privacy ?? data.selective_privacy,
+    legacySelectivePrivacy
+  );
 
   return {
     notifications: {
@@ -113,15 +136,14 @@ export function mapSettingsFromApi(data: ApiSettings): UserSettings {
         data.show_typing_indicators ??
         DEFAULT_PRIVACY_SETTINGS.showTypingIndicators,
       profileVisibility:
-        privacy.profile_visibility ?? data.profile_visibility ?? DEFAULT_PRIVACY_SETTINGS.profileVisibility,
+        privacy.profile_visibility ??
+        data.profile_visibility ??
+        DEFAULT_PRIVACY_SETTINGS.profileVisibility,
       allowFriendRequests:
         privacy.allow_friend_requests ??
         data.allow_friend_requests ??
         DEFAULT_PRIVACY_SETTINGS.allowFriendRequests,
-      allowMessageRequests:
-        privacy.allow_message_requests ??
-        data.allow_message_requests ??
-        DEFAULT_PRIVACY_SETTINGS.allowMessageRequests,
+      allowMessageRequests: selectivePrivacyRuleEnabled(selectivePrivacy.messageRequests),
       showInSearch:
         privacy.show_in_search ?? data.show_in_search ?? DEFAULT_PRIVACY_SETTINGS.showInSearch,
       allowGroupInvites:
@@ -134,7 +156,9 @@ export function mapSettingsFromApi(data: ApiSettings): UserSettings {
       showJoinDate:
         privacy.show_join_date ?? data.show_join_date ?? DEFAULT_PRIVACY_SETTINGS.showJoinDate,
       showLastActive:
-        privacy.show_last_active ?? data.show_last_active ?? DEFAULT_PRIVACY_SETTINGS.showLastActive,
+        privacy.show_last_active ??
+        data.show_last_active ??
+        DEFAULT_PRIVACY_SETTINGS.showLastActive,
       showSocialLinks:
         privacy.show_social_links ??
         data.show_social_links ??
@@ -145,16 +169,17 @@ export function mapSettingsFromApi(data: ApiSettings): UserSettings {
         privacy.show_in_member_list ??
         data.show_in_member_list ??
         DEFAULT_PRIVACY_SETTINGS.showInMemberList,
-      showPhone: privacy.show_phone ?? data.show_phone ?? DEFAULT_PRIVACY_SETTINGS.showPhone,
+      showPhone: selectivePrivacyRuleEnabled(selectivePrivacy.phoneNumber),
       showForwardedFrom:
         privacy.show_forwarded_from ??
         data.show_forwarded_from ??
         DEFAULT_PRIVACY_SETTINGS.showForwardedFrom,
-      allowCalls: privacy.allow_calls ?? data.allow_calls ?? DEFAULT_PRIVACY_SETTINGS.allowCalls,
+      allowCalls: selectivePrivacyRuleEnabled(selectivePrivacy.calls),
       autoDeleteDefault:
         privacy.auto_delete_default ??
         data.auto_delete_default ??
         DEFAULT_PRIVACY_SETTINGS.autoDeleteDefault,
+      selectivePrivacy,
     },
     appearance: {
       theme: appearance.theme ?? data.theme ?? DEFAULT_APPEARANCE_SETTINGS.theme,
@@ -192,7 +217,9 @@ export function mapSettingsFromApi(data: ApiSettings): UserSettings {
         data.keyboard_shortcuts_enabled ??
         DEFAULT_KEYBOARD_SETTINGS.keyboardShortcutsEnabled,
       customShortcuts:
-        keyboard.custom_shortcuts ?? data.custom_shortcuts ?? DEFAULT_KEYBOARD_SETTINGS.customShortcuts,
+        keyboard.custom_shortcuts ??
+        data.custom_shortcuts ??
+        DEFAULT_KEYBOARD_SETTINGS.customShortcuts,
     },
     media: {
       autoDownloadPhotos:
@@ -230,9 +257,13 @@ export function mapSettingsFromApi(data: ApiSettings): UserSettings {
     },
     calls: {
       echoCancellation:
-        calls.echo_cancellation ?? data.echo_cancellation ?? DEFAULT_CALLS_SETTINGS.echoCancellation,
+        calls.echo_cancellation ??
+        data.echo_cancellation ??
+        DEFAULT_CALLS_SETTINGS.echoCancellation,
       noiseSuppression:
-        calls.noise_suppression ?? data.noise_suppression ?? DEFAULT_CALLS_SETTINGS.noiseSuppression,
+        calls.noise_suppression ??
+        data.noise_suppression ??
+        DEFAULT_CALLS_SETTINGS.noiseSuppression,
       autoGainControl:
         calls.auto_gain_control ?? data.auto_gain_control ?? DEFAULT_CALLS_SETTINGS.autoGainControl,
       defaultVideoResolution:
@@ -296,6 +327,14 @@ export function mapSettingsToApi(settings: Partial<UserSettings>): Record<string
     if (p.showForwardedFrom !== undefined) result.show_forwarded_from = p.showForwardedFrom;
     if (p.allowCalls !== undefined) result.allow_calls = p.allowCalls;
     if (p.autoDeleteDefault !== undefined) result.auto_delete_default = p.autoDeleteDefault;
+    if (p.selectivePrivacy !== undefined) {
+      result.selective_privacy = selectivePrivacySettingsToApi(p.selectivePrivacy);
+      result.allow_message_requests = selectivePrivacyRuleEnabled(
+        p.selectivePrivacy.messageRequests
+      );
+      result.show_phone = selectivePrivacyRuleEnabled(p.selectivePrivacy.phoneNumber);
+      result.allow_calls = selectivePrivacyRuleEnabled(p.selectivePrivacy.calls);
+    }
   }
 
   if (settings.appearance) {
@@ -338,7 +377,8 @@ export function mapSettingsToApi(settings: Partial<UserSettings>): Record<string
   if (settings.stickersEmoji) {
     const s = settings.stickersEmoji;
     if (s.suggestStickers !== undefined) result.suggest_stickers = s.suggestStickers;
-    if (s.loopAnimatedStickers !== undefined) result.loop_animated_stickers = s.loopAnimatedStickers;
+    if (s.loopAnimatedStickers !== undefined)
+      result.loop_animated_stickers = s.loopAnimatedStickers;
     if (s.defaultSkinTone !== undefined) result.default_skin_tone = s.defaultSkinTone;
     if (s.installedPackIds !== undefined) result.installed_sticker_pack_ids = s.installedPackIds;
   }
@@ -435,6 +475,7 @@ export function narrowToApiSettings(raw: Record<string, unknown>): ApiSettings {
   const autoDownloadFiles = raw['auto_download_files'];
   const defaultSkinTone = raw['default_skin_tone'];
   const defaultVideoResolution = raw['default_video_resolution'];
+  const selectivePrivacy = raw['selective_privacy'];
 
   return {
     // Notifications
@@ -473,6 +514,12 @@ export function narrowToApiSettings(raw: Record<string, unknown>): ApiSettings {
     show_phone: bool('show_phone'),
     show_forwarded_from: bool('show_forwarded_from'),
     allow_calls: bool('allow_calls'),
+    selective_privacy:
+      typeof selectivePrivacy === 'object' &&
+      selectivePrivacy !== null &&
+      !Array.isArray(selectivePrivacy)
+        ? selectivePrivacy
+        : undefined,
     // Appearance
     theme: isTheme(theme) ? theme : undefined,
     compact_mode: bool('compact_mode'),

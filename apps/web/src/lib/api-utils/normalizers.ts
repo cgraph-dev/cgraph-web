@@ -7,6 +7,7 @@
 
 // API base URL for resolving relative media paths
 import { getMediaBaseUrl } from '@/lib/backend-url';
+import { identityFieldsFromApi } from '@/lib/identity';
 
 const API_URL = getMediaBaseUrl();
 
@@ -70,13 +71,25 @@ function normalizeSender(
     return null;
   }
 
+  const identity = identityFieldsFromApi(sender);
+
   return {
-    id: sender.id,
-    username: sender.username,
-    displayName: sender.displayName ?? sender.display_name ?? null,
-    avatarUrl: sender.avatarUrl ?? sender.avatar_url ?? null,
-    avatarBorderId: sender.avatarBorderId ?? sender.avatar_border_id ?? null,
-    status: sender.status ?? 'offline',
+    id: identity.id,
+    username: identity.username,
+    displayName: identity.displayName,
+    avatarUrl: identity.avatarUrl,
+    avatarBorderId: identity.avatarBorderId,
+    equippedTitleId: identity.equippedTitleId,
+    equippedBadgeIds: identity.equippedBadgeIds,
+    equippedNameplateId: identity.equippedNameplateId,
+    profileTheme: identity.profileTheme,
+    chatTheme: identity.chatTheme,
+    displayNameFont: identity.displayNameFont,
+    displayNameEffect: identity.displayNameEffect,
+    displayNameColor: identity.displayNameColor,
+    displayNameSecondaryColor: identity.displayNameSecondaryColor,
+    status: identity.status,
+    statusMessage: identity.statusMessage,
   };
 }
 
@@ -246,16 +259,7 @@ export function normalizeParticipant(raw: Record<string, unknown>): Record<strin
     isMuted: raw.isMuted ?? raw.is_muted ?? false,
     mutedUntil: raw.mutedUntil ?? raw.muted_until ?? null,
     joinedAt: raw.joinedAt ?? raw.joined_at ?? raw.insertedAt ?? raw.inserted_at,
-    user: userObj
-      ? {
-          id: userObj.id,
-          username: userObj.username,
-          displayName: userObj.displayName ?? userObj.display_name ?? null,
-          avatarUrl: userObj.avatarUrl ?? userObj.avatar_url ?? null,
-          avatarBorderId: userObj.avatarBorderId ?? userObj.avatar_border_id ?? null,
-          status: userObj.status ?? 'offline',
-        }
-      : null,
+    user: userObj ? identityFieldsFromApi(userObj) : null,
   };
 }
 
@@ -285,6 +289,7 @@ export function normalizeConversation(raw: Record<string, unknown>): Record<stri
     unreadCount: raw.unreadCount ?? raw.unread_count ?? 0,
     muted: raw.muted ?? false,
     pinned: raw.pinned ?? false,
+    isNoteToSelf: raw.isNoteToSelf ?? raw.is_note_to_self ?? false,
     createdAt: raw.createdAt ?? raw.created_at ?? raw.insertedAt ?? raw.inserted_at,
     updatedAt: raw.updatedAt ?? raw.updated_at,
     messageTTL: raw.messageTTL ?? raw.message_ttl ?? null,

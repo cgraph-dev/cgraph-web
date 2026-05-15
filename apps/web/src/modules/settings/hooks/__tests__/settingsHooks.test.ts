@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-const { mockCustomizationState } = vi.hoisted(() => ({
+const { mockCustomizationState, mockHttpGet, mockHttpPost } = vi.hoisted(() => ({
   mockCustomizationState: {
     profileTheme: null as string | null,
     selectedProfileThemeId: 'classic-purple',
@@ -9,6 +9,8 @@ const { mockCustomizationState } = vi.hoisted(() => ({
     backgroundEffect: 'solid',
     animationSpeed: 'normal',
   },
+  mockHttpGet: vi.fn(),
+  mockHttpPost: vi.fn(),
 }));
 
 vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
@@ -19,6 +21,13 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
 
 vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: vi.fn((value: string) => value),
+}));
+
+vi.mock('@/lib/api-client', () => ({
+  http: {
+    get: mockHttpGet,
+    post: mockHttpPost,
+  },
 }));
 
 import {
@@ -181,11 +190,10 @@ describe('useUsernameChange', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock fetch globally
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ available: true, message: 'Username is available!' }),
+    mockHttpGet.mockResolvedValue({
+      data: { available: true, message: 'Username is available!' },
     });
+    mockHttpPost.mockResolvedValue({ data: { ok: true } });
   });
 
   afterEach(() => {
@@ -242,7 +250,7 @@ describe('useUsernameChange', () => {
     expect(result.current.cooldownDays).toBe(7);
   });
 
-  it('setNewUsername updates the username value', () => {
+  it('setNewUsername updates the username value', async () => {
     const { result } = renderHook(() => useUsernameChange(baseOptions));
 
     act(() => {
@@ -250,6 +258,9 @@ describe('useUsernameChange', () => {
     });
 
     expect(result.current.newUsername).toBe('newuser');
+    await waitFor(() => {
+      expect(result.current.checkResult?.available).toBe(true);
+    });
   });
 
   it('toggleHistory toggles showHistory state', () => {
@@ -325,9 +336,6 @@ describe('useUsernameChange', () => {
       await result.current.handleSubmit();
     });
 
-    expect(global.fetch).not.toHaveBeenCalledWith(
-      '/api/users/me/change-username',
-      expect.any(Object)
-    );
+    expect(mockHttpPost).not.toHaveBeenCalled();
   });
 });

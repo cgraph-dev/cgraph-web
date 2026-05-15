@@ -150,6 +150,11 @@ export function useMessageActions(): UseMessageActionsReturn {
   const handlePinMessage = async (messageId: string, conversationId: string) => {
     try {
       await http.post(`/api/v1/conversations/${conversationId}/messages/${messageId}/pin`);
+      const { messages, updateMessage } = useChatStore.getState();
+      const message = messages[conversationId]?.find((item) => item.id === messageId);
+      if (message) {
+        updateMessage({ ...message, isPinned: true });
+      }
       toast.success('Message pinned');
       setActiveMessageMenu(null);
     } catch (error) {

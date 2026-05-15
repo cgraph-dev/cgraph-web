@@ -16,6 +16,7 @@
  */
 
 import { useSettingsStore } from '@/modules/settings/store';
+import { usePreferenceOrchestrator } from '@/modules/settings/store/preferenceOrchestrator';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { useThemeStore } from '@/stores/theme';
 
@@ -67,10 +68,12 @@ export function useSettingsFacade(): SettingsFacade {
   // Settings store
   const settings = useSettingsStore((s) => s.settings);
   const settingsLoading = useSettingsStore((s) => s.isLoading);
-  const fetchSettings = useSettingsStore((s) => s.fetchSettings);
+  const settingsSaving = useSettingsStore((s) => s.isSaving);
   const updateNotificationSettings = useSettingsStore((s) => s.updateNotificationSettings);
   const updatePrivacySettings = useSettingsStore((s) => s.updatePrivacySettings);
   const updateAppearanceSettings = useSettingsStore((s) => s.updateAppearanceSettings);
+  const bootstrapPreferences = usePreferenceOrchestrator((s) => s.bootstrapPreferences);
+  const isBootstrapping = usePreferenceOrchestrator((s) => s.isBootstrapping);
 
   // Customization store
   const themePreset = useCustomizationStore((s) => s.themePreset);
@@ -78,11 +81,14 @@ export function useSettingsFacade(): SettingsFacade {
   const animationSpeed = useCustomizationStore((s) => s.animationSpeed);
   const particlesEnabled = useCustomizationStore((s) => s.particlesEnabled);
   const glowEnabled = useCustomizationStore((s) => s.glowEnabled);
-  const isSaving = useCustomizationStore((s) => s.isSaving);
+  const customizationLoading = useCustomizationStore((s) => s.isLoading);
+  const customizationSaving = useCustomizationStore((s) => s.isSaving);
   const updateCustomization = useCustomizationStore((s) => s.updateSettings);
 
   // Theme store
   const theme = useThemeStore((s) => s.colorPreset);
+  const themeLoading = useThemeStore((s) => s.isLoading);
+  const themeSaving = useThemeStore((s) => s.isSaving);
 
   // Derived from settings
   const compactMode = settings?.appearance?.compactMode ?? false;
@@ -121,9 +127,11 @@ export function useSettingsFacade(): SettingsFacade {
     animationSpeed,
     particlesEnabled,
     glowEnabled,
-    isLoading: settingsLoading,
-    isSaving,
-    fetchSettings,
+    isLoading: settingsLoading || customizationLoading || themeLoading || isBootstrapping,
+    isSaving: settingsSaving || customizationSaving || themeSaving,
+    fetchSettings: async () => {
+      await bootstrapPreferences();
+    },
     updateSettings: updateCustomization,
     updateNotificationSettings,
     updatePrivacySettings,

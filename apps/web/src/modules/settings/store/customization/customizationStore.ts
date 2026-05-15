@@ -30,6 +30,7 @@ export type {
   BubbleAnimation,
   ThemeColors,
   CustomizationState,
+  CustomizationServerPatch,
   CustomizationStore,
 } from './customizationStore.types';
 export {
@@ -42,14 +43,19 @@ export {
 // NOTE: Selectors are NOT re-exported here to avoid circular dependency.
 // Import selectors from './customizationStore.selectors' directly, or via the barrel './index'.
 
-import type { CustomizationState, CustomizationStore } from './customizationStore.types';
+import type {
+  CustomizationServerPatch,
+  CustomizationState,
+  CustomizationStore,
+  ThemePreset,
+} from './customizationStore.types';
 import { THEME_COLORS, DEFAULT_STATE } from './customizationStore.types';
 import { apiSchemaMapper, debouncedSave, PERSIST_PARTIALIZE } from './customizationStore.schema';
 
 const logger = createLogger('customizationStore');
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function withCanonicalAliases(state: CustomizationState): CustomizationState {
@@ -64,6 +70,78 @@ function withCanonicalAliases(state: CustomizationState): CustomizationState {
     profileTheme: state.selectedProfileThemeId,
     appTheme: state.themePreset,
   };
+}
+
+function withServerPatchAliases(updates: CustomizationServerPatch): CustomizationServerPatch {
+  const next: CustomizationServerPatch = { ...updates };
+
+  if ('chatBubbleColor' in next && !('chatTheme' in next)) next.chatTheme = next.chatBubbleColor;
+  if ('chatTheme' in next && !('chatBubbleColor' in next)) next.chatBubbleColor = next.chatTheme;
+  if ('chatBubbleStyle' in next && !('bubbleStyle' in next))
+    next.bubbleStyle = next.chatBubbleStyle;
+  if ('bubbleEntranceAnimation' in next && !('messageEffect' in next)) {
+    next.messageEffect = next.bubbleEntranceAnimation;
+  }
+  if ('avatarBorderType' in next && !('avatarBorder' in next)) {
+    next.avatarBorder = next.avatarBorderType;
+  }
+  if ('equippedTitle' in next && !('title' in next)) next.title = next.equippedTitle;
+  if ('selectedProfileThemeId' in next && !('profileTheme' in next)) {
+    next.profileTheme = next.selectedProfileThemeId;
+  }
+  if ('profileCardStyle' in next && !('profileLayout' in next)) {
+    next.profileLayout = next.profileCardStyle;
+  }
+  if ('themePreset' in next && !('appTheme' in next)) next.appTheme = next.themePreset;
+
+  return next;
+}
+
+function getStringPatchValue(
+  updates: Record<string, unknown>,
+  keys: readonly string[]
+): string | null {
+  for (const key of keys) {
+    const value = updates[key];
+    if (typeof value === 'string') return value;
+  }
+  return null;
+}
+
+function isThemePreset(value: string | null): value is ThemePreset {
+  return Boolean(value && value in THEME_COLORS);
+}
+
+function mapServerCustomizationPatch(
+  updates: Record<string, unknown>,
+  current: CustomizationStore
+): CustomizationServerPatch {
+  const mappedUpdates = apiSchemaMapper.fromApi(updates, current);
+  const next: CustomizationServerPatch = { ...withCanonicalAliases(mappedUpdates) };
+
+  const appTheme = getStringPatchValue(updates, ['app_theme', 'appTheme', 'themePreset']);
+  if (isThemePreset(appTheme)) {
+    next.themePreset = appTheme;
+    next.appTheme = appTheme;
+  }
+
+  const chatTheme = getStringPatchValue(updates, ['chat_theme', 'chatTheme', 'chatBubbleColor']);
+  if (isThemePreset(chatTheme)) {
+    next.chatBubbleColor = chatTheme;
+    next.chatTheme = chatTheme;
+  }
+
+  const profileTheme = getStringPatchValue(updates, [
+    'profile_theme',
+    'profileTheme',
+    'selectedProfileThemeId',
+  ]);
+  if (profileTheme) {
+    next.selectedProfileThemeId = profileTheme;
+    next.profileTheme = profileTheme;
+  }
+
+  return withServerPatchAliases(next);
 }
 
 // STORE CREATION
@@ -92,6 +170,15 @@ export const useCustomizationStore = create<CustomizationStore>()(
 
         // === Batch Update ===
         updateSettings: (updates) => setAndSave(updates),
+        applyServerSettings: (updates) => {
+          const mappedUpdates = mapServerCustomizationPatch(updates, get());
+
+          set({
+            ...withServerPatchAliases(mappedUpdates),
+            isDirty: false,
+            lastSyncedAt: Date.now(),
+          });
+        },
 
         // === Theme Actions ===
         setTheme: (preset) => setAndSave({ themePreset: preset }),

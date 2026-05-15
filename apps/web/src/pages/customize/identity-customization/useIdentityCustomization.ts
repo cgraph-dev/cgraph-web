@@ -8,6 +8,7 @@
 import { durations } from '@cgraph/animation-constants';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { http } from '@/lib/api-client';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import toast from 'react-hot-toast';
@@ -21,40 +22,194 @@ import { getV2BorderType } from './constants';
 
 export type SectionId = 'borders' | 'titles' | 'badges' | 'name-styles' | 'nameplates';
 
+type InventoryType = 'avatar_border' | 'title' | 'badge' | 'nameplate';
+
+interface InventoryItemPayload {
+  readonly itemType?: unknown;
+  readonly item_type?: unknown;
+  readonly itemId?: unknown;
+  readonly item_id?: unknown;
+  readonly itemKey?: unknown;
+  readonly item_key?: unknown;
+  readonly itemSlug?: unknown;
+  readonly item_slug?: unknown;
+  readonly equippedAt?: unknown;
+  readonly equipped_at?: unknown;
+}
+
+interface InventoryOwnership {
+  readonly owned: Record<InventoryType, ReadonlySet<string>>;
+  readonly equipped: {
+    readonly avatarBorder: string | null;
+    readonly title: string | null;
+    readonly badges: readonly string[];
+    readonly nameplate: string | null;
+  };
+}
+
+function createEmptyOwnership(): InventoryOwnership {
+  return {
+    owned: {
+      avatar_border: new Set(),
+      title: new Set(),
+      badge: new Set(),
+      nameplate: new Set(),
+    },
+    equipped: {
+      avatarBorder: null,
+      title: null,
+      badges: [],
+      nameplate: null,
+    },
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object';
+}
+
+function isInventoryItemPayload(value: unknown): value is InventoryItemPayload {
+  return isRecord(value);
+}
+
+function readInventoryItems(payload: unknown): InventoryItemPayload[] {
+  const envelope = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+  const items = isRecord(envelope) ? envelope.items : undefined;
+  return Array.isArray(items) ? items.filter(isInventoryItemPayload) : [];
+}
+
+function normalizeInventoryType(value: unknown): InventoryType | null {
+  if (value === 'avatar_border' || value === 'border') return 'avatar_border';
+  if (value === 'title') return 'title';
+  if (value === 'badge') return 'badge';
+  if (value === 'nameplate') return 'nameplate';
+  return null;
+}
+
+function readString(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function normalizeCatalogKey(value: string): string {
+  return value.replace(/-/g, '_');
+}
+
+function readItemKeys(item: InventoryItemPayload, type: InventoryType): string[] {
+  const rawKeys = [
+    readString(item.itemSlug ?? item.item_slug),
+    readString(item.itemKey ?? item.item_key),
+    readString(item.itemId ?? item.item_id),
+  ].filter((value): value is string => value != null);
+
+  const keys = new Set<string>();
+
+  for (const rawKey of rawKeys) {
+    if (type === 'avatar_border') {
+      keys.add(normalizeCatalogKey(rawKey));
+      keys.add(rawKey);
+    } else {
+      keys.add(rawKey);
+      keys.add(normalizeCatalogKey(rawKey));
+    }
+  }
+
+  return [...keys];
+}
+
+function buildInventoryOwnership(items: readonly InventoryItemPayload[]): InventoryOwnership {
+  const owned: Record<InventoryType, Set<string>> = {
+    avatar_border: new Set(),
+    title: new Set(),
+    badge: new Set(),
+    nameplate: new Set(),
+  };
+  const equippedBadges: string[] = [];
+  let equippedAvatarBorder: string | null = null;
+  let equippedTitle: string | null = null;
+  let equippedNameplate: string | null = null;
+
+  for (const item of items) {
+    const type = normalizeInventoryType(item.itemType ?? item.item_type);
+    const itemKeys = type ? readItemKeys(item, type) : [];
+    const itemId = itemKeys[0] ?? null;
+
+    if (!type || !itemId) continue;
+
+    itemKeys.forEach((itemKey) => owned[type].add(itemKey));
+
+    if ((item.equippedAt ?? item.equipped_at) == null) continue;
+
+    if (type === 'avatar_border') equippedAvatarBorder = itemId;
+    if (type === 'title') equippedTitle = itemId;
+    if (type === 'badge') equippedBadges.push(itemId);
+    if (type === 'nameplate') equippedNameplate = itemId;
+  }
+
+  return {
+    owned,
+    equipped: {
+      avatarBorder: equippedAvatarBorder,
+      title: equippedTitle,
+      badges: equippedBadges,
+      nameplate: equippedNameplate,
+    },
+  };
+}
+
+function getBorderTypeForId(borderId: string | null) {
+  const border = borderId ? ALL_BORDERS.find((b) => b.id === borderId) : null;
+  return border ? getV2BorderType(border.animationType) : 'none';
+}
+
+function hydrateEquippedCosmetics(ownership: InventoryOwnership) {
+  const avatarBorderType = getBorderTypeForId(ownership.equipped.avatarBorder);
+
+  useCustomizationStore.setState({
+    selectedBorderId: ownership.equipped.avatarBorder,
+    avatarBorderType,
+    avatarBorder: avatarBorderType,
+    equippedTitle: ownership.equipped.title,
+    title: ownership.equipped.title,
+    equippedBadges: ownership.equipped.badges,
+    equippedNameplate: ownership.equipped.nameplate,
+    isDirty: false,
+  });
+}
+
 /** Map static BorderDefinition to the component's Border type */
-function mapBorderDefinition(b: BorderDefinition): Border {
+function mapBorderDefinition(b: BorderDefinition, ownership: InventoryOwnership): Border {
   return {
     id: b.id,
     name: b.name,
     rarity: b.rarity,
     animation: b.animationType,
     colors: b.colors,
-    unlocked: b.unlocked,
+    unlocked: ownership.owned.avatar_border.has(b.id),
     unlockRequirement: b.unlockRequirement,
   };
 }
 
 /** Map static TitleDefinition to the component's Title type */
-function mapTitleDefinition(t: TitleDefinition): Title {
+function mapTitleDefinition(t: TitleDefinition, ownership: InventoryOwnership): Title {
   return {
     id: t.id,
     name: t.name,
     animationType: t.animationType,
     gradient: t.gradient,
-    unlocked: t.unlocked ?? false,
+    unlocked: ownership.owned.title.has(t.id),
     unlockRequirement: t.unlockRequirement,
   };
 }
 
 /** Map static BadgeDefinition to the component's Badge type */
-function mapBadgeDefinition(b: BadgeDefinition): Badge {
+function mapBadgeDefinition(b: BadgeDefinition, ownership: InventoryOwnership): Badge {
   return {
     id: b.id,
     name: b.name,
     description: b.description,
     icon: b.icon,
     rarity: b.rarity,
-    unlocked: b.unlocked,
+    unlocked: ownership.owned.badge.has(b.id),
     unlockRequirement: b.unlockRequirement,
   };
 }
@@ -67,6 +222,7 @@ export function useIdentityCustomization() {
   const store = useCustomizationStore();
   const {
     avatarBorderType,
+    selectedBorderId,
     equippedTitle,
     equippedBadges,
     profileCardStyle,
@@ -74,7 +230,6 @@ export function useIdentityCustomization() {
     error,
     fetchCustomizations,
     saveCustomizations,
-    updateIdentity,
     setAvatarBorder,
     selectBorderId,
     setEquippedTitle,
@@ -149,21 +304,52 @@ export function useIdentityCustomization() {
   const [titles, setTitles] = useState<Title[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [isLoadingIdentity, setIsLoadingIdentity] = useState(true);
+  const [ownedNameplateIds, setOwnedNameplateIds] = useState<readonly string[]>([]);
 
-  // Fetch customizations on mount
+  // Load cosmetic ownership from the backend. Static lists below are metadata only.
   useEffect(() => {
-    if (user?.id) {
-      fetchCustomizations(user.id);
+    let canceled = false;
+
+    function applyOwnership(ownership: InventoryOwnership) {
+      if (canceled) return;
+      setBorders(ALL_BORDERS.map((b) => mapBorderDefinition(b, ownership)));
+      setTitles(ALL_TITLES.map((t) => mapTitleDefinition(t, ownership)));
+      setBadges(ALL_BADGES.map((b) => mapBadgeDefinition(b, ownership)));
+      setOwnedNameplateIds([...ownership.owned.nameplate]);
+      setIsLoadingIdentity(false);
     }
-  }, [user?.id, fetchCustomizations]);
 
-  // Load cosmetics data from static collections
-  useEffect(() => {
-    setBorders(ALL_BORDERS.map(mapBorderDefinition));
-    setTitles(ALL_TITLES.map(mapTitleDefinition));
-    setBadges(ALL_BADGES.map(mapBadgeDefinition));
-    setIsLoadingIdentity(false);
-  }, []);
+    async function loadIdentity() {
+      setIsLoadingIdentity(true);
+
+      if (!user?.id) {
+        applyOwnership(createEmptyOwnership());
+        return;
+      }
+
+      try {
+        await fetchCustomizations(user.id);
+        const response = await http.get('/api/v1/cosmetics/inventory');
+        const ownership = buildInventoryOwnership(readInventoryItems(response.data));
+
+        if (!canceled) {
+          hydrateEquippedCosmetics(ownership);
+          applyOwnership(ownership);
+        }
+      } catch {
+        if (!canceled) {
+          applyOwnership(createEmptyOwnership());
+          toast.error('Could not load cosmetic inventory');
+        }
+      }
+    }
+
+    void loadIdentity();
+
+    return () => {
+      canceled = true;
+    };
+  }, [user?.id, fetchCustomizations]);
 
   // --- Filtering ---
 
@@ -199,10 +385,8 @@ export function useIdentityCustomization() {
 
   // --- Preview helpers ---
 
-  function handlePreviewItem(itemId: string, type: 'border' | 'title') {
+  function handlePreviewItem(itemId: string, _type: 'border' | 'title') {
     setPreviewingLockedItem(itemId);
-    if (type === 'border') applyBorderToStore(itemId);
-    else if (type === 'title') applyTitleToStore(itemId);
     toast('Previewing item — Purchase premium to save', {
       duration: durations.cinematic.ms,
     });
@@ -211,8 +395,6 @@ export function useIdentityCustomization() {
   function clearPreview() {
     if (previewingLockedItem) {
       setPreviewingLockedItem(null);
-      if (avatarBorderType) applyBorderToStore(avatarBorderType);
-      if (equippedTitle) applyTitleToStore(equippedTitle);
     }
   }
 
@@ -224,8 +406,6 @@ export function useIdentityCustomization() {
       return;
     }
     clearPreview();
-    updateIdentity('avatarBorder', borderId);
-    selectBorderId(borderId);
     applyBorderToStore(borderId);
   };
 
@@ -235,7 +415,6 @@ export function useIdentityCustomization() {
       return;
     }
     clearPreview();
-    updateIdentity('title', titleId);
     applyTitleToStore(titleId);
   };
 
@@ -246,11 +425,9 @@ export function useIdentityCustomization() {
     }
     if (equippedBadges.includes(badgeId)) {
       const newBadges = equippedBadges.filter((id) => id !== badgeId);
-      updateIdentity('equippedBadges', newBadges);
       setEquippedBadges(newBadges);
     } else if (equippedBadges.length < 5) {
       const newBadges = [...equippedBadges, badgeId];
-      updateIdentity('equippedBadges', newBadges);
       setEquippedBadges(newBadges);
     } else {
       toast.error('Maximum 5 badges can be equipped');
@@ -283,7 +460,14 @@ export function useIdentityCustomization() {
   const handleSecondaryColorChange = (color: string | null) => setDisplayNameSecondaryColor(color);
 
   // --- Nameplate handlers ---
-  const handleEquipNameplate = (nameplateId: string | null) => setEquippedNameplate(nameplateId);
+  const handleEquipNameplate = (nameplateId: string | null) => {
+    if (nameplateId && !ownedNameplateIds.includes(nameplateId)) {
+      toast.error('Unlock this nameplate before equipping it');
+      return;
+    }
+
+    setEquippedNameplate(nameplateId);
+  };
 
   return {
     // State
@@ -298,7 +482,7 @@ export function useIdentityCustomization() {
     previewingLockedItem,
 
     // Store values
-    avatarBorderType,
+    avatarBorderType: selectedBorderId ?? avatarBorderType,
     equippedTitle,
     equippedBadges,
     profileCardStyle,
@@ -335,6 +519,7 @@ export function useIdentityCustomization() {
     // Nameplate
     equippedNameplate,
     handleEquipNameplate,
+    ownedNameplateIds,
     nameplatesCount: NAMEPLATE_REGISTRY.length,
   };
 }

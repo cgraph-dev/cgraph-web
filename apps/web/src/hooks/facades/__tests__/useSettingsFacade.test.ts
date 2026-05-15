@@ -34,6 +34,7 @@ const fullSettings = {
 const mockSettingsState: Record<string, unknown> = {
   settings: { ...fullSettings },
   isLoading: false,
+  isSaving: false,
   fetchSettings: vi.fn(),
   updateNotificationSettings: vi.fn(),
   updatePrivacySettings: vi.fn(),
@@ -46,12 +47,14 @@ const mockCustomizationState: Record<string, unknown> = {
   animationSpeed: 'fast',
   particlesEnabled: true,
   glowEnabled: true,
+  isLoading: false,
   isSaving: false,
   updateSettings: vi.fn(),
 };
 
-const mockThemeState: Record<string, unknown> = {
-  colorPreset: 'emerald',
+const mockPreferenceOrchestratorState: Record<string, unknown> = {
+  isBootstrapping: false,
+  bootstrapPreferences: vi.fn(),
 };
 
 vi.mock('@/modules/settings/store', () => ({
@@ -66,10 +69,18 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   ),
 }));
 
+vi.mock('@/modules/settings/store/preferenceOrchestrator', () => ({
+  usePreferenceOrchestrator: vi.fn((sel: (s: typeof mockPreferenceOrchestratorState) => unknown) =>
+    sel(mockPreferenceOrchestratorState)
+  ),
+}));
+
 vi.mock('@/stores/theme', () => ({
   useThemeStore: vi.fn((sel?: (s: Record<string, unknown>) => unknown) => {
     const __ts = {
       colorPreset: 'emerald',
+      isLoading: false,
+      isSaving: false,
       avatarBorder: 'none',
       avatarBorderColor: 'emerald',
       effectPreset: 'minimal',
@@ -248,13 +259,15 @@ vi.mock('@/stores/theme', () => ({
 function resetState() {
   mockSettingsState.settings = JSON.parse(JSON.stringify(fullSettings));
   mockSettingsState.isLoading = false;
+  mockSettingsState.isSaving = false;
   mockCustomizationState.themePreset = 'cyberpunk';
   mockCustomizationState.effectPreset = 'matrix';
   mockCustomizationState.animationSpeed = 'fast';
   mockCustomizationState.particlesEnabled = true;
   mockCustomizationState.glowEnabled = true;
+  mockCustomizationState.isLoading = false;
   mockCustomizationState.isSaving = false;
-  mockThemeState.colorPreset = 'emerald';
+  mockPreferenceOrchestratorState.isBootstrapping = false;
 }
 
 describe('useSettingsFacade', () => {
@@ -353,10 +366,10 @@ describe('useSettingsFacade', () => {
     const { result } = renderHook(() => useSettingsFacade());
     expect(result.current.isSaving).toBe(true);
   });
-  it('fetchSettings delegates to settings store', () => {
+  it('fetchSettings delegates to the preference orchestrator', () => {
     const { result } = renderHook(() => useSettingsFacade());
     result.current.fetchSettings();
-    expect(mockSettingsState.fetchSettings).toHaveBeenCalledOnce();
+    expect(mockPreferenceOrchestratorState.bootstrapPreferences).toHaveBeenCalledOnce();
   });
 
   it('updateSettings delegates to customization updateSettings', () => {

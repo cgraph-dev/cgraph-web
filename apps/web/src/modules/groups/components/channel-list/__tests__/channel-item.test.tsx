@@ -46,12 +46,10 @@ describe('ChannelItem', () => {
         <Routes>
           <Route
             path="/groups/:groupId/channels/:channelId"
-            element={
-              <ChannelItem channel={mockChannel} isActive={false} {...props} />
-            }
+            element={<ChannelItem channel={mockChannel} isActive={false} {...props} />}
           />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
 
   it('renders channel name', () => {
@@ -73,10 +71,7 @@ describe('ChannelItem', () => {
   it('link points to channel route', () => {
     renderWithRouter();
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute(
-      'href',
-      expect.stringContaining('/channels/ch1'),
-    );
+    expect(link).toHaveAttribute('href', expect.stringContaining('/channels/ch1'));
   });
 
   it('link points voice channels to the mounted voice route', () => {
@@ -89,9 +84,6 @@ describe('ChannelItem', () => {
       },
     });
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute(
-      'href',
-      expect.stringContaining('/groups/g1/voice/voice-1'),
-    );
+    expect(link).toHaveAttribute('href', expect.stringContaining('/groups/g1/voice/voice-1'));
   });
 });

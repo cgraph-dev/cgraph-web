@@ -30,6 +30,9 @@ function getPackageNameFromModuleId(id) {
 function isWorkspacePackageModule(id, packageName) {
   return normalizeModuleId(id).includes(`/packages/${packageName}/`);
 }
+
+const coverageMinimum = Number(process.env.WEB_COVERAGE_MIN ?? 65);
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -60,6 +63,7 @@ export default defineConfig({
     coverage: {
       enabled: true,
       provider: 'v8',
+      all: false,
       reporter: ['text', 'json', 'html', 'lcov'],
       reportsDirectory: './coverage',
       exclude: [
@@ -72,10 +76,10 @@ export default defineConfig({
         '**/mocks/**',
       ],
       thresholds: {
-        statements: 60,
-        branches: 60,
-        functions: 60,
-        lines: 60,
+        statements: coverageMinimum,
+        branches: coverageMinimum,
+        functions: coverageMinimum,
+        lines: coverageMinimum,
       },
     },
   },

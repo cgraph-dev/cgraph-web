@@ -20,6 +20,10 @@ import { useAuthStore } from '@/modules/auth/store';
 import { socketManager } from '@/lib/socket';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
+import {
+  buildMessageAttachmentSendPayload,
+  type UploadedMessageAttachment,
+} from '@cgraph/shared-types';
 
 import { ChannelHeader } from './channel-header';
 import { MessagesArea } from './messages-area';
@@ -60,14 +64,6 @@ const surfaceCopy: Record<
   },
 };
 
-interface UploadedAttachment {
-  url: string;
-  filename: string;
-  contentType: string;
-  size: number;
-  thumbnailUrl: string | null;
-}
-
 const EMPTY_MESSAGES: readonly ChannelMessage[] = [];
 const ADMINISTRATOR_PERMISSION = 1 << 0;
 const MANAGE_MESSAGES_PERMISSION = 1 << 6;
@@ -94,14 +90,7 @@ function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-function messageTypeForFile(file: File): ChannelMessage['messageType'] {
-  if (file.type.startsWith('image/')) return 'image';
-  if (file.type.startsWith('video/')) return 'video';
-  if (file.type.startsWith('audio/')) return 'audio';
-  return 'file';
-}
-
-async function uploadAttachment(file: File): Promise<UploadedAttachment> {
+async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('context', 'message');
@@ -182,13 +171,13 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const notificationLevel = group?.myMember?.notifications ?? 'mentions';
   const canManageMessages = Boolean(
     group &&
-      currentUserId &&
-      (group.ownerId === currentUserId ||
-        group.myMember?.roles?.some(
-          (role) =>
-            (role.permissions & ADMINISTRATOR_PERMISSION) !== 0 ||
-            (role.permissions & MANAGE_MESSAGES_PERMISSION) !== 0
-        ))
+    currentUserId &&
+    (group.ownerId === currentUserId ||
+      group.myMember?.roles?.some(
+        (role) =>
+          (role.permissions & ADMINISTRATOR_PERMISSION) !== 0 ||
+          (role.permissions & MANAGE_MESSAGES_PERMISSION) !== 0
+      ))
   );
 
   const searchMatches = useMemo(() => {
@@ -306,14 +295,12 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
       if (attachment) {
         const uploaded = await uploadAttachment(attachment);
-        await sendChannelMessage(channelId, trimmedContent || uploaded.filename, replyTo?.id, {
-          contentType: messageTypeForFile(attachment),
-          fileUrl: uploaded.url,
-          fileName: uploaded.filename,
-          fileSize: uploaded.size,
-          fileMimeType: uploaded.contentType,
-          thumbnailUrl: uploaded.thumbnailUrl,
-        });
+        await sendChannelMessage(
+          channelId,
+          trimmedContent || uploaded.filename,
+          replyTo?.id,
+          buildMessageAttachmentSendPayload(uploaded)
+        );
       } else {
         await sendChannelMessage(channelId, trimmedContent, replyTo?.id);
       }

@@ -63,6 +63,7 @@ export default function IdentityCustomization() {
     // Nameplate
     equippedNameplate,
     handleEquipNameplate,
+    ownedNameplateIds,
   } = useIdentityCustomization();
 
   const sectionTabs: { id: SectionId; label: string }[] = [
@@ -169,6 +170,7 @@ export default function IdentityCustomization() {
             <NameplatesSection
               selectedNameplate={equippedNameplate}
               onEquip={handleEquipNameplate}
+              ownedNameplateIds={ownedNameplateIds}
             />
           )}
         </motion.div>

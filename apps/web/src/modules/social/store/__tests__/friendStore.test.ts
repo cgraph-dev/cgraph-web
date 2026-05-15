@@ -361,4 +361,40 @@ describe('FriendStore', () => {
       expect(useFriendStore.getState().error).toBeNull();
     });
   });
+
+  describe('applyIdentityPatch', () => {
+    it('updates friends and request users through one store owner', () => {
+      useFriendStore.setState({
+        friends: [mockFriend],
+        pendingRequests: [mockRequest],
+        sentRequests: [
+          {
+            ...mockRequest,
+            id: 'req-2',
+            user: { ...mockRequest.user, id: mockFriend.id },
+            type: 'outgoing',
+          },
+        ],
+      });
+
+      useFriendStore.getState().applyIdentityPatch(mockFriend.id, {
+        avatarBorderId: 'border-gold',
+        avatar_border_id: 'border-gold',
+        equippedTitleId: 'title-founder',
+        equippedBadgeIds: ['badge-1'],
+      });
+
+      expect(useFriendStore.getState().friends[0]).toMatchObject({
+        avatarBorderId: 'border-gold',
+        equippedTitleId: 'title-founder',
+        equippedBadgeIds: ['badge-1'],
+      });
+      expect(useFriendStore.getState().sentRequests[0].user).toMatchObject({
+        avatarBorderId: 'border-gold',
+        equippedTitleId: 'title-founder',
+        equippedBadgeIds: ['badge-1'],
+      });
+      expect(useFriendStore.getState().pendingRequests[0].user.avatarBorderId).toBeUndefined();
+    });
+  });
 });

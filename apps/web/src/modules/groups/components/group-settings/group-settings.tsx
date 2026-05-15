@@ -64,11 +64,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
   return (
     <div className="flex h-full bg-[var(--token-card-bg)]">
       {/* Sidebar */}
-      <SettingsSidebar
-        group={activeGroup}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+      <SettingsSidebar group={activeGroup} activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
@@ -97,43 +93,26 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
           )}
 
           {activeTab === 'roles' && (
-            <motion.div
-              key="roles"
-              {...FADE_UP}
-              exit={{ opacity: 0, y: -20 }}
-              className="h-full"
-            >
+            <motion.div key="roles" {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="h-full">
               <RoleManager groupId={groupId} />
             </motion.div>
           )}
 
-          {activeTab === 'members' && (
-            <MembersTab key="members" groupId={groupId} />
-          )}
+          {activeTab === 'members' && <MembersTab key="members" groupId={groupId} />}
 
           {activeTab === 'invites' && (
-            <InvitesTab
-              key="invites"
-              groupId={groupId}
-              groupName={activeGroup.name}
-            />
+            <InvitesTab key="invites" groupId={groupId} groupName={activeGroup.name} />
           )}
 
-          {activeTab === 'channels' && (
-            <ChannelsTab key="channels" groupId={groupId} />
-          )}
+          {activeTab === 'channels' && <ChannelsTab key="channels" groupId={groupId} />}
 
           {activeTab === 'notifications' && (
             <NotificationsTab key="notifications" groupId={groupId} />
           )}
 
-          {activeTab === 'audit-log' && (
-            <AuditLogTab key="audit-log" groupId={groupId} />
-          )}
+          {activeTab === 'audit-log' && <AuditLogTab key="audit-log" groupId={groupId} />}
 
-          {activeTab === 'automod' && (
-            <AutomodTab key="automod" groupId={groupId} />
-          )}
+          {activeTab === 'automod' && <AutomodTab key="automod" groupId={groupId} />}
 
           {activeTab === 'danger' && (
             <DangerTab

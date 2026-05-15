@@ -442,10 +442,21 @@ export type {
 } from './schemas/forums';
 export {
   AllSettingsSchema,
+  PrivacySettingsSchema,
+  SelectivePrivacyModeSchema,
+  SelectivePrivacyRuleSchema,
+  SelectivePrivacySettingsSchema,
   SettingsCategorySchema,
   UpdateSettingsResponseSchema,
 } from './schemas/settings';
-export type { AllSettings, SettingsCategory, UpdateSettingsResponse } from './schemas/settings';
+export type {
+  AllSettings,
+  PrivacySettings,
+  SelectivePrivacyRule,
+  SelectivePrivacySettings,
+  SettingsCategory,
+  UpdateSettingsResponse,
+} from './schemas/settings';
 export { InviteSchema, RedeemInviteResponseSchema } from './schemas/invites';
 export type { Invite, RedeemInviteResponse } from './schemas/invites';
 export { SyncChangeSchema, SyncPullResponseSchema, SyncPushResponseSchema } from './schemas/sync';

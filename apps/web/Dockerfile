@@ -1,22 +1,26 @@
 # CGraph Web — CI Dockerfile
-# Build context: apps/web/
-# NOTE: This is a standalone CI build image. Production deploys use Cloudflare Pages
-# which builds from the full monorepo context with workspace packages available.
+# Build context: repository root.
+# The web app depends on workspace packages, so this image installs from the
+# monorepo lockfile and builds the @cgraph/web workspace in place.
 
 FROM node:22-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages ./packages
+RUN pnpm install --frozen-lockfile --filter @cgraph/web...
 
-COPY . .
+COPY tsconfig.base.json ./tsconfig.base.json
+COPY apps/web ./apps/web
+WORKDIR /app/apps/web
 RUN pnpm run build
 
 FROM nginx:1.27-alpine
 RUN rm -rf /usr/share/nginx/html/*
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 
 # SPA fallback + origin-level security headers (defense-in-depth)
 RUN printf 'server {\n\

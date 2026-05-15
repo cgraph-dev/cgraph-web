@@ -144,11 +144,18 @@ export interface CustomizationState {
   readonly isDirty: boolean;
 }
 
+type MutableCustomizationState = {
+  -readonly [K in keyof CustomizationState]: CustomizationState[K];
+};
+
+export type CustomizationServerPatch = Partial<MutableCustomizationState>;
+
 // ACTIONS INTERFACE
 
 export interface CustomizationActions {
   // Batch update
   updateSettings: (updates: Partial<CustomizationState>) => void;
+  applyServerSettings: (updates: CustomizationServerPatch | Record<string, unknown>) => void;
 
   // Theme actions
   setTheme: (preset: ThemePreset) => void;

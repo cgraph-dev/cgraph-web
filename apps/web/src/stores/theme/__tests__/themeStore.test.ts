@@ -1,6 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
+vi.mock('@/lib/api-client', () => ({
+  http: {
+    get: vi.fn(),
+    put: vi.fn(),
+  },
+}));
+
+import { http } from '@/lib/api-client';
 import { useThemeStore } from '../themeStore';
 import {
   COLORS,
@@ -33,6 +41,7 @@ import {
 // Reset store before each test
 beforeEach(() => {
   useThemeStore.setState(useThemeStore.getInitialState());
+  vi.clearAllMocks();
 });
 
 // INITIAL STATE
@@ -67,6 +76,66 @@ describe('themeStore initial state', () => {
 
   it('has default chat bubble config', () => {
     expect(useThemeStore.getState().chatBubble).toEqual(DEFAULT_CHAT_BUBBLE);
+  });
+});
+
+describe('backend sync', () => {
+  it('applyServerTheme maps backend theme payloads without saving', () => {
+    act(() =>
+      useThemeStore.getState().applyServerTheme({
+        colorPreset: 'emerald',
+        visualEffect: 'minimal',
+        animationSpeed: 'fast',
+        glowEnabled: true,
+        chatBubbleRadius: 24,
+        chatBubbleTail: false,
+      })
+    );
+
+    const state = useThemeStore.getState();
+    expect(state.colorPreset).toBe('emerald');
+    expect(state.effectPreset).toBe('minimal');
+    expect(state.animationSpeed).toBe('fast');
+    expect(state.glowEnabled).toBe(true);
+    expect(state.chatBubble.borderRadius).toBe(24);
+    expect(state.chatBubble.showTail).toBe(false);
+    expect(state.lastSyncedAt).toEqual(expect.any(Number));
+    expect(http.put).not.toHaveBeenCalled();
+  });
+
+  it('syncWithBackend accepts the render_data theme envelope', async () => {
+    vi.mocked(http.get).mockResolvedValueOnce({
+      data: { data: { theme: { colorPreset: 'gold', animationSpeed: 'slow' } } },
+    });
+
+    await act(async () => {
+      await useThemeStore.getState().syncWithBackend();
+    });
+
+    expect(http.get).toHaveBeenCalledWith('/api/v1/me/theme');
+    expect(useThemeStore.getState().colorPreset).toBe('gold');
+    expect(useThemeStore.getState().animationSpeed).toBe('slow');
+    expect(useThemeStore.getState().isLoading).toBe(false);
+  });
+
+  it('saveToBackend sends the server theme envelope', async () => {
+    vi.mocked(http.put).mockResolvedValueOnce({});
+
+    await act(async () => {
+      await useThemeStore.getState().saveToBackend();
+    });
+
+    expect(http.put).toHaveBeenCalledWith(
+      '/api/v1/me/theme',
+      expect.objectContaining({
+        theme: expect.objectContaining({
+          colorPreset: 'purple',
+          animationSpeed: 'normal',
+          visualEffect: 'aurora',
+        }),
+      })
+    );
+    expect(useThemeStore.getState().isSaving).toBe(false);
   });
 });
 

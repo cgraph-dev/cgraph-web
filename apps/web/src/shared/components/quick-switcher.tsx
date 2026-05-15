@@ -19,6 +19,7 @@ import {
   NewspaperIcon,
   PlusCircleIcon,
   GlobeAltIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import { FADE_IN } from '@/lib/animations/transitions';
@@ -96,6 +97,14 @@ const QUICK_ACTIONS: QuickSwitcherItem[] = [
     subtitle: 'Start a new group',
     path: '/groups/create',
     icon: UserGroupIcon,
+  },
+  {
+    id: 'action-spaces',
+    type: 'action',
+    name: 'Open Spaces',
+    subtitle: 'Organize conversations',
+    path: '/spaces',
+    icon: FolderIcon,
   },
   {
     id: 'action-explore',

@@ -52,30 +52,36 @@ export function MessageActionMenu({
           aria-label="Message actions"
           className="absolute right-0 top-full z-50 mt-1 w-32 rounded-lg bg-[var(--token-card-bg)/0.4] py-1 shadow-lg ring-1 ring-white/10"
         >
-          <button
-            role="menuitem"
-            onClick={onEdit}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
-          >
-            <EditIcon />
-            Edit
-          </button>
-          <button
-            role="menuitem"
-            onClick={onPin}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
-          >
-            <PinIcon />
-            Pin
-          </button>
-          <button
-            role="menuitem"
-            onClick={onForward}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
-          >
-            <ForwardIcon />
-            Forward
-          </button>
+          {isOwn && onEdit && (
+            <button
+              role="menuitem"
+              onClick={onEdit}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+            >
+              <EditIcon />
+              Edit
+            </button>
+          )}
+          {onPin && (
+            <button
+              role="menuitem"
+              onClick={onPin}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+            >
+              <PinIcon />
+              Pin
+            </button>
+          )}
+          {onForward && (
+            <button
+              role="menuitem"
+              onClick={onForward}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+            >
+              <ForwardIcon />
+              Forward
+            </button>
+          )}
           {!isOwn && dmTipping.enabled && onTip && (
             <button
               role="menuitem"
@@ -86,14 +92,16 @@ export function MessageActionMenu({
               Tip
             </button>
           )}
-          <button
-            role="menuitem"
-            onClick={onDelete}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-[var(--token-card-bg)]"
-          >
-            <DeleteIcon />
-            Delete
-          </button>
+          {onDelete && (
+            <button
+              role="menuitem"
+              onClick={onDelete}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-[var(--token-card-bg)]"
+            >
+              <DeleteIcon />
+              Delete
+            </button>
+          )}
         </div>
       )}
     </div>

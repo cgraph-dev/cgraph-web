@@ -33,22 +33,20 @@ export const NotificationSenderSchema = z.object({
 
 export type NotificationSender = z.infer<typeof NotificationSenderSchema>;
 
-export const NotificationSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  title: z.string(),
-  body: z.string().optional(),
-  message: z.string().optional(),
-  image_url: z.string().nullable().optional(),
-  action_url: z.string().nullable().optional(),
-  action: z.unknown().nullable().optional(),
-  data: z.record(z.unknown()).optional(),
-  read: z.boolean().optional(),
-  is_read: z.boolean().optional(),
-  created_at: z.string().optional(),
-  expires_at: z.string().nullable().optional(),
-  sender: z.unknown().nullable().optional(),
-});
+export const NotificationSchema = z
+  .object({
+    id: z.string(),
+    type: z.string(),
+    title: z.string(),
+    body: z.string().nullable().optional(),
+    is_read: z.boolean().optional(),
+    read_at: z.string().nullable().optional(),
+    action: z.unknown().nullable().optional(),
+    actor: z.unknown().nullable().optional(),
+    data: z.record(z.unknown()).nullable().optional(),
+    created_at: z.string().optional(),
+  })
+  .passthrough();
 
 export type Notification = z.infer<typeof NotificationSchema>;
 

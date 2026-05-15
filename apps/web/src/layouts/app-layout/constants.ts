@@ -1,7 +1,7 @@
 /**
- * App Layout constants — 4-section navigation matching mobile tab structure.
+ * App Layout constants — primary navigation matching mobile tab structure.
  *
- * Sections: Chats, Groups, Forums, Settings
+ * Sections: Chats, Spaces, Groups, Discover, Forums, Settings
  * Social + Explore removed as standalone items — content merged into Chats/Groups/Forums.
  * Creator accessible from Settings hub.
  *
@@ -10,6 +10,7 @@
  */
 import {
   ChatBubbleLeftRightIcon,
+  FolderIcon,
   UserGroupIcon,
   NewspaperIcon,
   Cog6ToothIcon,
@@ -17,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import {
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
+  FolderIcon as FolderIconSolid,
   UserGroupIcon as UserGroupIconSolid,
   NewspaperIcon as NewspaperIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
@@ -29,6 +31,12 @@ export const navItems = [
     label: 'Chats',
     icon: ChatBubbleLeftRightIcon,
     activeIcon: ChatBubbleLeftRightIconSolid,
+  },
+  {
+    path: '/spaces',
+    label: 'Spaces',
+    icon: FolderIcon,
+    activeIcon: FolderIconSolid,
   },
   {
     path: '/groups',

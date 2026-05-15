@@ -42,6 +42,8 @@ export interface Message {
     theme?: string | null;
     // Sender customization fields (populated from backend user_customizations)
     equippedTitleId?: string | null;
+    equippedBadgeIds?: readonly string[];
+    equippedNameplateId?: string | null;
     bubbleStyle?: string | null;
     bubbleColor?: string | null;
     bubbleRadius?: number | null;
@@ -187,6 +189,15 @@ export interface ConversationParticipant {
     status: string;
     lastSeenAt?: string | null;
     avatarBorderId?: string | null;
+    equippedTitleId?: string | null;
+    equippedBadgeIds?: readonly string[];
+    equippedNameplateId?: string | null;
+    profileTheme?: string | null;
+    chatTheme?: string | null;
+    displayNameFont?: string | null;
+    displayNameEffect?: string | null;
+    displayNameColor?: string | null;
+    displayNameSecondaryColor?: string | null;
     level?: number;
     xp?: number;
     pulse?: number;

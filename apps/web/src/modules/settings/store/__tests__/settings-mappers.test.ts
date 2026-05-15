@@ -39,6 +39,23 @@ describe('mapSettingsFromApi', () => {
       profile_visibility: 'private',
       allow_friend_requests: false,
       allow_group_invites: 'friends',
+      selective_privacy: {
+        message_requests: {
+          mode: 'contacts',
+          always_allow_user_ids: ['friend-id'],
+          never_allow_user_ids: ['blocked-id'],
+        },
+        phone_number: {
+          mode: 'nobody',
+          always_allow_user_ids: [],
+          never_allow_user_ids: [],
+        },
+        calls: {
+          mode: 'everyone',
+          always_allow_user_ids: [],
+          never_allow_user_ids: [],
+        },
+      },
     });
 
     expect(result.privacy.showOnlineStatus).toBe(false);
@@ -46,6 +63,10 @@ describe('mapSettingsFromApi', () => {
     expect(result.privacy.profileVisibility).toBe('private');
     expect(result.privacy.allowFriendRequests).toBe(false);
     expect(result.privacy.allowGroupInvites).toBe('friends');
+    expect(result.privacy.selectivePrivacy.messageRequests.mode).toBe('contacts');
+    expect(result.privacy.selectivePrivacy.messageRequests.alwaysAllowUserIds).toEqual([
+      'friend-id',
+    ]);
   });
 
   it('maps appearance settings from snake_case', () => {
@@ -175,6 +196,27 @@ describe('mapSettingsToApi', () => {
         showSocialLinks: true,
         showActivity: true,
         showInMemberList: true,
+        showPhone: false,
+        showForwardedFrom: true,
+        allowCalls: true,
+        autoDeleteDefault: null,
+        selectivePrivacy: {
+          messageRequests: {
+            mode: 'contacts',
+            alwaysAllowUserIds: ['friend-id'],
+            neverAllowUserIds: ['blocked-id'],
+          },
+          phoneNumber: {
+            mode: 'nobody',
+            alwaysAllowUserIds: [],
+            neverAllowUserIds: [],
+          },
+          calls: {
+            mode: 'everyone',
+            alwaysAllowUserIds: [],
+            neverAllowUserIds: [],
+          },
+        },
       },
     });
 
@@ -182,6 +224,23 @@ describe('mapSettingsToApi', () => {
     expect(result.profile_visibility).toBe('private');
     expect(result.allow_friend_requests).toBe(false);
     expect(result.show_last_active).toBe(false);
+    expect(result.selective_privacy).toEqual({
+      message_requests: {
+        mode: 'contacts',
+        always_allow_user_ids: ['friend-id'],
+        never_allow_user_ids: ['blocked-id'],
+      },
+      phone_number: {
+        mode: 'nobody',
+        always_allow_user_ids: [],
+        never_allow_user_ids: [],
+      },
+      calls: {
+        mode: 'everyone',
+        always_allow_user_ids: [],
+        never_allow_user_ids: [],
+      },
+    });
   });
 
   it('maps appearance settings to snake_case', () => {

@@ -19,6 +19,7 @@ export interface ProfileCardUser {
   displayName: string;
   avatarUrl: string;
   avatarBorderId?: string;
+  bannerUrl?: string;
   bio?: string;
   // Gamification
   level: number;
@@ -58,6 +59,7 @@ export interface ProfileCardUser {
   display_name_font?: string;
   display_name_effect?: string;
   display_name_color?: string;
+  display_name_secondary_color?: string;
 }
 
 // COMPONENT PROPS

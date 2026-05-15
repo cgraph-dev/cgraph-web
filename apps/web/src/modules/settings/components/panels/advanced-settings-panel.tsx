@@ -4,7 +4,7 @@
  * Mirrors Telegram-iOS user-facing experimental flags + reset surface.
  * Surfaces feature flags / experiments and exposes a single
  * "Reset preferences" button that snaps stickers/calls/etc. back to
- * defaults without touching the server-synced groups.
+ * server-synced defaults.
  */
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -29,7 +29,7 @@ export function AdvancedSettingsPanel(): ReactNode {
     setResetting(true);
     try {
       await resetAllPreferences();
-      toast.success('Local preferences reset to defaults');
+      toast.success('Preferences reset to defaults');
       setConfirming(false);
     } catch (err) {
       logger.error('Failed to reset preferences', err);
@@ -91,11 +91,10 @@ export function AdvancedSettingsPanel(): ReactNode {
 
       <GlassCard variant="frosted" className="p-6">
         <h2 className="mb-2 flex items-center gap-2 text-base font-semibold text-[var(--token-text-primary)]">
-          <ArrowPathIcon className="h-4 w-4" /> Reset local preferences
+          <ArrowPathIcon className="h-4 w-4" /> Reset preferences
         </h2>
         <p className="mb-4 text-sm text-[var(--token-text-secondary)]">
-          Snaps Stickers & Emoji and Calls back to defaults. Server-synced groups (notifications,
-          privacy, appearance) are not affected.
+          Snaps Stickers & Emoji and Calls back to defaults and saves them for this account.
         </p>
         {confirming ? (
           <div className="flex items-center gap-2">

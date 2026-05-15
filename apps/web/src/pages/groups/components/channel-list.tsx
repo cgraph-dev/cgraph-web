@@ -55,10 +55,7 @@ export function ChannelList({
               transition={{ delay: 0.2 }}
               className="p-4 text-center"
             >
-              <motion.div
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={loop(tweens.glacial)}
-              >
+              <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={loop(tweens.glacial)}>
                 <UserGroupIcon className="mx-auto mb-3 h-12 w-12 text-primary-400" />
               </motion.div>
               <p className="text-gray-400">Select a server to view channels</p>
@@ -190,12 +187,9 @@ export function ChannelList({
                 autoFocus
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter' && categoryName.trim()) {
-                    await http.post(
-                      `/api/v1/groups/${activeGroup.id}/categories`,
-                      {
-                        name: categoryName.trim(),
-                      },
-                    );
+                    await http.post(`/api/v1/groups/${activeGroup.id}/categories`, {
+                      name: categoryName.trim(),
+                    });
                     setCategoryName('');
                     setShowCategoryInput(false);
                     fetchGroup(activeGroup.id);
@@ -236,12 +230,8 @@ export function ChannelList({
             <motion.div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[rgba(20,20,25,0.95)] bg-green-500" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-white/90">
-              You
-            </p>
-            <p className="truncate text-[11px] font-medium text-white/40">
-              Online
-            </p>
+            <p className="truncate text-[13px] font-semibold text-white/90">You</p>
+            <p className="truncate text-[11px] font-medium text-white/40">Online</p>
           </div>
         </motion.div>
       </motion.div>

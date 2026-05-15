@@ -2,6 +2,7 @@ import { AxiosError } from 'axios';
 import type { ApiErrorResponse, User } from './authStore.types';
 import type { StateStorage } from 'zustand/middleware';
 import { authLogger } from '@/lib/logger';
+import { identityFieldsFromApi } from '@/lib/identity';
 function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
@@ -53,15 +54,27 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 
 /** Maps raw API user response to typed User object with safe defaults. */
 export function mapUserFromApi(apiUser: Record<string, unknown>): User {
+  const identity = identityFieldsFromApi(apiUser);
+
   return {
-    id: isString(apiUser.id) ? apiUser.id : '',
+    id: identity.id,
     uid: isString(apiUser.uid) ? apiUser.uid : '',
     userId: isNumber(apiUser.user_id) ? apiUser.user_id : 0,
     userIdDisplay: isString(apiUser.user_id_display) ? apiUser.user_id_display : '#0000000000',
     email: isString(apiUser.email) ? apiUser.email : '',
-    username: isString(apiUser.username) ? apiUser.username : null,
-    displayName: isString(apiUser.display_name) ? apiUser.display_name : null,
-    avatarUrl: isString(apiUser.avatar_url) ? apiUser.avatar_url : null,
+    username: identity.username || null,
+    displayName: identity.displayName,
+    avatarUrl: identity.avatarUrl,
+    avatarBorderId: identity.avatarBorderId,
+    equippedTitleId: identity.equippedTitleId,
+    equippedBadgeIds: identity.equippedBadgeIds,
+    equippedNameplateId: identity.equippedNameplateId,
+    profileTheme: identity.profileTheme,
+    chatTheme: identity.chatTheme,
+    displayNameFont: identity.displayNameFont,
+    displayNameEffect: identity.displayNameEffect,
+    displayNameColor: identity.displayNameColor,
+    displayNameSecondaryColor: identity.displayNameSecondaryColor,
     walletAddress: isString(apiUser.wallet_address) ? apiUser.wallet_address : null,
     emailVerifiedAt: isString(apiUser.email_verified_at) ? apiUser.email_verified_at : null,
     twoFactorEnabled: isBoolean(apiUser.totp_enabled) ? apiUser.totp_enabled : false,
