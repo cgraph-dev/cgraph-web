@@ -28,6 +28,8 @@ missing:
   instead of the old placeholder-only center pane.
 - Call history no longer falls back to demo rows; failed loads show a real error state in
   `apps/web/src/pages/calls/call-history/call-history-page.tsx`.
+- Call-history callback is browser-proven in `apps/web/e2e/web-owner-uat.spec.ts`: a real history
+  row launches the mounted `/call/:recipientId/:callType` screen.
 - DND schedule save is live in
   `apps/web/src/modules/settings/components/panels/dnd-schedule-panel.tsx`.
 - Account deletion is wired to the password-confirmed endpoint in
@@ -111,14 +113,16 @@ scroll/search-anchor behavior are now mounted and browser-verified by
 `apps/web/e2e/dm-media-composer.spec.ts`. The read-receipt backend contract is covered by
 `apps/backend/test/cgraph_web/controllers/api/v1/message_controller_test.exs`. The focused owner UAT
 smoke for auth, DMs, group text send, Social discover, settings, Nodes wallet, direct calls, and
-group voice rooms is now covered by `apps/web/e2e/web-owner-uat.spec.ts`.
+group voice rooms is now covered by `apps/web/e2e/web-owner-uat.spec.ts`. The same owner UAT now
+also proves call-history callback launch from a real history row.
 
 Routed DM typing start/stop is also browser-verified from the live input path by
 `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16.
 
 Routed DM voice/video call-entry launch is also browser-verified from the live header by
-`apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16. Full incoming/media/history call-flow proof
-remains tracked separately.
+`apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16. Call-history callback is browser-verified by
+`apps/web/e2e/web-owner-uat.spec.ts`. Full incoming/media/end-state call-flow proof remains tracked
+separately.
 
 | Existing capability                              | Existing source                                                                                                                                    | Where it should be mounted                                                      |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |

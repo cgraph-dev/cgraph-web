@@ -313,8 +313,8 @@ Important distinction:
    has no real file path and the routed hub page still relies on a divergent multipart path.
 9. Finish route-owned message parity: report, remaining delivery-state UI, GIF/sticker send, and any
    message-state controls beyond the now-routed read receipts and guarded latest-jump behavior.
-10. Finish route-owned call parity: keep the routed DM call-entry proof green, then verify incoming,
-    media/end-state, and history-based call entry in the browser.
+10. Finish route-owned call parity: keep the routed DM call-entry and call-history callback proofs
+    green, then verify incoming and media/end-state behavior in the browser.
 11. Browser-verify the canonical group entry paths and keep metadata-less `/groups/:groupId`
     fallbacks only for callers that truly cannot obtain channel context before navigation.
 

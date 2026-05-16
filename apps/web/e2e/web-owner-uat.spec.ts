@@ -446,6 +446,25 @@ async function installOwnerUatMocks(page: Page) {
       return;
     }
 
+    if (path === '/api/v1/calls') {
+      await fulfillJson(route, {
+        data: [
+          {
+            id: 'call-uat',
+            type: 'video',
+            state: 'ended',
+            creator_id: FRIEND_ID,
+            participant_ids: [CURRENT_USER_ID, FRIEND_ID],
+            duration_seconds: 84,
+            started_at: '2026-01-01T00:00:00.000Z',
+            ended_at: '2026-01-01T00:01:24.000Z',
+            inserted_at: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      });
+      return;
+    }
+
     await fulfillJson(route, { data: {} });
   });
 
@@ -493,6 +512,14 @@ test.describe('Web owner focused UAT', () => {
 
     await page.goto(`/call/${FRIEND_ID}/audio`);
     await expect(page.getByRole('button', { name: /mute/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /end call/i })).toBeVisible();
+
+    await page.goto('/calls/history');
+    await expect(page.getByRole('heading', { name: /call history/i })).toBeVisible();
+    await expect(page.getByText(/call participant/i)).toBeVisible();
+    await page.getByRole('button', { name: /call call participant/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/call/${FRIEND_ID}/video$`));
+    await expect(page.getByRole('button', { name: /hide video|show video/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /end call/i })).toBeVisible();
 
     await page.goto(`/groups/${GROUP_ID}/voice/${VOICE_CHANNEL_ID}`);
