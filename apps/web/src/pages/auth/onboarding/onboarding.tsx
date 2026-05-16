@@ -25,6 +25,7 @@ export default function Onboarding() {
   const {
     currentStep,
     isLoading,
+    error,
     avatarPreview,
     profileData,
     handleAvatarChange,
@@ -61,8 +62,8 @@ export default function Onboarding() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 p-4">
       {/* Animated Background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="bg-gradient-radial absolute -right-1/2 -top-1/2 h-full w-full rounded-full from-primary-500/10 to-transparent" />
-        <div className="bg-gradient-radial absolute -bottom-1/2 -left-1/2 h-full w-full rounded-full from-purple-500/10 to-transparent" />
+        <div className="bg-gradient-radial from-primary-500/10 absolute -right-1/2 -top-1/2 h-full w-full rounded-full to-transparent" />
+        <div className="bg-gradient-radial from-purple-500/10 absolute -bottom-1/2 -left-1/2 h-full w-full rounded-full to-transparent" />
       </div>
 
       <GlassCard variant="frosted" className="relative z-10 w-full max-w-lg" hover3D={false}>
@@ -84,6 +85,15 @@ export default function Onboarding() {
               {renderStepContent()}
             </motion.div>
           </AnimatePresence>
+
+          {error && (
+            <div
+              role="alert"
+              className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+            >
+              {error}
+            </div>
+          )}
 
           <NavigationButtons
             currentStep={currentStep}

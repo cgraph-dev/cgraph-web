@@ -20,6 +20,7 @@ export function useOnboarding() {
   const { user, updateUser } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
 
@@ -44,6 +45,8 @@ export function useOnboarding() {
   }
 
   async function handleNext(): Promise<void> {
+    setError(null);
+
     if (currentStep < ONBOARDING_STEPS.length) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -87,6 +90,7 @@ export function useOnboarding() {
         navigate('/messages');
       } catch (error) {
         logger.error('Onboarding error:', error);
+        setError('We could not save onboarding. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -99,8 +103,21 @@ export function useOnboarding() {
     }
   }
 
-  function handleSkip(): void {
-    navigate('/messages');
+  async function handleSkip(): Promise<void> {
+    if (isLoading) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await http.post('/api/v1/onboarding/skip');
+      navigate('/messages');
+    } catch (error) {
+      logger.error('Failed to skip onboarding:', error);
+      setError('We could not skip onboarding. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function updateProfileData<K extends keyof ProfileData>(key: K, value: ProfileData[K]): void {
@@ -110,6 +127,7 @@ export function useOnboarding() {
   return {
     currentStep,
     isLoading,
+    error,
     avatarPreview,
     profileData,
     handleAvatarChange,

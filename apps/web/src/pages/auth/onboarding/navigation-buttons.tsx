@@ -8,7 +8,7 @@ interface NavigationButtonsProps {
   isLoading: boolean;
   onBack: () => void;
   onNext: () => void;
-  onSkip: () => void;
+  onSkip: () => void | Promise<void>;
 }
 
 /**
@@ -36,6 +36,7 @@ export function NavigationButtons({
         <button
           type="button"
           onClick={onSkip}
+          disabled={isLoading}
           className="px-6 py-2 text-gray-500 transition-colors hover:text-gray-400"
         >
           Skip
@@ -46,7 +47,7 @@ export function NavigationButtons({
         type="button"
         onClick={onNext}
         disabled={isLoading}
-        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 px-8 py-3 font-medium text-white shadow-lg shadow-primary-500/25 transition-all duration-200 hover:scale-[1.02] hover:shadow-primary-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+        className="shadow-primary-500/25 hover:shadow-primary-500/40 flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 px-8 py-3 font-medium text-white shadow-lg transition-all duration-200 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isLoading ? (
           <>

@@ -26,6 +26,11 @@ Expired-link recovery now lets the user enter an email, posts it to
 revealing whether the address exists. Remaining auth risk is full browser/mail-provider verification
 across the broader auth route set.
 
+2026-05-16 update: onboarding skip and save-failure recovery are no longer listed as missing route
+semantics. The routed onboarding Skip action now posts `/api/v1/onboarding/skip` before navigating,
+and both skip/save failures render a route-owned recovery error instead of only logging. Remaining
+onboarding risk is post-auth gate-order and browser verification.
+
 2026-05-15 update: the web privacy model decision is closed as the fuller selective model.
 `packages/shared-types/src/privacy.ts`, backend `selective_privacy`, API-client schemas, web
 mappers, and the privacy panel now preserve `everyone` / `contacts` / `nobody` plus always-allow and

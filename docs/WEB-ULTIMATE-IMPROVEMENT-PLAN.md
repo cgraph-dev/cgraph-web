@@ -348,6 +348,7 @@ Checklist:
 - [x] Let expired verify-email links request a new verification email while logged out.
 - [ ] Resolve the `device_attestation` dead checkpoint before users can enter it on web.
 - [ ] Make onboarding completion, skip, and post-auth gate order deterministic.
+- [x] Persist onboarding skip and surface save/skip recovery errors on the routed onboarding page.
 - [ ] Add cancel-deletion UI that matches the existing password-confirmed delete-account flow.
 
 #### Web social, discovery, and notifications owner

@@ -210,7 +210,7 @@ Status meanings:
 | Password reset confirm                              | Partial | `reset-password.tsx` validates the reset token against `/api/v1/auth/reset-password/validate` and posts the new password to `/api/v1/auth/reset-password/confirm`, but the flow is not yet trusted against real expired, invalid, and replayed token states in-browser.                                                                                                                                                                                                                                                                       |
 | Verify-email token and resend                       | Partial | `useVerifyEmail.ts` posts `/api/v1/auth/verify-email`; expired-link recovery now accepts an email on the logged-out route and posts `/api/v1/auth/resend-verification`, which is mounted in the public strict auth pipeline with non-enumerating responses. Remaining risk is full browser/mail-provider verification.                                                                                                                                                                                                                        |
 | QR login                                            | Partial | `login/qr-login.tsx` creates `/api/v1/auth/qr-session`, joins `qr_auth:{sessionId}`, stores returned tokens, and redirects to `/messages`, but this pass has not yet verified the paired mobile approval flow or stale-session cleanup end-to-end.                                                                                                                                                                                                                                                                                            |
-| Web onboarding completion                           | Partial | `useOnboarding.ts` uploads avatar, updates `/api/v1/me`, saves notification preferences, and posts `/api/v1/me/onboarding/complete`, but `handleSkip()` bypasses completion entirely and the failure path only logs instead of giving the routed user a recovery action.                                                                                                                                                                                                                                                                      |
+| Web onboarding completion                           | Partial | `useOnboarding.ts` uploads avatar, updates `/api/v1/me`, saves notification preferences, and posts `/api/v1/me/onboarding/complete`. Skip now posts `/api/v1/onboarding/skip` before leaving the route, and save/skip failures render a routed recovery error with focused hook coverage. Remaining risk is post-auth gate-order and browser verification.                                                                                                                                                                                    |
 | Social hub route completeness                       | Partial | `social.tsx` fetches real friends, requests, notifications, and discovery results, and the route now renders a real main pane. The remaining gap is destination correctness and deeper action parity, not a placeholder center pane.                                                                                                                                                                                                                                                                                                          |
 | Social notifications list / mark-as-read            | Partial | `social.tsx` fetches `useNotificationStore`, the sidebar and main pane can mark notifications read, and the route no longer stops at a placeholder center pane. The remaining gap is contextual detail/action parity.                                                                                                                                                                                                                                                                                                                         |
 | Social notification deep-link navigation            | Partial | `social.tsx` now preserves action destinations through `getNotificationActionUrl(...)`, including conversation/message anchors, forum posts, profile routes, friend requests, and group channel/default-channel metadata. Remaining risk is browser verification plus metadata-less group notifications that still fall back to the group-route redirect.                                                                                                                                                                                     |
@@ -582,9 +582,10 @@ surfaces:
    contracts, but they still need one browser-level parity pass before they can support a whole-web
    readiness claim.
 
-2. Onboarding still has ambiguous completion semantics. The final path persists profile and
-   notification state, but skip jumps straight to `/messages` without calling
-   `/api/v1/me/onboarding/complete`, and route-owned failure recovery is missing.
+2. Onboarding no longer silently bypasses the server on skip. The final path persists profile and
+   notification state, skip now calls `/api/v1/onboarding/skip`, and route-owned save/skip failures
+   render a recovery error. The remaining onboarding risk is post-auth gate-order and browser
+   verification.
 
 3. The Social Hub is still incomplete, but it is no longer a placeholder shell. Friends,
    notifications, and discover all fetch real store data and the route renders a real main pane; the
@@ -808,9 +809,9 @@ Done when:
 - [ ] Decide the real post-auth gate order for verify-email, onboarding, and `/messages`, then make
       login and registration follow that same route-owned rule set.
 - [x] Fix verify-email resend so expired-link recovery still works when the user is logged out.
-- [ ] Fix onboarding skip semantics so the route either marks onboarding complete or clearly leaves
+- [x] Fix onboarding skip semantics so the route either marks onboarding complete or clearly leaves
       a pending onboarding state the app can resume later.
-- [ ] Add route-owned failure recovery for onboarding save errors instead of only logging them.
+- [x] Add route-owned failure recovery for onboarding save errors instead of only logging them.
 - [ ] Add a routed cancel-deletion flow against `DELETE /api/v1/me/delete-account`, or remove the
       current UI promise that users can manage the deletion grace-period state from web.
 
