@@ -488,6 +488,30 @@ test.describe('Web owner focused UAT', () => {
       .poll(() => sentDmMessages, { message: 'DM route sent through the conversation endpoint' })
       .toContainEqual(expect.objectContaining({ content: 'DM routed UAT send' }));
 
+    await page.evaluate((callerId) => {
+      window.dispatchEvent(
+        new CustomEvent('cgraph:e2e-incoming-call', {
+          detail: {
+            roomId: 'incoming-room-uat',
+            callerId,
+            callerName: 'Friend User',
+            callerAvatar: null,
+            type: 'video',
+            timestamp: Date.now(),
+          },
+        })
+      );
+    }, FRIEND_ID);
+    await expect(page.getByText(/incoming video call/i)).toBeVisible();
+    await page.getByRole('button', { name: /accept/i }).click();
+    await expect(page).toHaveURL(
+      new RegExp(`/call/${FRIEND_ID}/video\\?incoming=true&roomId=incoming-room-uat$`)
+    );
+    await expect(page.getByRole('button', { name: /hide video|show video/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /end call/i })).toBeVisible();
+    await page.getByRole('button', { name: /end call/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/messages/${CONVERSATION_ID}$`));
+
     await page.goto(`/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}`);
     await expect(page.getByText('Owner checklist proof')).toBeVisible();
     const groupComposer = page.getByPlaceholder(/message #general/i);

@@ -2,14 +2,14 @@
 
 Status date: 2026-05-16
 
-Current execution count after the call-history callback proof slice: 48 / 50 owner-level checklist
-items closed, 96.0% closed and 4.0% left. The Space route, verify-email resend, onboarding
+Current execution count after the incoming-call accept/end-state proof slice: 49 / 50 owner-level
+checklist items closed, 98.0% closed and 2.0% left. The Space route, verify-email resend, onboarding
 skip/recovery, cancel-deletion, phone native-attestation guard, verify-email-before-onboarding route
 gate, routed DM read-receipt rendering, routed DM guarded-scroll, routed DM typing-proof, and routed
-DM call-entry, and call-history callback implementations reduce strict web gaps, but this document
-is not 100% yet because the remaining closure buckets still include final support-matrix validation,
-final browser release truth, broader incoming/media/end-state call-flow proof, and profile/cosmetic
-live-update proof.
+DM call-entry, call-history callback, and incoming-call accept/end-state implementations reduce
+strict web gaps, but this document is not 100% yet because the remaining closure buckets still
+include final support-matrix validation, final browser release truth, deeper media-negotiation
+proof, and profile/cosmetic live-update proof.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -194,11 +194,15 @@ Required implementation-time questions:
       `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16 with the E2E-only typing observer.
 - [x] Routed DM voice/video call entry launches real call routes from the live header. Verified by
       `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16 for `/call/:recipientId/audio` and
-      `/call/:recipientId/video` controls. Full incoming/media/history call-flow proof remains in
-      the calls checklist.
+      `/call/:recipientId/video` controls. Incoming-call accept/end-state proof is covered below;
+      deeper peer media negotiation remains a final release-validation risk.
 - [x] Call-history callback launches the mounted call screen from a real history row. Verified by
-      `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16. Full incoming/media/end-state call-flow
-      proof remains in the calls checklist.
+      `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
+- [x] Incoming calls accept into the mounted call screen and return cleanly through the end-call
+      control. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16 through the
+      root-mounted `IncomingCallHandler`, `/call/:recipientId/video?incoming=true&roomId=...`,
+      visible video controls, and end-call navigation back to the DM route. Deeper peer media
+      negotiation remains tracked as final release validation risk.
 - [x] Routed group search and notification or mute behavior are real.
 - [x] Routed group message context actions are real.
 - [x] Routed group admin and settings surfaces are mounted and usable.

@@ -121,8 +121,10 @@ Routed DM typing start/stop is also browser-verified from the live input path by
 
 Routed DM voice/video call-entry launch is also browser-verified from the live header by
 `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16. Call-history callback is browser-verified by
-`apps/web/e2e/web-owner-uat.spec.ts`. Full incoming/media/end-state call-flow proof remains tracked
-separately.
+`apps/web/e2e/web-owner-uat.spec.ts`. Incoming-call accept/end-state behavior is also browser
+verified by `apps/web/e2e/web-owner-uat.spec.ts`: the root incoming-call modal accepts into
+`/call/:recipientId/:callType?incoming=true&roomId=...`, shows video controls, and End Call returns
+to the DM route. Deeper peer media negotiation remains tracked separately.
 
 | Existing capability                              | Existing source                                                                                                                                    | Where it should be mounted                                                      |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |

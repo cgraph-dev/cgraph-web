@@ -239,9 +239,10 @@ correctness work below before feature expansion or scale items.
   edit/delete/forward, message-request accept/reject/block-report, pin, loaded pinned-message panel,
   routed Seen/read-receipt rendering, guarded search-anchor/latest-jump scroll behavior, and typing
   start/stop emit from the live input path, plus voice/video call-entry launch from the live DM
-  header and call-history callback launch from a real history row.
-- Still open: canonical DM surface convergence, GIF/sticker send, and full incoming/media/end-state
-  call-flow verification.
+  header, call-history callback launch from a real history row, and incoming-call accept/end-state
+  route behavior.
+- Still open: canonical DM surface convergence, GIF/sticker send, and deeper peer media-negotiation
+  verification.
 
 4. Routed group parity
 
@@ -319,8 +320,7 @@ Checklist:
 - [x] Ship browser-verified file/photo and voice-note send on the routed DM surface.
 - [x] Ship guarded autoscroll/latest-jump behavior on the routed DM surface.
 - [x] Ship browser-verified call launch on the routed DM surface.
-- [ ] Ship GIF/sticker send and full incoming/media/end-state call-flow proof on the routed DM
-      surface.
+- [ ] Ship GIF/sticker send and deeper peer media-negotiation proof on the routed DM surface.
 
 #### Web groups owner
 
@@ -854,11 +854,12 @@ Unify the attachment/send contract across DMs and groups, eliminate the remainin
 
 ### Wave 2 — Routed DM parity (weeks 2–3)
 
-Ship the remaining GIF/sticker send and full incoming/media/end-state call-flow proof on the live DM
-route. File/photo, voice-note, DM call-entry launch, call-history callback, reply, search jump,
-guarded latest-jump scroll behavior, typing start/stop emit, edit/delete/forward, request actions,
-pin, loaded pinned-panel behavior, read-receipt rendering, core conversation-list participant
-actions, and per-chat Space move controls are already covered by focused tests or browser proof.
+Ship the remaining GIF/sticker send and deeper peer media-negotiation proof on the live DM route.
+File/photo, voice-note, DM call-entry launch, call-history callback, incoming-call accept/end-state,
+reply, search jump, guarded latest-jump scroll behavior, typing start/stop emit,
+edit/delete/forward, request actions, pin, loaded pinned-panel behavior, read-receipt rendering,
+core conversation-list participant actions, and per-chat Space move controls are already covered by
+focused tests or browser proof.
 
 ### Wave 3 — Routed group parity and admin surfaces (weeks 3–4)
 

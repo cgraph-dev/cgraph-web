@@ -60,7 +60,12 @@ mount real controls in `apps/web/e2e/dm-media-composer.spec.ts`.
 
 2026-05-16 update: call-history callback is no longer listed as needing browser proof.
 `apps/web/e2e/web-owner-uat.spec.ts` verifies a real history row launching the mounted video call
-screen. Remaining calls risk is full media/incoming/end-state coverage.
+screen.
+
+2026-05-16 update: incoming-call accept/end-state browser proof is no longer listed as missing.
+`IncomingCallHandler` now accepts into `/call/:recipientId/:callType?incoming=true&roomId=...`, and
+`apps/web/e2e/web-owner-uat.spec.ts` verifies the root modal, visible video controls, and End Call
+returning to the DM route. Remaining calls risk is deeper peer media negotiation.
 
 2026-05-16 update: account deletion grace-period recovery is no longer listed as missing UI. The
 settings delete-account panel still uses password-confirmed `POST /api/v1/me/delete-account` and now

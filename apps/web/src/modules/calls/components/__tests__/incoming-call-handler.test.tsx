@@ -12,12 +12,17 @@ vi.mock('react-router-dom', () => ({
 }));
 
 const mockDeclineCall = vi.fn();
+const mockSetIncomingCall = vi.fn((call: import('@/modules/calls/store').IncomingCall | null) => {
+  mockIncomingCallStore.incomingCall = call;
+});
 const mockIncomingCallStore: {
   incomingCall: import('@/modules/calls/store').IncomingCall | null;
   declineCall: ReturnType<typeof vi.fn>;
+  setIncomingCall: typeof mockSetIncomingCall;
 } = {
   incomingCall: null,
   declineCall: mockDeclineCall,
+  setIncomingCall: mockSetIncomingCall,
 };
 
 vi.mock('@/modules/calls/store', () => ({
@@ -126,8 +131,7 @@ describe('IncomingCallHandler', () => {
     render(<IncomingCallHandler />);
     fireEvent.click(screen.getByTestId('accept-btn'));
 
-    // Should navigate to conversation URL with query params
-    expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('/messages/conv-1'));
+    expect(mockNavigate).toHaveBeenCalledWith('/call/caller-1/audio?incoming=true&roomId=room-1');
     expect(mockDeclineCall).toHaveBeenCalled();
   });
 

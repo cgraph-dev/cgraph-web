@@ -10,8 +10,26 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
 import { IncomingCallModal } from './incoming-call-modal';
-import { useIncomingCallStore } from '@/modules/calls/store';
-import { useChatStore } from '@/modules/chat/store/chatStore.impl';
+import { useIncomingCallStore, type IncomingCall } from '@/modules/calls/store';
+
+const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isIncomingCall(value: unknown): value is IncomingCall {
+  if (!isRecord(value)) return false;
+
+  return (
+    typeof value.roomId === 'string' &&
+    typeof value.callerId === 'string' &&
+    typeof value.callerName === 'string' &&
+    (value.callerAvatar === null || typeof value.callerAvatar === 'string') &&
+    (value.type === 'audio' || value.type === 'video') &&
+    typeof value.timestamp === 'number'
+  );
+}
 
 /**
  * IncomingCallHandler Component
@@ -21,7 +39,7 @@ import { useChatStore } from '@/modules/chat/store/chatStore.impl';
  */
 export function IncomingCallHandler() {
   const navigate = useNavigate();
-  const { incomingCall, declineCall } = useIncomingCallStore();
+  const { incomingCall, declineCall, setIncomingCall } = useIncomingCallStore();
   const [showModal, setShowModal] = useState(false);
 
   // Show modal when incoming call arrives
@@ -37,18 +55,9 @@ export function IncomingCallHandler() {
     async (roomId: string, isVideo: boolean) => {
       if (!incomingCall) return;
 
-      // Find the conversation with the caller to navigate there
-      const { conversations } = useChatStore.getState();
-      const conversation = conversations.find((conv) =>
-        conv.participants.some((p) => p.userId === incomingCall.callerId)
-      );
-
-      if (conversation) {
-        // The conversation page will handle answering the call
-        // We pass the incoming room ID via URL query params
-        const url = `/messages/${conversation.id}?incomingCall=${roomId}&callType=${isVideo ? 'video' : 'voice'}`;
-        navigate(url);
-      }
+      const callType = isVideo ? 'video' : 'audio';
+      const query = new URLSearchParams({ incoming: 'true', roomId });
+      navigate(`/call/${incomingCall.callerId}/${callType}?${query.toString()}`);
 
       // Clear the incoming call from store
       declineCall();
@@ -75,6 +84,21 @@ export function IncomingCallHandler() {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [incomingCall, handleAccept, handleDecline]);
+
+  useEffect(() => {
+    if (!isE2EAuthBypass) return;
+
+    const handleE2EIncomingCall = (event: Event) => {
+      if (!(event instanceof CustomEvent)) return;
+
+      if (isIncomingCall(event.detail)) {
+        setIncomingCall(event.detail);
+      }
+    };
+
+    window.addEventListener('cgraph:e2e-incoming-call', handleE2EIncomingCall);
+    return () => window.removeEventListener('cgraph:e2e-incoming-call', handleE2EIncomingCall);
+  }, [setIncomingCall]);
 
   return (
     <AnimatePresence>
