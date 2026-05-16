@@ -110,6 +110,9 @@ scroll/search-anchor behavior are now mounted and browser-verified by
 smoke for auth, DMs, group text send, Social discover, settings, Nodes wallet, direct calls, and
 group voice rooms is now covered by `apps/web/e2e/web-owner-uat.spec.ts`.
 
+Routed DM typing start/stop is also browser-verified from the live input path by
+`apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16.
+
 | Existing capability                              | Existing source                                                                                                                                    | Where it should be mounted                                                      |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Conversation list action menu (pin/mute/archive) | `apps/web/src/modules/chat/components/conversation-list/conversation-menu.tsx`                                                                     | Routed inbox sidebar under `apps/web/src/pages/messages/messages/*`             |

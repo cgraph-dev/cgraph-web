@@ -47,8 +47,12 @@ browser proof is in `apps/web/e2e/dm-media-composer.spec.ts`.
 2026-05-16 update: routed DM guarded scroll is no longer listed as missing. The enhanced
 conversation route preserves explicit `scrollTo` anchors, avoids dragging readers to the bottom when
 they are reviewing older messages, and exposes a latest/new-messages jump. Browser proof lives in
-`apps/web/e2e/dm-media-composer.spec.ts`. Remaining DM risk is typing browser proof, GIF/sticker
-send, call-flow verification, and final conversation-list browser proof.
+`apps/web/e2e/dm-media-composer.spec.ts`.
+
+2026-05-16 update: routed DM typing emit is no longer listed as needing browser proof. The live
+routed input emits `typing=true`, and send emits `typing=false`; the path is verified by
+`apps/web/e2e/dm-media-composer.spec.ts` with the E2E-only typing observer. Remaining DM risk is
+GIF/sticker send, call-flow verification, and final conversation-list browser proof.
 
 2026-05-16 update: account deletion grace-period recovery is no longer listed as missing UI. The
 settings delete-account panel still uses password-confirmed `POST /api/v1/me/delete-account` and now

@@ -79,6 +79,7 @@ function messageFixture(overrides: Record<string, unknown>) {
 }
 
 type MessageFixture = ReturnType<typeof messageFixture>;
+type TypingProofEvent = { topic: string; isTyping: boolean };
 
 async function installMediaRecorderMock(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -443,6 +444,48 @@ test.describe('DM media composer', () => {
     await expect
       .poll(() => voiceUploads, { message: 'voice upload endpoint was called' })
       .toContain('POST');
+  });
+
+  test('emits routed cloud-DM typing start and stop from the live input', async ({ page }) => {
+    await page.addInitScript(() => {
+      const target = window as Window & { __cgraphTypingEvents?: TypingProofEvent[] };
+      target.__cgraphTypingEvents = [];
+      window.addEventListener('cgraph:e2e-typing', (event) => {
+        const detail = (event as CustomEvent<TypingProofEvent>).detail;
+        target.__cgraphTypingEvents?.push(detail);
+      });
+    });
+
+    const { sentMessages } = await installMessagingApiMocks(page);
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await page.getByPlaceholder(/type a message/i).fill('typing proof');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = window as Window & { __cgraphTypingEvents?: TypingProofEvent[] };
+            return target.__cgraphTypingEvents ?? [];
+          }),
+        { message: 'typing start was emitted from the routed input' }
+      )
+      .toContainEqual({ topic: `conversation:${CONVERSATION_ID}`, isTyping: true });
+
+    await page.getByRole('button', { name: /send message/i }).click();
+    await expect
+      .poll(() => sentMessages, { message: 'typing proof message was sent' })
+      .toContainEqual(expect.objectContaining({ content: 'typing proof' }));
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = window as Window & { __cgraphTypingEvents?: TypingProofEvent[] };
+            return target.__cgraphTypingEvents ?? [];
+          }),
+        { message: 'typing stop was emitted after send' }
+      )
+      .toContainEqual({ topic: `conversation:${CONVERSATION_ID}`, isTyping: false });
   });
 
   test('runs routed cloud-DM reply, search jump, edit, pin, forward, and delete actions', async ({

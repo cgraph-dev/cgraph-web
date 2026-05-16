@@ -74,6 +74,18 @@ function isNearScrollBottom(container: HTMLDivElement | null): boolean {
   return distanceFromBottom <= SCROLL_BOTTOM_THRESHOLD_PX;
 }
 
+function sendConversationTyping(topic: string, isTyping: boolean): void {
+  socketManager.sendTyping(topic, isTyping);
+
+  if (import.meta.env.VITE_E2E_AUTH_BYPASS !== 'true') return;
+
+  window.dispatchEvent(
+    new CustomEvent('cgraph:e2e-typing', {
+      detail: { topic, isTyping },
+    })
+  );
+}
+
 async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> {
   const formData = new FormData();
   formData.append('file', file);
@@ -241,7 +253,7 @@ export function useEnhancedConversation() {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      socketManager.sendTyping(`conversation:${conversationId}`, false);
+      sendConversationTyping(`conversation:${conversationId}`, false);
       socketManager.leaveConversation(conversationId);
     };
   }, [conversationId, fetchMessages, markAsRead]);
@@ -332,13 +344,13 @@ export function useEnhancedConversation() {
     }
 
     if (!value.trim()) {
-      socketManager.sendTyping(topic, false);
+      sendConversationTyping(topic, false);
       return;
     }
 
-    socketManager.sendTyping(topic, true);
+    sendConversationTyping(topic, true);
     typingTimeoutRef.current = setTimeout(() => {
-      socketManager.sendTyping(topic, false);
+      sendConversationTyping(topic, false);
     }, 5000);
   };
 
@@ -395,7 +407,7 @@ export function useEnhancedConversation() {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      socketManager.sendTyping(`conversation:${conversationId}`, false);
+      sendConversationTyping(`conversation:${conversationId}`, false);
       await fetchMessages(conversationId).catch((error: unknown) => {
         logger.warn('Failed to refresh conversation after voice message:', error);
       });
@@ -464,7 +476,7 @@ export function useEnhancedConversation() {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      socketManager.sendTyping(`conversation:${conversationId}`, false);
+      sendConversationTyping(`conversation:${conversationId}`, false);
     } catch (error) {
       logger.error('Failed to send message:', error);
       HapticFeedback.error();
