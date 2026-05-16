@@ -251,7 +251,7 @@ correctness work below before feature expansion or scale items.
 5. Auth, onboarding, and account-lifecycle parity
 
 - Browser-verify email auth, recovery, verify-email, QR, and phone flows.
-- Resolve the `device_attestation` dead checkpoint before users can enter it.
+- Keep the resolved `device_attestation` guard green so web users never enter a dead checkpoint.
 - Make onboarding completion, skip, and post-auth gate order deterministic.
 - Keep delete-account on the password-confirmed backend contract and add cancel-deletion support.
 
@@ -346,7 +346,7 @@ Checklist:
 - [ ] Browser-verify login, registration, forgot-password, reset-password, verify-email, QR, and
       phone entry routes.
 - [x] Let expired verify-email links request a new verification email while logged out.
-- [ ] Resolve the `device_attestation` dead checkpoint before users can enter it on web.
+- [x] Resolve the `device_attestation` dead checkpoint before users can enter it on web.
 - [ ] Make onboarding completion, skip, and post-auth gate order deterministic.
 - [x] Persist onboarding skip and surface save/skip recovery errors on the routed onboarding page.
 - [x] Add cancel-deletion UI that matches the existing password-confirmed delete-account flow.
@@ -857,8 +857,8 @@ voice/sticker/GIF/pin parity onto the canonical groups shell.
 
 ### Wave 4 — Auth, onboarding, and account lifecycle (week 5)
 
-Browser-verify login/register/forgot/reset/verify-email/QR/phone, resolve the `device_attestation`
-checkpoint on web, and lock down onboarding plus delete-account semantics.
+Browser-verify login/register/forgot/reset/verify-email/QR/phone, keep the resolved
+`device_attestation` guard green on web, and lock down onboarding plus delete-account semantics.
 
 ### Wave 5 — Social destinations and identity convergence (weeks 6–7)
 

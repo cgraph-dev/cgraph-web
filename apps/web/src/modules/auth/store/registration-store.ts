@@ -15,19 +15,13 @@ import { useAuthStore } from './authStore.impl';
 import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
 import { resolvePhoneCountries } from './fallback-countries';
 
-export type RegistrationStep =
-  | 'phone'
-  | 'otp'
-  | 'registration_lock'
-  | 'device_attestation'
-  | 'profile'
-  | 'permissions';
+export type RegistrationStep = 'phone' | 'otp' | 'registration_lock' | 'profile' | 'permissions';
 export type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported' | 'skipped';
 type DeliveryTransport = 'sms' | 'voice';
 
 type AuthenticatedRegistrationStep = Exclude<
   RegistrationStep,
-  'phone' | 'otp' | 'registration_lock' | 'device_attestation'
+  'phone' | 'otp' | 'registration_lock'
 >;
 
 interface PendingAuthState {
@@ -196,6 +190,9 @@ function formatChallengeError(challenges: readonly string[]): string {
 
   return 'Additional verification is required before requesting another code.';
 }
+
+const nativeDeviceRequiredMessage =
+  'This phone sign-in requires native device verification. Open CGraph on mobile or desktop, or switch back to email on web.';
 
 interface PhoneSessionLike {
   readonly session_id?: string | null;
@@ -656,17 +653,16 @@ export const usePhoneRegistrationStore = create<PhoneRegistrationState>((set, ge
     if (result.data.next_step === 'device_attestation') {
       set({
         isSubmitting: false,
-        step: 'device_attestation',
         sessionId: result.data.session_id ?? get().sessionId,
         pendingAuth: null,
         debugVerificationCode: null,
         incorrectCodeAttempts: 0,
         pendingChallenges: [],
         verificationChallenges: [],
-        error: null,
+        error: nativeDeviceRequiredMessage,
       });
 
-      return true;
+      return false;
     }
 
     if (!result.data.tokens) {
@@ -716,17 +712,16 @@ export const usePhoneRegistrationStore = create<PhoneRegistrationState>((set, ge
   completeRegistrationLock: async (payload, options) => {
     if (payload.next_step === 'device_attestation') {
       set({
-        step: 'device_attestation',
         sessionId: payload.session_id ?? get().sessionId,
         pendingAuth: null,
         debugVerificationCode: null,
         incorrectCodeAttempts: 0,
         pendingChallenges: [],
         verificationChallenges: [],
-        error: null,
+        error: nativeDeviceRequiredMessage,
       });
 
-      return true;
+      return false;
     }
 
     if (!payload.tokens) {

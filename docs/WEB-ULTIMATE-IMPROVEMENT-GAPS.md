@@ -37,6 +37,12 @@ also exposes `DELETE /api/v1/me/delete-account` for pending-deletion cancellatio
 component coverage for both endpoints. Remaining risk is full browser verification of the
 grace-period lifecycle.
 
+2026-05-16 update: phone auth no longer routes web users into the native-only device-attestation
+placeholder. `registration-store.ts` now keeps OTP and PIN-lock continuations on the current web
+step with a native-device-required error when the backend returns `next_step = device_attestation`,
+and focused store tests cover both paths. Remaining phone-auth risk is browser verification of the
+login/register entry paths, OTP retry, call fallback, registration lock, profile, and permissions.
+
 2026-05-15 update: the web privacy model decision is closed as the fuller selective model.
 `packages/shared-types/src/privacy.ts`, backend `selective_privacy`, API-client schemas, web
 mappers, and the privacy panel now preserve `everyone` / `contacts` / `nobody` plus always-allow and

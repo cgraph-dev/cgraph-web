@@ -124,14 +124,13 @@ The live web app still diverges from that in six concrete ways:
    customization bootstrap, and the settings route now gates section panels until that bootstrap is
    ready. The remaining settings risk is broader reload/sync validation.
 
-5. Phone auth still does not complete as one trustworthy route-owned checkpoint flow. Signal keeps
-   registration under a host activity plus a shared registration view model, and Telegram keeps
-   login and verification checkpoints under one route owner with explicit retry and fallback
-   handling. CGraph's `phone-register.tsx` does use one shared store, but when the backend returns
-   `next_step = device_attestation`, the live web route renders
-   `apps/web/src/modules/auth/components/device-verification.tsx`, which is only a
-   `MobileOnlyFeature` placeholder. That means the route can advance into a checkpoint the web app
-   cannot actually complete.
+5. Phone auth still needs route-owned browser verification, but the native-attestation dead
+   checkpoint is no longer reachable on web. Signal keeps registration under a host activity plus a
+   shared registration view model, and Telegram keeps login and verification checkpoints under one
+   route owner with explicit retry and fallback handling. CGraph's `phone-register.tsx` uses one
+   shared store, and `registration-store.ts` now treats backend `next_step = device_attestation` as
+   an in-place native-device-required error instead of advancing the browser route into a
+   `MobileOnlyFeature` placeholder.
 
 6. Conversation-list parity is weaker than both Signal and Telegram. Signal Desktop keeps inbox tab
    ownership inside one canonical inbox owner, and Telegram's chat-list context menu owns pin, mute,
@@ -201,8 +200,8 @@ Status meanings:
 | Group role management screen                        | Partial | The routed settings page now mounts `RoleManager`, which is wired to role CRUD/reorder logic. Browser verification and permission-denied states remain open.                                                                                                                                                                                                                                                                                                                                                                                  |
 | Group member management screen                      | Partial | The routed settings page now mounts the members tab. Richer member-management behavior still needs browser verification and permission coverage.                                                                                                                                                                                                                                                                                                                                                                                              |
 | Group create channel screen                         | Partial | The routed settings page now mounts the channels tab and create-channel flow. The live sidebar still only exposes create-category inline.                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Phone auth entry from auth pages                    | Partial | The routed phone auth flow is surfaced from both login and register, with `/login/phone` and `/register/phone` mounting the same multi-step screen, but the route still needs browser verification across both entry paths and still exposes a checkpoint the web app cannot finish locally.                                                                                                                                                                                                                                                  |
-| Phone OTP auth parity on web                        | Partial | `phone-register.tsx` plus `registration-store.ts` implement phone entry, OTP, registration-lock, profile, and permissions, and `verifyCode()` can authenticate existing users, but `next_step = device_attestation` still resolves to a `MobileOnlyFeature` placeholder instead of a real route-owned checkpoint. The web flow is therefore not yet parity-trustworthy.                                                                                                                                                                       |
+| Phone auth entry from auth pages                    | Partial | The routed phone auth flow is surfaced from both login and register, with `/login/phone` and `/register/phone` mounting the same multi-step screen. The web route no longer exposes a native-attestation checkpoint it cannot finish, but it still needs browser verification across both entry paths.                                                                                                                                                                                                                                        |
+| Phone OTP auth parity on web                        | Partial | `phone-register.tsx` plus `registration-store.ts` implement phone entry, OTP, registration-lock, profile, and permissions, and `verifyCode()` can authenticate existing users. Backend `next_step = device_attestation` now remains on the current web step with a native-device-required error instead of rendering a `MobileOnlyFeature` placeholder. Remaining risk is browser verification for existing-user sign-in, new-user registration, OTP retry, call fallback, and PIN-lock paths.                                                |
 | Auth route-set parity coverage                      | Partial | The matrix below now identifies real but still-untrusted login, registration, recovery, QR, onboarding, and phone-auth paths individually. The remaining gap is route-owned browser verification across the entire auth surface.                                                                                                                                                                                                                                                                                                              |
 | Email/password login                                | Partial | `useLoginForm.ts` calls `useAuthStore.login(...)`, supports the 2FA handoff through `verifyLoginTwoFactor(...)`, and navigates to `/messages`, but this pass has not yet browser-verified session hydration, 2FA fallback, or post-login gating behavior.                                                                                                                                                                                                                                                                                     |
 | Email/password registration                         | Partial | `useRegisterForm.ts` validates credentials, calls `useAuthStore.register(...)`, and navigates to `/messages`, but verify-email and onboarding handoff are still not trusted end-to-end from the routed web surface.                                                                                                                                                                                                                                                                                                                           |
@@ -277,15 +276,16 @@ not line up with the richer shared code or the API contract.
 The earlier version of this document correctly identified the biggest route-owned gaps, but it was
 still understating four reference-backed parity problems that matter for Goal 2.
 
-### 1. Phone auth still contains a non-completable checkpoint on web
+### 1. Phone auth still needs browser proof, but the dead checkpoint is guarded on web
 
 - Signal Android keeps the entire registration flow under `RegistrationActivity` with one shared
   `RegistrationViewModel` checkpoint owner.
 - Telegram Android keeps login, code entry, call fallback, and secondary-factor checkpoints under
   `LoginActivity`.
-- CGraph's web route does centralize state in `registration-store.ts`, but the `device_attestation`
-  step still hands off to a `MobileOnlyFeature` placeholder. That means this route can truthfully be
-  called connected, but not parity-ready.
+- CGraph's web route centralizes state in `registration-store.ts`, and `device_attestation` no
+  longer hands off to a `MobileOnlyFeature` placeholder. Web stays on the current step with a
+  native-device-required error, so the dead checkpoint is closed, but the route still needs browser
+  proof across entry, retry, call fallback, PIN-lock, profile, and permission paths.
 
 ### 2. Conversation list parity is thinner than the doc previously made explicit
 
@@ -542,7 +542,10 @@ These previously verified issues still matter and still belong in the web fix pl
   `/forgot-password`, `/reset-password`, `/verify-email`, `/register/phone`, `/login/phone`, and
   `/qr-login`.
 - `apps/web/src/pages/auth/phone-register.tsx` is a real multi-step phone flow with phone entry,
-  OTP, registration-lock, device attestation, profile, and permissions steps.
+  OTP, registration-lock, profile, and permissions steps.
+- `apps/web/src/modules/auth/store/registration-store.ts` now prevents web from entering the
+  native-only device-attestation checkpoint; focused store tests cover both OTP and PIN-lock
+  continuations returning `next_step = device_attestation`.
 - `apps/web/src/modules/auth/store/registration-store.ts` calls real phone auth APIs, including
   request-code, verify-code, call-fallback, profile completion, and final token/user session
   hydration.
@@ -690,7 +693,8 @@ green.
 8. Auth, onboarding, and account lifecycle
    - Browser-verify email login, registration, forgot-password, reset-password, verify-email, QR,
      and phone entry.
-   - Resolve the `device_attestation` dead checkpoint before users can enter it on web.
+   - Keep the resolved `device_attestation` guard green so web never advances into a native-only
+     checkpoint.
    - Make onboarding completion, skip, and post-auth gate order deterministic.
    - Keep delete-account on the password-confirmed contract and add routed cancel-deletion support.
 
@@ -731,13 +735,13 @@ The current Goal 2 release path has 10 phases. Scored against those phases today
 | Identity and profile convergence                 | `70%` | A shared identity contract and web canonical identity normalizer now preserve avatar, border, title, badges, nameplate, theme, and display-name style fields across auth/profile/friend/chat/group HTTP and socket paths. Routed identity customization now uses backend-owned inventory/equipped truth, `UserProfileCard` hydrates `userId` callers from the backend, friend cosmetic socket patches route through the friend-store identity patch owner, and own-profile cosmetic socket patches route through one identity sync owner. Remaining risk is cross-surface browser proof and cleanup of split visual consumers. |
 | Settings, privacy, and customization convergence | `75%` | The settings route and panels are real, preference bootstrap has one owner, section panels are gated until bootstrap is ready, the runtime-neutral settings/defaults contract now lives in `packages/shared-types/src/settings.ts`, selective privacy has shared types/API/backend/web coverage, Calls/Stickers reset now saves through the settings API, customization/theme server patches now sync over the user channel, and identity customization inventory/equipped state now comes from backend inventory with backend rejection of unowned saves. Broader browser validation remains open.                            |
 | Nodes and calls honesty                          | `50%` | Nodes false-success and schema drift are materially fixed in targeted tests, but browser negative-path validation and remaining call-history/call-flow trust work are still open.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Auth, onboarding, and account lifecycle          | `55%` | Email auth and recovery are wired, logged-out verification resend works at the route level, onboarding skip/failure recovery is route-owned, and delete-account now includes cancellation UI. Browser verification is incomplete and phone auth still has a dead checkpoint.                                                                                                                                                                                                                                                                                                                                                   |
+| Auth, onboarding, and account lifecycle          | `60%` | Email auth and recovery are wired, logged-out verification resend works at the route level, onboarding skip/failure recovery is route-owned, delete-account includes cancellation UI, and web no longer advances phone auth into the native-only device-attestation checkpoint. Browser verification is still incomplete across the broader auth route set.                                                                                                                                                                                                                                                                    |
 | Social, discovery, and notification destinations | `68%` | Data loads into the route, the Social Hub has a real main pane, notifications preserve action destinations, forums route by slug, groups with channel metadata route to mounted channel destinations, and unjoined group results now run a real join action. Browser verification and deeper action parity remain.                                                                                                                                                                                                                                                                                                             |
 | Final release validation                         | `0%`  | The final strict browser pass has not been rerun after the release-path fixes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
-Equal-weight release-readiness score: `43.6%`.
+Equal-weight release-readiness score: `44.1%`.
 
-Truthful rounded Goal 2 completion: `41%`.
+Truthful rounded Goal 2 completion: `42%`.
 
 If someone produces a much higher number, they are almost certainly counting shared code existence
 or surface count instead of release-trustworthy, route-owned behavior.
@@ -815,6 +819,8 @@ Done when:
 - [x] Add route-owned failure recovery for onboarding save errors instead of only logging them.
 - [x] Add a routed cancel-deletion flow against `DELETE /api/v1/me/delete-account`, or remove the
       current UI promise that users can manage the deletion grace-period state from web.
+- [x] Prevent backend `device_attestation` continuations from routing web users into a native-only
+      placeholder checkpoint.
 
 Done when:
 
@@ -929,8 +935,8 @@ Done when:
 - [ ] Browser-verify the surfaced phone-auth entry points from both login and register while keeping
       the existing web visual style intact.
 - [ ] Verify the existing phone flow for both existing-user sign-in and new-user registration,
-      including OTP retry, call fallback, registration lock, device attestation, profile completion,
-      and permission steps.
+      including OTP retry, call fallback, registration lock, native-device-required handling,
+      profile completion, and permission steps.
 - [ ] Audit login, forgot-password, verify-email, QR login, and onboarding with the same route-owned
       criteria used in the rest of this file.
 - [ ] Re-run targeted browser verification after each subsystem lands instead of waiting for one big

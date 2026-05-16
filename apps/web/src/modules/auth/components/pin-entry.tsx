@@ -67,7 +67,10 @@ function PinEntry({
         const success = await completeRegistrationLock(result.data, { completeExistingUser });
 
         if (!success) {
-          setError('Verification succeeded, but the next step could not be loaded.');
+          setError(
+            usePhoneRegistrationStore.getState().error ??
+              'Verification succeeded, but the next step could not be loaded.'
+          );
         }
       } else {
         const errorData = result.error;

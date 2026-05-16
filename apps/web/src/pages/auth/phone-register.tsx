@@ -2,7 +2,6 @@ import { useEffect, type ReactElement } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CountryPicker } from '@/modules/auth/components/country-picker';
-import { DeviceVerification } from '@/modules/auth/components/device-verification';
 import { OtpEntry } from '@/modules/auth/components/otp-entry';
 import { PermissionRequests } from '@/modules/auth/components/permission-requests';
 import { PinEntry } from '@/modules/auth/components/pin-entry';
@@ -13,14 +12,7 @@ import {
   type RegistrationStep,
 } from '@/modules/auth/store/registration-store';
 
-const registrationSteps = [
-  'phone',
-  'otp',
-  'registration_lock',
-  'device_attestation',
-  'profile',
-  'permissions',
-] as const;
+const registrationSteps = ['phone', 'otp', 'registration_lock', 'profile', 'permissions'] as const;
 
 function stepLabel(step: RegistrationStep): string {
   switch (step) {
@@ -34,8 +26,6 @@ function stepLabel(step: RegistrationStep): string {
       return 'Permissions';
     case 'registration_lock':
       return 'PIN';
-    case 'device_attestation':
-      return 'Device';
   }
 }
 
@@ -54,7 +44,7 @@ function StepProgress({
         <span>{isPhoneLogin ? 'Phone login' : 'Signal-style registration'}</span>
         <span>{stepLabel(step)}</span>
       </div>
-      <div className="grid grid-cols-6 gap-2">
+      <div className="grid grid-cols-5 gap-2">
         {registrationSteps.map((entry, index) => (
           <div
             key={entry}
@@ -115,7 +105,6 @@ export default function PhoneRegister(): ReactElement {
           onNeedHelp={() => usePhoneRegistrationStore.getState().returnToPhoneEntry()}
         />
       ) : null}
-      {step === 'device_attestation' ? <DeviceVerification /> : null}
       {step === 'profile' ? <ProfileSetup /> : null}
       {step === 'permissions' ? <PermissionRequests onContinue={handleComplete} /> : null}
 
