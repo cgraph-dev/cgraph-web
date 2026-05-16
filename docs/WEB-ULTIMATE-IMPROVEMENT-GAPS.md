@@ -54,6 +54,11 @@ routed input emits `typing=true`, and send emits `typing=false`; the path is ver
 `apps/web/e2e/dm-media-composer.spec.ts` with the E2E-only typing observer. Remaining DM risk is
 GIF/sticker send, call-flow verification, and final conversation-list browser proof.
 
+2026-05-16 update: routed DM call entry is no longer listed as needing browser proof. The live DM
+header opens both `/call/:recipientId/audio` and `/call/:recipientId/video`, and the call screens
+mount real controls in `apps/web/e2e/dm-media-composer.spec.ts`. Remaining calls risk is full
+media/incoming/end-state coverage plus call-history callback proof.
+
 2026-05-16 update: account deletion grace-period recovery is no longer listed as missing UI. The
 settings delete-account panel still uses password-confirmed `POST /api/v1/me/delete-account` and now
 also exposes `DELETE /api/v1/me/delete-account` for pending-deletion cancellation, with focused
@@ -176,7 +181,7 @@ routed browser proof across every visual surface.
 
 7. **Lock in behavior with focused web UAT and regression tests** — Partial. A focused owner UAT
    browser smoke now covers auth, DMs, group text send, Social discover, settings, Nodes wallet,
-   direct call route mounting, and group voice-room mounting in
+   manual direct call route mounting, routed DM call-entry launch, and group voice-room mounting in
    `apps/web/e2e/web-owner-uat.spec.ts`. The broader historical suite still needs cleanup, and the
    backend helper dependency issues (`CGraph.Uploads.S3ClientBehaviour`, missing `:hammer` app)
    remain outside this web UAT proof.

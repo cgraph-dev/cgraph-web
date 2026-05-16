@@ -181,6 +181,19 @@ async function installMessagingApiMocks(
     }),
   ];
   const messageRequestStatus = options.messageRequestStatus ?? 'accepted';
+  const friendUser = conversation.participants[1].user;
+
+  await page.route(`**/api/v1/users/${FRIEND_USER_ID}`, async (route, request) => {
+    if (request.method() !== 'GET') {
+      await route.fallback();
+      return;
+    }
+
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ data: friendUser, ...friendUser }),
+    });
+  });
 
   await page.route('**/api/v1/conversations**', async (route, request) => {
     const url = new URL(request.url());
@@ -486,6 +499,24 @@ test.describe('DM media composer', () => {
         { message: 'typing stop was emitted after send' }
       )
       .toContainEqual({ topic: `conversation:${CONVERSATION_ID}`, isTyping: false });
+  });
+
+  test('launches routed cloud-DM voice and video calls from the header', async ({ page }) => {
+    await installMessagingApiMocks(page);
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await page.getByRole('button', { name: /start voice call/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/call/${FRIEND_USER_ID}/audio$`));
+    await expect(page.getByRole('button', { name: /mute/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /end call/i })).toBeVisible();
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await page.getByRole('button', { name: /start video call/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/call/${FRIEND_USER_ID}/video$`));
+    await expect(page.getByRole('button', { name: /hide video|show video/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /end call/i })).toBeVisible();
   });
 
   test('runs routed cloud-DM reply, search jump, edit, pin, forward, and delete actions', async ({

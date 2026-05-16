@@ -38,6 +38,9 @@ missing:
 - Routed DM read receipts are real in
   `apps/web/src/pages/messages/enhanced-conversation/enhanced-message-bubble.tsx`: backend message
   JSON carries `metadata.readBy`, and the routed bubble renders Seen/read-receipt state.
+- Routed DM call entry is browser-proven in `apps/web/e2e/dm-media-composer.spec.ts`: the live
+  header opens both `/call/:recipientId/audio` and `/call/:recipientId/video` with call-screen
+  controls.
 
 ## Fixed in this slice
 
@@ -112,6 +115,10 @@ group voice rooms is now covered by `apps/web/e2e/web-owner-uat.spec.ts`.
 
 Routed DM typing start/stop is also browser-verified from the live input path by
 `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16.
+
+Routed DM voice/video call-entry launch is also browser-verified from the live header by
+`apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16. Full incoming/media/history call-flow proof
+remains tracked separately.
 
 | Existing capability                              | Existing source                                                                                                                                    | Where it should be mounted                                                      |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |

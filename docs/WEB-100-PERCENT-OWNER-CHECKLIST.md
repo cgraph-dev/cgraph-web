@@ -2,12 +2,13 @@
 
 Status date: 2026-05-16
 
-Current execution count after the routed DM typing-proof slice: 46 / 50 owner-level checklist items
-closed, 92.0% closed and 8.0% left. The Space route, verify-email resend, onboarding skip/recovery,
-cancel-deletion, phone native-attestation guard, verify-email-before-onboarding route gate, routed
-DM read-receipt rendering, routed DM guarded-scroll, and routed DM typing-proof implementations
-reduce strict web gaps, but this document is not 100% yet because final support-matrix validation,
-final browser release truth, and broader profile/cosmetic live-update proof remain open.
+Current execution count after the routed DM call-entry proof slice: 47 / 50 owner-level checklist
+items closed, 94.0% closed and 6.0% left. The Space route, verify-email resend, onboarding
+skip/recovery, cancel-deletion, phone native-attestation guard, verify-email-before-onboarding route
+gate, routed DM read-receipt rendering, routed DM guarded-scroll, routed DM typing-proof, and routed
+DM call-entry implementations reduce strict web gaps, but this document is not 100% yet because the
+remaining closure buckets still include final support-matrix validation, final browser release
+truth, broader full-call-flow proof, and profile/cosmetic live-update proof.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -190,6 +191,10 @@ Required implementation-time questions:
       `apps/backend/test/cgraph_web/controllers/api/v1/message_controller_test.exs`.
 - [x] Routed DM typing start/stop emits from the live input path. Verified by
       `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16 with the E2E-only typing observer.
+- [x] Routed DM voice/video call entry launches real call routes from the live header. Verified by
+      `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16 for `/call/:recipientId/audio` and
+      `/call/:recipientId/video` controls. Full incoming/media/history call-flow proof remains in
+      the calls checklist.
 - [x] Routed group search and notification or mute behavior are real.
 - [x] Routed group message context actions are real.
 - [x] Routed group admin and settings surfaces are mounted and usable.
