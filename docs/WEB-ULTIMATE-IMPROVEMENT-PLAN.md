@@ -349,7 +349,7 @@ Checklist:
 - [ ] Resolve the `device_attestation` dead checkpoint before users can enter it on web.
 - [ ] Make onboarding completion, skip, and post-auth gate order deterministic.
 - [x] Persist onboarding skip and surface save/skip recovery errors on the routed onboarding page.
-- [ ] Add cancel-deletion UI that matches the existing password-confirmed delete-account flow.
+- [x] Add cancel-deletion UI that matches the existing password-confirmed delete-account flow.
 
 #### Web social, discovery, and notifications owner
 
@@ -427,7 +427,7 @@ Supporting owners: shared schema owner
 
 Checklist:
 
-- [ ] Align cancel-deletion behavior with the route-owned web UX.
+- [x] Align cancel-deletion behavior with the route-owned web UX.
 - [x] Expand/prove `settings_json.ex` so persisted notification settings round-trip through reload.
 - [x] Align privacy payloads with the chosen web model.
 - [ ] Align Nodes, wallet, tip, gift, unlock, and call-history payloads with the shared schema.

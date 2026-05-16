@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-const { mockPost, mockLogout } = vi.hoisted(() => ({
+const { mockDelete, mockPost, mockLogout } = vi.hoisted(() => ({
+  mockDelete: vi.fn(),
   mockPost: vi.fn(),
   mockLogout: vi.fn(),
 }));
@@ -44,6 +45,7 @@ vi.mock('motion/react', () => ({
 }));
 
 vi.mock('@heroicons/react/24/outline', () => ({
+  ArrowUturnLeftIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
   ExclamationTriangleIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
   TrashIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
 }));
@@ -56,6 +58,7 @@ vi.mock('@/shared/components/ui', () => ({
 
 vi.mock('@/lib/api', () => ({
   api: {
+    delete: mockDelete,
     post: mockPost,
   },
   getErrorMessage: () => 'Failed to delete account. Please check your password.',
@@ -80,6 +83,7 @@ import { DeleteAccount } from '../delete-account';
 describe('DeleteAccount', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDelete.mockResolvedValue({ data: { message: 'Account deletion cancelled.' } });
     mockPost.mockResolvedValue({});
   });
 
@@ -101,5 +105,16 @@ describe('DeleteAccount', () => {
       });
     });
     expect(mockLogout).toHaveBeenCalled();
+  });
+
+  it('uses the cancel-deletion endpoint for grace-period recovery', async () => {
+    render(<DeleteAccount />);
+
+    fireEvent.click(screen.getByText('Cancel Pending Deletion'));
+
+    await waitFor(() => {
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/me/delete-account');
+    });
+    expect(await screen.findByText('Account deletion cancelled.')).toBeInTheDocument();
   });
 });

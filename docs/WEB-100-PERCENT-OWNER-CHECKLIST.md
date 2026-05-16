@@ -2,11 +2,11 @@
 
 Status date: 2026-05-16
 
-Current execution count after the onboarding skip/recovery slice: 41 / 50 owner-level checklist
-items closed, 82.0% closed and 18.0% left. The Space route, verify-email resend, and onboarding
-skip/recovery implementations reduce strict web gaps, but this document is not 100% yet because
-final support-matrix validation, final browser release truth, and broader profile/cosmetic
-live-update proof remain open.
+Current execution count after the account deletion recovery slice: 41 / 50 owner-level checklist
+items closed, 82.0% closed and 18.0% left. The Space route, verify-email resend, onboarding
+skip/recovery, and cancel-deletion implementations reduce strict web gaps, but this document is not
+100% yet because final support-matrix validation, final browser release truth, and broader
+profile/cosmetic live-update proof remain open.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent

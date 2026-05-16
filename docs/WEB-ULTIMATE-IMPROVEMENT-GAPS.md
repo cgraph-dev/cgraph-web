@@ -31,6 +31,12 @@ semantics. The routed onboarding Skip action now posts `/api/v1/onboarding/skip`
 and both skip/save failures render a route-owned recovery error instead of only logging. Remaining
 onboarding risk is post-auth gate-order and browser verification.
 
+2026-05-16 update: account deletion grace-period recovery is no longer listed as missing UI. The
+settings delete-account panel still uses password-confirmed `POST /api/v1/me/delete-account` and now
+also exposes `DELETE /api/v1/me/delete-account` for pending-deletion cancellation, with focused
+component coverage for both endpoints. Remaining risk is full browser verification of the
+grace-period lifecycle.
+
 2026-05-15 update: the web privacy model decision is closed as the fuller selective model.
 `packages/shared-types/src/privacy.ts`, backend `selective_privacy`, API-client schemas, web
 mappers, and the privacy panel now preserve `everyone` / `contacts` / `nobody` plus always-allow and

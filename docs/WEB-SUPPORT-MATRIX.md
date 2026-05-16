@@ -65,13 +65,13 @@ Use this document as the plain-language answer to "Can I do this on web right no
 
 ## Settings And Account
 
-| Feature                    | Availability    | User note                                                                                                                                              |
-| -------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Account deletion           | `Web supported` | The settings page uses the password-confirmed delete-account endpoint.                                                                                 |
-| DND schedule               | `Web supported` | Quiet-hours schedule save is wired through the settings store and notification settings route.                                                         |
-| Calls/Stickers preferences | `Web supported` | Calls and Stickers/Emoji saves and reset now flow through the server settings API with focused store rollback coverage.                                |
-| Customization/theme sync   | `Web partial`   | Backend saves now broadcast user-channel customization/theme sync events and web applies those patches; final routed multi-tab/device proof remains.   |
-| Selective privacy          | `Web partial`   | Message-request, phone, and call privacy use the shared selective contract with exception lists; final browser reload and live-sync validation remain. |
+| Feature                    | Availability    | User note                                                                                                                                                  |
+| -------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account deletion           | `Web supported` | The settings page uses the password-confirmed delete-account endpoint and exposes pending-deletion cancellation through the backend grace-period endpoint. |
+| DND schedule               | `Web supported` | Quiet-hours schedule save is wired through the settings store and notification settings route.                                                             |
+| Calls/Stickers preferences | `Web supported` | Calls and Stickers/Emoji saves and reset now flow through the server settings API with focused store rollback coverage.                                    |
+| Customization/theme sync   | `Web partial`   | Backend saves now broadcast user-channel customization/theme sync events and web applies those patches; final routed multi-tab/device proof remains.       |
+| Selective privacy          | `Web partial`   | Message-request, phone, and call privacy use the shared selective contract with exception lists; final browser reload and live-sync validation remain.     |
 
 ## Practical summary
 

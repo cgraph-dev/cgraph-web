@@ -3,7 +3,11 @@
  */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExclamationTriangleIcon, TrashIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowUturnLeftIcon,
+  ExclamationTriangleIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { api as http } from '@/lib/api';
 import { getErrorMessage } from '@/lib/api';
@@ -21,6 +25,8 @@ export function DeleteAccount() {
   const [password, setPassword] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelMessage, setCancelMessage] = useState('');
   const [error, setError] = useState('');
 
   const canDelete = password.length > 0 && confirmText === 'DELETE';
@@ -47,6 +53,27 @@ export function DeleteAccount() {
       setError(errMsg);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDeletion = async () => {
+    HapticFeedback.light();
+    setIsCancelling(true);
+    setError('');
+    setCancelMessage('');
+
+    try {
+      const response = await http.delete('/api/v1/me/delete-account');
+      const message =
+        typeof response.data?.message === 'string'
+          ? response.data.message
+          : 'Account deletion cancelled.';
+      setCancelMessage(message);
+    } catch (err: unknown) {
+      const errMsg = getErrorMessage(err) || 'No pending account deletion could be cancelled.';
+      setError(errMsg);
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -143,6 +170,29 @@ export function DeleteAccount() {
                 </motion.li>
               ))}
             </motion.ul>
+
+            <div className="mt-6 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+              <p className="text-sm font-semibold text-yellow-100">Already scheduled deletion?</p>
+              <p className="mt-1 text-xs text-yellow-100/70">
+                You can cancel a pending deletion during the grace period.
+              </p>
+              <button
+                type="button"
+                onClick={handleCancelDeletion}
+                disabled={isCancelling}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-yellow-400/30 bg-yellow-400/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-yellow-100 transition-colors hover:bg-yellow-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCancelling ? (
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-yellow-100/20 border-t-yellow-100" />
+                ) : (
+                  <ArrowUturnLeftIcon className="h-4 w-4" />
+                )}
+                Cancel Pending Deletion
+              </button>
+              {cancelMessage && (
+                <p className="mt-3 text-xs font-bold text-green-300">{cancelMessage}</p>
+              )}
+            </div>
           </div>
         </div>
 
