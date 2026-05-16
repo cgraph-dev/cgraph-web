@@ -103,11 +103,12 @@ These features already exist in module-level code and should be moved onto the l
 surfaces instead of being rebuilt from scratch.
 
 Recently closed from this table: routed DM edit/delete/forward actions, routed message-request
-accept/reject/block-report actions, and routed Seen/read-receipt rendering are now mounted and
-browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`. The read-receipt backend contract is
-covered by `apps/backend/test/cgraph_web/controllers/api/v1/message_controller_test.exs`. The
-focused owner UAT smoke for auth, DMs, group text send, Social discover, settings, Nodes wallet,
-direct calls, and group voice rooms is now covered by `apps/web/e2e/web-owner-uat.spec.ts`.
+accept/reject/block-report actions, routed Seen/read-receipt rendering, and guarded routed DM
+scroll/search-anchor behavior are now mounted and browser-verified by
+`apps/web/e2e/dm-media-composer.spec.ts`. The read-receipt backend contract is covered by
+`apps/backend/test/cgraph_web/controllers/api/v1/message_controller_test.exs`. The focused owner UAT
+smoke for auth, DMs, group text send, Social discover, settings, Nodes wallet, direct calls, and
+group voice rooms is now covered by `apps/web/e2e/web-owner-uat.spec.ts`.
 
 | Existing capability                              | Existing source                                                                                                                                    | Where it should be mounted                                                      |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |

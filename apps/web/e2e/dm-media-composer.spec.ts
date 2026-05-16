@@ -78,6 +78,8 @@ function messageFixture(overrides: Record<string, unknown>) {
   };
 }
 
+type MessageFixture = ReturnType<typeof messageFixture>;
+
 async function installMediaRecorderMock(page: Page): Promise<void> {
   await page.addInitScript(() => {
     class MockAudioContext {
@@ -133,7 +135,10 @@ async function installMediaRecorderMock(page: Page): Promise<void> {
 
 async function installMessagingApiMocks(
   page: Page,
-  options: { messageRequestStatus?: 'accepted' | 'pending' } = {}
+  options: {
+    initialMessages?: MessageFixture[];
+    messageRequestStatus?: 'accepted' | 'pending';
+  } = {}
 ): Promise<{
   attachmentUploads: string[];
   deletedMessages: string[];
@@ -152,6 +157,28 @@ async function installMessagingApiMocks(
   const requestActions: string[] = [];
   const sentMessages: Record<string, unknown>[] = [];
   const voiceUploads: string[] = [];
+  const initialMessages = options.initialMessages ?? [
+    messageFixture({}),
+    messageFixture({
+      id: 'msg-own',
+      senderId: CURRENT_USER_ID,
+      sender: conversation.participants[0].user,
+      content: 'editable proof',
+      metadata: {
+        readBy: [
+          {
+            userId: FRIEND_USER_ID,
+            readAt: '2026-01-01T00:02:00.000Z',
+            username: 'Friend',
+            displayName: 'Friend',
+            avatarUrl: null,
+          },
+        ],
+      },
+      createdAt: '2026-01-01T00:01:00.000Z',
+      updatedAt: '2026-01-01T00:01:00.000Z',
+    }),
+  ];
   const messageRequestStatus = options.messageRequestStatus ?? 'accepted';
 
   await page.route('**/api/v1/conversations**', async (route, request) => {
@@ -294,29 +321,8 @@ async function installMessagingApiMocks(
       await route.fulfill({
         contentType: 'application/json',
         body: JSON.stringify({
-          data: [
-            messageFixture({}),
-            messageFixture({
-              id: 'msg-own',
-              senderId: CURRENT_USER_ID,
-              sender: conversation.participants[0].user,
-              content: 'editable proof',
-              metadata: {
-                readBy: [
-                  {
-                    userId: FRIEND_USER_ID,
-                    readAt: '2026-01-01T00:02:00.000Z',
-                    username: 'Friend',
-                    displayName: 'Friend',
-                    avatarUrl: null,
-                  },
-                ],
-              },
-              createdAt: '2026-01-01T00:01:00.000Z',
-              updatedAt: '2026-01-01T00:01:00.000Z',
-            }),
-          ],
-          meta: { page: 1, total: 1, hasMore: false },
+          data: initialMessages,
+          meta: { page: 1, total: initialMessages.length, hasMore: false },
         }),
       });
     }
@@ -510,6 +516,38 @@ test.describe('DM media composer', () => {
       .poll(() => deletedMessages, { message: 'delete endpoint was called' })
       .toContain('DELETE');
     await expect(ownMessage).toContainText(/message deleted/i);
+  });
+
+  test('keeps routed search-jump anchors stable until the user jumps to latest', async ({
+    page,
+  }) => {
+    const messages = Array.from({ length: 36 }, (_, index) => {
+      const messageNumber = index + 1;
+      const isOwn = messageNumber % 7 === 0;
+
+      return messageFixture({
+        id: `msg-${messageNumber}`,
+        senderId: isOwn ? CURRENT_USER_ID : FRIEND_USER_ID,
+        sender: isOwn ? conversation.participants[0].user : conversation.participants[1].user,
+        content: `scroll proof message ${messageNumber}`,
+        createdAt: `2026-01-01T00:${String(messageNumber).padStart(2, '0')}:00.000Z`,
+        updatedAt: `2026-01-01T00:${String(messageNumber).padStart(2, '0')}:00.000Z`,
+      });
+    });
+
+    await installMessagingApiMocks(page, { initialMessages: messages });
+
+    await page.goto(`/messages/${CONVERSATION_ID}?scrollTo=msg-6`);
+
+    const targetMessage = page.locator('#message-msg-6');
+    await expect(targetMessage).toBeVisible();
+    await expect(targetMessage).toBeInViewport();
+    await expect(page.locator('#message-msg-36')).not.toBeInViewport();
+
+    const jumpToLatest = page.getByRole('button', { name: /scroll to latest messages/i });
+    await expect(jumpToLatest).toBeVisible();
+    await jumpToLatest.click();
+    await expect(page.locator('#message-msg-36')).toBeInViewport();
   });
 
   test('accepts and blocks routed cloud-DM message requests in the browser', async ({ page }) => {

@@ -2,7 +2,7 @@
  * useEnhancedConversation hook - state and handlers for the conversation
  */
 
-import { useEffect, useRef, useState, useOptimistic } from 'react';
+import { useCallback, useEffect, useRef, useState, useOptimistic } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { createLogger } from '@/lib/logger';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
@@ -31,6 +31,14 @@ interface PendingMessageRequest {
   sharedGroupCount: number;
 }
 
+interface MessageScrollSnapshot {
+  conversationId: string | null;
+  lastMessageId: string | null;
+  length: number;
+}
+
+const SCROLL_BOTTOM_THRESHOLD_PX = 96;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -57,6 +65,13 @@ function pendingRequestInfo(value: unknown): PendingMessageRequest | null {
     requesterAvatar: stringValue(requester.avatar_url),
     sharedGroupCount: numberValue(value.shared_group_count) ?? 0,
   };
+}
+
+function isNearScrollBottom(container: HTMLDivElement | null): boolean {
+  if (!container) return true;
+
+  const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+  return distanceFromBottom <= SCROLL_BOTTOM_THRESHOLD_PX;
 }
 
 async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> {
@@ -112,6 +127,14 @@ export function useEnhancedConversation() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const scrollSnapshotRef = useRef<MessageScrollSnapshot>({
+    conversationId: null,
+    lastMessageId: null,
+    length: 0,
+  });
+  const [showScrollToLatest, setShowScrollToLatest] = useState(false);
+  const [newMessagesBelow, setNewMessagesBelow] = useState(0);
 
   const conversation = conversations.find((c) => c.id === conversationId);
   const scrollToMessageId = searchParams.get('scrollTo');
@@ -126,9 +149,26 @@ export function useEnhancedConversation() {
     (state: readonly Message[], newMessage: Message) => [...state, newMessage]
   );
   const conversationMessages = optimisticMessages;
+  const lastMessageId = conversationMessages.at(-1)?.id ?? null;
   const typing = conversationId
     ? (typingUsers[conversationId] || []).filter((userId) => userId !== user?.id)
     : [];
+
+  const scrollToLatestMessages = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+    setNewMessagesBelow(0);
+    setShowScrollToLatest(false);
+  }, []);
+
+  const handleMessagesScroll = useCallback(() => {
+    if (isNearScrollBottom(messagesScrollRef.current)) {
+      setNewMessagesBelow(0);
+      setShowScrollToLatest(false);
+      return;
+    }
+
+    setShowScrollToLatest(true);
+  }, []);
 
   useEffect(() => {
     if (!conversationId) {
@@ -206,12 +246,66 @@ export function useEnhancedConversation() {
     };
   }, [conversationId, fetchMessages, markAsRead]);
 
-  // Scroll to bottom
+  // Guarded autoscroll: keep users anchored when they are reading older messages.
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!conversationId) {
+      scrollSnapshotRef.current = { conversationId: null, lastMessageId: null, length: 0 };
+      setNewMessagesBelow(0);
+      setShowScrollToLatest(false);
+      return;
     }
-  }, [conversationMessages.length]);
+
+    const previous = scrollSnapshotRef.current;
+    const currentLength = conversationMessages.length;
+    const conversationChanged = previous.conversationId !== conversationId;
+    const firstLoadedBatch = previous.length === 0 && currentLength > 0;
+    const addedMessages = Math.max(currentLength - previous.length, 0);
+    const latestMessage = conversationMessages.at(-1);
+    const latestMessageIsOwn = Boolean(
+      latestMessage?.senderId && user?.id && latestMessage.senderId === user.id
+    );
+
+    scrollSnapshotRef.current = {
+      conversationId,
+      lastMessageId,
+      length: currentLength,
+    };
+
+    if (currentLength === 0) {
+      setNewMessagesBelow(0);
+      setShowScrollToLatest(false);
+      return;
+    }
+
+    if (scrollToMessageId) {
+      return;
+    }
+
+    if (conversationChanged || firstLoadedBatch) {
+      const frame = window.requestAnimationFrame(() => scrollToLatestMessages('auto'));
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    if (addedMessages === 0 || previous.lastMessageId === lastMessageId) {
+      return;
+    }
+
+    if (isNearScrollBottom(messagesScrollRef.current) || latestMessageIsOwn) {
+      const frame = window.requestAnimationFrame(() => scrollToLatestMessages('smooth'));
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    setNewMessagesBelow((count) => Math.min(999, count + addedMessages));
+    setShowScrollToLatest(true);
+    return undefined;
+  }, [
+    conversationId,
+    conversationMessages,
+    lastMessageId,
+    scrollToLatestMessages,
+    scrollToMessageId,
+    user?.id,
+  ]);
 
   useEffect(() => {
     if (!scrollToMessageId) return;
@@ -219,6 +313,8 @@ export function useEnhancedConversation() {
     const frame = window.requestAnimationFrame(() => {
       const target = document.getElementById(`message-${scrollToMessageId}`);
       target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setNewMessagesBelow(0);
+      setShowScrollToLatest(!isNearScrollBottom(messagesScrollRef.current));
     });
 
     return () => window.cancelAnimationFrame(frame);
@@ -423,7 +519,12 @@ export function useEnhancedConversation() {
     // Refs
     messagesEndRef,
     inputContainerRef,
+    messagesScrollRef,
     // Handlers
+    handleMessagesScroll,
+    showScrollToLatest,
+    newMessagesBelow,
+    scrollToLatestMessages,
     handleSend,
     handleVoiceComplete,
     handleAvatarClick,

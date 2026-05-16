@@ -16,6 +16,8 @@ import { TypingIndicator } from './typing-indicator';
 import { LoadingSpinner } from './loading-spinner';
 import { MessageRequestBanner } from '@/modules/chat/components/message-request-banner';
 import { ForwardMessageModal } from '@/modules/chat/components/forward-message-modal';
+import { NewMessagesBar } from '@/modules/chat/components/new-messages-bar';
+import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 
@@ -42,7 +44,12 @@ export default function EnhancedConversation() {
     setReplyTo,
     messagesEndRef,
     inputContainerRef,
+    messagesScrollRef,
     callRecipientId,
+    handleMessagesScroll,
+    showScrollToLatest,
+    newMessagesBelow,
+    scrollToLatestMessages,
     handleSend,
     handleVoiceComplete,
     handleAvatarClick,
@@ -143,7 +150,16 @@ export default function EnhancedConversation() {
         )}
 
         {/* Messages Area */}
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6">
+        <div
+          ref={messagesScrollRef}
+          onScroll={handleMessagesScroll}
+          className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6"
+          aria-label="Conversation messages"
+        >
+          {newMessagesBelow > 0 && (
+            <NewMessagesBar count={newMessagesBelow} onJump={() => scrollToLatestMessages()} />
+          )}
+
           {conversationMessages.map((message, index) => {
             const isOwn = message.senderId === user?.id;
             const prevMessage = conversationMessages[index - 1];
@@ -179,6 +195,12 @@ export default function EnhancedConversation() {
 
           <div ref={messagesEndRef} />
         </div>
+
+        <ScrollToBottomButton
+          visible={showScrollToLatest}
+          newCount={newMessagesBelow}
+          onClick={() => scrollToLatestMessages()}
+        />
 
         {/* Input Area */}
         <MessageInputArea
