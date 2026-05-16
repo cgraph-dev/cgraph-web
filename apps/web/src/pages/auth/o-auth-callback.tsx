@@ -115,6 +115,7 @@ export function OAuthCallbackPage() {
               avatarUrl: response.user.avatar_url,
               walletAddress: response.user.wallet_address,
               emailVerifiedAt: response.user.email_verified_at,
+              onboardingCompleted: response.user.onboarding_completed !== false,
               twoFactorEnabled: response.user.totp_enabled,
               status: response.user.status,
               statusMessage: response.user.custom_status,

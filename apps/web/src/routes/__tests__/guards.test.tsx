@@ -4,7 +4,13 @@ import '@testing-library/jest-dom/vitest';
 const { authState } = vi.hoisted(() => {
   const authState = {
     isAuthenticated: false,
-    user: null as { id: string; isAdmin?: boolean } | null,
+    user: null as {
+      id: string;
+      email?: string;
+      emailVerifiedAt?: string | null;
+      onboardingCompleted?: boolean;
+      isAdmin?: boolean;
+    } | null,
   };
   return { authState };
 });
@@ -28,6 +34,7 @@ import { ProtectedRoute, PublicRoute, AdminRoute, ProfileRedirectRoute } from '.
 beforeEach(() => {
   authState.isAuthenticated = false;
   authState.user = null;
+  window.history.replaceState({}, '', '/');
 });
 
 describe('Route Guards', () => {
@@ -44,12 +51,66 @@ describe('Route Guards', () => {
 
     it('renders children when authenticated', () => {
       authState.isAuthenticated = true;
+      authState.user = { id: 'u1', email: 'user@example.com', emailVerifiedAt: 'verified' };
       render(
         <ProtectedRoute>
           <div data-testid="content">Protected Content</div>
         </ProtectedRoute>
       );
       expect(screen.getByTestId('content')).toHaveTextContent('Protected Content');
+    });
+
+    it('redirects authenticated users to verify-email before app routes', () => {
+      authState.isAuthenticated = true;
+      authState.user = { id: 'u1', email: 'new@example.com', emailVerifiedAt: null };
+
+      render(
+        <ProtectedRoute>
+          <div>Protected</div>
+        </ProtectedRoute>
+      );
+
+      expect(screen.getByTestId('navigate')).toHaveAttribute(
+        'data-to',
+        '/verify-email?email=new%40example.com'
+      );
+    });
+
+    it('redirects authenticated users to onboarding after email verification', () => {
+      authState.isAuthenticated = true;
+      authState.user = {
+        id: 'u1',
+        email: 'new@example.com',
+        emailVerifiedAt: 'verified',
+        onboardingCompleted: false,
+      };
+
+      render(
+        <ProtectedRoute>
+          <div>Protected</div>
+        </ProtectedRoute>
+      );
+
+      expect(screen.getByTestId('navigate')).toHaveAttribute('data-to', '/onboarding');
+    });
+
+    it('allows the onboarding route while onboarding is incomplete', () => {
+      window.history.replaceState({}, '', '/onboarding');
+      authState.isAuthenticated = true;
+      authState.user = {
+        id: 'u1',
+        email: 'new@example.com',
+        emailVerifiedAt: 'verified',
+        onboardingCompleted: false,
+      };
+
+      render(
+        <ProtectedRoute>
+          <div data-testid="content">Onboarding</div>
+        </ProtectedRoute>
+      );
+
+      expect(screen.getByTestId('content')).toHaveTextContent('Onboarding');
     });
   });
 
@@ -63,14 +124,31 @@ describe('Route Guards', () => {
       expect(screen.getByTestId('public')).toBeInTheDocument();
     });
 
-    it('redirects to /messages when authenticated', () => {
+    it('redirects to /messages when authenticated and release gates are satisfied', () => {
       authState.isAuthenticated = true;
+      authState.user = { id: 'u1', email: 'user@example.com', emailVerifiedAt: 'verified' };
       render(
         <PublicRoute>
           <div>Public</div>
         </PublicRoute>
       );
       expect(screen.getByTestId('navigate')).toHaveAttribute('data-to', '/messages');
+    });
+
+    it('redirects authenticated public-route users to verify-email first', () => {
+      authState.isAuthenticated = true;
+      authState.user = { id: 'u1', email: 'new@example.com', emailVerifiedAt: null };
+
+      render(
+        <PublicRoute>
+          <div>Public</div>
+        </PublicRoute>
+      );
+
+      expect(screen.getByTestId('navigate')).toHaveAttribute(
+        'data-to',
+        '/verify-email?email=new%40example.com'
+      );
     });
   });
 

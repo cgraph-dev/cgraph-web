@@ -9,6 +9,12 @@ import { AxiosError, type AxiosResponse } from 'axios';
 
 // Mock logger to prevent console noise
 vi.mock('@/lib/logger', () => ({
+  createLogger: vi.fn(() => ({
+    warn: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  })),
   authLogger: {
     warn: vi.fn(),
     error: vi.fn(),
@@ -80,6 +86,7 @@ describe('mapUserFromApi', () => {
     avatar_url: 'https://cdn.test.com/avatar.png',
     wallet_address: '0xABC',
     email_verified_at: '2025-01-01T00:00:00Z',
+    onboarding_completed: false,
     totp_enabled: true,
     status: 'online',
     custom_status: 'Busy coding',
@@ -112,6 +119,7 @@ describe('mapUserFromApi', () => {
     expect(user.avatarUrl).toBe('https://cdn.test.com/avatar.png');
     expect(user.walletAddress).toBe('0xABC');
     expect(user.emailVerifiedAt).toBe('2025-01-01T00:00:00Z');
+    expect(user.onboardingCompleted).toBe(false);
     expect(user.twoFactorEnabled).toBe(true);
     expect(user.status).toBe('online');
     expect(user.statusMessage).toBe('Busy coding');
@@ -144,6 +152,7 @@ describe('mapUserFromApi', () => {
     expect(user.avatarUrl).toBeNull();
     expect(user.walletAddress).toBeNull();
     expect(user.emailVerifiedAt).toBeNull();
+    expect(user.onboardingCompleted).toBe(true);
     expect(user.twoFactorEnabled).toBe(false);
     expect(user.status).toBe('offline');
     expect(user.statusMessage).toBeNull();

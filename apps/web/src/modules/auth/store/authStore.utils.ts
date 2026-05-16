@@ -77,6 +77,9 @@ export function mapUserFromApi(apiUser: Record<string, unknown>): User {
     displayNameSecondaryColor: identity.displayNameSecondaryColor,
     walletAddress: isString(apiUser.wallet_address) ? apiUser.wallet_address : null,
     emailVerifiedAt: isString(apiUser.email_verified_at) ? apiUser.email_verified_at : null,
+    onboardingCompleted: isBoolean(apiUser.onboarding_completed)
+      ? apiUser.onboarding_completed
+      : true,
     twoFactorEnabled: isBoolean(apiUser.totp_enabled) ? apiUser.totp_enabled : false,
     status: isUserStatus(apiUser.status) ? apiUser.status : 'offline',
     statusMessage: isString(apiUser.custom_status) ? apiUser.custom_status : null,

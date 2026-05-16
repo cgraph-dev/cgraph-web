@@ -2,11 +2,12 @@
 
 Status date: 2026-05-16
 
-Current execution count after the phone native-attestation guard slice: 42 / 50 owner-level
-checklist items closed, 84.0% closed and 16.0% left. The Space route, verify-email resend,
-onboarding skip/recovery, cancel-deletion, and phone native-attestation guard implementations reduce
-strict web gaps, but this document is not 100% yet because final support-matrix validation, final
-browser release truth, and broader profile/cosmetic live-update proof remain open.
+Current execution count after the post-auth gate-order slice: 43 / 50 owner-level checklist items
+closed, 86.0% closed and 14.0% left. The Space route, verify-email resend, onboarding skip/recovery,
+cancel-deletion, phone native-attestation guard, and verify-email-before-onboarding route gate
+implementations reduce strict web gaps, but this document is not 100% yet because final
+support-matrix validation, final browser release truth, and broader profile/cosmetic live-update
+proof remain open.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent

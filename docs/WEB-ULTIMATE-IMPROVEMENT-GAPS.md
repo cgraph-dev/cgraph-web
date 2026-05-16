@@ -29,7 +29,14 @@ across the broader auth route set.
 2026-05-16 update: onboarding skip and save-failure recovery are no longer listed as missing route
 semantics. The routed onboarding Skip action now posts `/api/v1/onboarding/skip` before navigating,
 and both skip/save failures render a route-owned recovery error instead of only logging. Remaining
-onboarding risk is post-auth gate-order and browser verification.
+onboarding risk is browser verification.
+
+2026-05-16 update: post-auth gate order is now route-owned. `post-auth-redirect.ts` enforces
+verify-email before onboarding before the app route, `ProtectedRoute` and `PublicRoute` both use
+that owner, `/verify-email` can render a no-token pending/resend state, and backend auth JSON now
+returns `onboarding_completed` so register/login responses can be gated immediately. Remaining auth
+risk is broad browser verification of login, registration, recovery, QR, phone, and onboarding
+paths.
 
 2026-05-16 update: account deletion grace-period recovery is no longer listed as missing UI. The
 settings delete-account panel still uses password-confirmed `POST /api/v1/me/delete-account` and now

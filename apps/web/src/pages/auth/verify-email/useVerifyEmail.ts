@@ -13,7 +13,13 @@ import { useAuthStore } from '@/modules/auth/store';
 
 const logger = createLogger('VerifyEmail');
 
-export type VerificationState = 'verifying' | 'success' | 'expired' | 'error' | 'already-verified';
+export type VerificationState =
+  | 'verifying'
+  | 'pending'
+  | 'success'
+  | 'expired'
+  | 'error'
+  | 'already-verified';
 
 /**
  */
@@ -35,7 +41,7 @@ export function useVerifyEmail() {
   useEffect(() => {
     async function verifyToken() {
       if (!token) {
-        setState('error');
+        setState('pending');
         return;
       }
 

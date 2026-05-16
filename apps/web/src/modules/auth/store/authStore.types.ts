@@ -26,6 +26,7 @@ export interface User {
   displayNameSecondaryColor?: string | null;
   walletAddress: string | null;
   emailVerifiedAt: string | null;
+  onboardingCompleted?: boolean;
   twoFactorEnabled: boolean;
   status: 'online' | 'idle' | 'dnd' | 'offline';
   statusMessage: string | null;

@@ -252,7 +252,7 @@ correctness work below before feature expansion or scale items.
 
 - Browser-verify email auth, recovery, verify-email, QR, and phone flows.
 - Keep the resolved `device_attestation` guard green so web users never enter a dead checkpoint.
-- Make onboarding completion, skip, and post-auth gate order deterministic.
+- Keep verify-email before onboarding before app-route gate order deterministic.
 - Keep delete-account on the password-confirmed backend contract and add cancel-deletion support.
 
 6. Social, discovery, and notification destination correctness
@@ -347,7 +347,7 @@ Checklist:
       phone entry routes.
 - [x] Let expired verify-email links request a new verification email while logged out.
 - [x] Resolve the `device_attestation` dead checkpoint before users can enter it on web.
-- [ ] Make onboarding completion, skip, and post-auth gate order deterministic.
+- [x] Make onboarding completion, skip, and post-auth gate order deterministic.
 - [x] Persist onboarding skip and surface save/skip recovery errors on the routed onboarding page.
 - [x] Add cancel-deletion UI that matches the existing password-confirmed delete-account flow.
 

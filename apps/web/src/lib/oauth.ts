@@ -27,6 +27,7 @@ interface OAuthTokenResponse {
     custom_status: string | null;
     is_verified: boolean;
     is_premium: boolean;
+    onboarding_completed?: boolean;
     inserted_at: string;
   };
   tokens: {

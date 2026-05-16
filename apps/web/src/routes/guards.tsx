@@ -8,6 +8,10 @@
 
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
+import {
+  getPostAuthRedirect,
+  isCurrentPostAuthGate,
+} from '@/modules/auth/routing/post-auth-redirect';
 import { routeLogger } from '@/lib/logger';
 
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
@@ -19,7 +23,7 @@ const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
  * re-authenticate in the background if a valid token exists).
  */
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
   routeLogger.debug('ProtectedRoute state:', { isAuthenticated, isLoading });
 
   // During rehydration, show nothing (or a global spinner) rather than redirecting
@@ -30,6 +34,17 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated && !isE2EAuthBypass) {
     return <Navigate to="/login" replace />;
   }
+
+  if (isAuthenticated) {
+    const redirectTo = getPostAuthRedirect(user);
+    if (
+      redirectTo !== '/messages' &&
+      !isCurrentPostAuthGate(window.location.pathname, redirectTo)
+    ) {
+      return <Navigate to={redirectTo} replace />;
+    }
+  }
+
   return <>{children}</>;
 }
 
@@ -39,11 +54,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
  * If the user is authenticated (e.g. after hydration), redirects to /messages.
  */
 export function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   routeLogger.debug('PublicRoute isAuthenticated:', isAuthenticated);
 
   if (isAuthenticated) {
-    return <Navigate to="/messages" replace />;
+    return <Navigate to={getPostAuthRedirect(user)} replace />;
   }
   return <>{children}</>;
 }

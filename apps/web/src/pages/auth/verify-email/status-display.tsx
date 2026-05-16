@@ -129,6 +129,9 @@ function ExpiredView({
   resendError,
   onResendEmailChange,
   onResend,
+  title = 'Link Expired',
+  description = 'This verification link has expired. Request a new one to verify your email.',
+  backLinkLabel = 'Back to Login',
 }: {
   isResending: boolean;
   resendSuccess: boolean;
@@ -136,6 +139,9 @@ function ExpiredView({
   resendError: string | null;
   onResendEmailChange: (email: string) => void;
   onResend: () => void;
+  title?: string;
+  description?: string;
+  backLinkLabel?: string;
 }) {
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -164,11 +170,11 @@ function ExpiredView({
       </motion.div>
 
       <motion.h2 variants={itemVariants} className="mb-2 text-2xl font-bold text-white">
-        Link Expired
+        {title}
       </motion.h2>
 
       <motion.p variants={itemVariants} className="mb-8 text-gray-400">
-        This verification link has expired. Request a new one to verify your email.
+        {description}
       </motion.p>
 
       <motion.div variants={itemVariants} className="space-y-3">
@@ -245,7 +251,7 @@ function ExpiredView({
         )}
 
         <Link to="/login" className="block py-2 text-gray-400 transition-colors hover:text-white">
-          Back to Login
+          {backLinkLabel}
         </Link>
       </motion.div>
     </motion.div>
@@ -314,6 +320,20 @@ export default function StatusDisplay({
       return <SuccessView onNavigate={onNavigate} />;
     case 'already-verified':
       return <AlreadyVerifiedView onNavigate={onNavigate} />;
+    case 'pending':
+      return (
+        <ExpiredView
+          title="Check your email"
+          description="Verify your email before entering the app. You can request a fresh verification link here."
+          backLinkLabel="Use a different account"
+          isResending={isResending}
+          resendSuccess={resendSuccess}
+          resendEmail={resendEmail}
+          resendError={resendError}
+          onResendEmailChange={onResendEmailChange}
+          onResend={onResend}
+        />
+      );
     case 'expired':
       return (
         <ExpiredView
