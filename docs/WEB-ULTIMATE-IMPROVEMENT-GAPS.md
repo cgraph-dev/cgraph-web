@@ -16,7 +16,15 @@ First-class Spaces routing is also no longer missing: `/spaces` and `/spaces/:sp
 2026-05-16 update: per-chat Space move controls are no longer listed as a missing conversation-list
 feature. The routed conversation action menu now loads server-owned Spaces, shows membership state,
 and patches `/api/v1/spaces/:id` include/exclude lists with rollback on failure. Remaining risk is
-final routed browser verification of the combined conversation-list menu.
+final routed browser verification of the combined conversation-list menu. The backend Space
+controller is now mounted under `/api/v1/spaces` through the messaging route owner and delegates
+through `CGraph.Messaging`, with controller tests covering create/list/update/delete.
+
+2026-05-16 update: logged-out verify-email resend is no longer listed as a route-owned gap.
+Expired-link recovery now lets the user enter an email, posts it to
+`/api/v1/auth/resend-verification`, and the backend accepts that public strict-auth request without
+revealing whether the address exists. Remaining auth risk is full browser/mail-provider verification
+across the broader auth route set.
 
 2026-05-15 update: the web privacy model decision is closed as the fuller selective model.
 `packages/shared-types/src/privacy.ts`, backend `selective_privacy`, API-client schemas, web

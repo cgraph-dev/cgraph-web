@@ -345,6 +345,7 @@ Checklist:
 
 - [ ] Browser-verify login, registration, forgot-password, reset-password, verify-email, QR, and
       phone entry routes.
+- [x] Let expired verify-email links request a new verification email while logged out.
 - [ ] Resolve the `device_attestation` dead checkpoint before users can enter it on web.
 - [ ] Make onboarding completion, skip, and post-auth gate order deterministic.
 - [ ] Add cancel-deletion UI that matches the existing password-confirmed delete-account flow.

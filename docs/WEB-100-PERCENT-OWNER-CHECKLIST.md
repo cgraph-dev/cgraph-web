@@ -2,9 +2,9 @@
 
 Status date: 2026-05-16
 
-Current execution count after the conversation-list Space-controls slice: 41 / 50 owner-level
-checklist items closed, 82.0% closed and 18.0% left. The Space move implementation reduces the
-strict messaging gaps, but this document is not 100% yet because final support-matrix validation,
+Current execution count after the Space route/resend recovery slice: 41 / 50 owner-level checklist
+items closed, 82.0% closed and 18.0% left. The Space route and verify-email resend implementations
+reduce strict web gaps, but this document is not 100% yet because final support-matrix validation,
 final browser release truth, and broader profile/cosmetic live-update proof remain open.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web

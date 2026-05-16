@@ -28,6 +28,8 @@ export function useVerifyEmail() {
   const [state, setState] = useState<VerificationState>('verifying');
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendEmail, setResendEmail] = useState(searchParams.get('email') ?? user?.email ?? '');
+  const [resendError, setResendError] = useState<string | null>(null);
 
   // Verify token on mount
   useEffect(() => {
@@ -63,22 +65,42 @@ export function useVerifyEmail() {
     verifyToken();
   }, [token, checkAuth]);
 
+  useEffect(() => {
+    if (!resendEmail && user?.email) {
+      setResendEmail(user.email);
+    }
+  }, [resendEmail, user?.email]);
+
   // Resend verification email
   async function handleResend() {
-    if (!user?.email) return;
+    const email = (user?.email ?? resendEmail).trim();
+    if (!email) {
+      setResendError('Enter the email address for this account.');
+      return;
+    }
 
     setIsResending(true);
+    setResendError(null);
     try {
       await http.post('/api/v1/auth/resend-verification', {
-        email: user.email,
+        email,
       });
       setResendSuccess(true);
     } catch (error) {
       logger.warn('Failed to resend verification email', error);
+      setResendError('Could not send a new verification email. Please try again.');
     } finally {
       setIsResending(false);
     }
   }
 
-  return { state, isResending, resendSuccess, handleResend };
+  return {
+    state,
+    isResending,
+    resendSuccess,
+    resendEmail,
+    resendError,
+    setResendEmail,
+    handleResend,
+  };
 }

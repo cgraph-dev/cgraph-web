@@ -233,10 +233,13 @@ export function createAuthEndpoints(http: AxiosInstance) {
 
     /**
      * Resend the email verification link.
-     * Requires authentication.
+     * Authenticated callers can omit email; logged-out expired-link recovery sends email.
      */
-    async resendVerification(): Promise<ApiResult<Record<string, unknown>>> {
-      return apiCall(() => http.post('/api/v1/auth/resend-verification'), EmptySchema);
+    async resendVerification(email?: string): Promise<ApiResult<Record<string, unknown>>> {
+      return apiCall(
+        () => http.post('/api/v1/auth/resend-verification', email ? { email } : undefined),
+        EmptySchema
+      );
     },
 
     // -------------------------------------------------------------------------

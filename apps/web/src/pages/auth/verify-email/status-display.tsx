@@ -7,6 +7,7 @@
 
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import type { FormEvent } from 'react';
 import type { VerificationState } from '@/pages/auth/verify-email/useVerifyEmail';
 import { containerVariants, itemVariants } from '@/pages/auth/verify-email/animations';
 import { springs } from '@/lib/animation-presets';
@@ -15,6 +16,9 @@ interface StatusDisplayProps {
   state: VerificationState;
   isResending: boolean;
   resendSuccess: boolean;
+  resendEmail: string;
+  resendError: string | null;
+  onResendEmailChange: (email: string) => void;
   onResend: () => void;
   onNavigate: (path: string) => void;
 }
@@ -60,7 +64,7 @@ function SuccessView({ onNavigate }: { onNavigate: (path: string) => void }) {
         <button
           type="button"
           onClick={() => onNavigate('/messages')}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 py-3 font-medium text-white shadow-lg shadow-primary-500/25 transition-all hover:scale-[1.02] hover:shadow-primary-500/40"
+          className="shadow-primary-500/25 hover:shadow-primary-500/40 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 py-3 font-medium text-white shadow-lg transition-all hover:scale-[1.02]"
         >
           Continue to App
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -110,7 +114,7 @@ function AlreadyVerifiedView({ onNavigate }: { onNavigate: (path: string) => voi
       <motion.button
         variants={itemVariants}
         onClick={() => onNavigate('/messages')}
-        className="rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 px-8 py-3 font-medium text-white shadow-lg shadow-primary-500/25 transition-all hover:scale-[1.02] hover:shadow-primary-500/40"
+        className="shadow-primary-500/25 hover:shadow-primary-500/40 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 px-8 py-3 font-medium text-white shadow-lg transition-all hover:scale-[1.02]"
       >
         Go to App
       </motion.button>
@@ -121,12 +125,23 @@ function AlreadyVerifiedView({ onNavigate }: { onNavigate: (path: string) => voi
 function ExpiredView({
   isResending,
   resendSuccess,
+  resendEmail,
+  resendError,
+  onResendEmailChange,
   onResend,
 }: {
   isResending: boolean;
   resendSuccess: boolean;
+  resendEmail: string;
+  resendError: string | null;
+  onResendEmailChange: (email: string) => void;
   onResend: () => void;
 }) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    onResend();
+  }
+
   return (
     <motion.div
       variants={containerVariants}
@@ -173,45 +188,60 @@ function ExpiredView({
             <p className="mt-1 text-sm text-green-400/70">Check your inbox for the new link.</p>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={onResend}
-            disabled={isResending}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 py-3 font-medium text-white shadow-lg shadow-primary-500/25 transition-all hover:scale-[1.02] hover:shadow-primary-500/40 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isResending ? (
-              <>
-                <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                Sending...
-              </>
-            ) : (
-              <>
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-                Resend Verification Email
-              </>
-            )}
-          </button>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <label className="block text-left text-sm font-medium text-white/75" htmlFor="email">
+              Email address
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={resendEmail}
+              onChange={(event) => onResendEmailChange(event.target.value)}
+              disabled={isResending}
+              autoComplete="email"
+              className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-primary-400 disabled:cursor-not-allowed disabled:opacity-60"
+              placeholder="you@example.com"
+            />
+            {resendError && <p className="text-left text-sm text-red-300">{resendError}</p>}
+            <button
+              type="submit"
+              disabled={isResending}
+              className="shadow-primary-500/25 hover:shadow-primary-500/40 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 py-3 font-medium text-white shadow-lg transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isResending ? (
+                <>
+                  <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Resend Verification Email
+                </>
+              )}
+            </button>
+          </form>
         )}
 
         <Link to="/login" className="block py-2 text-gray-400 transition-colors hover:text-white">
@@ -271,6 +301,9 @@ export default function StatusDisplay({
   state,
   isResending,
   resendSuccess,
+  resendEmail,
+  resendError,
+  onResendEmailChange,
   onResend,
   onNavigate,
 }: StatusDisplayProps) {
@@ -283,7 +316,14 @@ export default function StatusDisplay({
       return <AlreadyVerifiedView onNavigate={onNavigate} />;
     case 'expired':
       return (
-        <ExpiredView isResending={isResending} resendSuccess={resendSuccess} onResend={onResend} />
+        <ExpiredView
+          isResending={isResending}
+          resendSuccess={resendSuccess}
+          resendEmail={resendEmail}
+          resendError={resendError}
+          onResendEmailChange={onResendEmailChange}
+          onResend={onResend}
+        />
       );
     case 'error':
     default:

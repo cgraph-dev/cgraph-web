@@ -19,14 +19,22 @@ import { LogoIcon } from '@/components/logo';
  */
 export default function VerifyEmail() {
   const navigate = useNavigate();
-  const { state, isResending, resendSuccess, handleResend } = useVerifyEmail();
+  const {
+    state,
+    isResending,
+    resendSuccess,
+    resendEmail,
+    resendError,
+    setResendEmail,
+    handleResend,
+  } = useVerifyEmail();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 p-4">
       {/* Background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="bg-gradient-radial absolute -right-1/2 -top-1/2 h-full w-full rounded-full from-primary-500/10 to-transparent" />
-        <div className="bg-gradient-radial absolute -bottom-1/2 -left-1/2 h-full w-full rounded-full from-purple-500/10 to-transparent" />
+        <div className="bg-gradient-radial from-primary-500/10 absolute -right-1/2 -top-1/2 h-full w-full rounded-full to-transparent" />
+        <div className="bg-gradient-radial from-purple-500/10 absolute -bottom-1/2 -left-1/2 h-full w-full rounded-full to-transparent" />
       </div>
 
       <GlassCard variant="frosted" className="relative z-10 w-full max-w-md" hover3D={false}>
@@ -42,6 +50,9 @@ export default function VerifyEmail() {
             state={state}
             isResending={isResending}
             resendSuccess={resendSuccess}
+            resendEmail={resendEmail}
+            resendError={resendError}
+            onResendEmailChange={setResendEmail}
             onResend={handleResend}
             onNavigate={navigate}
           />
