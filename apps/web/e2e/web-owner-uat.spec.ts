@@ -6,6 +6,7 @@ const CONVERSATION_ID = '88888888-8888-4888-8888-888888888888';
 const GROUP_ID = 'group-uat';
 const TEXT_CHANNEL_ID = 'text-uat';
 const VOICE_CHANNEL_ID = 'voice-uat';
+const LIVE_AVATAR_BORDER_ID = 'border_cyberpunk_epic_01';
 
 const friendUser = {
   id: FRIEND_ID,
@@ -487,6 +488,27 @@ test.describe('Web owner focused UAT', () => {
     await expect
       .poll(() => sentDmMessages, { message: 'DM route sent through the conversation endpoint' })
       .toContainEqual(expect.objectContaining({ content: 'DM routed UAT send' }));
+
+    await page.evaluate(
+      ({ userId, avatarBorderId }) => {
+        window.dispatchEvent(
+          new CustomEvent('cgraph:e2e-identity-patch', {
+            detail: {
+              userId,
+              customization: {
+                avatar_border_id: avatarBorderId,
+                title_id: 'title-founder',
+              },
+            },
+          })
+        );
+      },
+      { userId: FRIEND_ID, avatarBorderId: LIVE_AVATAR_BORDER_ID }
+    );
+    await expect(
+      page.locator(`[data-avatar-border-id="${LIVE_AVATAR_BORDER_ID}"]`).first()
+    ).toBeVisible();
+    await expect(page.getByText('Founder').first()).toBeVisible();
 
     await page.evaluate((callerId) => {
       window.dispatchEvent(

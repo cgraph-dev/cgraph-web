@@ -221,6 +221,25 @@ export interface ConversationParticipant {
   mutedUntil: string | null;
   joinedAt: string;
 }
+
+export interface ChatIdentityPatch {
+  username?: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  status?: string;
+  statusMessage?: string | null;
+  avatarBorderId?: string | null;
+  equippedTitleId?: string | null;
+  equippedBadgeIds?: readonly string[];
+  equippedNameplateId?: string | null;
+  profileTheme?: string | null;
+  chatTheme?: string | null;
+  displayNameFont?: string | null;
+  displayNameEffect?: string | null;
+  displayNameColor?: string | null;
+  displayNameSecondaryColor?: string | null;
+}
+
 export interface TypingUserInfo {
   userId: string;
   startedAt?: string;
@@ -245,6 +264,7 @@ export interface ChatState {
   fetchConversations: () => Promise<void>;
   fetchArchivedConversations: () => Promise<void>;
   fetchMessages: (conversationId: string, before?: string) => Promise<void>;
+  applyUserIdentityPatch: (userId: string, patch: ChatIdentityPatch) => void;
   sendMessage: (
     conversationId: string,
     content: string,

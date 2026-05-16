@@ -43,6 +43,9 @@ missing:
 - Routed DM call entry is browser-proven in `apps/web/e2e/dm-media-composer.spec.ts`: the live
   header opens both `/call/:recipientId/audio` and `/call/:recipientId/video` with call-screen
   controls.
+- Routed identity/cosmetic live updates are browser-proven in `apps/web/e2e/web-owner-uat.spec.ts`:
+  `friend_customization_changed` now reaches one selective friend/chat identity owner, and the
+  routed DM surface renders the updated avatar border plus title without reload.
 
 ## Fixed in this slice
 

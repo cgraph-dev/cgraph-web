@@ -89,7 +89,7 @@ under the settings/convergence gap.
 customization hook now hydrates ownership and equipped state from `/api/v1/cosmetics/inventory`, the
 backend inventory response exposes catalog keys, and customization saves reject unowned border,
 title, badge, and nameplate values. Remaining cosmetic risk is broader settings/theme/customization
-orchestration plus live-update/browser proof across every visual surface.
+multi-tab/device validation plus badge/nameplate proof beyond the routed DM owner UAT.
 
 2026-05-15 update: `UserProfileCard` no longer renders the default placeholder user when callers
 only pass `userId`. The card fetches `/api/v1/users/:id`, maps the response through canonical
@@ -127,14 +127,15 @@ menu and patch the server-owned Spaces contract.
 `packages/shared-types/src/settings.ts` owns user setting types and defaults, and the web
 `settingsStore.types.ts` re-exports that package contract for compatibility.
 
-2026-05-15 update: friend cosmetic live updates now flow through a store-owned identity patch
-action. `presenceManager` maps `friend_customization_changed` through the canonical identity
-projection and calls `useFriendStore.getState().applyIdentityPatch(...)`, which updates friends plus
-incoming/outgoing request users through one friend-store owner. Own-profile `profile_updated`,
-`item_equipped`, and `item_unequipped` socket events now route through
-`apps/web/src/lib/identity/ownIdentitySync.ts`, which patches auth and customization from one
-server-sync owner without autosaving the inbound server event. Remaining identity risk is final
-routed browser proof across every visual surface.
+2026-05-16 update: friend cosmetic live updates now flow through
+`apps/web/src/lib/identity/otherIdentitySync.ts`. `presenceManager` maps
+`friend_customization_changed` through the canonical identity projection and updates friend rows,
+incoming/outgoing request users, conversation participants, sidebar previews, and routed message
+senders through one selective patch owner. Own-profile `profile_updated`, `item_equipped`, and
+`item_unequipped` socket events route through `apps/web/src/lib/identity/ownIdentitySync.ts`, which
+patches auth and customization from one server-sync owner without autosaving the inbound server
+event. `apps/web/e2e/web-owner-uat.spec.ts` browser-verifies a live friend avatar-border/title patch
+on the routed DM surface.
 
 ## Confirmed high-priority gaps
 
@@ -167,9 +168,9 @@ routed browser proof across every visual surface.
    `apps/web/src/lib/identity/canonicalIdentity.ts`, and `UserProfileCard` now preserve avatar,
    border, title, badge, nameplate, theme, and display-name styling fields across
    auth/profile/friend/chat/group HTTP, socket paths, and userId-only profile cards.
-   `friend_customization_changed` now reaches the friend-store identity patch owner, and own-profile
-   cosmetic socket events now reach the own-identity sync owner. Final live-update/browser proof
-   remains open.
+   `friend_customization_changed` now reaches the other-user identity sync owner, own-profile
+   cosmetic socket events now reach the own-identity sync owner, and owner UAT browser-verifies a
+   live avatar-border/title update on the routed DM surface.
 
 5. **Consolidate settings, theme, and customization ownership** — Closed for explicit bootstrap
    ownership and shared settings defaults.

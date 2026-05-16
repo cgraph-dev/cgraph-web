@@ -126,7 +126,10 @@ inspection on `feat/cloud-chat-tier`.
    - **Status:** Canonical identity types, the web identity normalizer, backend-hydrated
      `UserProfileCard`, server-owned customization inventory, and friend cosmetic socket patching
      now exist with focused tests. Own-profile cosmetic socket events now route through one identity
-     sync owner. Remaining work is final live-update/browser proof across every visual surface.
+     sync owner, other-profile cosmetic socket events route through one selective friend/chat sync
+     owner, and owner UAT browser-verifies a live friend avatar-border/title update on the routed DM
+     surface. Remaining work is broader badge/nameplate and multi-tab/device proof beyond this owner
+     route.
 
 4. **Stop dropping identity fields during normalization and socket sync**
    - **What:** Preserve server identity/customization fields through web normalization instead of
@@ -143,10 +146,10 @@ inspection on `feat/cloud-chat-tier`.
    - **Complexity:** medium
    - **Status:** Sender, participant, friend, profile, group member, group message, auth hydration,
      userId-only profile cards, and relevant socket paths now preserve the shared identity fields.
-     `friend_customization_changed` now routes through `useFriendStore.applyIdentityPatch(...)`
-     instead of direct presence-store mutation, and own-profile `profile_updated`, `item_equipped`,
-     and `item_unequipped` events now route through `ownIdentitySync`. Remaining live-surface work
-     is final reload/UAT proof.
+     `friend_customization_changed` now routes through `otherIdentitySync` instead of direct
+     presence-store mutation, and own-profile `profile_updated`, `item_equipped`, and
+     `item_unequipped` events now route through `ownIdentitySync`. Owner UAT verifies the routed
+     live avatar-border/title update path.
 
 5. **Consolidate settings, theme, and customization ownership**
    - **What:** Remove the current three-way split between settings store, customization store, and
@@ -389,8 +392,8 @@ Checklist:
 - [x] Create one canonical web identity model for avatars, borders, titles, badges, and display
       names.
 - [x] Fix `UserProfileCard` and related profile-card hydration to use authoritative user data.
-- [x] Route friend profile and cosmetic socket updates through the friend-store identity patch
-      owner.
+- [x] Route friend profile and cosmetic socket updates through the selective other-user identity
+      patch owner.
 - [x] Route own-profile profile and cosmetic socket updates through the final canonical owner.
 - [x] Fetch canonical settings before section panels render.
 - [x] Collapse settings, theme, and customization ownership into one explicit orchestration model.

@@ -12,7 +12,13 @@ import { devtools } from 'zustand/middleware';
 import { apiClient, http } from '@/lib/api-client';
 import { ensureArray, normalizeMessage, normalizeConversations } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
-import type { Message, Conversation, ChatState, ConversationParticipant } from './chatStore.types';
+import type {
+  Message,
+  Conversation,
+  ChatState,
+  ConversationParticipant,
+  ChatIdentityPatch,
+} from './chatStore.types';
 import { createMessagingActions } from './chatStore.messaging';
 import { createOperationsActions } from './chatStore.operations';
 import { toTypedMessage } from './chatStore.normalizers';
@@ -40,6 +46,51 @@ function renderableMessageForWeb(msg: Message): Message {
     ...msg,
     content:
       msg.decryptionFailed === true ? CLOUD_DECRYPT_FAILED_PLACEHOLDER : LOCKED_WEB_PLACEHOLDER,
+  };
+}
+
+function patchMessageIdentity(message: Message, userId: string, patch: ChatIdentityPatch): Message;
+function patchMessageIdentity(message: null, userId: string, patch: ChatIdentityPatch): null;
+function patchMessageIdentity(
+  message: Message | null,
+  userId: string,
+  patch: ChatIdentityPatch
+): Message | null;
+function patchMessageIdentity(
+  message: Message | null,
+  userId: string,
+  patch: ChatIdentityPatch
+): Message | null {
+  if (!message) return message;
+
+  const sender =
+    message.sender?.id === userId ? { ...message.sender, ...patch } : message.sender;
+  const replyTo: Message | null = message.replyTo
+    ? patchMessageIdentity(message.replyTo, userId, patch)
+    : null;
+
+  if (sender === message.sender && replyTo === message.replyTo) {
+    return message;
+  }
+
+  return { ...message, sender, replyTo };
+}
+
+function patchConversationIdentity(
+  conversation: Conversation,
+  userId: string,
+  patch: ChatIdentityPatch
+): Conversation {
+  const participants = conversation.participants.map((participant) =>
+    participant.userId === userId || participant.user.id === userId
+      ? { ...participant, user: { ...participant.user, ...patch } }
+      : participant
+  );
+
+  return {
+    ...conversation,
+    participants,
+    lastMessage: patchMessageIdentity(conversation.lastMessage, userId, patch),
   };
 }
 
@@ -135,6 +186,22 @@ export const useChatStore = create<ChatState>()(
       hasMoreMessages: {},
       conversationsLastFetchedAt: null,
       readReceipts: {},
+      applyUserIdentityPatch: (userId, patch) => {
+        set((state) => ({
+          conversations: state.conversations.map((conversation) =>
+            patchConversationIdentity(conversation, userId, patch)
+          ),
+          archivedConversations: state.archivedConversations.map((conversation) =>
+            patchConversationIdentity(conversation, userId, patch)
+          ),
+          messages: Object.fromEntries(
+            Object.entries(state.messages).map(([conversationId, messages]) => [
+              conversationId,
+              messages.map((message) => patchMessageIdentity(message, userId, patch)),
+            ])
+          ),
+        }));
+      },
       fetchConversations: async () => {
         const { conversationsLastFetchedAt, isLoadingConversations } = get();
         const now = Date.now();

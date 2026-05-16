@@ -14,6 +14,8 @@ import {
   isUserOnline,
   getAllOnlineStatuses,
 } from '../presenceManager';
+import { useChatStore } from '@/modules/chat/store/chatStore.impl';
+import { useFriendStore } from '@/modules/social/store/friendStore.impl';
 
 // Mock Phoenix Presence
 const { MockPresence } = vi.hoisted(() => {
@@ -28,7 +30,23 @@ vi.mock('phoenix', () => ({
 }));
 
 vi.mock('../../logger', () => ({
+  createLogger: () => ({
+    log: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    time: vi.fn(),
+    timeEnd: vi.fn(),
+    breadcrumb: vi.fn(),
+  }),
+  logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
   socketLogger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  authLogger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  apiLogger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  chatLogger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  routeLogger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+  themeLogger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
 // Helpers
@@ -163,6 +181,28 @@ describe('joinPresenceLobby', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useFriendStore.setState({
+      friends: [],
+      pendingRequests: [],
+      sentRequests: [],
+      isLoading: false,
+      error: null,
+    });
+    useChatStore.setState({
+      conversations: [],
+      archivedConversations: [],
+      activeConversationId: null,
+      messages: {},
+      messageIdSets: {},
+      isLoadingConversations: false,
+      isLoadingArchivedConversations: false,
+      isLoadingMessages: false,
+      typingUsers: {},
+      typingUsersInfo: {},
+      hasMoreMessages: {},
+      conversationsLastFetchedAt: null,
+      readReceipts: {},
+    });
     channels = new Map();
     presences = new Map();
     onlineUsers = new Map();
@@ -279,6 +319,96 @@ describe('joinPresenceLobby', () => {
     ch._triggerJoin('error', { reason: 'unauthorized' });
 
     expect(channels.has('presence:lobby')).toBe(false);
+  });
+
+  it('applies friend customization changes to friend and routed chat identity stores', () => {
+    useFriendStore.setState({
+      friends: [
+        {
+          id: 'u42',
+          username: 'friend',
+          displayName: 'Friend',
+          avatarUrl: null,
+          status: 'online',
+          statusMessage: null,
+          friendshipId: 'fs-42',
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+    });
+    useChatStore.setState({
+      conversations: [
+        {
+          id: 'conv-42',
+          type: 'direct',
+          name: null,
+          avatarUrl: null,
+          participants: [
+            {
+              id: 'p-me',
+              userId: 'me',
+              user: {
+                id: 'me',
+                username: 'me',
+                displayName: null,
+                avatarUrl: null,
+                status: 'online',
+              },
+              nickname: null,
+              isMuted: false,
+              mutedUntil: null,
+              joinedAt: '2026-01-01T00:00:00Z',
+            },
+            {
+              id: 'p-friend',
+              userId: 'u42',
+              user: {
+                id: 'u42',
+                username: 'friend',
+                displayName: 'Friend',
+                avatarUrl: null,
+                status: 'online',
+              },
+              nickname: null,
+              isMuted: false,
+              mutedUntil: null,
+              joinedAt: '2026-01-01T00:00:00Z',
+            },
+          ],
+          lastMessage: null,
+          unreadCount: 0,
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+    });
+
+    const socket = createMockSocket();
+    joinPresenceLobby(
+      socket as never,
+      channels as never,
+      presences as never,
+      onlineUsers,
+      notifyStatusChange
+    );
+
+    const ch = channels.get('presence:lobby')!;
+    ch._trigger('friend_customization_changed', {
+      user_id: 'u42',
+      customization: {
+        avatar_border_id: 'border_cyberpunk_epic_01',
+        title_id: 'title-founder',
+      },
+    });
+
+    expect(useFriendStore.getState().friends[0]).toMatchObject({
+      avatarBorderId: 'border_cyberpunk_epic_01',
+      equippedTitleId: 'title-founder',
+    });
+    expect(useChatStore.getState().conversations[0]!.participants[1]!.user).toMatchObject({
+      avatarBorderId: 'border_cyberpunk_epic_01',
+      equippedTitleId: 'title-founder',
+    });
   });
 });
 

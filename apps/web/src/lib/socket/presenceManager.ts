@@ -8,9 +8,8 @@
 
 import type { Socket, Channel } from 'phoenix';
 import { Presence } from 'phoenix';
-import { useFriendStore } from '@/modules/social/store';
 import { socketLogger as logger } from '../logger';
-import { identityFieldsFromApi } from '../identity';
+import { applyOtherUserIdentityPayload } from '../identity/otherIdentitySync';
 
 /** Customization data received from presence broadcasts. */
 export interface FriendCustomization {
@@ -45,22 +44,7 @@ function isFriendCustomization(value: unknown): value is FriendCustomization {
 }
 
 function applyFriendCustomization(userId: string, customization: FriendCustomization): void {
-  const identity = identityFieldsFromApi({ id: userId, customization });
-  const patch = {
-    avatarBorderId: identity.avatarBorderId,
-    avatar_border_id: identity.avatarBorderId,
-    equippedTitleId: identity.equippedTitleId,
-    equippedBadgeIds: identity.equippedBadgeIds,
-    equippedNameplateId: identity.equippedNameplateId,
-    profileTheme: identity.profileTheme,
-    chatTheme: identity.chatTheme,
-    displayNameFont: identity.displayNameFont,
-    displayNameEffect: identity.displayNameEffect,
-    displayNameColor: identity.displayNameColor,
-    displayNameSecondaryColor: identity.displayNameSecondaryColor,
-  };
-
-  useFriendStore.getState().applyIdentityPatch(userId, patch);
+  applyOtherUserIdentityPayload(userId, { customization });
 }
 
 /**

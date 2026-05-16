@@ -178,19 +178,13 @@ export function FriendsTab({
                   <div className="flex items-center gap-3">
                     <UserProfileCard userId={friend.id} trigger="both">
                       <div className="relative flex-shrink-0">
-                        {friend.avatarUrl ? (
-                          <ThemedAvatar
-                            src={friend.avatarUrl}
-                            alt={friend.displayName || friend.username}
-                            size="medium"
-                            className="h-12 w-12 ring-2 ring-white/[0.08]"
-                            avatarBorderId={getAvatarBorderId(friend)}
-                          />
-                        ) : (
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-500/80 to-purple-600/80 font-medium text-white ring-2 ring-white/[0.08]">
-                            {friend.username.charAt(0).toUpperCase()}
-                          </div>
-                        )}
+                        <ThemedAvatar
+                          src={friend.avatarUrl}
+                          alt={friend.displayName || friend.username}
+                          size="medium"
+                          className="h-12 w-12 ring-2 ring-white/[0.08]"
+                          avatarBorderId={getAvatarBorderId(friend)}
+                        />
                         {friend.status === 'online' && (
                           <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/40 ring-2 ring-dark-900" />
                         )}

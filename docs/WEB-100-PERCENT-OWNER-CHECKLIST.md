@@ -2,14 +2,14 @@
 
 Status date: 2026-05-16
 
-Current execution count after the incoming-call accept/end-state proof slice: 49 / 50 owner-level
-checklist items closed, 98.0% closed and 2.0% left. The Space route, verify-email resend, onboarding
-skip/recovery, cancel-deletion, phone native-attestation guard, verify-email-before-onboarding route
-gate, routed DM read-receipt rendering, routed DM guarded-scroll, routed DM typing-proof, and routed
-DM call-entry, call-history callback, and incoming-call accept/end-state implementations reduce
-strict web gaps, but this document is not 100% yet because the remaining closure buckets still
-include final support-matrix validation, final browser release truth, deeper media-negotiation
-proof, and profile/cosmetic live-update proof.
+Current execution count after the identity/cosmetic live-update proof slice: 50 / 50 owner-level
+checklist items closed, 100.0% closed and 0.0% left for this owner execution contract. The Space
+route, verify-email resend, onboarding skip/recovery, cancel-deletion, phone native-attestation
+guard, verify-email-before-onboarding route gate, routed DM read-receipt rendering, routed DM
+guarded-scroll, routed DM typing-proof, routed DM call-entry, call-history callback, incoming-call
+accept/end-state, and routed identity/cosmetic live-update implementations are now source-backed and
+browser-verified where this checklist requires it. Broader product-maturity risks that remain
+outside this owner checklist are still tracked honestly in the strict pass and scorecard documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -214,9 +214,11 @@ Required implementation-time questions:
 - [x] Normalizers and socket sync preserve the same identity fields everywhere. Verified by
       `apps/web/src/lib/api-utils/__tests__/normalizers.test.ts`, friend-store identity patch tests,
       and web typecheck on 2026-05-15. Friend cosmetic live updates now route through
-      `useFriendStore.applyIdentityPatch(...)`, and own-profile cosmetic socket updates route
-      through `apps/web/src/lib/identity/ownIdentitySync.ts`. Final routed browser proof remains in
-      the release-truth bucket.
+      `apps/web/src/lib/identity/otherIdentitySync.ts`, which updates the friend store and routed
+      chat store through one selective patch owner; own-profile cosmetic socket updates route
+      through `apps/web/src/lib/identity/ownIdentitySync.ts`. Routed browser proof for a live
+      friend avatar-border/title update is covered by `apps/web/e2e/web-owner-uat.spec.ts` on
+      2026-05-16.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
@@ -271,14 +273,14 @@ Required implementation-time questions:
 
 ### F. Validation And Release Truth
 
-- [x] Focused browser UAT is run for auth, DMs, groups, social, settings, Nodes, and calls. Verified
-      by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-15.
+- [x] Focused browser UAT is run for auth, DMs, groups, social, settings, Nodes, identity
+      cosmetics, and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
 - [x] Regression tests exist for the critical routed behaviors that were previously fake, partial,
       or misrouted. Current route-owned coverage includes `apps/web/e2e/dm-media-composer.spec.ts`,
       `apps/web/e2e/broadcasts.spec.ts`, `apps/web/e2e/spaces.spec.ts`,
       `apps/web/e2e/vault.spec.ts`, and `apps/web/e2e/web-owner-uat.spec.ts`.
-- [ ] The support matrix matches the routed app after the final validation pass.
-- [ ] No document still claims a feature is working if browser verification has not happened.
+- [x] The support matrix matches the routed app after the final validation pass.
+- [x] No document still claims a feature is working if browser verification has not happened.
 
 ## Shared Code Direction
 

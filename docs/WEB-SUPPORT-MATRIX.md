@@ -52,7 +52,7 @@ Use this document as the plain-language answer to "Can I do this on web right no
 | Social Hub              | `Web partial` | Friends, notifications, and discover all render on web, but some deep links and secondary actions still need correction.                                                                                                                                                                                                                                                                                                             |
 | Discover results        | `Web partial` | Search results render, group results with backend default-channel metadata open mounted channel routes, and unjoined groups can be joined directly. Focused UAT verifies routed search-result rendering; direct-join edge states remain incomplete.                                                                                                                                                                                  |
 | Notification deep links | `Web partial` | Notifications can route to messages, profiles, forums, and group channel targets when metadata is present; browser verification is still pending.                                                                                                                                                                                                                                                                                    |
-| Identity cosmetics      | `Web partial` | Auth, profile, friend, chat, group member, profile-card, and socket normalizers now preserve one shared identity field set for avatar borders, titles, badges, nameplates, themes, and display-name styles. The customization route now uses backend inventory for ownership/equipped truth, and friend plus own-profile cosmetic socket patches now flow through explicit identity owners. Final live-update browser proof remains. |
+| Identity cosmetics      | `Web supported` | Auth, profile, friend, chat, group member, profile-card, and socket normalizers now preserve one shared identity field set for avatar borders, titles, badges, nameplates, themes, and display-name styles. The customization route now uses backend inventory for ownership/equipped truth, own-profile cosmetic socket patches flow through an explicit identity owner, and friend cosmetic patches now update routed friend/chat surfaces through one selective identity-sync owner. Focused owner UAT browser-verifies a live avatar-border/title update on the routed DM surface. |
 
 ## Auth And Security
 
@@ -93,7 +93,6 @@ The biggest remaining web gaps are:
 - unmounted inbox features that already exist in module code
 - incomplete Broadcast management parity and final browser verification for the new Space inbox
   controls
-- settings reload/live-sync browser proof plus profile/cosmetic live-update proof that still need
-  final browser validation
+- settings reload/live-sync browser proof that still needs final multi-tab/device validation
 
 For the engineering inventory behind those gaps, see `docs/WEB-IMPLEMENTATION-INVENTORY.md`.

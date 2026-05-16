@@ -52,6 +52,11 @@ export interface FriendRequest {
 }
 
 export interface FriendIdentityPatch {
+  username?: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  status?: Friend['status'];
+  statusMessage?: string | null;
   avatarBorderId?: string | null;
   avatar_border_id?: string | null;
   equippedTitleId?: string | null;

@@ -157,19 +157,13 @@ export function EnhancedMessageBubble({
                 transition={springs.snappy}
                 title={`View ${message.sender?.displayName || message.sender?.username || 'user'}'s profile`}
               >
-                {message.sender?.avatarUrl ? (
-                  <ThemedAvatar
-                    src={message.sender.avatarUrl}
-                    alt={message.sender?.displayName || 'User'}
-                    size="small"
-                    className="h-8 w-8"
-                    avatarBorderId={getAvatarBorderId(message.sender)}
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm font-bold text-primary-400">
-                    {(message.sender?.displayName || 'U').charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <ThemedAvatar
+                  src={message.sender.avatarUrl}
+                  alt={message.sender.displayName || 'User'}
+                  size="small"
+                  className="h-8 w-8"
+                  avatarBorderId={getAvatarBorderId(message.sender)}
+                />
               </motion.button>
             )}
           </div>

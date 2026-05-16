@@ -108,13 +108,13 @@ The live web app still diverges from that in six concrete ways:
    defines the runtime-neutral identity projection, and
    `apps/web/src/lib/identity/canonicalIdentity.ts` is now used by auth, profile, friend, chat,
    group, HTTP, socket normalizers, and backend-hydrated profile cards.
-   `friend_customization_changed` now updates the friend-store identity patch owner instead of
-   staying in a presence-only cache or mutating the store ad hoc. Own-profile `profile_updated`,
+   `friend_customization_changed` now updates the selective other-user identity sync owner instead
+   of staying in a presence-only cache or mutating one store ad hoc. Own-profile `profile_updated`,
    `item_equipped`, and `item_unequipped` socket events now flow through
    `applyOwnProfileUpdate(...)` / `applyOwnItem...(...)` instead of inline auth/customization
    mutations. Routed identity customization now reads ownership/equipped state from backend
-   inventory instead of static local unlock flags. Final profile/cosmetic live-update browser proof
-   remains open.
+   inventory instead of static local unlock flags. Focused owner UAT now browser-verifies a live
+   avatar-border/title patch on the routed DM surface.
 
 4. Settings and privacy ownership is closer to the Telegram model after the 2026-05-15 selective
    privacy slice. `packages/shared-types/src/privacy.ts`,
@@ -221,7 +221,7 @@ Status meanings:
 | Friend request / accept / remove actions            | Partial | Real actions exist in profile flows and friend lists refresh from the user channel. Friend-facing identity cards now hydrate backend profile data, but broader friend action parity and browser proof remain incomplete.                                                                                                                                                                                                                                                                                                                      |
 | Mini profile cards                                  | Ready   | `UserProfileCard` now fetches `/api/v1/users/:id` when only `userId` is supplied, maps the payload through canonical identity fields, and is covered by `apps/web/src/modules/social/components/user-profile-card/__tests__/user-profile-card.test.tsx`.                                                                                                                                                                                                                                                                                      |
 | Full profile cards                                  | Ready   | The same hydrated `UserProfileCard` path feeds the full popout variant, so callers no longer need to pass a complete user object to avoid placeholder data. Covered by focused user-profile-card tests plus existing full-card tests.                                                                                                                                                                                                                                                                                                         |
-| Identity / customization sync across surfaces       | Partial | Canonical identity normalization now preserves richer cosmetic fields, `friend_customization_changed` feeds the identity path, `UserProfileCard` hydrates backend profile data for `userId` callers, and the identity-customization route hydrates ownership/equipped truth from backend inventory. Remaining risk is final reload/live-update browser proof.                                                                                                                                                                                 |
+| Identity / customization sync across surfaces       | Ready   | Canonical identity normalization now preserves richer cosmetic fields, `friend_customization_changed` feeds one selective other-user identity owner that updates friend plus routed chat stores, `UserProfileCard` hydrates backend profile data for `userId` callers, and the identity-customization route hydrates ownership/equipped truth from backend inventory. `apps/web/e2e/web-owner-uat.spec.ts` browser-verifies a live friend avatar-border/title update on the routed DM surface; broader settings multi-tab/device sync remains tracked separately. |
 | Settings initial hydration                          | Ready   | `settings.tsx` now boots through `usePreferenceOrchestrator` and blocks section panels until settings/customization/theme bootstrap is fulfilled for the current user, with a retry state for bootstrap failures. Focused orchestrator tests cover the readiness rule.                                                                                                                                                                                                                                                                        |
 | Notification settings save and reload persistence   | Ready   | Save actions are real, and `apps/backend/test/cgraph_web/controllers/api/v1/settings_controller_test.exs` now proves `notify_group_invites`, `notify_forum_replies`, `notify_economy`, `notify_system`, `notification_sound`, and `dnd_until` round-trip through the settings response. Final browser reload/live-sync proof remains tracked under global settings validation.                                                                                                                                                                |
 | Privacy settings correctness                        | Partial | The 2026-05-15 slice adds `packages/shared-types/src/privacy.ts`, backend `selective_privacy` storage/rendering, API-client schemas, and web controls for message requests, phone visibility, calls, and exception lists. Focused mapper/component/backend tests cover the contract; final routed browser reload and cross-device sync validation remain open.                                                                                                                                                                                |
@@ -425,17 +425,18 @@ High-confidence findings:
    the canonical identity fields from `apps/web/src/lib/identity/canonicalIdentity.ts`.
 
 5. `apps/web/src/lib/socket/presenceManager.ts` now consumes `friend_customization_changed` through
-   `useFriendStore.getState().applyIdentityPatch(...)`, so friend rows and friend-request users
-   update through one store-owned identity patch action.
+   `apps/web/src/lib/identity/otherIdentitySync.ts`, so friend rows, friend-request users,
+   conversation participants, sidebar previews, and routed message senders update through one
+   selective identity patch owner.
 
 6. `apps/backend/lib/cgraph_web/controllers/api/v1/message_json.ex` and
    `apps/backend/lib/cgraph_web/controllers/api/v1/conversation_json.ex` now serialize the same
    sender/participant cosmetic identity fields that web normalizers preserve.
 
-7. Own-profile socket events now route through one identity sync owner, but visual consumption is
-   still spread across auth, customization, profile-card, chat, and helper paths. Avatar borders,
-   badges, titles, and other cosmetics still need final live-update/browser proof across every
-   visual surface.
+7. Own-profile socket events route through `ownIdentitySync`, and other-profile socket events route
+   through `otherIdentitySync`, which updates friend and routed chat state together. Avatar-border
+   and title live-update proof is covered by owner UAT on the routed DM surface; broader badge and
+   multi-tab/device settings proof remains tracked separately.
 
 ## 3. Settings are connected, but the live web settings experience is still broken in specific ways
 
@@ -739,16 +740,16 @@ The current Goal 2 release path has 10 phases. Scored against those phases today
 | Group route and shell convergence                | `55%` | Valid channel routes exist, primary create/join flows use `getGroupRoute(...)`, Social discover/notification group links can use canonical channel metadata, global Explore group cards now consume backend `default_channel_id`, channel-list controls split text, voice, video, announcement, and forum destinations, and `/groups/:groupId/settings` mounts the admin/settings stack. Lower-context bare fallbacks, browser verification, and dual-shell cleanup remain.                                                                                                                                                    |
 | Routed DM parity                                 | `75%` | Basic DM open/send, browser-verified typing emit, stable guarded search anchors, jump-to-latest behavior, mark-as-read, browser-verified read-receipt rendering, browser-verified file/photo and voice-note send, browser-verified DM call-entry launch, routed reply/search jump/edit/delete/forward/request/pin/pinned-panel behavior, incoming-call accept/end-call route proof, and sidebar mark-read/archive are now wired. Remaining gaps are canonical surface convergence, GIF/sticker parity, remaining list-action browser verification, deeper media-negotiation proof, and broader final browser verification.     |
 | Routed group parity                              | `50%` | Group fetch/send works after landing on a valid channel, voice/video channel routes now mount a LiveKit-backed group room view, group settings/admin tabs are mounted, the routed header has real loaded-message search plus backend-backed group mute/unmute, and channel message menus now wire edit/delete/report/pin/copy-link actions. Browser verification, permission edge states, older-message search coverage, and media parity remain incomplete.                                                                                                                                                                   |
-| Identity and profile convergence                 | `70%` | A shared identity contract and web canonical identity normalizer now preserve avatar, border, title, badges, nameplate, theme, and display-name style fields across auth/profile/friend/chat/group HTTP and socket paths. Routed identity customization now uses backend-owned inventory/equipped truth, `UserProfileCard` hydrates `userId` callers from the backend, friend cosmetic socket patches route through the friend-store identity patch owner, and own-profile cosmetic socket patches route through one identity sync owner. Remaining risk is cross-surface browser proof and cleanup of split visual consumers. |
+| Identity and profile convergence                 | `78%` | A shared identity contract and web canonical identity normalizer now preserve avatar, border, title, badges, nameplate, theme, and display-name style fields across auth/profile/friend/chat/group HTTP and socket paths. Routed identity customization now uses backend-owned inventory/equipped truth, `UserProfileCard` hydrates `userId` callers from the backend, friend cosmetic socket patches route through one selective friend/chat identity owner, own-profile cosmetic socket patches route through one identity sync owner, and owner UAT verifies a live avatar-border/title update on the routed DM surface. Remaining risk is broader badge/nameplate, multi-tab/device, and visual-consumer cleanup proof. |
 | Settings, privacy, and customization convergence | `75%` | The settings route and panels are real, preference bootstrap has one owner, section panels are gated until bootstrap is ready, the runtime-neutral settings/defaults contract now lives in `packages/shared-types/src/settings.ts`, selective privacy has shared types/API/backend/web coverage, Calls/Stickers reset now saves through the settings API, customization/theme server patches now sync over the user channel, and identity customization inventory/equipped state now comes from backend inventory with backend rejection of unowned saves. Broader browser validation remains open.                            |
 | Nodes and calls honesty                          | `56%` | Nodes false-success and schema drift are materially fixed in targeted tests, call-history callback is browser-verified, and incoming-call accept/end-call route behavior is browser-verified. Browser negative-path validation plus deeper peer media-negotiation trust work are still open.                                                                                                                                                                                                                                                                                                                                   |
 | Auth, onboarding, and account lifecycle          | `65%` | Email auth and recovery are wired, logged-out verification resend works at the route level, onboarding skip/failure recovery is route-owned, delete-account includes cancellation UI, web no longer advances phone auth into the native-only device-attestation checkpoint, and post-auth route order is now verify-email before onboarding before app routes. Browser verification is still incomplete across the broader auth route set.                                                                                                                                                                                     |
 | Social, discovery, and notification destinations | `68%` | Data loads into the route, the Social Hub has a real main pane, notifications preserve action destinations, forums route by slug, groups with channel metadata route to mounted channel destinations, and unjoined group results now run a real join action. Browser verification and deeper action parity remain.                                                                                                                                                                                                                                                                                                             |
 | Final release validation                         | `0%`  | The final strict browser pass has not been rerun after the release-path fixes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
-Equal-weight release-readiness score: `46.6%`.
+Equal-weight release-readiness score: `58.7%`.
 
-Truthful rounded Goal 2 completion: `47%`.
+Truthful rounded Goal 2 completion: `59%`.
 
 If someone produces a much higher number, they are almost certainly counting shared code existence
 or surface count instead of release-trustworthy, route-owned behavior.
@@ -884,14 +885,17 @@ Done when:
       shape.
 - [x] Fix `UserProfileCard` so `userId` resolves authoritative user data instead of falling back to
       `DEFAULT_PLACEHOLDER_USER`.
-- [ ] Stop splitting own-profile cosmetics vs other-profile cosmetics across different stores and
-      helper paths.
-- [x] Consume `friend_customization_changed` through the friend-store identity patch owner instead
-      of leaving it in `presenceManager` cache or direct ad hoc store mutation.
+- [x] Stop splitting own-profile cosmetics vs other-profile cosmetics across different stores and
+      helper paths for the audited routed surfaces; own-profile updates use `ownIdentitySync`, and
+      other-profile updates use `otherIdentitySync`.
+- [x] Consume `friend_customization_changed` through the selective other-user identity patch owner
+      instead of leaving it in `presenceManager` cache or direct ad hoc store mutation.
 - [x] Route own-profile profile/cosmetic socket updates into one identity sync owner instead of
       inline parallel auth/customization mutations in `userChannel`.
-- [ ] Revalidate avatar border, badges, title, and profile-card consistency after reload and live
-      updates.
+- [x] Revalidate avatar border, title, and routed profile/chat consistency after live updates.
+      `apps/web/e2e/web-owner-uat.spec.ts` dispatches a live friend identity patch and verifies the
+      routed DM surface renders the updated avatar border plus `Founder` title. Broader badge and
+      multi-tab/device settings proof remains outside this row.
 
 Done when:
 

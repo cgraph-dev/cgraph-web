@@ -543,6 +543,54 @@ describe('conversation management', () => {
   it('getRecipientId returns null for unknown conversation', () => {
     expect(useChatStore.getState().getRecipientId('unknown', 'me')).toBeNull();
   });
+
+  it('applies live identity patches to participants, sidebar previews, and routed messages', () => {
+    const friendMessage = makeMsg({
+      senderId: 'user-2',
+      sender: { id: 'user-2', username: 'bob', displayName: 'Bob', avatarUrl: null },
+      replyTo: makeMsg({
+        id: 'reply-1',
+        senderId: 'user-2',
+        sender: { id: 'user-2', username: 'bob', displayName: 'Bob', avatarUrl: null },
+      }),
+    });
+    useChatStore.setState({
+      conversations: [makeConv({ lastMessage: friendMessage })],
+      archivedConversations: [makeConv({ id: 'archived-1' })],
+      messages: { 'conv-1': [friendMessage] },
+    });
+
+    useChatStore.getState().applyUserIdentityPatch('user-2', {
+      displayName: 'Bobby',
+      avatarBorderId: 'border_cyberpunk_epic_01',
+      equippedTitleId: 'title-founder',
+    });
+
+    const state = useChatStore.getState();
+    expect(state.conversations[0]!.participants[1]!.user).toMatchObject({
+      displayName: 'Bobby',
+      avatarBorderId: 'border_cyberpunk_epic_01',
+      equippedTitleId: 'title-founder',
+    });
+    expect(state.conversations[0]!.lastMessage?.sender).toMatchObject({
+      displayName: 'Bobby',
+      avatarBorderId: 'border_cyberpunk_epic_01',
+      equippedTitleId: 'title-founder',
+    });
+    expect(state.messages['conv-1']![0]!.sender).toMatchObject({
+      displayName: 'Bobby',
+      avatarBorderId: 'border_cyberpunk_epic_01',
+      equippedTitleId: 'title-founder',
+    });
+    expect(state.messages['conv-1']![0]!.replyTo?.sender).toMatchObject({
+      displayName: 'Bobby',
+      avatarBorderId: 'border_cyberpunk_epic_01',
+      equippedTitleId: 'title-founder',
+    });
+    expect(state.archivedConversations[0]!.participants[1]!.user.avatarBorderId).toBe(
+      'border_cyberpunk_epic_01'
+    );
+  });
 });
 
 // 9. Add / Update / Remove Message (synchronous ops)

@@ -19,6 +19,7 @@ import { initErrorTracking, reportWebVitals } from '@/lib/error-tracking';
 import { startAutoSync, stopAutoSync } from '@/lib/offline/sync-service';
 import { useAuthStore } from '@/modules/auth/store';
 import { useDesktopInit } from '@/lib/desktop/use-desktop-init';
+import { applyOtherUserIdentityPayload } from '@/lib/identity/otherIdentitySync';
 import '@/lib/theme/theme-globals.css';
 import '@/styles/customization-effects.css';
 
@@ -52,6 +53,8 @@ const PushNotificationPrompt = lazy(() =>
   }))
 );
 
+const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
+
 // Initialize error tracking on module load
 initErrorTracking();
 reportWebVitals();
@@ -80,6 +83,15 @@ function ScrollToTop() {
   }, [pathname]);
 
   return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function getUserIdFromPayload(payload: Record<string, unknown>) {
+  const userId = payload.userId ?? payload.user_id;
+  return typeof userId === 'string' ? userId : null;
 }
 
 /**
@@ -115,6 +127,20 @@ export default function App() {
     startAutoSync();
     return () => stopAutoSync();
   }, [token]);
+
+  useEffect(() => {
+    if (!isE2EAuthBypass) return undefined;
+
+    const handleIdentityPatch = (event: Event) => {
+      if (!(event instanceof CustomEvent) || !isRecord(event.detail)) return;
+      const userId = getUserIdFromPayload(event.detail);
+      if (!userId) return;
+      applyOtherUserIdentityPayload(userId, event.detail);
+    };
+
+    window.addEventListener('cgraph:e2e-identity-patch', handleIdentityPatch);
+    return () => window.removeEventListener('cgraph:e2e-identity-patch', handleIdentityPatch);
+  }, []);
 
   return (
     <AuthInitializer>

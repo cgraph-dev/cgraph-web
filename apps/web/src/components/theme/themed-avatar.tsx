@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 
 import { useThemeStore, THEME_COLORS } from '@/stores';
 
-import type { UserTheme } from '@/stores';
+import type { LegacyTheme, UserTheme } from '@/stores/theme/types';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
 import type { AvatarBorderConfig } from '@/types/avatar-borders';
 import { AVATAR_BORDERS } from '@/data/avatar-borders';
@@ -25,6 +25,16 @@ interface ThemedAvatarProps {
   onClick?: () => void;
   style?: React.CSSProperties;
 }
+
+type AvatarTheme = Pick<
+  LegacyTheme,
+  | 'avatarBorder'
+  | 'avatarBorderColor'
+  | 'animationSpeed'
+  | 'particlesEnabled'
+  | 'glowEnabled'
+  | 'effectPreset'
+>;
 
 const sizeMap = {
   xs: 'w-6 h-6',
@@ -74,10 +84,23 @@ export function ThemedAvatar({
   onClick,
   style,
 }: ThemedAvatarProps) {
-  const currentUserTheme = useThemeStore((state) => state.theme);
+  const currentUserTheme: AvatarTheme = {
+    avatarBorder: useThemeStore((state) => state.avatarBorder),
+    avatarBorderColor: useThemeStore((state) => state.avatarBorderColor),
+    animationSpeed: useThemeStore((state) => state.animationSpeed),
+    particlesEnabled: useThemeStore((state) => state.particlesEnabled),
+    glowEnabled: useThemeStore((state) => state.glowEnabled),
+    effectPreset: useThemeStore((state) => state.effectPreset),
+  };
 
-  // Use provided user theme or fall back to current user's theme
-  const theme = userTheme ? { ...currentUserTheme, ...userTheme } : currentUserTheme;
+  const theme: AvatarTheme = {
+    avatarBorder: userTheme?.avatarBorder ?? currentUserTheme.avatarBorder,
+    avatarBorderColor: userTheme?.avatarBorderColor ?? currentUserTheme.avatarBorderColor,
+    animationSpeed: userTheme?.animationSpeed ?? currentUserTheme.animationSpeed,
+    particlesEnabled: userTheme?.particlesEnabled ?? currentUserTheme.particlesEnabled,
+    glowEnabled: userTheme?.glowEnabled ?? currentUserTheme.glowEnabled,
+    effectPreset: currentUserTheme.effectPreset,
+  };
   const colors = THEME_COLORS[theme.avatarBorderColor];
 
   const borderWidth = borderWidthMap[size];
@@ -93,7 +116,7 @@ export function ThemedAvatar({
 
   if (resolvedBorder) {
     return (
-      <div className={className} style={style}>
+      <div className={className} style={style} data-avatar-border-id={resolvedBorder.id}>
         <AvatarBorderRenderer
           src={src || '/default-avatar.png'}
           alt={alt}
@@ -211,6 +234,7 @@ export function ThemedAvatar({
       whileHover={onClick ? { scale: 1 } : undefined}
       whileTap={onClick ? { scale: 1 } : undefined}
       onClick={onClick}
+      data-avatar-border-id={avatarBorderId ?? undefined}
     >
       {/* Particles effect for premium borders */}
       {theme.particlesEnabled &&
