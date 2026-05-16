@@ -17,6 +17,8 @@ import {
 } from '@/modules/chat/components/animated-reaction-bubble';
 import { MessageActionMenu } from '@/modules/chat/components/message-bubble/message-action-menu';
 import { MessageEditForm } from '@/modules/chat/components/message-bubble/message-edit-form';
+import { ReadReceipts } from '@/modules/chat/components/message-bubble/read-receipts';
+import type { ReadByEntry } from '@/modules/chat/components/message-bubble/types';
 import { GlassCard } from '@/shared/components/ui';
 import { InlineTitle } from '@/shared/components/ui';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
@@ -30,8 +32,24 @@ import { FADE_IN } from '@/lib/animations/transitions';
 
 const logger = createLogger('EnhancedMessageBubble');
 
-/**
- */
+/** Convert backend receipt metadata into the avatar receipt component shape. */
+function readReceiptEntries(
+  readBy: EnhancedMessageBubbleProps['message']['metadata']['readBy'],
+  currentUserId?: string
+): ReadByEntry[] {
+  if (!Array.isArray(readBy)) return [];
+
+  return readBy
+    .filter((entry) => entry && entry.userId !== currentUserId)
+    .map((entry) => ({
+      id: entry.id ?? entry.userId,
+      userId: entry.userId,
+      readAt: entry.readAt,
+      username: entry.displayName ?? entry.username ?? undefined,
+      avatarUrl: entry.avatarUrl ?? undefined,
+    }));
+}
+
 /**
  * Enhanced Message Bubble component.
  */
@@ -65,6 +83,7 @@ export function EnhancedMessageBubble({
     message.messageType === 'image' ||
     message.messageType === 'video' ||
     message.messageType === 'file';
+  const readers = isOwn ? readReceiptEntries(message.metadata?.readBy, user?.id) : [];
 
   // React 19 useOptimistic: show new reactions immediately before the API responds.
   // When the parent re-renders with updated message.reactions from the store,
@@ -345,6 +364,8 @@ export function EnhancedMessageBubble({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {readers.length > 0 && <ReadReceipts readBy={readers} />}
         </div>
       </motion.div>
     </AnimatedMessageWrapper>

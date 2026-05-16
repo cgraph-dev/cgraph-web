@@ -128,7 +128,14 @@ export interface MessageMetadata {
   waveform?: number[];
   width?: number;
   height?: number;
-  readBy?: Array<{ userId: string; readAt: string }>;
+  readBy?: Array<{
+    id?: string;
+    userId: string;
+    readAt: string;
+    username?: string;
+    avatarUrl?: string;
+    displayName?: string;
+  }>;
   stickerId?: string;
   stickerPackId?: string;
   gifId?: string;

@@ -38,6 +38,14 @@ returns `onboarding_completed` so register/login responses can be gated immediat
 risk is broad browser verification of login, registration, recovery, QR, phone, and onboarding
 paths.
 
+2026-05-16 update: routed DM read-receipt UI is no longer listed as missing. Backend message JSON
+now preloads `read_receipts`, exposes them as `metadata.readBy`, and the routed enhanced DM bubble
+renders the Seen/read-receipt state. Focused backend proof lives in
+`apps/backend/test/cgraph_web/controllers/api/v1/message_controller_test.exs`, and the routed
+browser proof is in `apps/web/e2e/dm-media-composer.spec.ts`. Remaining DM risk is typing browser
+proof, guarded autoscroll/unread jump, GIF/sticker send, call-flow verification, and final
+conversation-list browser proof.
+
 2026-05-16 update: account deletion grace-period recovery is no longer listed as missing UI. The
 settings delete-account panel still uses password-confirmed `POST /api/v1/me/delete-account` and now
 also exposes `DELETE /api/v1/me/delete-account` for pending-deletion cancellation, with focused

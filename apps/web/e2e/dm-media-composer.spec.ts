@@ -301,6 +301,17 @@ async function installMessagingApiMocks(
               senderId: CURRENT_USER_ID,
               sender: conversation.participants[0].user,
               content: 'editable proof',
+              metadata: {
+                readBy: [
+                  {
+                    userId: FRIEND_USER_ID,
+                    readAt: '2026-01-01T00:02:00.000Z',
+                    username: 'Friend',
+                    displayName: 'Friend',
+                    avatarUrl: null,
+                  },
+                ],
+              },
               createdAt: '2026-01-01T00:01:00.000Z',
               updatedAt: '2026-01-01T00:01:00.000Z',
             }),
@@ -438,6 +449,7 @@ test.describe('DM media composer', () => {
 
     await expect(page.locator('#message-msg-own')).toBeVisible();
     await expect(page.locator('#message-msg-own')).toBeInViewport();
+    await expect(page.locator('#message-msg-own').getByText(/seen/i)).toBeVisible();
 
     const friendMessage = page.locator('#message-msg-1');
     await friendMessage.hover();
