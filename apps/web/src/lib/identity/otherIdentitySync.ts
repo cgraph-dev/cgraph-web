@@ -102,6 +102,9 @@ export function otherUserIdentityPatchFromPayload(
   return patch;
 }
 
+/**
+ * Applies a normalized other-user identity patch to every routed identity cache.
+ */
 export function applyOtherUserIdentityPatch(
   userId: string,
   patch: OtherUserIdentityPatch
@@ -112,6 +115,9 @@ export function applyOtherUserIdentityPatch(
   useChatStore.getState().applyUserIdentityPatch(userId, patch);
 }
 
+/**
+ * Normalizes a backend or socket payload before applying it to routed identity caches.
+ */
 export function applyOtherUserIdentityPayload(
   userId: string,
   payload: Record<string, unknown>

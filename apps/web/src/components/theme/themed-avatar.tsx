@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 
 import { useThemeStore, THEME_COLORS } from '@/stores';
 
-import type { LegacyTheme, UserTheme } from '@/stores/theme/types';
+import type { AvatarBorderType, EffectPreset, ThemeColorPreset, UserTheme } from '@/stores';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
 import type { AvatarBorderConfig } from '@/types/avatar-borders';
 import { AVATAR_BORDERS } from '@/data/avatar-borders';
@@ -26,15 +26,14 @@ interface ThemedAvatarProps {
   style?: React.CSSProperties;
 }
 
-type AvatarTheme = Pick<
-  LegacyTheme,
-  | 'avatarBorder'
-  | 'avatarBorderColor'
-  | 'animationSpeed'
-  | 'particlesEnabled'
-  | 'glowEnabled'
-  | 'effectPreset'
->;
+interface AvatarTheme {
+  avatarBorder: AvatarBorderType;
+  avatarBorderColor: ThemeColorPreset;
+  animationSpeed: NonNullable<UserTheme['animationSpeed']>;
+  particlesEnabled: boolean;
+  glowEnabled: boolean;
+  effectPreset: EffectPreset;
+}
 
 const sizeMap = {
   xs: 'w-6 h-6',
