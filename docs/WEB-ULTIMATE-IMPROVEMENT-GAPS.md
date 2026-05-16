@@ -11,8 +11,12 @@ this workstream, see `docs/WEB-100-PERCENT-OWNER-CHECKLIST.md`.
 2026-05-15 update: first-class Vault/Saved Messages is no longer listed as a gap. `/vault` now opens
 the backend Note-to-Self conversation and is browser-verified by `apps/web/e2e/vault.spec.ts`.
 First-class Spaces routing is also no longer missing: `/spaces` and `/spaces/:spaceId` now use
-`/api/v1/spaces` and are browser-verified by `apps/web/e2e/spaces.spec.ts`. Per-chat Space move
-controls remain part of the conversation-list management gap.
+`/api/v1/spaces` and are browser-verified by `apps/web/e2e/spaces.spec.ts`.
+
+2026-05-16 update: per-chat Space move controls are no longer listed as a missing conversation-list
+feature. The routed conversation action menu now loads server-owned Spaces, shows membership state,
+and patches `/api/v1/spaces/:id` include/exclude lists with rollback on failure. Remaining risk is
+final routed browser verification of the combined conversation-list menu.
 
 2026-05-15 update: the web privacy model decision is closed as the fuller selective model.
 `packages/shared-types/src/privacy.ts`, backend `selective_privacy`, API-client schemas, web
@@ -55,8 +59,8 @@ quietly in the focused Vitest run.
 2026-05-16 update: routed conversation-list participant controls are now real for the core inbox
 actions. The backend mounts current-user routes for mark-unread, archive, unarchive, pin/unpin, and
 mute/unmute; the web sidebar exposes those actions plus archived-list recovery, and focused
-controller/store tests cover the path. Per-chat Space move controls remain part of the
-conversation-list management gap.
+controller/store tests cover the path. Per-chat Space move controls now use the same routed sidebar
+menu and patch the server-owned Spaces contract.
 
 2026-05-15 update: the runtime-neutral user settings contract is no longer web-local.
 `packages/shared-types/src/settings.ts` owns user setting types and defaults, and the web

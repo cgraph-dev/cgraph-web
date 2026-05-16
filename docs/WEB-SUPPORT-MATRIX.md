@@ -22,7 +22,7 @@ Use this document as the plain-language answer to "Can I do this on web right no
 | Secret Chats / Ghost Chat    | `Mobile/Desktop only` | Web intentionally stays outside the Signal-participant trust boundary for secret-chat style flows.                                                                                                                                                                                                                                                                                                                                               |
 | DM voice/video call entry    | `Web partial`         | The web app can build and open call routes from the DM header, and focused UAT verifies that the manual call route mounts controls. The full media/incoming/end-call browser flow still needs end-to-end verification.                                                                                                                                                                                                                           |
 | Call history                 | `Web partial`         | The call-history route is real and callback buttons are wired, but broader browser verification is still needed.                                                                                                                                                                                                                                                                                                                                 |
-| Conversation list management | `Web partial`         | The shipped inbox surface now supports mark-read, mark-unread, pin/unpin, mute/unmute, archive, and archived-list recovery through mounted backend routes. Per-chat Space move controls and final browser verification remain incomplete.                                                                                                                                                                                                        |
+| Conversation list management | `Web partial`         | The shipped inbox surface now supports mark-read, mark-unread, pin/unpin, mute/unmute, archive, archived-list recovery, and per-chat Space add/remove controls through mounted backend routes. Final browser verification of the combined menu remains incomplete.                                                                                                                                                                               |
 
 ## Hubs
 
@@ -39,11 +39,11 @@ Use this document as the plain-language answer to "Can I do this on web right no
 
 ## Broadcast And Organization
 
-| Feature    | Availability  | User note                                                                                                                                                                                                                                                                                         |
-| ---------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Broadcasts | `Web partial` | `/broadcasts` and `/broadcasts/:broadcastId` now support directory browsing, creation, subscribe, feed reading, and owner publishing. Post edit/delete/pin, link/admin management, comments, scheduled publish, media, polls, analytics, and deeper edge-state verification are still incomplete. |
-| Spaces     | `Web partial` | `/spaces` and `/spaces/:spaceId` list/create server-owned Spaces and filter conversations through `/api/v1/spaces`. Browser-verified by `apps/web/e2e/spaces.spec.ts`. Per-chat add/remove controls from the live inbox are still incomplete.                                                     |
-| Vault      | `Web ready`   | `/vault` opens the authenticated user's backend Note-to-Self conversation, redirects to `/vault/:conversationId`, and uses the real cloud-message history/composer. Browser-verified by `apps/web/e2e/vault.spec.ts`.                                                                             |
+| Feature    | Availability  | User note                                                                                                                                                                                                                                                                                                                      |
+| ---------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Broadcasts | `Web partial` | `/broadcasts` and `/broadcasts/:broadcastId` now support directory browsing, creation, subscribe, feed reading, and owner publishing. Post edit/delete/pin, link/admin management, comments, scheduled publish, media, polls, analytics, and deeper edge-state verification are still incomplete.                              |
+| Spaces     | `Web partial` | `/spaces` and `/spaces/:spaceId` list/create server-owned Spaces and filter conversations through `/api/v1/spaces`. Browser-verified by `apps/web/e2e/spaces.spec.ts`; the live inbox can now add/remove chats through the same server-owned include/exclude lists. Final browser verification of that combined route remains. |
+| Vault      | `Web ready`   | `/vault` opens the authenticated user's backend Note-to-Self conversation, redirects to `/vault/:conversationId`, and uses the real cloud-message history/composer. Browser-verified by `apps/web/e2e/vault.spec.ts`.                                                                                                          |
 
 ## Social And Discovery
 
@@ -91,7 +91,8 @@ The biggest remaining web gaps are:
 - metadata-less bare hub fallbacks (`/groups/:groupId`) that still need browser verification as
   deliberate redirects rather than dead destinations
 - unmounted inbox features that already exist in module code
-- incomplete Broadcast management parity plus per-chat Space move controls
+- incomplete Broadcast management parity and final browser verification for the new Space inbox
+  controls
 - settings reload/live-sync browser proof plus profile/cosmetic live-update proof that still need
   final browser validation
 

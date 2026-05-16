@@ -14,8 +14,10 @@ import {
   BellIcon,
   BellSlashIcon,
   CheckCircleIcon,
+  CheckIcon,
   EllipsisHorizontalIcon,
   EnvelopeIcon,
+  FolderIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
@@ -23,6 +25,7 @@ import { formatTimeAgo } from '@/lib/utils';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { getConversationName, getConversationAvatar, getConversationAvatarBorderId } from './utils';
 import type { ConversationItemProps } from './types';
+import { conversationMatchesSpace } from './conversation-spaces';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 
@@ -42,6 +45,8 @@ export function ConversationItem({
   onUnarchive,
   onPin,
   onMute,
+  spaces,
+  onToggleSpace,
   showArchived,
 }: ConversationItemProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -84,6 +89,10 @@ export function ConversationItem({
   function handleMuteToggle(): void {
     setIsMenuOpen(false);
     onMute(conversation.id, !conversation.isMuted);
+  }
+
+  function handleSpaceToggle(spaceId: string, shouldInclude: boolean): void {
+    onToggleSpace(conversation.id, spaceId, shouldInclude);
   }
 
   return (
@@ -244,7 +253,7 @@ export function ConversationItem({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.96 }}
               transition={tweens.fast}
-              className="bg-[var(--token-card-bg)]/95 absolute right-0 top-full mt-1 w-44 overflow-hidden rounded-xl border border-[var(--token-card-border)] py-1 shadow-xl backdrop-blur-xl"
+              className="bg-[var(--token-card-bg)]/95 absolute right-0 top-full mt-1 max-h-[70vh] w-56 overflow-y-auto rounded-xl border border-[var(--token-card-border)] py-1 shadow-xl backdrop-blur-xl"
             >
               <button
                 type="button"
@@ -295,6 +304,37 @@ export function ConversationItem({
                 )}
                 {showArchived ? 'Unarchive' : 'Archive'}
               </button>
+              {spaces.length > 0 && (
+                <div className="mt-1 border-t border-white/10 pt-1">
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">
+                    <FolderIcon className="h-3.5 w-3.5" />
+                    Spaces
+                  </div>
+                  {spaces.map((space) => {
+                    const isInSpace = conversationMatchesSpace(conversation, space);
+                    return (
+                      <button
+                        key={space.id}
+                        type="button"
+                        onClick={() => handleSpaceToggle(space.id, !isInSpace)}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/[0.08]"
+                      >
+                        <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center">
+                          {isInSpace ? (
+                            <CheckIcon className="h-4 w-4 text-primary-300" />
+                          ) : (
+                            <FolderIcon className="h-4 w-4 text-white/35" />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">
+                          {space.emoji ? `${space.emoji} ` : ''}
+                          {space.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

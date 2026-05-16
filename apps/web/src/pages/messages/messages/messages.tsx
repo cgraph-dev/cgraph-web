@@ -4,18 +4,26 @@
  * Main messages page with conversation sidebar and content area.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
 import { NewChatModal } from '@/modules/chat/components/conversation-list';
 import { socketManager } from '@/lib/socket';
+import { http } from '@/lib/api-client';
+import { ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
 import { toast } from '@/shared/components/ui';
 import { MessageSearch } from '@/modules/chat/components/message-search';
 
 import { ConversationSidebar } from './conversation-sidebar';
 import { NoConversationSelected } from './empty-states';
+import {
+  applySpaceConversationPatch,
+  readConversationSpace,
+  spaceConversationPatch,
+  type ConversationSpace,
+} from './conversation-spaces';
 import { filterConversations } from './utils';
 import type { OnlineStatusMap } from './types';
 
@@ -50,6 +58,7 @@ export default function Messages() {
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatusMap>({});
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [spaces, setSpaces] = useState<readonly ConversationSpace[]>([]);
 
   // Handle search result click - navigate to conversation and scroll to message
   function handleSearchResultClick(convId: string, messageId: string) {
@@ -99,38 +108,57 @@ export default function Messages() {
     fetchConversations();
   }, [fetchConversations]);
 
+  const loadSpaces = useCallback(async () => {
+    try {
+      const response = await http.get('/api/v1/spaces');
+      const parsed = ensureArray<unknown>(response.data)
+        .map(readConversationSpace)
+        .filter((space): space is ConversationSpace => Boolean(space))
+        .sort((a, b) => a.position - b.position);
+      setSpaces(parsed);
+    } catch (error) {
+      logger.warn('Failed to load Spaces for conversation actions:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadSpaces();
+  }, [loadSpaces]);
+
   useEffect(() => {
     if (showArchived) {
       fetchArchivedConversations();
     }
   }, [fetchArchivedConversations, showArchived]);
 
-  // Memoized handler for starting conversation with user
-  async function handleStartConversationWithUser(userId: string) {
-    // Check if conversation already exists with this user
-    const existingConv = conversations.find((conv) => {
-      if (conv.type !== 'direct') return false;
-      return conv.participants.some((p) => p.userId === userId);
-    });
+  const handleStartConversationWithUser = useCallback(
+    async (userId: string) => {
+      // Check if conversation already exists with this user
+      const existingConv = conversations.find((conv) => {
+        if (conv.type !== 'direct') return false;
+        return conv.participants.some((p) => p.userId === userId);
+      });
 
-    if (existingConv) {
-      navigate(`/messages/${existingConv.id}`, { replace: true });
-      return;
-    }
+      if (existingConv) {
+        navigate(`/messages/${existingConv.id}`, { replace: true });
+        return;
+      }
 
-    // Create new conversation
-    setIsCreatingConversation(true);
-    try {
-      const newConv = await createConversation([userId], { type: 'cloud' });
-      navigate(`/messages/${newConv.id}`, { replace: true });
-    } catch (error) {
-      logger.error('Failed to create conversation:', error);
-      toast.error('Failed to start conversation. Please try again.');
-      navigate('/messages', { replace: true });
-    } finally {
-      setIsCreatingConversation(false);
-    }
-  }
+      // Create new conversation
+      setIsCreatingConversation(true);
+      try {
+        const newConv = await createConversation([userId], { type: 'cloud' });
+        navigate(`/messages/${newConv.id}`, { replace: true });
+      } catch (error) {
+        logger.error('Failed to create conversation:', error);
+        toast.error('Failed to start conversation. Please try again.');
+        navigate('/messages', { replace: true });
+      } finally {
+        setIsCreatingConversation(false);
+      }
+    },
+    [conversations, createConversation, navigate]
+  );
 
   async function handleMarkConversationRead(convId: string) {
     try {
@@ -193,6 +221,42 @@ export default function Messages() {
     }
   }
 
+  async function handleToggleConversationSpace(
+    convId: string,
+    spaceId: string,
+    shouldInclude: boolean
+  ) {
+    const previousSpace = spaces.find((space) => space.id === spaceId);
+    if (!previousSpace) return;
+
+    const patch = spaceConversationPatch(previousSpace, convId, shouldInclude);
+
+    setSpaces((current) =>
+      current.map((space) =>
+        space.id === spaceId ? applySpaceConversationPatch(space, convId, shouldInclude) : space
+      )
+    );
+
+    try {
+      const response = await http.patch(`/api/v1/spaces/${spaceId}`, patch);
+      const updated = readConversationSpace(response.data);
+      if (updated) {
+        setSpaces((current) =>
+          current
+            .map((space) => (space.id === updated.id ? updated : space))
+            .sort((a, b) => a.position - b.position)
+        );
+      }
+      toast.success(shouldInclude ? 'Conversation added to Space.' : 'Conversation removed.');
+    } catch (error) {
+      logger.error('Failed to update conversation Space:', error);
+      setSpaces((current) =>
+        current.map((space) => (space.id === previousSpace.id ? previousSpace : space))
+      );
+      toast.error('Failed to update Space.');
+    }
+  }
+
   // Handle userId query param (from friends page)
   useEffect(() => {
     const userId = searchParams.get('userId');
@@ -226,6 +290,8 @@ export default function Messages() {
         onUnarchive={handleUnarchiveConversation}
         onPin={handlePinConversation}
         onMute={handleMuteConversation}
+        spaces={spaces}
+        onToggleSpace={handleToggleConversationSpace}
         showArchived={showArchived}
         onShowArchivedChange={setShowArchived}
       />

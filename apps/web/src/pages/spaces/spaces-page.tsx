@@ -14,29 +14,21 @@ import {
 } from '@heroicons/react/24/outline';
 import { motion } from 'motion/react';
 import { http } from '@/lib/api-client';
-import { ensureArray, ensureObject } from '@/lib/api-utils';
+import { ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
-import { useChatStore, type Conversation } from '@/modules/chat/store/chatStore.impl';
+import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { SpaceFilterEditor } from '@/modules/chat/components/spaces/space-filter-editor';
 import { getConversationName } from '@/pages/messages/messages/utils';
+import {
+  conversationMatchesSpace,
+  readConversationSpace,
+  type ConversationSpace as Space,
+} from '@/pages/messages/messages/conversation-spaces';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN, FADE_UP } from '@/lib/animations/transitions';
 
 const logger = createLogger('SpacesPage');
-
-interface Space {
-  readonly id: string;
-  readonly name: string;
-  readonly emoji: string;
-  readonly position: number;
-  readonly includeAllIndividual: boolean;
-  readonly includeAllGroups: boolean;
-  readonly showOnlyUnread: boolean;
-  readonly showMuted: boolean;
-  readonly includedConversationIds: readonly string[];
-  readonly excludedConversationIds: readonly string[];
-}
 
 interface NewSpaceFormState {
   readonly name: string;
@@ -55,70 +47,6 @@ const DEFAULT_FORM: NewSpaceFormState = {
   showOnlyUnread: false,
   showMuted: true,
 };
-
-function boolValue(value: unknown, fallback: boolean): boolean {
-  return typeof value === 'boolean' ? value : fallback;
-}
-
-function stringArray(value: unknown): readonly string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : [];
-}
-
-function readSpace(raw: unknown): Space | null {
-  const value = ensureObject<Record<string, unknown>>(raw);
-  if (!value || typeof value.id !== 'string' || typeof value.name !== 'string') {
-    return null;
-  }
-
-  return {
-    id: value.id,
-    name: value.name,
-    emoji: typeof value.emoji === 'string' ? value.emoji : '',
-    position: typeof value.position === 'number' ? value.position : 0,
-    includeAllIndividual: boolValue(
-      value.includeAllIndividual ?? value.include_all_individual,
-      true
-    ),
-    includeAllGroups: boolValue(value.includeAllGroups ?? value.include_all_groups, true),
-    showOnlyUnread: boolValue(value.showOnlyUnread ?? value.show_only_unread, false),
-    showMuted: boolValue(value.showMuted ?? value.show_muted, true),
-    includedConversationIds: stringArray(
-      value.includedConversationIds ?? value.included_conversation_ids
-    ),
-    excludedConversationIds: stringArray(
-      value.excludedConversationIds ?? value.excluded_conversation_ids
-    ),
-  };
-}
-
-function conversationMatchesSpace(conversation: Conversation, space: Space): boolean {
-  const included = new Set(space.includedConversationIds);
-  const excluded = new Set(space.excludedConversationIds);
-
-  if (excluded.has(conversation.id)) {
-    return false;
-  }
-
-  const isExplicitlyIncluded = included.has(conversation.id);
-  const typeAllowed =
-    conversation.type === 'group' ? space.includeAllGroups : space.includeAllIndividual;
-
-  if (!isExplicitlyIncluded && !typeAllowed) {
-    return false;
-  }
-
-  if (space.showOnlyUnread && conversation.unreadCount === 0) {
-    return false;
-  }
-
-  if (!space.showMuted && conversation.isMuted) {
-    return false;
-  }
-
-  return true;
-}
 
 function spacePayload(form: NewSpaceFormState): Record<string, unknown> {
   return {
@@ -158,7 +86,7 @@ export default function SpacesPage() {
       ]);
 
       const parsed = ensureArray<unknown>(spacesResponse.data)
-        .map(readSpace)
+        .map(readConversationSpace)
         .filter((space): space is Space => Boolean(space));
       setSpaces((current) => {
         const byId = new Map(parsed.map((space) => [space.id, space]));
@@ -200,7 +128,7 @@ export default function SpacesPage() {
 
     try {
       const response = await http.post('/api/v1/spaces', spacePayload(form));
-      const created = readSpace(response.data);
+      const created = readConversationSpace(response.data);
       if (!created) throw new Error('Space response did not include a Space');
       setSpaces((current) => [...current, created].sort((a, b) => a.position - b.position));
       setForm(DEFAULT_FORM);

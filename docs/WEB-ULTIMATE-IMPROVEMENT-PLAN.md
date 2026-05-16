@@ -38,7 +38,8 @@ What **is** broken is a mix of user-visible UX gaps and latent correctness/safet
 - **Vault / Saved Messages** now has a first-class `/vault` route backed by the backend Note-to-Self
   conversation.
 - **Spaces** now have first-class `/spaces` and `/spaces/:spaceId` routes backed by the backend
-  Spaces contract; per-chat move controls remain open.
+  Spaces contract, and the routed inbox can add/remove conversations through the server-owned
+  include/exclude lists.
 - Paid DM, Pulse score, and Follow (vs friend) remain stubbed or incomplete.
 - **`reduceMotion` / `prefers-reduced-motion`** is not wired — WCAG 2.1 motion fail.
 - **`FederationRoutes` module is still imported** in the router despite CLAUDE.md Rule 8a saying all
@@ -237,8 +238,8 @@ correctness work below before feature expansion or scale items.
 - Browser-verified now: routed file/photo send, voice-note send, reply, search jump,
   edit/delete/forward, message-request accept/reject/block-report, pin, and loaded pinned-message
   panel.
-- Still open: canonical DM surface convergence, typing browser proof, read-receipt UI, per-chat
-  Space move controls, GIF/sticker send, guarded autoscroll, and call-flow verification.
+- Still open: canonical DM surface convergence, typing browser proof, read-receipt UI, GIF/sticker
+  send, guarded autoscroll, and call-flow verification.
 
 4. Routed group parity
 
@@ -308,7 +309,7 @@ Checklist:
 - [ ] Browser-verify typing emit and ship read-receipt UI/read-state controls on the live DM route.
 - [x] Ship mute/archive/pin/mark-unread conversation-list actions and archived-list recovery on the
       routed sidebar.
-- [ ] Ship per-chat Space move controls on the routed sidebar.
+- [x] Ship per-chat Space move controls on the routed sidebar.
 - [x] Ship browser-verified file/photo and voice-note send on the routed DM surface.
 - [ ] Ship GIF/sticker send, guarded autoscroll, and call launch on the routed DM surface.
 
@@ -842,10 +843,10 @@ Unify the attachment/send contract across DMs and groups, eliminate the remainin
 
 ### Wave 2 — Routed DM parity (weeks 2–3)
 
-Ship the remaining typing proof, read-state UI, per-chat Space move controls, GIF/sticker send,
-guarded autoscroll, and call launch on the live DM route. File/photo, voice-note, reply, search
-jump, edit/delete/forward, request actions, pin, loaded pinned-panel behavior, and core
-conversation-list participant actions are already covered by focused tests or browser proof.
+Ship the remaining typing proof, read-state UI, GIF/sticker send, guarded autoscroll, and call
+launch on the live DM route. File/photo, voice-note, reply, search jump, edit/delete/forward,
+request actions, pin, loaded pinned-panel behavior, core conversation-list participant actions, and
+per-chat Space move controls are already covered by focused tests or browser proof.
 
 ### Wave 3 — Routed group parity and admin surfaces (weeks 3–4)
 

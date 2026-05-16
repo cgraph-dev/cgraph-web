@@ -41,6 +41,8 @@ export function ConversationSidebar({
   onUnarchive,
   onPin,
   onMute,
+  spaces,
+  onToggleSpace,
   showArchived,
   onShowArchivedChange,
 }: ConversationSidebarProps) {
@@ -161,6 +163,8 @@ export function ConversationSidebar({
                   onUnarchive={onUnarchive}
                   onPin={onPin}
                   onMute={onMute}
+                  spaces={spaces}
+                  onToggleSpace={onToggleSpace}
                   showArchived={showArchived}
                 />
               </motion.div>

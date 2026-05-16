@@ -5,6 +5,7 @@
  */
 
 import type { Conversation } from '@/modules/chat/store/chatStore.impl';
+import type { ConversationSpace } from './conversation-spaces';
 
 /**
  * Online status map by conversation-user key
@@ -25,6 +26,8 @@ export interface ConversationItemProps {
   onUnarchive: (conversationId: string) => void;
   onPin: (conversationId: string, pinned: boolean) => void;
   onMute: (conversationId: string, muted: boolean) => void;
+  spaces: readonly ConversationSpace[];
+  onToggleSpace: (conversationId: string, spaceId: string, shouldInclude: boolean) => void;
   showArchived: boolean;
 }
 
@@ -54,6 +57,8 @@ export interface ConversationSidebarProps {
   onUnarchive: (conversationId: string) => void;
   onPin: (conversationId: string, pinned: boolean) => void;
   onMute: (conversationId: string, muted: boolean) => void;
+  spaces: readonly ConversationSpace[];
+  onToggleSpace: (conversationId: string, spaceId: string, shouldInclude: boolean) => void;
   showArchived: boolean;
   onShowArchivedChange: (showArchived: boolean) => void;
 }
