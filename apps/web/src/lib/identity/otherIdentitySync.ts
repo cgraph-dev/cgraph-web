@@ -105,10 +105,7 @@ export function otherUserIdentityPatchFromPayload(
 /**
  * Applies a normalized other-user identity patch to every routed identity cache.
  */
-export function applyOtherUserIdentityPatch(
-  userId: string,
-  patch: OtherUserIdentityPatch
-): void {
+export function applyOtherUserIdentityPatch(userId: string, patch: OtherUserIdentityPatch): void {
   if (!userId || Object.keys(patch).length === 0) return;
 
   useFriendStore.getState().applyIdentityPatch(userId, patch);

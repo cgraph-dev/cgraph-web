@@ -50,7 +50,7 @@ export function FriendsTab({
           {onRetry && (
             <button
               onClick={onRetry}
-              className="rounded-xl border border-primary-500/20 bg-primary-500/10 px-8 py-3 text-sm font-bold text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all hover:bg-primary-500/16 hover:scale-[1.02] active:scale-[0.98]"
+              className="border-primary-500/20 bg-primary-500/10 hover:bg-primary-500/16 rounded-xl border px-8 py-3 text-sm font-bold text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Try Again
             </button>
@@ -80,7 +80,7 @@ export function FriendsTab({
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search friends..."
           aria-label="Search friends"
-          className="peer w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] py-3 pl-11 pr-4 text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:placeholder:text-transparent focus:border-primary-500/40 focus:outline-none focus:ring-1 focus:ring-primary-500/20"
+          className="focus:border-primary-500/40 focus:ring-primary-500/20 peer w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] py-3 pl-11 pr-4 text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:outline-none focus:ring-1 focus:placeholder:text-transparent"
         />
         <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
       </div>
@@ -88,10 +88,10 @@ export function FriendsTab({
       {/* Pending Requests */}
       {pendingRequests.length > 0 && (
         <div>
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-primary-400/80">
-            <span className="h-px flex-1 bg-gradient-to-r from-primary-500/30 to-transparent" />
+          <h3 className="text-primary-400/80 mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider">
+            <span className="from-primary-500/30 h-px flex-1 bg-gradient-to-r to-transparent" />
             Pending Requests ({pendingRequests.length})
-            <span className="h-px flex-1 bg-gradient-to-l from-primary-500/30 to-transparent" />
+            <span className="from-primary-500/30 h-px flex-1 bg-gradient-to-l to-transparent" />
           </h3>
           <div className="space-y-2">
             {pendingRequests.map((request, index) => (
@@ -104,7 +104,7 @@ export function FriendsTab({
                 <GlassCard variant="neon" glow className="p-4">
                   <div className="flex items-center gap-3">
                     <UserProfileCard userId={request.user?.id || ''} trigger="both">
-                      <div className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-violet-600 font-medium text-white shadow-lg shadow-primary-500/20 ring-2 ring-primary-500/20">
+                      <div className="shadow-primary-500/20 ring-primary-500/20 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-violet-600 font-medium text-white shadow-lg ring-2">
                         {request.user?.username?.charAt(0).toUpperCase() || '?'}
                       </div>
                     </UserProfileCard>
@@ -126,7 +126,7 @@ export function FriendsTab({
                           onAcceptRequest(request.id);
                           HapticFeedback.success();
                         }}
-                        className="rounded-xl border border-primary-500/20 bg-primary-500/10 p-2.5 text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all hover:bg-primary-500/16"
+                        className="border-primary-500/20 bg-primary-500/10 hover:bg-primary-500/16 rounded-xl border p-2.5 text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all"
                         title="Accept"
                       >
                         <CheckIcon className="h-5 w-5" />
@@ -160,20 +160,16 @@ export function FriendsTab({
           <span className="h-px flex-1 bg-gradient-to-l from-white/10 to-transparent" />
         </h3>
         {friends.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/5 py-12 px-4 text-center">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/5 px-4 py-12 text-center">
             <p className="text-sm font-bold text-white/20"> No connections found </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2">
             {friends.map((friend, index) => (
-              <motion.div
-                key={friend.id}
-                {...FADE_UP}
-                transition={{ delay: index * 0.03 }}
-              >
+              <motion.div key={friend.id} {...FADE_UP} transition={{ delay: index * 0.03 }}>
                 <GlassCard
                   variant="crystal"
-                  className="group cursor-pointer p-3 transition-all duration-300 hover:bg-[var(--token-bg-primary)] border-[var(--token-border-muted)] hover:border-[var(--token-card-border)]"
+                  className="group cursor-pointer border-[var(--token-border-muted)] p-3 transition-all duration-300 hover:border-[var(--token-card-border)] hover:bg-[var(--token-bg-primary)]"
                 >
                   <div className="flex items-center gap-3">
                     <UserProfileCard userId={friend.id} trigger="both">
@@ -206,7 +202,7 @@ export function FriendsTab({
                         navigate(`/messages?userId=${friend.id}`);
                         HapticFeedback.medium();
                       }}
-                      className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-2.5 text-white/40 opacity-0 backdrop-blur-md transition-all hover:bg-primary-500/10 hover:border-primary-500/20 hover:text-primary-300 group-hover:opacity-100"
+                      className="hover:bg-primary-500/10 hover:border-primary-500/20 rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-2.5 text-white/40 opacity-0 backdrop-blur-md transition-all hover:text-primary-300 group-hover:opacity-100"
                       title="Send Message"
                     >
                       <ChatBubbleLeftRightIcon className="h-5 w-5" />

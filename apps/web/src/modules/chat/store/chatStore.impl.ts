@@ -63,8 +63,7 @@ function patchMessageIdentity(
 ): Message | null {
   if (!message) return message;
 
-  const sender =
-    message.sender?.id === userId ? { ...message.sender, ...patch } : message.sender;
+  const sender = message.sender?.id === userId ? { ...message.sender, ...patch } : message.sender;
   const replyTo: Message | null = message.replyTo
     ? patchMessageIdentity(message.replyTo, userId, patch)
     : null;

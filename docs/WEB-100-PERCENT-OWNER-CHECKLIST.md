@@ -216,9 +216,8 @@ Required implementation-time questions:
       and web typecheck on 2026-05-15. Friend cosmetic live updates now route through
       `apps/web/src/lib/identity/otherIdentitySync.ts`, which updates the friend store and routed
       chat store through one selective patch owner; own-profile cosmetic socket updates route
-      through `apps/web/src/lib/identity/ownIdentitySync.ts`. Routed browser proof for a live
-      friend avatar-border/title update is covered by `apps/web/e2e/web-owner-uat.spec.ts` on
-      2026-05-16.
+      through `apps/web/src/lib/identity/ownIdentitySync.ts`. Routed browser proof for a live friend
+      avatar-border/title update is covered by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
@@ -273,8 +272,8 @@ Required implementation-time questions:
 
 ### F. Validation And Release Truth
 
-- [x] Focused browser UAT is run for auth, DMs, groups, social, settings, Nodes, identity
-      cosmetics, and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
+- [x] Focused browser UAT is run for auth, DMs, groups, social, settings, Nodes, identity cosmetics,
+      and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
 - [x] Regression tests exist for the critical routed behaviors that were previously fake, partial,
       or misrouted. Current route-owned coverage includes `apps/web/e2e/dm-media-composer.spec.ts`,
       `apps/web/e2e/broadcasts.spec.ts`, `apps/web/e2e/spaces.spec.ts`,
