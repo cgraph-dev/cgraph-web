@@ -102,11 +102,7 @@ export function InviteCreateTab({
       {/* Generated Link */}
       <AnimatePresence>
         {inviteLink && (
-          <motion.div
-            {...FADE_UP}
-            exit={{ opacity: 0, y: -20 }}
-            className="mt-4"
-          >
+          <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="mt-4">
             <div className="flex items-center gap-2">
               <input
                 type="text"

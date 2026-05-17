@@ -206,11 +206,11 @@ Required implementation-time questions:
       negotiation remains tracked as final release validation risk.
 - [x] Routed group search and notification or mute behavior are real.
 - [x] Routed group message context actions are real.
-- [x] Routed group admin and settings surfaces are mounted and usable.
-      Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-17 for cold settings-route
-      ownership, overview save, invite creation, member role assignment, role-tab render, and
-      settings-channel creation. Remaining release-readiness work is permission-edge coverage and
-      deeper role CRUD/reorder proof, tracked in `docs/WEB-ULTIMATE-STRICT-PASS.md`.
+- [x] Routed group admin and settings surfaces are mounted and usable. Verified by
+      `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-17 for cold settings-route ownership, overview
+      save, invite creation, member role assignment, role-tab render, and settings-channel creation.
+      Remaining release-readiness work is permission-edge coverage and deeper role CRUD/reorder
+      proof, tracked in `docs/WEB-ULTIMATE-STRICT-PASS.md`.
 
 ### C. Converge Identity, Settings, And Customization Ownership
 

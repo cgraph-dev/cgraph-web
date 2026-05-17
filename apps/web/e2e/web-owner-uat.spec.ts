@@ -563,10 +563,7 @@ async function installOwnerUatMocks(page: Page) {
       return;
     }
 
-    if (
-      path === `/api/v1/groups/${GROUP_ID}/members/member-friend/roles` &&
-      method === 'PUT'
-    ) {
+    if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/roles` && method === 'PUT') {
       const body = request.postDataJSON() as Record<string, unknown>;
       const roleIds = Array.isArray(body.role_ids)
         ? body.role_ids.filter((roleId): roleId is string => typeof roleId === 'string')
