@@ -252,8 +252,10 @@ async function installOwnerUatMocks(page: Page) {
   const sentGroupMessages: Record<string, unknown>[] = [];
   const groupAttachmentUploads: string[] = [];
   const groupPinRequests: Record<string, unknown>[] = [];
+  const groupUnpinRequests: string[] = [];
   const notificationPatches: Record<string, unknown>[] = [];
   const reportRequests: Record<string, unknown>[] = [];
+  const pinnedMessageIds = new Set<string>();
   let currentNotificationLevel: 'mentions' | 'none' = 'mentions';
 
   await page.addInitScript(() => {
@@ -503,11 +505,35 @@ async function installOwnerUatMocks(page: Page) {
       if (method === 'POST') {
         const body = request.postDataJSON() as Record<string, unknown>;
         groupPinRequests.push(body);
+        if (typeof body.message_id === 'string') {
+          pinnedMessageIds.add(body.message_id);
+        }
         await fulfillJson(route, { data: { message_id: body.message_id } }, 201);
         return;
       }
 
-      await fulfillJson(route, { data: [] });
+      await fulfillJson(route, {
+        data: Array.from(pinnedMessageIds).map((messageId, index) => ({
+          id: `pin-${messageId}`,
+          channel_id: TEXT_CHANNEL_ID,
+          message_id: messageId,
+          pinned_by_id: CURRENT_USER_ID,
+          position: index,
+          pinned_at: '2026-01-01T00:00:00.000Z',
+        })),
+      });
+      return;
+    }
+
+    if (
+      path.startsWith(`/api/v1/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}/pins/`) &&
+      method === 'DELETE'
+    ) {
+      const pinId = decodeURIComponent(path.split('/').pop() ?? '');
+      groupUnpinRequests.push(pinId);
+      const messageId = pinId.replace(/^pin-/u, '');
+      pinnedMessageIds.delete(messageId);
+      await fulfillJson(route, { data: { id: pinId } });
       return;
     }
 
@@ -585,6 +611,7 @@ async function installOwnerUatMocks(page: Page) {
   return {
     groupAttachmentUploads,
     groupPinRequests,
+    groupUnpinRequests,
     notificationPatches,
     reportRequests,
     sentDmMessages,
@@ -599,6 +626,7 @@ test.describe('Web owner focused UAT', () => {
     const {
       groupAttachmentUploads,
       groupPinRequests,
+      groupUnpinRequests,
       notificationPatches,
       reportRequests,
       sentDmMessages,
@@ -766,6 +794,15 @@ test.describe('Web owner focused UAT', () => {
       .poll(() => groupPinRequests, { message: 'group pin endpoint received the message id' })
       .toContainEqual(expect.objectContaining({ message_id: 'group-msg-uat-sent-1' }));
     await expect(ownGroupMessage).toContainText('Pinned');
+    const pinnedPanel = page.getByRole('complementary', { name: /pinned messages/i });
+    await expect(pinnedPanel).toContainText('Group routed UAT edited');
+    await pinnedPanel.getByText('Group routed UAT edited').hover();
+    await pinnedPanel.getByRole('button', { name: /unpin group routed uat edited/i }).click();
+    await expect
+      .poll(() => groupUnpinRequests, { message: 'group unpin endpoint received the pin id' })
+      .toContain('pin-group-msg-uat-sent-1');
+    await expect(pinnedPanel).toContainText('No pinned messages');
+    await expect(ownGroupMessage).not.toContainText('Pinned');
 
     await ownGroupMessage.hover();
     await ownGroupMessage.getByTitle('More Actions').click();

@@ -648,6 +648,12 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
             channelId={channelId}
             channelMessages={messages}
             onClose={() => setShowPinned(false)}
+            onUnpin={(pin) => {
+              const message = messages.find((candidate) => candidate.id === pin.message_id);
+              if (message) {
+                updateChannelMessage({ ...message, isPinned: false });
+              }
+            }}
           />
         )}
       </AnimatePresence>

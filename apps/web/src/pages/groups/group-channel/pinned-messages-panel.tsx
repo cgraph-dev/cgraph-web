@@ -4,7 +4,7 @@
  *
  */
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
@@ -30,7 +30,7 @@ interface PinnedMessagesPanelProps {
   /** Locally loaded channel messages used to hydrate pin metadata */
   channelMessages: readonly ChannelMessage[];
   onClose: () => void;
-  onUnpin?: (pinId: string) => void;
+  onUnpin?: (pin: PinnedMessageEntry) => void;
 }
 
 /**
@@ -48,7 +48,7 @@ export function PinnedMessagesPanel({
   const [pins, setPins] = useState<PinnedMessageEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  async function fetchPins() {
+  const fetchPins = useCallback(async () => {
     try {
       const res = await http.get(`/api/v1/groups/${groupId}/channels/${channelId}/pins`);
       const data: PinnedMessageEntry[] = res.data?.data ?? res.data ?? [];
@@ -65,17 +65,17 @@ export function PinnedMessagesPanel({
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [channelId, channelMessages, groupId]);
 
   useEffect(() => {
     fetchPins();
   }, [fetchPins]);
 
-  async function handleUnpin(pinId: string) {
+  async function handleUnpin(pin: PinnedMessageEntry) {
     try {
-      await http.delete(`/api/v1/groups/${groupId}/channels/${channelId}/pins/${pinId}`);
-      setPins((prev) => prev.filter((p) => p.id !== pinId));
-      onUnpin?.(pinId);
+      await http.delete(`/api/v1/groups/${groupId}/channels/${channelId}/pins/${pin.id}`);
+      setPins((prev) => prev.filter((p) => p.id !== pin.id));
+      onUnpin?.(pin);
     } catch (err) {
       logger.warn('Failed to unpin message', err);
     }
@@ -88,6 +88,8 @@ export function PinnedMessagesPanel({
       exit={{ width: 0, opacity: 0 }}
       transition={{ ...springs.stiff, mass: 0.8 }}
       className="flex flex-col overflow-hidden border-l border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4]"
+      role="complementary"
+      aria-label="Pinned messages"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--token-border-muted)] px-4 py-3">
@@ -95,6 +97,7 @@ export function PinnedMessagesPanel({
         <button
           onClick={onClose}
           className="rounded p-1 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white"
+          aria-label="Close pinned messages"
         >
           <XMarkIcon className="h-4 w-4" />
         </button>
@@ -160,8 +163,9 @@ export function PinnedMessagesPanel({
 
                   {/* Unpin button (visible on hover) */}
                   <button
-                    onClick={() => handleUnpin(pin.id)}
+                    onClick={() => handleUnpin(pin)}
                     className="mt-2 hidden text-xs text-red-400 transition-colors hover:text-red-300 group-hover:inline-block"
+                    aria-label={`Unpin ${pin.message.content}`}
                   >
                     Unpin
                   </button>
