@@ -4,6 +4,8 @@ const CONVERSATION_ID = '11111111-1111-4111-8111-111111111111';
 const FORWARD_CONVERSATION_ID = '11111111-1111-4111-8111-222222222222';
 const CURRENT_USER_ID = 'e2e-user';
 const FRIEND_USER_ID = '33333333-3333-4333-8333-333333333333';
+const GIF_DATA_URL =
+  'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
 const conversation = {
   id: CONVERSATION_ID,
@@ -277,6 +279,25 @@ async function installMessagingApiMocks(
     await route.fallback();
   });
 
+  await page.route('**/api/v1/gifs/search**', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        gifs: [
+          {
+            id: 'gif-launch-proof',
+            title: 'Launch Proof',
+            url: GIF_DATA_URL,
+            previewUrl: GIF_DATA_URL,
+            width: 320,
+            height: 180,
+            source: 'klipy',
+          },
+        ],
+      }),
+    });
+  });
+
   await page.route(`**/api/v1/message-requests/${CONVERSATION_ID}`, async (route) => {
     if (messageRequestStatus === 'pending') {
       await route.fulfill({
@@ -365,29 +386,40 @@ async function installMessagingApiMocks(
       }
 
       if (request.method() !== 'GET') {
+        let messageBody: Record<string, unknown> = {};
         try {
-          sentMessages.push(request.postDataJSON() as Record<string, unknown>);
+          messageBody = request.postDataJSON() as Record<string, unknown>;
+          sentMessages.push(messageBody);
         } catch {
           sentMessages.push({});
         }
+        const submittedContent =
+          typeof messageBody.content === 'string' ? messageBody.content : 'sent';
+        const submittedContentType =
+          typeof messageBody.content_type === 'string' ? messageBody.content_type : 'text';
+        const submittedMetadata =
+          messageBody.metadata && typeof messageBody.metadata === 'object'
+            ? messageBody.metadata
+            : {};
 
         await route.fulfill({
           status: 201,
           contentType: 'application/json',
           body: JSON.stringify({
             data: {
-              id: 'msg-text',
+              id: `msg-${submittedContentType}`,
               conversationId: CONVERSATION_ID,
               senderId: CURRENT_USER_ID,
-              content: 'sent',
-              messageType: 'text',
+              content: submittedContent,
+              messageType: submittedContentType,
               isEncrypted: false,
               isEdited: false,
               isPinned: false,
-              replyToId: null,
+              replyToId:
+                typeof messageBody.reply_to_id === 'string' ? messageBody.reply_to_id : null,
               replyTo: null,
               deletedAt: null,
-              metadata: {},
+              metadata: submittedMetadata,
               reactions: [],
               sender: conversation.participants[0].user,
               createdAt: new Date().toISOString(),
@@ -669,6 +701,51 @@ test.describe('DM media composer', () => {
     await expect
       .poll(() => conversationActions, { message: 'unarchive endpoint was called' })
       .toContain('POST unarchive');
+  });
+
+  test('sends routed cloud-DM GIF and sticker messages in the browser', async ({ page }) => {
+    const { sentMessages } = await installMessagingApiMocks(page);
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await page.getByRole('button', { name: /open gif picker/i }).click();
+    await page.getByRole('button', { name: /select gif launch proof/i }).click();
+    await expect
+      .poll(() => sentMessages, { message: 'GIF payload was sent through routed composer' })
+      .toContainEqual(
+        expect.objectContaining({
+          content: GIF_DATA_URL,
+          content_type: 'gif',
+          metadata: expect.objectContaining({
+            gifId: 'gif-launch-proof',
+            gifTitle: 'Launch Proof',
+            gifUrl: GIF_DATA_URL,
+            gifPreviewUrl: GIF_DATA_URL,
+            gifWidth: 320,
+            gifHeight: 180,
+            gifSource: 'klipy',
+          }),
+        })
+      );
+    await expect(page.getByAltText('Launch Proof').first()).toBeVisible();
+
+    await page.getByRole('button', { name: /open sticker picker/i }).click();
+    await page.getByRole('menuitem', { name: /send sticker wave/i }).click();
+    await expect
+      .poll(() => sentMessages, { message: 'Sticker payload was sent through routed composer' })
+      .toContainEqual(
+        expect.objectContaining({
+          content: '👋',
+          content_type: 'sticker',
+          metadata: expect.objectContaining({
+            stickerId: 'wave',
+            stickerPackId: 'cgraph-default',
+            stickerLabel: 'Wave',
+            stickerEmoji: '👋',
+          }),
+        })
+      );
+    await expect(page.getByLabel(/sticker wave/i).first()).toBeVisible();
   });
 
   test('runs routed cloud-DM reply, search jump, edit, pin, forward, and delete actions', async ({

@@ -24,6 +24,7 @@ import { InlineTitle } from '@/shared/components/ui';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import AdvancedVoiceVisualizer from '@/modules/chat/components/audio/advanced-voice-visualizer';
 import { FileMessage } from '@/modules/chat/components/file-message';
+import { GifMessage } from '@/modules/chat/components/gif-message';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { getAvatarBorderId } from '@/lib/utils';
 import { createLogger } from '@/lib/logger';
@@ -83,6 +84,8 @@ export function EnhancedMessageBubble({
     message.messageType === 'image' ||
     message.messageType === 'video' ||
     message.messageType === 'file';
+  const isGifMessage = message.messageType === 'gif';
+  const isStickerMessage = message.messageType === 'sticker';
   const readers = isOwn ? readReceiptEntries(message.metadata?.readBy, user?.id) : [];
 
   // React 19 useOptimistic: show new reactions immediately before the API responds.
@@ -141,7 +144,7 @@ export function EnhancedMessageBubble({
     >
       <motion.div
         ref={bubbleRef}
-        className={`group flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
+        className={`group flex w-full items-end gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}
         onMouseEnter={() => setShowActions(true)}
         onMouseLeave={() => setShowActions(false)}
         layout
@@ -170,9 +173,11 @@ export function EnhancedMessageBubble({
         )}
 
         {/* Message content */}
-        <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[70%]`}>
+        <div
+          className={`flex w-full min-w-0 max-w-[70%] flex-col ${isOwn ? 'items-end' : 'items-start'}`}
+        >
           {/* Message bubble with glassmorphism */}
-          <div className="relative">
+          <div className="relative w-full">
             {/* Actions (floating on hover) */}
             <AnimatePresence>
               {showActions && (
@@ -214,7 +219,7 @@ export function EnhancedMessageBubble({
               glow={isOwn}
               glowColor={isOwn ? 'rgba(16, 185, 129, 0.4)' : undefined}
               hover3D
-              className={`px-4 py-3 ${isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'}`}
+              className={`w-full px-4 py-3 ${isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'}`}
             >
               {/* Sender name (for received messages) */}
               {!isOwn && showAvatar && message.sender && (
@@ -263,7 +268,9 @@ export function EnhancedMessageBubble({
                   {/* Text content */}
                   {message.content &&
                     message.messageType !== 'voice' &&
-                    message.messageType !== 'audio' && (
+                    message.messageType !== 'audio' &&
+                    !isGifMessage &&
+                    !isStickerMessage && (
                       <motion.p
                         className="whitespace-pre-wrap break-words text-white"
                         {...FADE_IN}
@@ -272,6 +279,30 @@ export function EnhancedMessageBubble({
                         {message.content}
                       </motion.p>
                     )}
+
+                  {isGifMessage && <GifMessage message={message} isOwnMessage={isOwn} />}
+
+                  {isStickerMessage && (
+                    <div
+                      className="flex flex-col items-center gap-1"
+                      aria-label={`Sticker ${
+                        typeof message.metadata?.stickerLabel === 'string'
+                          ? message.metadata.stickerLabel
+                          : message.content
+                      }`}
+                    >
+                      <span className="text-5xl leading-none">
+                        {typeof message.metadata?.stickerEmoji === 'string'
+                          ? message.metadata.stickerEmoji
+                          : message.content}
+                      </span>
+                      {typeof message.metadata?.stickerLabel === 'string' && (
+                        <span className="text-xs text-white/55">
+                          {message.metadata.stickerLabel}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Voice message visualization */}
                   {(message.messageType === 'voice' || message.messageType === 'audio') &&

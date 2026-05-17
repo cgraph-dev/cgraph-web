@@ -140,7 +140,7 @@ export function AnimatedMessageWrapper({
       <motion.div
         ref={wrapperRef}
         id={messageId ? `message-${messageId}` : undefined}
-        className="relative"
+        className="relative w-full"
         custom={{ index, isOwnMessage, speedMultiplier }}
         variants={prefersReducedMotion ? undefined : messageVariants}
         initial={isNew && !prefersReducedMotion ? 'initial' : false}

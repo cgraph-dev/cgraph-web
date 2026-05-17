@@ -23,6 +23,8 @@ import {
   type UploadedVoiceMessage,
   type VoiceRecordingData,
 } from './voice-message-upload';
+import type { GifResult } from '@/modules/chat/components/gif-picker';
+import type { StickerSelection } from './types';
 const logger = createLogger('EnhancedConversation');
 
 interface PendingMessageRequest {
@@ -419,6 +421,86 @@ export function useEnhancedConversation() {
     }
   };
 
+  async function sendRichMessage(
+    content: string,
+    contentType: Message['messageType'],
+    metadata: Record<string, unknown>
+  ): Promise<void> {
+    if (!conversationId || isSending) return;
+
+    HapticFeedback.medium();
+    setIsSending(true);
+
+    try {
+      addOptimisticMessage({
+        id: `optimistic-${contentType}-${Date.now()}`,
+        conversationId,
+        senderId: user?.id ?? '',
+        content,
+        encryptedContent: null,
+        isEncrypted: false,
+        messageType: contentType,
+        replyToId: replyTo?.id ?? null,
+        replyTo: null,
+        isPinned: false,
+        isEdited: false,
+        deletedAt: null,
+        metadata: metadata satisfies Message['metadata'],
+        reactions: [],
+        sender: {
+          id: user?.id ?? '',
+          username: user?.username ?? '',
+          displayName: user?.displayName ?? null,
+          avatarUrl: user?.avatarUrl ?? null,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } satisfies Message);
+      window.requestAnimationFrame(() => scrollToLatestMessages('auto'));
+
+      await sendMessage(conversationId, content, replyTo?.id, {
+        type: contentType,
+        metadata,
+      });
+      window.requestAnimationFrame(() => scrollToLatestMessages('smooth'));
+
+      setMessageInput('');
+      setReplyTo(null);
+      setAttachment(null);
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      sendConversationTyping(`conversation:${conversationId}`, false);
+    } catch (error) {
+      logger.error('Failed to send rich message:', error);
+      HapticFeedback.error();
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  const handleGifSelect = (gif: GifResult) => {
+    void sendRichMessage(gif.url, 'gif', {
+      gifId: gif.id,
+      gifTitle: gif.title,
+      gifUrl: gif.url,
+      gifPreviewUrl: gif.previewUrl,
+      gifWidth: gif.width,
+      gifHeight: gif.height,
+      gifSource: gif.source,
+    });
+  };
+
+  const handleStickerSelect = (sticker: StickerSelection) => {
+    void sendRichMessage(sticker.emoji, 'sticker', {
+      stickerId: sticker.id,
+      stickerPackId: sticker.packId,
+      stickerLabel: sticker.label,
+      stickerEmoji: sticker.emoji,
+    });
+  };
+
   // Handle send message
   const handleSend = async () => {
     if (!conversationId || (!messageInput.trim() && !attachment) || isSending) return;
@@ -538,6 +620,8 @@ export function useEnhancedConversation() {
     newMessagesBelow,
     scrollToLatestMessages,
     handleSend,
+    handleGifSelect,
+    handleStickerSelect,
     handleVoiceComplete,
     handleAvatarClick,
     handleStartCall,

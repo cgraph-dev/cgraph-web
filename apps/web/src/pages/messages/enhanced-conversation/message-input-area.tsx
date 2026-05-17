@@ -2,22 +2,37 @@
  * MessageInputArea - message input with sticker picker and send button
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
+  FaceSmileIcon,
   MicrophoneIcon,
   PaperAirplaneIcon,
   PaperClipIcon,
+  SparklesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { VoiceMessageRecorder } from '@/components/media/voice-message-recorder';
-import type { MessageInputAreaProps } from './types';
+import type { MessageInputAreaProps, StickerSelection } from './types';
 import { tweens } from '@/lib/animation-presets';
 
 interface MessageInputAreaWithRefProps extends MessageInputAreaProps {
   inputContainerRef: React.RefObject<HTMLDivElement | null>;
 }
+
+const GifPicker = lazy(() =>
+  import('@/modules/chat/components/gif-picker').then((module) => ({ default: module.GifPicker }))
+);
+
+const STICKERS: readonly StickerSelection[] = [
+  { id: 'wave', packId: 'cgraph-default', label: 'Wave', emoji: '👋' },
+  { id: 'thumbs-up', packId: 'cgraph-default', label: 'Thumbs up', emoji: '👍' },
+  { id: 'fire', packId: 'cgraph-default', label: 'Fire', emoji: '🔥' },
+  { id: 'party', packId: 'cgraph-default', label: 'Party', emoji: '🎉' },
+  { id: 'heart', packId: 'cgraph-default', label: 'Heart', emoji: '💜' },
+  { id: 'sparkles', packId: 'cgraph-default', label: 'Sparkles', emoji: '✨' },
+];
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -46,11 +61,15 @@ export function MessageInputArea({
   onFileSelect,
   onClearAttachment,
   onClearReply,
+  onGifSelect,
+  onStickerSelect,
   onVoiceComplete,
   onSend,
 }: MessageInputAreaWithRefProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   const canSend = Boolean(messageInput.trim() || attachment) && !isSending;
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>): void {
@@ -90,11 +109,54 @@ export function MessageInputArea({
   }, [attachment, imagePreviewUrl]);
 
   return (
-    <GlassCard
-      variant="frosted"
-      intensity="strong"
-      className="flex-shrink-0 rounded-none border-t border-[var(--token-card-border)] p-4"
-    >
+    <>
+      <div className="fixed bottom-24 left-4 z-[100] md:left-[22rem]">
+        <Suspense fallback={null}>
+          {showGifPicker && (
+            <GifPicker
+              isOpen={showGifPicker}
+              onClose={() => setShowGifPicker(false)}
+              onSelect={(gif) => {
+                onGifSelect(gif);
+                setShowGifPicker(false);
+              }}
+              className="relative"
+            />
+          )}
+        </Suspense>
+
+        {showStickerPicker && (
+          <div
+            role="menu"
+            aria-label="Sticker picker"
+            className="grid w-64 grid-cols-3 gap-2 rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)]/95 p-3 shadow-2xl backdrop-blur-xl"
+          >
+            {STICKERS.map((sticker) => (
+              <button
+                key={sticker.id}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  onStickerSelect(sticker);
+                  setShowStickerPicker(false);
+                }}
+                className="rounded-lg border border-white/10 bg-white/[0.06] p-3 text-2xl transition-colors hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-primary-500"
+                aria-label={`Send sticker ${sticker.label}`}
+                title={sticker.label}
+              >
+                {sticker.emoji}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <GlassCard
+        variant="frosted"
+        intensity="strong"
+        className="flex-shrink-0 rounded-none border-t border-[var(--token-card-border)] p-4"
+      >
+
       {attachment && (
         <div className="mb-3 flex items-center gap-3 rounded-lg border border-[var(--token-card-border)] bg-white/[0.06] px-3 py-2">
           {imagePreviewUrl ? (
@@ -192,6 +254,36 @@ export function MessageInputArea({
               <PaperClipIcon className="h-5 w-5" />
             </motion.button>
 
+            <motion.button
+              type="button"
+              onClick={() => {
+                setShowStickerPicker((value) => !value);
+                setShowGifPicker(false);
+              }}
+              className="rounded-lg border border-[var(--token-card-border)] bg-white/[0.06] p-2.5 text-gray-300 hover:text-white"
+              whileTap={{ scale: 0.88 }}
+              transition={tweens.smooth}
+              title="Send sticker"
+              aria-label="Open sticker picker"
+            >
+              <FaceSmileIcon className="h-5 w-5" />
+            </motion.button>
+
+            <motion.button
+              type="button"
+              onClick={() => {
+                setShowGifPicker((value) => !value);
+                setShowStickerPicker(false);
+              }}
+              className="rounded-lg border border-[var(--token-card-border)] bg-white/[0.06] p-2.5 text-gray-300 hover:text-white"
+              whileTap={{ scale: 0.88 }}
+              transition={tweens.smooth}
+              title="Send GIF"
+              aria-label="Open GIF picker"
+            >
+              <SparklesIcon className="h-5 w-5" />
+            </motion.button>
+
             {canSend ? (
               <motion.button
                 type="button"
@@ -223,6 +315,7 @@ export function MessageInputArea({
           </>
         )}
       </div>
-    </GlassCard>
+      </GlassCard>
+    </>
   );
 }

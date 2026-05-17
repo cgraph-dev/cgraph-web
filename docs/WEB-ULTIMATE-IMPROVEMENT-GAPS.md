@@ -53,7 +53,12 @@ they are reviewing older messages, and exposes a latest/new-messages jump. Brows
 2026-05-16 update: routed DM typing emit is no longer listed as needing browser proof. The live
 routed input emits `typing=true`, and send emits `typing=false`; the path is verified by
 `apps/web/e2e/dm-media-composer.spec.ts` with the E2E-only typing observer. Remaining DM risk is
-GIF/sticker send, call-flow verification, and final conversation-list browser proof.
+canonical surface convergence, deeper peer media negotiation, and final broad release validation.
+
+2026-05-17 update: routed DM GIF/sticker send is no longer listed as missing. The live routed
+composer now sends structured `gif` and `sticker` message payloads through the conversation message
+endpoint, renders the sent media in the routed bubble, and is browser-verified by
+`apps/web/e2e/dm-media-composer.spec.ts`.
 
 2026-05-16 update: routed DM call entry is no longer listed as needing browser proof. The live DM
 header opens both `/call/:recipientId/audio` and `/call/:recipientId/video`, and the call screens

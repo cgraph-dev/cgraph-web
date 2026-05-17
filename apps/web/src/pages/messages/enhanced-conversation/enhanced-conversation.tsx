@@ -51,6 +51,8 @@ export default function EnhancedConversation() {
     newMessagesBelow,
     scrollToLatestMessages,
     handleSend,
+    handleGifSelect,
+    handleStickerSelect,
     handleVoiceComplete,
     handleAvatarClick,
     handleStartCall,
@@ -215,6 +217,8 @@ export default function EnhancedConversation() {
           onFileSelect={setAttachment}
           onClearAttachment={() => setAttachment(null)}
           onClearReply={() => setReplyTo(null)}
+          onGifSelect={handleGifSelect}
+          onStickerSelect={handleStickerSelect}
           onVoiceComplete={handleVoiceComplete}
           onSend={handleSend}
         />

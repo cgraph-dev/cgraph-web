@@ -6,7 +6,7 @@
  *
  */
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { XMarkIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
@@ -66,6 +66,12 @@ export function GifMessage({
     displayWidth = displayHeight * aspectRatio;
   }
 
+  const displaySizeStyle = {
+    width: `${displayWidth}px`,
+    height: `${displayHeight}px`,
+    maxWidth: '100%',
+  } satisfies CSSProperties;
+
   const handleImageLoad = () => {
     setIsLoading(false);
     setHasError(false);
@@ -99,8 +105,7 @@ export function GifMessage({
           <div
             className="flex items-center justify-center rounded-lg bg-[var(--token-card-bg)/0.6]"
             style={{
-              width: `${displayWidth}px`,
-              height: `${displayHeight}px`,
+              ...displaySizeStyle,
               minWidth: '200px',
               minHeight: '150px',
             }}
@@ -125,9 +130,10 @@ export function GifMessage({
         {!hasError && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: isLoading ? 0 : 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={tweens.standard}
             className="group relative cursor-pointer overflow-hidden rounded-lg"
+            style={displaySizeStyle}
             onClick={handleClick}
             whileHover={{ opacity: 0.9 }}
             whileTap={{ scale: 0.98 }}
@@ -135,15 +141,19 @@ export function GifMessage({
             <img
               src={gifPreviewUrl || gifUrl}
               alt={gifTitle}
+              ref={(image) => {
+                if (image?.complete && image.naturalWidth > 0 && isLoading) {
+                  handleImageLoad();
+                }
+              }}
               onLoad={handleImageLoad}
               onError={handleImageError}
               className="rounded-lg object-cover transition-opacity"
               style={{
-                width: `${displayWidth}px`,
-                height: `${displayHeight}px`,
-                maxWidth: '100%',
+                width: '100%',
+                height: '100%',
               }}
-              loading="lazy"
+              loading="eager"
             />
 
             {/* Hover Overlay */}
