@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
@@ -35,7 +35,7 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
   const [editName, setEditName] = useState('');
   const [editTopic, setEditTopic] = useState('');
 
-  const fetchChannels = async () => {
+  const fetchChannels = useCallback(async () => {
     try {
       setLoading(true);
       const result = await apiClient.groups.getChannels(groupId);
@@ -70,7 +70,7 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
     fetchChannels();

@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useGroupStore } from '@/modules/groups/store';
 import {
   ServerList,
@@ -19,6 +19,7 @@ import { getGroupRoute } from '@/modules/groups/routing';
  */
 export default function Groups() {
   const { groupId, channelId } = useParams();
+  const location = useLocation();
   const { groups, isLoadingGroups, fetchGroups, fetchGroup, setActiveGroup, setActiveChannel } =
     useGroupStore();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -51,6 +52,7 @@ export default function Groups() {
   if (
     groupId &&
     !channelId &&
+    location.pathname === `/groups/${groupId}` &&
     activeGroup &&
     defaultGroupRoute &&
     defaultGroupRoute !== `/groups/${activeGroup.id}`

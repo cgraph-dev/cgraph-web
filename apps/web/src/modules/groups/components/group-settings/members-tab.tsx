@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GlassCard } from '@/shared/components/ui';
 import { apiClient, http } from '@/lib/api-client';
@@ -38,7 +38,7 @@ export function MembersTab({ groupId }: MembersTabProps) {
   const [roleModalMemberId, setRoleModalMemberId] = useState<string | null>(null);
   const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set());
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       setLoading(true);
       const params: Record<string, string> = {};
@@ -88,7 +88,7 @@ export function MembersTab({ groupId }: MembersTabProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId, roleFilter]);
 
   useEffect(() => {
     fetchMembers();

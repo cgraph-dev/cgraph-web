@@ -117,6 +117,7 @@ export function InviteCreateTab({
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onCopyLink(inviteLink)}
+                aria-label="Copy generated invite link"
                 className="rounded-xl bg-primary-600 p-3 text-white"
               >
                 {copied ? (

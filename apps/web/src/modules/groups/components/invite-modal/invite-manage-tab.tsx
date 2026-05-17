@@ -57,6 +57,7 @@ export function InviteManageTab({
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={() => onCopyLink(invite.url)}
+                    aria-label={`Copy invite ${invite.code}`}
                     className="rounded p-1 hover:bg-[var(--token-card-bg)]"
                   >
                     <ClipboardDocumentIcon className="h-4 w-4 text-gray-400" />
@@ -81,6 +82,7 @@ export function InviteManageTab({
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onDeleteInvite(invite.id)}
+                aria-label={`Delete invite ${invite.code}`}
                 className="rounded-lg p-2 text-gray-400 hover:bg-red-500/10 hover:text-red-400"
               >
                 <TrashIcon className="h-4 w-4" />

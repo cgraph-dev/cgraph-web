@@ -76,6 +76,7 @@ export function MemberListItem({
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => onToggleMenu(isMenuOpen ? null : member.id)}
+          aria-label={`Member actions for ${member.displayName || member.username}`}
           className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white"
         >
           <EllipsisVerticalIcon className="h-5 w-5" />

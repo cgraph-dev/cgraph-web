@@ -251,15 +251,61 @@ async function installOwnerUatMocks(page: Page) {
   const sentDmMessages: Record<string, unknown>[] = [];
   const sentGroupMessages: Record<string, unknown>[] = [];
   const groupAttachmentUploads: string[] = [];
+  const groupChannelCreateRequests: Record<string, unknown>[] = [];
+  const groupInviteCreateRequests: Record<string, unknown>[] = [];
+  const groupMemberRoleRequests: Record<string, unknown>[] = [];
   const groupPinRequests: Record<string, unknown>[] = [];
   const groupReactionRequests: Record<string, unknown>[] = [];
+  const groupSettingsPatches: Record<string, unknown>[] = [];
   const threadReplyRequests: Record<string, unknown>[] = [];
   const groupUnpinRequests: string[] = [];
   const notificationPatches: Record<string, unknown>[] = [];
   const reportRequests: Record<string, unknown>[] = [];
   const pinnedMessageIds = new Set<string>();
   const threadRepliesByParent = new Map<string, Record<string, unknown>[]>();
+  const adminRole = group.roles[0];
+  if (!adminRole) {
+    throw new Error('Owner UAT group fixture is missing the admin role');
+  }
+  const groupRoles = [
+    adminRole,
+    {
+      id: 'role-mod',
+      name: 'Moderator',
+      color: '#22c55e',
+      position: 1,
+      permissions: 65,
+      is_default: false,
+      is_mentionable: true,
+    },
+  ];
+  let currentGroupName = group.name;
+  let currentGroupDescription = group.description;
+  let currentGroupIsPublic = group.is_public;
   let currentNotificationLevel: 'mentions' | 'none' = 'mentions';
+  let friendRoleIds: string[] = [];
+  let settingsChannels = [
+    {
+      id: TEXT_CHANNEL_ID,
+      name: 'general',
+      type: 'text',
+      topic: 'Owner checklist proof',
+      position: 0,
+      category_id: null,
+      is_nsfw: false,
+      slow_mode_seconds: 0,
+    },
+    {
+      id: VOICE_CHANNEL_ID,
+      name: 'standup',
+      type: 'voice',
+      topic: 'Voice UAT room',
+      position: 1,
+      category_id: null,
+      is_nsfw: false,
+      slow_mode_seconds: 0,
+    },
+  ];
 
   await page.addInitScript(() => {
     const target = window as Window & {
@@ -286,11 +332,41 @@ async function installOwnerUatMocks(page: Page) {
   function groupWithCurrentNotifications() {
     return {
       ...group,
+      name: currentGroupName,
+      description: currentGroupDescription,
+      is_public: currentGroupIsPublic,
+      channels: settingsChannels,
+      roles: groupRoles,
       myMember: {
         ...group.myMember,
+        roles: [groupRoles[0]],
         notifications: currentNotificationLevel,
       },
     };
+  }
+
+  function groupMembersResponse() {
+    return [
+      {
+        ...group.myMember,
+        role: 'admin',
+        roles: [groupRoles[0]],
+        username: currentUser.username,
+        display_name: currentUser.display_name,
+        avatar_url: currentUser.avatar_url,
+      },
+      {
+        id: 'member-friend',
+        user_id: FRIEND_ID,
+        user: friendUser,
+        username: friendUser.username,
+        display_name: friendUser.display_name,
+        avatar_url: friendUser.avatar_url,
+        role: 'member',
+        roles: groupRoles.filter((role) => friendRoleIds.includes(role.id)),
+        joined_at: '2026-01-01T00:00:00.000Z',
+      },
+    ];
   }
 
   await page.route('**/uploads/groups/**', async (route) => {
@@ -449,6 +525,18 @@ async function installOwnerUatMocks(page: Page) {
     }
 
     if (path === `/api/v1/groups/${GROUP_ID}`) {
+      if (method === 'PATCH') {
+        const body = request.postDataJSON() as Record<string, unknown>;
+        groupSettingsPatches.push(body);
+        if (typeof body.name === 'string') currentGroupName = body.name;
+        if (typeof body.description === 'string' || body.description === null) {
+          currentGroupDescription = body.description as string | null;
+        }
+        if (body.visibility === 'public') currentGroupIsPublic = true;
+        if (body.visibility === 'private') currentGroupIsPublic = false;
+        await fulfillJson(route, { data: groupWithCurrentNotifications() });
+        return;
+      }
       await fulfillJson(route, { data: groupWithCurrentNotifications() });
       return;
     }
@@ -466,8 +554,104 @@ async function installOwnerUatMocks(page: Page) {
     }
 
     if (path === `/api/v1/groups/${GROUP_ID}/members`) {
+      await fulfillJson(route, { data: groupMembersResponse() });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/roles` && method === 'GET') {
+      await fulfillJson(route, { data: groupRoles });
+      return;
+    }
+
+    if (
+      path === `/api/v1/groups/${GROUP_ID}/members/member-friend/roles` &&
+      method === 'PUT'
+    ) {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      const roleIds = Array.isArray(body.role_ids)
+        ? body.role_ids.filter((roleId): roleId is string => typeof roleId === 'string')
+        : [];
+      friendRoleIds = roleIds;
+      groupMemberRoleRequests.push({ memberId: 'member-friend', ...body });
+      await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/invites`) {
+      if (method === 'POST') {
+        const body = request.postDataJSON() as Record<string, unknown>;
+        groupInviteCreateRequests.push(body);
+        await fulfillJson(
+          route,
+          {
+            data: {
+              id: 'invite-new',
+              code: 'INVITEUAT',
+              group_id: GROUP_ID,
+              creator_id: CURRENT_USER_ID,
+              creator_username: currentUser.username,
+              uses: 0,
+              max_uses: body.max_uses ?? null,
+              expires_at: '2026-01-02T00:00:00.000Z',
+              created_at: '2026-01-01T00:00:00.000Z',
+            },
+          },
+          201
+        );
+        return;
+      }
+
       await fulfillJson(route, {
-        data: [group.myMember, { id: 'member-friend', user: friendUser }],
+        data: [
+          {
+            id: 'invite-old',
+            code: 'UATOLD',
+            group_id: GROUP_ID,
+            creator_id: CURRENT_USER_ID,
+            creator_username: currentUser.username,
+            uses: 1,
+            max_uses: 5,
+            expires_at: null,
+            created_at: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      });
+      return;
+    }
+
+    if (path.startsWith(`/api/v1/groups/${GROUP_ID}/invites/`) && method === 'DELETE') {
+      await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/channels`) {
+      if (method === 'POST') {
+        const body = request.postDataJSON() as Record<string, unknown>;
+        groupChannelCreateRequests.push(body);
+        const channel = {
+          id: 'settings-channel-uat',
+          name: String(body.name ?? 'ops-room'),
+          type: typeof body.type === 'string' ? body.type : 'text',
+          topic: typeof body.description === 'string' ? body.description : null,
+          position: settingsChannels.length,
+          category_id: null,
+          is_nsfw: false,
+          slow_mode_seconds: 0,
+        };
+        settingsChannels = [...settingsChannels, channel];
+        await fulfillJson(route, { data: channel }, 201);
+        return;
+      }
+
+      await fulfillJson(route, {
+        data: [
+          {
+            id: 'cat-main',
+            name: 'Text Channels',
+            position: 0,
+            channels: settingsChannels,
+          },
+        ],
       });
       return;
     }
@@ -644,9 +828,13 @@ async function installOwnerUatMocks(page: Page) {
   });
 
   return {
+    groupChannelCreateRequests,
     groupAttachmentUploads,
+    groupInviteCreateRequests,
+    groupMemberRoleRequests,
     groupPinRequests,
     groupReactionRequests,
+    groupSettingsPatches,
     groupUnpinRequests,
     notificationPatches,
     reportRequests,
@@ -662,8 +850,12 @@ test.describe('Web owner focused UAT', () => {
   }) => {
     const {
       groupAttachmentUploads,
+      groupChannelCreateRequests,
+      groupInviteCreateRequests,
+      groupMemberRoleRequests,
       groupPinRequests,
       groupReactionRequests,
+      groupSettingsPatches,
       groupUnpinRequests,
       notificationPatches,
       reportRequests,
@@ -941,6 +1133,76 @@ test.describe('Web owner focused UAT', () => {
         })
       );
     await expect(ownGroupMessage).not.toBeVisible();
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await expect(page.getByText('Group Settings').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Overview$/ })).toBeVisible();
+    await page.locator('input[type="text"]').first().fill('UAT Hub Verified');
+    await page.getByRole('button', { name: /save changes/i }).click();
+    await expect
+      .poll(() => groupSettingsPatches, { message: 'group overview save patched the group' })
+      .toContainEqual(expect.objectContaining({ name: 'UAT Hub Verified' }));
+
+    await page.getByRole('button', { name: /^Invites$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Invites$/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Create Invite$/ }).click();
+    await expect(page.getByText('Invite People')).toBeVisible();
+    await page.getByRole('button', { name: /generate new link/i }).click();
+    await expect
+      .poll(() => groupInviteCreateRequests, {
+        message: 'group invite modal posted the default expiration',
+      })
+      .toContainEqual(expect.objectContaining({ expires_in: 86400 }));
+    await expect(page.locator('input[readonly]')).toHaveValue(/\/invite\/INVITEUAT$/);
+    await page.getByRole('button', { name: /^Close$/ }).click();
+    await expect(page.getByText('Invite People')).not.toBeVisible();
+
+    await page.getByRole('button', { name: /^Members$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
+    await page.getByPlaceholder(/search members/i).fill('friend');
+    await expect(page.getByText('Friend User')).toBeVisible();
+    await page.getByRole('button', { name: /member actions for friend user/i }).click();
+    await page.getByRole('button', { name: /change role/i }).click();
+    await expect(page.getByRole('heading', { name: /assign roles/i })).toBeVisible();
+    await page.getByLabel('Moderator').check();
+    await page.getByRole('button', { name: /save roles/i }).click();
+    await expect
+      .poll(() => groupMemberRoleRequests, {
+        message: 'member role modal persisted role_ids',
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          memberId: 'member-friend',
+          role_ids: ['role-mod'],
+        })
+      );
+
+    await page.getByRole('button', { name: /^Channels$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Channels$/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Create Channel$/ }).click();
+    await page.getByPlaceholder('channel-name').fill('ops room');
+    await page.getByPlaceholder(/channel topic/i).fill('Settings create proof');
+    await page.getByRole('button', { name: /^Create$/ }).click();
+    await expect
+      .poll(() => groupChannelCreateRequests, {
+        message: 'channels tab created a normalized text channel',
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          name: 'ops-room',
+          type: 'text',
+          description: 'Settings create proof',
+        })
+      );
+    await expect(page.getByText('ops-room')).toBeVisible();
+
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByText('Admin')).toBeVisible();
+    await page.getByText('Admin').click();
+    await expect(page.getByRole('heading', { name: /edit role/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /close group settings/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}$`));
 
     await page.goto('/social/discover');
     await page.getByPlaceholder(/search cgraph/i).fill('uat');

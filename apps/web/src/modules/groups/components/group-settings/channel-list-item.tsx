@@ -127,6 +127,7 @@ export function ChannelListItem({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => onPermissions(channel.id)}
+              aria-label={`Permissions for ${channel.name}`}
               className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-primary-400"
               title="Permissions"
             >
@@ -135,6 +136,7 @@ export function ChannelListItem({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => onStartEdit(channel)}
+              aria-label={`Edit ${channel.name}`}
               className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white"
             >
               <PencilIcon className="h-4 w-4" />
@@ -142,6 +144,7 @@ export function ChannelListItem({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => onDelete(channel.id)}
+              aria-label={`Delete ${channel.name}`}
               className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-red-400"
             >
               <TrashIcon className="h-4 w-4" />

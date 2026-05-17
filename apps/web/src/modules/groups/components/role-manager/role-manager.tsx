@@ -11,7 +11,7 @@
  * - Member assignment preview
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Reorder } from 'motion/react';
 import { ShieldCheckIcon, PlusIcon } from '@heroicons/react/24/outline';
@@ -39,12 +39,9 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
 
   const activeGroup = groups.find((g) => g.id === groupId);
 
-  // Initialize roles from group
-  useState(() => {
-    if (activeGroup?.roles) {
-      setRoles([...activeGroup.roles].sort((a, b) => b.position - a.position));
-    }
-  });
+  useEffect(() => {
+    setRoles([...(activeGroup?.roles ?? [])].sort((a, b) => b.position - a.position));
+  }, [activeGroup?.roles]);
 
   const handleReorder = (newOrder: Role[]) => {
     setRoles(newOrder);
@@ -132,6 +129,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleCreateRole}
+            aria-label="Create role"
             className="bg-primary-600/20 hover:bg-primary-600/30 rounded-lg p-1.5 text-primary-400"
           >
             <PlusIcon className="h-4 w-4" />
