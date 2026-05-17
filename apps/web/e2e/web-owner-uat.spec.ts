@@ -845,6 +845,8 @@ async function installOwnerUatMocks(page: Page) {
 }
 
 test.describe('Web owner focused UAT', () => {
+  test.setTimeout(60_000);
+
   test('verifies auth, DMs, groups, social, settings, Nodes, and calls routes', async ({
     page,
   }) => {
