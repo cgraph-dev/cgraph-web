@@ -599,7 +599,9 @@ test.describe('Web owner focused UAT', () => {
     await groupComposer.focus();
     await groupComposer.press('Enter');
     await expect
-      .poll(() => groupAttachmentUploads, { message: 'group attachment upload endpoint was called' })
+      .poll(() => groupAttachmentUploads, {
+        message: 'group attachment upload endpoint was called',
+      })
       .toContain('POST');
     await expect
       .poll(() => sentGroupMessages, { message: 'group message endpoint received media metadata' })
