@@ -492,7 +492,8 @@ async function installOwnerUatMocks(page: Page) {
           message_type: body.content_type,
           reply_to_id: replyToId,
           reply_to: replyToMessage,
-          metadata: typeof body.metadata === 'object' && body.metadata !== null ? body.metadata : {},
+          metadata:
+            typeof body.metadata === 'object' && body.metadata !== null ? body.metadata : {},
           file_url: body.file_url,
           file_name: body.file_name,
           file_size: body.file_size,
@@ -506,11 +507,7 @@ async function installOwnerUatMocks(page: Page) {
             sentMessage,
           ]);
         }
-        await fulfillJson(
-          route,
-          { data: sentMessage },
-          201
-        );
+        await fulfillJson(route, { data: sentMessage }, 201);
         return;
       }
 
