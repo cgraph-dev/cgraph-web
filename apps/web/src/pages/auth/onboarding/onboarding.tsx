@@ -59,7 +59,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 p-4">
+    <div className="flex min-h-full w-full flex-1 items-center justify-center overflow-y-auto bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 p-4">
       {/* Animated Background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="bg-gradient-radial from-primary-500/10 absolute -right-1/2 -top-1/2 h-full w-full rounded-full to-transparent" />

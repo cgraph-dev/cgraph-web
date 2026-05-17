@@ -7,7 +7,7 @@
  */
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircleIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
@@ -22,6 +22,7 @@ import { OnboardingChecklist } from './onboarding-checklist';
  */
 export function OnboardingTutorial(): React.ReactNode {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     isVisible,
     isCompleted,
@@ -33,10 +34,17 @@ export function OnboardingTutorial(): React.ReactNode {
     toggleExpanded,
   } = useOnboardingStore();
 
+  const isRequiredOnboardingRoute = location.pathname === '/onboarding';
+
   // Fetch onboarding status on mount
   useEffect(() => {
+    if (isRequiredOnboardingRoute) return;
     fetchStatus();
-  }, [fetchStatus]);
+  }, [fetchStatus, isRequiredOnboardingRoute]);
+
+  if (isRequiredOnboardingRoute) {
+    return null;
+  }
 
   if (isLoading || !isVisible || isCompleted) {
     return <OnboardingChecklist />;

@@ -18,6 +18,7 @@ import { useCustomizationApplication } from '@/modules/settings/hooks/useCustomi
 import { authLogger, themeLogger } from '@/lib/logger';
 
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
+const E2E_ONBOARDING_COMPLETED_KEY = 'cgraph-e2e-onboarding-completed';
 const PUBLIC_AUTH_ROUTE_PATTERN =
   /^\/(login|register|forgot-password|reset-password|verify-email)(\/|$)/;
 
@@ -50,6 +51,20 @@ const E2E_USER: User = {
   },
 };
 
+function getE2EUser(): User {
+  if (typeof sessionStorage === 'undefined') return E2E_USER;
+
+  const onboardingCompleted = sessionStorage.getItem(E2E_ONBOARDING_COMPLETED_KEY);
+  if (onboardingCompleted === 'false') {
+    return {
+      ...E2E_USER,
+      onboardingCompleted: false,
+    };
+  }
+
+  return E2E_USER;
+}
+
 /**
  * Initializes authentication, gamification, preferences, and theme state.
  * Renders children immediately — never blocks rendering.
@@ -68,7 +83,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     if (isE2EAuthBypass) {
       if (!PUBLIC_AUTH_ROUTE_PATTERN.test(window.location.pathname)) {
         useAuthStore.setState({
-          user: E2E_USER,
+          user: getE2EUser(),
           token: 'e2e-access-token',
           refreshToken: 'e2e-refresh-token',
           isAuthenticated: true,

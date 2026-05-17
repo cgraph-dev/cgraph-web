@@ -54,6 +54,38 @@ describe('useOnboarding', () => {
     });
 
     expect(mocks.httpPost).toHaveBeenCalledWith('/api/v1/onboarding/skip');
+    expect(mocks.updateUser).toHaveBeenCalledWith({ onboardingCompleted: true });
+    expect(mocks.navigate).toHaveBeenCalledWith('/messages');
+    expect(result.current.error).toBeNull();
+  });
+
+  it('marks onboarding complete locally before leaving after final save', async () => {
+    mocks.httpPut.mockResolvedValue({ data: { data: {} } });
+    mocks.httpPost.mockResolvedValue({ data: { data: { onboarding_completed: true } } });
+
+    const { result } = renderHook(() => useOnboarding());
+
+    await act(async () => {
+      await result.current.handleNext();
+      await result.current.handleNext();
+      await result.current.handleNext();
+    });
+
+    await act(async () => {
+      await result.current.handleNext();
+    });
+
+    expect(mocks.httpPut).toHaveBeenCalledWith('/api/v1/me', {
+      display_name: 'Tricky',
+      bio: '',
+      avatar_url: null,
+    });
+    expect(mocks.httpPost).toHaveBeenCalledWith('/api/v1/me/onboarding/complete');
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      displayName: 'Tricky',
+      avatarUrl: null,
+    });
+    expect(mocks.updateUser).toHaveBeenCalledWith({ onboardingCompleted: true });
     expect(mocks.navigate).toHaveBeenCalledWith('/messages');
     expect(result.current.error).toBeNull();
   });

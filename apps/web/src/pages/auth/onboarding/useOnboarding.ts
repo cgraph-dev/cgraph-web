@@ -87,6 +87,10 @@ export function useOnboarding() {
         // Mark onboarding complete
         await http.post('/api/v1/me/onboarding/complete');
 
+        updateUser({
+          onboardingCompleted: true,
+        });
+
         navigate('/messages');
       } catch (error) {
         logger.error('Onboarding error:', error);
@@ -111,6 +115,9 @@ export function useOnboarding() {
 
     try {
       await http.post('/api/v1/onboarding/skip');
+      updateUser({
+        onboardingCompleted: true,
+      });
       navigate('/messages');
     } catch (error) {
       logger.error('Failed to skip onboarding:', error);

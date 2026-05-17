@@ -137,3 +137,31 @@ test.describe('User Flow — Authenticated Journey', () => {
     await expect(page.getByRole('main').first()).toBeVisible();
   });
 });
+
+test.describe('User Flow — Required Onboarding Gate', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('renders the required onboarding wizard and exits after skip', async ({ page }) => {
+    await page.route('**/api/v1/onboarding/skip', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { completed: true, steps: {} } }),
+      });
+    });
+
+    await page.addInitScript(() => {
+      sessionStorage.setItem('cgraph-e2e-onboarding-completed', 'false');
+    });
+
+    await page.goto('/onboarding');
+
+    await expect(page.getByRole('heading', { name: 'Welcome to CGraph' })).toBeVisible();
+    await expect(page.getByRole('complementary', { name: /getting started tutorial/i })).toHaveCount(
+      0
+    );
+
+    await page.getByRole('button', { name: 'Skip' }).click();
+    await expect(page).toHaveURL(/\/messages$/);
+  });
+});
