@@ -251,8 +251,32 @@ async function installOwnerUatMocks(page: Page) {
   const sentDmMessages: Record<string, unknown>[] = [];
   const sentGroupMessages: Record<string, unknown>[] = [];
   const groupAttachmentUploads: string[] = [];
+  const groupPinRequests: Record<string, unknown>[] = [];
   const notificationPatches: Record<string, unknown>[] = [];
+  const reportRequests: Record<string, unknown>[] = [];
   let currentNotificationLevel: 'mentions' | 'none' = 'mentions';
+
+  await page.addInitScript(() => {
+    const target = window as Window & {
+      __cgraphCopiedText?: string;
+      __cgraphGroupActionEvents?: unknown[];
+    };
+    target.__cgraphGroupActionEvents = [];
+    window.addEventListener('cgraph:e2e-group-channel-action', (event) => {
+      target.__cgraphGroupActionEvents?.push((event as CustomEvent).detail);
+    });
+    window.confirm = () => true;
+    window.prompt = () => 'group report proof';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText(value: string) {
+          target.__cgraphCopiedText = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
 
   function groupWithCurrentNotifications() {
     return {
@@ -475,8 +499,27 @@ async function installOwnerUatMocks(page: Page) {
       return;
     }
 
+    if (path === `/api/v1/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}/pins`) {
+      if (method === 'POST') {
+        const body = request.postDataJSON() as Record<string, unknown>;
+        groupPinRequests.push(body);
+        await fulfillJson(route, { data: { message_id: body.message_id } }, 201);
+        return;
+      }
+
+      await fulfillJson(route, { data: [] });
+      return;
+    }
+
     if (path === `/api/v1/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}/thread-counts`) {
       await fulfillJson(route, { data: {} });
+      return;
+    }
+
+    if (path === '/api/v1/reports') {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      reportRequests.push(body);
+      await fulfillJson(route, { data: { id: 'report-uat' } }, 201);
       return;
     }
 
@@ -539,15 +582,28 @@ async function installOwnerUatMocks(page: Page) {
     await fulfillJson(route, { data: {} });
   });
 
-  return { groupAttachmentUploads, notificationPatches, sentDmMessages, sentGroupMessages };
+  return {
+    groupAttachmentUploads,
+    groupPinRequests,
+    notificationPatches,
+    reportRequests,
+    sentDmMessages,
+    sentGroupMessages,
+  };
 }
 
 test.describe('Web owner focused UAT', () => {
   test('verifies auth, DMs, groups, social, settings, Nodes, and calls routes', async ({
     page,
   }) => {
-    const { groupAttachmentUploads, notificationPatches, sentDmMessages, sentGroupMessages } =
-      await installOwnerUatMocks(page);
+    const {
+      groupAttachmentUploads,
+      groupPinRequests,
+      notificationPatches,
+      reportRequests,
+      sentDmMessages,
+      sentGroupMessages,
+    } = await installOwnerUatMocks(page);
 
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: /welcome back|sign in|log in/i })).toBeVisible();
@@ -674,6 +730,94 @@ test.describe('Web owner focused UAT', () => {
       .poll(() => notificationPatches, { message: 'group unmute endpoint received the patch' })
       .toContainEqual(expect.objectContaining({ notifications: 'mentions' }));
     await expect(page.getByRole('button', { name: /mute group/i })).toBeVisible();
+
+    const ownGroupMessage = page.locator('#group-message-group-msg-uat-sent-1');
+    await ownGroupMessage.hover();
+    await ownGroupMessage.getByTitle('More Actions').click();
+    await page.getByRole('menuitem', { name: /edit/i }).click();
+    await ownGroupMessage.locator('textarea').fill('Group routed UAT edited');
+    await ownGroupMessage.getByRole('button', { name: /save/i }).click();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = window as Window & { __cgraphGroupActionEvents?: unknown[] };
+            return target.__cgraphGroupActionEvents ?? [];
+          }),
+        { message: 'group edit socket action was emitted' }
+      )
+      .toContainEqual(
+        expect.objectContaining({
+          event: 'edit_message',
+          topic: `group:${TEXT_CHANNEL_ID}`,
+          payload: expect.objectContaining({
+            message_id: 'group-msg-uat-sent-1',
+            content: 'Group routed UAT edited',
+          }),
+        })
+      );
+    await expect(ownGroupMessage).toContainText('Group routed UAT edited');
+    await expect(ownGroupMessage).toContainText('(edited)');
+
+    await ownGroupMessage.hover();
+    await ownGroupMessage.getByTitle('More Actions').click();
+    await page.getByRole('menuitem', { name: /pin/i }).click();
+    await expect
+      .poll(() => groupPinRequests, { message: 'group pin endpoint received the message id' })
+      .toContainEqual(expect.objectContaining({ message_id: 'group-msg-uat-sent-1' }));
+    await expect(ownGroupMessage).toContainText('Pinned');
+
+    await ownGroupMessage.hover();
+    await ownGroupMessage.getByTitle('More Actions').click();
+    await page.getByRole('menuitem', { name: /copy link/i }).click();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = window as Window & { __cgraphCopiedText?: string };
+            return target.__cgraphCopiedText ?? '';
+          }),
+        { message: 'message link was copied' }
+      )
+      .toContain(`/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}?scrollTo=group-msg-uat-sent-1`);
+
+    const friendGroupMessage = page.locator('#group-message-group-msg-uat-1');
+    await friendGroupMessage.hover();
+    await friendGroupMessage.getByTitle('More Actions').click();
+    await page.getByRole('menuitem', { name: /report/i }).click();
+    await expect
+      .poll(() => reportRequests, { message: 'group report endpoint received the report' })
+      .toContainEqual(
+        expect.objectContaining({
+          report: expect.objectContaining({
+            target_type: 'message',
+            target_id: 'group-msg-uat-1',
+            category: 'other',
+            description: 'group report proof',
+          }),
+        })
+      );
+
+    await ownGroupMessage.hover();
+    await ownGroupMessage.getByTitle('More Actions').click();
+    await page.getByRole('menuitem', { name: /delete/i }).click();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = window as Window & { __cgraphGroupActionEvents?: unknown[] };
+            return target.__cgraphGroupActionEvents ?? [];
+          }),
+        { message: 'group delete socket action was emitted' }
+      )
+      .toContainEqual(
+        expect.objectContaining({
+          event: 'delete_message',
+          topic: `group:${TEXT_CHANNEL_ID}`,
+          payload: expect.objectContaining({ message_id: 'group-msg-uat-sent-1' }),
+        })
+      );
+    await expect(ownGroupMessage).not.toBeVisible();
 
     await page.goto('/social/discover');
     await page.getByPlaceholder(/search cgraph/i).fill('uat');

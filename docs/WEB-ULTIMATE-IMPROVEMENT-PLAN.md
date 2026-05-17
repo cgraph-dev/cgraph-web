@@ -250,7 +250,7 @@ correctness work below before feature expansion or scale items.
 
 - Browser-verified group file/photo attachment sends.
 - Browser-verified loaded-channel header search and group-level mute/unmute behavior.
-- Real message edit, delete, report, copy-link, and pin entry actions.
+- Browser-verified message edit, delete, report, copy-link, and pin entry actions.
 - Voice, sticker, GIF, and browser-verified pin/action parity.
 - Explore/join entry points that always land on a mounted channel.
 

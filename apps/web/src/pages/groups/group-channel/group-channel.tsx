@@ -90,6 +90,21 @@ function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
+function dispatchE2EGroupChannelAction(
+  topic: string,
+  event: string,
+  payload: Record<string, unknown>
+): boolean {
+  if (import.meta.env.VITE_E2E_AUTH_BYPASS !== 'true') return false;
+
+  window.dispatchEvent(
+    new CustomEvent('cgraph:e2e-group-channel-action', {
+      detail: { topic, event, payload },
+    })
+  );
+  return true;
+}
+
 async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> {
   const formData = new FormData();
   formData.append('file', file);
@@ -368,6 +383,9 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
     const socketChannel = socketManager.getChannel(`group:${channelId}`);
     if (!socketChannel || socketChannel.state !== 'joined') {
+      if (dispatchE2EGroupChannelAction(`group:${channelId}`, event, payload)) {
+        return Promise.resolve();
+      }
       return Promise.reject(new Error('Channel socket is not ready.'));
     }
 
