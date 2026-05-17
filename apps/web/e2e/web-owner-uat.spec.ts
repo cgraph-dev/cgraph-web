@@ -251,6 +251,18 @@ async function installOwnerUatMocks(page: Page) {
   const sentDmMessages: Record<string, unknown>[] = [];
   const sentGroupMessages: Record<string, unknown>[] = [];
   const groupAttachmentUploads: string[] = [];
+  const notificationPatches: Record<string, unknown>[] = [];
+  let currentNotificationLevel: 'mentions' | 'none' = 'mentions';
+
+  function groupWithCurrentNotifications() {
+    return {
+      ...group,
+      myMember: {
+        ...group.myMember,
+        notifications: currentNotificationLevel,
+      },
+    };
+  }
 
   await page.route('**/uploads/groups/**', async (route) => {
     await route.fulfill({
@@ -403,12 +415,24 @@ async function installOwnerUatMocks(page: Page) {
     }
 
     if (path === '/api/v1/groups') {
-      await fulfillJson(route, { data: [group] });
+      await fulfillJson(route, { data: [groupWithCurrentNotifications()] });
       return;
     }
 
     if (path === `/api/v1/groups/${GROUP_ID}`) {
-      await fulfillJson(route, { data: group });
+      await fulfillJson(route, { data: groupWithCurrentNotifications() });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/members/me/notifications`) {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      notificationPatches.push(body);
+      if (body.notifications === 'none' || body.notifications === 'mentions') {
+        currentNotificationLevel = body.notifications;
+      }
+      await fulfillJson(route, {
+        data: { notifications: currentNotificationLevel },
+      });
       return;
     }
 
@@ -515,14 +539,14 @@ async function installOwnerUatMocks(page: Page) {
     await fulfillJson(route, { data: {} });
   });
 
-  return { groupAttachmentUploads, sentDmMessages, sentGroupMessages };
+  return { groupAttachmentUploads, notificationPatches, sentDmMessages, sentGroupMessages };
 }
 
 test.describe('Web owner focused UAT', () => {
   test('verifies auth, DMs, groups, social, settings, Nodes, and calls routes', async ({
     page,
   }) => {
-    const { groupAttachmentUploads, sentDmMessages, sentGroupMessages } =
+    const { groupAttachmentUploads, notificationPatches, sentDmMessages, sentGroupMessages } =
       await installOwnerUatMocks(page);
 
     await page.goto('/login');
@@ -626,6 +650,30 @@ test.describe('Web owner focused UAT', () => {
     await expect(
       page.locator('a[href$="/uploads/groups/proof.png"] img[alt="group-proof.png"]')
     ).toBeVisible();
+    await page.getByRole('button', { name: /search messages/i }).click();
+    const groupSearch = page.getByPlaceholder(/search #general/i);
+    await expect(groupSearch).toBeVisible();
+    await groupSearch.fill('Group routed');
+    await expect(page.getByText('1/1')).toBeVisible();
+    await page.getByRole('button', { name: /next result/i }).click();
+    await page.getByRole('button', { name: /close search/i }).click();
+    await expect(groupSearch).not.toBeVisible();
+
+    await page.getByRole('button', { name: /mute group/i }).click();
+    await expect
+      .poll(() => notificationPatches, { message: 'group mute endpoint received the patch' })
+      .toContainEqual(
+        expect.objectContaining({
+          notifications: 'none',
+          suppress_everyone: false,
+        })
+      );
+    await expect(page.getByRole('button', { name: /unmute group/i })).toBeVisible();
+    await page.getByRole('button', { name: /unmute group/i }).click();
+    await expect
+      .poll(() => notificationPatches, { message: 'group unmute endpoint received the patch' })
+      .toContainEqual(expect.objectContaining({ notifications: 'mentions' }));
+    await expect(page.getByRole('button', { name: /mute group/i })).toBeVisible();
 
     await page.goto('/social/discover');
     await page.getByPlaceholder(/search cgraph/i).fill('uat');

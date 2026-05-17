@@ -249,7 +249,7 @@ correctness work below before feature expansion or scale items.
 4. Routed group parity
 
 - Browser-verified group file/photo attachment sends.
-- Real header search and notification behavior.
+- Browser-verified loaded-channel header search and group-level mute/unmute behavior.
 - Real message edit, delete, report, copy-link, and pin entry actions.
 - Voice, sticker, GIF, and browser-verified pin/action parity.
 - Explore/join entry points that always land on a mounted channel.
