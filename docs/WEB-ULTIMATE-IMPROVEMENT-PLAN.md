@@ -857,9 +857,9 @@ Unify the attachment/send contract across DMs and groups, eliminate the remainin
 
 ### Wave 2 — Routed DM parity (weeks 2–3)
 
-Ship the remaining deeper peer media-negotiation proof on the live DM route. File/photo,
-voice-note, GIF/sticker send, DM call-entry launch, call-history callback, incoming-call
-accept/end-state, reply, search jump, guarded latest-jump scroll behavior, typing start/stop emit,
+Ship the remaining deeper peer media-negotiation proof on the live DM route. File/photo, voice-note,
+GIF/sticker send, DM call-entry launch, call-history callback, incoming-call accept/end-state,
+reply, search jump, guarded latest-jump scroll behavior, typing start/stop emit,
 edit/delete/forward, request actions, pin, loaded pinned-panel behavior, read-receipt rendering,
 core conversation-list participant actions, and per-chat Space move controls are already covered by
 focused tests and browser proof.
