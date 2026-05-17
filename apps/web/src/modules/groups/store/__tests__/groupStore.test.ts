@@ -679,6 +679,55 @@ describe('groupStore (modules)', () => {
         }
       );
     });
+
+    it('should include the full upload-first attachment payload when sending media', async () => {
+      mockedApi.post.mockResolvedValue({ data: { message: mockMessage } });
+
+      await useGroupStore.getState().sendChannelMessage('channel-1', 'proof.png', undefined, {
+        contentType: 'image',
+        fileUrl: '/uploads/groups/proof.png',
+        fileName: 'proof.png',
+        fileSize: 12,
+        fileMimeType: 'image/png',
+        thumbnailUrl: '/uploads/groups/proof-thumb.png',
+        metadata: {
+          fileUrl: '/uploads/groups/proof.png',
+          fileName: 'proof.png',
+          fileSize: 12,
+          fileMimeType: 'image/png',
+          url: '/uploads/groups/proof.png',
+          filename: 'proof.png',
+          size: 12,
+          mimeType: 'image/png',
+          thumbnailUrl: '/uploads/groups/proof-thumb.png',
+        },
+      });
+
+      expect(mockedApi.post).toHaveBeenCalledWith(
+        '/api/v1/groups/group-1/channels/channel-1/messages',
+        {
+          content: 'proof.png',
+          content_type: 'image',
+          client_message_id: 'test-idempotency-key-123',
+          file_url: '/uploads/groups/proof.png',
+          file_name: 'proof.png',
+          file_size: 12,
+          file_mime_type: 'image/png',
+          thumbnail_url: '/uploads/groups/proof-thumb.png',
+          metadata: {
+            fileUrl: '/uploads/groups/proof.png',
+            fileName: 'proof.png',
+            fileSize: 12,
+            fileMimeType: 'image/png',
+            url: '/uploads/groups/proof.png',
+            filename: 'proof.png',
+            size: 12,
+            mimeType: 'image/png',
+            thumbnailUrl: '/uploads/groups/proof-thumb.png',
+          },
+        }
+      );
+    });
   });
 
   // addChannelMessage / updateChannelMessage / removeChannelMessage

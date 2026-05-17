@@ -250,6 +250,18 @@ async function fulfillJson(route: Route, body: unknown, status = 200) {
 async function installOwnerUatMocks(page: Page) {
   const sentDmMessages: Record<string, unknown>[] = [];
   const sentGroupMessages: Record<string, unknown>[] = [];
+  const groupAttachmentUploads: string[] = [];
+
+  await page.route('**/uploads/groups/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/axjXcQAAAAASUVORK5CYII=',
+        'base64'
+      ),
+    });
+  });
 
   await page.route('**/api/v1/**', async (route, request) => {
     const url = new URL(request.url());
@@ -372,6 +384,24 @@ async function installOwnerUatMocks(page: Page) {
       return;
     }
 
+    if (path === '/api/v1/uploads' && method === 'POST') {
+      groupAttachmentUploads.push(method);
+      await fulfillJson(
+        route,
+        {
+          data: {
+            url: '/uploads/groups/proof.png',
+            original_filename: 'group-proof.png',
+            content_type: 'image/png',
+            size: 12,
+            thumbnail_url: '/uploads/groups/proof-thumb.png',
+          },
+        },
+        201
+      );
+      return;
+    }
+
     if (path === '/api/v1/groups') {
       await fulfillJson(route, { data: [group] });
       return;
@@ -393,9 +423,25 @@ async function installOwnerUatMocks(page: Page) {
       if (method === 'POST') {
         const body = request.postDataJSON() as Record<string, unknown>;
         sentGroupMessages.push(body);
+        const sentIndex = sentGroupMessages.length;
         await fulfillJson(
           route,
-          { data: channelMessage({ id: 'group-msg-uat-sent', content: body.content }) },
+          {
+            data: channelMessage({
+              id: `group-msg-uat-sent-${sentIndex}`,
+              sender_id: CURRENT_USER_ID,
+              author: currentUser,
+              content: body.content,
+              message_type: body.content_type,
+              metadata:
+                typeof body.metadata === 'object' && body.metadata !== null ? body.metadata : {},
+              file_url: body.file_url,
+              file_name: body.file_name,
+              file_size: body.file_size,
+              file_mime_type: body.file_mime_type,
+              thumbnail_url: body.thumbnail_url,
+            }),
+          },
           201
         );
         return;
@@ -469,14 +515,15 @@ async function installOwnerUatMocks(page: Page) {
     await fulfillJson(route, { data: {} });
   });
 
-  return { sentDmMessages, sentGroupMessages };
+  return { groupAttachmentUploads, sentDmMessages, sentGroupMessages };
 }
 
 test.describe('Web owner focused UAT', () => {
   test('verifies auth, DMs, groups, social, settings, Nodes, and calls routes', async ({
     page,
   }) => {
-    const { sentDmMessages, sentGroupMessages } = await installOwnerUatMocks(page);
+    const { groupAttachmentUploads, sentDmMessages, sentGroupMessages } =
+      await installOwnerUatMocks(page);
 
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: /welcome back|sign in|log in/i })).toBeVisible();
@@ -542,6 +589,41 @@ test.describe('Web owner focused UAT', () => {
     await expect
       .poll(() => sentGroupMessages, { message: 'Group route sent through the channel endpoint' })
       .toContainEqual(expect.objectContaining({ content: 'Group routed UAT send' }));
+
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'group-proof.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('browser-proof'),
+    });
+    await expect(page.getByText('group-proof.png')).toBeVisible();
+    await groupComposer.focus();
+    await groupComposer.press('Enter');
+    await expect
+      .poll(() => groupAttachmentUploads, { message: 'group attachment upload endpoint was called' })
+      .toContain('POST');
+    await expect
+      .poll(() => sentGroupMessages, { message: 'group message endpoint received media metadata' })
+      .toContainEqual(
+        expect.objectContaining({
+          content: 'group-proof.png',
+          content_type: 'image',
+          file_url: '/uploads/groups/proof.png',
+          file_name: 'group-proof.png',
+          file_size: 12,
+          file_mime_type: 'image/png',
+          thumbnail_url: '/uploads/groups/proof-thumb.png',
+          metadata: expect.objectContaining({
+            fileUrl: '/uploads/groups/proof.png',
+            fileName: 'group-proof.png',
+            fileSize: 12,
+            fileMimeType: 'image/png',
+            thumbnailUrl: '/uploads/groups/proof-thumb.png',
+          }),
+        })
+      );
+    await expect(
+      page.locator('a[href$="/uploads/groups/proof.png"] img[alt="group-proof.png"]')
+    ).toBeVisible();
 
     await page.goto('/social/discover');
     await page.getByPlaceholder(/search cgraph/i).fill('uat');

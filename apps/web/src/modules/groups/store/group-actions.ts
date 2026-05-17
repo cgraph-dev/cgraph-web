@@ -443,6 +443,9 @@ export function createGroupActions(
       if (options?.fileSize != null) payload.file_size = options.fileSize;
       if (options?.fileMimeType) payload.file_mime_type = options.fileMimeType;
       if (options?.thumbnailUrl) payload.thumbnail_url = options.thumbnailUrl;
+      if (options?.metadata && Object.keys(options.metadata).length > 0) {
+        payload.metadata = options.metadata;
+      }
 
       const response = await http.post(channelMessagesPath(get(), channelId), payload);
       const raw =

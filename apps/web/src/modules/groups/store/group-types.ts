@@ -177,6 +177,7 @@ export interface GroupState {
       fileSize?: number | null;
       fileMimeType?: string | null;
       thumbnailUrl?: string | null;
+      metadata?: Record<string, unknown>;
     }
   ) => Promise<void>;
   setActiveGroup: (groupId: string | null) => void;
