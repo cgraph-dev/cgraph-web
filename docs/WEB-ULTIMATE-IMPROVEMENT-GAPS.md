@@ -15,10 +15,11 @@ First-class Spaces routing is also no longer missing: `/spaces` and `/spaces/:sp
 
 2026-05-16 update: per-chat Space move controls are no longer listed as a missing conversation-list
 feature. The routed conversation action menu now loads server-owned Spaces, shows membership state,
-and patches `/api/v1/spaces/:id` include/exclude lists with rollback on failure. Remaining risk is
-final routed browser verification of the combined conversation-list menu. The backend Space
-controller is now mounted under `/api/v1/spaces` through the messaging route owner and delegates
-through `CGraph.Messaging`, with controller tests covering create/list/update/delete.
+and patches `/api/v1/spaces/:id` include/exclude lists with rollback on failure. The combined
+conversation-list menu is browser-verified by `apps/web/e2e/dm-media-composer.spec.ts` for mark
+unread/read, pin/unpin, mute/unmute, archive/recover, and Space add/remove. The backend Space
+controller is mounted under `/api/v1/spaces` through the messaging route owner and delegates through
+`CGraph.Messaging`, with controller tests covering create/list/update/delete.
 
 2026-05-16 update: logged-out verify-email resend is no longer listed as a route-owned gap.
 Expired-link recovery now lets the user enter an email, posts it to
@@ -121,7 +122,8 @@ quietly in the focused Vitest run.
 actions. The backend mounts current-user routes for mark-unread, archive, unarchive, pin/unpin, and
 mute/unmute; the web sidebar exposes those actions plus archived-list recovery, and focused
 controller/store tests cover the path. Per-chat Space move controls now use the same routed sidebar
-menu and patch the server-owned Spaces contract.
+menu and patch the server-owned Spaces contract. `apps/web/e2e/dm-media-composer.spec.ts`
+browser-verifies the combined live menu path.
 
 2026-05-15 update: the runtime-neutral user settings contract is no longer web-local.
 `packages/shared-types/src/settings.ts` owns user setting types and defaults, and the web

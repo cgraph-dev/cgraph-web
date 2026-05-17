@@ -2,14 +2,15 @@
 
 Status date: 2026-05-16
 
-Current execution count after the identity/cosmetic live-update proof slice: 50 / 50 owner-level
+Current execution count after the conversation-list/Space browser-proof slice: 50 / 50 owner-level
 checklist items closed, 100.0% closed and 0.0% left for this owner execution contract. The Space
 route, verify-email resend, onboarding skip/recovery, cancel-deletion, phone native-attestation
 guard, verify-email-before-onboarding route gate, routed DM read-receipt rendering, routed DM
 guarded-scroll, routed DM typing-proof, routed DM call-entry, call-history callback, incoming-call
-accept/end-state, and routed identity/cosmetic live-update implementations are now source-backed and
-browser-verified where this checklist requires it. Broader product-maturity risks that remain
-outside this owner checklist are still tracked honestly in the strict pass and scorecard documents.
+accept/end-state, routed identity/cosmetic live-update, and routed conversation-list/Space menu
+implementations are now source-backed and browser-verified where this checklist requires it.
+Broader product-maturity risks that remain outside this owner checklist are still tracked honestly
+in the strict pass and scorecard documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -241,7 +242,8 @@ Required implementation-time questions:
 - [x] Spaces have first-class routed web surfaces if they remain in scope. `/spaces` and
       `/spaces/:spaceId` list, create, and filter backend-owned Spaces and are browser-verified by
       `apps/web/e2e/spaces.spec.ts` on 2026-05-15. Per-chat Space move controls now live in the
-      routed conversation-list action menu and patch the server-owned Space include/exclude lists.
+      routed conversation-list action menu, patch the server-owned Space include/exclude lists, and
+      are browser-verified by `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-17.
 - [x] Vault has a first-class routed web surface if it remains in scope. `/vault` creates or opens
       the backend Note-to-Self conversation and is browser-verified by `apps/web/e2e/vault.spec.ts`
       on 2026-05-15.

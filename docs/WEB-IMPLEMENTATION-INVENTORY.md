@@ -149,7 +149,8 @@ routes now exist and are browser-verified by `apps/web/e2e/broadcasts.spec.ts`; 
 routes now exist at `/vault` and `/vault/:conversationId`, backed by the backend Note-to-Self
 contract and browser-verified by `apps/web/e2e/vault.spec.ts`; first-class Spaces routes now exist
 at `/spaces` and `/spaces/:spaceId`, backed by `/api/v1/spaces` and browser-verified by
-`apps/web/e2e/spaces.spec.ts`; canonical identity field preservation now exists through
+`apps/web/e2e/spaces.spec.ts`; live inbox Space membership controls are browser-verified by
+`apps/web/e2e/dm-media-composer.spec.ts`; canonical identity field preservation now exists through
 `packages/shared-types/src/identity.ts`, `apps/web/src/lib/identity/canonicalIdentity.ts`, backend
 message/conversation JSON, and the web auth/profile/friend/chat/group normalizers; routed DM and
 group attachments now share the upload-first media contract in `packages/shared-types/src/media.ts`.
@@ -159,7 +160,7 @@ group attachments now share the upload-first media contract in `packages/shared-
 3. Browser-verified video-channel room behavior.
 4. Full announcement-channel publisher/read-only semantics.
 5. Full forum/topic-first hub behavior if topics are meant to behave differently from side threads.
-6. Per-chat Space membership controls from the live conversation list.
+6. Full Broadcast management beyond directory/detail/create/subscribe/publish.
 
 ## Not Web Work By Design
 

@@ -142,22 +142,27 @@ async function installMessagingApiMocks(
   } = {}
 ): Promise<{
   attachmentUploads: string[];
+  conversationActions: string[];
   deletedMessages: string[];
   editedMessages: Record<string, unknown>[];
   forwardedMessages: Record<string, unknown>[];
   pinnedMessages: string[];
   requestActions: string[];
   sentMessages: Record<string, unknown>[];
+  spacePatches: Record<string, unknown>[];
   voiceUploads: string[];
 }> {
   const attachmentUploads: string[] = [];
+  const conversationActions: string[] = [];
   const deletedMessages: string[] = [];
   const editedMessages: Record<string, unknown>[] = [];
   const forwardedMessages: Record<string, unknown>[] = [];
   const pinnedMessages: string[] = [];
   const requestActions: string[] = [];
   const sentMessages: Record<string, unknown>[] = [];
+  const spacePatches: Record<string, unknown>[] = [];
   const voiceUploads: string[] = [];
+  const spaceProofId = 'space-proof';
   const initialMessages = options.initialMessages ?? [
     messageFixture({}),
     messageFixture({
@@ -182,6 +187,19 @@ async function installMessagingApiMocks(
   ];
   const messageRequestStatus = options.messageRequestStatus ?? 'accepted';
   const friendUser = conversation.participants[1].user;
+  const archivedConversation = { ...conversation, isArchived: true };
+  let spaceState = {
+    id: spaceProofId,
+    name: 'Proof Space',
+    emoji: 'P',
+    position: 0,
+    include_all_individual: false,
+    include_all_groups: false,
+    show_only_unread: false,
+    show_muted: true,
+    included_conversation_ids: [] as string[],
+    excluded_conversation_ids: [] as string[],
+  };
 
   await page.route(`**/api/v1/users/${FRIEND_USER_ID}`, async (route, request) => {
     if (request.method() !== 'GET') {
@@ -197,6 +215,17 @@ async function installMessagingApiMocks(
 
   await page.route('**/api/v1/conversations**', async (route, request) => {
     const url = new URL(request.url());
+    if (request.method() === 'GET' && url.pathname === '/api/v1/conversations/archived') {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [archivedConversation],
+          meta: { page: 1, total: 1 },
+        }),
+      });
+      return;
+    }
+
     if (request.method() !== 'GET' || url.pathname !== '/api/v1/conversations') {
       await route.fallback();
       return;
@@ -209,6 +238,43 @@ async function installMessagingApiMocks(
         meta: { page: 1, total: 2 },
       }),
     });
+  });
+
+  await page.route('**/api/v1/spaces**', async (route, request) => {
+    const url = new URL(request.url());
+
+    if (request.method() === 'GET' && url.pathname === '/api/v1/spaces') {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [spaceState] }),
+      });
+      return;
+    }
+
+    if (request.method() === 'PATCH' && url.pathname === `/api/v1/spaces/${spaceProofId}`) {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      spacePatches.push(body);
+      spaceState = {
+        ...spaceState,
+        included_conversation_ids: Array.isArray(body.included_conversation_ids)
+          ? body.included_conversation_ids.filter(
+              (value): value is string => typeof value === 'string'
+            )
+          : [],
+        excluded_conversation_ids: Array.isArray(body.excluded_conversation_ids)
+          ? body.excluded_conversation_ids.filter(
+              (value): value is string => typeof value === 'string'
+            )
+          : [],
+      };
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ data: spaceState }),
+      });
+      return;
+    }
+
+    await route.fallback();
   });
 
   await page.route(`**/api/v1/message-requests/${CONVERSATION_ID}`, async (route) => {
@@ -360,9 +426,12 @@ async function installMessagingApiMocks(
     });
   });
 
-  await page.route(`**/api/v1/conversations/${CONVERSATION_ID}/read`, async (route) => {
-    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: {} }) });
-  });
+  for (const action of ['read', 'unread', 'archive', 'unarchive', 'pin', 'mute']) {
+    await page.route(`**/api/v1/conversations/${CONVERSATION_ID}/${action}`, async (route) => {
+      conversationActions.push(`${route.request().method()} ${action}`);
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: {} }) });
+    });
+  }
 
   await page.route('**/api/v1/voice-messages', async (route) => {
     const request = route.request();
@@ -392,12 +461,14 @@ async function installMessagingApiMocks(
 
   return {
     attachmentUploads,
+    conversationActions,
     deletedMessages,
     editedMessages,
     forwardedMessages,
     pinnedMessages,
     requestActions,
     sentMessages,
+    spacePatches,
     voiceUploads,
   };
 }
@@ -517,6 +588,87 @@ test.describe('DM media composer', () => {
     await expect(page).toHaveURL(new RegExp(`/call/${FRIEND_USER_ID}/video$`));
     await expect(page.getByRole('button', { name: /hide video|show video/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /end call/i })).toBeVisible();
+  });
+
+  test('runs routed conversation-list actions and Space membership controls', async ({ page }) => {
+    const { conversationActions, spacePatches } = await installMessagingApiMocks(page);
+    const openConversationActions = async () => {
+      await page.getByText('Browser Proof Chat').first().hover();
+      await page.getByLabel('Open actions for Browser Proof Chat').click();
+    };
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+    await expect(page.getByText('Browser Proof Chat').first()).toBeVisible();
+
+    await openConversationActions();
+    await page.getByRole('button', { name: /^mark as unread$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'mark-unread endpoint was called' })
+      .toContain('POST unread');
+
+    await openConversationActions();
+    await page.getByRole('button', { name: /^mark as read$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'mark-read endpoint was called' })
+      .toContain('POST read');
+
+    await openConversationActions();
+    await page.getByRole('button', { name: /^pin$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'pin endpoint was called' })
+      .toContain('POST pin');
+
+    await openConversationActions();
+    await page.getByRole('button', { name: /^unpin$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'unpin endpoint was called' })
+      .toContain('DELETE pin');
+
+    await openConversationActions();
+    await page.getByRole('button', { name: /^mute$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'mute endpoint was called' })
+      .toContain('POST mute');
+
+    await openConversationActions();
+    await page.getByRole('button', { name: /^unmute$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'unmute endpoint was called' })
+      .toContain('DELETE mute');
+
+    await openConversationActions();
+    await page.getByRole('button', { name: /proof space/i }).click();
+    await expect
+      .poll(() => spacePatches, { message: 'Space include patch was sent' })
+      .toContainEqual(
+        expect.objectContaining({
+          included_conversation_ids: [CONVERSATION_ID],
+          excluded_conversation_ids: [],
+        })
+      );
+    await page.getByRole('button', { name: /proof space/i }).click();
+    await expect
+      .poll(() => spacePatches, { message: 'Space exclude patch was sent' })
+      .toContainEqual(
+        expect.objectContaining({
+          included_conversation_ids: [],
+          excluded_conversation_ids: [CONVERSATION_ID],
+        })
+      );
+
+    await page.getByRole('button', { name: /^archive$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'archive endpoint was called' })
+      .toContain('POST archive');
+    await expect(page).toHaveURL(/\/messages$/);
+
+    await page.getByRole('button', { name: /^archived$/i }).click();
+    await expect(page.getByText('Browser Proof Chat').first()).toBeVisible();
+    await openConversationActions();
+    await page.getByRole('button', { name: /^unarchive$/i }).click();
+    await expect
+      .poll(() => conversationActions, { message: 'unarchive endpoint was called' })
+      .toContain('POST unarchive');
   });
 
   test('runs routed cloud-DM reply, search jump, edit, pin, forward, and delete actions', async ({

@@ -39,7 +39,7 @@ What **is** broken is a mix of user-visible UX gaps and latent correctness/safet
   conversation.
 - **Spaces** now have first-class `/spaces` and `/spaces/:spaceId` routes backed by the backend
   Spaces contract, and the routed inbox can add/remove conversations through the server-owned
-  include/exclude lists.
+  include/exclude lists with browser proof in `apps/web/e2e/dm-media-composer.spec.ts`.
 - Paid DM, Pulse score, and Follow (vs friend) remain stubbed or incomplete.
 - **`reduceMotion` / `prefers-reduced-motion`** is not wired — WCAG 2.1 motion fail.
 - **`FederationRoutes` module is still imported** in the router despite CLAUDE.md Rule 8a saying all
@@ -862,7 +862,7 @@ File/photo, voice-note, DM call-entry launch, call-history callback, incoming-ca
 reply, search jump, guarded latest-jump scroll behavior, typing start/stop emit,
 edit/delete/forward, request actions, pin, loaded pinned-panel behavior, read-receipt rendering,
 core conversation-list participant actions, and per-chat Space move controls are already covered by
-focused tests or browser proof.
+focused tests and browser proof.
 
 ### Wave 3 — Routed group parity and admin surfaces (weeks 3–4)
 

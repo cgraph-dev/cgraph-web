@@ -156,11 +156,11 @@ Upstream references for this section:
 | Filter current conversation list       | Partial | `conversation-sidebar.tsx` only filters the already-loaded list locally.                                                                                                                                                                                                                                             | Keep local filtering, but move it into the canonical inbox surface.            |
 | Global search and jump to message      | Ready   | `messages.tsx` opens `MessageSearch` and navigates with `?scrollTo=...`; `useEnhancedConversation.ts` consumes that query param, preserves the target anchor instead of forcing bottom scroll, and exposes a latest/new-messages jump. Browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                 | Keep the jump and guarded-scroll proof green while converging inbox ownership. |
 | Start a new DM from the inbox          | Partial | The route can open `NewChatModal`, but the inbox still lacks the surrounding chat-list parity actions.                                                                                                                                                                                                               | Keep the modal, but mount it under the canonical inbox owner.                  |
-| Pin or unpin a chat                    | Missing | `modules/chat/components/conversation-list/conversation-menu.tsx` exposes pin, mute, and archive, but the routed inbox never mounts that menu.                                                                                                                                                                       | Mount a real conversation menu on the live sidebar and wire store/API actions. |
-| Mute or unmute a chat                  | Missing | Same gap as pinning: latent module component exists, routed page uses a simpler item component.                                                                                                                                                                                                                      | Use one real sidebar item that includes menu actions.                          |
-| Archive or unarchive a chat            | Missing | The routed sidebar item has no archive affordance.                                                                                                                                                                                                                                                                   | Add archive actions and archive destination behavior.                          |
-| Mark chat unread or read from the list | Partial | The routed conversation sidebar exposes mark-read and mark-unread actions backed by `/api/v1/conversations/:id/read` and `/api/v1/conversations/:id/unread`; final combined browser verification remains open.                                                                                                       | Browser-verify the combined conversation-list menu.                            |
-| Move chats into folders / Spaces       | Partial | `/spaces` and `/spaces/:spaceId` now list/create server-owned Spaces and apply filter rules to the conversation list. Browser-verified by `apps/web/e2e/spaces.spec.ts`. Per-chat add/remove controls now patch server-owned Space membership from the live inbox; final combined browser verification remains open. | Browser-verify the combined Space membership menu.                             |
+| Pin or unpin a chat                    | Ready   | The routed inbox sidebar menu now pins and unpins through `/api/v1/conversations/:id/pin`, updates the live list state, and is browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                        | Keep the live menu proof green while converging inbox ownership.               |
+| Mute or unmute a chat                  | Ready   | The routed inbox sidebar menu now mutes and unmutes through `/api/v1/conversations/:id/mute`, updates the live list state, and is browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                    | Keep the live menu proof green while converging inbox ownership.               |
+| Archive or unarchive a chat            | Ready   | The routed sidebar can archive from the inbox, open the archived list, and unarchive from the recovery surface. Browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                                       | Keep archived-list recovery proof green while converging inbox ownership.      |
+| Mark chat unread or read from the list | Ready   | The routed conversation sidebar exposes mark-read and mark-unread actions backed by `/api/v1/conversations/:id/read` and `/api/v1/conversations/:id/unread`; the combined menu path is browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                               | Keep the combined conversation-list menu proof green.                          |
+| Move chats into folders / Spaces       | Ready   | `/spaces` and `/spaces/:spaceId` list/create server-owned Spaces and apply filter rules to the conversation list. Browser-verified by `apps/web/e2e/spaces.spec.ts`. Per-chat add/remove controls patch server-owned Space membership from the live inbox and are browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`. | Keep the combined Space membership menu proof green.                      |
 | Open Vault / Saved Messages            | Ready   | `/vault` creates or fetches the backend Note-to-Self conversation through `/api/v1/conversations/note-to-self`, routes to `/vault/:conversationId`, and renders the real cloud-message history/composer. Browser-verified by `apps/web/e2e/vault.spec.ts`.                                                           | Keep the browser proof green while converging wider inbox ownership.           |
 
 ## Direct-message actions
@@ -298,9 +298,8 @@ Important distinction:
 2. Replace the page-local messages shell with one canonical inbox and one canonical cloud-DM owner.
    The routed surface should own the list, composer, message actions, search jump, receipts,
    autoscroll, and pins.
-3. Mount the real conversation-list actions on the live inbox: pin, mute, archive, mark unread, and
-   per-chat Space moves. Spaces are now first-class at `/spaces`; Vault is now first-class at
-   `/vault`.
+3. Keep the browser-verified live inbox actions green: pin, mute, archive/recover, mark unread/read,
+   and per-chat Space moves. Spaces are first-class at `/spaces`; Vault is first-class at `/vault`.
 4. Split hub channel types into real routed products: text, forum/topic, voice, video, and
    announcement are not the same surface.
 5. Finish remaining Broadcast management parity on web. Telegram-style broadcast channels map to
@@ -324,7 +323,8 @@ The live web app already has the beginnings of a real cloud-DM and hub experienc
 missing the product shape that Signal and Telegram actually ship:
 
 - one canonical inbox and conversation owner
-- first-class chat-list actions and folders
+- one canonical inbox and conversation owner, even though first-class chat-list actions and folders
+  are now mounted and browser-verified
 - channel-type-specific routed surfaces
 - mounted hub admin screens
 - first-class Broadcast routes
