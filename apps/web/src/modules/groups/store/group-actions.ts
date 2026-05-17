@@ -6,13 +6,14 @@ import type { StoreApi } from 'zustand';
 import { apiClient, http } from '@/lib/api-client';
 import { createIdempotencyKey } from '@cgraph/utils';
 import { createLogger } from '@/lib/logger';
-import { useAuthStore } from '@/modules/auth/store';
 import { identityFieldsFromApi } from '@/lib/identity';
-
-const logger = createLogger('GroupActions');
+import { useAuthStore } from '@/modules/auth/store';
 import { ensureArray, ensureObject } from '@/lib/api-utils';
 import { asStringOrNull, asRecordOrEmpty, asRecordOrUndef, asEnum } from '@/lib/api-utils';
+import { normalizeChannelMessage } from './channel-message-normalizer';
 import type { Group, GroupState, Channel, ChannelMessage, Member } from './group-types';
+
+const logger = createLogger('GroupActions');
 
 const MAX_MEMBERS_PER_GROUP = 1000;
 const MAX_DISCOVERABLE_GROUPS = 100;
@@ -209,86 +210,6 @@ function normalizeGroups(rawList: unknown): Group[] {
   return ensureArray<Record<string, unknown>>(rawList).map(normalizeGroup);
 }
 
-const MESSAGE_TYPES = new Set<ChannelMessage['messageType']>([
-  'text',
-  'image',
-  'video',
-  'file',
-  'audio',
-  'voice',
-  'sticker',
-  'gif',
-  'system',
-]);
-
-/**
- * Normalize a raw API message to ChannelMessage shape.
- * Backend sends sender/senderId; ChannelMessage type expects author/authorId.
- *
- * This is a system-boundary normalizer: raw API data → typed domain object.
- * Type assertions are unavoidable at this boundary since the input is untyped JSON.
- */
-
-function normalizeToChannelMessage(raw: Record<string, unknown>): ChannelMessage {
-  const sender = asRecordOrEmpty(raw.sender ?? raw.author);
-  const identity = identityFieldsFromApi(sender);
-  const replyToRaw = asRecordOrUndef(raw.replyTo);
-
-  const message: ChannelMessage = {
-    id: String(raw.id ?? ''),
-    authorId: String(raw.authorId ?? raw.senderId ?? raw.sender_id ?? sender.id ?? ''),
-    author: {
-      id: identity.id,
-      username: identity.username,
-      displayName: identity.displayName,
-      avatarUrl: identity.avatarUrl,
-      member: null,
-      avatarBorderId: identity.avatarBorderId,
-      equippedTitleId: identity.equippedTitleId,
-      equippedBadgeIds: identity.equippedBadgeIds,
-      equippedNameplateId: identity.equippedNameplateId,
-      profileTheme: identity.profileTheme,
-      chatTheme: identity.chatTheme,
-      displayNameFont: identity.displayNameFont,
-      displayNameEffect: identity.displayNameEffect,
-      displayNameColor: identity.displayNameColor,
-      displayNameSecondaryColor: identity.displayNameSecondaryColor,
-    },
-    channelId: String(raw.channelId ?? raw.channel_id ?? ''),
-    content: String(raw.content ?? ''),
-    messageType: asEnum(
-      raw.messageType ?? raw.message_type ?? raw.contentType,
-      MESSAGE_TYPES,
-      'text'
-    ),
-    replyToId: asStringOrNull(raw.replyToId ?? raw.reply_to_id),
-    replyTo: replyToRaw ? normalizeToChannelMessage(replyToRaw) : null,
-    isPinned: Boolean(raw.isPinned ?? raw.is_pinned ?? false),
-    isEdited: Boolean(raw.isEdited ?? raw.is_edited ?? false),
-    deletedAt: asStringOrNull(raw.deletedAt ?? raw.deleted_at),
-    metadata: asRecordOrEmpty(raw.metadata),
-    fileUrl: asStringOrNull(raw.fileUrl ?? raw.file_url),
-    fileName: asStringOrNull(raw.fileName ?? raw.file_name),
-    fileSize:
-      typeof raw.fileSize === 'number'
-        ? raw.fileSize
-        : typeof raw.file_size === 'number'
-          ? raw.file_size
-          : null,
-    fileMimeType: asStringOrNull(raw.fileMimeType ?? raw.file_mime_type),
-    thumbnailUrl: asStringOrNull(raw.thumbnailUrl ?? raw.thumbnail_url),
-    reactions: Array.isArray(raw.reactions) ? raw.reactions : [],
-    createdAt: String(raw.createdAt ?? raw.created_at ?? raw.insertedAt ?? raw.inserted_at ?? ''),
-    // E2EE optional fields
-    encrypted_content:
-      typeof raw.encrypted_content === 'string' ? raw.encrypted_content : undefined,
-    sender_key_id: typeof raw.sender_key_id === 'string' ? raw.sender_key_id : undefined,
-    chain_index: typeof raw.chain_index === 'number' ? raw.chain_index : undefined,
-    is_encrypted: typeof raw.is_encrypted === 'boolean' ? raw.is_encrypted : undefined,
-  };
-  return message;
-}
-
 type SetState = StoreApi<GroupState>['setState'];
 type GetState = StoreApi<GroupState>['getState'];
 
@@ -365,7 +286,7 @@ export function createGroupActions(
           dataMessages.length > 0
             ? dataMessages
             : ensureArray<Record<string, unknown>>(response.data, 'messages');
-        const newMessages = rawMessages.map(normalizeToChannelMessage);
+        const newMessages = rawMessages.map(normalizeChannelMessage);
         const hasMore = newMessages.length === 50;
 
         // Web is not a Signal-participant device (ADR-022). Group E2EE was
@@ -451,7 +372,7 @@ export function createGroupActions(
       const raw =
         ensureObject<Record<string, unknown>>(response.data, 'data') ??
         ensureObject<Record<string, unknown>>(response.data, 'message');
-      const message = raw ? normalizeToChannelMessage(raw) : null;
+      const message = raw ? normalizeChannelMessage(raw) : null;
       if (message) {
         get().addChannelMessage(message);
       }

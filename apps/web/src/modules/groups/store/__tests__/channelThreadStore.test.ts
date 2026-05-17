@@ -19,11 +19,19 @@ vi.mock('@/lib/api', () => ({
 
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({
+    debug: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
     info: vi.fn(),
     log: vi.fn(),
   }),
+  authLogger: {
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    log: vi.fn(),
+  },
 }));
 
 import { api } from '@/lib/api-client';
@@ -105,6 +113,40 @@ describe('channelThreadStore', () => {
     expect(useChannelThreadStore.getState().threadReplies).toHaveLength(1);
   });
 
+  it('openThread normalizes snake_case API replies', async () => {
+    const parent = makeMessage({ id: 'parent-1' });
+    mockedApi.get.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            id: 'reply-snake',
+            channel_id: 'ch-1',
+            sender_id: 'u-2',
+            author: { id: 'u-2', username: 'bob', display_name: 'Bob' },
+            content: 'Snake reply',
+            message_type: 'text',
+            reply_to_id: 'parent-1',
+            reactions: [{ emoji: '👍', count: 2, hasReacted: false }],
+            created_at: '2025-01-01T00:01:00Z',
+          },
+        ],
+      },
+    });
+
+    await useChannelThreadStore.getState().openThread('g-1', 'ch-1', parent);
+
+    expect(useChannelThreadStore.getState().threadReplies).toEqual([
+      expect.objectContaining({
+        id: 'reply-snake',
+        channelId: 'ch-1',
+        authorId: 'u-2',
+        replyToId: 'parent-1',
+        createdAt: '2025-01-01T00:01:00Z',
+        author: expect.objectContaining({ displayName: 'Bob' }),
+      }),
+    ]);
+  });
+
   it('openThread handles API failure gracefully', async () => {
     const parent = makeMessage({ id: 'parent-1' });
     mockedApi.get.mockRejectedValueOnce(new Error('Network error'));
@@ -147,6 +189,38 @@ describe('channelThreadStore', () => {
     const state = useChannelThreadStore.getState();
     expect(state.threadReplies).toHaveLength(1);
     expect(state.replyCounts['parent-1']).toBe(1);
+  });
+
+  it('sendThreadReply normalizes the appended API reply', async () => {
+    const parent = makeMessage({ id: 'parent-1' });
+    mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
+    await useChannelThreadStore.getState().openThread('g-1', 'ch-1', parent);
+
+    mockedApi.post.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'reply-new',
+          channel_id: 'ch-1',
+          sender_id: 'u-1',
+          author: { id: 'u-1', username: 'alice', display_name: 'Alice' },
+          content: 'Hello thread',
+          message_type: 'text',
+          reply_to_id: 'parent-1',
+          created_at: '2025-01-01T00:02:00Z',
+        },
+      },
+    });
+
+    await useChannelThreadStore.getState().sendThreadReply('Hello thread');
+
+    expect(useChannelThreadStore.getState().threadReplies[0]).toEqual(
+      expect.objectContaining({
+        id: 'reply-new',
+        channelId: 'ch-1',
+        replyToId: 'parent-1',
+        createdAt: '2025-01-01T00:02:00Z',
+      })
+    );
   });
 
   it('sendThreadReply is a no-op without active thread', async () => {

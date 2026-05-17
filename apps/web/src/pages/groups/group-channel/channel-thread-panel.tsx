@@ -77,6 +77,8 @@ export function ChannelThreadPanel() {
           animate="animate"
           exit="initial"
           transition={springs.gentle}
+          role="complementary"
+          aria-label="Message thread"
           className="flex h-full w-96 flex-col border-l border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4]"
         >
           {/* Header */}
@@ -90,6 +92,7 @@ export function ChannelThreadPanel() {
             </div>
             <button
               onClick={closeThread}
+              aria-label="Close thread"
               className="rounded-lg p-1.5 text-white/40 hover:bg-white/10 hover:text-white"
             >
               <XMarkIcon className="h-5 w-5" />

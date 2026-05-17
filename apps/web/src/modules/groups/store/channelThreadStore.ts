@@ -10,10 +10,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { http } from '@/lib/api-client';
+import { isRecord } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
+import { normalizeChannelMessage } from './channel-message-normalizer';
+import type { ChannelMessage } from './group-types';
 
 const logger = createLogger('ChannelThreadStore');
-import type { ChannelMessage } from './group-types';
 
 interface ChannelThreadState {
   /** The parent message of the currently open thread */
@@ -42,9 +44,8 @@ interface ChannelThreadState {
   reset: () => void;
 }
 
-/** Type guard: checks that an unknown value has the minimum shape of a ChannelMessage. */
-function isChannelMessage(v: unknown): v is ChannelMessage {
-  return typeof v === 'object' && v !== null && 'id' in v;
+function asMessageRecord(value: unknown): Record<string, unknown> | null {
+  return isRecord(value) && !Array.isArray(value) ? value : null;
 }
 
 export const useChannelThreadStore = create<ChannelThreadState>()(
@@ -75,11 +76,15 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
           const res = await http.get(
             `/api/v1/groups/${groupId}/channels/${channelId}/messages/${message.id}/replies`
           );
-          const replies: ChannelMessage[] = Array.isArray(res.data?.data)
+          const rawReplies: unknown[] = Array.isArray(res.data?.data)
             ? res.data.data
             : Array.isArray(res.data?.replies)
               ? res.data.replies
               : [];
+          const replies = rawReplies
+            .map((reply) => asMessageRecord(reply))
+            .filter((reply): reply is Record<string, unknown> => reply !== null)
+            .map(normalizeChannelMessage);
 
           set({
             threadReplies: replies,
@@ -116,7 +121,10 @@ export const useChannelThreadStore = create<ChannelThreadState>()(
             }
           );
           const replyRaw: unknown = res.data?.data ?? res.data?.message ?? res.data;
-          const reply: ChannelMessage | null = isChannelMessage(replyRaw) ? replyRaw : null;
+          const replyRecord = asMessageRecord(replyRaw);
+          const reply: ChannelMessage | null = replyRecord
+            ? normalizeChannelMessage(replyRecord)
+            : null;
           if (reply?.id) {
             set((state) => ({
               threadReplies: [...state.threadReplies, reply],

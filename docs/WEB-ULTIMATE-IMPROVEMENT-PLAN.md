@@ -252,7 +252,9 @@ correctness work below before feature expansion or scale items.
 - Browser-verified loaded-channel header search and group-level mute/unmute behavior.
 - Browser-verified message edit, delete, report, copy-link, pin entry, and pinned-panel unpin
   actions.
-- Voice, sticker, GIF, and browser-verified pin/action parity.
+- Browser-verified direct reply, reaction toggle, and thread reply behavior.
+- Voice, sticker, GIF, admin-path, permission-edge, older-search, and channel-level notification
+  parity.
 - Explore/join entry points that always land on a mounted channel.
 
 5. Auth, onboarding, and account-lifecycle parity
@@ -868,8 +870,9 @@ focused tests and browser proof.
 
 ### Wave 3 — Routed group parity and admin surfaces (weeks 3–4)
 
-Bring group admin/settings/invites/roles/members/create-channel, real group-header actions, and
-voice/sticker/GIF/pin parity onto the canonical groups shell.
+Bring group admin/settings/invites/roles/members/create-channel proof, older-history search,
+channel-level notification semantics, permission edge states, and voice/sticker/GIF media parity
+onto the canonical groups shell.
 
 ### Wave 4 — Auth, onboarding, and account lifecycle (week 5)
 

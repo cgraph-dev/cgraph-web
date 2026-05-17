@@ -252,10 +252,13 @@ async function installOwnerUatMocks(page: Page) {
   const sentGroupMessages: Record<string, unknown>[] = [];
   const groupAttachmentUploads: string[] = [];
   const groupPinRequests: Record<string, unknown>[] = [];
+  const groupReactionRequests: Record<string, unknown>[] = [];
+  const threadReplyRequests: Record<string, unknown>[] = [];
   const groupUnpinRequests: string[] = [];
   const notificationPatches: Record<string, unknown>[] = [];
   const reportRequests: Record<string, unknown>[] = [];
   const pinnedMessageIds = new Set<string>();
+  const threadRepliesByParent = new Map<string, Record<string, unknown>[]>();
   let currentNotificationLevel: 'mentions' | 'none' = 'mentions';
 
   await page.addInitScript(() => {
@@ -474,30 +477,58 @@ async function installOwnerUatMocks(page: Page) {
         const body = request.postDataJSON() as Record<string, unknown>;
         sentGroupMessages.push(body);
         const sentIndex = sentGroupMessages.length;
+        const replyToId = typeof body.reply_to_id === 'string' ? body.reply_to_id : null;
+        const replyToMessage =
+          replyToId === 'group-msg-uat-1'
+            ? channelMessage({
+                reactions: [{ emoji: '👍', count: 1, hasReacted: false }],
+              })
+            : null;
+        const sentMessage = channelMessage({
+          id: `group-msg-uat-sent-${sentIndex}`,
+          sender_id: CURRENT_USER_ID,
+          author: currentUser,
+          content: body.content,
+          message_type: body.content_type,
+          reply_to_id: replyToId,
+          reply_to: replyToMessage,
+          metadata: typeof body.metadata === 'object' && body.metadata !== null ? body.metadata : {},
+          file_url: body.file_url,
+          file_name: body.file_name,
+          file_size: body.file_size,
+          file_mime_type: body.file_mime_type,
+          thumbnail_url: body.thumbnail_url,
+        });
+        if (replyToId && body.content === 'Group thread reply proof') {
+          threadReplyRequests.push(body);
+          threadRepliesByParent.set(replyToId, [
+            ...(threadRepliesByParent.get(replyToId) ?? []),
+            sentMessage,
+          ]);
+        }
         await fulfillJson(
           route,
-          {
-            data: channelMessage({
-              id: `group-msg-uat-sent-${sentIndex}`,
-              sender_id: CURRENT_USER_ID,
-              author: currentUser,
-              content: body.content,
-              message_type: body.content_type,
-              metadata:
-                typeof body.metadata === 'object' && body.metadata !== null ? body.metadata : {},
-              file_url: body.file_url,
-              file_name: body.file_name,
-              file_size: body.file_size,
-              file_mime_type: body.file_mime_type,
-              thumbnail_url: body.thumbnail_url,
-            }),
-          },
+          { data: sentMessage },
           201
         );
         return;
       }
 
-      await fulfillJson(route, { data: [channelMessage()] });
+      await fulfillJson(route, {
+        data: [
+          channelMessage({
+            reactions: [{ emoji: '👍', count: 1, hasReacted: false }],
+          }),
+        ],
+      });
+      return;
+    }
+
+    if (
+      path ===
+      `/api/v1/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}/messages/group-msg-uat-1/replies`
+    ) {
+      await fulfillJson(route, { data: threadRepliesByParent.get('group-msg-uat-1') ?? [] });
       return;
     }
 
@@ -539,6 +570,13 @@ async function installOwnerUatMocks(page: Page) {
 
     if (path === `/api/v1/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}/thread-counts`) {
       await fulfillJson(route, { data: {} });
+      return;
+    }
+
+    if (path === '/api/v1/messages/group-msg-uat-1/reactions' && method === 'POST') {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      groupReactionRequests.push({ messageId: 'group-msg-uat-1', ...body });
+      await fulfillJson(route, { data: { message_id: 'group-msg-uat-1', ...body } }, 201);
       return;
     }
 
@@ -611,11 +649,13 @@ async function installOwnerUatMocks(page: Page) {
   return {
     groupAttachmentUploads,
     groupPinRequests,
+    groupReactionRequests,
     groupUnpinRequests,
     notificationPatches,
     reportRequests,
     sentDmMessages,
     sentGroupMessages,
+    threadReplyRequests,
   };
 }
 
@@ -626,11 +666,13 @@ test.describe('Web owner focused UAT', () => {
     const {
       groupAttachmentUploads,
       groupPinRequests,
+      groupReactionRequests,
       groupUnpinRequests,
       notificationPatches,
       reportRequests,
       sentDmMessages,
       sentGroupMessages,
+      threadReplyRequests,
     } = await installOwnerUatMocks(page);
 
     await page.goto('/login');
@@ -697,6 +739,54 @@ test.describe('Web owner focused UAT', () => {
     await expect
       .poll(() => sentGroupMessages, { message: 'Group route sent through the channel endpoint' })
       .toContainEqual(expect.objectContaining({ content: 'Group routed UAT send' }));
+
+    const friendGroupMessage = page.locator('#group-message-group-msg-uat-1');
+    await friendGroupMessage.getByRole('button', { name: /👍\s*1/ }).click();
+    await expect
+      .poll(() => groupReactionRequests, { message: 'group reaction endpoint received emoji' })
+      .toContainEqual(expect.objectContaining({ messageId: 'group-msg-uat-1', emoji: '👍' }));
+    await expect(friendGroupMessage.getByRole('button', { name: /👍\s*2/ })).toBeVisible();
+
+    await friendGroupMessage.hover();
+    await friendGroupMessage.getByTitle(/^Reply$/).click();
+    await expect(page.getByText(/replying to friend user/i)).toBeVisible();
+    await groupComposer.fill('Group reply payload proof');
+    await groupComposer.press('Enter');
+    await expect
+      .poll(() => sentGroupMessages, {
+        message: 'group reply endpoint received reply_to_id',
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          content: 'Group reply payload proof',
+          reply_to_id: 'group-msg-uat-1',
+        })
+      );
+    const groupReplyMessage = page.locator('#group-message-group-msg-uat-sent-2');
+    await expect(groupReplyMessage).toContainText('Friend User');
+    await expect(groupReplyMessage).toContainText('Group owner UAT proof');
+
+    await friendGroupMessage.hover();
+    await friendGroupMessage.getByTitle('Reply in Thread').click();
+    const threadPanel = page.getByRole('complementary', { name: /message thread/i });
+    await expect(threadPanel).toContainText('Group owner UAT proof');
+    const threadInput = threadPanel.getByPlaceholder(/reply to thread/i);
+    await threadInput.fill('Group thread reply proof');
+    await threadInput.press('Enter');
+    await expect
+      .poll(() => threadReplyRequests, {
+        message: 'group thread reply endpoint received reply_to_id',
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          content: 'Group thread reply proof',
+          reply_to_id: 'group-msg-uat-1',
+        })
+      );
+    await expect(threadPanel).toContainText('Group thread reply proof');
+    await expect(threadPanel).toContainText('1 reply');
+    await threadPanel.getByRole('button', { name: /close thread/i }).click();
+    await expect(threadPanel).not.toBeVisible();
 
     await page.locator('input[type="file"]').setInputFiles({
       name: 'group-proof.png',
@@ -818,7 +908,6 @@ test.describe('Web owner focused UAT', () => {
       )
       .toContain(`/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}?scrollTo=group-msg-uat-sent-1`);
 
-    const friendGroupMessage = page.locator('#group-message-group-msg-uat-1');
     await friendGroupMessage.hover();
     await friendGroupMessage.getByTitle('More Actions').click();
     await page.getByRole('menuitem', { name: /report/i }).click();
