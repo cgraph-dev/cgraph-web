@@ -35,6 +35,7 @@ export function sanitizeHtml(
 function toSanitizedHtmlSink(html: string, options: SanitizeOptions): SanitizedMarkup {
   return {
     dangerouslySetInnerHTML: {
+      // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml - All HTML reaches this audited sink only after DOMPurify sanitization.
       __html: sanitizeHtml(html, options),
     },
   };
@@ -43,6 +44,7 @@ function toSanitizedHtmlSink(html: string, options: SanitizeOptions): SanitizedM
 function toSanitizedStyleSink(css: string): SanitizedMarkup {
   return {
     dangerouslySetInnerHTML: {
+      // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml - Style output reaches this audited sink only after CSS sanitization.
       __html: sanitizeCss(css),
     },
   };
