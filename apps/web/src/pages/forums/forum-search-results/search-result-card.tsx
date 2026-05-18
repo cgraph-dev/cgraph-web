@@ -20,23 +20,60 @@ const TYPE_BADGE_STYLES: Record<
 
 function highlightText(text: string, highlights?: string[]): React.ReactNode {
   if (!highlights?.length) return text;
-  let result = text;
-  for (const h of highlights) {
-    result = result.replace(
-      new RegExp(`(${h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-      '**$1**'
-    );
+
+  const lowerText = text.toLowerCase();
+  const ranges: Array<{ start: number; end: number }> = [];
+
+  for (const highlight of highlights) {
+    const needle = highlight.trim();
+    if (!needle) continue;
+
+    const lowerNeedle = needle.toLowerCase();
+    let start = lowerText.indexOf(lowerNeedle);
+
+    while (start !== -1) {
+      ranges.push({ start, end: start + needle.length });
+      start = lowerText.indexOf(lowerNeedle, start + needle.length);
+    }
   }
-  const parts = result.split(/\*\*(.*?)\*\*/g);
-  return parts.map((part, i) =>
-    i % 2 === 1 ? (
-      <mark key={i} className="rounded bg-yellow-500/30 px-0.5 text-yellow-200">
-        {part}
+
+  if (!ranges.length) return text;
+
+  const mergedRanges = ranges
+    .sort((a, b) => a.start - b.start || b.end - a.end)
+    .reduce<Array<{ start: number; end: number }>>((merged, range) => {
+      const previous = merged[merged.length - 1];
+      if (previous && range.start <= previous.end) {
+        previous.end = Math.max(previous.end, range.end);
+        return merged;
+      }
+      merged.push({ ...range });
+      return merged;
+    }, []);
+
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+
+  for (const range of mergedRanges) {
+    if (range.start > cursor) {
+      parts.push(text.slice(cursor, range.start));
+    }
+    parts.push(
+      <mark
+        key={`${range.start}-${range.end}`}
+        className="rounded bg-yellow-500/30 px-0.5 text-yellow-200"
+      >
+        {text.slice(range.start, range.end)}
       </mark>
-    ) : (
-      part
-    )
-  );
+    );
+    cursor = range.end;
+  }
+
+  if (cursor < text.length) {
+    parts.push(text.slice(cursor));
+  }
+
+  return parts;
 }
 
 function formatRelativeTime(dateStr: string): string {

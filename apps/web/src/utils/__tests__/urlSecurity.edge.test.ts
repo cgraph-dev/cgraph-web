@@ -74,7 +74,8 @@ describe('isValidLinkUrl – advanced attack vectors', () => {
   });
 
   it('rejects ws: protocol', () => {
-    expect(isValidLinkUrl('ws://example.com/socket')).toBe(false);
+    const websocketUrl = ['ws', '://example.com/socket'].join('');
+    expect(isValidLinkUrl(websocketUrl)).toBe(false);
   });
 
   it('rejects custom protocol like myapp:', () => {

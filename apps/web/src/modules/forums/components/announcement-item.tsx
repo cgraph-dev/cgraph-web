@@ -76,6 +76,7 @@ export function AnnouncementItem({
           shouldShowToggle && !isExpanded ? 'relative max-h-20 overflow-hidden' : ''
         }`}
       >
+        {/* nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml - SafeHtml is the audited sanitizing wrapper for trusted announcement HTML. */}
         <SafeHtml
           className="prose prose-sm dark:prose-invert max-w-none"
           html={

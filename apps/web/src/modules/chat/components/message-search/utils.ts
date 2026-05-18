@@ -24,12 +24,27 @@ export const SEARCH_DEBOUNCE_MS = 300;
  * Highlight search term in content
  */
 export function highlightContent(content: string, searchTerm: string): string {
-  if (!searchTerm.trim()) return content;
-  const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  return content.replace(
-    regex,
-    '<mark class="bg-yellow-500/30 text-yellow-200 px-0.5 rounded">$1</mark>'
-  );
+  const needle = searchTerm.trim();
+  if (!needle) return content;
+
+  const lowerContent = content.toLowerCase();
+  const lowerNeedle = needle.toLowerCase();
+  const parts: string[] = [];
+  let cursor = 0;
+  let matchIndex = lowerContent.indexOf(lowerNeedle);
+
+  while (matchIndex !== -1) {
+    parts.push(content.slice(cursor, matchIndex));
+    const match = content.slice(matchIndex, matchIndex + needle.length);
+    parts.push(
+      `<mark class="bg-yellow-500/30 text-yellow-200 px-0.5 rounded">${match}</mark>`
+    );
+    cursor = matchIndex + needle.length;
+    matchIndex = lowerContent.indexOf(lowerNeedle, cursor);
+  }
+
+  parts.push(content.slice(cursor));
+  return parts.join('');
 }
 
 /**
