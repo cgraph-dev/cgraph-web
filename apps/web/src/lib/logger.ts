@@ -55,6 +55,14 @@ function sanitizeForProduction(args: unknown[]): string {
     .join(' ');
 }
 
+function writeConsole(
+  method: 'debug' | 'info' | 'log' | 'warn' | 'error',
+  prefix: string,
+  ...args: unknown[]
+) {
+  console[method]('%s', prefix, ...args);
+}
+
 /**
  * Creates a namespaced logger with error tracking integration
  * @param namespace - Prefix for log messages (e.g., 'Socket', 'E2EE')
@@ -65,29 +73,29 @@ export const createLogger = (namespace: string): Logger => {
   return {
     debug: (...args: unknown[]) => {
       if (isDev) {
-        console.debug(prefix, ...args);
+        writeConsole('debug', prefix, ...args);
       }
     },
 
     info: (...args: unknown[]) => {
       if (isDev) {
-        console.info(prefix, ...args);
+        writeConsole('info', prefix, ...args);
       }
     },
 
     log: (...args: unknown[]) => {
       if (isDev) {
-        console.log(prefix, ...args);
+        writeConsole('log', prefix, ...args);
       }
     },
 
     warn: (...args: unknown[]) => {
       if (isDev) {
-        console.warn(prefix, ...args);
+        writeConsole('warn', prefix, ...args);
       } else {
         // In production, log sanitized and send to error tracking
         const sanitized = sanitizeForProduction(args);
-        console.warn(prefix, 'Warning:', sanitized);
+        writeConsole('warn', prefix, 'Warning:', sanitized);
         captureMessage(`${namespace}: ${sanitized}`, 'warning', {
           component: namespace,
         });
@@ -96,11 +104,11 @@ export const createLogger = (namespace: string): Logger => {
 
     error: (error: Error | string, ...args: unknown[]) => {
       if (isDev) {
-        console.error(prefix, error, ...args);
+        writeConsole('error', prefix, error, ...args);
       } else {
         // In production, sanitize and send to error tracking
         const sanitized = sanitizeForProduction(args);
-        console.error(prefix, 'Error occurred');
+        writeConsole('error', prefix, 'Error occurred');
         captureError(error, {
           component: namespace,
           metadata: { additionalInfo: sanitized },
@@ -119,7 +127,7 @@ export const createLogger = (namespace: string): Logger => {
         const duration = performance.now() - start;
         timers.delete(key);
         if (isDev) {
-          console.debug(prefix, `${label}: ${duration.toFixed(2)}ms`);
+          writeConsole('debug', prefix, `${label}: ${duration.toFixed(2)}ms`);
         }
         // Track slow operations in production
         if (isProd && duration > 1000) {
@@ -134,7 +142,7 @@ export const createLogger = (namespace: string): Logger => {
     breadcrumb: (message: string, data?: Record<string, unknown>) => {
       addBreadcrumb('ui', `${namespace}: ${message}`, data);
       if (isDev) {
-        console.debug(prefix, '[Breadcrumb]', message, data || '');
+        writeConsole('debug', prefix, '[Breadcrumb]', message, data || '');
       }
     },
   };

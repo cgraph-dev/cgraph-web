@@ -3,6 +3,11 @@ import DOMPurify from 'dompurify';
 import { sanitizeCss } from '@/lib/security/css-sanitization';
 
 type SanitizeOptions = NonNullable<Parameters<typeof DOMPurify.sanitize>[1]>;
+type SanitizedMarkup = {
+  dangerouslySetInnerHTML: {
+    __html: string;
+  };
+};
 
 const DEFAULT_HTML_OPTIONS: SanitizeOptions = {
   USE_PROFILES: { html: true },
@@ -27,6 +32,22 @@ export function sanitizeHtml(
   return DOMPurify.sanitize(html, options);
 }
 
+function toSanitizedHtmlSink(html: string, options: SanitizeOptions): SanitizedMarkup {
+  return {
+    dangerouslySetInnerHTML: {
+      __html: sanitizeHtml(html, options),
+    },
+  };
+}
+
+function toSanitizedStyleSink(css: string): SanitizedMarkup {
+  return {
+    dangerouslySetInnerHTML: {
+      __html: sanitizeCss(css),
+    },
+  };
+}
+
 /**
  * Escapes text for contexts that need literal HTML entity output.
  */
@@ -43,14 +64,12 @@ export function escapeHtml(text: string): string {
  * Renders sanitized HTML through the audited application wrapper.
  */
 export function SafeHtml({ html, options = DEFAULT_HTML_OPTIONS, ref, ...props }: SafeHtmlProps) {
-  return (
-    <div ref={ref} {...props} dangerouslySetInnerHTML={{ __html: sanitizeHtml(html, options) }} />
-  );
+  return <div ref={ref} {...props} {...toSanitizedHtmlSink(html, options)} />;
 }
 
 /**
  * Renders sanitized CSS for trusted style injection sites.
  */
 export function SafeStyle({ css }: { css: string }) {
-  return <style dangerouslySetInnerHTML={{ __html: sanitizeCss(css) }} />;
+  return <style {...toSanitizedStyleSink(css)} />;
 }
