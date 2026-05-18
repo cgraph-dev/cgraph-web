@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { http } from '@/lib/api-client';
+import { getErrorMessage } from '@/lib/api';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
 
@@ -20,6 +21,30 @@ export type VerificationState =
   | 'expired'
   | 'error'
   | 'already-verified';
+
+function getResponseStatus(error: unknown): number | undefined {
+  if (!(typeof error === 'object' && error !== null && 'response' in error)) {
+    return undefined;
+  }
+
+  const response = error.response;
+
+  if (!(typeof response === 'object' && response !== null && 'status' in response)) {
+    return undefined;
+  }
+
+  return typeof response.status === 'number' ? response.status : undefined;
+}
+
+function isExpiredVerificationError(error: unknown): boolean {
+  const message = getErrorMessage(error).toLowerCase();
+  return getResponseStatus(error) === 410 || message.includes('expired');
+}
+
+function getResendErrorMessage(error: unknown): string {
+  const message = getErrorMessage(error).trim();
+  return message || 'Could not send a new verification email. Please try again.';
+}
 
 /**
  */
@@ -55,12 +80,7 @@ export function useVerifyEmail() {
           await checkAuth?.();
         }
       } catch (error: unknown) {
-        const resp = error instanceof Object && 'response' in error ? error.response : undefined;
-        const status =
-          resp instanceof Object && 'status' in resp && typeof resp.status === 'number'
-            ? resp.status
-            : undefined;
-        if (status === 410) {
+        if (isExpiredVerificationError(error)) {
           setState('expired');
         } else {
           setState('error');
@@ -92,9 +112,9 @@ export function useVerifyEmail() {
         email,
       });
       setResendSuccess(true);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn('Failed to resend verification email', error);
-      setResendError('Could not send a new verification email. Please try again.');
+      setResendError(getResendErrorMessage(error));
     } finally {
       setIsResending(false);
     }
