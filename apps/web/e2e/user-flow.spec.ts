@@ -21,14 +21,10 @@ test.describe('User Flow — Registration & Onboarding', () => {
 
     // Required form fields
     const emailField = page.getByLabel(/email/i);
-    const usernameField = page.getByLabel(/username/i).or(page.getByPlaceholder(/username/i));
     const passwordField = page.getByLabel(/^password$/i);
 
     await expect(emailField).toBeVisible();
     await expect(passwordField).toBeVisible();
-
-    // Username field may be on register or onboarding
-    const hasUsername = await usernameField.isVisible().catch(() => false);
 
     // Submit button should exist
     await expect(page.getByRole('button', { name: /sign up|register|create/i })).toBeVisible();
@@ -163,5 +159,77 @@ test.describe('User Flow — Required Onboarding Gate', () => {
 
     await page.getByRole('button', { name: 'Skip' }).click();
     await expect(page).toHaveURL(/\/messages$/);
+  });
+
+  test('completes required onboarding and opens messages', async ({ page }) => {
+    const completedRequests: string[] = [];
+
+    await page.route('**/api/v1/invites**', async (route) => {
+      const request = route.request();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          request.method() === 'GET'
+            ? { data: [] }
+            : { data: { id: 'invite-1', code: 'WELCOME', uses: 0, max_uses: 10 } }
+        ),
+      });
+    });
+
+    await page.route('**/api/v1/me', async (route) => {
+      if (route.request().method() !== 'PUT') {
+        await route.fallback();
+        return;
+      }
+
+      completedRequests.push('profile');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { display_name: 'Prod Ready' } }),
+      });
+    });
+
+    await page.route('**/api/v1/settings/notifications', async (route) => {
+      completedRequests.push('notifications');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { messages: true, mentions: true, friend_requests: true } }),
+      });
+    });
+
+    await page.route('**/api/v1/me/onboarding/complete', async (route) => {
+      completedRequests.push('complete');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { onboarding_completed: true } }),
+      });
+    });
+
+    await page.addInitScript(() => {
+      sessionStorage.setItem('cgraph-e2e-onboarding-completed', 'false');
+    });
+
+    await page.goto('/onboarding');
+
+    await expect(page.getByRole('heading', { name: 'Welcome to CGraph' })).toBeVisible();
+    await page.getByPlaceholder('How should we call you?').fill('Prod Ready');
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Discover Communities' })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Invite Friends' })).toBeVisible();
+    await expect(page.getByText('/invite/WELCOME')).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+
+    await expect(page.getByRole('heading', { name: "You're All Set!" })).toBeVisible();
+    await page.getByRole('button', { name: 'Get Started' }).click();
+
+    await expect(page).toHaveURL(/\/messages$/);
+    expect(completedRequests).toEqual(['profile', 'notifications', 'complete']);
   });
 });
