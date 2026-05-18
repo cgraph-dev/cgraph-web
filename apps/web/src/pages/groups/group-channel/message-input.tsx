@@ -1,10 +1,4 @@
-/**
- * MessageInput Component
- *
- * Message input area with attachments, emoji picker, and reply preview.
- */
-
-import { useState, useRef, lazy, Suspense } from 'react';
+import { useState, useRef } from 'react';
 import {
   PaperAirplaneIcon,
   PaperClipIcon,
@@ -16,44 +10,19 @@ import {
 import type { MessageInputProps } from './types';
 import { VoiceMessageRecorder } from '@/components/media/voice-message-recorder';
 import { getDisplayName } from './utils';
+import { RichMediaPickers } from './rich-media-pickers';
 
-const EmojiPicker = lazy(() =>
-  import('@/modules/chat/components/emoji-picker').then((m) => ({
-    default: m.EmojiPicker,
-  }))
-);
-const GifPicker = lazy(() =>
-  import('@/modules/chat/components/gif-picker').then((m) => ({ default: m.GifPicker }))
-);
-
-const STICKERS = [
-  { id: 'wave', packId: 'cgraph-default', label: 'Wave', emoji: '👋' },
-  { id: 'thumbs-up', packId: 'cgraph-default', label: 'Thumbs up', emoji: '👍' },
-  { id: 'fire', packId: 'cgraph-default', label: 'Fire', emoji: '🔥' },
-  { id: 'party', packId: 'cgraph-default', label: 'Party', emoji: '🎉' },
-  { id: 'heart', packId: 'cgraph-default', label: 'Heart', emoji: '💜' },
-  { id: 'sparkles', packId: 'cgraph-default', label: 'Sparkles', emoji: '✨' },
-] as const;
-
-/**
- * Formats a file size in bytes to a human-readable string.
- */
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * Checks whether a file has an image MIME type.
- */
 function isImageFile(file: File): boolean {
   return file.type.startsWith('image/');
 }
 
-/**
- * Message Input component.
- */
+/** Renders the group channel composer with text, attachments, reactions, and voice controls. */
 export function MessageInput({
   channelName,
   placeholder,
@@ -90,7 +59,6 @@ export function MessageInput({
       const before = messageInput.slice(0, start);
       const after = messageInput.slice(end);
       onInputChange(before + emoji + after);
-      // Restore cursor position after emoji insertion
       requestAnimationFrame(() => {
         const newPos = start + emoji.length;
         textarea.selectionStart = newPos;
@@ -116,7 +84,6 @@ export function MessageInput({
 
     onFileSelect(file);
 
-    // Generate image preview
     if (isImageFile(file)) {
       const url = URL.createObjectURL(file);
       setImagePreviewUrl(url);
@@ -124,7 +91,6 @@ export function MessageInput({
       setImagePreviewUrl(null);
     }
 
-    // Reset input so the same file can be re-selected
     e.target.value = '';
   }
 
@@ -138,7 +104,6 @@ export function MessageInput({
 
   return (
     <>
-      {/* Reply preview */}
       {replyTo && (
         <div className="flex items-center justify-between border-t border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4 py-2">
           <div className="flex items-center gap-2">
@@ -159,7 +124,6 @@ export function MessageInput({
         </div>
       )}
 
-      {/* Attachment preview */}
       {attachment && (
         <div className="flex items-center gap-3 border-t border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4 py-2">
           {imagePreviewUrl ? (
@@ -187,59 +151,23 @@ export function MessageInput({
         </div>
       )}
 
-      {/* Rich media pickers */}
-      <Suspense fallback={null}>
-        {showEmojiPicker && (
-          <div className="fixed bottom-24 left-36 z-50">
-            <EmojiPicker
-              isOpen={showEmojiPicker}
-              onClose={() => setShowEmojiPicker(false)}
-              onSelect={handleEmojiSelect}
-            />
-          </div>
-        )}
+      <RichMediaPickers
+        showEmojiPicker={showEmojiPicker}
+        showGifPicker={showGifPicker}
+        showStickerPicker={showStickerPicker}
+        onEmojiClose={() => setShowEmojiPicker(false)}
+        onEmojiSelect={handleEmojiSelect}
+        onGifClose={() => setShowGifPicker(false)}
+        onGifSelect={(gif) => {
+          onGifSelect(gif);
+          closeRichPickers();
+        }}
+        onStickerSelect={(sticker) => {
+          onStickerSelect(sticker);
+          closeRichPickers();
+        }}
+      />
 
-        {showGifPicker && (
-          <div className="fixed bottom-24 left-36 z-50">
-            <GifPicker
-              isOpen={showGifPicker}
-              onClose={() => setShowGifPicker(false)}
-              onSelect={(gif) => {
-                onGifSelect(gif);
-                closeRichPickers();
-              }}
-              className="relative"
-            />
-          </div>
-        )}
-      </Suspense>
-
-      {showStickerPicker && (
-        <div
-          role="menu"
-          aria-label="Sticker picker"
-          className="bg-[var(--token-card-bg)]/95 fixed bottom-24 left-36 z-50 grid w-64 grid-cols-3 gap-2 rounded-xl border border-[var(--token-card-border)] p-3 shadow-2xl backdrop-blur-xl"
-        >
-          {STICKERS.map((sticker) => (
-            <button
-              key={sticker.id}
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                onStickerSelect(sticker);
-                closeRichPickers();
-              }}
-              className="rounded-lg border border-white/10 bg-white/[0.06] p-3 text-2xl transition-colors hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-primary-500"
-              aria-label={`Send sticker ${sticker.label}`}
-              title={sticker.label}
-            >
-              {sticker.emoji}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -248,7 +176,6 @@ export function MessageInput({
         accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip"
       />
 
-      {/* Input */}
       <div className="border-t border-[var(--token-border-muted)] p-4">
         <div className="flex items-end gap-2 rounded-lg bg-[var(--token-card-bg)/0.6] px-4 py-2">
           {isVoiceMode ? (
@@ -355,9 +282,6 @@ export function MessageInput({
   );
 }
 
-/**
- * Close icon SVG component
- */
 function CloseIcon() {
   return (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
