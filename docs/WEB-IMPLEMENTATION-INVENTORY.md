@@ -46,6 +46,10 @@ missing:
 - Routed identity/cosmetic live updates are browser-proven in `apps/web/e2e/web-owner-uat.spec.ts`:
   `friend_customization_changed` now reaches one selective friend/chat identity owner, and the
   routed DM surface renders the updated avatar border plus title without reload.
+- Routed group GIF, sticker, and voice-note sends are browser-proven in
+  `apps/web/e2e/web-owner-uat.spec.ts`: the live group composer sends structured rich-message
+  payloads through the channel message endpoint and uploads channel voice notes through
+  `/api/v1/voice-messages`.
 
 ## Fixed in this slice
 

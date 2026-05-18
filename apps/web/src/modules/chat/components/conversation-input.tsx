@@ -126,7 +126,7 @@ function ConversationInputComponent({
               isOpen={showGifPicker}
               onClose={() => setShowGifPicker(false)}
               onSelect={onGifSelect}
-              className="bottom-16 left-0"
+              className="absolute bottom-16 left-0"
             />
           )}
           {showEmojiPicker && (

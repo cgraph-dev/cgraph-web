@@ -7,7 +7,7 @@
  *
  */
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createLogger } from '@/lib/logger';
 import { XMarkIcon, MagnifyingGlassIcon, ClockIcon } from '@heroicons/react/24/outline';
@@ -51,7 +51,7 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
   }, [isOpen]);
 
   // Fetch GIFs from API
-  async function fetchGifs(query: string) {
+  const fetchGifs = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
       const response = await http.get('/api/v1/gifs/search', {
@@ -69,7 +69,7 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
 
   // Search with debounce
   useEffect(() => {
@@ -133,6 +133,7 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+  const positionClassName = className ?? 'absolute';
 
   return (
     <AnimatePresence>
@@ -141,8 +142,8 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
         className={cn(
-          'absolute z-50 w-[420px] overflow-hidden rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] shadow-2xl',
-          className
+          'z-50 w-[420px] overflow-hidden rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] shadow-2xl',
+          positionClassName
         )}
       >
         {/* Header */}

@@ -255,8 +255,8 @@ correctness work below before feature expansion or scale items.
 - Browser-verified direct reply, reaction toggle, and thread reply behavior.
 - Browser-verified routed settings overview save, invite creation, member role assignment, role-tab
   render, and channel creation.
-- Voice, sticker, GIF, permission-edge, older-search, deeper role CRUD/reorder, and channel-level
-  notification parity.
+- Permission-edge, stronger scroll behavior, older-search, deeper role CRUD/reorder, and
+  channel-level notification parity.
 - Explore/join entry points that always land on a mounted channel.
 
 5. Auth, onboarding, and account-lifecycle parity
@@ -349,8 +349,10 @@ Checklist:
       canonical shell.
 - [x] Make group-header search and notification behavior real.
 - [x] Make routed group message edit, delete, report, copy-link, and pin-entry actions real.
-- [ ] Ship voice, stickers, GIFs, and browser-verified pin/action parity on the routed group
+- [x] Ship voice, stickers, GIFs, and browser-verified pin/action happy paths on the routed group
       surface.
+- [ ] Ship group permission-edge proof, stronger group scroll behavior, older-search, deeper role
+      CRUD/reorder, and channel-level notification semantics.
 
 #### Web auth and onboarding owner
 
@@ -872,10 +874,11 @@ focused tests and browser proof.
 
 ### Wave 3 — Routed group parity and admin surfaces (weeks 3–4)
 
-Bring remaining group admin permission edges, deeper role CRUD/reorder proof, older-history search,
-channel-level notification semantics, and voice/sticker/GIF media parity onto the canonical groups
-shell. The routed settings overview, invite creation, member role assignment, role-tab render, and
-channel creation happy paths are already browser-verified by the owner UAT.
+Bring remaining group admin permission edges, stronger group scroll behavior, deeper role
+CRUD/reorder proof, older-history search, and channel-level notification semantics onto the
+canonical groups shell. The routed settings overview, invite creation, member role assignment,
+role-tab render, channel creation, group GIF/sticker/voice send, and group message action happy
+paths are already browser-verified by the owner UAT.
 
 ### Wave 4 — Auth, onboarding, and account lifecycle (week 5)
 

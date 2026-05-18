@@ -5,6 +5,20 @@
  */
 
 import type { ChannelMessage, Member } from '@/modules/groups/store';
+import type { GifResult } from '@/modules/chat/components/gif-picker';
+
+export interface StickerSelection {
+  id: string;
+  packId: string;
+  label: string;
+  emoji: string;
+}
+
+export interface VoiceRecordingData {
+  blob: Blob;
+  duration: number;
+  waveform: number[];
+}
 
 /**
  * Message item component props
@@ -100,11 +114,16 @@ export interface MessageInputProps {
   isSending: boolean;
   replyTo: ChannelMessage | null;
   attachment: File | null;
+  isVoiceMode: boolean;
   onInputChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onSend: () => void;
+  onVoiceModeChange: (value: boolean) => void;
   onCancelReply: () => void;
   onEmojiSelect: (emoji: string) => void;
+  onGifSelect: (gif: GifResult) => void;
+  onStickerSelect: (sticker: StickerSelection) => void;
+  onVoiceComplete: (data: VoiceRecordingData) => void;
   onFileSelect: (file: File) => void;
   onClearAttachment: () => void;
 }

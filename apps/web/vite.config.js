@@ -64,7 +64,7 @@ export default defineConfig({
       enabled: true,
       provider: 'v8',
       all: false,
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
       exclude: [
         'node_modules/**',

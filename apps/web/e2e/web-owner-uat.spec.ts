@@ -7,6 +7,7 @@ const GROUP_ID = 'group-uat';
 const TEXT_CHANNEL_ID = 'text-uat';
 const VOICE_CHANNEL_ID = 'voice-uat';
 const LIVE_AVATAR_BORDER_ID = 'border_cyberpunk_epic_01';
+const GIF_DATA_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
 const friendUser = {
   id: FRIEND_ID,
@@ -251,6 +252,7 @@ async function installOwnerUatMocks(page: Page) {
   const sentDmMessages: Record<string, unknown>[] = [];
   const sentGroupMessages: Record<string, unknown>[] = [];
   const groupAttachmentUploads: string[] = [];
+  const groupVoiceUploads: string[] = [];
   const groupChannelCreateRequests: Record<string, unknown>[] = [];
   const groupInviteCreateRequests: Record<string, unknown>[] = [];
   const groupMemberRoleRequests: Record<string, unknown>[] = [];
@@ -318,6 +320,53 @@ async function installOwnerUatMocks(page: Page) {
     });
     window.confirm = () => true;
     window.prompt = () => 'group report proof';
+    class MockAudioContext {
+      createMediaStreamSource() {
+        return { connect() {} };
+      }
+
+      createAnalyser() {
+        return {
+          fftSize: 256,
+          frequencyBinCount: 1,
+          getByteFrequencyData(values: Uint8Array) {
+            values[0] = 64;
+          },
+        };
+      }
+    }
+
+    class MockMediaRecorder {
+      static isTypeSupported() {
+        return true;
+      }
+
+      state: 'inactive' | 'recording' = 'inactive';
+      ondataavailable: ((event: BlobEvent) => void) | null = null;
+      onstop: (() => void) | null = null;
+
+      start() {
+        this.state = 'recording';
+      }
+
+      stop() {
+        this.state = 'inactive';
+        const blob = new Blob(['browser-group-voice'], { type: 'audio/webm' });
+        this.ondataavailable?.({ data: blob } as BlobEvent);
+        this.onstop?.();
+      }
+    }
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: async () => ({
+          getTracks: () => [{ stop() {} }],
+        }),
+      },
+    });
+    window.AudioContext = MockAudioContext as unknown as typeof AudioContext;
+    window.MediaRecorder = MockMediaRecorder as unknown as typeof MediaRecorder;
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: {
@@ -377,6 +426,14 @@ async function installOwnerUatMocks(page: Page) {
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/axjXcQAAAAASUVORK5CYII=',
         'base64'
       ),
+    });
+  });
+
+  await page.route('**/uploads/voice/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'audio/ogg',
+      body: Buffer.from('browser-group-voice'),
     });
   });
 
@@ -653,6 +710,43 @@ async function installOwnerUatMocks(page: Page) {
       return;
     }
 
+    if (path === '/api/v1/gifs/search') {
+      await fulfillJson(route, {
+        gifs: [
+          {
+            id: 'group-gif-launch-proof',
+            title: 'Group Launch Proof',
+            url: GIF_DATA_URL,
+            previewUrl: GIF_DATA_URL,
+            width: 320,
+            height: 180,
+            source: 'klipy',
+          },
+        ],
+      });
+      return;
+    }
+
+    if (path === '/api/v1/voice-messages' && method === 'POST') {
+      groupVoiceUploads.push(request.method());
+      await fulfillJson(
+        route,
+        {
+          data: {
+            id: 'group-voice-uat',
+            url: '/uploads/voice/group-voice-uat.ogg',
+            duration: 2,
+            waveform: [0.2, 0.6, 0.4],
+            content_type: 'audio/ogg',
+            size: 42,
+            message_id: 'group-msg-uat-voice',
+          },
+        },
+        201
+      );
+      return;
+    }
+
     if (path === `/api/v1/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}/messages`) {
       if (method === 'POST') {
         const body = request.postDataJSON() as Record<string, unknown>;
@@ -827,6 +921,7 @@ async function installOwnerUatMocks(page: Page) {
   return {
     groupChannelCreateRequests,
     groupAttachmentUploads,
+    groupVoiceUploads,
     groupInviteCreateRequests,
     groupMemberRoleRequests,
     groupPinRequests,
@@ -850,6 +945,7 @@ test.describe('Web owner focused UAT', () => {
     const {
       groupAttachmentUploads,
       groupChannelCreateRequests,
+      groupVoiceUploads,
       groupInviteCreateRequests,
       groupMemberRoleRequests,
       groupPinRequests,
@@ -921,6 +1017,9 @@ test.describe('Web owner focused UAT', () => {
 
     await page.goto(`/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}`);
     await expect(page.getByText('Owner checklist proof')).toBeVisible();
+    const friendGroupMessage = page.locator('#group-message-group-msg-uat-1');
+    await expect(friendGroupMessage).toBeVisible();
+
     const groupComposer = page.getByPlaceholder(/message #general/i);
     await groupComposer.fill('Group routed UAT send');
     await groupComposer.press('Enter');
@@ -928,7 +1027,6 @@ test.describe('Web owner focused UAT', () => {
       .poll(() => sentGroupMessages, { message: 'Group route sent through the channel endpoint' })
       .toContainEqual(expect.objectContaining({ content: 'Group routed UAT send' }));
 
-    const friendGroupMessage = page.locator('#group-message-group-msg-uat-1');
     await friendGroupMessage.getByRole('button', { name: /👍\s*1/ }).click();
     await expect
       .poll(() => groupReactionRequests, { message: 'group reaction endpoint received emoji' })
@@ -1012,6 +1110,61 @@ test.describe('Web owner focused UAT', () => {
     await expect(
       page.locator('a[href$="/uploads/groups/proof.png"] img[alt="group-proof.png"]')
     ).toBeVisible();
+
+    await page.getByRole('button', { name: /open gif picker/i }).click();
+    await page.getByRole('button', { name: /select gif group launch proof/i }).click();
+    await expect
+      .poll(() => sentGroupMessages, { message: 'group message endpoint received GIF metadata' })
+      .toContainEqual(
+        expect.objectContaining({
+          content: GIF_DATA_URL,
+          content_type: 'gif',
+          metadata: expect.objectContaining({
+            gifId: 'group-gif-launch-proof',
+            gifTitle: 'Group Launch Proof',
+            gifUrl: GIF_DATA_URL,
+            gifPreviewUrl: GIF_DATA_URL,
+            gifSource: 'klipy',
+          }),
+          link_preview: expect.objectContaining({
+            gifId: 'group-gif-launch-proof',
+            gifTitle: 'Group Launch Proof',
+          }),
+        })
+      );
+    await expect(page.locator('img[alt="Group Launch Proof"]').first()).toBeVisible();
+
+    await page.getByRole('button', { name: /open sticker picker/i }).click();
+    await page.getByRole('menuitem', { name: /send sticker wave/i }).click();
+    await expect
+      .poll(() => sentGroupMessages, {
+        message: 'group message endpoint received sticker metadata',
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          content: '👋',
+          content_type: 'sticker',
+          metadata: expect.objectContaining({
+            stickerId: 'wave',
+            stickerPackId: 'cgraph-default',
+            stickerLabel: 'Wave',
+            stickerEmoji: '👋',
+          }),
+        })
+      );
+    await expect(page.getByLabel(/sticker wave/i).first()).toBeVisible();
+
+    await page.getByRole('button', { name: /record voice message/i }).click();
+    await page.getByRole('button', { name: /record voice message/i }).click();
+    await page.getByRole('button', { name: /stop recording/i }).click();
+    await page.getByRole('button', { name: /send voice message/i }).click();
+    await expect
+      .poll(() => groupVoiceUploads, {
+        message: 'group voice upload endpoint was called',
+      })
+      .toContain('POST');
+    await expect(page.locator('audio[src="/uploads/voice/group-voice-uat.ogg"]')).toBeAttached();
+
     await page.getByRole('button', { name: /search messages/i }).click();
     const groupSearch = page.getByPlaceholder(/search #general/i);
     await expect(groupSearch).toBeVisible();

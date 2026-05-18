@@ -106,14 +106,19 @@ function createMockGroup(overrides: Partial<Group> = {}): Group {
 // --- Tests ---
 
 describe('NodeGateModal', () => {
-  const defaultProps = {
-    group: createMockGroup(),
-    onSuccess: vi.fn(),
-    onClose: vi.fn(),
-  };
+  function createDefaultProps() {
+    return {
+      group: createMockGroup(),
+      onSuccess: vi.fn(),
+      onClose: vi.fn(),
+    };
+  }
+
+  let defaultProps: ReturnType<typeof createDefaultProps>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    defaultProps = createDefaultProps();
     mockSubscribeToGroup.mockResolvedValue({ id: 'sub-1', status: 'active' });
   });
 

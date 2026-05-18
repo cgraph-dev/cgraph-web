@@ -19,6 +19,7 @@ import {
   TrashIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { VoiceMessagePlayer } from '@/components/media/voice-message-player';
 import { DisplayName } from '@/shared/components/ui';
 import type { ChannelMessageItemProps } from './types';
 import type { Role } from '@/modules/groups/store';
@@ -202,10 +203,12 @@ export function ChannelMessageItem({
           </div>
         ) : (
           <>
-            <ChannelMarkdown content={message.content} />
+            <ChannelMessageContent message={message} />
             {message.isEdited && <span className="ml-1 text-[11px] text-gray-500">(edited)</span>}
             {message.isPinned && <span className="ml-2 text-[11px] text-primary-300">Pinned</span>}
-            <MessageAttachment message={message} />
+            {message.messageType !== 'voice' && message.messageType !== 'audio' && (
+              <MessageAttachment message={message} />
+            )}
           </>
         )}
 
@@ -504,6 +507,72 @@ function metadataString(metadata: Record<string, unknown>, key: string): string 
 function metadataNumber(metadata: Record<string, unknown>, key: string): number | null {
   const value = metadata[key];
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function metadataNumberArray(metadata: Record<string, unknown>, key: string): number[] | null {
+  const value = metadata[key];
+  if (!Array.isArray(value)) return null;
+  const numbers = value.filter((item): item is number => typeof item === 'number');
+  return numbers.length === value.length ? numbers : null;
+}
+
+function ChannelMessageContent({
+  message,
+}: {
+  readonly message: ChannelMessageItemProps['message'];
+}) {
+  if (message.messageType === 'gif') {
+    const gifUrl = metadataString(message.metadata, 'gifUrl') ?? message.content;
+    const gifPreviewUrl = metadataString(message.metadata, 'gifPreviewUrl') ?? gifUrl;
+    const gifTitle = metadataString(message.metadata, 'gifTitle') ?? 'GIF';
+    const gifWidth = metadataNumber(message.metadata, 'gifWidth');
+    const gifHeight = metadataNumber(message.metadata, 'gifHeight');
+    const aspectRatio = gifWidth && gifHeight ? gifWidth / gifHeight : 4 / 3;
+
+    return (
+      <a href={gifUrl} target="_blank" rel="noopener noreferrer" className="mt-1 block w-fit">
+        <img
+          src={gifPreviewUrl}
+          alt={gifTitle}
+          className="max-h-72 max-w-full rounded-lg object-cover"
+          style={{ aspectRatio }}
+        />
+      </a>
+    );
+  }
+
+  if (message.messageType === 'sticker') {
+    const label = metadataString(message.metadata, 'stickerLabel') ?? message.content;
+    const emoji = metadataString(message.metadata, 'stickerEmoji') ?? message.content;
+
+    return (
+      <div className="mt-1 inline-flex flex-col items-center gap-1" aria-label={`Sticker ${label}`}>
+        <span className="text-5xl leading-none">{emoji}</span>
+        {label && <span className="text-xs text-gray-400">{label}</span>}
+      </div>
+    );
+  }
+
+  if (message.messageType === 'voice' || message.messageType === 'audio') {
+    const audioUrl = message.fileUrl ?? metadataString(message.metadata, 'url');
+    if (!audioUrl) {
+      return <ChannelMarkdown content={message.content} />;
+    }
+
+    return (
+      <div className="mt-2 max-w-sm">
+        <VoiceMessagePlayer
+          messageId={metadataString(message.metadata, 'voiceMessageId') ?? message.id}
+          audioUrl={audioUrl}
+          duration={metadataNumber(message.metadata, 'duration') ?? 0}
+          waveformData={metadataNumberArray(message.metadata, 'waveform') ?? undefined}
+          className="rounded-lg border border-white/10 bg-white/[0.04] p-2"
+        />
+      </div>
+    );
+  }
+
+  return <ChannelMarkdown content={message.content} />;
 }
 
 function MessageAttachment({ message }: { readonly message: ChannelMessageItemProps['message'] }) {

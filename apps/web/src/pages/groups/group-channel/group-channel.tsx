@@ -24,6 +24,7 @@ import {
   buildMessageAttachmentSendPayload,
   type UploadedMessageAttachment,
 } from '@cgraph/shared-types';
+import type { GifResult } from '@/modules/chat/components/gif-picker';
 
 import { ChannelHeader } from './channel-header';
 import { MessagesArea } from './messages-area';
@@ -34,7 +35,7 @@ import { ChannelThreadPanel } from './channel-thread-panel';
 import { useChannelThreadStore } from '@/modules/groups/store/channelThreadStore';
 import { findGroupChannel } from '@/modules/groups/routing';
 import { formatDateHeader, groupMessagesByDate } from './utils';
-import type { ChannelMessage } from './types';
+import type { ChannelMessage, StickerSelection, VoiceRecordingData } from './types';
 
 const logger = createLogger('GroupChannel');
 
@@ -127,6 +128,69 @@ async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> 
   };
 }
 
+interface UploadedChannelVoiceMessage {
+  id: string | null;
+  url: string;
+  duration: number;
+  waveform: number[];
+  contentType: string;
+  size: number;
+  messageId: string | null;
+}
+
+function numberArrayValue(value: unknown): number[] | null {
+  if (!Array.isArray(value)) return null;
+
+  const numbers = value.filter((item): item is number => typeof item === 'number');
+  return numbers.length === value.length ? numbers : null;
+}
+
+function voiceUploadMimeType(blob: Blob): string {
+  if (blob.type.startsWith('audio/webm')) return 'audio/webm';
+  return blob.type || 'audio/webm';
+}
+
+function voiceUploadFilename(mimeType: string): string {
+  if (mimeType === 'audio/ogg') return 'voice-message.ogg';
+  if (mimeType === 'audio/mp4' || mimeType === 'audio/m4a' || mimeType === 'audio/x-m4a') {
+    return 'voice-message.m4a';
+  }
+  if (mimeType === 'audio/mpeg' || mimeType === 'audio/mp3') return 'voice-message.mp3';
+  if (mimeType === 'audio/wav') return 'voice-message.wav';
+  return 'voice-message.webm';
+}
+
+async function uploadChannelVoiceMessage(
+  channelId: string,
+  recording: VoiceRecordingData
+): Promise<UploadedChannelVoiceMessage> {
+  const mimeType = voiceUploadMimeType(recording.blob);
+  const audioFile = new File([recording.blob], voiceUploadFilename(mimeType), { type: mimeType });
+  const formData = new FormData();
+  formData.append('audio', audioFile);
+  formData.append('channel_id', channelId);
+  formData.append('duration', String(recording.duration));
+  formData.append('waveform', JSON.stringify(recording.waveform));
+
+  const response = await http.post('/api/v1/voice-messages', formData);
+  const data = isRecord(response.data) && isRecord(response.data.data) ? response.data.data : null;
+  const url = stringValue(data?.url);
+
+  if (!data || !url) {
+    throw new Error('Voice message response did not include a playback URL');
+  }
+
+  return {
+    id: stringValue(data.id),
+    url,
+    duration: numberValue(data.duration) ?? recording.duration,
+    waveform: numberArrayValue(data.waveform) ?? recording.waveform,
+    contentType: stringValue(data.content_type) ?? mimeType,
+    size: numberValue(data.size) ?? recording.blob.size,
+    messageId: stringValue(data.message_id),
+  };
+}
+
 /**
  * Group Channel component.
  */
@@ -137,7 +201,8 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const scrollToMessageId = searchParams.get('scrollTo');
-  const currentUserId = useAuthStore((s) => s.user?.id);
+  const currentUser = useAuthStore((s) => s.user);
+  const currentUserId = currentUser?.id;
   const copy = surfaceCopy[surface];
 
   const {
@@ -152,6 +217,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     fetchMembers,
     sendChannelMessage,
     setActiveChannel,
+    addChannelMessage,
     updateChannelMessage,
     removeChannelMessage,
     toggleChannelReaction,
@@ -161,6 +227,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const [isSending, setIsSending] = useState(false);
   const [replyTo, setReplyTo] = useState<ChannelMessage | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [showMembers, setShowMembers] = useState(true);
   const [showPinned, setShowPinned] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -221,21 +288,32 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   // Join channel and fetch data
   useEffect(() => {
     if (!channelId || !groupId) return;
+    let cancelled = false;
 
     setActiveChannel(channelId);
     socketManager.joinGroupChannel(channelId);
-    fetchChannelMessages(channelId);
-    fetchMembers(groupId);
-    // Reply counts fetched reactively after messages load
+
+    void (async () => {
+      try {
+        await fetchGroup(groupId);
+        if (cancelled) return;
+        await Promise.all([fetchChannelMessages(channelId), fetchMembers(groupId)]);
+      } catch (error) {
+        if (!cancelled) {
+          logger.error('Failed to load group channel:', error);
+        }
+      }
+    })();
 
     return () => {
+      cancelled = true;
       setActiveChannel(null);
       socketManager.leaveGroupChannel(channelId);
       if (highlightTimeoutRef.current) {
         clearTimeout(highlightTimeoutRef.current);
       }
     };
-  }, [channelId, groupId, setActiveChannel, fetchChannelMessages, fetchMembers]);
+  }, [channelId, groupId, setActiveChannel, fetchGroup, fetchChannelMessages, fetchMembers]);
 
   useEffect(() => {
     setSearchQuery('');
@@ -323,6 +401,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
       setMessageInput('');
       setReplyTo(null);
       setAttachment(null);
+      setIsVoiceMode(false);
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -330,6 +409,121 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
       socketManager.sendTyping(`group:${channelId}`, false);
     } catch (error) {
       logger.error('Failed to send message:', error);
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  async function sendRichChannelMessage(
+    content: string,
+    contentType: ChannelMessage['messageType'],
+    metadata: Record<string, unknown>
+  ): Promise<void> {
+    if (!channelId || isSending) return;
+
+    setIsSending(true);
+    try {
+      await sendChannelMessage(channelId, content, replyTo?.id, {
+        contentType,
+        metadata,
+      });
+      setMessageInput('');
+      setReplyTo(null);
+      setAttachment(null);
+      setIsVoiceMode(false);
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      socketManager.sendTyping(`group:${channelId}`, false);
+    } catch (error) {
+      logger.error('Failed to send rich group message:', error);
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  function handleGifSelect(gif: GifResult): void {
+    void sendRichChannelMessage(gif.url, 'gif', {
+      gifId: gif.id,
+      gifTitle: gif.title,
+      gifUrl: gif.url,
+      gifPreviewUrl: gif.previewUrl,
+      gifWidth: gif.width,
+      gifHeight: gif.height,
+      gifSource: gif.source,
+    });
+  }
+
+  function handleStickerSelect(sticker: StickerSelection): void {
+    void sendRichChannelMessage(sticker.emoji, 'sticker', {
+      stickerId: sticker.id,
+      stickerPackId: sticker.packId,
+      stickerLabel: sticker.label,
+      stickerEmoji: sticker.emoji,
+    });
+  }
+
+  async function handleVoiceComplete(recording: VoiceRecordingData): Promise<void> {
+    if (!channelId || isSending) return;
+
+    setIsSending(true);
+    try {
+      const uploaded = await uploadChannelVoiceMessage(channelId, recording);
+      addChannelMessage({
+        id: uploaded.messageId ?? `group-voice-${Date.now()}`,
+        channelId,
+        authorId: currentUserId ?? '',
+        author: {
+          id: currentUserId ?? '',
+          username: currentUser?.username ?? 'You',
+          displayName: currentUser?.displayName ?? currentUser?.username ?? 'You',
+          avatarUrl: currentUser?.avatarUrl ?? null,
+          member: null,
+          avatarBorderId: currentUser?.avatarBorderId ?? null,
+          equippedTitleId: currentUser?.equippedTitleId ?? null,
+          equippedBadgeIds: currentUser?.equippedBadgeIds ?? [],
+          equippedNameplateId: currentUser?.equippedNameplateId ?? null,
+          profileTheme: currentUser?.profileTheme ?? null,
+          chatTheme: currentUser?.chatTheme ?? null,
+          displayNameFont: currentUser?.displayNameFont ?? null,
+          displayNameEffect: currentUser?.displayNameEffect ?? null,
+          displayNameColor: currentUser?.displayNameColor ?? null,
+          displayNameSecondaryColor: currentUser?.displayNameSecondaryColor ?? null,
+        },
+        content: '[Voice Message]',
+        messageType: 'voice',
+        replyToId: replyTo?.id ?? null,
+        replyTo,
+        isPinned: false,
+        isEdited: false,
+        deletedAt: null,
+        metadata: {
+          url: uploaded.url,
+          filename: 'voice-message.webm',
+          size: uploaded.size,
+          mimeType: uploaded.contentType,
+          duration: uploaded.duration,
+          waveform: uploaded.waveform,
+          voiceMessageId: uploaded.id,
+        },
+        fileUrl: uploaded.url,
+        fileName: 'voice-message.webm',
+        fileSize: uploaded.size,
+        fileMimeType: uploaded.contentType,
+        thumbnailUrl: null,
+        reactions: [],
+        createdAt: new Date().toISOString(),
+      });
+      setReplyTo(null);
+      setIsVoiceMode(false);
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      socketManager.sendTyping(`group:${channelId}`, false);
+    } catch (error) {
+      logger.error('Failed to send group voice message:', error);
     } finally {
       setIsSending(false);
     }
@@ -622,11 +816,16 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
           isSending={isSending}
           replyTo={replyTo}
           attachment={attachment}
+          isVoiceMode={isVoiceMode}
           onInputChange={handleInputChange}
           onKeyDown={handleKeyPress}
           onSend={handleSend}
+          onVoiceModeChange={setIsVoiceMode}
           onCancelReply={() => setReplyTo(null)}
           onEmojiSelect={handleEmojiSelect}
+          onGifSelect={handleGifSelect}
+          onStickerSelect={handleStickerSelect}
+          onVoiceComplete={(recording) => void handleVoiceComplete(recording)}
           onFileSelect={setAttachment}
           onClearAttachment={() => setAttachment(null)}
         />

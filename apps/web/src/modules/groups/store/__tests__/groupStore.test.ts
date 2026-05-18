@@ -725,6 +725,17 @@ describe('groupStore (modules)', () => {
             mimeType: 'image/png',
             thumbnailUrl: '/uploads/groups/proof-thumb.png',
           },
+          link_preview: {
+            fileUrl: '/uploads/groups/proof.png',
+            fileName: 'proof.png',
+            fileSize: 12,
+            fileMimeType: 'image/png',
+            url: '/uploads/groups/proof.png',
+            filename: 'proof.png',
+            size: 12,
+            mimeType: 'image/png',
+            thumbnailUrl: '/uploads/groups/proof-thumb.png',
+          },
         }
       );
     });

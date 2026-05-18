@@ -8,6 +8,7 @@
  */
 
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
 import type { User } from '@/modules/auth/store';
 import { useThemeStore, THEME_COLORS } from '@/stores/theme';
@@ -70,6 +71,7 @@ function getE2EUser(): User {
  * Renders children immediately — never blocks rendering.
  */
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const userId = useAuthStore((state) => state.user?.id);
@@ -81,7 +83,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   // Auth check — runs once on mount only
   useEffect(() => {
     if (isE2EAuthBypass) {
-      if (!PUBLIC_AUTH_ROUTE_PATTERN.test(window.location.pathname)) {
+      if (!PUBLIC_AUTH_ROUTE_PATTERN.test(pathname)) {
         useAuthStore.setState({
           user: getE2EUser(),
           token: 'e2e-access-token',
@@ -102,7 +104,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       .finally(() => {
         authLogger.debug('Auth check complete');
       });
-  }, [checkAuth]);
+  }, [checkAuth, pathname]);
 
   useEffect(() => {
     if (isE2EAuthBypass) {

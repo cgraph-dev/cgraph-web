@@ -1,16 +1,21 @@
 # Web 100 Percent Owner Checklist
 
-Status date: 2026-05-17
+Status date: 2026-05-18
 
-Current execution count after the routed DM GIF/sticker browser-proof slice: 50 / 50 owner-level
-checklist items closed, 100.0% closed and 0.0% left for this owner execution contract. The Space
-route, verify-email resend, onboarding skip/recovery, cancel-deletion, phone native-attestation
-guard, verify-email-before-onboarding route gate, routed DM read-receipt rendering, routed DM
-guarded-scroll, routed DM typing-proof, routed DM call-entry, call-history callback, incoming-call
-accept/end-state, routed identity/cosmetic live-update, and routed conversation-list/Space menu
-implementations, plus routed DM GIF/sticker send, are now source-backed and browser-verified where
-this checklist requires it. Broader product-maturity risks that remain outside this owner checklist
-are still tracked honestly in the strict pass and scorecard documents.
+Current checklist state: 50 / 50 owner-level implementation rows are closed for this execution
+contract, but this is not the same as full Level 2 release-readiness or a complete web-workstream
+sign-off. The final sign-off questions at the bottom of this file remain open, and
+`docs/WEB-ULTIMATE-STRICT-PASS.md` plus `docs/WEB-PRODUCT-MATURITY-SCORECARD.md` still own the
+stricter release/product-maturity gaps. Treat this document as "owner implementation checklist
+closed, final sign-off pending", not as a 100% production maturity claim.
+
+The Space route, verify-email resend, onboarding skip/recovery, cancel-deletion, phone
+native-attestation guard, verify-email-before-onboarding route gate, routed DM read-receipt
+rendering, routed DM guarded-scroll, routed DM typing-proof, routed DM call-entry, call-history
+callback, incoming-call accept/end-state, routed identity/cosmetic live-update, routed
+conversation-list/Space menu implementations, routed DM GIF/sticker send, and routed group
+GIF/sticker/voice sends are source-backed and browser-verified where this checklist requires it.
+Broader product-maturity risks remain tracked honestly in the strict pass and scorecard documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -168,7 +173,27 @@ Required implementation-time questions:
       new shared-boundary decision is blocking.
 - [x] Web-only route owners, browser storage, browser notifications, browser upload adapters, and
       browser call/media behavior stay in `apps/web`.
-- [ ] Mobile and desktop restart only after the convergence items below are complete and validated.
+- [x] Mobile and desktop restart only after the convergence items below are complete and validated.
+      Until then, mobile and desktop work is limited to truth cleanup, package resync, or explicit
+      foundation-directed slices.
+
+### Repo, Package, And Sync-Strategy Decisions
+
+- [x] `/CGraph` is the umbrella planning and integration workspace for cross-repo work and PR #22.
+      It is not, by itself, proof that the split production repos have deployed.
+- [x] `/home/looter-admin/CGraphRepos/cgraph-backend` is the Fly.io backend production repo.
+- [x] `/home/looter-admin/CGraphRepos/cgraph-web` is the Vercel web production repo.
+- [x] `/home/looter-admin/CGraphRepos/cgraph-packages` is the canonical source owner for `@cgraph/*`
+      packages.
+- [x] App-local `packages/` folders are mirrors during the transition, not editable shared-package
+      owners.
+- [x] Shared-package changes start in `cgraph-packages`, then move to app repos through the
+      documented mirror or future versioned-package sync path.
+- [x] Production deployment only happens after the owning production repo receives the relevant
+      committed change and its deploy platform is able to build it.
+- [x] Current package promotion order is the corrected order from
+      `docs/SHARED-PACKAGES-AUDIT-AND-PROMOTION-PLAN.md`: phase 2, mobile re-sync from phase 5,
+      phase 3, phase 4, remaining phase 5, then phase 6.
 
 ## Execution Checklist
 
@@ -206,6 +231,9 @@ Required implementation-time questions:
       negotiation remains tracked as final release validation risk.
 - [x] Routed group search and notification or mute behavior are real.
 - [x] Routed group message context actions are real.
+- [x] Routed group GIF, sticker, and voice-note sends are real. Verified by
+      `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-18; backend channel media payload proof lives
+      in `apps/backend/test/cgraph_web/controllers/api/v1/channel_message_controller_test.exs`.
 - [x] Routed group admin and settings surfaces are mounted and usable. Verified by
       `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-17 for cold settings-route ownership, overview
       save, invite creation, member role assignment, role-tab render, and settings-channel creation.
@@ -324,7 +352,9 @@ After every implementation slice, update docs in this exact order:
 
 ## Final Owner Sign-Off Questions
 
-Do not call the workstream complete until the owner can answer "yes" to every question below.
+Current sign-off state: 0 / 6 final questions closed. Do not call the workstream complete until the
+owner can answer "yes" to every question below, and do not check these boxes from source inspection
+alone.
 
 - [ ] Can a user navigate every in-scope routed messaging, hub, and social surface without landing
       on a blank, partial, or semantically wrong destination?

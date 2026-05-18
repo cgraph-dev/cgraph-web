@@ -366,6 +366,7 @@ export function createGroupActions(
       if (options?.thumbnailUrl) payload.thumbnail_url = options.thumbnailUrl;
       if (options?.metadata && Object.keys(options.metadata).length > 0) {
         payload.metadata = options.metadata;
+        payload.link_preview = options.metadata;
       }
 
       const response = await http.post(channelMessagesPath(get(), channelId), payload);

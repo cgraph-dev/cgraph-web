@@ -60,6 +60,11 @@ composer now sends structured `gif` and `sticker` message payloads through the c
 endpoint, renders the sent media in the routed bubble, and is browser-verified by
 `apps/web/e2e/dm-media-composer.spec.ts`.
 
+2026-05-18 update: routed group GIF/sticker/voice send is no longer listed as missing. The live
+group composer now sends structured `gif` and `sticker` channel messages, uploads channel voice
+notes through `/api/v1/voice-messages`, renders the returned media, and is browser-verified by
+`apps/web/e2e/web-owner-uat.spec.ts`.
+
 2026-05-16 update: routed DM call entry is no longer listed as needing browser proof. The live DM
 header opens both `/call/:recipientId/audio` and `/call/:recipientId/video`, and the call screens
 mount real controls in `apps/web/e2e/dm-media-composer.spec.ts`.
@@ -162,8 +167,8 @@ on the routed DM surface.
    routed channel header now has real loaded-message search plus backend-backed group mute/unmute,
    and channel message menus now wire edit, delete, report, pin, and copy-link actions. The routed
    groups owner still handles metadata-less bare group fallbacks once group data resolves, browser
-   verification remains incomplete, and older-message/channel-granular search/notification scope
-   still needs an owner decision.
+   verification remains incomplete outside the focused UAT, and older-message/channel-granular
+   search/notification scope still needs an owner decision.
 
 3. **Create a canonical web identity model** — Partial. The shared identity projection now covers
    auth, chat, friends, groups, profile-card hydration, customization inventory ownership, and
