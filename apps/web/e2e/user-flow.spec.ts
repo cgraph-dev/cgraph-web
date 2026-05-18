@@ -48,6 +48,50 @@ test.describe('User Flow — Registration & Onboarding', () => {
 
     await expect(page).toHaveURL(/\/register/);
   });
+
+  test('login phone entry opens the routed phone login flow', async ({ page }) => {
+    await page.route('**/api/v1/auth/phone/countries**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            countries: [{ code: 'US', name: 'United States', calling_code: '+1', flag: 'US' }],
+          },
+        }),
+      });
+    });
+
+    await page.goto('/login');
+    await page.getByRole('link', { name: /continue with phone number instead/i }).click();
+
+    await expect(page).toHaveURL(/\/login\/phone$/);
+    await expect(page.getByText('Phone login')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Enter your phone number' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /switch back to email login/i })).toBeVisible();
+  });
+
+  test('register phone entry opens the routed phone registration flow', async ({ page }) => {
+    await page.route('**/api/v1/auth/phone/countries**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            countries: [{ code: 'US', name: 'United States', calling_code: '+1', flag: 'US' }],
+          },
+        }),
+      });
+    });
+
+    await page.goto('/register');
+    await page.getByRole('link', { name: /register with phone number instead/i }).click();
+
+    await expect(page).toHaveURL(/\/register\/phone$/);
+    await expect(page.getByText('Signal-style registration')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Enter your phone number' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /switch back to email registration/i })).toBeVisible();
+  });
 });
 
 test.describe('User Flow — Authenticated Journey', () => {
