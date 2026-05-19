@@ -201,7 +201,7 @@ export const TITLES: Title[] = [
     unlockRequirement: 'Privacy Advocate achievement',
   },
   {
-    id: 'code_contributor',
+    id: 'platform_builder',
     name: 'Platform Builder',
     displayName: 'Platform Builder',
     rarity: 'legendary',

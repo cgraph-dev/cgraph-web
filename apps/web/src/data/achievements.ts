@@ -233,7 +233,7 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
     maxProgress: 1,
     isHidden: false,
     loreFragment: 'lore_3_2',
-    cosmeticReward: { type: 'title', itemId: 'code_contributor' },
+    cosmeticReward: { type: 'title', itemId: 'platform_builder' },
   },
   {
     id: 'node_runner',
