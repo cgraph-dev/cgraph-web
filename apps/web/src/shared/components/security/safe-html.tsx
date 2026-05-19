@@ -1,13 +1,8 @@
-import type { HTMLAttributes, Ref } from 'react';
+import { createElement, useMemo, type HTMLAttributes, type ReactNode, type Ref } from 'react';
 import DOMPurify from 'dompurify';
 import { sanitizeCss } from '@/lib/security/css-sanitization';
 
 type SanitizeOptions = NonNullable<Parameters<typeof DOMPurify.sanitize>[1]>;
-type SanitizedMarkup = {
-  dangerouslySetInnerHTML: {
-    __html: string;
-  };
-};
 
 const DEFAULT_HTML_OPTIONS: SanitizeOptions = {
   USE_PROFILES: { html: true },
@@ -32,22 +27,70 @@ export function sanitizeHtml(
   return DOMPurify.sanitize(html, options);
 }
 
-function toSanitizedHtmlSink(html: string, options: SanitizeOptions): SanitizedMarkup {
-  return {
-    dangerouslySetInnerHTML: {
-      // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml - All HTML reaches this audited sink only after DOMPurify sanitization.
-      __html: sanitizeHtml(html, options),
-    },
-  };
+const REACT_ATTRIBUTE_NAMES: Record<string, string> = {
+  class: 'className',
+  for: 'htmlFor',
+  tabindex: 'tabIndex',
+  readonly: 'readOnly',
+  maxlength: 'maxLength',
+  colspan: 'colSpan',
+  rowspan: 'rowSpan',
+};
+
+function toReactProps(element: Element, key: string): Record<string, string> {
+  const props: Record<string, string> = { key };
+
+  for (const attribute of Array.from(element.attributes)) {
+    const name = attribute.name.toLowerCase();
+
+    if (name.startsWith('on') || name === 'style') {
+      continue;
+    }
+
+    props[REACT_ATTRIBUTE_NAMES[name] ?? attribute.name] = attribute.value;
+  }
+
+  if (props.target === '_blank') {
+    props.rel = props.rel || 'noopener noreferrer';
+  }
+
+  return props;
 }
 
-function toSanitizedStyleSink(css: string): SanitizedMarkup {
-  return {
-    dangerouslySetInnerHTML: {
-      // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml - Style output reaches this audited sink only after CSS sanitization.
-      __html: sanitizeCss(css),
-    },
-  };
+function toReactNode(node: ChildNode, key: string): ReactNode {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent;
+  }
+
+  if (!(node instanceof Element)) {
+    return null;
+  }
+
+  const children = Array.from(node.childNodes).map((child, index) =>
+    toReactNode(child, `${key}-${index}`)
+  );
+
+  return createElement(node.tagName.toLowerCase(), toReactProps(node, key), ...children);
+}
+
+function sanitizedHtmlToReactNodes(html: string): ReactNode[] {
+  if (typeof DOMParser === 'undefined') {
+    return [html];
+  }
+
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  return Array.from(document.body.childNodes).map((node, index) => toReactNode(node, `${index}`));
+}
+
+function useSanitizedHtmlNodes(html: string, options: SanitizeOptions): ReactNode[] {
+  return useMemo(() => {
+    const sanitized = sanitizeHtml(html, options);
+    return sanitizedHtmlToReactNodes(sanitized);
+  }, [html, options]);
+}
+
+function useSanitizedCss(css: string): string {
+  return useMemo(() => sanitizeCss(css), [css]);
 }
 
 /**
@@ -66,12 +109,20 @@ export function escapeHtml(text: string): string {
  * Renders sanitized HTML through the audited application wrapper.
  */
 export function SafeHtml({ html, options = DEFAULT_HTML_OPTIONS, ref, ...props }: SafeHtmlProps) {
-  return <div ref={ref} {...props} {...toSanitizedHtmlSink(html, options)} />;
+  const nodes = useSanitizedHtmlNodes(html, options);
+
+  return (
+    <div ref={ref} {...props}>
+      {nodes}
+    </div>
+  );
 }
 
 /**
  * Renders sanitized CSS for trusted style injection sites.
  */
 export function SafeStyle({ css }: { css: string }) {
-  return <style {...toSanitizedStyleSink(css)} />;
+  const sanitizedCss = useSanitizedCss(css);
+
+  return <style>{sanitizedCss}</style>;
 }
