@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getErrorMessage } from '@/lib/api';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import type { ChannelMessage } from '@/modules/groups/store';
@@ -33,6 +34,28 @@ interface PinnedMessagesPanelProps {
   onUnpin?: (pin: PinnedMessageEntry) => void;
 }
 
+function getResponseStatus(error: unknown): number | undefined {
+  if (!(typeof error === 'object' && error !== null && 'response' in error)) {
+    return undefined;
+  }
+
+  const response = error.response;
+  if (!(typeof response === 'object' && response !== null && 'status' in response)) {
+    return undefined;
+  }
+
+  return typeof response.status === 'number' ? response.status : undefined;
+}
+
+function getPinnedMessageError(error: unknown, forbiddenMessage: string, fallback: string): string {
+  if (getResponseStatus(error) === 403) {
+    return forbiddenMessage;
+  }
+
+  const message = getErrorMessage(error).trim();
+  return message || fallback;
+}
+
 /**
  */
 /**
@@ -47,9 +70,12 @@ export function PinnedMessagesPanel({
 }: PinnedMessagesPanelProps) {
   const [pins, setPins] = useState<PinnedMessageEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [unpinningId, setUnpinningId] = useState<string | null>(null);
 
   const fetchPins = useCallback(async () => {
     try {
+      setErrorMessage(null);
       const res = await http.get(`/api/v1/groups/${groupId}/channels/${channelId}/pins`);
       const data: PinnedMessageEntry[] = res.data?.data ?? res.data ?? [];
 
@@ -62,6 +88,13 @@ export function PinnedMessagesPanel({
       setPins(hydrated);
     } catch (err) {
       logger.warn('Failed to fetch pinned messages', err);
+      setErrorMessage(
+        getPinnedMessageError(
+          err,
+          'You do not have permission to view pinned messages in this channel.',
+          'Pinned messages could not be loaded.'
+        )
+      );
     } finally {
       setIsLoading(false);
     }
@@ -73,11 +106,22 @@ export function PinnedMessagesPanel({
 
   async function handleUnpin(pin: PinnedMessageEntry) {
     try {
+      setErrorMessage(null);
+      setUnpinningId(pin.id);
       await http.delete(`/api/v1/groups/${groupId}/channels/${channelId}/pins/${pin.id}`);
       setPins((prev) => prev.filter((p) => p.id !== pin.id));
       onUnpin?.(pin);
     } catch (err) {
       logger.warn('Failed to unpin message', err);
+      setErrorMessage(
+        getPinnedMessageError(
+          err,
+          'You do not have permission to unpin messages in this channel.',
+          'Pinned message could not be unpinned.'
+        )
+      );
+    } finally {
+      setUnpinningId(null);
     }
   }
 
@@ -105,6 +149,15 @@ export function PinnedMessagesPanel({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
+        {errorMessage && (
+          <div
+            role="alert"
+            className="m-3 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200"
+          >
+            {errorMessage}
+          </div>
+        )}
+
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
@@ -164,10 +217,11 @@ export function PinnedMessagesPanel({
                   {/* Unpin button (visible on hover) */}
                   <button
                     onClick={() => handleUnpin(pin)}
-                    className="mt-2 hidden text-xs text-red-400 transition-colors hover:text-red-300 group-hover:inline-block"
+                    disabled={unpinningId === pin.id}
+                    className="mt-2 hidden text-xs text-red-400 transition-colors hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60 group-hover:inline-block"
                     aria-label={`Unpin ${pin.message.content}`}
                   >
-                    Unpin
+                    {unpinningId === pin.id ? 'Unpinning...' : 'Unpin'}
                   </button>
                 </>
               ) : (
