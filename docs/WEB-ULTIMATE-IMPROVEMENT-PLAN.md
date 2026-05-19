@@ -981,7 +981,7 @@ conversation list fetch, message send (cloud), message search, group join, broad
 - Baseline run after deploy of Wave 5 establishes the headroom; subsequent runs guard against
   regressions.
 
-**Cost:** $0 — k6 is open source, the workflow runs on GitHub-hosted runners. **Effort:** 1 week.
+**Cost:** $0 — k6 has no licensing cost, and the workflow runs on GitHub-hosted runners. **Effort:** 1 week.
 **Triggers:** before any growth campaign or beta expansion; quarterly otherwise.
 
 ### 46. ML moderation hook (free-tier)

@@ -43,8 +43,8 @@ separate written agreement says otherwise.
 4. Third-Party Software
 
 Third-party dependencies remain governed by their own licenses. This license does
-not modify any open-source license obligations for third-party software included
-in or used by the project.
+not modify any third-party license obligations for software included in or used
+by the project.
 
 5. No Warranty
 
@@ -80,12 +80,11 @@ the software and destroy all copies in your possession or control.
 Unless a separate written agreement states otherwise, this license is governed by
 the laws of the jurisdiction where the rights holder is organized or domiciled,
 without regard to conflict-of-law rules. Mandatory consumer, employment, data
-protection, and open-source license rights are not excluded where they cannot be
+protection, and third-party license rights are not excluded where they cannot be
 waived under applicable law.
 
 10. Contact
 
 Licensing and legal inquiries: contact@cgraph.org
 
-This license is not an open-source license. All rights not expressly granted are
-reserved.
+This is a proprietary license. All rights not expressly granted are reserved.

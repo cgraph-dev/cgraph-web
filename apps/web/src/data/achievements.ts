@@ -226,7 +226,7 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
   {
     id: 'protocol_pioneer',
     title: 'Protocol Pioneer',
-    description: 'Contribute to CGraph open source development',
+    description: 'Help shape CGraph platform quality',
     category: 'mastery',
     rarity: 'legendary',
     icon: '⚙️',
