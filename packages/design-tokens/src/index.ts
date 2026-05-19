@@ -38,11 +38,31 @@ export {
 } from './themes';
 export type { ThemePalette, ThemeId, CustomThemeOverrides } from './themes';
 
-export { colorPresets, ghostChatThemes, chatBubblePresets, themeProfiles } from './presets';
+export {
+  CHAT_BUBBLE_ANIMATION_ALIASES,
+  CHAT_BUBBLE_ANIMATION_IDS,
+  CHAT_BUBBLE_PRESET_IDS,
+  CHAT_BUBBLE_STYLE_ALIASES,
+  colorPresets,
+  ghostChatThemes,
+  chatBubblePresets,
+  chatBubblePresetsById,
+  getChatBubblePreset,
+  isChatBubbleAnimationId,
+  isChatBubblePresetId,
+  normalizeChatBubbleAnimationId,
+  normalizeChatBubbleStyleId,
+  themeProfiles,
+} from './presets';
 export type {
+  ChatBubbleAnimationId,
+  ChatBubbleDensity,
+  ChatBubbleLegacyStyleId,
   ColorPresetId,
   ColorPreset,
   GhostChatTheme,
   ChatBubblePreset,
+  ChatBubblePresetId,
+  ChatBubbleShape,
   ThemeProfile,
 } from './presets';

@@ -15,11 +15,13 @@ export {
 } from './presets';
 export {
   chatBubbleAnimations,
+  getChatBubbleAnimation,
   messageEntranceVariants,
   messageListStagger,
   typingIndicatorVariants,
 } from './chat-bubbles';
 export type { ChatBubbleStyleId } from './chat-bubbles';
+export type { ChatBubbleAnimationId } from '@cgraph/design-tokens';
 export {
   hoverAnimations,
   createPulseAnimation,

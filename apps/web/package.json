@@ -36,6 +36,7 @@
   "dependencies": {
     "@cgraph/animation-constants": "workspace:^",
     "@cgraph/api-client": "workspace:*",
+    "@cgraph/design-tokens": "workspace:*",
     "@cgraph/shared-types": "workspace:*",
     "@cgraph/utils": "workspace:*",
     "@dnd-kit/core": "^6.3.1",

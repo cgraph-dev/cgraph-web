@@ -8,27 +8,13 @@
  * of the chat surfaces). Without the second write, bubble style /
  * radius / colour selections never reached the actual chat UI.
  */
+import { normalizeChatBubbleStyleId } from '@cgraph/design-tokens';
 import { useThemeStore } from '@/stores/theme';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { BubblesTab } from '@/components/theme/theme-customizer/bubbles-tab';
 import type { ChatBubbleStylePreset, ThemeColorPreset } from '@/stores';
-import type {
-  BubbleAnimation,
-  ChatBubbleStyle,
-  ThemePreset,
-} from '@/modules/settings/store/customization/customizationStore.types';
-
-const STYLE_MAP: Readonly<Record<ChatBubbleStylePreset, ChatBubbleStyle>> = {
-  default: 'default',
-  rounded: 'rounded',
-  sharp: 'sharp',
-  cloud: 'cloud',
-  modern: 'modern',
-  retro: 'retro',
-  bubble: 'rounded',
-  glassmorphism: 'modern',
-};
+import type { BubbleAnimation, ThemePreset } from '@/modules/settings/store/customization/customizationStore.types';
 
 const COLOR_MAP: Readonly<Record<ThemeColorPreset, ThemePreset>> = {
   emerald: 'emerald',
@@ -71,7 +57,7 @@ export default function BubblesCustomization() {
 
   function handleSelectStyle(style: ChatBubbleStylePreset): void {
     setChatBubbleStyle(style);
-    customizationSetStyle(STYLE_MAP[style]);
+    customizationSetStyle(normalizeChatBubbleStyleId(style));
     HapticFeedback.light();
   }
 

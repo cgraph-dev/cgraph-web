@@ -5,6 +5,7 @@
  * extracted from customizationStore.ts.
  *
  */
+import type { ChatBubblePresetId } from '@cgraph/design-tokens';
 
 // TYPES
 
@@ -41,7 +42,7 @@ export type AvatarBorderType =
   | 'mythic'
   | 'lottie';
 
-export type ChatBubbleStyle = 'default' | 'rounded' | 'sharp' | 'cloud' | 'modern' | 'retro';
+export type ChatBubbleStyle = ChatBubblePresetId;
 
 export type ProfileCardStyle =
   | 'default'

@@ -8,6 +8,10 @@
  */
 
 import { useEffect } from 'react';
+import {
+  normalizeChatBubbleStyleId,
+  type ChatBubblePresetId,
+} from '@cgraph/design-tokens';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 
 /**
@@ -168,7 +172,7 @@ export function getAvatarBorderStyle(borderId: string | null): {
  * Get message bubble CSS class based on bubble style
  */
 export function getMessageBubbleClass(bubbleStyle: string): string {
-  const bubbleClassMap: Record<string, string> = {
+  const bubbleClassMap: Record<ChatBubblePresetId, string> = {
     default: 'bubble-default',
     rounded: 'bubble-rounded',
     sharp: 'bubble-sharp',
@@ -178,11 +182,11 @@ export function getMessageBubbleClass(bubbleStyle: string): string {
     glass: 'bubble-glass',
     neon: 'bubble-neon',
     retro: 'bubble-retro',
-    '3d': 'bubble-3d',
+    'three-d': 'bubble-3d',
     outline: 'bubble-outline',
   };
 
-  return bubbleClassMap[bubbleStyle] || 'bubble-default';
+  return bubbleClassMap[normalizeChatBubbleStyleId(bubbleStyle)];
 }
 
 /**

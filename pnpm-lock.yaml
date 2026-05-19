@@ -39,6 +39,9 @@ importers:
       '@cgraph/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@cgraph/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
       '@cgraph/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
