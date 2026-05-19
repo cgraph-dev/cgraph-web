@@ -47,6 +47,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import ErrorBoundary from './components/error-boundary';
@@ -195,6 +196,7 @@ try {
                     },
                   }}
                 />
+                <SpeedInsights />
               </BrowserRouter>
             </QueryClientProvider>
           </ThemeProvider>
