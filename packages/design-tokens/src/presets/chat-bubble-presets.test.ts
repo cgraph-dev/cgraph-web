@@ -42,7 +42,7 @@ describe('chat bubble preset semantics', () => {
   });
 
   it('provides preset lookup by normalized id', () => {
-    expect(chatBubblePresetsById.glass.id).toBe('glass');
+    expect(chatBubblePresetsById.get('glass')?.id).toBe('glass');
     expect(getChatBubblePreset('glassmorphism').id).toBe('glass');
   });
 });

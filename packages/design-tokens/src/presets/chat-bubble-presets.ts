@@ -286,37 +286,50 @@ export const chatBubblePresets: readonly ChatBubblePreset[] = [
 
 const chatBubblePresetIdSet = new Set<string>(CHAT_BUBBLE_PRESET_IDS);
 const chatBubbleAnimationIdSet = new Set<string>(CHAT_BUBBLE_ANIMATION_IDS);
-const chatBubbleStyleAliases = CHAT_BUBBLE_STYLE_ALIASES as Readonly<
-  Record<string, ChatBubblePresetId | undefined>
->;
-const chatBubbleAnimationAliases = CHAT_BUBBLE_ANIMATION_ALIASES as Readonly<
-  Record<string, ChatBubbleAnimationId | undefined>
->;
+const chatBubbleStyleAliases: Readonly<Record<string, ChatBubblePresetId | undefined>> =
+  CHAT_BUBBLE_STYLE_ALIASES;
+const chatBubbleAnimationAliases: Readonly<Record<string, ChatBubbleAnimationId | undefined>> =
+  CHAT_BUBBLE_ANIMATION_ALIASES;
 
-export const chatBubblePresetsById = Object.fromEntries(
+function requireDefaultChatBubblePreset(): ChatBubblePreset {
+  const preset = chatBubblePresets.find((candidate) => candidate.id === 'default');
+  if (!preset) {
+    throw new Error('Default chat bubble preset is missing.');
+  }
+  return preset;
+}
+
+const defaultChatBubblePreset = requireDefaultChatBubblePreset();
+
+export const chatBubblePresetsById = new Map<ChatBubblePresetId, ChatBubblePreset>(
   chatBubblePresets.map((preset) => [preset.id, preset])
-) as Readonly<Record<ChatBubblePresetId, ChatBubblePreset>>;
+);
 
+/** Returns true when a value is a shared chat bubble preset id. */
 export function isChatBubblePresetId(value: unknown): value is ChatBubblePresetId {
   return typeof value === 'string' && chatBubblePresetIdSet.has(value);
 }
 
+/** Returns true when a value is a shared chat bubble animation id. */
 export function isChatBubbleAnimationId(value: unknown): value is ChatBubbleAnimationId {
   return typeof value === 'string' && chatBubbleAnimationIdSet.has(value);
 }
 
+/** Normalizes stored and legacy bubble style ids into shared preset ids. */
 export function normalizeChatBubbleStyleId(value: unknown): ChatBubblePresetId {
   if (isChatBubblePresetId(value)) return value;
   if (typeof value !== 'string') return 'default';
   return chatBubbleStyleAliases[value] ?? 'default';
 }
 
+/** Normalizes stored and legacy bubble animation ids into shared animation ids. */
 export function normalizeChatBubbleAnimationId(value: unknown): ChatBubbleAnimationId {
   if (isChatBubbleAnimationId(value)) return value;
   if (typeof value !== 'string') return 'default';
   return chatBubbleAnimationAliases[value] ?? 'default';
 }
 
+/** Looks up a chat bubble preset after applying legacy alias normalization. */
 export function getChatBubblePreset(value: unknown): ChatBubblePreset {
-  return chatBubblePresetsById[normalizeChatBubbleStyleId(value)];
+  return chatBubblePresetsById.get(normalizeChatBubbleStyleId(value)) ?? defaultChatBubblePreset;
 }
