@@ -26,6 +26,13 @@ vi.mock('@/lib/logger', () => ({
     log: vi.fn(),
     debug: vi.fn(),
   }),
+  authLogger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    log: vi.fn(),
+    debug: vi.fn(),
+  },
 }));
 
 import { api } from '@/lib/api-client';
