@@ -1,0 +1,87 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  httpGet: vi.fn(),
+  setAuthState: vi.fn(),
+}));
+
+vi.mock('@/lib/api-client', () => ({
+  http: {
+    get: mocks.httpGet,
+  },
+}));
+
+vi.mock('@/lib/logger', () => ({
+  createLogger: () => ({
+    error: vi.fn(),
+  }),
+}));
+
+vi.mock('@/lib/oauth', () => ({
+  openOAuthPopup: vi.fn(),
+  providerColors: {
+    google: { bg: 'bg-white', text: 'text-gray-900', hover: 'hover:bg-gray-100' },
+    apple: { bg: 'bg-black', text: 'text-white', hover: 'hover:bg-gray-800' },
+    facebook: { bg: 'bg-blue-600', text: 'text-white', hover: 'hover:bg-blue-700' },
+    tiktok: { bg: 'bg-black', text: 'text-white', hover: 'hover:bg-gray-800' },
+  },
+  providerNames: {
+    google: 'Google',
+    apple: 'Apple',
+    facebook: 'Facebook',
+    tiktok: 'TikTok',
+  },
+}));
+
+vi.mock('@/modules/auth/store', () => ({
+  useAuthStore: {
+    setState: mocks.setAuthState,
+  },
+  mapUserFromApi: (user: unknown) => user,
+}));
+
+import { OAuthButtonGroup } from '../o-auth-buttons';
+
+describe('OAuthButtonGroup', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('discovers available OAuth providers from the backend', async () => {
+    mocks.httpGet.mockResolvedValueOnce({
+      data: { data: { providers: ['google', { provider: 'tiktok' }, 'unknown'] } },
+    });
+
+    render(<OAuthButtonGroup variant="icon" />);
+
+    await waitFor(() => {
+      expect(mocks.httpGet).toHaveBeenCalledWith('/api/v1/auth/oauth/providers');
+    });
+
+    expect(await screen.findByTitle('Continue with Google')).toBeTruthy();
+    expect(screen.getByTitle('Continue with TikTok')).toBeTruthy();
+    expect(screen.queryByTitle('Continue with Apple')).toBeNull();
+    expect(screen.queryByTitle('Continue with Facebook')).toBeNull();
+  });
+
+  it('does not render provider buttons when discovery returns none', async () => {
+    mocks.httpGet.mockResolvedValueOnce({ data: { data: { providers: [] } } });
+
+    render(<OAuthButtonGroup variant="icon" />);
+
+    await waitFor(() => {
+      expect(mocks.httpGet).toHaveBeenCalledWith('/api/v1/auth/oauth/providers');
+    });
+
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('uses explicit providers without calling discovery', () => {
+    render(<OAuthButtonGroup providers={['apple']} variant="icon" />);
+
+    expect(mocks.httpGet).not.toHaveBeenCalled();
+    expect(screen.getByTitle('Continue with Apple')).toBeTruthy();
+    expect(screen.queryByTitle('Continue with Google')).toBeNull();
+  });
+});

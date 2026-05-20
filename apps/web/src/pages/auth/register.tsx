@@ -118,7 +118,6 @@ export default function Register() {
       {/* OAuth Buttons with matrix hover effects */}
       <motion.div variants={reduced ? {} : itemVariants}>
         <OAuthButtonGroup
-          providers={['google', 'apple', 'facebook', 'tiktok']}
           variant="icon"
           onSuccess={() => navigate('/messages')}
           onError={(err) => logger.error('OAuth error:', err)}

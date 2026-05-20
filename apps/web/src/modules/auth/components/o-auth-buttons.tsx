@@ -3,11 +3,12 @@
  * Social login buttons for Google, Apple, Facebook, and TikTok
  */
 
-import { useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { motion } from 'motion/react';
 import { OAuthProvider, openOAuthPopup, providerColors, providerNames } from '@/lib/oauth';
 import { useAuthStore, mapUserFromApi } from '@/modules/auth/store';
 import { createLogger } from '@/lib/logger';
+import { http } from '@/lib/api-client';
 
 const logger = createLogger('OAuthButtons');
 
@@ -72,6 +73,39 @@ const providerIcons: Record<OAuthProvider, () => ReactElement> = {
   facebook: FacebookIcon,
   tiktok: TikTokIcon,
 };
+
+const knownProviders: readonly OAuthProvider[] = ['google', 'apple', 'facebook', 'tiktok'];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isOAuthProvider(value: string): value is OAuthProvider {
+  return knownProviders.some((provider) => provider === value);
+}
+
+function toOAuthProvider(value: unknown): OAuthProvider | null {
+  if (typeof value === 'string' && isOAuthProvider(value)) {
+    return value;
+  }
+
+  if (isRecord(value)) {
+    return toOAuthProvider(value.provider ?? value.name ?? value.id);
+  }
+
+  return null;
+}
+
+function readDiscoveredProviders(payload: unknown): OAuthProvider[] {
+  const data = isRecord(payload) && 'data' in payload ? payload.data : payload;
+  const candidates = isRecord(data) && Array.isArray(data.providers) ? data.providers : data;
+
+  if (!Array.isArray(candidates)) {
+    return [];
+  }
+
+  return [...new Set(candidates.map(toOAuthProvider).filter((provider) => provider !== null))];
+}
 
 // Provider-specific hover glow colors
 const providerGlow: Record<OAuthProvider, { ring: string; shadow: string; bg: string }> = {
@@ -222,7 +256,7 @@ export function OAuthButton({
 interface OAuthButtonGroupProps {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
-  providers?: OAuthProvider[];
+  providers?: readonly OAuthProvider[];
   variant?: 'full' | 'icon';
   className?: string;
 }
@@ -233,14 +267,47 @@ interface OAuthButtonGroupProps {
 export function OAuthButtonGroup({
   onSuccess,
   onError,
-  providers = ['google', 'apple', 'facebook', 'tiktok'],
+  providers,
   variant = 'full',
   className = '',
 }: OAuthButtonGroupProps) {
+  const [discoveredProviders, setDiscoveredProviders] = useState<OAuthProvider[] | null>(null);
+  const resolvedProviders = providers ? [...providers] : discoveredProviders;
+
+  useEffect(() => {
+    if (providers) {
+      return;
+    }
+
+    let isMounted = true;
+
+    http
+      .get('/api/v1/auth/oauth/providers')
+      .then((response) => {
+        if (isMounted) {
+          setDiscoveredProviders(readDiscoveredProviders(response.data));
+        }
+      })
+      .catch((error) => {
+        logger.error('Failed to load OAuth providers:', error);
+        if (isMounted) {
+          setDiscoveredProviders([]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [providers]);
+
+  if (!resolvedProviders || resolvedProviders.length === 0) {
+    return null;
+  }
+
   if (variant === 'icon') {
     return (
       <div className={`flex items-center justify-center gap-4 ${className}`}>
-        {providers.map((provider) => (
+        {resolvedProviders.map((provider) => (
           <OAuthButton
             key={provider}
             provider={provider}
@@ -255,7 +322,7 @@ export function OAuthButtonGroup({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {providers.map((provider) => (
+      {resolvedProviders.map((provider) => (
         <OAuthButton
           key={provider}
           provider={provider}
