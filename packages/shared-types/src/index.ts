@@ -263,6 +263,9 @@ export {
   isTheme,
   isTimeFormat,
   isVideoResolution,
+  narrowApiSettings,
+  settingsFromApi,
+  settingsToApi,
 } from './settings';
 
 // rarity
