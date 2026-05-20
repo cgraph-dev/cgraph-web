@@ -57,9 +57,12 @@ export function useOnboarding() {
         let avatarUrl = profileData.avatarUrl;
         if (avatarFile) {
           const formData = new FormData();
-          formData.append('avatar', avatarFile);
+          formData.append('file', avatarFile);
           const response = await http.post('/api/v1/me/avatar', formData);
-          avatarUrl = response.data.avatar_url;
+          const uploadedAvatarUrl = response.data?.data?.avatar_url ?? response.data?.avatar_url;
+          if (typeof uploadedAvatarUrl === 'string') {
+            avatarUrl = uploadedAvatarUrl;
+          }
         }
 
         // Update profile via API
@@ -69,7 +72,7 @@ export function useOnboarding() {
           bio: profileData.bio,
           avatar_url: avatarUrl,
         };
-        await http.put('/api/v1/me', profilePayload);
+        await http.put('/api/v1/me', { user: profilePayload });
 
         // Update local user state
         updateUser({
@@ -79,9 +82,9 @@ export function useOnboarding() {
 
         // Update notification preferences
         await http.put('/api/v1/settings/notifications', {
-          messages: profileData.notifyMessages,
-          mentions: profileData.notifyMentions,
-          friend_requests: profileData.notifyFriendRequests,
+          notify_messages: profileData.notifyMessages,
+          notify_mentions: profileData.notifyMentions,
+          notify_friend_requests: profileData.notifyFriendRequests,
         });
 
         // Mark onboarding complete

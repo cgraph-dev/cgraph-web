@@ -75,10 +75,17 @@ describe('useOnboarding', () => {
       await result.current.handleNext();
     });
 
-    expect(mocks.httpPut).toHaveBeenCalledWith('/api/v1/me', {
-      display_name: 'Tricky',
-      bio: '',
-      avatar_url: null,
+    expect(mocks.httpPut).toHaveBeenNthCalledWith(1, '/api/v1/me', {
+      user: {
+        display_name: 'Tricky',
+        bio: '',
+        avatar_url: null,
+      },
+    });
+    expect(mocks.httpPut).toHaveBeenNthCalledWith(2, '/api/v1/settings/notifications', {
+      notify_messages: true,
+      notify_mentions: true,
+      notify_friend_requests: true,
     });
     expect(mocks.httpPost).toHaveBeenCalledWith('/api/v1/me/onboarding/complete');
     expect(mocks.updateUser).toHaveBeenCalledWith({
