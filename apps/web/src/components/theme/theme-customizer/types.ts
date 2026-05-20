@@ -4,11 +4,7 @@
  * Type definitions for theme customization components.
  */
 
-import type {
-  ThemeColorPreset,
-  AvatarBorderType,
-  ChatBubbleStylePreset,
-} from '@/stores';
+import type { ThemeColorPreset, AvatarBorderType, ChatBubbleStylePreset } from '@/stores';
 
 // COMPONENT PROPS
 

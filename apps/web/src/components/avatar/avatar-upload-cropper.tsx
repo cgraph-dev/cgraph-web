@@ -149,7 +149,7 @@ export function AvatarUploadCropper({
         onClick={() => inputRef.current?.click()}
         disabled={disabled}
         className={cn(
-          'group relative rounded-full p-[3px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/70 disabled:cursor-not-allowed disabled:opacity-60',
+          'focus-visible:ring-primary-400/70 group relative rounded-full p-[3px] transition focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60',
           previewSizeClass[size]
         )}
         aria-label="Choose avatar image"
@@ -184,7 +184,7 @@ export function AvatarUploadCropper({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={disabled}
-        className="inline-flex items-center gap-2 rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] px-4 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition hover:border-primary-400/50 hover:bg-[var(--token-bg-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/60 disabled:cursor-not-allowed disabled:opacity-60"
+        className="hover:border-primary-400/50 focus-visible:ring-primary-400/60 inline-flex items-center gap-2 rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] px-4 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition hover:bg-[var(--token-bg-tertiary)] focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {previewUrl ? (
           <ArrowPathIcon className="h-4 w-4" aria-hidden="true" />

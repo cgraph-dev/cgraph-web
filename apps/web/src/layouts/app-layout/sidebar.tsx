@@ -309,7 +309,7 @@ export default function Sidebar({
             <button
               type="button"
               onClick={() => navigate(profileRoute)}
-              className="relative block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/70"
+              className="focus-visible:ring-primary-400/70 relative block focus:outline-none focus-visible:ring-2"
               aria-label="Open your public profile"
             >
               <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">

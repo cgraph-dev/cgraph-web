@@ -14,10 +14,7 @@ import {
 // THEME PANEL COMPONENT
 
 export const ThemePanel = memo(function ThemePanel() {
-  const {
-    themePreset,
-    setTheme,
-  } = useCustomizationStore();
+  const { themePreset, setTheme } = useCustomizationStore();
 
   const colors = themeColors[themePreset];
 
@@ -35,7 +32,6 @@ export const ThemePanel = memo(function ThemePanel() {
           Currently: <span style={{ color: colors.primary }}>{colors.name}</span>
         </p>
       </section>
-
     </div>
   );
 });

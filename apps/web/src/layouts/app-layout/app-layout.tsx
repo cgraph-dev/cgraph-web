@@ -42,7 +42,6 @@ export default function AppLayout() {
           {/* Background mesh gradient */}
           <div className="bg-primary-500/[0.04] absolute left-1/4 top-0 h-[500px] w-[500px] rounded-full blur-[120px]" />
           <div className="bg-purple-500/[0.04] absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full blur-[120px]" />
-
         </div>
       )}
 

@@ -54,14 +54,14 @@ export function ThemeCustomizer({ onClose, className = '' }: ThemeCustomizerProp
   }
 
   function handleBorderSelect(border: AvatarBorderType) {
-      setAvatarBorder(border);
-      HapticFeedback.medium();
-    }
+    setAvatarBorder(border);
+    HapticFeedback.medium();
+  }
 
   function handleBubbleStyleSelect(style: ChatBubbleStylePreset) {
-      setChatBubbleStyle(style);
-      HapticFeedback.light();
-    }
+    setChatBubbleStyle(style);
+    HapticFeedback.light();
+  }
 
   return (
     <div className={`w-full max-w-4xl ${className}`}>
@@ -80,7 +80,9 @@ export function ThemeCustomizer({ onClose, className = '' }: ThemeCustomizerProp
               whileTap={{ scale: 0.88 }}
               onClick={() => setShowPreview(!showPreview)}
               className={`rounded-lg p-2 transition-colors ${
-                showPreview ? 'bg-primary-600 text-white' : 'bg-[var(--token-card-bg)] text-gray-400'
+                showPreview
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-[var(--token-card-bg)] text-gray-400'
               }`}
             >
               <EyeIcon className="h-5 w-5" />
@@ -119,7 +121,7 @@ export function ThemeCustomizer({ onClose, className = '' }: ThemeCustomizerProp
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors ${
                     activeTab === tab.id
-                      ? 'border border-primary-500/30 bg-primary-600/20 text-primary-400'
+                      ? 'border-primary-500/30 bg-primary-600/20 border text-primary-400'
                       : 'text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white'
                   }`}
                 >
