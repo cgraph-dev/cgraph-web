@@ -27,17 +27,16 @@ Expired-link recovery now lets the user enter an email, posts it to
 revealing whether the address exists. Remaining auth risk is full browser/mail-provider verification
 across the broader auth route set.
 
-2026-05-16 update: onboarding skip and save-failure recovery are no longer listed as missing route
-semantics. The routed onboarding Skip action now posts `/api/v1/onboarding/skip` before navigating,
-and both skip/save failures render a route-owned recovery error instead of only logging. Remaining
-onboarding risk is browser verification.
+2026-05-18 update: onboarding skip, save-failure recovery, and full completion are no longer listed
+as missing route semantics. The routed onboarding Skip action posts `/api/v1/onboarding/skip` before
+navigating, both skip/save failures render a route-owned recovery error instead of only logging, and
+`apps/web/e2e/user-flow.spec.ts` browser-verifies both skip and full completion into `/messages`.
 
 2026-05-16 update: post-auth gate order is now route-owned. `post-auth-redirect.ts` enforces
 verify-email before onboarding before the app route, `ProtectedRoute` and `PublicRoute` both use
 that owner, `/verify-email` can render a no-token pending/resend state, and backend auth JSON now
 returns `onboarding_completed` so register/login responses can be gated immediately. Remaining auth
-risk is broad browser verification of login, registration, recovery, QR, phone, and onboarding
-paths.
+risk is broad browser verification of login, registration, recovery, QR, and full phone OTP paths.
 
 2026-05-16 update: routed DM read-receipt UI is no longer listed as missing. Backend message JSON
 now preloads `read_receipts`, exposes them as `metadata.readBy`, and the routed enhanced DM bubble
@@ -87,8 +86,9 @@ grace-period lifecycle.
 2026-05-16 update: phone auth no longer routes web users into the native-only device-attestation
 placeholder. `registration-store.ts` now keeps OTP and PIN-lock continuations on the current web
 step with a native-device-required error when the backend returns `next_step = device_attestation`,
-and focused store tests cover both paths. Remaining phone-auth risk is browser verification of the
-login/register entry paths, OTP retry, call fallback, registration lock, profile, and permissions.
+and focused store tests cover both paths. Login/register entry links are now browser-verified in
+`apps/web/e2e/user-flow.spec.ts`. Remaining phone-auth risk is OTP retry, call fallback,
+registration lock, profile, permissions, and existing-user/new-user completion proof.
 
 2026-05-15 update: the web privacy model decision is closed as the fuller selective model.
 `packages/shared-types/src/privacy.ts`, backend `selective_privacy`, API-client schemas, web
@@ -105,6 +105,11 @@ multi-tab/device validation plus badge/nameplate proof beyond the routed DM owne
 2026-05-15 update: `UserProfileCard` no longer renders the default placeholder user when callers
 only pass `userId`. The card fetches `/api/v1/users/:id`, maps the response through canonical
 identity fields, and focused component tests cover both backend hydration and provided-user paths.
+
+2026-05-21 update: the remaining current-user avatar consumer gap is materially closed. Onboarding,
+profile edit, and settings now share one crop-and-preview avatar upload adapter, and the sidebar top
+avatar reads the current auth avatar URL plus avatar border while opening the mini profile card on
+hover and routing clicks to the user's public profile.
 
 2026-05-15 update: settings, theme, and customization now have one explicit bootstrap owner.
 `preferenceOrchestrator` hydrates settings, customization, and theme from auth startup and the
@@ -203,7 +208,9 @@ on the routed DM surface.
 7. **Lock in behavior with focused web UAT and regression tests** — Partial. A focused owner UAT
    browser smoke now covers auth, DMs, group text send, Social discover, settings, Nodes wallet,
    manual direct call route mounting, routed DM call-entry launch, call-history callback, and group
-   voice-room mounting in `apps/web/e2e/web-owner-uat.spec.ts`. The broader historical suite still
+   voice-room mounting in `apps/web/e2e/web-owner-uat.spec.ts`. Focused Nodes page tests now cover
+   wallet load failure, transaction-history failure, shop bundle-load failure, true empty shop
+   state, and canonical insufficient-balance unlock routing. The broader historical suite still
    needs cleanup, and the backend helper dependency issues (`CGraph.Uploads.S3ClientBehaviour`,
    missing `:hammer` app) remain outside this web UAT proof.
 
@@ -219,6 +226,10 @@ on the routed DM surface.
   behavior exists in the settings/theme-engine path, but the specific planned single source of truth
   in the theme store and shared preset gating was not completed; motion helpers still read
   `matchMedia` directly.
+
+- **Old Effects customization route** — Closed by removal. The Effects route/tab and particle engine
+  were intentionally deleted from production web on 2026-05-21 instead of being promoted as a
+  cross-platform customization feature.
 
 - **#10 Implement draft autosave** — Partial. Draft persistence exists, but
   `apps/web/src/modules/chat/components/conversation-list/conversation-item.tsx` still renders only

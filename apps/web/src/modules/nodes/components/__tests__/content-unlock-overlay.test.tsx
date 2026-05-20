@@ -131,7 +131,7 @@ describe('ContentUnlockOverlay', () => {
 
     expect(onUnlocked).toHaveBeenCalled();
   });
-  it('navigates to /nodes/shop on insufficient_balance error', () => {
+  it('navigates to the canonical wallet shop on insufficient_balance error', () => {
     const mutate = vi.fn();
     mockUseUnlockContent.mockReturnValue({ mutate, isPending: false });
 
@@ -148,7 +148,7 @@ describe('ContentUnlockOverlay', () => {
     });
 
     expect(toast.error).toHaveBeenCalledWith('Not enough Nodes');
-    expect(mockNavigate).toHaveBeenCalledWith('/nodes/shop');
+    expect(mockNavigate).toHaveBeenCalledWith('/me/wallet/shop');
   });
 
   it('shows generic error toast for non-balance errors', () => {

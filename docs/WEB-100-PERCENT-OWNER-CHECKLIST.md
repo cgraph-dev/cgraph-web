@@ -1,6 +1,6 @@
 # Web 100 Percent Owner Checklist
 
-Status date: 2026-05-20
+Status date: 2026-05-21
 
 Current checklist state: 50 / 50 owner-level implementation rows are closed for this execution
 contract, but this is not the same as full Level 2 release-readiness or a complete web-workstream
@@ -18,6 +18,14 @@ GIF/sticker/voice sends, and the seven static profile themes shared across full 
 profile-card, mini/hover-card, and customization preview surfaces are source-backed and
 browser-verified or narrowly test-verified where this checklist requires it. Broader
 product-maturity risks remain tracked honestly in the strict pass and scorecard documents.
+
+2026-05-21 production-web proof: `cgraph-web` commit `867b562c7ffaa09afdb5db4525cc1a8edc4ac0de`
+removes the web Effects route/tab and old particle engine, adds one shared avatar upload/cropper
+used by onboarding, settings, and profile edit, keeps the sidebar avatar/border in sync with the
+auth identity while opening the mini profile card on hover, and preserves authenticated state when
+auth re-check fails for non-401/403 reasons. `cgraph-packages` commit
+`4f6927f18e6eb4ff8ba644df0d58188d1fb6c974` owns the matching shared `httpClient` logout behavior,
+and web/mobile package mirrors now point at that canonical package commit.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -245,7 +253,11 @@ Required implementation-time questions:
 ### C. Converge Identity, Settings, And Customization Ownership
 
 - [x] One canonical web identity model exists for avatar, border, title, badges, and display name.
-      Verified by `apps/web/src/lib/identity/__tests__/canonicalIdentity.test.ts` on 2026-05-15.
+      Verified by `apps/web/src/lib/identity/__tests__/canonicalIdentity.test.ts` on 2026-05-15. The
+      2026-05-21 production web slice also routes onboarding, settings avatar changes, and
+      profile-edit avatar changes through one crop/upload adapter in
+      `apps/web/src/components/avatar/avatar-upload-cropper.tsx` plus
+      `apps/web/src/lib/avatar-upload.ts`.
 - [x] Normalizers and socket sync preserve the same identity fields everywhere. Verified by
       `apps/web/src/lib/api-utils/__tests__/normalizers.test.ts`, friend-store identity patch tests,
       and web typecheck on 2026-05-15. Friend cosmetic live updates now route through
@@ -253,6 +265,8 @@ Required implementation-time questions:
       chat store through one selective patch owner; own-profile cosmetic socket updates route
       through `apps/web/src/lib/identity/ownIdentitySync.ts`. Routed browser proof for a live friend
       avatar-border/title update is covered by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
+      The top sidebar avatar now consumes the same auth identity avatar URL and avatar-border owner,
+      opens a mini `UserProfileCard` on hover, and clicks through to the public profile route.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
@@ -306,7 +320,10 @@ Required implementation-time questions:
       web. The 2026-05-15 slice moves the runtime-neutral user settings contract and defaults into
       `packages/shared-types/src/settings.ts`, keeps web re-exporting the contract from the old
       store path for compatibility, exposes the package subpath, and validates shared/web type
-      checks plus focused settings tests.
+      checks plus focused settings tests. The 2026-05-20 follow-up moves the settings API mappers
+      and realtime payload narrower into canonical `@cgraph/shared-types` commit
+      `944e3fe8ddb9faa1f8bc496a786c9d9d10b12dbf`, leaving web's settings mapper file as a thin
+      compatibility adapter.
 - [x] Package boundaries remain free of web-only runtime imports and browser globals. Verified with
       `pnpm run check:packages` on 2026-05-14.
 

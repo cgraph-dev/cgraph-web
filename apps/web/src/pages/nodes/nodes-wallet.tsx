@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNodeWallet, useNodeTransactions } from '@/modules/nodes/hooks/useNodes';
 import { TransactionRow } from '@/modules/nodes/components/transaction-row';
+import { NodesErrorState } from '@/modules/nodes/components/nodes-error-state';
 import { cn } from '@/lib/utils';
 import type { TransactionType } from '@/modules/nodes/types';
 
@@ -23,13 +24,39 @@ const filterTabs: Array<{ label: string; value: TransactionType | undefined }> =
 export function NodesWalletPage(): React.ReactElement {
   const [activeFilter, setActiveFilter] = useState<TransactionType | undefined>(undefined);
 
-  const { data: wallet, isLoading: walletLoading } = useNodeWallet();
-  const { data: transactions, isLoading: txLoading } = useNodeTransactions(activeFilter);
+  const {
+    data: wallet,
+    error: walletError,
+    isError: isWalletError,
+    isLoading: walletLoading,
+    refetch: refetchWallet,
+  } = useNodeWallet();
+  const {
+    data: transactions,
+    error: transactionsError,
+    isError: isTransactionsError,
+    isLoading: txLoading,
+    refetch: refetchTransactions,
+  } = useNodeTransactions(activeFilter);
 
   if (walletLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isWalletError) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-8">
+        <NodesErrorState
+          title="Wallet unavailable"
+          error={walletError}
+          onRetry={() => {
+            void refetchWallet();
+          }}
+        />
       </div>
     );
   }
@@ -99,7 +126,15 @@ export function NodesWalletPage(): React.ReactElement {
 
         {/* Transaction List */}
         <div className="mt-4 space-y-2">
-          {txLoading ? (
+          {isTransactionsError ? (
+            <NodesErrorState
+              title="Transaction history unavailable"
+              error={transactionsError}
+              onRetry={() => {
+                void refetchTransactions();
+              }}
+            />
+          ) : txLoading ? (
             <div className="flex h-32 items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
             </div>

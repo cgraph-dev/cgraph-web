@@ -57,7 +57,7 @@ export function ContentUnlockOverlay({ postId, price, onUnlocked }: ContentUnloc
 
         if (msg === 'insufficient_balance') {
           toast.error('Not enough Nodes');
-          navigate('/nodes/shop');
+          navigate('/me/wallet/shop');
         } else {
           toast.error('Unlock failed. Please try again.');
         }
