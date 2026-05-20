@@ -344,13 +344,15 @@ export function createRefreshSessionAction(set: Set, get: Get) {
         });
       }
     } catch (error) {
-      authLogger.warn('Session refresh failed, clearing auth state', error);
-      set({
-        user: null,
-        token: null,
-        refreshToken: null,
-        isAuthenticated: false,
-      });
+      authLogger.warn('Session refresh failed', error);
+      if (get().refreshToken === refreshToken) {
+        set({
+          user: null,
+          token: null,
+          refreshToken: null,
+          isAuthenticated: false,
+        });
+      }
     }
   };
 }
@@ -375,7 +377,7 @@ export function createUpdateUserAction(_set: Set, get: Get) {
  */
 export function createCheckAuthAction(set: Set, get: Get) {
   return async () => {
-    const { token } = get();
+    const { token, refreshToken } = get();
     if (!token) {
       set({ isLoading: false, isAuthenticated: false });
       return;
@@ -394,13 +396,18 @@ export function createCheckAuthAction(set: Set, get: Get) {
     } catch (error) {
       if (isAuthFailure(error)) {
         authLogger.debug('checkAuth failed with invalid auth - clearing session:', error);
-        set({
-          user: null,
-          token: null,
-          refreshToken: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
+        const latest = get();
+        if (latest.token === token && latest.refreshToken === refreshToken) {
+          set({
+            user: null,
+            token: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        } else {
+          set({ isLoading: false });
+        }
         return;
       }
 

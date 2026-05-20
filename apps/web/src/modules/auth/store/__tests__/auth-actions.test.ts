@@ -502,6 +502,31 @@ describe('createRefreshSessionAction', () => {
       })
     );
   });
+
+  it('does not clear a newer session when an old refresh fails', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.refreshToken = 'old-refresh';
+    state.token = 'old-access';
+    state.isAuthenticated = true;
+    const refresh = createRefreshSessionAction(set as never, get as never);
+
+    mockedApi.post.mockImplementationOnce(async () => {
+      state.refreshToken = 'new-refresh';
+      state.token = 'new-access';
+      throw new Error('Old refresh failed');
+    });
+
+    await refresh();
+
+    expect(set).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+      })
+    );
+  });
 });
 
 describe('createUpdateUserAction', () => {
@@ -585,6 +610,35 @@ describe('createCheckAuthAction', () => {
         isLoading: false,
       })
     );
+  });
+
+  it('does not clear a newer login when an old profile check fails', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.token = 'old-token';
+    state.refreshToken = 'old-refresh';
+    state.isAuthenticated = true;
+    const checkAuth = createCheckAuthAction(set as never, get as never);
+
+    const err = new AxiosError('unauthorized');
+    err.response = { data: { error: 'Unauthorized' }, status: 401 } as AxiosResponse;
+    mockedApi.get.mockImplementationOnce(async () => {
+      state.token = 'new-token';
+      state.refreshToken = 'new-refresh';
+      state.isAuthenticated = true;
+      throw err;
+    });
+
+    await checkAuth();
+
+    expect(set).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+      })
+    );
+    expect(set).toHaveBeenCalledWith({ isLoading: false });
   });
 
   it('preserves the session when profile check fails without an auth rejection', async () => {

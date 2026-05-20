@@ -264,7 +264,10 @@ export function createHttpClient(options: HttpClientOptions): AxiosInstance {
         } catch (refreshErr) {
           isRefreshing = false;
           rejectQueue(refreshErr instanceof Error ? refreshErr : new Error('Refresh failed'));
-          if (onLogout) await onLogout();
+          const latestRefreshToken = await getRefreshToken();
+          if (onLogout && latestRefreshToken === refreshToken) {
+            await onLogout();
+          }
           return Promise.reject(refreshErr);
         }
       }
