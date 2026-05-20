@@ -7,10 +7,9 @@ import {
   ArchiveBoxIcon,
   ShoppingBagIcon,
   ChatBubbleLeftRightIcon,
-  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
-export type CategoryId = 'identity' | 'themes' | 'bubbles' | 'effects' | 'inventory' | 'shop';
+export type CategoryId = 'identity' | 'themes' | 'bubbles' | 'inventory' | 'shop';
 
 export interface Category {
   id: CategoryId;
@@ -45,14 +44,6 @@ export const categories: Category[] = [
     description: 'Bubble style, colour, radius, shadow, glass',
     gradient: 'from-[var(--token-interactive-primary)]/10 to-[var(--token-interactive-primary)]/5',
     features: ['8 Styles', '12 Colours', 'Glass Effect'],
-  },
-  {
-    id: 'effects',
-    label: 'Effects',
-    icon: SparklesIcon,
-    description: 'Visual effect preset, animation speed, particles',
-    gradient: 'from-[var(--token-interactive-primary)]/10 to-[var(--token-interactive-primary)]/5',
-    features: ['6 Presets', 'Animation Speed', 'Particles'],
   },
   {
     id: 'inventory',

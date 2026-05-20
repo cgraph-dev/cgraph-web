@@ -3,6 +3,7 @@
  */
 import { http } from '@/lib/api-client';
 import { ensureArray, isRecord, asString, asBool, asOptionalString, asEnum } from '@/lib/api-utils';
+import { avatarUrlFromUploadResponse } from '@/lib/avatar-upload';
 import { createLogger } from '@/lib/logger';
 import type { StoreApi } from 'zustand';
 import type { ProfileField, ProfileState } from './profileStore.types';
@@ -114,7 +115,8 @@ export function createUploadAvatar(set: Set) {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    const avatarUrl = response.data.avatar_url || response.data.url;
+    const avatarUrl = avatarUrlFromUploadResponse(response.data);
+    if (!avatarUrl) throw new Error('Avatar upload response did not include avatar URL');
 
     set((state) => ({
       myProfile: state.myProfile ? { ...state.myProfile, avatarUrl } : null,

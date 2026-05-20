@@ -8,6 +8,24 @@ import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
 
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 
+function getResponseStatus(error: unknown): number | null {
+  if (error instanceof AxiosError && typeof error.response?.status === 'number') {
+    return error.response.status;
+  }
+
+  if (error instanceof Error) {
+    const statusMatch = error.message.match(/\b(401|403)\b/);
+    return statusMatch ? Number(statusMatch[1]) : null;
+  }
+
+  return null;
+}
+
+function isAuthFailure(error: unknown): boolean {
+  const status = getResponseStatus(error);
+  return status === 401 || status === 403;
+}
+
 type Set = (
   partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>),
   replace?: false,
@@ -374,15 +392,20 @@ export function createCheckAuthAction(set: Set, get: Get) {
         isLoading: false,
       });
     } catch (error) {
-      // Clear invalid/stale auth on any error
-      authLogger.debug('checkAuth failed - clearing auth:', error);
-      set({
-        user: null,
-        token: null,
-        refreshToken: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      if (isAuthFailure(error)) {
+        authLogger.debug('checkAuth failed with invalid auth - clearing session:', error);
+        set({
+          user: null,
+          token: null,
+          refreshToken: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+        return;
+      }
+
+      authLogger.warn('checkAuth failed without auth rejection - preserving session:', error);
+      set({ isLoading: false, isAuthenticated: true });
     }
   };
 }

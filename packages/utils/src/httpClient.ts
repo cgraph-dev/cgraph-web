@@ -227,7 +227,6 @@ export function createHttpClient(options: HttpClientOptions): AxiosInstance {
         cfg._retry = true;
         const refreshToken = await getRefreshToken();
         if (!refreshToken) {
-          if (onLogout) await onLogout();
           return Promise.reject(error);
         }
 

@@ -8,7 +8,6 @@ import type {
   ThemeColorPreset,
   AvatarBorderType,
   ChatBubbleStylePreset,
-  EffectPreset,
 } from '@/stores';
 
 // COMPONENT PROPS
@@ -33,7 +32,7 @@ export interface TabDefinition {
 /**
  * Available tab IDs
  */
-export type TabId = 'colors' | 'avatar' | 'bubbles' | 'effects';
+export type TabId = 'colors' | 'avatar' | 'bubbles';
 
 // OPTION TYPES
 
@@ -52,16 +51,6 @@ export interface AvatarBorderOption {
 export interface BubbleStyleOption {
   value: ChatBubbleStylePreset;
   label: string;
-  tier: 'free' | 'premium' | 'enterprise';
-}
-
-/**
- * Effect option with description and tier
- */
-export interface EffectOption {
-  value: EffectPreset;
-  label: string;
-  description: string;
   tier: 'free' | 'premium' | 'enterprise';
 }
 
@@ -117,16 +106,4 @@ export interface BubblesTabProps {
   onSelectStyle: (style: ChatBubbleStylePreset) => void;
   onSelectColor: (color: ThemeColorPreset) => void;
   onUpdateSettings: (settings: Record<string, unknown>) => void;
-}
-
-/**
- * Props for EffectsTab component
- */
-export interface EffectsTabProps {
-  selectedEffect: EffectPreset;
-  animationSpeed: 'slow' | 'normal' | 'fast';
-  particlesEnabled: boolean;
-  onSelectEffect: (effect: EffectPreset) => void;
-  onSetSpeed: (speed: 'slow' | 'normal' | 'fast') => void;
-  onToggleParticles: () => void;
 }

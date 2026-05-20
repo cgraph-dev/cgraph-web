@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import type { CroppedAvatarPayload } from '@/components/avatar/avatar-upload-cropper';
+import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
 import { DEFAULT_PROFILE_DATA, ONBOARDING_STEPS } from './constants';
 import type { ProfileData, ProfileUpdatePayload } from './types';
 
@@ -30,18 +32,9 @@ export function useOnboarding() {
     avatarUrl: user?.avatarUrl || null,
   });
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setAvatarPreview(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+  function handleAvatarCropped(payload: CroppedAvatarPayload): void {
+    setAvatarFile(payload.file);
+    setAvatarPreview(payload.previewUrl);
   }
 
   async function handleNext(): Promise<void> {
@@ -56,10 +49,7 @@ export function useOnboarding() {
         // Upload avatar if changed
         let avatarUrl = profileData.avatarUrl;
         if (avatarFile) {
-          const formData = new FormData();
-          formData.append('file', avatarFile);
-          const response = await http.post('/api/v1/me/avatar', formData);
-          const uploadedAvatarUrl = response.data?.data?.avatar_url ?? response.data?.avatar_url;
+          const uploadedAvatarUrl = await uploadCurrentUserAvatar(avatarFile);
           if (typeof uploadedAvatarUrl === 'string') {
             avatarUrl = uploadedAvatarUrl;
           }
@@ -140,7 +130,7 @@ export function useOnboarding() {
     error,
     avatarPreview,
     profileData,
-    handleAvatarChange,
+    handleAvatarCropped,
     handleNext,
     handleBack,
     handleSkip,

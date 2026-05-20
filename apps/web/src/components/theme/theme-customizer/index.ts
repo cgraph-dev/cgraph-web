@@ -12,7 +12,6 @@ export { ThemeCustomizer, default } from './theme-customizer';
 export { ColorTab } from './color-tab';
 export { AvatarTab } from './avatar-tab';
 export { BubblesTab } from './bubbles-tab';
-export { EffectsTab } from './effects-tab';
 export { LivePreview } from './live-preview';
 
 // Constants
@@ -20,7 +19,6 @@ export {
   TABS,
   AVATAR_BORDER_OPTIONS,
   BUBBLE_STYLE_OPTIONS,
-  EFFECT_OPTIONS,
   QUICK_PRESETS,
 } from './constants';
 
@@ -31,11 +29,9 @@ export type {
   TabDefinition,
   AvatarBorderOption,
   BubbleStyleOption,
-  EffectOption,
   QuickPresetOption,
   ColorTabProps,
   AvatarTabProps,
   BubblesTabProps,
-  EffectsTabProps,
   BubbleSettings,
 } from './types';

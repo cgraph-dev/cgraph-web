@@ -1,7 +1,7 @@
 /**
  * Main customization page layout.
  */
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { SparklesIcon } from '@heroicons/react/24/outline';
@@ -13,7 +13,6 @@ import { Sidebar, LoadingSkeleton } from '@/pages/customize/customize-sidebar';
 const IdentityCustomization = lazy(() => import('./identity-customization'));
 const ThemeCustomization = lazy(() => import('./theme-customization'));
 const BubblesCustomization = lazy(() => import('./bubbles-customization'));
-const EffectsCustomization = lazy(() => import('./effects-customization'));
 const CosmeticsInventoryPage = lazy(() => import('@/modules/cosmetics/pages/inventory-page'));
 const CosmeticsShopPage = lazy(() => import('@/modules/cosmetics/pages/shop-page'));
 
@@ -45,6 +44,12 @@ export default function Customize() {
   };
 
   const activeCategory: CategoryId = isValidCategory(urlCategory) ? urlCategory : 'identity';
+
+  useEffect(() => {
+    if (urlCategory === 'effects') {
+      navigate('../themes', { relative: 'path', replace: true });
+    }
+  }, [navigate, urlCategory]);
 
   function handleCategoryChange(id: CategoryId) {
     navigate(`../${id}`, { relative: 'path' });
@@ -93,7 +98,6 @@ export default function Customize() {
                 {activeCategory === 'identity' && <IdentityCustomization />}
                 {activeCategory === 'themes' && <ThemeCustomization />}
                 {activeCategory === 'bubbles' && <BubblesCustomization />}
-                {activeCategory === 'effects' && <EffectsCustomization />}
                 {activeCategory === 'inventory' && <CosmeticsInventoryPage />}
                 {activeCategory === 'shop' && <CosmeticsShopPage />}
               </Suspense>

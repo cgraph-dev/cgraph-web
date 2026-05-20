@@ -8,13 +8,16 @@
  *
  */
 
-import React, { useState, useRef } from 'react';
-import Cropper from 'react-easy-crop';
-import type { Area } from 'react-easy-crop';
+import { useRef, useState } from 'react';
 import { http } from '@/lib/api-client';
 import { toast } from '@/components/feedback/toast';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
+import {
+  AvatarUploadCropper,
+  type CroppedAvatarPayload,
+} from '@/components/avatar/avatar-upload-cropper';
+import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
 
 const logger = createLogger('ProfileEditForm');
 
@@ -34,38 +37,6 @@ export interface ProfileEditFormProps {
   onCancel?: () => void;
 }
 
-// Helpers — canvas crop
-
-function createImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', (err) => reject(err));
-    image.crossOrigin = 'anonymous';
-    image.src = url;
-  });
-}
-
-async function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not get canvas context');
-
-  canvas.width = crop.width;
-  canvas.height = crop.height;
-
-  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
-
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Canvas toBlob failed'))),
-      'image/jpeg',
-      0.9
-    );
-  });
-}
-
 // Component
 
 /** Description. */
@@ -77,81 +48,18 @@ export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProp
   const [signature, setSignature] = useState(user.signature ?? '');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatar_url ?? null);
 
-  // Crop state
-  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-
   // Upload / save state
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track pending avatar blob for upload on save
   const pendingAvatarBlobRef = useRef<Blob | null>(null);
 
   // Handlers
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5 MB');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setCropImageSrc(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-
-    // Reset so re-selecting same file works
-    e.target.value = '';
-  }
-
-  function onCropComplete(_croppedArea: Area, croppedPixels: Area) {
-    setCroppedAreaPixels(croppedPixels);
-  }
-
-  async function handleCropConfirm() {
-    if (!cropImageSrc || !croppedAreaPixels) return;
-
-    try {
-      const blob = await getCroppedBlob(cropImageSrc, croppedAreaPixels);
-      pendingAvatarBlobRef.current = blob;
-      setAvatarPreview(URL.createObjectURL(blob));
-      setCropImageSrc(null);
-    } catch (err) {
-      logger.error('Crop failed:', err);
-      toast.error('Failed to crop image');
-    }
-  }
-
-  function handleCropCancel() {
-    setCropImageSrc(null);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-  }
-
-  async function uploadAvatarBlob(blob: Blob): Promise<string | null> {
-    const formData = new FormData();
-    formData.append('file', blob, 'avatar.jpg');
-
-    const response = await http.post('/api/v1/me/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    // Backend renders :show and returns { data: { user: { avatar_url } } }
-    const candidate = response.data?.data?.avatar_url ?? response.data?.user?.avatar_url ?? null;
-    return typeof candidate === 'string' ? candidate : null;
+  function handleAvatarCropped(payload: CroppedAvatarPayload) {
+    pendingAvatarBlobRef.current = payload.blob;
+    setAvatarPreview(payload.previewUrl);
   }
 
   async function handleSave() {
@@ -169,7 +77,7 @@ export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProp
       let newAvatarUrl: string | null = null;
       if (pendingAvatarBlobRef.current) {
         setIsUploadingAvatar(true);
-        newAvatarUrl = await uploadAvatarBlob(pendingAvatarBlobRef.current);
+        newAvatarUrl = await uploadCurrentUserAvatar(pendingAvatarBlobRef.current);
         pendingAvatarBlobRef.current = null;
         setIsUploadingAvatar(false);
       }
@@ -181,7 +89,7 @@ export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProp
         signature: signature.trim(),
       };
 
-      await http.put('/api/v1/me', payload);
+      await http.put('/api/v1/me', { user: payload });
 
       // Live-sync the auth store so every place that renders the user
       // (sidebar nav, DM headers, friend list, forum author rows, etc.)
@@ -192,7 +100,10 @@ export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProp
       });
 
       toast.success('Profile updated!');
-      onSaved?.(payload);
+      onSaved?.({
+        ...payload,
+        ...(newAvatarUrl ? { avatar_url: newAvatarUrl } : {}),
+      });
     } catch (err) {
       logger.error('Failed to save profile:', err);
       toast.error('Failed to save profile. Please try again.');
@@ -209,46 +120,13 @@ export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProp
   return (
     <div className="mx-auto max-w-lg space-y-6 p-4">
       {/* ---- Avatar ---- */}
-      <div className="flex flex-col items-center gap-3">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="group relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-white/10 transition-all hover:ring-white/30"
-          disabled={busy}
-          aria-label="Change avatar"
-        >
-          {avatarPreview ? (
-            <img
-              src={avatarPreview}
-              alt="Avatar preview"
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[var(--token-card-bg)] text-2xl text-gray-400">
-              {displayName?.[0]?.toUpperCase() ?? '?'}
-            </div>
-          )}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-            <span className="text-xs font-medium text-white">Change</span>
-          </div>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="text-sm font-medium text-blue-400 hover:text-blue-300"
-          disabled={busy}
-        >
-          Change Avatar
-        </button>
-      </div>
+      <AvatarUploadCropper
+        avatarUrl={avatarPreview}
+        displayName={displayName}
+        disabled={busy}
+        label="Profile avatar"
+        onAvatarCropped={handleAvatarCropped}
+      />
 
       {/* ---- Display Name ---- */}
       <div className="space-y-1">
@@ -325,59 +203,6 @@ export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProp
           {busy ? 'Saving...' : 'Save'}
         </button>
       </div>
-
-      {/* ---- Crop Modal ---- */}
-      {cropImageSrc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="relative flex w-full max-w-md flex-col overflow-hidden rounded-xl bg-[var(--token-card-bg)] shadow-2xl">
-            <div className="relative h-80 w-full">
-              <Cropper
-                image={cropImageSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
-                cropShape="round"
-                showGrid={false}
-              />
-            </div>
-
-            {/* Zoom slider */}
-            <div className="flex items-center gap-3 px-4 py-3">
-              <span className="text-xs text-gray-400">Zoom</span>
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.05}
-                value={zoom}
-                onChange={(e) => setZoom(Number(e.target.value))}
-                className="flex-1"
-              />
-            </div>
-
-            {/* Modal actions */}
-            <div className="flex justify-end gap-2 border-t border-[var(--token-border-muted)] px-4 py-3">
-              <button
-                type="button"
-                onClick={handleCropCancel}
-                className="rounded-lg px-4 py-1.5 text-sm text-gray-400 hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCropConfirm}
-                className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-500"
-              >
-                Apply Crop
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

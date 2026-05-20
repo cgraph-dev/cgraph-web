@@ -570,7 +570,9 @@ describe('createCheckAuthAction', () => {
     state.isAuthenticated = true;
     const checkAuth = createCheckAuthAction(set as never, get as never);
 
-    mockedApi.get.mockRejectedValueOnce(new Error('401'));
+    const err = new AxiosError('unauthorized');
+    err.response = { data: { error: 'Unauthorized' }, status: 401 } as AxiosResponse;
+    mockedApi.get.mockRejectedValueOnce(err);
 
     await checkAuth();
 
@@ -583,6 +585,28 @@ describe('createCheckAuthAction', () => {
         isLoading: false,
       })
     );
+  });
+
+  it('preserves the session when profile check fails without an auth rejection', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.token = 'valid-token';
+    state.isAuthenticated = true;
+    state.user = { id: 'u1', username: 'stable' };
+    const checkAuth = createCheckAuthAction(set as never, get as never);
+
+    mockedApi.get.mockRejectedValueOnce(new Error('Network Error'));
+
+    await checkAuth();
+
+    expect(set).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+      })
+    );
+    expect(set).toHaveBeenCalledWith({ isLoading: false, isAuthenticated: true });
   });
 
   it('sets not authenticated when no token exists', async () => {

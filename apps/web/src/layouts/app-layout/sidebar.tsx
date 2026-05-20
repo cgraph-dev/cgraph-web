@@ -1,8 +1,8 @@
 /**
  * Sidebar Component - Responsive navigation sidebar with badges
  */
-import { type ReactNode, useState } from 'react';
-import { NavLink, type Location } from 'react-router-dom';
+import { type ReactNode, useMemo, useState } from 'react';
+import { NavLink, type Location, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogoIcon } from '@/components/logo/logo-icon';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
@@ -11,6 +11,8 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { ArrowRightOnRectangleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { PresenceStatusSelector } from '@/shared/components/presence-status-selector';
 import type { User } from '@/modules/auth/store';
+import { UserProfileCard } from '@/modules/social/components/user-profile-card';
+import type { ProfileCardUser } from '@/modules/social/components/profile-card';
 import type { NavItem } from './constants';
 import { loop } from '@/lib/animation-presets';
 import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
@@ -18,6 +20,31 @@ type FeatureGateKey = string;
 type IconComponent = (props: { className?: string }) => ReactNode;
 
 const tapSpring = { type: 'spring' as const, stiffness: 400, damping: 24 };
+
+function sidebarProfileCardUser(user: User): ProfileCardUser {
+  return {
+    id: user.id,
+    username: user.username ?? '',
+    displayName: user.displayName || user.username || 'User',
+    avatarUrl: user.avatarUrl ?? '',
+    avatarBorderId: getAvatarBorderId(user) ?? undefined,
+    bannerUrl: user.bannerUrl ?? undefined,
+    bio: user.bio,
+    level: user.level ?? 1,
+    xp: user.xp ?? 0,
+    xpToNextLevel: 100,
+    pulse: user.pulse ?? 0,
+    streak: user.streak ?? 0,
+    equippedBadges: [],
+    isOnline: user.status === 'online',
+    profile_theme: user.profileTheme ?? undefined,
+    equipped_nameplate: user.equippedNameplateId ?? undefined,
+    display_name_font: user.displayNameFont ?? undefined,
+    display_name_effect: user.displayNameEffect ?? undefined,
+    display_name_color: user.displayNameColor ?? undefined,
+    display_name_secondary_color: user.displayNameSecondaryColor ?? undefined,
+  };
+}
 
 /**
  * Lock badge overlay for level-gated nav items.
@@ -224,9 +251,12 @@ export default function Sidebar({
   unreadCount,
   navItems,
 }: SidebarProps) {
+  const navigate = useNavigate();
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const { theme } = useThemeEnhanced();
   const isLight = theme.category === 'light';
+  const profileRoute = user?.id ? `/user/${user.id}` : '/me/profile';
+  const profileCardUser = useMemo(() => (user ? sidebarProfileCardUser(user) : null), [user]);
 
   // Glass effects: aurora/bubble = blur+saturate, dark = blur only, light = none (solid bg)
   function getGlassClasses(): string {
@@ -268,45 +298,98 @@ export default function Sidebar({
 
       {/* ── User Avatar (top) ── */}
       <div className="relative z-10 mb-2" role="group" aria-label="User profile">
-        <NavLink to="/me" className="relative block">
-          <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
-            <div
-              className="h-11 w-11 cursor-pointer overflow-hidden rounded-full p-[1.5px]"
-              role="img"
-              aria-label={`Your profile picture: ${user?.displayName || user?.username || 'User'}`}
-              style={{
-                background:
-                  'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 60%, transparent), rgba(59,130,246,0.5), color-mix(in srgb, var(--color-brand-purple) 50%, transparent))',
-              }}
+        {user?.id && profileCardUser ? (
+          <UserProfileCard
+            userId={user.id}
+            user={profileCardUser}
+            trigger="hover"
+            variant="mini"
+            className="relative block"
+          >
+            <button
+              type="button"
+              onClick={() => navigate(profileRoute)}
+              className="relative block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/70"
+              aria-label="Open your public profile"
             >
-              {user?.avatarUrl ? (
-                <ThemedAvatar
-                  src={user.avatarUrl}
-                  alt={user.displayName || user.username || 'User avatar'}
-                  size="medium"
-                  className="h-full w-full rounded-full"
-                  avatarBorderId={getAvatarBorderId(user)}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)] text-base font-semibold text-[var(--token-text-primary)]">
-                  {(user?.displayName || user?.username || 'U').charAt(0).toUpperCase()}
+              <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
+                <div
+                  className="h-11 w-11 cursor-pointer overflow-hidden rounded-full p-[1.5px]"
+                  role="img"
+                  aria-label={`Your profile picture: ${user.displayName || user.username || 'User'}`}
+                  style={{
+                    background:
+                      'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 60%, transparent), rgba(59,130,246,0.5), color-mix(in srgb, var(--color-brand-purple) 50%, transparent))',
+                  }}
+                >
+                  {user.avatarUrl ? (
+                    <ThemedAvatar
+                      src={user.avatarUrl}
+                      alt={user.displayName || user.username || 'User avatar'}
+                      size="medium"
+                      className="h-full w-full rounded-full"
+                      avatarBorderId={getAvatarBorderId(user)}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)] text-base font-semibold text-[var(--token-text-primary)]">
+                      {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Breathing ring */}
-            <motion.div
-              className="pointer-events-none absolute -inset-0.5 rounded-full"
-              animate={{
-                boxShadow: [
-                  '0 0 0 0 color-mix(in srgb, var(--color-brand-purple) 30%, transparent)',
-                  '0 0 0 5px color-mix(in srgb, var(--color-brand-purple) 0%, transparent)',
-                ],
-              }}
-              transition={loop({ duration: 3, ease: 'easeOut' })}
-            />
-          </motion.div>
-        </NavLink>
+                <motion.div
+                  className="pointer-events-none absolute -inset-0.5 rounded-full"
+                  animate={{
+                    boxShadow: [
+                      '0 0 0 0 color-mix(in srgb, var(--color-brand-purple) 30%, transparent)',
+                      '0 0 0 5px color-mix(in srgb, var(--color-brand-purple) 0%, transparent)',
+                    ],
+                  }}
+                  transition={loop({ duration: 3, ease: 'easeOut' })}
+                />
+              </motion.div>
+            </button>
+          </UserProfileCard>
+        ) : (
+          <NavLink to={profileRoute} className="relative block">
+            <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
+              <div
+                className="h-11 w-11 cursor-pointer overflow-hidden rounded-full p-[1.5px]"
+                role="img"
+                aria-label={`Your profile picture: ${user?.displayName || user?.username || 'User'}`}
+                style={{
+                  background:
+                    'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 60%, transparent), rgba(59,130,246,0.5), color-mix(in srgb, var(--color-brand-purple) 50%, transparent))',
+                }}
+              >
+                {user?.avatarUrl ? (
+                  <ThemedAvatar
+                    src={user.avatarUrl}
+                    alt={user.displayName || user.username || 'User avatar'}
+                    size="medium"
+                    className="h-full w-full rounded-full"
+                    avatarBorderId={getAvatarBorderId(user)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)] text-base font-semibold text-[var(--token-text-primary)]">
+                    {(user?.displayName || user?.username || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              <motion.div
+                className="pointer-events-none absolute -inset-0.5 rounded-full"
+                animate={{
+                  boxShadow: [
+                    '0 0 0 0 color-mix(in srgb, var(--color-brand-purple) 30%, transparent)',
+                    '0 0 0 5px color-mix(in srgb, var(--color-brand-purple) 0%, transparent)',
+                  ],
+                }}
+                transition={loop({ duration: 3, ease: 'easeOut' })}
+              />
+            </motion.div>
+          </NavLink>
+        )}
 
         {/* Presence Status Selector */}
         <div className="mt-1.5">

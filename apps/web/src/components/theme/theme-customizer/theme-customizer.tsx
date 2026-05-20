@@ -6,8 +6,6 @@
  * - Color preset selection with visual swatches
  * - Avatar border configuration
  * - Chat bubble style customization
- * - Effect presets (glassmorphism, neon, etc.)
- * - Animation speed controls
  * - Live preview of all changes
  * - Premium feature gating
  * - Export/Import themes
@@ -21,7 +19,7 @@ import {
   type ThemeColorPreset,
   type AvatarBorderType,
   type ChatBubbleStylePreset,
-  type EffectPreset} from '@/stores/theme';
+} from '@/stores/theme';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 
@@ -30,7 +28,6 @@ import { TABS, QUICK_PRESETS } from './constants';
 import { ColorTab } from './color-tab';
 import { AvatarTab } from './avatar-tab';
 import { BubblesTab } from './bubbles-tab';
-import { EffectsTab } from './effects-tab';
 import { LivePreview } from './live-preview';
 
 // COMPONENT
@@ -50,9 +47,6 @@ export function ThemeCustomizer({ onClose, className = '' }: ThemeCustomizerProp
     setColorPreset,
     setAvatarBorder,
     setChatBubbleStyle,
-    setEffect,
-    setAnimationSpeed,
-    toggleParticles,
     toggleGlow,
     resetTheme,
     applyPreset,
@@ -71,11 +65,6 @@ export function ThemeCustomizer({ onClose, className = '' }: ThemeCustomizerProp
   function handleBubbleStyleSelect(style: ChatBubbleStylePreset) {
       setChatBubbleStyle(style);
       HapticFeedback.light();
-    }
-
-  function handleEffectSelect(effect: EffectPreset) {
-      setEffect(effect);
-      HapticFeedback.medium();
     }
 
   return (
@@ -205,17 +194,6 @@ export function ThemeCustomizer({ onClose, className = '' }: ThemeCustomizerProp
                   onSelectStyle={handleBubbleStyleSelect}
                   onSelectColor={(color) => updateTheme({ chatBubbleColor: color })}
                   onUpdateSettings={(settings) => updateTheme(settings)}
-                />
-              )}
-              {activeTab === 'effects' && (
-                <EffectsTab
-                  key="effects"
-                  selectedEffect={theme.effectPreset}
-                  animationSpeed={theme.animationSpeed}
-                  particlesEnabled={theme.particlesEnabled}
-                  onSelectEffect={handleEffectSelect}
-                  onSetSpeed={setAnimationSpeed}
-                  onToggleParticles={toggleParticles}
                 />
               )}
             </AnimatePresence>

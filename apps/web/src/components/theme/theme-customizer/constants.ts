@@ -4,13 +4,12 @@
  * Configuration options for theme customization.
  */
 
-import { SwatchIcon, SparklesIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
+import { SwatchIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 import type {
   TabDefinition,
   AvatarBorderOption,
   BubbleStyleOption,
-  EffectOption,
   QuickPresetOption,
 } from './types';
 
@@ -20,7 +19,6 @@ export const TABS: TabDefinition[] = [
   { id: 'colors', label: 'Colors', icon: SwatchIcon },
   { id: 'avatar', label: 'Avatar', icon: SparklesIcon },
   { id: 'bubbles', label: 'Bubbles', icon: SparklesIcon },
-  { id: 'effects', label: 'Effects', icon: AdjustmentsHorizontalIcon },
 ];
 
 // AVATAR BORDER OPTIONS
@@ -49,32 +47,6 @@ export const BUBBLE_STYLE_OPTIONS: BubbleStyleOption[] = [
   { value: 'retro', label: 'Retro', tier: 'premium' },
   { value: 'bubble', label: 'Bubble', tier: 'premium' },
   { value: 'glassmorphism', label: 'Glass', tier: 'enterprise' },
-];
-
-// EFFECT OPTIONS
-
-export const EFFECT_OPTIONS: EffectOption[] = [
-  { value: 'minimal', label: 'Minimal', description: 'Clean and simple', tier: 'free' },
-  {
-    value: 'glassmorphism',
-    label: 'Glassmorphism',
-    description: 'Frosted glass effect',
-    tier: 'free',
-  },
-  { value: 'neon', label: 'Neon', description: 'Vibrant glow effects', tier: 'premium' },
-  { value: 'aurora', label: 'Aurora', description: 'Flowing color waves', tier: 'premium' },
-  {
-    value: 'cyberpunk',
-    label: 'Cyberpunk',
-    description: 'Futuristic tech aesthetic',
-    tier: 'enterprise',
-  },
-  {
-    value: 'holographic',
-    label: 'Holographic',
-    description: 'Rainbow light effects',
-    tier: 'enterprise',
-  },
 ];
 
 // QUICK PRESETS

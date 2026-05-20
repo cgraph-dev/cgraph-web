@@ -28,7 +28,7 @@ export default function Onboarding() {
     error,
     avatarPreview,
     profileData,
-    handleAvatarChange,
+    handleAvatarCropped,
     handleNext,
     handleBack,
     handleSkip,
@@ -43,7 +43,7 @@ export default function Onboarding() {
           <WelcomeStep
             avatarPreview={avatarPreview}
             displayName={profileData.displayName}
-            onAvatarChange={handleAvatarChange}
+            onAvatarCropped={handleAvatarCropped}
             onDisplayNameChange={(name) => updateProfileData('displayName', name)}
           />
         );

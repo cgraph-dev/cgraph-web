@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import Onboarding from '../onboarding';
 
 const mocks = vi.hoisted(() => ({
-  handleAvatarChange: vi.fn(),
+  handleAvatarCropped: vi.fn(),
   handleNext: vi.fn(),
   handleBack: vi.fn(),
   handleSkip: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock('../useOnboarding', () => ({
       notifyFriendRequests: true,
       theme: 'dark',
     },
-    handleAvatarChange: mocks.handleAvatarChange,
+    handleAvatarCropped: mocks.handleAvatarCropped,
     handleNext: mocks.handleNext,
     handleBack: mocks.handleBack,
     handleSkip: mocks.handleSkip,

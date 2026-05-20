@@ -7,7 +7,6 @@ import { useAppLayout } from './hooks';
 import { navItems } from './constants';
 import Sidebar from './sidebar';
 import { AnimatedOutlet } from './animated-outlet';
-import { motion } from 'motion/react';
 import {
   AriaLiveRegion,
   AssertiveLiveRegion,
@@ -44,28 +43,6 @@ export default function AppLayout() {
           <div className="bg-primary-500/[0.04] absolute left-1/4 top-0 h-[500px] w-[500px] rounded-full blur-[120px]" />
           <div className="bg-purple-500/[0.04] absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full blur-[120px]" />
 
-          {/* Floating ambient particles */}
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="pointer-events-none absolute h-0.5 w-0.5 rounded-full bg-primary-400"
-              style={{
-                left: `${15 + Math.random() * 70}%`,
-                top: `${10 + Math.random() * 80}%`,
-              }}
-              animate={{
-                y: [0, -25, 0],
-                opacity: [0.08, 0.25, 0.08],
-                scale: [1, 1.4, 1],
-              }}
-              transition={{
-                duration: 5 + Math.random() * 3,
-                repeat: Infinity,
-                delay: Math.random() * 4,
-                ease: 'easeInOut',
-              }}
-            />
-          ))}
         </div>
       )}
 

@@ -1,6 +1,6 @@
 /** @module avatar-section tests */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 vi.mock('framer-motion', () => ({
   motion: {
@@ -28,14 +28,27 @@ vi.mock('@/lib/animations/animation-engine', () => ({
   HapticFeedback: { medium: vi.fn() },
 }));
 
+vi.mock('@/modules/auth/store', () => ({
+  useAuthStore: vi.fn(() => vi.fn()),
+}));
+
+vi.mock('@/components/feedback/toast', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/avatar-upload', () => ({
+  uploadCurrentUserAvatar: vi.fn(),
+}));
+
 vi.mock('@/lib/utils', () => ({
+  cn: (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(' '),
   getAvatarBorderId: vi.fn(() => 'border-1'),
 }));
 
 import { AvatarSection } from '../avatar-section';
-import { HapticFeedback } from '@/lib/animations/animation-engine';
-
-const mockHaptic = vi.mocked(HapticFeedback);
 
 const mockUser = {
   id: 'user-1',
@@ -61,20 +74,16 @@ describe('AvatarSection', () => {
     expect(screen.getByText('T')).toBeInTheDocument();
   });
 
-  it('renders "Upload Image" button', () => {
+  it('renders change image button when an avatar exists', () => {
     render(<AvatarSection user={mockUser as never} />);
-    expect(screen.getByText('Upload Image')).toBeInTheDocument();
+    expect(screen.getByText('Change Image')).toBeInTheDocument();
   });
 
   it('renders file size hint', () => {
     render(<AvatarSection user={mockUser as never} />);
-    expect(screen.getByText('JPG, PNG, or GIF. Max 2MB.')).toBeInTheDocument();
-  });
-
-  it('triggers haptic feedback on upload button click', () => {
-    render(<AvatarSection user={mockUser as never} />);
-    fireEvent.click(screen.getByText('Upload Image'));
-    expect(mockHaptic.medium).toHaveBeenCalledOnce();
+    expect(
+      screen.getByText('Crop once and it updates your profile, sidebar, chats, and profile cards.')
+    ).toBeInTheDocument();
   });
 
   it('renders inside GlassCard', () => {
