@@ -356,9 +356,7 @@ export function isProfileThemeId(value: unknown): value is ProfileThemeId {
 }
 
 /** Returns true when a value is a supported static profile theme surface pattern. */
-export function isProfileThemeSurfacePattern(
-  value: unknown
-): value is ProfileThemeSurfacePattern {
+export function isProfileThemeSurfacePattern(value: unknown): value is ProfileThemeSurfacePattern {
   return isOneOf(PROFILE_THEME_SURFACE_PATTERNS, value);
 }
 

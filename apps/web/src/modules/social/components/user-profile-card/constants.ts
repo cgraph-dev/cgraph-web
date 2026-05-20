@@ -6,12 +6,7 @@
  * badge rarity configs, and pulse tier mappings.
  */
 
-import type {
-  AccentThemeId,
-  BadgeDisplayTier,
-  NameplateVariant,
-  PulseTier,
-} from './types';
+import type { AccentThemeId, BadgeDisplayTier, NameplateVariant, PulseTier } from './types';
 
 // LEGACY CONSTANTS (preserved)
 

@@ -10,7 +10,7 @@ export default function PreviewCard({ theme }: PreviewCardProps) {
   return (
     <>
       <div className="flex flex-1 items-center justify-center">
-        <div className="relative h-20 w-full max-w-[9rem] overflow-hidden rounded-xl border border-white/12 bg-black/30 p-2 shadow-[0_12px_34px_rgba(0,0,0,0.28)]">
+        <div className="border-white/12 relative h-20 w-full max-w-[9rem] overflow-hidden rounded-xl border bg-black/30 p-2 shadow-[0_12px_34px_rgba(0,0,0,0.28)]">
           <div
             className="absolute inset-x-0 top-0 h-6"
             style={{

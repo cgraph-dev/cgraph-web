@@ -92,7 +92,9 @@ export default function ProfileThemeCard({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-black/35" />
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{ background: `linear-gradient(90deg, transparent, ${theme.accentPrimary}, transparent)` }}
+        style={{
+          background: `linear-gradient(90deg, transparent, ${theme.accentPrimary}, transparent)`,
+        }}
       />
 
       {/* Content overlay */}
