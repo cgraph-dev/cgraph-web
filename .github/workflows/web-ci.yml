@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v6
         with:
           version: 10.12.1
@@ -20,6 +22,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:packages
+      - run: pnpm check:package-owner
       - run: pnpm --filter @cgraph/web lint
       - run: pnpm --filter @cgraph/web typecheck
       - run: pnpm --filter @cgraph/web check:release-gates
