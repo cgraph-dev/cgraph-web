@@ -1,6 +1,6 @@
 # Web 100 Percent Owner Checklist
 
-Status date: 2026-05-18
+Status date: 2026-05-20
 
 Current checklist state: 50 / 50 owner-level implementation rows are closed for this execution
 contract, but this is not the same as full Level 2 release-readiness or a complete web-workstream
@@ -13,9 +13,11 @@ The Space route, verify-email resend, onboarding skip/recovery, cancel-deletion,
 native-attestation guard, verify-email-before-onboarding route gate, routed DM read-receipt
 rendering, routed DM guarded-scroll, routed DM typing-proof, routed DM call-entry, call-history
 callback, incoming-call accept/end-state, routed identity/cosmetic live-update, routed
-conversation-list/Space menu implementations, routed DM GIF/sticker send, and routed group
-GIF/sticker/voice sends are source-backed and browser-verified where this checklist requires it.
-Broader product-maturity risks remain tracked honestly in the strict pass and scorecard documents.
+conversation-list/Space menu implementations, routed DM GIF/sticker send, routed group
+GIF/sticker/voice sends, and the seven static profile themes shared across full profile,
+profile-card, mini/hover-card, and customization preview surfaces are source-backed and
+browser-verified or narrowly test-verified where this checklist requires it. Broader
+product-maturity risks remain tracked honestly in the strict pass and scorecard documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -295,7 +297,11 @@ Required implementation-time questions:
       and customization surfaces. The 2026-05-15 slices preserve canonical identity fields through
       shared/web normalizers, hydrate `UserProfileCard` from `/api/v1/users/:id` when only `userId`
       is supplied, derive customization ownership/equipped state from backend inventory, and reject
-      unowned customization saves in the backend.
+      unowned customization saves in the backend. The 2026-05-20 profile-theme slice keeps the
+      selectable profile-theme set capped at seven shared IDs in
+      `packages/shared-types/src/cosmetics.ts`, validates saved IDs in the backend, and renders the
+      same static theme semantics across full profile, profile-card, mini/hover-card, and
+      customization preview surfaces.
 - [x] Shared runtime-neutral types and schemas are defined in `packages/*`, not duplicated ad hoc in
       web. The 2026-05-15 slice moves the runtime-neutral user settings contract and defaults into
       `packages/shared-types/src/settings.ts`, keeps web re-exporting the contract from the old
