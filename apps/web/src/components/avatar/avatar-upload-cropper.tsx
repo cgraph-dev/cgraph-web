@@ -37,10 +37,12 @@ const previewSizeClass: Record<NonNullable<AvatarUploadCropperProps['size']>, st
   xlarge: 'h-32 w-32',
 };
 
+/** Builds the initials shown before a user selects an avatar image. */
 function initialsFor(displayName?: string | null): string {
   return (displayName || 'User').trim().charAt(0).toUpperCase() || 'U';
 }
 
+/** Loads a local image URL so the selected crop can be rendered onto a canvas. */
 function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -51,6 +53,7 @@ function createImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Converts the selected square crop into the JPEG blob uploaded to the backend. */
 async function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -70,6 +73,7 @@ async function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
   });
 }
 
+/** Shared avatar upload UI with local preview, crop controls, and validation. */
 export function AvatarUploadCropper({
   avatarUrl,
   displayName,

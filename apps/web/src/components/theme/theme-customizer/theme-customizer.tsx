@@ -11,7 +11,7 @@
  * - Export/Import themes
  */
 
-import { useState} from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SwatchIcon, EyeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import {
@@ -19,7 +19,7 @@ import {
   type ThemeColorPreset,
   type AvatarBorderType,
   type ChatBubbleStylePreset,
-} from '@/stores/theme';
+} from '@/stores';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 
@@ -30,10 +30,6 @@ import { AvatarTab } from './avatar-tab';
 import { BubblesTab } from './bubbles-tab';
 import { LivePreview } from './live-preview';
 
-// COMPONENT
-
-/**
- */
 /**
  * Theme Customizer component.
  */
@@ -53,9 +49,9 @@ export function ThemeCustomizer({ onClose, className = '' }: ThemeCustomizerProp
   } = useThemeStore();
 
   function handleColorSelect(preset: ThemeColorPreset) {
-      setColorPreset(preset);
-      HapticFeedback.light();
-    }
+    setColorPreset(preset);
+    HapticFeedback.light();
+  }
 
   function handleBorderSelect(border: AvatarBorderType) {
       setAvatarBorder(border);

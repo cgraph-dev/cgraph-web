@@ -1,6 +1,7 @@
 import { http } from '@/lib/api-client';
 import { asString, isRecord } from '@/lib/api-utils';
 
+/** Extracts an avatar URL from the supported backend upload response shapes. */
 export function avatarUrlFromUploadResponse(responseData: unknown): string | null {
   if (!isRecord(responseData)) return null;
 
@@ -19,6 +20,7 @@ export function avatarUrlFromUploadResponse(responseData: unknown): string | nul
   return asString(user.avatar_url) || asString(user.avatarUrl) || null;
 }
 
+/** Uploads a cropped avatar blob for the authenticated user. */
 export async function uploadCurrentUserAvatar(blob: Blob): Promise<string | null> {
   const formData = new FormData();
   formData.append('file', blob, 'avatar.jpg');
