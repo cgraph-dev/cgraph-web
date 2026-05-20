@@ -5,6 +5,7 @@ interface PreviewCardProps {
   theme: ProfileThemeConfig;
 }
 
+/** Static miniature profile preview for theme picker cards. */
 export default function PreviewCard({ theme }: PreviewCardProps) {
   return (
     <>

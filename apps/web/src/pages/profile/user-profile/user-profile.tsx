@@ -52,13 +52,18 @@ import { FADE_UP } from '@/lib/animations/transitions';
 /** Stable empty array for stub achievements */
 const EMPTY_ACHIEVEMENTS: never[] = [];
 
-function getProfileThemePageStyle(theme: ProfileThemeConfig): React.CSSProperties {
+interface ProfileThemePageStyle extends React.CSSProperties {
+  '--profile-theme-accent': string;
+  '--profile-theme-accent-secondary': string;
+}
+
+function getProfileThemePageStyle(theme: ProfileThemeConfig): ProfileThemePageStyle {
   const baseGradient = `linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`;
 
   return {
     background: `radial-gradient(circle at 15% 8%, ${theme.accentPrimary}24, transparent 30%), radial-gradient(circle at 84% 18%, ${theme.accentSecondary}22, transparent 34%), ${baseGradient}`,
-    ['--profile-theme-accent' as string]: theme.accentPrimary,
-    ['--profile-theme-accent-secondary' as string]: theme.accentSecondary,
+    '--profile-theme-accent': theme.accentPrimary,
+    '--profile-theme-accent-secondary': theme.accentSecondary,
   };
 }
 

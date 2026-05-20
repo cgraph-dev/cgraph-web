@@ -342,17 +342,20 @@ export interface ProfileThemeConfig {
 }
 
 function isOneOf<const T extends readonly string[]>(values: T, value: unknown): value is T[number] {
-  return typeof value === 'string' && (values as readonly string[]).includes(value);
+  return typeof value === 'string' && values.some((candidate) => candidate === value);
 }
 
+/** Returns true when a value is one of the seven supported profile theme categories. */
 export function isProfileThemeCategory(value: unknown): value is ProfileThemeCategory {
   return isOneOf(PROFILE_THEME_CATEGORIES, value);
 }
 
+/** Returns true when a value is one of the seven supported profile theme IDs. */
 export function isProfileThemeId(value: unknown): value is ProfileThemeId {
   return isOneOf(PROFILE_THEME_IDS, value);
 }
 
+/** Returns true when a value is a supported static profile theme surface pattern. */
 export function isProfileThemeSurfacePattern(
   value: unknown
 ): value is ProfileThemeSurfacePattern {

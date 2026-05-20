@@ -206,21 +206,31 @@ export const ALL_PROFILE_THEMES: ProfileThemeConfig[] = [
   },
 ];
 
-const PROFILE_THEMES_BY_ID = Object.fromEntries(
-  ALL_PROFILE_THEMES.map((theme) => [theme.id, theme])
-) as Record<ProfileThemeId, ProfileThemeConfig>;
+/** Resolves the default theme once so stale catalog edits fail loudly. */
+function resolveDefaultProfileTheme(): ProfileThemeConfig {
+  const theme = ALL_PROFILE_THEMES.find(({ id }) => id === DEFAULT_PROFILE_THEME_ID);
+  if (!theme) {
+    throw new Error(`Missing default profile theme: ${DEFAULT_PROFILE_THEME_ID}`);
+  }
+  return theme;
+}
 
+const DEFAULT_PROFILE_THEME = resolveDefaultProfileTheme();
+
+/** Returns all static profile themes belonging to a category. */
 export function getThemesByCategory(category: ProfileThemeCategory): ProfileThemeConfig[] {
   return ALL_PROFILE_THEMES.filter((theme) => theme.category === category);
 }
 
+/** Looks up a static profile theme by ID and rejects stale or unknown IDs. */
 export function getThemeById(id: string | null | undefined): ProfileThemeConfig | undefined {
   if (!isProfileThemeId(id)) return undefined;
-  return PROFILE_THEMES_BY_ID[id];
+  return ALL_PROFILE_THEMES.find((theme) => theme.id === id);
 }
 
+/** Returns the selected profile theme, falling back to the default theme. */
 export function getProfileThemeOrDefault(id: string | null | undefined): ProfileThemeConfig {
-  return getThemeById(id) ?? PROFILE_THEMES_BY_ID[DEFAULT_PROFILE_THEME_ID];
+  return getThemeById(id) ?? DEFAULT_PROFILE_THEME;
 }
 
 export const TIER_COLORS: Record<
