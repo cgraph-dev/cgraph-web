@@ -7,24 +7,21 @@
 
 import {
   boolToSelectivePrivacyRule,
+  isAutoDownloadPolicy,
+  isDateFormat,
+  isEmojiSkinTone,
+  isFontSize,
+  isGroupInvitePermission,
+  isMessageDensity,
+  isProfileVisibility,
+  isTheme,
+  isTimeFormat,
+  isVideoResolution,
   selectivePrivacyRuleEnabled,
   selectivePrivacySettingsFromApi,
   selectivePrivacySettingsToApi,
 } from '@cgraph/shared-types';
-import type {
-  ApiSettings,
-  UserSettings,
-  ProfileVisibility,
-  GroupInvitePermission,
-  Theme,
-  FontSize,
-  MessageDensity,
-  DateFormat,
-  TimeFormat,
-  AutoDownloadPolicy,
-  EmojiSkinTone,
-  VideoResolution,
-} from './settingsStore.types';
+import type { ApiSettings, UserSettings } from './settingsStore.types';
 
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
@@ -395,55 +392,6 @@ export function mapSettingsToApi(settings: Partial<UserSettings>): Record<string
   return result;
 }
 
-// Type guard helpers for narrow union literals
-
-function isProfileVisibility(v: unknown): v is ProfileVisibility {
-  return v === 'public' || v === 'friends' || v === 'private';
-}
-
-function isGroupInvitePermission(v: unknown): v is GroupInvitePermission {
-  return v === 'anyone' || v === 'friends' || v === 'nobody';
-}
-
-function isTheme(v: unknown): v is Theme {
-  return v === 'light' || v === 'dark' || v === 'system';
-}
-
-function isFontSize(v: unknown): v is FontSize {
-  return v === 'small' || v === 'medium' || v === 'large';
-}
-
-function isMessageDensity(v: unknown): v is MessageDensity {
-  return v === 'comfortable' || v === 'compact';
-}
-
-function isDateFormat(v: unknown): v is DateFormat {
-  return v === 'mdy' || v === 'dmy' || v === 'ymd';
-}
-
-function isTimeFormat(v: unknown): v is TimeFormat {
-  return v === 'twelve_hour' || v === 'twenty_four_hour';
-}
-
-function isAutoDownloadPolicy(v: unknown): v is AutoDownloadPolicy {
-  return v === 'always' || v === 'wifi' || v === 'never';
-}
-
-function isEmojiSkinTone(v: unknown): v is EmojiSkinTone {
-  return (
-    v === 'neutral' ||
-    v === 'light' ||
-    v === 'medium-light' ||
-    v === 'medium' ||
-    v === 'medium-dark' ||
-    v === 'dark'
-  );
-}
-
-function isVideoResolution(v: unknown): v is VideoResolution {
-  return v === 'auto' || v === '720p' || v === '1080p';
-}
-
 /**
  * Narrow a raw `Record<string, unknown>` WebSocket payload into a typed
  * `ApiSettings` object. Only copies known snake_case keys whose values pass
@@ -518,7 +466,7 @@ export function narrowToApiSettings(raw: Record<string, unknown>): ApiSettings {
       typeof selectivePrivacy === 'object' &&
       selectivePrivacy !== null &&
       !Array.isArray(selectivePrivacy)
-        ? selectivePrivacy
+        ? selectivePrivacySettingsToApi(selectivePrivacySettingsFromApi(selectivePrivacy))
         : undefined,
     // Appearance
     theme: isTheme(theme) ? theme : undefined,

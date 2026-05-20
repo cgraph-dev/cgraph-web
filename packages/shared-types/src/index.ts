@@ -204,6 +204,15 @@ export {
 
 // settings
 export type {
+  ApiAppearanceSettings,
+  ApiCallsSettings,
+  ApiKeyboardSettings,
+  ApiLocaleSettings,
+  ApiMediaSettings,
+  ApiNotificationSettings,
+  ApiPrivacySettings,
+  ApiSettings,
+  ApiStickersEmojiSettings,
   AppearanceSettings,
   AutoDownloadPolicy,
   CallsSettings,
@@ -234,6 +243,26 @@ export {
   DEFAULT_PRIVACY_SETTINGS,
   DEFAULT_SETTINGS,
   DEFAULT_STICKERS_EMOJI_SETTINGS,
+  AUTO_DOWNLOAD_POLICY_VALUES,
+  DATE_FORMAT_VALUES,
+  EMOJI_SKIN_TONE_VALUES,
+  FONT_SIZE_VALUES,
+  GROUP_INVITE_PERMISSION_VALUES,
+  MESSAGE_DENSITY_VALUES,
+  PROFILE_VISIBILITY_VALUES,
+  THEME_VALUES,
+  TIME_FORMAT_VALUES,
+  VIDEO_RESOLUTION_VALUES,
+  isAutoDownloadPolicy,
+  isDateFormat,
+  isEmojiSkinTone,
+  isFontSize,
+  isGroupInvitePermission,
+  isMessageDensity,
+  isProfileVisibility,
+  isTheme,
+  isTimeFormat,
+  isVideoResolution,
 } from './settings';
 
 // rarity
