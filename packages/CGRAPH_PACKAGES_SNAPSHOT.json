@@ -1,7 +1,7 @@
 {
   "source_repository": "cgraph-dev/cgraph-packages",
   "source_branch": "main",
-  "source_commit": "944e3fe8ddb9faa1f8bc496a786c9d9d10b12dbf",
+  "source_commit": "4f6927f036b839b5ff3501c354f28ca317fa58d2",
   "sync_status": "source-sync",
   "sync_policy": "Web carries a checked-in snapshot of canonical shared packages until package publishing is enabled. Update this file whenever packages/ is synced from cgraph-packages."
 }
