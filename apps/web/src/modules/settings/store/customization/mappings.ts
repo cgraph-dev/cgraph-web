@@ -44,6 +44,13 @@ export const BORDER_ID_TO_TYPE: Record<string, AvatarBorderType> = {
  * Used for determining avatar border colors and profile backgrounds.
  */
 export const PROFILE_THEME_TO_COLOR: Record<string, ThemePreset> = {
+  'signal-noir': 'cyan',
+  'aurora-glass': 'cyan',
+  'retro-terminal': 'emerald',
+  'solarpunk-canopy': 'gold',
+  'deep-space': 'purple',
+  'sakura-dream': 'pink',
+  'ember-forge': 'orange',
   'profile-default': 'purple',
   'classic-purple': 'purple',
   'profile-ocean': 'cyan',
@@ -59,6 +66,13 @@ export const PROFILE_THEME_TO_COLOR: Record<string, ThemePreset> = {
  */
 export const THEME_ID_TO_PRESET: Record<string, ThemePreset> = {
   // Profile themes
+  'signal-noir': 'cyan',
+  'aurora-glass': 'cyan',
+  'retro-terminal': 'emerald',
+  'solarpunk-canopy': 'gold',
+  'deep-space': 'purple',
+  'sakura-dream': 'pink',
+  'ember-forge': 'orange',
   'profile-default': 'purple',
   'classic-purple': 'purple',
   'profile-ocean': 'cyan',

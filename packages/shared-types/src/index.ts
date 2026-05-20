@@ -56,13 +56,27 @@ export type {
   InventoryItem,
   MarketplaceFilters,
   MarketplaceListing,
+  ProfileThemeCategory,
+  ProfileThemeConfig,
+  ProfileThemeId,
+  ProfileThemeSurfacePattern,
+  ProfileThemeTier,
   UnlockEntry,
   UnlockType,
   UpcomingUnlock,
   UserCosmeticInventory,
   UserProgression,
 } from './cosmetics';
-export { hasCosmetics } from './cosmetics';
+export {
+  PROFILE_THEME_CATEGORIES,
+  PROFILE_THEME_IDS,
+  PROFILE_THEME_SURFACE_PATTERNS,
+  PROFILE_THEME_TIERS,
+  hasCosmetics,
+  isProfileThemeCategory,
+  isProfileThemeId,
+  isProfileThemeSurfacePattern,
+} from './cosmetics';
 
 // forum-customization
 export type {

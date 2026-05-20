@@ -128,6 +128,12 @@ export function useProfileData({
           // Title system - equipped title ID
           equippedTitle:
             userData.equipped_title || userData.equipped_title_id || userData.title_id || null,
+          profileTheme: userData.profile_theme || userData.profileTheme || null,
+          avatarBorderId: userData.avatar_border_id || userData.avatarBorderId || null,
+          displayNameFont: userData.display_name_font || null,
+          displayNameEffect: userData.display_name_effect || null,
+          displayNameColor: userData.display_name_color || null,
+          displayNameSecondaryColor: userData.display_name_secondary_color || null,
         });
 
         // Backend returns is_friend/friend_request_sent/friend_request_received booleans

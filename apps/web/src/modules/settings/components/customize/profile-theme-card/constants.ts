@@ -1,11 +1,12 @@
 /** Map of theme categories to their display emoji */
 export const CATEGORY_ICONS: Record<string, string> = {
-  '8bit': '🎮',
-  japanese: '🌸',
-  anime: '⚡',
-  cyberpunk: '🤖',
-  gothic: '🦇',
-  kawaii: '🌈',
+  signal: 'S',
+  aurora: 'A',
+  retro: 'R',
+  solarpunk: 'P',
+  cosmic: 'C',
+  sakura: 'K',
+  ember: 'E',
 };
 
 /** Grid column class map */

@@ -9,22 +9,6 @@ export interface ChatBubbleProps {
   senderName?: string;
 }
 
-export interface ParticleData {
-  id: number;
-  width: number;
-  height: number;
-  left: number;
-  top: number;
-  boxShadow: number;
-  delay: number;
-  duration: number;
-}
-
-export interface ParticleStyle {
-  color: string;
-  shape: 'circle' | 'square';
-}
-
 export interface PreviewBadge {
   emoji: string;
   color: string;

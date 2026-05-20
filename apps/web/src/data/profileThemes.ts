@@ -1,90 +1,27 @@
 /**
- * Profile Themes Data
+ * Canonical profile theme catalog.
  *
- * 18+ animated profile themes organized by category.
- * Each theme has background gradients, particle effects, overlays, and tier badges.
+ * The seven themes below are the only selectable profile themes in web. They
+ * share the runtime-neutral contract from @cgraph/shared-types and are rendered
+ * differently by the full profile, hover card, and customization preview card.
  */
 
-export type ProfileThemeCategory =
-  | '8bit'
-  | 'anime'
-  | 'cyberpunk'
-  | 'gothic'
-  | 'kawaii'
-  | 'gradient'
-  | 'minimal'
-  | 'dark'
-  | 'light'
-  | 'animated'
-  | 'seasonal'
-  | 'premium';
-export type ProfileThemeTier = 'free' | 'premium' | 'enterprise';
-export type ParticleType =
-  | 'none'
-  | 'pixel'
-  | 'petal'
-  | 'energy'
-  | 'neon'
-  | 'smoke'
-  | 'stars'
-  | 'hearts'
-  | 'sparkles'
-  | 'snow'
-  | 'rain'
-  | 'bubbles'
-  | 'fire'
-  | 'lightning'
-  | 'leaves'
-  | 'confetti';
-export type OverlayType =
-  | 'none'
-  | 'scanlines'
-  | 'holographic'
-  | 'noise'
-  | 'vignette'
-  | 'grid'
-  | 'rays';
+import {
+  PROFILE_THEME_CATEGORIES as PROFILE_THEME_CATEGORY_IDS,
+  PROFILE_THEME_IDS,
+  isProfileThemeId,
+} from '@cgraph/shared-types';
+import type {
+  ProfileThemeCategory,
+  ProfileThemeConfig,
+  ProfileThemeId,
+  ProfileThemeTier,
+} from '@cgraph/shared-types';
 
-export interface ProfileThemeConfig {
-  id: string;
-  name: string;
-  category: ProfileThemeCategory;
-  tier: ProfileThemeTier;
-  description: string;
+export { PROFILE_THEME_CATEGORY_IDS, PROFILE_THEME_IDS };
+export type { ProfileThemeCategory, ProfileThemeConfig, ProfileThemeId, ProfileThemeTier };
 
-  // Background
-  backgroundGradient: string[];
-  backgroundAnimation?: 'none' | 'shift' | 'pulse' | 'wave' | 'rotate';
-  backgroundAnimationDuration?: number;
-
-  // Particles
-  particleType: ParticleType;
-  particleCount?: number;
-  particleColors?: string[];
-  particleSpeed?: number;
-
-  // Overlay effects
-  overlayType: OverlayType;
-  overlayOpacity?: number;
-
-  // Glow & Lighting
-  glowEnabled: boolean;
-  glowColor?: string;
-  glowIntensity?: number;
-
-  // Accent colors for UI elements
-  accentPrimary: string;
-  accentSecondary: string;
-  textColor: string;
-
-  // Unlock info
-  unlocked: boolean;
-  unlockRequirement?: string;
-  unlockLevel?: number;
-
-  // Preview
-  previewImage?: string;
-}
+export const DEFAULT_PROFILE_THEME_ID: ProfileThemeId = 'signal-noir';
 
 export interface ProfileThemeCategoryInfo {
   id: ProfileThemeCategory;
@@ -95,581 +32,217 @@ export interface ProfileThemeCategoryInfo {
   themeCount: number;
 }
 
-// Theme Categories
 export const PROFILE_THEME_CATEGORIES: ProfileThemeCategoryInfo[] = [
   {
-    id: '8bit',
+    id: 'signal',
+    name: 'Signal',
+    description: 'Private, sharp, low-noise styling',
+    icon: 'S',
+    accentColor: '#38bdf8',
+    themeCount: 1,
+  },
+  {
+    id: 'aurora',
+    name: 'Aurora',
+    description: 'Glass layers with luminous depth',
+    icon: 'A',
+    accentColor: '#7dd3fc',
+    themeCount: 1,
+  },
+  {
+    id: 'retro',
     name: 'Retro',
-    description: 'Pixel art nostalgia',
-    icon: '◆',
-    accentColor: '#39ff14',
-    themeCount: 3,
-  },
-
-  {
-    id: 'anime',
-    name: 'Dynamic',
-    description: 'High-energy effects',
-    icon: '▲',
-    accentColor: '#ffcc00',
-    themeCount: 3,
+    description: 'Terminal pixels and green phosphor',
+    icon: 'R',
+    accentColor: '#86efac',
+    themeCount: 1,
   },
   {
-    id: 'cyberpunk',
-    name: 'Neon',
-    description: 'Futuristic & electric',
-    icon: '◎',
-    accentColor: '#00ffff',
-    themeCount: 3,
+    id: 'solarpunk',
+    name: 'Solarpunk',
+    description: 'Organic light and warm canopy tones',
+    icon: 'P',
+    accentColor: '#facc15',
+    themeCount: 1,
   },
   {
-    id: 'gothic',
-    name: 'Dark',
-    description: 'Dark elegance',
-    icon: '◈',
-    accentColor: '#8b00ff',
-    themeCount: 3,
+    id: 'cosmic',
+    name: 'Cosmic',
+    description: 'Deep sky contrast and star fields',
+    icon: 'C',
+    accentColor: '#a78bfa',
+    themeCount: 1,
   },
   {
-    id: 'kawaii',
-    name: 'Bloom',
-    description: 'Soft & colorful',
-    icon: '✿',
-    accentColor: '#ff69b4',
-    themeCount: 3,
+    id: 'sakura',
+    name: 'Sakura',
+    description: 'Soft bloom, calm pinks, quiet depth',
+    icon: 'K',
+    accentColor: '#fb7185',
+    themeCount: 1,
+  },
+  {
+    id: 'ember',
+    name: 'Ember',
+    description: 'Forged metal, heat, and amber glow',
+    icon: 'E',
+    accentColor: '#fb923c',
+    themeCount: 1,
   },
 ];
 
-// 8-Bit Themes
-const THEMES_8BIT: ProfileThemeConfig[] = [
-  {
-    id: '8bit-arcade',
-    name: 'Arcade Classic',
-    category: '8bit',
-    tier: 'free',
-    description: 'Classic arcade cabinet vibes with pixel art aesthetics',
-    backgroundGradient: ['#0a0a0a', '#1a1a2e', '#16213e'],
-    backgroundAnimation: 'none',
-    particleType: 'pixel',
-    particleCount: 20,
-    particleColors: ['#39ff14', '#00ffff', '#ff00ff'],
-    overlayType: 'scanlines',
-    overlayOpacity: 0.1,
-    glowEnabled: true,
-    glowColor: '#39ff14',
-    glowIntensity: 0.5,
-    accentPrimary: '#39ff14',
-    accentSecondary: '#00ffff',
-    textColor: '#ffffff',
-    unlocked: true,
-  },
-  {
-    id: '8bit-neon',
-    name: 'Neon Nights',
-    category: '8bit',
-    tier: 'premium',
-    description: 'Synthwave sunset with neon grid lines',
-    backgroundGradient: ['#0f0c29', '#302b63', '#24243e'],
-    backgroundAnimation: 'shift',
-    backgroundAnimationDuration: 10,
-    particleType: 'neon',
-    particleCount: 15,
-    particleColors: ['#ff00ff', '#00ffff', '#ffff00'],
-    overlayType: 'grid',
-    overlayOpacity: 0.15,
-    glowEnabled: true,
-    glowColor: '#ff00ff',
-    glowIntensity: 0.8,
-    accentPrimary: '#ff00ff',
-    accentSecondary: '#00ffff',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Reach Level 15',
-  },
-  {
-    id: '8bit-dreams',
-    name: 'Pixel Dreams',
-    category: '8bit',
-    tier: 'enterprise',
-    description: 'Dreamy vaporwave pixel paradise',
-    backgroundGradient: ['#667eea', '#764ba2', '#f093fb'],
-    backgroundAnimation: 'wave',
-    backgroundAnimationDuration: 8,
-    particleType: 'sparkles',
-    particleCount: 30,
-    particleColors: ['#ffffff', '#ffd700', '#ff69b4'],
-    overlayType: 'holographic',
-    overlayOpacity: 0.2,
-    glowEnabled: true,
-    glowColor: '#f093fb',
-    glowIntensity: 1.0,
-    accentPrimary: '#f093fb',
-    accentSecondary: '#667eea',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Collect 50 retro achievements',
-  },
-];
-
-// Anime Themes
-const THEMES_ANIME: ProfileThemeConfig[] = [
-  {
-    id: 'anime-power',
-    name: 'Power Up',
-    category: 'anime',
-    tier: 'free',
-    description: 'Basic power aura for aspiring heroes',
-    backgroundGradient: ['#1a1a2e', '#2d2d44', '#16213e'],
-    backgroundAnimation: 'pulse',
-    backgroundAnimationDuration: 3,
-    particleType: 'energy',
-    particleCount: 15,
-    particleColors: ['#ffd700', '#ff8c00'],
-    overlayType: 'none',
-    glowEnabled: true,
-    glowColor: '#ffd700',
-    glowIntensity: 0.5,
-    accentPrimary: '#ffd700',
-    accentSecondary: '#ff8c00',
-    textColor: '#ffffff',
-    unlocked: true,
-  },
-  {
-    id: 'anime-mystic',
-    name: 'Mystic Arts',
-    category: 'anime',
-    tier: 'premium',
-    description: 'Ancient magical energy flowing around you',
-    backgroundGradient: ['#1a0a2e', '#2e1a4a', '#4a2c7a'],
-    backgroundAnimation: 'rotate',
-    backgroundAnimationDuration: 20,
-    particleType: 'sparkles',
-    particleCount: 25,
-    particleColors: ['#9b30ff', '#ff69b4', '#00ffff'],
-    overlayType: 'holographic',
-    overlayOpacity: 0.1,
-    glowEnabled: true,
-    glowColor: '#9b30ff',
-    glowIntensity: 0.8,
-    accentPrimary: '#9b30ff',
-    accentSecondary: '#ff69b4',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Reach Level 25',
-  },
-  {
-    id: 'anime-hero',
-    name: 'Ultimate Hero',
-    category: 'anime',
-    tier: 'enterprise',
-    description: 'Maximum power level achieved!',
-    backgroundGradient: ['#ff4500', '#ff8c00', '#ffd700'],
-    backgroundAnimation: 'pulse',
-    backgroundAnimationDuration: 2,
-    particleType: 'fire',
-    particleCount: 40,
-    particleColors: ['#ff4500', '#ffd700', '#ffffff'],
-    particleSpeed: 1.5,
-    overlayType: 'rays',
-    overlayOpacity: 0.2,
-    glowEnabled: true,
-    glowColor: '#ffd700',
-    glowIntensity: 1.2,
-    accentPrimary: '#ffd700',
-    accentSecondary: '#ff4500',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Break your limits',
-  },
-];
-
-// Cyberpunk Themes
-const THEMES_CYBERPUNK: ProfileThemeConfig[] = [
-  {
-    id: 'cyber-city',
-    name: 'Night City',
-    category: 'cyberpunk',
-    tier: 'free',
-    description: 'Neon-lit streets of the digital metropolis',
-    backgroundGradient: ['#0a0a0a', '#1a1a2e', '#0f0f23'],
-    backgroundAnimation: 'none',
-    particleType: 'neon',
-    particleCount: 12,
-    particleColors: ['#00ffff', '#ff00ff'],
-    overlayType: 'scanlines',
-    overlayOpacity: 0.08,
-    glowEnabled: true,
-    glowColor: '#00ffff',
-    glowIntensity: 0.5,
-    accentPrimary: '#00ffff',
-    accentSecondary: '#ff00ff',
-    textColor: '#ffffff',
-    unlocked: true,
-  },
-  {
-    id: 'cyber-matrix',
-    name: 'The Matrix',
-    category: 'cyberpunk',
-    tier: 'premium',
-    description: 'Digital rain cascading through reality',
-    backgroundGradient: ['#000000', '#001a00', '#003300'],
-    backgroundAnimation: 'shift',
-    backgroundAnimationDuration: 5,
-    particleType: 'rain',
-    particleCount: 50,
-    particleColors: ['#00ff00', '#39ff14'],
-    particleSpeed: 2,
-    overlayType: 'scanlines',
-    overlayOpacity: 0.15,
-    glowEnabled: true,
-    glowColor: '#00ff00',
-    glowIntensity: 0.7,
-    accentPrimary: '#00ff00',
-    accentSecondary: '#39ff14',
-    textColor: '#00ff00',
-    unlocked: false,
-    unlockRequirement: 'Reach Level 20',
-  },
-  {
-    id: 'cyber-pulse',
-    name: 'Neural Pulse',
-    category: 'cyberpunk',
-    tier: 'enterprise',
-    description: 'Connected to the global network consciousness',
-    backgroundGradient: ['#0f0f1a', '#1a1a3e', '#2a2a5e'],
-    backgroundAnimation: 'pulse',
-    backgroundAnimationDuration: 3,
-    particleType: 'lightning',
-    particleCount: 8,
-    particleColors: ['#00ffff', '#0080ff', '#ffffff'],
-    overlayType: 'grid',
-    overlayOpacity: 0.1,
-    glowEnabled: true,
-    glowColor: '#00ffff',
-    glowIntensity: 1.0,
-    accentPrimary: '#00ffff',
-    accentSecondary: '#0080ff',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Full neural integration',
-  },
-];
-
-// Gothic Themes
-const THEMES_GOTHIC: ProfileThemeConfig[] = [
-  {
-    id: 'gothic-shadow',
-    name: 'Shadow Realm',
-    category: 'gothic',
-    tier: 'free',
-    description: 'Dark mysteries await in the shadows',
-    backgroundGradient: ['#0a0a0a', '#1a1a1a', '#0d0d0d'],
-    backgroundAnimation: 'none',
-    particleType: 'smoke',
-    particleCount: 10,
-    particleColors: ['#333333', '#666666'],
-    overlayType: 'vignette',
-    overlayOpacity: 0.3,
-    glowEnabled: false,
-    accentPrimary: '#8b0000',
-    accentSecondary: '#4b0082',
-    textColor: '#c0c0c0',
-    unlocked: true,
-  },
-  {
-    id: 'gothic-blood',
-    name: 'Blood Moon',
-    category: 'gothic',
-    tier: 'premium',
-    description: 'Crimson night under the blood moon',
-    backgroundGradient: ['#1a0a0a', '#2e1a1a', '#4a0a0a'],
-    backgroundAnimation: 'pulse',
-    backgroundAnimationDuration: 5,
-    particleType: 'sparkles',
-    particleCount: 15,
-    particleColors: ['#8b0000', '#dc143c', '#ff4500'],
-    overlayType: 'vignette',
-    overlayOpacity: 0.4,
-    glowEnabled: true,
-    glowColor: '#8b0000',
-    glowIntensity: 0.6,
-    accentPrimary: '#dc143c',
-    accentSecondary: '#8b0000',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Reach Level 20',
-  },
-  {
-    id: 'gothic-void',
-    name: 'Abyssal Void',
-    category: 'gothic',
-    tier: 'enterprise',
-    description: 'Stare into the abyss, and it stares back',
-    backgroundGradient: ['#000000', '#0a0a1a', '#1a0a2e'],
-    backgroundAnimation: 'shift',
-    backgroundAnimationDuration: 8,
-    particleType: 'smoke',
-    particleCount: 20,
-    particleColors: ['#4b0082', '#8b008b', '#000000'],
-    overlayType: 'noise',
-    overlayOpacity: 0.05,
-    glowEnabled: true,
-    glowColor: '#8b00ff',
-    glowIntensity: 0.8,
-    accentPrimary: '#8b00ff',
-    accentSecondary: '#4b0082',
-    textColor: '#e0e0e0',
-    unlocked: false,
-    unlockRequirement: 'Embrace the darkness',
-  },
-];
-
-// Kawaii Themes
-const THEMES_KAWAII: ProfileThemeConfig[] = [
-  {
-    id: 'kawaii-pastel',
-    name: 'Pastel Dream',
-    category: 'kawaii',
-    tier: 'free',
-    description: 'Soft pastel colors for a gentle aesthetic',
-    backgroundGradient: ['#ffe4e6', '#fce7f3', '#f3e8ff'],
-    backgroundAnimation: 'none',
-    particleType: 'hearts',
-    particleCount: 12,
-    particleColors: ['#ff69b4', '#ffb6c1', '#ff1493'],
-    overlayType: 'none',
-    glowEnabled: true,
-    glowColor: '#ff69b4',
-    glowIntensity: 0.4,
-    accentPrimary: '#ff69b4',
-    accentSecondary: '#ffb6c1',
-    textColor: '#4a4a4a',
-    unlocked: true,
-  },
-  {
-    id: 'kawaii-candy',
-    name: 'Candy Pop',
-    category: 'kawaii',
-    tier: 'premium',
-    description: 'Sweet and colorful candy explosion',
-    backgroundGradient: ['#ff9a9e', '#fecfef', '#fecfef', '#a18cd1'],
-    backgroundAnimation: 'shift',
-    backgroundAnimationDuration: 8,
-    particleType: 'confetti',
-    particleCount: 25,
-    particleColors: ['#ff69b4', '#ffff00', '#00ffff', '#ff00ff'],
-    overlayType: 'none',
-    glowEnabled: true,
-    glowColor: '#ff69b4',
-    glowIntensity: 0.6,
-    accentPrimary: '#ff69b4',
-    accentSecondary: '#a18cd1',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Reach Level 15',
-  },
-  {
-    id: 'kawaii-rainbow',
-    name: 'Rainbow Magic',
-    category: 'kawaii',
-    tier: 'enterprise',
-    description: 'All the colors of happiness combined',
-    backgroundGradient: ['#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#ff9ff3', '#a29bfe'],
-    backgroundAnimation: 'rotate',
-    backgroundAnimationDuration: 15,
-    particleType: 'stars',
-    particleCount: 35,
-    particleColors: ['#ffffff', '#ffd700', '#ff69b4'],
-    overlayType: 'holographic',
-    overlayOpacity: 0.15,
-    glowEnabled: true,
-    glowColor: '#ff69b4',
-    glowIntensity: 1.0,
-    accentPrimary: '#ff69b4',
-    accentSecondary: '#a29bfe',
-    textColor: '#ffffff',
-    unlocked: false,
-    unlockRequirement: 'Spread maximum joy',
-  },
-];
-
-// Combine all themes
 export const ALL_PROFILE_THEMES: ProfileThemeConfig[] = [
-  ...THEMES_8BIT,
-
-  ...THEMES_ANIME,
-  ...THEMES_CYBERPUNK,
-  ...THEMES_GOTHIC,
-  ...THEMES_KAWAII,
+  {
+    id: 'signal-noir',
+    name: 'Signal Noir',
+    category: 'signal',
+    tier: 'free',
+    description: 'Private signal styling with crisp noir contrast.',
+    backgroundGradient: ['#020617', '#0f172a', '#111827'],
+    surfacePattern: 'scanline',
+    glowEnabled: true,
+    glowColor: '#38bdf8',
+    glowIntensity: 0.62,
+    accentPrimary: '#38bdf8',
+    accentSecondary: '#818cf8',
+    textColor: '#f8fafc',
+    unlocked: true,
+  },
+  {
+    id: 'aurora-glass',
+    name: 'Aurora Glass',
+    category: 'aurora',
+    tier: 'free',
+    description: 'Transparent aurora ribbons over polished glass.',
+    backgroundGradient: ['#031b1d', '#0f766e', '#2563eb', '#8b5cf6'],
+    surfacePattern: 'glass',
+    glowEnabled: true,
+    glowColor: '#7dd3fc',
+    glowIntensity: 0.72,
+    accentPrimary: '#7dd3fc',
+    accentSecondary: '#c4b5fd',
+    textColor: '#f0fdfa',
+    unlocked: true,
+  },
+  {
+    id: 'retro-terminal',
+    name: 'Retro Terminal',
+    category: 'retro',
+    tier: 'free',
+    description: 'Pixel grid, phosphor glow, and command-line energy.',
+    backgroundGradient: ['#020403', '#052e16', '#064e3b'],
+    surfacePattern: 'terminal-grid',
+    glowEnabled: true,
+    glowColor: '#86efac',
+    glowIntensity: 0.58,
+    accentPrimary: '#86efac',
+    accentSecondary: '#22c55e',
+    textColor: '#ecfdf5',
+    unlocked: true,
+  },
+  {
+    id: 'solarpunk-canopy',
+    name: 'Solarpunk Canopy',
+    category: 'solarpunk',
+    tier: 'free',
+    description: 'Green canopy shadows with clean solar highlights.',
+    backgroundGradient: ['#10200f', '#166534', '#84cc16', '#facc15'],
+    surfacePattern: 'canopy',
+    glowEnabled: true,
+    glowColor: '#facc15',
+    glowIntensity: 0.55,
+    accentPrimary: '#facc15',
+    accentSecondary: '#4ade80',
+    textColor: '#f7fee7',
+    unlocked: true,
+  },
+  {
+    id: 'deep-space',
+    name: 'Deep Space',
+    category: 'cosmic',
+    tier: 'free',
+    description: 'Nebula depth, cold stars, and quiet purple light.',
+    backgroundGradient: ['#030014', '#11103a', '#312e81', '#0f172a'],
+    surfacePattern: 'starfield',
+    glowEnabled: true,
+    glowColor: '#a78bfa',
+    glowIntensity: 0.78,
+    accentPrimary: '#a78bfa',
+    accentSecondary: '#67e8f9',
+    textColor: '#eef2ff',
+    unlocked: true,
+  },
+  {
+    id: 'sakura-dream',
+    name: 'Sakura Dream',
+    category: 'sakura',
+    tier: 'free',
+    description: 'Soft petals, rose light, and calm profile warmth.',
+    backgroundGradient: ['#3b0715', '#9f1239', '#f9a8d4', '#fff1f2'],
+    surfacePattern: 'petal-wash',
+    glowEnabled: true,
+    glowColor: '#fb7185',
+    glowIntensity: 0.52,
+    accentPrimary: '#fb7185',
+    accentSecondary: '#f9a8d4',
+    textColor: '#fff1f2',
+    unlocked: true,
+  },
+  {
+    id: 'ember-forge',
+    name: 'Ember Forge',
+    category: 'ember',
+    tier: 'free',
+    description: 'Charcoal metal, molten edges, and ember sparks.',
+    backgroundGradient: ['#120806', '#451a03', '#9a3412', '#fb923c'],
+    surfacePattern: 'forge',
+    glowEnabled: true,
+    glowColor: '#fb923c',
+    glowIntensity: 0.72,
+    accentPrimary: '#fb923c',
+    accentSecondary: '#facc15',
+    textColor: '#fff7ed',
+    unlocked: true,
+  },
 ];
 
-// Get themes by category
-export const getThemesByCategory = (category: ProfileThemeCategory): ProfileThemeConfig[] => {
+const PROFILE_THEMES_BY_ID = Object.fromEntries(
+  ALL_PROFILE_THEMES.map((theme) => [theme.id, theme])
+) as Record<ProfileThemeId, ProfileThemeConfig>;
+
+export function getThemesByCategory(category: ProfileThemeCategory): ProfileThemeConfig[] {
   return ALL_PROFILE_THEMES.filter((theme) => theme.category === category);
-};
+}
 
-// Get theme by ID
-export const getThemeById = (id: string): ProfileThemeConfig | undefined => {
-  return ALL_PROFILE_THEMES.find((theme) => theme.id === id);
-};
+export function getThemeById(id: string | null | undefined): ProfileThemeConfig | undefined {
+  if (!isProfileThemeId(id)) return undefined;
+  return PROFILE_THEMES_BY_ID[id];
+}
 
-// Tier badge colors
+export function getProfileThemeOrDefault(id: string | null | undefined): ProfileThemeConfig {
+  return getThemeById(id) ?? PROFILE_THEMES_BY_ID[DEFAULT_PROFILE_THEME_ID];
+}
+
 export const TIER_COLORS: Record<
   ProfileThemeTier,
   { bg: string; text: string; border: string; glow: string }
 > = {
   free: {
-    bg: 'bg-gray-600/80',
-    text: 'text-gray-200',
-    border: 'border-gray-500',
-    glow: 'rgba(107,114,128,0.3)',
+    bg: 'bg-white/10',
+    text: 'text-white',
+    border: 'border-white/20',
+    glow: 'rgba(255,255,255,0.18)',
   },
   premium: {
     bg: 'bg-gradient-to-r from-purple-600 to-pink-500',
     text: 'text-white',
-    border: 'border-purple-400',
-    glow: 'rgba(139,92,246,0.5)',
+    border: 'border-purple-300/70',
+    glow: 'rgba(168,85,247,0.5)',
   },
   enterprise: {
     bg: 'bg-gradient-to-r from-yellow-500 to-orange-500',
     text: 'text-white',
-    border: 'border-yellow-400',
-    glow: 'rgba(234,179,8,0.6)',
-  },
-};
-
-// Animation keyframes for profile theme backgrounds
-export const BACKGROUND_ANIMATIONS = {
-  none: {},
-  shift: {
-    backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-  },
-  pulse: {
-    opacity: [0.8, 1, 0.8],
-    scale: [1, 1.02, 1],
-  },
-  wave: {
-    backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
-  },
-  rotate: {
-    rotate: [0, 360],
-  },
-};
-
-// Particle animation configs
-export const PARTICLE_CONFIGS: Record<
-  ParticleType,
-  {
-    shape: 'circle' | 'square' | 'triangle' | 'star' | 'heart' | 'custom';
-    size: { min: number; max: number };
-    velocity: { x: { min: number; max: number }; y: { min: number; max: number } };
-    opacity: { min: number; max: number };
-    rotation?: boolean;
-    trail?: boolean;
-  }
-> = {
-  none: {
-    shape: 'circle',
-    size: { min: 0, max: 0 },
-    velocity: { x: { min: 0, max: 0 }, y: { min: 0, max: 0 } },
-    opacity: { min: 0, max: 0 },
-  },
-  pixel: {
-    shape: 'square',
-    size: { min: 2, max: 4 },
-    velocity: { x: { min: -0.5, max: 0.5 }, y: { min: -1, max: -0.5 } },
-    opacity: { min: 0.5, max: 1 },
-  },
-  petal: {
-    shape: 'custom',
-    size: { min: 8, max: 16 },
-    velocity: { x: { min: -1, max: 1 }, y: { min: 0.5, max: 1.5 } },
-    opacity: { min: 0.6, max: 1 },
-    rotation: true,
-  },
-  energy: {
-    shape: 'circle',
-    size: { min: 2, max: 6 },
-    velocity: { x: { min: -2, max: 2 }, y: { min: -3, max: -1 } },
-    opacity: { min: 0.3, max: 0.8 },
-    trail: true,
-  },
-  neon: {
-    shape: 'circle',
-    size: { min: 1, max: 3 },
-    velocity: { x: { min: -0.3, max: 0.3 }, y: { min: -0.5, max: 0.5 } },
-    opacity: { min: 0.5, max: 1 },
-  },
-  smoke: {
-    shape: 'circle',
-    size: { min: 20, max: 50 },
-    velocity: { x: { min: -0.2, max: 0.2 }, y: { min: -0.5, max: -0.1 } },
-    opacity: { min: 0.1, max: 0.3 },
-  },
-  stars: {
-    shape: 'star',
-    size: { min: 3, max: 8 },
-    velocity: { x: { min: 0, max: 0 }, y: { min: 0, max: 0 } },
-    opacity: { min: 0.3, max: 1 },
-    rotation: true,
-  },
-  hearts: {
-    shape: 'heart',
-    size: { min: 8, max: 16 },
-    velocity: { x: { min: -0.5, max: 0.5 }, y: { min: -1, max: -0.3 } },
-    opacity: { min: 0.5, max: 1 },
-  },
-  sparkles: {
-    shape: 'star',
-    size: { min: 2, max: 6 },
-    velocity: { x: { min: -1, max: 1 }, y: { min: -1, max: 1 } },
-    opacity: { min: 0.4, max: 1 },
-  },
-  snow: {
-    shape: 'circle',
-    size: { min: 2, max: 6 },
-    velocity: { x: { min: -0.3, max: 0.3 }, y: { min: 0.5, max: 1.5 } },
-    opacity: { min: 0.5, max: 1 },
-  },
-  rain: {
-    shape: 'custom',
-    size: { min: 1, max: 2 },
-    velocity: { x: { min: -0.1, max: 0.1 }, y: { min: 5, max: 10 } },
-    opacity: { min: 0.3, max: 0.6 },
-    trail: true,
-  },
-  bubbles: {
-    shape: 'circle',
-    size: { min: 4, max: 12 },
-    velocity: { x: { min: -0.3, max: 0.3 }, y: { min: -1, max: -0.3 } },
-    opacity: { min: 0.2, max: 0.5 },
-  },
-  fire: {
-    shape: 'circle',
-    size: { min: 3, max: 10 },
-    velocity: { x: { min: -0.5, max: 0.5 }, y: { min: -3, max: -1 } },
-    opacity: { min: 0.5, max: 1 },
-    trail: true,
-  },
-  lightning: {
-    shape: 'custom',
-    size: { min: 1, max: 2 },
-    velocity: { x: { min: -5, max: 5 }, y: { min: -5, max: 5 } },
-    opacity: { min: 0.8, max: 1 },
-    trail: true,
-  },
-  leaves: {
-    shape: 'custom',
-    size: { min: 8, max: 16 },
-    velocity: { x: { min: -1, max: 1 }, y: { min: 0.3, max: 1 } },
-    opacity: { min: 0.6, max: 1 },
-    rotation: true,
-  },
-  confetti: {
-    shape: 'square',
-    size: { min: 4, max: 8 },
-    velocity: { x: { min: -2, max: 2 }, y: { min: 1, max: 3 } },
-    opacity: { min: 0.7, max: 1 },
-    rotation: true,
+    border: 'border-yellow-200/80',
+    glow: 'rgba(251,191,36,0.6)',
   },
 };

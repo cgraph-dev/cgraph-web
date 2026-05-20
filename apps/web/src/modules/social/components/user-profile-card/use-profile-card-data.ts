@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { getBadgeById } from '@/data/badgesCollection';
+import { DEFAULT_PROFILE_THEME_ID, PROFILE_THEME_IDS } from '@/data/profileThemes';
 import { getTitleById } from '@/data/titlesCollection';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
@@ -28,10 +29,10 @@ const RARITY_RANK: Record<BadgeDisplayTier, number> = {
   legendary: 3,
 };
 
-const ACCENT_THEME_IDS: readonly AccentThemeId[] = ['default', 'ember', 'void', 'rose', 'ice'];
+const ACCENT_THEME_IDS: readonly AccentThemeId[] = PROFILE_THEME_IDS;
 function toAccentThemeId(value: string): AccentThemeId {
   const found = ACCENT_THEME_IDS.find((id) => id === value);
-  return found ?? 'default';
+  return found ?? DEFAULT_PROFILE_THEME_ID;
 }
 
 /** Map badge IDs from store → ProfileBadge[] for the card display */
@@ -119,7 +120,9 @@ export function useProfileCardData(
     useShallow((s) =>
       isOwnProfile
         ? {
-            accentTheme: toAccentThemeId(s.profileThemePresetId ?? 'default'), // store value narrowed to branded ID
+            accentTheme: toAccentThemeId(
+              s.selectedProfileThemeId ?? s.profileThemePresetId ?? DEFAULT_PROFILE_THEME_ID
+            ),
             nameplate: s.equippedNameplate,
             borderId: s.selectedBorderId,
             titleId: s.equippedTitle,
@@ -135,8 +138,8 @@ export function useProfileCardData(
 
   return useMemo(() => {
     const accentTheme: AccentThemeId = isOwnProfile
-      ? (ownCustomization?.accentTheme ?? 'default')
-      : toAccentThemeId(user.profile_theme ?? 'default');
+      ? (ownCustomization?.accentTheme ?? DEFAULT_PROFILE_THEME_ID)
+      : toAccentThemeId(user.profile_theme ?? DEFAULT_PROFILE_THEME_ID);
 
     const nameplateVariant: NameplateVariant = isOwnProfile
       ? (NAMEPLATE_MAP[ownCustomization?.nameplate ?? ''] ?? 'none')

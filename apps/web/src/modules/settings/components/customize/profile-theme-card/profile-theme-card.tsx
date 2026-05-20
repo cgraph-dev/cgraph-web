@@ -1,20 +1,56 @@
 /**
  * ProfileThemeCard Component
  *
- * Profile theme preview card with animated backgrounds,
- * particles, tier badges, and holographic shine effects.
+ * Profile theme preview card with static themed surfaces,
+ * tier badges, and selection states.
  */
 
-import { motion, useMotionValue, useTransform } from 'motion/react';
-import { useState, useRef } from 'react';
+import type React from 'react';
+import { motion } from 'motion/react';
+import { useRef } from 'react';
 import type { ProfileThemeCardProps } from './types';
-import { useParticles } from './useParticles';
-import { getBackgroundAnimation } from './useThemeEffects';
 import TierBadge from './tier-badge';
 import PreviewCard from './preview-card';
-import ThemeEffects from './theme-effects';
 import LockOverlay from './lock-overlay';
 import SelectedIndicator from './selected-indicator';
+import type { ProfileThemeConfig } from '@/data/profileThemes';
+
+function getStaticPatternStyle(theme: ProfileThemeConfig): React.CSSProperties {
+  const accent = theme.accentPrimary;
+  const secondary = theme.accentSecondary;
+
+  switch (theme.surfacePattern) {
+    case 'scanline':
+      return {
+        backgroundImage: `repeating-linear-gradient(0deg, transparent 0 7px, rgba(255,255,255,0.06) 7px 8px), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+      };
+    case 'glass':
+      return {
+        backgroundImage: `radial-gradient(circle at 18% 12%, ${accent}55, transparent 32%), radial-gradient(circle at 82% 24%, ${secondary}45, transparent 30%), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+      };
+    case 'terminal-grid':
+      return {
+        backgroundImage: `linear-gradient(${accent}22 1px, transparent 1px), linear-gradient(90deg, ${accent}18 1px, transparent 1px), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+        backgroundSize: '18px 18px, 18px 18px, auto',
+      };
+    case 'canopy':
+      return {
+        backgroundImage: `radial-gradient(ellipse at 25% 10%, ${secondary}45, transparent 35%), linear-gradient(115deg, transparent 0 42%, ${accent}22 42% 46%, transparent 46% 100%), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+      };
+    case 'starfield':
+      return {
+        backgroundImage: `radial-gradient(circle at 22% 24%, rgba(255,255,255,0.7) 0 1px, transparent 1.5px), radial-gradient(circle at 70% 18%, ${secondary}aa 0 1px, transparent 1.5px), radial-gradient(circle at 58% 72%, ${accent}aa 0 1px, transparent 1.5px), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+      };
+    case 'petal-wash':
+      return {
+        backgroundImage: `radial-gradient(ellipse at 20% 18%, ${secondary}55, transparent 30%), radial-gradient(ellipse at 72% 70%, ${accent}44, transparent 32%), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+      };
+    case 'forge':
+      return {
+        backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 18px), radial-gradient(circle at 50% 100%, ${accent}55, transparent 38%), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+      };
+  }
+}
 
 /**
  * Profile Theme Card display component.
@@ -24,43 +60,16 @@ export default function ProfileThemeCard({
   isSelected,
   onSelect,
   allowPreview = true,
-  showParticles = true,
 }: ProfileThemeCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
 
   const isLocked = !theme.unlocked && !allowPreview;
   const canInteract = !isLocked;
-
-  // Holographic shine effect based on mouse position
-  const shineX = useTransform(mouseX, [0, 1], ['-100%', '200%']);
-  const shineY = useTransform(mouseY, [0, 1], ['-100%', '200%']);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    mouseX.set(x);
-    mouseY.set(y);
-  };
-
-  const particles = useParticles(
-    theme.particleType,
-    theme.particleCount,
-    theme.particleColors,
-    showParticles
-  );
 
   return (
     <motion.div
       ref={cardRef}
       onClick={() => canInteract && onSelect()}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       role="button"
       tabIndex={canInteract ? 0 : -1}
       onKeyDown={(e) => e.key === 'Enter' && canInteract && onSelect()}
@@ -71,24 +80,19 @@ export default function ProfileThemeCard({
         boxShadow: isSelected && theme.glowEnabled ? `0 0 30px ${theme.glowColor}60` : undefined,
       }}
     >
-      {/* Background gradient with animation */}
-      <motion.div
+      {/* Static themed surface */}
+      <div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
-          backgroundSize: '400% 400%',
+          ...getStaticPatternStyle(theme),
+          backgroundColor: theme.backgroundGradient[0],
         }}
-        {...getBackgroundAnimation(theme)}
       />
 
-      {/* Visual effects layer */}
-      <ThemeEffects
-        theme={theme}
-        particles={particles}
-        showParticles={showParticles}
-        isHovered={isHovered}
-        shineX={shineX}
-        shineY={shineY}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-black/35" />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{ background: `linear-gradient(90deg, transparent, ${theme.accentPrimary}, transparent)` }}
       />
 
       {/* Content overlay */}

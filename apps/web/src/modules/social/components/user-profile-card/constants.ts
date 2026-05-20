@@ -41,50 +41,82 @@ interface AccentTheme {
   dim: string;
   glow: string;
   surface: string;
+  body: string;
+  banner: string;
   border: string;
   rgb: string;
 }
 
 export const ACCENT_THEMES: Record<AccentThemeId, AccentTheme> = {
-  default: {
-    accent: '#00d4aa',
-    dim: 'rgba(0,212,170,0.10)',
-    glow: 'rgba(0,212,170,0.18)',
-    surface: 'rgba(0,212,170,0.022)',
-    border: 'rgba(0,212,170,0.08)',
-    rgb: '0,212,170',
+  'signal-noir': {
+    accent: '#38bdf8',
+    dim: 'rgba(56,189,248,0.10)',
+    glow: 'rgba(56,189,248,0.18)',
+    surface: 'rgba(56,189,248,0.026)',
+    body: 'linear-gradient(180deg, rgba(56,189,248,0.055) 0%, rgba(8,9,15,0.98) 48%, #08090f 100%)',
+    banner: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #111827 100%)',
+    border: 'rgba(56,189,248,0.12)',
+    rgb: '56,189,248',
   },
-  ember: {
-    accent: '#e8a020',
-    dim: 'rgba(232,160,32,0.10)',
-    glow: 'rgba(232,160,32,0.18)',
-    surface: 'rgba(232,160,32,0.022)',
-    border: 'rgba(232,160,32,0.08)',
-    rgb: '232,160,32',
+  'aurora-glass': {
+    accent: '#7dd3fc',
+    dim: 'rgba(125,211,252,0.10)',
+    glow: 'rgba(125,211,252,0.18)',
+    surface: 'rgba(125,211,252,0.028)',
+    body: 'linear-gradient(160deg, rgba(45,212,191,0.07) 0%, rgba(59,130,246,0.045) 42%, rgba(139,92,246,0.06) 100%), #071016',
+    banner: 'linear-gradient(135deg, #031b1d 0%, #0f766e 42%, #8b5cf6 100%)',
+    border: 'rgba(125,211,252,0.14)',
+    rgb: '125,211,252',
   },
-  void: {
-    accent: '#7c6ef5',
-    dim: 'rgba(124,110,245,0.10)',
-    glow: 'rgba(124,110,245,0.18)',
-    surface: 'rgba(124,110,245,0.022)',
-    border: 'rgba(124,110,245,0.08)',
-    rgb: '124,110,245',
+  'retro-terminal': {
+    accent: '#86efac',
+    dim: 'rgba(134,239,172,0.10)',
+    glow: 'rgba(134,239,172,0.18)',
+    surface: 'rgba(34,197,94,0.026)',
+    body: 'linear-gradient(180deg, rgba(34,197,94,0.055) 0%, rgba(4,15,9,0.98) 55%, #050805 100%)',
+    banner: 'linear-gradient(135deg, #020403 0%, #052e16 50%, #064e3b 100%)',
+    border: 'rgba(134,239,172,0.14)',
+    rgb: '134,239,172',
   },
-  rose: {
-    accent: '#f03060',
-    dim: 'rgba(240,48,96,0.10)',
-    glow: 'rgba(240,48,96,0.18)',
-    surface: 'rgba(240,48,96,0.022)',
-    border: 'rgba(240,48,96,0.08)',
-    rgb: '240,48,96',
+  'solarpunk-canopy': {
+    accent: '#facc15',
+    dim: 'rgba(250,204,21,0.10)',
+    glow: 'rgba(250,204,21,0.18)',
+    surface: 'rgba(132,204,22,0.028)',
+    body: 'linear-gradient(155deg, rgba(74,222,128,0.055) 0%, rgba(250,204,21,0.05) 52%, rgba(10,18,8,0.98) 100%), #0b1208',
+    banner: 'linear-gradient(135deg, #10200f 0%, #166534 48%, #facc15 100%)',
+    border: 'rgba(250,204,21,0.16)',
+    rgb: '250,204,21',
   },
-  ice: {
-    accent: '#18b8f8',
-    dim: 'rgba(24,184,248,0.10)',
-    glow: 'rgba(24,184,248,0.18)',
-    surface: 'rgba(24,184,248,0.022)',
-    border: 'rgba(24,184,248,0.08)',
-    rgb: '24,184,248',
+  'deep-space': {
+    accent: '#a78bfa',
+    dim: 'rgba(167,139,250,0.10)',
+    glow: 'rgba(167,139,250,0.20)',
+    surface: 'rgba(167,139,250,0.03)',
+    body: 'radial-gradient(circle at 20% 0%, rgba(103,232,249,0.07), transparent 34%), linear-gradient(180deg, rgba(167,139,250,0.06) 0%, #070617 72%)',
+    banner: 'linear-gradient(135deg, #030014 0%, #11103a 48%, #312e81 100%)',
+    border: 'rgba(167,139,250,0.15)',
+    rgb: '167,139,250',
+  },
+  'sakura-dream': {
+    accent: '#fb7185',
+    dim: 'rgba(251,113,133,0.10)',
+    glow: 'rgba(251,113,133,0.18)',
+    surface: 'rgba(251,113,133,0.026)',
+    body: 'linear-gradient(160deg, rgba(251,113,133,0.06) 0%, rgba(249,168,212,0.045) 50%, rgba(30,8,14,0.98) 100%), #12070c',
+    banner: 'linear-gradient(135deg, #3b0715 0%, #9f1239 46%, #f9a8d4 100%)',
+    border: 'rgba(251,113,133,0.13)',
+    rgb: '251,113,133',
+  },
+  'ember-forge': {
+    accent: '#fb923c',
+    dim: 'rgba(251,146,60,0.10)',
+    glow: 'rgba(251,146,60,0.20)',
+    surface: 'rgba(251,146,60,0.028)',
+    body: 'linear-gradient(160deg, rgba(251,146,60,0.07) 0%, rgba(154,52,18,0.055) 48%, rgba(18,8,6,0.98) 100%), #130806',
+    banner: 'linear-gradient(135deg, #120806 0%, #451a03 48%, #fb923c 100%)',
+    border: 'rgba(251,146,60,0.15)',
+    rgb: '251,146,60',
   },
 };
 

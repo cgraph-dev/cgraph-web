@@ -6,9 +6,11 @@ import { motion } from 'motion/react';
 import { PencilSquareIcon, CheckIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
+import type { ProfileThemeConfig } from '@/data/profileThemes';
 
 interface ProfileBannerProps {
   bannerUrl?: string;
+  theme: ProfileThemeConfig;
   isOwnProfile: boolean;
   editMode: boolean;
   isUploading: boolean;
@@ -28,6 +30,7 @@ interface ProfileBannerProps {
  */
 export function ProfileBanner({
   bannerUrl,
+  theme,
   isOwnProfile,
   editMode,
   isUploading,
@@ -44,9 +47,32 @@ export function ProfileBanner({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={tweens.smooth}
-      className="group relative h-48 overflow-hidden bg-gradient-to-r from-primary-600 to-purple-600"
+      className="group relative h-48 overflow-hidden"
+      style={{
+        background: `radial-gradient(circle at 18% 18%, ${theme.accentPrimary}55, transparent 32%), radial-gradient(circle at 82% 28%, ${theme.accentSecondary}45, transparent 34%), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
+      }}
     >
       {bannerUrl && <img src={bannerUrl} alt="" className="h-full w-full object-cover" />}
+      {!bannerUrl && theme.surfacePattern === 'terminal-grid' && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: `linear-gradient(${theme.accentPrimary}24 1px, transparent 1px), linear-gradient(90deg, ${theme.accentPrimary}18 1px, transparent 1px)`,
+            backgroundSize: '28px 28px',
+          }}
+        />
+      )}
+      {!bannerUrl && theme.surfacePattern === 'scanline' && (
+        <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0_8px,rgba(255,255,255,0.055)_8px_9px)]" />
+      )}
+      {!bannerUrl && theme.surfacePattern === 'starfield' && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 22% 22%, rgba(255,255,255,0.8) 0 1px, transparent 1.5px), radial-gradient(circle at 72% 34%, ${theme.accentSecondary} 0 1px, transparent 1.5px), radial-gradient(circle at 54% 68%, ${theme.accentPrimary} 0 1px, transparent 1.5px)`,
+          }}
+        />
+      )}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-dark-950/50" />
 
       {/* Edit Mode Toggle - Top Right */}

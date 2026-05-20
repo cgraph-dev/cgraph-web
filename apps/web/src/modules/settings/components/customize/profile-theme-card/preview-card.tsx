@@ -1,45 +1,44 @@
-/** PreviewCard — renders a live preview of a profile theme configuration. */
-import { motion } from 'motion/react';
+/** PreviewCard — static theme sample used by the picker card. */
 import type { ProfileThemeConfig } from '@/data/profileThemes';
-import { tweens, loop } from '@/lib/animation-presets';
 
 interface PreviewCardProps {
   theme: ProfileThemeConfig;
 }
 
-/**
- * Preview Card display component.
- */
 export default function PreviewCard({ theme }: PreviewCardProps) {
   return (
     <>
-      {/* Center: Preview avatar */}
       <div className="flex flex-1 items-center justify-center">
-        <motion.div
-          className="flex h-16 w-16 items-center justify-center rounded-full border-2 bg-[var(--token-card-bg)]/[0.80]"
-          style={{
-            borderColor: theme.accentPrimary,
-            boxShadow: theme.glowEnabled ? `0 0 20px ${theme.accentPrimary}60` : undefined,
-          }}
-          animate={
-            theme.glowEnabled
-              ? {
-                  boxShadow: [
-                    `0 0 10px ${theme.accentPrimary}40`,
-                    `0 0 25px ${theme.accentPrimary}60`,
-                    `0 0 10px ${theme.accentPrimary}40`,
-                  ],
-                }
-              : {}
-          }
-          transition={loop(tweens.ambient)}
-        >
-          <span className="text-2xl">👤</span>
-        </motion.div>
+        <div className="relative h-20 w-full max-w-[9rem] overflow-hidden rounded-xl border border-white/12 bg-black/30 p-2 shadow-[0_12px_34px_rgba(0,0,0,0.28)]">
+          <div
+            className="absolute inset-x-0 top-0 h-6"
+            style={{
+              background: `linear-gradient(90deg, ${theme.accentPrimary}70, ${theme.accentSecondary}55)`,
+            }}
+          />
+          <div className="relative mt-3 flex items-end gap-2">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-full border text-[11px] font-bold"
+              style={{
+                borderColor: theme.accentPrimary,
+                color: theme.textColor,
+                boxShadow: theme.glowEnabled ? `0 0 18px ${theme.glowColor}55` : undefined,
+              }}
+            >
+              CG
+            </div>
+            <div className="min-w-0 flex-1 space-y-1 pb-1">
+              <div
+                className="h-2.5 rounded-full"
+                style={{ background: `linear-gradient(90deg, ${theme.textColor}, transparent)` }}
+              />
+              <div className="h-1.5 w-2/3 rounded-full bg-white/25" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Bottom: Theme name and description */}
-      <div className="rounded-lg bg-black/40 p-2 backdrop-blur-sm">
+      <div className="rounded-lg border border-white/10 bg-black/45 p-2 backdrop-blur-sm">
         <h3 className="truncate text-sm font-bold" style={{ color: theme.textColor }}>
           {theme.name}
         </h3>

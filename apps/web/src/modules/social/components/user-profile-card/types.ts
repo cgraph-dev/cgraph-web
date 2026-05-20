@@ -6,6 +6,7 @@
  */
 
 import type { ProfileCardUser } from '../profile-card';
+import type { ProfileThemeId } from '@/data/profileThemes';
 
 export type { ProfileCardUser };
 
@@ -59,7 +60,7 @@ export type NameplateVariant = 'cosmic' | 'aurora' | 'ember' | 'none';
 export type BadgeDisplayTier = 'legendary' | 'epic' | 'rare' | 'dim';
 
 /** Per-user accent theme (cosmetic choice, separate from app theme) */
-export type AccentThemeId = 'default' | 'ember' | 'void' | 'rose' | 'ice';
+export type AccentThemeId = ProfileThemeId;
 
 /** Pulse tier derived from pulse score */
 export type PulseTier =
@@ -112,7 +113,7 @@ export interface CardShellProps {
 export interface BannerProps {
   bannerType: 'animated' | 'static' | 'none';
   accentColor: string;
-  prefersReducedMotion: boolean;
+  bannerBackground: string;
 }
 
 export interface AvatarZoneProps {

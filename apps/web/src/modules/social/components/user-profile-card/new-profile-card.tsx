@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { usePrefersReducedMotion } from '@/hooks';
+import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
 
 import { ActionButtons } from './action-buttons';
 import { AvatarZone } from './avatar-zone';
@@ -26,8 +26,7 @@ export const NewProfileCard = memo(function NewProfileCard({
   onViewProfile = NOOP,
   className,
 }: NewProfileCardProps) {
-  const prefersReducedMotion = usePrefersReducedMotion();
-  const theme = ACCENT_THEMES[user.accentTheme ?? 'default'];
+  const theme = ACCENT_THEMES[user.accentTheme ?? DEFAULT_PROFILE_THEME_ID];
   const accentColor = theme.accent;
   const isMini = variant === 'mini';
   const isPreview = mode === 'preview';
@@ -47,7 +46,7 @@ export const NewProfileCard = memo(function NewProfileCard({
       <BannerCanvas
         bannerType={user.bannerType ?? 'static'}
         accentColor={accentColor}
-        prefersReducedMotion={prefersReducedMotion}
+        bannerBackground={theme.banner}
       />
 
       {/* Card body with theme surface tint */}
@@ -111,7 +110,7 @@ export const NewProfileCard = memo(function NewProfileCard({
               filled={user.pulseFilled ?? 0}
               tier={user.pulseTier ?? 'Newcomer'}
               score={user.pulse ?? 0}
-              prefersReducedMotion={prefersReducedMotion}
+              prefersReducedMotion={true}
             />
           </>
         )}

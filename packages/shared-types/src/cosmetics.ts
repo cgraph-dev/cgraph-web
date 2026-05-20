@@ -280,6 +280,85 @@ export interface ProfileThemeCatalog {
   readonly colorAccent: string | null;
 }
 
+export const PROFILE_THEME_IDS = [
+  'signal-noir',
+  'aurora-glass',
+  'retro-terminal',
+  'solarpunk-canopy',
+  'deep-space',
+  'sakura-dream',
+  'ember-forge',
+] as const;
+
+export type ProfileThemeId = (typeof PROFILE_THEME_IDS)[number];
+
+export const PROFILE_THEME_CATEGORIES = [
+  'signal',
+  'aurora',
+  'retro',
+  'solarpunk',
+  'cosmic',
+  'sakura',
+  'ember',
+] as const;
+
+export type ProfileThemeCategory = (typeof PROFILE_THEME_CATEGORIES)[number];
+
+export const PROFILE_THEME_TIERS = ['free', 'premium', 'enterprise'] as const;
+
+export type ProfileThemeTier = (typeof PROFILE_THEME_TIERS)[number];
+
+export const PROFILE_THEME_SURFACE_PATTERNS = [
+  'scanline',
+  'glass',
+  'terminal-grid',
+  'canopy',
+  'starfield',
+  'petal-wash',
+  'forge',
+] as const;
+
+export type ProfileThemeSurfacePattern = (typeof PROFILE_THEME_SURFACE_PATTERNS)[number];
+
+/** Runtime-neutral profile theme contract shared by full profiles and previews. */
+export interface ProfileThemeConfig {
+  readonly id: ProfileThemeId;
+  readonly name: string;
+  readonly category: ProfileThemeCategory;
+  readonly tier: ProfileThemeTier;
+  readonly description: string;
+  readonly backgroundGradient: readonly string[];
+  readonly surfacePattern: ProfileThemeSurfacePattern;
+  readonly glowEnabled: boolean;
+  readonly glowColor?: string;
+  readonly glowIntensity?: number;
+  readonly accentPrimary: string;
+  readonly accentSecondary: string;
+  readonly textColor: string;
+  readonly unlocked: boolean;
+  readonly unlockRequirement?: string;
+  readonly unlockLevel?: number;
+  readonly previewImage?: string;
+}
+
+function isOneOf<const T extends readonly string[]>(values: T, value: unknown): value is T[number] {
+  return typeof value === 'string' && (values as readonly string[]).includes(value);
+}
+
+export function isProfileThemeCategory(value: unknown): value is ProfileThemeCategory {
+  return isOneOf(PROFILE_THEME_CATEGORIES, value);
+}
+
+export function isProfileThemeId(value: unknown): value is ProfileThemeId {
+  return isOneOf(PROFILE_THEME_IDS, value);
+}
+
+export function isProfileThemeSurfacePattern(
+  value: unknown
+): value is ProfileThemeSurfacePattern {
+  return isOneOf(PROFILE_THEME_SURFACE_PATTERNS, value);
+}
+
 /** All equipped cosmetics for a user — returned by GET /api/v1/cosmetics/equipped. */
 export interface EquippedCosmetics {
   readonly avatar_border: CatalogItemSummary | null;

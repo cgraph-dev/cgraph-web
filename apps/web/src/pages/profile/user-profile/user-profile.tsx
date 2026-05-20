@@ -12,6 +12,7 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import type React from 'react';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 import {
@@ -22,6 +23,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { getProfileThemeOrDefault, type ProfileThemeConfig } from '@/data/profileThemes';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 
@@ -29,7 +31,6 @@ import {
   ProfileLoadingState,
   ProfileErrorState,
   ProfileInvalidUser,
-  AmbientParticles,
   ProfileStatsGrid,
   ProfileSidebar,
   EquippedBadgesShowcase,
@@ -50,6 +51,16 @@ import { FADE_UP } from '@/lib/animations/transitions';
 
 /** Stable empty array for stub achievements */
 const EMPTY_ACHIEVEMENTS: never[] = [];
+
+function getProfileThemePageStyle(theme: ProfileThemeConfig): React.CSSProperties {
+  const baseGradient = `linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`;
+
+  return {
+    background: `radial-gradient(circle at 15% 8%, ${theme.accentPrimary}24, transparent 30%), radial-gradient(circle at 84% 18%, ${theme.accentSecondary}22, transparent 34%), ${baseGradient}`,
+    ['--profile-theme-accent' as string]: theme.accentPrimary,
+    ['--profile-theme-accent-secondary' as string]: theme.accentSecondary,
+  };
+}
 
 /** XP progress bar toward next level */
 function XPProgressBar({
@@ -134,6 +145,7 @@ export function UserProfile() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore();
   const equippedBadges = useCustomizationStore((s) => s.equippedBadges) ?? [];
+  const selectedProfileThemeId = useCustomizationStore((s) => s.selectedProfileThemeId);
 
   const isOwnProfile = currentUser?.id === userId;
 
@@ -166,12 +178,19 @@ export function UserProfile() {
   if (isLoading) return <ProfileLoadingState />;
   if (error || !profile) return <ProfileErrorState error={error} />;
 
-  return (
-    <div className="relative flex-1 overflow-y-auto bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
-      <AmbientParticles count={15} />
+  const activeProfileTheme = getProfileThemeOrDefault(
+    isOwnProfile ? (selectedProfileThemeId ?? profile.profileTheme) : profile.profileTheme
+  );
 
+  return (
+    <div
+      className="relative flex-1 overflow-y-auto bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950"
+      style={getProfileThemePageStyle(activeProfileTheme)}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-dark-950/40" />
       <ProfileBanner
         bannerUrl={profile.bannerUrl ?? undefined}
+        theme={activeProfileTheme}
         isOwnProfile={isOwnProfile}
         editMode={actions.editMode}
         isUploading={actions.isUploadingBanner}

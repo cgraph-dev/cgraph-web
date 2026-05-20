@@ -16,8 +16,6 @@ export interface ProfileThemeCardProps {
   onSelect: () => void;
   /** Whether to show the preview overlay */
   allowPreview?: boolean;
-  /** Whether to render particle effects */
-  showParticles?: boolean;
 }
 
 export interface ProfileThemeGridProps {
@@ -27,22 +25,4 @@ export interface ProfileThemeGridProps {
   columns?: 2 | 3 | 4;
   /** Additional CSS classes */
   className?: string;
-}
-
-/** Internal particle data for theme effects */
-export interface Particle {
-  /** Unique particle ID */
-  id: number;
-  /** X position (0-100%) */
-  x: number;
-  /** Y position (0-100%) */
-  y: number;
-  /** Particle size in pixels */
-  size: number;
-  /** Animation delay in seconds */
-  delay: number;
-  /** Animation duration in seconds */
-  duration: number;
-  /** Particle color (hex or CSS color) */
-  color: string;
 }

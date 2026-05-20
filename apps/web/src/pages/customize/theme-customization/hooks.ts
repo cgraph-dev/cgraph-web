@@ -10,6 +10,7 @@ import { useCustomizationStore } from '@/modules/settings/store/customization/cu
 import toast from 'react-hot-toast';
 import {
   ALL_PROFILE_THEMES,
+  PROFILE_THEME_CATEGORY_IDS,
   getThemesByCategory,
   type ProfileThemeConfig,
   type ProfileThemeCategory,
@@ -20,13 +21,7 @@ import type { ThemeCategory } from './types';
 const VALID_CATEGORIES: ReadonlyArray<ThemeCategory> = ['profile', 'chat', 'forum', 'app'];
 const VALID_PROFILE_FILTERS: ReadonlyArray<ProfileThemeCategory | 'all'> = [
   'all',
-  'gradient',
-  'minimal',
-  'dark',
-  'light',
-  'animated',
-  'seasonal',
-  'premium',
+  ...PROFILE_THEME_CATEGORY_IDS,
 ];
 
 /** Narrows a raw URL string to ThemeCategory, falling back to 'profile'. */
@@ -110,7 +105,7 @@ export function useThemeCustomization() {
 
   // Create selectedThemes object from store state
   const selectedThemes: Record<ThemeCategory, string> = {
-    profile: profileTheme ?? 'default',
+    profile: profileTheme ?? 'signal-noir',
     chat: chatTheme,
     forum: forumTheme ?? 'forum-default',
     app: appTheme,
