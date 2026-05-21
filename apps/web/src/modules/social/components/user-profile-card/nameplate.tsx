@@ -5,6 +5,8 @@ import {
   NAME_FONTS,
   NAME_FONT_KEYS,
   NAME_EFFECTS,
+  NAME_EFFECT_KEYS,
+  type NameEffect,
   type NameFont,
 } from '@cgraph/animation-constants';
 
@@ -17,6 +19,14 @@ function getNameFontKey(font?: string): NameFont | null {
   }
 
   return NAME_FONT_KEYS.find((key) => key === font) ?? null;
+}
+
+function getNameEffectKey(effect?: string): NameEffect | null {
+  if (!effect) {
+    return null;
+  }
+
+  return NAME_EFFECT_KEYS.find((key) => key === effect) ?? null;
 }
 
 function getFontWeight(fontWeight: unknown): React.CSSProperties['fontWeight'] | undefined {
@@ -120,10 +130,8 @@ export const Nameplate = memo(function Nameplate({
     }
     return { color: '#edf0f8' };
   })();
-  const effectConfig =
-    displayNameEffect && displayNameEffect in NAME_EFFECTS
-      ? NAME_EFFECTS[displayNameEffect as keyof typeof NAME_EFFECTS]
-      : null;
+  const effectKey = getNameEffectKey(displayNameEffect);
+  const effectConfig = effectKey ? NAME_EFFECTS[effectKey] : null;
 
   return (
     <div className="relative z-[2] flex flex-col items-center px-4 pt-[22px]">
