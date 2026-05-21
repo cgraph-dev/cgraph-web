@@ -10,7 +10,6 @@ export { default, default as ThemedBorderCard } from './themed-border-card';
 // Sub-components
 export { BorderCardGrid } from './border-card-grid';
 export { CornerBrackets } from './corner-brackets';
-export { ParticleEffects } from './particle-effects';
 
 // Animations
 export { getBorderAnimation } from './animations';
@@ -24,4 +23,4 @@ export type {
 } from './types';
 
 // Constants
-export { SIZE_CONFIG, COLUMN_CLASSES, PARTICLE_ANIMATION_TYPES } from './constants';
+export { SIZE_CONFIG, COLUMN_CLASSES } from './constants';

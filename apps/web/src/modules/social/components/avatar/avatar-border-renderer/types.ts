@@ -2,12 +2,7 @@
  * Type definitions for AvatarBorderRenderer module
  */
 
-import type {
-  AvatarBorderConfig,
-  BorderTheme,
-  ParticleConfig,
-  ParticleType,
-} from '@/types/avatar-borders';
+import type { AvatarBorderConfig, BorderTheme } from '@/types/avatar-borders';
 
 export interface AvatarBorderRendererProps {
   /** Avatar image URL (optional when children provided) */
@@ -20,8 +15,6 @@ export interface AvatarBorderRendererProps {
   size?: number;
   /** Custom class name */
   className?: string;
-  /** Whether to show particles */
-  showParticles?: boolean;
   /** Animation speed multiplier */
   animationSpeed?: number;
   /** Whether border is interactive (hover effects) */
@@ -40,18 +33,10 @@ export interface AvatarBorderRendererProps {
   children?: React.ReactNode;
 }
 
-export interface ParticleProps {
-  config: ParticleConfig;
-  containerSize: number;
-  index: number;
-  total: number;
-  colors: BorderColors;
-}
-
 export interface BorderColors {
   primary: string;
   secondary: string;
   accent: string;
 }
 
-export type { AvatarBorderConfig, BorderTheme, ParticleConfig, ParticleType };
+export type { AvatarBorderConfig, BorderTheme };

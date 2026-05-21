@@ -1,8 +1,7 @@
 /**
  * NameplatesSection Component
  *
- * Advanced nameplate selection with category filtering, text effect preview,
- * particle overlays, and Naraka-style emblem/gradient system.
+ * Advanced nameplate selection with category filtering and Lottie-backed previews.
  * Uses the shared NAMEPLATE_REGISTRY from @cgraph/animation-constants.
  */
 
@@ -88,7 +87,6 @@ function NameplateRow({
             nameplate={plate}
             username="CryptoNinja"
             size="md"
-            showParticles={true}
           />
         </div>
 
@@ -124,11 +122,6 @@ function NameplateRow({
           </p>
           {/* Feature badges */}
           <div className="mt-1 flex flex-wrap gap-1">
-            {plate.particleType !== 'none' && (
-              <span className="rounded bg-[var(--token-bg-tertiary)] px-1 py-0.5 text-[9px] text-[var(--token-text-muted)]">
-                {plate.particleType} particles
-              </span>
-            )}
             {plate.emblem && (
               <span className="rounded bg-[var(--token-bg-tertiary)] px-1 py-0.5 text-[9px] text-[var(--token-text-muted)]">
                 {plate.emblem} emblem

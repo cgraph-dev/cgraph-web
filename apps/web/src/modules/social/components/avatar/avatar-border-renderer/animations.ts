@@ -3,7 +3,7 @@
  */
 
 import { durations } from '@cgraph/animation-constants';
-import type { BorderTheme, ParticleType } from '@/types/avatar-borders';
+import type { BorderTheme } from '@/types/avatar-borders';
 import type { BorderColors } from './types';
 export const ANIMATION_KEYFRAMES = {
   rotate: {
@@ -111,40 +111,6 @@ export function getAnimationTypeFromBorder(borderType: string): string {
   return 'pulse'; // Default fallback
 }
 
-/** Get particle type from border type */
-export function getParticleTypeFromBorder(borderType: string): ParticleType {
-  if (borderType.includes('fire') || borderType.includes('flame') || borderType.includes('inferno'))
-    return 'flame';
-  if (
-    borderType.includes('sakura') ||
-    borderType.includes('cherry') ||
-    borderType.includes('petal')
-  )
-    return 'petal';
-  if (
-    borderType.includes('spark') ||
-    borderType.includes('electric') ||
-    borderType.includes('lightning')
-  )
-    return 'sparkle';
-  if (borderType.includes('bubble') || borderType.includes('water')) return 'bubble';
-  if (
-    borderType.includes('star') ||
-    borderType.includes('cosmic') ||
-    borderType.includes('stellar')
-  )
-    return 'star';
-  if (borderType.includes('snow') || borderType.includes('frost') || borderType.includes('ice'))
-    return 'snowflake';
-  if (borderType.includes('leaf') || borderType.includes('nature') || borderType.includes('vine'))
-    return 'leaf';
-  if (borderType.includes('node') || borderType.includes('golden')) return 'circle';
-  if (borderType.includes('heart')) return 'heart';
-  if (borderType.includes('pixel') || borderType.includes('8bit')) return 'pixel';
-  if (borderType.includes('gear') || borderType.includes('steampunk')) return 'gear';
-  if (borderType.includes('rune') || borderType.includes('ancient')) return 'rune';
-  return 'sparkle'; // Default fallback
-}
 export const getThemeStyles = (theme: BorderTheme, colors: BorderColors): React.CSSProperties => {
   const baseGradient = `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`;
 

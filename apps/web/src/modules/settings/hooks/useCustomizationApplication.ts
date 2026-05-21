@@ -3,7 +3,7 @@
  *
  * Applies user customizations to the UI in real-time.
  * Listens to customizationStore and updates CSS variables, body classes,
- * and DOM elements to reflect selected themes, effects, and animations.
+ * and DOM elements to reflect selected themes and chat styling.
  *
  */
 
@@ -104,8 +104,6 @@ export function useCustomizationApplication(): void {
   const profileTheme = useCustomizationStore((s) => s.profileTheme);
   const selectedProfileThemeId = useCustomizationStore((s) => s.selectedProfileThemeId);
   const chatTheme = useCustomizationStore((s) => s.chatTheme);
-  const particleEffect = useCustomizationStore((s) => s.particleEffect);
-  const backgroundEffect = useCustomizationStore((s) => s.backgroundEffect);
   const animationSpeed = useCustomizationStore((s) => s.animationSpeed);
 
   const effectiveProfileTheme = profileTheme ?? selectedProfileThemeId;
@@ -127,11 +125,11 @@ export function useCustomizationApplication(): void {
     const speedMultiplier = ANIMATION_SPEEDS[animationSpeed] ?? '1';
     root.style.setProperty('--animation-speed', speedMultiplier);
 
-    // Apply body classes for effects and themes
-    updateBodyClass('particle-effect-', particleEffect !== 'none' ? particleEffect : null);
-    updateBodyClass('bg-effect-', backgroundEffect !== 'solid' ? backgroundEffect : null);
+    // Apply body classes for themes
+    updateBodyClass('particle-effect-', null);
+    updateBodyClass('bg-effect-', null);
     updateBodyClass('chat-theme-', chatTheme);
-  }, [effectiveProfileTheme, chatTheme, particleEffect, backgroundEffect, animationSpeed]);
+  }, [effectiveProfileTheme, chatTheme, animationSpeed]);
 }
 
 /**
@@ -153,7 +151,6 @@ export function getAvatarBorderStyle(borderId: string | null): {
     'rotating-ring': 'avatar-border-rotating',
     'dual-ring': 'avatar-border-dual-ring',
     'rainbow-spin': 'avatar-border-rainbow',
-    'particle-orbit': 'avatar-border-particles',
     'electric-arc': 'avatar-border-electric',
     'flame-ring': 'avatar-border-flame',
     'ice-crystal': 'avatar-border-ice',

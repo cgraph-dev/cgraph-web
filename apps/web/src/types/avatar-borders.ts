@@ -144,42 +144,6 @@ export interface AvatarBorderConfig {
     segment?: [number, number];
   };
 }
-export type ParticleType =
-  | 'circle'
-  | 'square'
-  | 'star'
-  | 'heart'
-  | 'sparkle'
-  | 'pixel'
-  | 'leaf'
-  | 'petal'
-  | 'snowflake'
-  | 'flame'
-  | 'bubble'
-  | 'lightning'
-  | 'rune'
-  | 'gear'
-  | 'triangle'
-  | 'hexagon'
-  | 'custom'
-  | 'spark'
-  | 'sakura'
-  | 'node'
-  | 'electric'
-  | 'crystal'
-  | 'glitch'
-  | 'void';
-
-export interface ParticleConfig {
-  type: ParticleType;
-  count: number;
-  size: number;
-  color: string;
-  opacity: number;
-  speed: number;
-  direction: 'clockwise' | 'counterclockwise' | 'random' | 'outward' | 'inward';
-  pattern: 'orbit' | 'spiral' | 'burst' | 'wave' | 'grid' | 'random';
-}
 export type BorderAnimationType =
   | 'static'
   | 'rotate'

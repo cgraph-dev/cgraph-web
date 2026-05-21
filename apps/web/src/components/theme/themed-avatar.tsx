@@ -121,7 +121,6 @@ export function ThemedAvatar({
           alt={alt}
           border={resolvedBorder}
           size={sizePxMap[size]}
-          showParticles={theme.particlesEnabled}
           animationSpeed={speedMultiplier}
           interactive={!!onClick}
           onClick={onClick}
@@ -235,33 +234,6 @@ export function ThemedAvatar({
       onClick={onClick}
       data-avatar-border-id={avatarBorderId ?? undefined}
     >
-      {/* Particles effect for premium borders */}
-      {theme.particlesEnabled &&
-        (theme.avatarBorder === 'legendary' || theme.avatarBorder === 'mythic') && (
-          <div className="pointer-events-none absolute inset-0">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute h-1 w-1 rounded-full"
-                style={{
-                  background: colors.primary,
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -10, 0],
-                  opacity: [0.3, 0.8, 0.3],
-                }}
-                transition={{
-                  duration: (1.5 + Math.random()) * speedMultiplier,
-                  repeat: Infinity,
-                  delay: Math.random() * 2,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
       {/* Avatar Image */}
       <img
         src={src || '/default-avatar.png'}

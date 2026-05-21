@@ -4,9 +4,11 @@ import {
   getNameplateById,
   NAME_FONTS,
   NAME_FONT_KEYS,
+  NAME_EFFECTS,
   type NameFont,
 } from '@cgraph/animation-constants';
 
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import type { NameplateProps } from './types';
 
 function getNameFontKey(font?: string): NameFont | null {
@@ -118,6 +120,10 @@ export const Nameplate = memo(function Nameplate({
     }
     return { color: '#edf0f8' };
   })();
+  const effectConfig =
+    displayNameEffect && displayNameEffect in NAME_EFFECTS
+      ? NAME_EFFECTS[displayNameEffect as keyof typeof NAME_EFFECTS]
+      : null;
 
   return (
     <div className="relative z-[2] flex flex-col items-center px-4 pt-[22px]">
@@ -129,19 +135,18 @@ export const Nameplate = memo(function Nameplate({
           boxShadow: barShadow,
         }}
       >
+        {hasEntry && entry.lottieUrl && (
+          <LottieAssetRenderer
+            path={entry.lottieUrl}
+            fallbackPath="/lottie/nameplates/placeholder.json"
+            label={`${entry.name} nameplate`}
+            className="pointer-events-none absolute inset-0 z-0 opacity-80"
+            fallback={null}
+          />
+        )}
+
         {/* Emblem from nameplate entry */}
         {hasEntry && entry.emblem && <span className="relative z-[1] text-sm">{entry.emblem}</span>}
-
-        {/* Shimmer sweep */}
-        <div
-          className="pointer-events-none absolute top-0 h-full w-[65%]"
-          style={{
-            left: '-70%',
-            background:
-              'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.065) 50%, transparent 75%)',
-            animation: 'pc-nameplate-sheen 4.5s ease-in-out infinite',
-          }}
-        />
 
         {/* Display name */}
         <span
@@ -151,7 +156,16 @@ export const Nameplate = memo(function Nameplate({
             ...textStyles,
           }}
         >
-          {displayName}
+          {effectConfig && (
+            <LottieAssetRenderer
+              path={effectConfig.lottieUrl}
+              fallbackPath="/lottie/effects/placeholder.json"
+              label={`${effectConfig.label} name effect`}
+              className="pointer-events-none absolute inset-[-0.45rem] z-0 opacity-45"
+              fallback={null}
+            />
+          )}
+          <span className="relative z-[1]">{displayName}</span>
         </span>
       </div>
     </div>

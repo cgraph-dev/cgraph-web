@@ -3,7 +3,6 @@
  *
  * Renders animated avatar borders with support for:
  * - 150+ unique border styles across 20+ themes
- * - Particle effects (flames, sparkles, bubbles, etc.)
  * - Performance optimization with reduced motion support
  * - Custom color overrides
  */
@@ -18,10 +17,8 @@ import type { AvatarBorderRendererProps, BorderColors } from './types';
 import {
   ANIMATION_KEYFRAMES,
   getAnimationTypeFromBorder,
-  getParticleTypeFromBorder,
   getThemeStyles,
 } from './animations';
-import { Particle } from './particle';
 
 /** Type guard: is the value a lottie animation config object? */
 function isLottieConfig(
@@ -44,7 +41,6 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
   border: propBorder,
   size = 80,
   className,
-  showParticles: propShowParticles,
   animationSpeed = 1,
   interactive = true,
   onClick,
@@ -54,18 +50,14 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
 }: AvatarBorderRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const preferences = {
-    showParticles: true,
     reducedMotion: false,
     animationSpeed: 1,
-    particleDensity: 50,
   };
   const displayBorder = null;
 
   // Use prop border or store border
   const border = propBorder ?? displayBorder;
 
-  // Merge preferences with props
-  const showParticles = propShowParticles ?? preferences.showParticles;
   const reducedMotion = propReducedMotion ?? preferences.reducedMotion;
   const finalAnimationSpeed = animationSpeed * preferences.animationSpeed;
 
@@ -163,12 +155,6 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
     return {};
   };
 
-  // Particle configuration
-  const particleCount =
-    showParticles && border.particleCount
-      ? Math.round((border.particleCount || 8) * (preferences.particleDensity / 50))
-      : 0;
-
   const containerStyle: CSSPropertiesWithVars = {
     width: size,
     height: size,
@@ -259,32 +245,6 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
       >
         {avatarContent}
       </div>
-
-      {/* Particle effects */}
-      {showParticles && particleCount > 0 && (
-        <div className="pointer-events-none absolute inset-0">
-          {Array.from({ length: particleCount }).map((_, i) => (
-            <Particle
-              key={i}
-              config={{
-                type: getParticleTypeFromBorder(border.type),
-                count: border.particleCount || 8,
-                size: 4,
-                color: colors.primary,
-                opacity: 0.8,
-                speed: 1,
-                direction: 'random',
-                pattern: 'orbit',
-              }}
-              containerSize={size}
-              index={i}
-              total={particleCount}
-              colors={colors}
-            />
-          ))}
-        </div>
-      )}
-
       {/* Ripple effect for certain borders */}
       {getAnimationTypeFromBorder(border.type) === 'ripple' && !reducedMotion && (
         <>

@@ -113,7 +113,6 @@ export const AvatarZone = memo(function AvatarZone({
               alt={displayName}
               border={borderConfig}
               size={120}
-              showParticles
               animationSpeed={1}
               interactive={false}
             >

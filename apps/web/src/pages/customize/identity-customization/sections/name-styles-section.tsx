@@ -21,6 +21,7 @@ import {
 } from '@cgraph/animation-constants';
 import { GlassCard } from '@/shared/components/ui';
 import { tweens } from '@/lib/animation-presets';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
 // Narrow store strings into the registry union types. Indexed access
 // into the readonly arrays returns `T | undefined` under
@@ -74,62 +75,86 @@ function NamePreview({
   };
 
   const secondary = secondaryColor || 'var(--token-interactive-primary)';
+  const effectConfig = NAME_EFFECTS[effect];
 
-  switch (effect) {
-    case 'gradient':
-      return (
-        <span
-          style={{
-            ...baseStyle,
-            background: `linear-gradient(135deg, ${color}, ${secondary})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
-          {name}
-        </span>
-      );
-    case 'neon':
-      return (
-        <span
-          style={{
-            ...baseStyle,
-            color,
-            textShadow: `0 0 7px ${color}, 0 0 10px ${color}, 0 0 21px ${color}, 0 0 42px ${secondary}`,
-          }}
-        >
-          {name}
-        </span>
-      );
-    case 'toon':
-      return (
-        <span
-          style={{
-            ...baseStyle,
-            color,
-            WebkitTextStroke: '1px rgba(0,0,0,0.6)',
-            textShadow: `2px 2px 0 rgba(0,0,0,0.3)`,
-          }}
-        >
-          {name}
-        </span>
-      );
-    case 'pop':
-      return (
-        <span
-          style={{
-            ...baseStyle,
-            color,
-            textShadow: `3px 3px 0 ${secondary}, -1px -1px 0 rgba(0,0,0,0.2)`,
-          }}
-        >
-          {name}
-        </span>
-      );
-    default:
-      return <span style={{ ...baseStyle, color }}>{name}</span>;
-  }
+  const previewText = (() => {
+    switch (effect) {
+      case 'gradient':
+        return (
+          <span
+            className="relative z-[1]"
+            style={{
+              ...baseStyle,
+              background: `linear-gradient(135deg, ${color}, ${secondary})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            {name}
+          </span>
+        );
+      case 'neon':
+        return (
+          <span
+            className="relative z-[1]"
+            style={{
+              ...baseStyle,
+              color,
+              textShadow: `0 0 7px ${color}, 0 0 10px ${color}, 0 0 21px ${color}, 0 0 42px ${secondary}`,
+            }}
+          >
+            {name}
+          </span>
+        );
+      case 'toon':
+        return (
+          <span
+            className="relative z-[1]"
+            style={{
+              ...baseStyle,
+              color,
+              WebkitTextStroke: '1px rgba(0,0,0,0.6)',
+              textShadow: `2px 2px 0 rgba(0,0,0,0.3)`,
+            }}
+          >
+            {name}
+          </span>
+        );
+      case 'pop':
+        return (
+          <span
+            className="relative z-[1]"
+            style={{
+              ...baseStyle,
+              color,
+              textShadow: `3px 3px 0 ${secondary}, -1px -1px 0 rgba(0,0,0,0.2)`,
+            }}
+          >
+            {name}
+          </span>
+        );
+      default:
+        return (
+          <span className="relative z-[1]" style={{ ...baseStyle, color }}>
+            {name}
+          </span>
+        );
+    }
+  })();
+
+  return (
+    <span className="relative inline-flex min-h-12 min-w-[12rem] items-center justify-center px-6">
+      <LottieAssetRenderer
+        path={effectConfig.lottieUrl}
+        fallbackPath="/lottie/effects/placeholder.json"
+        label={`${effectConfig.label} name effect`}
+        className="pointer-events-none absolute inset-0 z-0 opacity-50"
+        fallback={null}
+      />
+      {previewText}
+    </span>
+  );
 }
 
 /**
@@ -217,7 +242,18 @@ export function NameStylesSection({
                     : 'aurora-social-button-muted text-white/72 hover:scale-[1.02] hover:text-white'
                 }`}
               >
-                <div className="text-sm font-bold tracking-tight">{config.label}</div>
+                <div className="relative mb-2 h-8 w-full overflow-hidden rounded-lg border border-white/5 bg-black/10">
+                  <LottieAssetRenderer
+                    path={config.lottieUrl}
+                    fallbackPath="/lottie/effects/placeholder.json"
+                    label={`${config.label} name effect preview`}
+                    className="pointer-events-none absolute inset-0 opacity-70"
+                    fallback={null}
+                  />
+                  <div className="relative z-[1] flex h-full items-center justify-center text-sm font-bold tracking-tight">
+                    {config.label}
+                  </div>
+                </div>
                 <div className={`mt-1 text-[10px] leading-tight transition-colors border-none font-medium ${
                   isSelected ? 'text-[var(--token-text-secondary)]' : 'text-[var(--token-text-muted)] group-hover:text-[var(--token-text-secondary)]'
                 }`}>{config.description}</div>

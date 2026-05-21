@@ -6,13 +6,12 @@
  *   2. Border frame (solid / gradient / glow / animated / double)
  *   3. Emblem icon
  *   4. Text effect overlay (holo, rainbow, glitch, glow, fire, ice, neon, metallic, etc.)
- *   5. Particle integration via ParticleEngine
  *
  * Design tokens are sourced from `@cgraph/animation-constants` (shared with mobile).
  *
  */
 
-import { useRef, useEffect, useState, memo } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   getNameplateById,
@@ -241,118 +240,10 @@ function GradientBackground({ gradient }: { gradient: readonly [string, string] 
     />
   );
 }
-/** Lightweight inline particle canvas scoped to the nameplate bar. */
-function NameplateParticles({
-  particleType,
-  colors,
-  width,
-  height,
-}: {
-  particleType: string;
-  colors: readonly [string, string] | null;
-  width: number;
-  height: number;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef(0);
-
-  const particleColors = colors ? [colors[0], colors[1], `${colors[0]}80`] : ['#f59e0b', '#fbbf24', '#fcd34d'];
-
-  useEffect(() => {
-    if (particleType === 'none') return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
-
-    interface MiniParticle {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      size: number;
-      opacity: number;
-      life: number;
-      maxLife: number;
-      color: string;
-    }
-
-    const particles: MiniParticle[] = [];
-    const maxCount = 15;
-
-    function spawn(): MiniParticle {
-      return {
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: -Math.random() * 0.5 - 0.1,
-        size: Math.random() * 2 + 0.5,
-        opacity: Math.random() * 0.5 + 0.2,
-        life: 0,
-        maxLife: Math.random() * 150 + 80,
-        color: particleColors[Math.floor(Math.random() * particleColors.length)] ?? '#fbbf24',
-      };
-    }
-
-    function tick() {
-      if (!ctx) return;
-      ctx.clearRect(0, 0, width, height);
-
-      while (particles.length < maxCount) {
-        particles.push(spawn());
-      }
-
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        if (!p) continue;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life += 1;
-
-        const ratio = p.life / p.maxLife;
-        const alpha = ratio > 0.7 ? p.opacity * (1 - (ratio - 0.7) / 0.3) : p.opacity;
-
-        if (p.life >= p.maxLife || p.y < -5) {
-          particles.splice(i, 1);
-          continue;
-        }
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = alpha;
-        ctx.fill();
-      }
-
-      ctx.globalAlpha = 1;
-      rafRef.current = requestAnimationFrame(tick);
-    }
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [particleType, width, height, particleColors]);
-
-  if (particleType === 'none') return null;
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none absolute inset-0"
-      style={{ width, height }}
-      aria-hidden="true"
-    />
-  );
-}
 /**
  * NameplateBar — renders a fully layered decorative nameplate bar.
  *
- * Layers (back→front): gradient bg → Lottie bg → border → emblem + text effect → particles.
+ * Layers (back→front): gradient bg → Lottie bg → border → emblem + text effect.
  *
  * @example
  * ```tsx
@@ -465,16 +356,6 @@ export const NameplateBar = memo(function NameplateBar({
             </motion.span>
           )}
         </div>
-
-        {/* Layer 4: Particle overlay */}
-        {!prefersReducedMotion && (
-          <NameplateParticles
-            particleType={entry.particleType}
-            colors={entry.barGradient}
-            width={width}
-            height={height}
-          />
-        )}
       </motion.div>
     </AnimatePresence>
   );

@@ -58,8 +58,8 @@ describe('getAvatarBorderStyle', () => {
     expect(getAvatarBorderStyle('rainbow-spin').className).toBe('avatar-border-rainbow');
   });
 
-  it('returns correct class for particle-orbit', () => {
-    expect(getAvatarBorderStyle('particle-orbit').className).toBe('avatar-border-particles');
+  it('does not map particle-orbit to a legacy CSS particle border', () => {
+    expect(getAvatarBorderStyle('particle-orbit').className).toBe('');
   });
 
   it('returns correct class for electric-arc', () => {
@@ -260,10 +260,14 @@ describe('useCustomizationApplication', () => {
     expect(hasParticle).toBe(false);
   });
 
-  it('adds particle effect body class', () => {
+  it('clears legacy particle effect body classes', () => {
+    document.body.classList.add('particle-effect-stars');
     mockState.particleEffect = 'snow';
     renderHook(() => useCustomizationApplication());
-    expect(document.body.classList.contains('particle-effect-snow')).toBe(true);
+    const hasParticle = Array.from(document.body.classList).some((c) =>
+      c.startsWith('particle-effect-')
+    );
+    expect(hasParticle).toBe(false);
   });
 
   it('does not add bg-effect class when solid', () => {
@@ -272,9 +276,11 @@ describe('useCustomizationApplication', () => {
     expect(hasBg).toBe(false);
   });
 
-  it('adds background effect body class', () => {
+  it('clears legacy background effect body classes', () => {
+    document.body.classList.add('bg-effect-dots');
     mockState.backgroundEffect = 'gradient';
     renderHook(() => useCustomizationApplication());
-    expect(document.body.classList.contains('bg-effect-gradient')).toBe(true);
+    const hasBg = Array.from(document.body.classList).some((c) => c.startsWith('bg-effect-'));
+    expect(hasBg).toBe(false);
   });
 });

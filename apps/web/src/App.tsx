@@ -29,11 +29,6 @@ const IncomingCallHandler = lazy(() =>
     default: m.IncomingCallHandler,
   }))
 );
-const BackgroundEffectRenderer = lazy(() =>
-  import('@/modules/settings/components/background-effect-renderer').then((m) => ({
-    default: m.BackgroundEffectRenderer,
-  }))
-);
 const QuickSwitcher = lazy(() =>
   import('@/shared/components/quick-switcher').then((m) => ({ default: m.QuickSwitcher }))
 );
@@ -148,7 +143,6 @@ export default function App() {
       <ReconnectBanner />
       <Suspense fallback={null}>
         <IncomingCallHandler />
-        <BackgroundEffectRenderer />
         <QuickSwitcher isOpen={quickSwitcherOpen} onClose={() => setQuickSwitcherOpen(false)} />
         <KeyboardShortcutsModal />
         <GroupJoinCelebration

@@ -37,7 +37,6 @@ export {
   type NameplateRarity,
   type NameplateEntry,
   type NameplateTextEffect,
-  type NameplateParticleType,
   type NameplateBorderStyle,
   type NameplateCategory,
 } from './registries/nameplates';
@@ -50,6 +49,7 @@ export {
   DEFAULT_DISPLAY_NAME_STYLE,
   type NameFont,
   type NameEffect,
+  type NameEffectAnimationType,
 } from './registries/displayNameStyles';
 export {
   PROFILE_THEME_PRESETS,

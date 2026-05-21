@@ -39,8 +39,3 @@ export const COLUMN_CLASSES: Record<3 | 4 | 5 | 6, string> = {
   5: 'grid-cols-5',
   6: 'grid-cols-6',
 };
-
-/**
- * Animation types that have particle effects
- */
-export const PARTICLE_ANIMATION_TYPES = ['fire', 'electric', 'legendary', 'mythic'] as const;

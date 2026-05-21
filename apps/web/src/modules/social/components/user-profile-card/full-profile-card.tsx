@@ -81,7 +81,6 @@ export const FullProfileCard = memo(function FullProfileCard({
               alt={user.displayName}
               size={96}
               border={userBorder}
-              showParticles={true}
               interactive={true}
             />
             {user.isOnline && (

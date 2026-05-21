@@ -1,8 +1,8 @@
 /**
  * Display Name Styles — shared across web and mobile.
  *
- * Defines fonts, text effects, and preset colors for the
- * user's display name. Pure styling — no Lottie needed.
+ * Defines fonts, text effects, preset colors, and Lottie motion accents
+ * for the user's display name.
  *
  */
 /** Available name font keys */
@@ -51,19 +51,49 @@ export const NAME_FONT_KEYS: readonly NameFont[] = [
 /** Available text effect keys */
 export type NameEffect = 'solid' | 'gradient' | 'neon' | 'toon' | 'pop';
 
+/** Renderer selection for name effect motion accents */
+export type NameEffectAnimationType = 'lottie';
+
 /** Effect metadata */
 export interface NameEffectConfig {
   readonly label: string;
   readonly description: string;
+  readonly lottieUrl: string;
+  readonly animationType: NameEffectAnimationType;
 }
 
 /** All available text effects */
 export const NAME_EFFECTS: Record<NameEffect, NameEffectConfig> = {
-  solid: { label: 'Solid', description: 'Clean single color' },
-  gradient: { label: 'Gradient', description: 'Smooth color blend' },
-  neon: { label: 'Neon', description: 'Glowing neon light' },
-  toon: { label: 'Toon', description: 'Bold cartoon outline' },
-  pop: { label: 'Pop', description: 'Funky offset shadow' },
+  solid: {
+    label: 'Solid',
+    description: 'Clean single color',
+    lottieUrl: 'effects/name-solid.json',
+    animationType: 'lottie',
+  },
+  gradient: {
+    label: 'Gradient',
+    description: 'Smooth color blend',
+    lottieUrl: 'effects/name-gradient.json',
+    animationType: 'lottie',
+  },
+  neon: {
+    label: 'Neon',
+    description: 'Glowing neon light',
+    lottieUrl: 'effects/name-neon.json',
+    animationType: 'lottie',
+  },
+  toon: {
+    label: 'Toon',
+    description: 'Bold cartoon outline',
+    lottieUrl: 'effects/name-toon.json',
+    animationType: 'lottie',
+  },
+  pop: {
+    label: 'Pop',
+    description: 'Funky offset shadow',
+    lottieUrl: 'effects/name-pop.json',
+    animationType: 'lottie',
+  },
 } as const;
 
 /** Ordered list of effect keys for iteration */

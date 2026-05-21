@@ -84,12 +84,16 @@ describe('useCustomizationApplication', () => {
     expect(document.documentElement.style.getPropertyValue('--animation-speed')).toBe('0.5');
   });
 
-  it('adds particle effect body class when not "none"', () => {
+  it('clears legacy particle effect body classes', () => {
+    document.body.classList.add('particle-effect-sparkles');
     mockCustomizationState.particleEffect = 'sparkles';
 
     renderHook(() => useCustomizationApplication());
 
-    expect(document.body.classList.contains('particle-effect-sparkles')).toBe(true);
+    const hasParticleClass = Array.from(document.body.classList).some((c) =>
+      c.startsWith('particle-effect-')
+    );
+    expect(hasParticleClass).toBe(false);
   });
 
   it('does not add particle effect body class when "none"', () => {

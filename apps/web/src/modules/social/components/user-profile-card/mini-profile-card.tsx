@@ -42,7 +42,6 @@ export const MiniProfileCard = memo(function MiniProfileCard({
             alt={user.displayName}
             size={80}
             border={userBorder}
-            showParticles={true}
             interactive={true}
           />
           {/* Online indicator */}

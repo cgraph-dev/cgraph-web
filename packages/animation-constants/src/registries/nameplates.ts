@@ -2,8 +2,7 @@
  * Nameplate Registry — shared across web and mobile.
  *
  * Defines the canonical catalogue of decorative username nameplates
- * with rarity tiers, Lottie file references, text effects, emblems,
- * and particle overlays. Inspired by Naraka Bladepoint nameplate system.
+ * with rarity tiers, Lottie file references, text effects, and emblems.
  *
  * Nameplates render as a horizontal bar (300×48px canvas) behind the
  * username text and are shown across multiple UI surfaces:
@@ -40,24 +39,11 @@ export type NameplateTextEffect =
   | 'shadow'
   | 'emboss';
 
-/** Particle overlay type rendered on top of the nameplate bar */
-export type NameplateParticleType =
-  | 'none'
-  | 'sparkles'
-  | 'flames'
-  | 'snowflakes'
-  | 'petals'
-  | 'lightning'
-  | 'bubbles'
-  | 'stars'
-  | 'embers'
-  | 'mist';
-
 /** Border style around the nameplate bar */
 export type NameplateBorderStyle = 'none' | 'solid' | 'gradient' | 'animated' | 'double' | 'glow';
 
-/** Renderer selection: static gradient, CSS animation, or Lottie vector animation */
-export type NameplateAnimationType = 'static' | 'css' | 'lottie';
+/** Renderer selection for motion-backed nameplates */
+export type NameplateAnimationType = 'lottie';
 
 /** A single nameplate entry */
 export interface NameplateEntry {
@@ -69,8 +55,8 @@ export interface NameplateEntry {
   readonly rarity: NameplateRarity;
   /** Whether the nameplate is always unlocked */
   readonly free: boolean;
-  /** Lottie JSON filename (null = no background, plain text) */
-  readonly lottieFile: string | null;
+  /** Lottie JSON filename */
+  readonly lottieFile: string;
   /** Text color to use on top of this nameplate background */
   readonly textColor: string;
   /** Short description shown in the picker */
@@ -81,13 +67,11 @@ export interface NameplateEntry {
   readonly textColorSecondary: string | null;
   /** Emblem icon shown before the username (emoji or icon key) */
   readonly emblem: string | null;
-  /** Path to Lottie JSON file (undefined = use lottieFile or CSS fallback) */
-  readonly lottieUrl?: string;
-  /** Renderer selection — defaults to 'css' if omitted */
-  readonly animationType?: NameplateAnimationType;
-  /** Particle overlay on the nameplate bar */
-  readonly particleType: NameplateParticleType;
-  /** Gradient colors for the bar background (used when no lottie) */
+  /** Path to Lottie JSON file */
+  readonly lottieUrl: string;
+  /** Renderer selection */
+  readonly animationType: NameplateAnimationType;
+  /** Fallback gradient used while the Lottie asset is loading */
   readonly barGradient: readonly [string, string] | null;
   /** Border style around the nameplate */
   readonly borderStyle: NameplateBorderStyle;
@@ -98,12 +82,32 @@ export interface NameplateEntry {
 }
 
 /**
- * Canonical registry of all nameplates.
- *
- * Designed to accept unlimited items later —
- * simply append new entries to the array.
+ * Raw catalogue rows may omit motion fields while data is being authored.
+ * The exported registry is normalized so every row has a Lottie source.
  */
-export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
+type RawNameplateEntry = Omit<
+  NameplateEntry,
+  'animationType' | 'lottieFile' | 'lottieUrl'
+> & {
+  readonly lottieFile?: string | null;
+  readonly lottieUrl?: string;
+  readonly animationType?: NameplateAnimationType;
+};
+
+const DEFAULT_NAMEPLATE_LOTTIE_FILE = 'placeholder.json';
+
+function normalizeNameplate(entry: RawNameplateEntry): NameplateEntry {
+  const lottieFile = entry.lottieFile ?? DEFAULT_NAMEPLATE_LOTTIE_FILE;
+
+  return {
+    ...entry,
+    lottieFile,
+    lottieUrl: entry.lottieUrl ?? `nameplates/${lottieFile}`,
+    animationType: 'lottie',
+  };
+}
+
+const RAW_NAMEPLATE_REGISTRY: readonly RawNameplateEntry[] = [
   {
     id: 'plate_none',
     name: 'None',
@@ -115,7 +119,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'none',
     textColorSecondary: null,
     emblem: null,
-    particleType: 'none',
     barGradient: null,
     borderStyle: 'none',
     borderColor: null,
@@ -134,7 +137,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'shadow',
     textColorSecondary: null,
     emblem: null,
-    particleType: 'none',
     barGradient: ['#1a1a2e', '#16213e'],
     borderStyle: 'solid',
     borderColor: '#ffffff20',
@@ -151,7 +153,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'none',
     textColorSecondary: null,
     emblem: null,
-    particleType: 'none',
     barGradient: ['#334155', '#1e293b'],
     borderStyle: 'solid',
     borderColor: '#475569',
@@ -170,7 +171,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'metallic',
     textColorSecondary: '#b8860b',
     emblem: '✦',
-    particleType: 'sparkles',
     barGradient: ['#ffd700', '#b8860b'],
     borderStyle: 'gradient',
     borderColor: '#ffd700',
@@ -189,7 +189,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glow',
     textColorSecondary: '#ff69b4',
     emblem: '🌸',
-    particleType: 'petals',
     barGradient: ['#ffb7c5', '#ff69b4'],
     borderStyle: 'solid',
     borderColor: '#ff69b440',
@@ -208,7 +207,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glow',
     textColorSecondary: '#00bfff',
     emblem: '🌊',
-    particleType: 'bubbles',
     barGradient: ['#006994', '#00bfff'],
     borderStyle: 'solid',
     borderColor: '#00bfff30',
@@ -227,7 +225,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'metallic',
     textColorSecondary: '#c0c0c0',
     emblem: '◆',
-    particleType: 'sparkles',
     barGradient: ['#c0c0c0', '#808080'],
     borderStyle: 'gradient',
     borderColor: '#c0c0c0',
@@ -246,7 +243,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'neon',
     textColorSecondary: '#ff00ff',
     emblem: '⚡',
-    particleType: 'lightning',
     barGradient: ['#0a0a2e', '#1a0033'],
     borderStyle: 'animated',
     borderColor: '#00f5ff',
@@ -261,11 +257,10 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     lottieUrl: 'nameplates/plate_fire.json',
     animationType: 'lottie',
     textColor: '#ffffff',
-    description: 'Flickering flame bar with ember particles',
+    description: 'Flickering flame bar with ember glow',
     textEffect: 'fire',
     textColorSecondary: '#ff4500',
     emblem: '🔥',
-    particleType: 'embers',
     barGradient: ['#8b0000', '#ff4500'],
     borderStyle: 'glow',
     borderColor: '#ff4500',
@@ -284,7 +279,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glow',
     textColorSecondary: '#c084fc',
     emblem: '✧',
-    particleType: 'stars',
     barGradient: ['#0d0221', '#2d1b69'],
     borderStyle: 'gradient',
     borderColor: '#8b5cf6',
@@ -303,7 +297,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'ice',
     textColorSecondary: '#67e8f9',
     emblem: '❄',
-    particleType: 'snowflakes',
     barGradient: ['#164e63', '#0e7490'],
     borderStyle: 'glow',
     borderColor: '#67e8f9',
@@ -322,7 +315,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glow',
     textColorSecondary: '#34d399',
     emblem: '🌿',
-    particleType: 'petals',
     barGradient: ['#064e3b', '#047857'],
     borderStyle: 'solid',
     borderColor: '#34d39940',
@@ -341,7 +333,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glow',
     textColorSecondary: '#ec4899',
     emblem: '💖',
-    particleType: 'sparkles',
     barGradient: ['#831843', '#ec4899'],
     borderStyle: 'animated',
     borderColor: '#ec4899',
@@ -360,7 +351,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glitch',
     textColorSecondary: '#7c3aed',
     emblem: '◈',
-    particleType: 'mist',
     barGradient: ['#0f0024', '#1e0040'],
     borderStyle: 'animated',
     borderColor: '#7c3aed',
@@ -379,7 +369,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'rainbow',
     textColorSecondary: null,
     emblem: '✦',
-    particleType: 'sparkles',
     barGradient: ['#064e3b', '#7c3aed'],
     borderStyle: 'gradient',
     borderColor: '#34d399',
@@ -398,7 +387,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'neon',
     textColorSecondary: '#facc15',
     emblem: '⚡',
-    particleType: 'lightning',
     barGradient: ['#1e1b4b', '#312e81'],
     borderStyle: 'glow',
     borderColor: '#facc15',
@@ -417,7 +405,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glow',
     textColorSecondary: '#dc2626',
     emblem: '🌙',
-    particleType: 'embers',
     barGradient: ['#450a0a', '#7f1d1d'],
     borderStyle: 'animated',
     borderColor: '#dc2626',
@@ -436,7 +423,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'metallic',
     textColorSecondary: '#fff7ed',
     emblem: '👑',
-    particleType: 'sparkles',
     barGradient: ['#854d0e', '#fbbf24'],
     borderStyle: 'animated',
     borderColor: '#ffd700',
@@ -451,11 +437,10 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     lottieUrl: 'nameplates/plate_phoenix.json',
     animationType: 'lottie',
     textColor: '#fef3c7',
-    description: 'Rising phoenix flames with ash particles',
+    description: 'Rising phoenix flames with ash glow',
     textEffect: 'fire',
     textColorSecondary: '#f97316',
     emblem: '🔱',
-    particleType: 'flames',
     barGradient: ['#7c2d12', '#ea580c'],
     borderStyle: 'glow',
     borderColor: '#f97316',
@@ -474,7 +459,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'metallic',
     textColorSecondary: '#dc2626',
     emblem: '🐉',
-    particleType: 'embers',
     barGradient: ['#1c1917', '#44403c'],
     borderStyle: 'double',
     borderColor: '#fbbf24',
@@ -493,7 +477,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'ice',
     textColorSecondary: '#06b6d4',
     emblem: '💎',
-    particleType: 'snowflakes',
     barGradient: ['#083344', '#155e75'],
     borderStyle: 'animated',
     borderColor: '#06b6d4',
@@ -512,7 +495,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'holographic',
     textColorSecondary: null,
     emblem: '⚜',
-    particleType: 'stars',
     barGradient: ['#0c0a1d', '#1e1b4b'],
     borderStyle: 'animated',
     borderColor: '#a78bfa',
@@ -531,7 +513,6 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'fire',
     textColorSecondary: '#fbbf24',
     emblem: '🔱',
-    particleType: 'flames',
     barGradient: ['#450a0a', '#b91c1c'],
     borderStyle: 'animated',
     borderColor: '#ef4444',
@@ -550,13 +531,21 @@ export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] = [
     textEffect: 'glitch',
     textColorSecondary: '#a855f7',
     emblem: '◈',
-    particleType: 'mist',
     barGradient: ['#0a0015', '#1e0040'],
     borderStyle: 'animated',
     borderColor: '#a855f7',
     category: 'dark',
   },
 ] as const;
+
+/**
+ * Canonical registry of all nameplates.
+ *
+ * Every exported row is safe to render through the Lottie renderer. Text
+ * colors, gradients, and emblems remain as accessible fallback metadata.
+ */
+export const NAMEPLATE_REGISTRY: readonly NameplateEntry[] =
+  RAW_NAMEPLATE_REGISTRY.map(normalizeNameplate);
 
 /** All available nameplate categories for filtering */
 export const NAMEPLATE_CATEGORIES = [

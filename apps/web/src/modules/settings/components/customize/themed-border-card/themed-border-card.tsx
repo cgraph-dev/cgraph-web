@@ -11,10 +11,9 @@ import { motion } from 'motion/react';
 import { LockClosedIcon, CheckIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import { RARITY_COLORS } from '@/data/avatar-borders';
 import type { ThemedBorderCardProps } from './types';
-import { SIZE_CONFIG, PARTICLE_ANIMATION_TYPES } from './constants';
+import { SIZE_CONFIG } from './constants';
 import { getBorderAnimation } from './animations';
 import { CornerBrackets } from './corner-brackets';
-import { ParticleEffects } from './particle-effects';
 import { tweens, loop } from '@/lib/animation-presets';
 
 // Lazy-load Lottie renderer to avoid bundling lottie-web when not needed
@@ -26,10 +25,6 @@ const LottieBorderRenderer = lazy(() =>
 
 /** Avatar size in px for each card size */
 const AVATAR_PX: Record<string, number> = { sm: 48, md: 64, lg: 96 };
-
-function hasParticleAnimation(animationType: string): boolean {
-  return PARTICLE_ANIMATION_TYPES.some((type) => type === animationType);
-}
 
 /**
  * Themed Border Card display component.
@@ -48,7 +43,6 @@ export default function ThemedBorderCard({
   const canInteract = !isLocked;
 
   const borderAnimation = getBorderAnimation(border, showAnimation);
-  const showParticles = showAnimation && hasParticleAnimation(border.animationType);
 
   return (
     <motion.button
@@ -104,9 +98,6 @@ export default function ThemedBorderCard({
           <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[var(--token-bg-secondary)]">
             <span className="text-2xl">👤</span>
           </div>
-
-          {/* Particle effects for special borders */}
-          {showParticles && <ParticleEffects colors={border.colors} />}
         </motion.div>
       )}
 

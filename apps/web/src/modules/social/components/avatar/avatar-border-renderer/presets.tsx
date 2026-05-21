@@ -29,9 +29,7 @@ export const SimpleBorderAvatar = memo(function SimpleBorderAvatar({
     tags: ['custom'],
   };
 
-  return (
-    <AvatarBorderRenderer src={src} size={size} border={border} showParticles={false} {...props} />
-  );
+  return <AvatarBorderRenderer src={src} size={size} border={border} {...props} />;
 });
 
 /** Animated glow border */
@@ -57,7 +55,5 @@ export const GlowBorderAvatar = memo(function GlowBorderAvatar({
     tags: ['custom', 'glow'],
   };
 
-  return (
-    <AvatarBorderRenderer src={src} size={size} border={border} showParticles={false} {...props} />
-  );
+  return <AvatarBorderRenderer src={src} size={size} border={border} {...props} />;
 });

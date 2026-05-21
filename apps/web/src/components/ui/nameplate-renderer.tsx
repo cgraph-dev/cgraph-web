@@ -1,10 +1,8 @@
 import { memo } from 'react';
-import { motion } from 'motion/react';
 import type {
   NameplateEntry,
   NameplateTextEffect,
   NameplateBorderStyle,
-  NameplateParticleType,
 } from '@cgraph/animation-constants';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
@@ -146,58 +144,10 @@ function getBorderStyles(style: NameplateBorderStyle, color: string | null): Rea
   }
 }
 
-function ParticleOverlay({ type }: { type: NameplateParticleType }) {
-  if (type === 'none') return null;
-
-  // CSS-only particle indicators (real Lottie particles would replace these)
-  const particleConfig: Record<string, { emoji: string; count: number }> = {
-    sparkles: { emoji: '✦', count: 3 },
-    flames: { emoji: '🔥', count: 2 },
-    snowflakes: { emoji: '❄', count: 3 },
-    petals: { emoji: '🌸', count: 2 },
-    lightning: { emoji: '⚡', count: 2 },
-    bubbles: { emoji: '○', count: 3 },
-    stars: { emoji: '✧', count: 3 },
-    embers: { emoji: '•', count: 4 },
-    mist: { emoji: '', count: 0 },
-  };
-
-  const config = particleConfig[type];
-  if (!config || config.count === 0) return null;
-
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {Array.from({ length: config.count }).map((_, i) => (
-        <motion.span
-          key={i}
-          className="absolute text-[8px] opacity-60"
-          style={{
-            left: `${20 + i * 25}%`,
-            top: '20%',
-          }}
-          animate={{
-            y: [-2, 2, -2],
-            opacity: [0.4, 0.8, 0.4],
-          }}
-          transition={{
-            duration: 2 + i * 0.5,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: i * 0.3,
-          }}
-        >
-          {config.emoji}
-        </motion.span>
-      ))}
-    </div>
-  );
-}
-
 interface NameplateRendererProps {
   readonly nameplate: NameplateEntry;
   readonly username: string;
   readonly size?: NameplateSize;
-  readonly showParticles?: boolean;
   readonly showEmblem?: boolean;
   readonly className?: string;
   readonly width?: string;
@@ -206,7 +156,6 @@ export const NameplateRenderer = memo(function NameplateRenderer({
   nameplate,
   username,
   size = 'md',
-  showParticles = true,
   showEmblem = true,
   className = '',
   width,
@@ -258,10 +207,6 @@ export const NameplateRenderer = memo(function NameplateRenderer({
           fallback={null}
         />
       )}
-
-      {/* Particle overlay */}
-      {showParticles && <ParticleOverlay type={nameplate.particleType} />}
-
       {/* Emblem */}
       {showEmblem && nameplate.emblem && (
         <span className={`relative z-10 ${sizeConfig.emblemSize}`}>{nameplate.emblem}</span>
