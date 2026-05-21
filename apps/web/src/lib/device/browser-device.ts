@@ -20,6 +20,9 @@ function getLocalStorage(): Storage | null {
   }
 }
 
+/**
+ * Returns a stable web-scoped device identifier for socket joins and push registration.
+ */
 export function getBrowserDeviceId(storage: Storage | null = getLocalStorage()): string {
   if (!storage) {
     fallbackDeviceId ??= createBrowserDeviceId();

@@ -46,11 +46,17 @@ function useIsVisible(ref: React.RefObject<HTMLElement | null>): boolean {
   return visible;
 }
 
+/**
+ * Normalizes catalog-provided Lottie paths into public asset URLs.
+ */
 export function resolveLottieAssetPath(path: string): string {
   if (/^(https?:)?\/\//.test(path) || path.startsWith('/')) return path;
   return `/lottie/${path}`;
 }
 
+/**
+ * Lazy-loads a Lottie animation with visibility gating and a safe fallback path.
+ */
 export function LottieAssetRenderer({
   path,
   fallbackPath,
