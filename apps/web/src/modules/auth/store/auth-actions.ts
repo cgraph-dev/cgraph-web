@@ -31,15 +31,16 @@ function getStringField(value: Record<string, unknown>, key: string): string | n
   return typeof field === 'string' ? field : null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 function extractRefreshTokens(data: unknown): {
   accessToken: string | null;
   refreshToken: string | null;
 } {
-  const body: Record<string, unknown> = data !== null && typeof data === 'object' ? data : {};
-  const tokens =
-    'tokens' in body && body.tokens !== null && typeof body.tokens === 'object'
-      ? (body.tokens as Record<string, unknown>)
-      : body;
+  const body = isRecord(data) ? data : {};
+  const tokens = isRecord(body.tokens) ? body.tokens : body;
 
   return {
     accessToken: getStringField(tokens, 'access_token'),
