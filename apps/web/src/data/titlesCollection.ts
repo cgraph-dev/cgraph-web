@@ -151,22 +151,37 @@ export const TITLE_CATEGORIES: TitleCategory[] = (
   titles: ALL_TITLES.filter((title) => title.category === category),
 }));
 
+/**
+ * Finds a title definition by its canonical shared catalogue ID.
+ */
 export function getTitleById(id: string): TitleDefinition | undefined {
   return ALL_TITLES.find((title) => title.id === id);
 }
 
+/**
+ * Returns all titles that belong to a shared catalogue category.
+ */
 export function getTitlesByCategory(category: TitleCategoryId): TitleDefinition[] {
   return ALL_TITLES.filter((title) => title.category === category);
 }
 
+/**
+ * Returns all titles matching a rarity tier.
+ */
 export function getTitlesByRarity(rarity: TitleRarity): TitleDefinition[] {
   return ALL_TITLES.filter((title) => title.rarity === rarity);
 }
 
+/**
+ * Returns titles that every user can equip without a paid inventory row.
+ */
 export function getUnlockedTitles(): TitleDefinition[] {
   return ALL_TITLES.filter((title) => title.unlocked);
 }
 
+/**
+ * Returns titles that are priced or otherwise premium in the shared catalogue.
+ */
 export function getPremiumTitles(): TitleDefinition[] {
   return ALL_TITLES.filter((title) => title.isPremium);
 }
