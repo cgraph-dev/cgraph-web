@@ -7,6 +7,7 @@ function getEmojiMap(): Map<string, string> {
   return emojiToCodepoint;
 }
 
+/** Resolves the animated emoji CDN assets for a supported emoji glyph. */
 export function getEmojiAnimationAsset(
   emoji: string
 ): { lottie: string; webp: string; codepoint: string } | null {
