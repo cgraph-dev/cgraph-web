@@ -8,6 +8,7 @@
 import { useAuthStore } from '@/modules/auth/store';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { createLogger } from '@/lib/logger';
+import { getEmojiAnimationAsset } from '@/lib/lottie/emoji-animation-assets';
 
 const logger = createLogger('ReactionUtils');
 
@@ -112,25 +113,6 @@ export function aggregateReactionsSimple(
 // REACTION HANDLERS
 
 /**
- * CDN base for animated Noto emoji assets.
- */
-const LOTTIE_CDN_BASE = 'https://fonts.gstatic.com/s/e/notoemoji/latest';
-
-/**
- * Static lookup map: emoji character → codepoint hex.
- * Built lazily from the static catalog on first access.
- */
-import { ANIMATED_EMOJI_CATALOG } from '@/lib/lottie/animated-emoji-catalog';
-
-let _emojiToCodepoint: Map<string, string> | null = null;
-function getEmojiMap(): Map<string, string> {
-  if (!_emojiToCodepoint) {
-    _emojiToCodepoint = new Map(ANIMATED_EMOJI_CATALOG.map((e) => [e.e, e.c]));
-  }
-  return _emojiToCodepoint;
-}
-
-/**
  * Returns Lottie and WebP animation URLs for a reaction emoji.
  * Uses the static embedded catalog — no API or localStorage needed.
  *
@@ -140,13 +122,7 @@ function getEmojiMap(): Map<string, string> {
 export function getReactionAnimation(
   emoji: string
 ): { lottie: string; webp: string; codepoint: string } | null {
-  const codepoint = getEmojiMap().get(emoji);
-  if (!codepoint) return null;
-  return {
-    lottie: `${LOTTIE_CDN_BASE}/${codepoint}/lottie.json`,
-    webp: `${LOTTIE_CDN_BASE}/${codepoint}/512.webp`,
-    codepoint,
-  };
+  return getEmojiAnimationAsset(emoji);
 }
 
 /**

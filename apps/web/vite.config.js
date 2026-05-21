@@ -147,10 +147,7 @@ export default defineConfig({
             return 'app-runtime';
           }
           if (normalizedId.includes('/src/modules/auth/components/auth-effects/')) {
-            return 'app-runtime';
-          }
-          if (normalizedId.includes('/src/modules/onboarding/')) {
-            return 'app-runtime';
+            return 'auth-effects';
           }
           if (
             normalizedId.includes('/src/lib/theme/') ||
@@ -158,13 +155,12 @@ export default defineConfig({
           ) {
             return 'app-runtime';
           }
-          if (normalizedId.includes('/src/lib/lottie/')) {
-            return 'app-runtime';
+          if (normalizedId.includes('/src/lib/animation-presets/')) {
+            return 'animation-presets';
           }
-          if (normalizedId.includes('/src/modules/social/components/avatar/')) {
-            return 'app-runtime';
+          if (normalizedId.includes('/src/lib/animations/animation-engine')) {
+            return 'animation-engine';
           }
-
           const packageName = getPackageNameFromModuleId(normalizedId);
           if (!packageName) {
             return undefined;

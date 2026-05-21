@@ -1,16 +1,10 @@
-import { ReactNode, lazy, Suspense } from 'react';
+import { ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { LottieBorderRenderer } from '@/lib/lottie/lottie-border-renderer';
+import { LottieRenderer } from '@/lib/lottie/lottie-renderer';
 import { getAvatarBorderStyle } from '@/modules/settings/hooks/useCustomizationApplication';
 import { getBorderById } from '@/data/avatar-borders';
-
-const LottieRenderer = lazy(() =>
-  import('@/lib/lottie/lottie-renderer').then((m) => ({ default: m.LottieRenderer }))
-);
-
-const LottieBorderRenderer = lazy(() =>
-  import('@/lib/lottie/lottie-border-renderer').then((m) => ({ default: m.LottieBorderRenderer }))
-);
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 type AvatarStatus = 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
@@ -180,24 +174,7 @@ export default function Avatar({
         style={!borderLottieUrl ? borderStyle.style : undefined}
       >
         {lottieUrl ? (
-          <Suspense
-            fallback={
-              src ? (
-                <img
-                  src={src}
-                  alt={alt || name}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <span className={cn('select-none font-semibold text-white', cfg.text)}>
-                  {getInitials(name)}
-                </span>
-              )
-            }
-          >
-            <LottieRenderer codepoint={lottieUrl} emoji={name || alt} size={cfg.px} autoplay loop />
-          </Suspense>
+          <LottieRenderer codepoint={lottieUrl} emoji={name || alt} size={cfg.px} autoplay loop />
         ) : src ? (
           <img src={src} alt={alt || name} className="h-full w-full object-cover" loading="lazy" />
         ) : (
@@ -253,15 +230,13 @@ export default function Avatar({
     // Lottie frames have decorative elements that extend beyond the avatar
     const frameBorderWidth = Math.max(6, Math.round(cfg.px * 0.2));
     return (
-      <Suspense fallback={avatarContent}>
-        <LottieBorderRenderer
-          lottieUrl={borderLottieUrl}
-          avatarSize={cfg.px}
-          borderWidth={frameBorderWidth}
-        >
-          {avatarContent}
-        </LottieBorderRenderer>
-      </Suspense>
+      <LottieBorderRenderer
+        lottieUrl={borderLottieUrl}
+        avatarSize={cfg.px}
+        borderWidth={frameBorderWidth}
+      >
+        {avatarContent}
+      </LottieBorderRenderer>
     );
   }
 

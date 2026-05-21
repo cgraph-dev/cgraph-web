@@ -7,7 +7,7 @@
  */
 
 import { LottieRenderer } from './lottie-renderer';
-import { getReactionAnimation } from '@/lib/chat/reactionUtils';
+import { getEmojiAnimationAsset } from './emoji-animation-assets';
 
 export interface AnimatedEmojiProps {
   /** The emoji character to render (e.g. "👍"). */
@@ -35,7 +35,7 @@ export function AnimatedEmoji({
   replayInterval = 0,
   className,
 }: AnimatedEmojiProps) {
-  const anim = getReactionAnimation(emoji);
+  const anim = getEmojiAnimationAsset(emoji);
 
   if (anim) {
     return (

@@ -6,12 +6,9 @@
  *
  */
 
-import { memo, lazy, Suspense } from 'react';
+import { memo } from 'react';
+import { LottieBorderRenderer } from '@/lib/lottie/lottie-border-renderer';
 import type { ThemePreset } from '@/modules/settings/store/customization';
-
-const LottieBorderRenderer = lazy(() =>
-  import('@/lib/lottie/lottie-border-renderer').then((m) => ({ default: m.LottieBorderRenderer }))
-);
 
 interface AnimatedAvatarProps {
   borderType: 'none' | 'lottie';
@@ -71,16 +68,14 @@ export const AnimatedAvatar = memo(function AnimatedAvatar({
       className="relative flex items-center justify-center"
       style={{ width: outerSize, height: outerSize }}
     >
-      <Suspense fallback={avatarImage}>
-        <LottieBorderRenderer
-          lottieUrl={lottieUrl}
-          avatarSize={avatarSize - 8}
-          borderWidth={Math.round((frameSize - (avatarSize - 8)) / 2)}
-          lottieConfig={{ speed: speedMultiplier }}
-        >
-          {avatarImage}
-        </LottieBorderRenderer>
-      </Suspense>
+      <LottieBorderRenderer
+        lottieUrl={lottieUrl}
+        avatarSize={avatarSize - 8}
+        borderWidth={Math.round((frameSize - (avatarSize - 8)) / 2)}
+        lottieConfig={{ speed: speedMultiplier }}
+      >
+        {avatarImage}
+      </LottieBorderRenderer>
     </div>
   );
 });

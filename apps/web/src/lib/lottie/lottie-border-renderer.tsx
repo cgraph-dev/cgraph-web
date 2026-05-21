@@ -14,6 +14,7 @@
 
 import { useRef, useEffect, useState, memo } from 'react';
 import type { AnimationItem } from 'lottie-web';
+import { loadLottieCanvasPlayer } from './lottie-player';
 export interface LottieBorderConfig {
   /** Loop the animation. @default true */
   loop?: boolean;
@@ -41,6 +42,20 @@ export interface LottieBorderProps {
 }
 let activeAnimationCount = 0;
 const MAX_CONCURRENT_ANIMATIONS = 100; // Increased to allow all grid items and live preview to play without freezing
+
+function playManagedAnimation(anim: AnimationItem | null) {
+  if (!anim || anim.isPaused === false) return;
+  if (activeAnimationCount >= MAX_CONCURRENT_ANIMATIONS) return;
+  activeAnimationCount++;
+  anim.play();
+}
+
+function pauseManagedAnimation(anim: AnimationItem | null) {
+  if (!anim || anim.isPaused) return;
+  activeAnimationCount = Math.max(0, activeAnimationCount - 1);
+  anim.pause();
+}
+
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -83,6 +98,10 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
   const totalSize = avatarSize + borderWidth * 2;
   // Use canvas for all Lottie borders to prevent browser freezing with heavily layered AI-traced SVGs
   const renderer = 'canvas';
+  const lottieLoop = lottieConfig?.loop ?? true;
+  const lottieSpeed = lottieConfig?.speed;
+  const segmentStart = lottieConfig?.segment?.[0];
+  const segmentEnd = lottieConfig?.segment?.[1];
 
   // IntersectionObserver: track visibility
   useEffect(() => {
@@ -109,26 +128,25 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
 
     async function init() {
       try {
-        // Dynamically import full lottie-web (supports embedded image assets)
-        const lottie = (await import('lottie-web')).default;
+        const lottie = await loadLottieCanvasPlayer();
         if (cancelled) return;
 
         const rendererType: 'svg' | 'canvas' = renderer;
         const anim = lottie.loadAnimation({
           container,
           renderer: rendererType,
-          loop: lottieConfig?.loop ?? true,
+          loop: lottieLoop,
           autoplay: false,
           path: lottieUrl,
         });
 
         anim.addEventListener('DOMLoaded', () => {
           if (cancelled) return;
-          if (lottieConfig?.speed) {
-            anim.setSpeed(lottieConfig.speed);
+          if (lottieSpeed) {
+            anim.setSpeed(lottieSpeed);
           }
-          if (lottieConfig?.segment) {
-            anim.playSegments(lottieConfig.segment, true);
+          if (segmentStart !== undefined && segmentEnd !== undefined) {
+            anim.playSegments([segmentStart, segmentEnd], true);
           }
           animRef.current = anim;
           setIsLoaded(true);
@@ -147,44 +165,25 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
     return () => {
       cancelled = true;
       if (animRef.current) {
-        // Fix counting leak: decrement if it was actively playing when destroyed
-        if (!animRef.current.isPaused) {
-          activeAnimationCount = Math.max(0, activeAnimationCount - 1);
-        }
+        pauseManagedAnimation(animRef.current);
         animRef.current.destroy();
         animRef.current = null;
       }
       setIsLoaded(false);
     };
-  }, [lottieUrl, prefersReducedMotion]);
-
-  // Play/pause based on visibility + concurrency budget
-  function playAnim() {
-    const anim = animRef.current;
-    if (!anim || anim.isPaused === false) return;
-    if (activeAnimationCount >= MAX_CONCURRENT_ANIMATIONS) return;
-    activeAnimationCount++;
-    anim.play();
-  }
-
-  function pauseAnim() {
-    const anim = animRef.current;
-    if (!anim || anim.isPaused) return;
-    activeAnimationCount = Math.max(0, activeAnimationCount - 1);
-    anim.pause();
-  }
+  }, [error, lottieLoop, lottieSpeed, lottieUrl, prefersReducedMotion, segmentEnd, segmentStart]);
 
   useEffect(() => {
     if (!isLoaded) return;
     if (isVisible) {
-      playAnim();
+      playManagedAnimation(animRef.current);
     } else {
-      pauseAnim();
+      pauseManagedAnimation(animRef.current);
     }
     return () => {
-      pauseAnim();
+      pauseManagedAnimation(animRef.current);
     };
-  }, [isVisible, isLoaded, playAnim, pauseAnim]);
+  }, [isVisible, isLoaded]);
 
   // Fallback: reduced motion or error → static CSS ring
   if (prefersReducedMotion || error) {

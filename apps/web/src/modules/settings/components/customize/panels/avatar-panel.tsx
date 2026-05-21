@@ -7,17 +7,14 @@
  *
  */
 
-import { memo, Suspense, lazy } from 'react';
+import { memo } from 'react';
 import { motion } from 'motion/react';
+import { LottieBorderRenderer } from '@/lib/lottie/lottie-border-renderer';
 import { SizeSelector, SectionHeader } from '../customization-ui';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { getBorderById } from '@/data/avatar-borders';
 import { useAuthStore } from '@/modules/auth/store';
-
-const LottieBorderRenderer = lazy(() =>
-  import('@/lib/lottie/lottie-border-renderer').then((m) => ({ default: m.LottieBorderRenderer }))
-);
 
 // AVATAR PANEL COMPONENT
 
@@ -60,16 +57,14 @@ export const AvatarPanel = memo(function AvatarPanel() {
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-[var(--token-border-muted)] bg-black/20 p-8">
           <motion.div {...FADE_UP}>
             {lottieUrl ? (
-              <Suspense fallback={avatarImage}>
-                <LottieBorderRenderer
-                  lottieUrl={lottieUrl}
-                  avatarSize={64}
-                  borderWidth={18}
-                  lottieConfig={{ speed: 1 }}
-                >
-                  {avatarImage}
-                </LottieBorderRenderer>
-              </Suspense>
+              <LottieBorderRenderer
+                lottieUrl={lottieUrl}
+                avatarSize={64}
+                borderWidth={18}
+                lottieConfig={{ speed: 1 }}
+              >
+                {avatarImage}
+              </LottieBorderRenderer>
             ) : (
               avatarImage
             )}

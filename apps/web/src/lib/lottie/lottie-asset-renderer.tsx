@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AnimationItem } from 'lottie-web';
+import { loadLottieSvgPlayer } from './lottie-player';
 
 interface LottieAssetRendererProps {
   readonly path: string;
@@ -89,7 +90,7 @@ export function LottieAssetRenderer({
 
     async function loadAnimation() {
       try {
-        const lottie = (await import('lottie-web')).default;
+        const lottie = await loadLottieSvgPlayer();
         if (canceled) return;
 
         const animation = lottie.loadAnimation({

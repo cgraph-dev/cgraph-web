@@ -29,6 +29,7 @@ export type {
 } from './types';
 
 import { SocketManager } from './socket-manager';
+import { registerSocketTokenReconnectHandler } from '../socket-token-reconnect';
 
 let _instance: SocketManager | null = null;
 
@@ -55,6 +56,13 @@ export const socketManager: SocketManager = new Proxy(createSocketManagerProxyTa
   set(_target, prop, value, receiver) {
     return Reflect.set(getSocketManager(), prop, value, receiver);
   },
+});
+
+registerSocketTokenReconnectHandler(async () => {
+  const manager = getSocketManager();
+  if (manager.isConnected()) {
+    await manager.reconnectWithNewToken();
+  }
 });
 
 /**

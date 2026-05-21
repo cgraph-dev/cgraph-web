@@ -9,9 +9,6 @@
  */
 
 import type { LottieAnimationData, LottieCacheEntry } from './lottie-types';
-import { createLogger } from '@/lib/logger';
-
-const logger = createLogger('LottieCache');
 
 const LOTTIE_CDN_BASE = 'https://fonts.gstatic.com/s/e/notoemoji/latest';
 
@@ -122,8 +119,8 @@ class LottieCacheManager {
           this.evictOldest(store);
         }
       };
-    } catch (error) {
-      logger.warn('Failed to store animation in cache', error);
+    } catch {
+      // Cache writes are best-effort; rendering falls back to network/static assets.
     }
   }
 
@@ -149,8 +146,8 @@ class LottieCacheManager {
               const data: LottieAnimationData = await res.json();
               await this.set(cp, data);
             }
-          } catch (error) {
-            logger.warn(`Failed to fetch Lottie animation for codepoint ${cp}`, error);
+          } catch {
+            // Individual preload failures should not block the rest of the batch.
           }
         })
       );
@@ -165,8 +162,8 @@ class LottieCacheManager {
 
       const tx = this.db.transaction(this.STORE_NAME, 'readwrite');
       tx.objectStore(this.STORE_NAME).clear();
-    } catch (error) {
-      logger.warn('Failed to clear Lottie cache', error);
+    } catch {
+      // Cache clear is best-effort.
     }
   }
 

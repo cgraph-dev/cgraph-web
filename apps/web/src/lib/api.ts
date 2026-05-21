@@ -9,6 +9,7 @@ import {
   triggerLogout,
 } from './tokenService';
 import { getApiBaseUrl } from './backend-url';
+import { reconnectSocketWithFreshToken } from './socket-token-reconnect';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('API');
@@ -28,13 +29,11 @@ const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 // Empty string means "use relative paths" for Vercel rewrites.
 const API_URL = getApiBaseUrl();
 
-// Lazy import socket to avoid circular dependency
+// Socket reconnects are registered by the socket module when it is loaded.
+// This keeps the HTTP client free of a socket import cycle.
 async function reconnectSocket(): Promise<void> {
   try {
-    const { socketManager } = await import('./socket');
-    if (socketManager.isConnected()) {
-      await socketManager.reconnectWithNewToken();
-    }
+    await reconnectSocketWithFreshToken();
   } catch (err) {
     logger.warn('Socket reconnect failed:', err);
   }

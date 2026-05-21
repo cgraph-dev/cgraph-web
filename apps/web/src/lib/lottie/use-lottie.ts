@@ -10,10 +10,11 @@
  *
  */
 
-import { useState, useEffect, useRef} from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { AnimationItem } from 'lottie-web';
 
 import { lottieCache } from './lottie-cache';
+import { loadLottieSvgPlayer } from './lottie-player';
 import type { LottieAnimationData } from './lottie-types';
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(() => {
@@ -92,8 +93,8 @@ export function useLottie({
           return;
         }
 
-        // 2. Dynamically import the light SVG-only build (~150KB)
-        const lottie = (await import('lottie-web/build/player/lottie_light')).default;
+        // 2. Load the shared light SVG-only player.
+        const lottie = await loadLottieSvgPlayer();
 
         if (cancelled) return;
 

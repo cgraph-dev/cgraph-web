@@ -6,22 +6,15 @@
  * Renders Lottie animations when a border has a lottieFile URL.
  */
 
-import { lazy, Suspense } from 'react';
 import { motion } from 'motion/react';
 import { LockClosedIcon, CheckIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { LottieBorderRenderer } from '@/lib/lottie/lottie-border-renderer';
 import { RARITY_COLORS } from '@/data/avatar-borders';
 import type { ThemedBorderCardProps } from './types';
 import { SIZE_CONFIG } from './constants';
 import { getBorderAnimation } from './animations';
 import { CornerBrackets } from './corner-brackets';
 import { tweens, loop } from '@/lib/animation-presets';
-
-// Lazy-load Lottie renderer to avoid bundling lottie-web when not needed
-const LottieBorderRenderer = lazy(() =>
-  import('@/lib/lottie/lottie-border-renderer').then((m) => ({
-    default: m.default ?? m.LottieBorderRenderer,
-  }))
-);
 
 /** Avatar size in px for each card size */
 const AVATAR_PX: Record<string, number> = { sm: 48, md: 64, lg: 96 };
@@ -58,32 +51,16 @@ export default function ThemedBorderCard({
 
       {/* Avatar preview with animated border — Lottie or CSS fallback */}
       {border.lottieFile && showAnimation ? (
-        <Suspense
-          fallback={
-            <div
-              className={`${config.avatar} rounded-full`}
-              style={{
-                background: `linear-gradient(135deg, ${border.colors.join(', ')})`,
-                padding: '3px',
-              }}
-            >
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)]">
-                <span className="text-2xl">👤</span>
-              </div>
-            </div>
-          }
+        <LottieBorderRenderer
+          lottieUrl={border.lottieFile}
+          avatarSize={Math.round((AVATAR_PX[size] ?? 64) * 0.65)}
+          borderWidth={Math.round((AVATAR_PX[size] ?? 64) * 0.18)}
+          fallbackColor={border.colors[0]}
         >
-          <LottieBorderRenderer
-            lottieUrl={border.lottieFile}
-            avatarSize={Math.round((AVATAR_PX[size] ?? 64) * 0.65)}
-            borderWidth={Math.round((AVATAR_PX[size] ?? 64) * 0.18)}
-            fallbackColor={border.colors[0]}
-          >
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)]">
-              <span className="text-2xl">👤</span>
-            </div>
-          </LottieBorderRenderer>
-        </Suspense>
+          <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)]">
+            <span className="text-2xl">👤</span>
+          </div>
+        </LottieBorderRenderer>
       ) : (
         <motion.div
           className={`${config.avatar} relative overflow-visible rounded-full`}

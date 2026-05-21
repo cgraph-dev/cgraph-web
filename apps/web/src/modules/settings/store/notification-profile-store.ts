@@ -6,6 +6,7 @@
  */
 import { create } from 'zustand';
 import type { NotificationProfile, NotificationProfileSchedule } from '@cgraph/shared-types';
+import { api as httpClient } from '@/lib/api';
 import { createLogger } from '@/lib/logger';
 import { toast } from '@/shared/components/ui';
 
@@ -59,25 +60,21 @@ interface ApiEnvelope<T> {
 }
 
 async function apiGet<T>(path: string): Promise<ApiEnvelope<T>> {
-  const { api: httpClient } = await import('@/lib/api');
   const response: { data: ApiEnvelope<T> } = await httpClient.get(path);
   return response.data;
 }
 
 async function apiPost<T>(path: string, data?: unknown): Promise<ApiEnvelope<T>> {
-  const { api: httpClient } = await import('@/lib/api');
   const response: { data: ApiEnvelope<T> } = await httpClient.post(path, data);
   return response.data;
 }
 
 async function apiPut<T>(path: string, data?: unknown): Promise<ApiEnvelope<T>> {
-  const { api: httpClient } = await import('@/lib/api');
   const response: { data: ApiEnvelope<T> } = await httpClient.put(path, data);
   return response.data;
 }
 
 async function apiDelete(path: string): Promise<unknown> {
-  const { api: httpClient } = await import('@/lib/api');
   const response = await httpClient.delete(path);
   return response.data;
 }

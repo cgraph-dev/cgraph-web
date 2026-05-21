@@ -16,6 +16,7 @@ export type { Friend, FriendRequest, FriendState } from './friend-types';
 
 import type { FriendIdentityPatch, FriendState } from './friend-types';
 import { normalizeFriend, normalizeRequest } from './friend-normalizers';
+import { registerFriendBlockSyncHandler } from './friendStore.sync';
 
 function patchRequestUser(userId: string, patch: FriendIdentityPatch) {
   return (request: FriendState['pendingRequests'][number]) =>
@@ -187,3 +188,12 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       error: null,
     }),
 }));
+
+registerFriendBlockSyncHandler((userId) => {
+  const friendState = useFriendStore.getState();
+  useFriendStore.setState({
+    friends: friendState.friends.filter((friend) => friend.id !== userId),
+    pendingRequests: friendState.pendingRequests.filter((request) => request.user.id !== userId),
+    sentRequests: friendState.sentRequests.filter((request) => request.user.id !== userId),
+  });
+});
