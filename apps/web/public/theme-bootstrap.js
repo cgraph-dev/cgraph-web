@@ -4,7 +4,6 @@
   var loader = document.getElementById('initial-loader');
   var themeMeta = document.querySelector('meta[name="theme-color"]');
   var storageKey = 'cgraph-theme-preferences';
-  var legacyKey = 'cgraph-app-theme';
   var defaultThemeId = 'aurora';
   var themes = {
     aurora: {
@@ -62,11 +61,6 @@
         if (storedThemeId && themes[storedThemeId]) {
           return storedThemeId;
         }
-      }
-
-      var legacyThemeId = localStorage.getItem(legacyKey);
-      if (legacyThemeId && themes[legacyThemeId]) {
-        return legacyThemeId;
       }
     } catch (_error) {
       return defaultThemeId;

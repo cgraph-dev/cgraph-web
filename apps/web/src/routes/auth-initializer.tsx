@@ -119,10 +119,9 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, userId]);
   useEffect(() => {
     const hasProfessionalThemePreferences = Boolean(localStorage.getItem(THEME_PREFERENCES_KEY));
-    const legacyThemeId = localStorage.getItem('cgraph-app-theme');
     const appThemeId = hasProfessionalThemePreferences
       ? themeEngine.getCurrentTheme().id
-      : legacyThemeId || 'aurora';
+      : 'aurora';
     themeEngine.setTheme(appThemeId);
 
     const colors = THEME_COLORS[colorPreset];

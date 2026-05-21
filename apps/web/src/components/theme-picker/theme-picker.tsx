@@ -10,9 +10,14 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useThemeEnhanced } from '@/providers/theme-enhanced/hooks';
 import { getTokensForTheme } from '@/lib/theme/tokens';
+import { http } from '@/lib/api-client';
+import { createLogger } from '@/lib/logger';
+import { useAuthStore } from '@/modules/auth/store';
 import { ThemePreviewCard } from './theme-preview-card';
 import { THEME_ORDER, THEME_CYCLE } from './constants';
 import { transitionTheme } from './theme-transition';
+
+const logger = createLogger('ThemePicker');
 
 interface ThemePickerProps {
   placement?: 'settings' | 'floating' | 'modal';
@@ -21,8 +26,24 @@ interface ThemePickerProps {
 /** Theme Picker. */
 export function ThemePicker({ placement = 'settings' }: ThemePickerProps): React.ReactElement {
   const { theme: activeTheme, setTheme, preferences, toggleSystemPreference } = useThemeEnhanced();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const { respectSystemPreference: isAutoMode, reduceMotion } = preferences.settings;
+
+  function persistExplicitAppTheme(themeId: string): void {
+    if (!isAuthenticated) return;
+
+    void http
+      .put('/api/v1/me/theme', {
+        theme: {
+          mode: themeId,
+          modeExplicit: true,
+        },
+      })
+      .catch((error) => {
+        logger.warn('Failed to persist app theme selection:', error);
+      });
+  }
 
   function handleSelect(themeId: string) {
     // Disable auto mode when user manually picks a theme
@@ -30,6 +51,7 @@ export function ThemePicker({ placement = 'settings' }: ThemePickerProps): React
       toggleSystemPreference();
     }
     transitionTheme(() => setTheme(themeId), reduceMotion);
+    persistExplicitAppTheme(themeId);
   }
 
   // Keyboard shortcut: Ctrl+Shift+T (or Cmd+Shift+T) cycles themes

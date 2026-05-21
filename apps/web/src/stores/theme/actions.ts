@@ -13,6 +13,7 @@
 import type { StateCreator } from 'zustand';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { themeEngine, THEME_REGISTRY } from '@/lib/theme/theme-engine';
 
 import type {
   AnimationSpeed,
@@ -33,6 +34,7 @@ import {
 } from './presets';
 
 const logger = createLogger('ThemeStore');
+const APP_THEME_IDS = new Set(Object.keys(THEME_REGISTRY));
 
 const ANIMATION_SPEEDS: Readonly<Record<AnimationSpeed, true>> = {
   slow: true,
@@ -119,6 +121,25 @@ function isEffectPreset(value: string | null): value is EffectPreset {
 
 function isAnimationSpeed(value: string | null): value is AnimationSpeed {
   return hasKnownKey(ANIMATION_SPEEDS, value);
+}
+
+function isAppThemeId(value: string | null): value is keyof typeof THEME_REGISTRY {
+  return Boolean(value && APP_THEME_IDS.has(value));
+}
+
+function applyServerAppShellTheme(rawTheme: Record<string, unknown>): void {
+  const mode = getStringField(rawTheme, ['mode', 'appTheme', 'app_theme']);
+  const modeExplicit =
+    getBooleanField(rawTheme, [
+      'modeExplicit',
+      'mode_explicit',
+      'appThemeExplicit',
+      'app_theme_explicit',
+    ]) ?? false;
+
+  if (modeExplicit && isAppThemeId(mode)) {
+    themeEngine.setTheme(mode);
+  }
 }
 
 function normalizeServerTheme(
@@ -314,6 +335,7 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
 
       if (theme && typeof theme === 'object' && !Array.isArray(theme)) {
         get().applyServerTheme({ ...theme });
+        applyServerAppShellTheme({ ...theme });
         set({ isLoading: false });
       } else {
         set({ isLoading: false });
