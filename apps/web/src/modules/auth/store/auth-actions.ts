@@ -26,6 +26,27 @@ function isAuthFailure(error: unknown): boolean {
   return status === 401 || status === 403;
 }
 
+function getStringField(value: Record<string, unknown>, key: string): string | null {
+  const field = value[key];
+  return typeof field === 'string' ? field : null;
+}
+
+function extractRefreshTokens(data: unknown): {
+  accessToken: string | null;
+  refreshToken: string | null;
+} {
+  const body: Record<string, unknown> = data !== null && typeof data === 'object' ? data : {};
+  const tokens =
+    'tokens' in body && body.tokens !== null && typeof body.tokens === 'object'
+      ? (body.tokens as Record<string, unknown>)
+      : body;
+
+  return {
+    accessToken: getStringField(tokens, 'access_token'),
+    refreshToken: getStringField(tokens, 'refresh_token'),
+  };
+}
+
 type Set = (
   partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>),
   replace?: false,
@@ -329,13 +350,8 @@ export function createRefreshSessionAction(set: Set, get: Get) {
     }
 
     try {
-      const result = await apiClient.auth.refresh(refreshToken);
-      if (!result.ok) {
-        throw new Error(result.error.message);
-      }
-      const tokens = result.data;
-      const accessToken = tokens.access_token;
-      const newRefreshToken = tokens.refresh_token;
+      const response = await http.post('/api/v1/auth/refresh', {});
+      const { accessToken, refreshToken: newRefreshToken } = extractRefreshTokens(response.data);
 
       if (accessToken) {
         set({

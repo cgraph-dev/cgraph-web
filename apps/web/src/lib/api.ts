@@ -73,7 +73,10 @@ export const api = createHttpClient({
   },
   refresh: {
     endpoint: '/api/v1/auth/refresh',
-    buildBody: (rt) => ({ refresh_token: rt }),
+    // Web sessions are cookie-owned. Do not send the JS-stored refresh token
+    // in the body: if that copy is stale after rotation, the backend must use
+    // the current httpOnly cookie instead of treating the old token as reuse.
+    buildBody: () => ({}),
     withCredentials: true,
     parseTokens: (data: unknown) => {
       // Type-safe parsing of refresh token response — resolve nested or flat shapes

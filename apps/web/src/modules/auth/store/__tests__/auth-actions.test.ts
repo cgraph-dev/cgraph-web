@@ -433,9 +433,7 @@ describe('createRefreshSessionAction', () => {
 
     await refresh();
 
-    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/refresh', {
-      refresh_token: 'old-refresh',
-    });
+    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/refresh', {});
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({ token: 'new-access', refreshToken: 'new-refresh' })
     );
