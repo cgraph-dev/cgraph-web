@@ -51,6 +51,7 @@
       "esbuild",
       "msw",
       "msgpack",
+      "protobufjs",
       "utf-8-validate",
       "@signalapp/libsignal-client"
     ],

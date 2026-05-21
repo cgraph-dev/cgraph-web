@@ -155,6 +155,19 @@ export default defineConfig({
           ) {
             return 'app-runtime';
           }
+          if (normalizedId.includes('/src/lib/security/')) {
+            return 'security-utils';
+          }
+          if (normalizedId.includes('/src/lib/store-helpers/')) {
+            return 'store-helpers';
+          }
+          if (
+            normalizedId.includes('/src/data/titlesCollection') ||
+            normalizedId.includes('/src/data/profileThemes') ||
+            normalizedId.includes('/src/data/avatar-borders')
+          ) {
+            return 'profile-catalogs';
+          }
           if (normalizedId.includes('/src/lib/animation-presets/')) {
             return 'animation-presets';
           }
