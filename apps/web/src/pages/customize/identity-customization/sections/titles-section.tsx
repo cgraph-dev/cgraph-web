@@ -22,7 +22,7 @@ export interface TitlesSectionProps {
 }
 
 /**
- * Animated title text component with all 11 animation types
+ * Animated title text component backed by the shared title animation registry.
  */
 function AnimatedTitleText({
   name,
@@ -41,12 +41,11 @@ function AnimatedTitleText({
   // Animation variants for different title animations
   const getAnimationVariants = () => {
     switch (animationType) {
-      case 'fade':
-        return {
-          animate: { opacity: [0.5, 1, 0.5] },
-          transition: { duration: durations.loop.ms / 1000, repeat: Infinity, ease: 'easeInOut' },
-        };
       case 'glow':
+      case 'sparkle':
+      case 'holographic':
+      case 'ethereal':
+      case 'divine':
         return {
           animate: {
             textShadow: [
@@ -62,6 +61,9 @@ function AnimatedTitleText({
           },
         };
       case 'pulse':
+      case 'electric':
+      case 'storm':
+      case 'plasma':
         return {
           animate: {
             textShadow: [
@@ -73,32 +75,32 @@ function AnimatedTitleText({
           transition: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'shimmer':
+      case 'crystalline':
         return {
           animate: {
-            backgroundPosition: ['200% center', '-200% center'],
+            opacity: [0.72, 1, 0.72],
+            filter: ['brightness(1)', 'brightness(1.45)', 'brightness(1)'],
           },
           transition: { duration: durations.cinematic.ms / 1000, repeat: Infinity, ease: 'linear' },
-          style: {
-            backgroundImage: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%), ${gradient}`,
-            backgroundSize: '200% 100%',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-          },
         };
       case 'rainbow':
+      case 'aurora':
+      case 'cosmic':
         return {
           animate: {
             filter: ['hue-rotate(0deg)', 'hue-rotate(360deg)'],
           },
           transition: { duration: 4, repeat: Infinity, ease: 'linear' },
         };
-      case 'typing':
+      case 'float':
         return {
-          animate: { width: ['0%', '100%', '100%', '0%'] },
-          transition: { duration: 4, repeat: Infinity, times: [0, 0.4, 0.6, 1] },
-          style: { overflow: 'hidden', whiteSpace: 'nowrap' as const },
+          animate: { y: [0, -5, 0] },
+          transition: { duration: durations.ambient.ms / 1000, repeat: Infinity, ease: 'easeInOut' },
         };
       case 'glitch':
+      case 'matrix':
+      case 'void':
+      case 'shadow':
         return {
           animate: {
             x: [0, -2, 2, -1, 1, 0],
@@ -112,6 +114,7 @@ function AnimatedTitleText({
           transition: { duration: durations.slower.ms / 1000, repeat: Infinity, repeatDelay: 2 },
         };
       case 'wave':
+      case 'nature':
         return {
           animate: { y: [0, -4, 0, 4, 0] },
           transition: {
@@ -121,11 +124,15 @@ function AnimatedTitleText({
           },
         };
       case 'bounce':
+      case 'fire':
+      case 'ice':
+      case 'inferno':
+      case 'blizzard':
         return {
           animate: { y: [0, -8, 0] },
           transition: { duration: durations.dramatic.ms / 1000, repeat: Infinity, ease: 'easeOut' },
         };
-      case 'neon-flicker':
+      case 'neon_flicker':
         return {
           animate: {
             opacity: [1, 0.8, 1, 0.9, 1, 0.7, 1],

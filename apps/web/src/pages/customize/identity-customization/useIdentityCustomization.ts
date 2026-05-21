@@ -174,10 +174,14 @@ const NAMEPLATE_ALIAS_IDS: Readonly<Record<string, string>> = {
 };
 
 const TITLE_ALIAS_IDS: Readonly<Record<string, string>> = {
-  'new-user': 'title-newbie',
-  chatter: 'title-chatterbox',
-  'forum-reader': 'title-forum-master',
+  'new-user': 'newcomer',
+  chatter: 'chatterbox',
+  'forum-reader': 'forum_founder',
 };
+
+const FREE_NAMEPLATE_IDS = new Set(
+  NAMEPLATE_REGISTRY.filter((plate) => plate.free).map((plate) => plate.id)
+);
 
 function createCatalogLookup(type: InventoryType): ReadonlyMap<string, string> {
   const lookup = new Map<string, string>();
@@ -299,9 +303,11 @@ function buildInventoryOwnership(items: readonly InventoryItemPayload[]): Invent
 
     if (!type || !itemId) continue;
 
+    owned[type].add(itemId);
     itemKeys.forEach((itemKey) => owned[type].add(itemKey));
     if (serverItemId) {
       const target = { itemType: rawType ?? type, itemId: serverItemId };
+      equipTargets[type].set(itemId, target);
       itemKeys.forEach((itemKey) => equipTargets[type].set(itemKey, target));
     }
 
@@ -370,7 +376,7 @@ function mapTitleDefinition(t: TitleDefinition, ownership: InventoryOwnership): 
     animationType: t.animationType,
     gradient: t.gradient,
     lottieUrl: t.lottieUrl ?? '/lottie/effects/placeholder.json',
-    unlocked: ownership.owned.title.has(t.id),
+    unlocked: t.unlocked || ownership.owned.title.has(t.id),
     serverItemId: equipTarget?.itemId,
     serverItemType: equipTarget?.itemType,
     unlockRequirement: t.unlockRequirement,
@@ -479,6 +485,10 @@ export function useIdentityCustomization() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRarity, setSelectedRarity] = useState<Rarity | 'all'>('all');
   const [previewingLockedItem, setPreviewingLockedItem] = useState<string | null>(null);
+  const [previewSnapshot, setPreviewSnapshot] = useState<{
+    equippedTitle: string | null;
+    equippedNameplate: string | null;
+  } | null>(null);
 
   // API data state
   const [borders, setBorders] = useState<Border[]>([]);
@@ -499,7 +509,7 @@ export function useIdentityCustomization() {
       setBorders(ALL_BORDERS.map((b) => mapBorderDefinition(b, ownership)));
       setTitles(ALL_TITLES.map((t) => mapTitleDefinition(t, ownership)));
       setBadges(ALL_BADGES.map((b) => mapBadgeDefinition(b, ownership)));
-      setOwnedNameplateIds([...ownership.owned.nameplate]);
+      setOwnedNameplateIds([...new Set([...FREE_NAMEPLATE_IDS, ...ownership.owned.nameplate])]);
       setInventoryEquipTargets(ownership.equipTargets);
       setIsLoadingIdentity(false);
     }
@@ -611,7 +621,26 @@ export function useIdentityCustomization() {
 
   // --- Preview helpers ---
 
-  function handlePreviewItem(itemId: string, _type: 'border' | 'title') {
+  function setPreviewState(itemId: string, updates: Partial<typeof store>) {
+    setPreviewSnapshot((current) => {
+      if (current) return current;
+
+      return {
+        equippedTitle: useCustomizationStore.getState().equippedTitle,
+        equippedNameplate: useCustomizationStore.getState().equippedNameplate,
+      };
+    });
+    useCustomizationStore.setState({ ...updates, isDirty: false });
+    setPreviewingLockedItem(itemId);
+  }
+
+  function handlePreviewItem(itemId: string, type: 'border' | 'title') {
+    if (type === 'title') {
+      setPreviewState(itemId, { equippedTitle: itemId, title: itemId });
+    } else {
+      setPreviewingLockedItem(itemId);
+    }
+
     setPreviewingLockedItem(itemId);
     toast('Previewing item — Purchase premium to save', {
       duration: durations.cinematic.ms,
@@ -619,9 +648,16 @@ export function useIdentityCustomization() {
   }
 
   function clearPreview() {
-    if (previewingLockedItem) {
-      setPreviewingLockedItem(null);
+    if (previewSnapshot) {
+      useCustomizationStore.setState({
+        equippedTitle: previewSnapshot.equippedTitle,
+        title: previewSnapshot.equippedTitle,
+        equippedNameplate: previewSnapshot.equippedNameplate,
+        isDirty: false,
+      });
+      setPreviewSnapshot(null);
     }
+    setPreviewingLockedItem(null);
   }
 
   // --- Section handlers ---
@@ -733,11 +769,19 @@ export function useIdentityCustomization() {
 
   // --- Nameplate handlers ---
   const handleEquipNameplate = (nameplateId: string | null) => {
-    if (nameplateId && !ownedNameplateIds.includes(nameplateId)) {
-      toast.error('Unlock this nameplate before equipping it');
+    if (
+      nameplateId &&
+      !FREE_NAMEPLATE_IDS.has(nameplateId) &&
+      !ownedNameplateIds.includes(nameplateId)
+    ) {
+      setPreviewState(nameplateId, { equippedNameplate: nameplateId });
+      toast('Previewing nameplate — unlock it to save', {
+        duration: durations.cinematic.ms,
+      });
       return;
     }
 
+    clearPreview();
     setEquippedNameplate(nameplateId);
     if (nameplateId) {
       applyOwnItemEquipped('nameplate', nameplateId);

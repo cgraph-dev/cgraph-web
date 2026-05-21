@@ -3,7 +3,7 @@
  *
  * Streamlined identity customization page with 6 sections:
  * 1. Avatar Borders - 44 animated borders with search/rarity filtering
- * 2. Titles - 26 animated title styles
+ * 2. Titles - shared Lottie-backed title catalogue
  * 3. Badges - 36 badges, equip up to 5
  * 4. Name Styles - Typography and effect customization for username
  * 5. Nameplates - Multi-context username background styles

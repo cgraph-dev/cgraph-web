@@ -65,20 +65,22 @@ function NameplateRow({
   isSelected,
   isOwned,
   onSelect,
+  onPreview,
 }: {
   plate: NameplateEntry;
   isSelected: boolean;
   isOwned: boolean;
   onSelect: () => void;
+  onPreview: () => void;
 }) {
   return (
     <motion.button
-      onClick={() => isOwned && onSelect()}
+      onClick={() => (isOwned ? onSelect() : onPreview())}
       className={`group relative w-full overflow-hidden rounded-2xl border p-5 text-left backdrop-blur-3xl transition-all duration-300 ${
         isSelected
           ? 'border-[var(--token-interactive-primary)]/20 bg-[var(--token-interactive-primary)]/10 ring-[var(--token-interactive-primary)]/50 scale-[1.01] ring-2'
           : 'border-[var(--token-border-muted)] bg-[var(--token-bg-primary)/0.3] hover:border-[var(--token-card-border)] hover:bg-[var(--token-card-bg)/0.4]'
-      } ${isOwned ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+      } ${isOwned ? 'cursor-pointer' : 'cursor-pointer opacity-70'}`}
     >
       <div className="flex items-center gap-4">
         {/* Live nameplate preview */}
@@ -113,7 +115,7 @@ function NameplateRow({
             )}
             {!isOwned && (
               <span className="rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-tertiary)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--token-text-muted)]">
-                Locked
+                Preview
               </span>
             )}
           </div>
@@ -216,7 +218,7 @@ export function NameplatesSection({
         <AnimatePresence mode="popLayout">
           {filteredPlates.map((plate, index) => {
             const isNonePlate = plate.id === 'plate_none';
-            const isOwned = isNonePlate || ownedNameplates.has(plate.id);
+            const isOwned = isNonePlate || plate.free || ownedNameplates.has(plate.id);
 
             return (
               <motion.div
@@ -232,6 +234,7 @@ export function NameplatesSection({
                   isOwned={isOwned}
                   isSelected={selectedNameplate === plate.id || (!selectedNameplate && isNonePlate)}
                   onSelect={() => onEquip(isNonePlate ? null : plate.id)}
+                  onPreview={() => onEquip(plate.id)}
                 />
               </motion.div>
             );
