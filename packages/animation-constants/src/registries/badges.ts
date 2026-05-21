@@ -28,6 +28,16 @@ export interface BadgeDefinition {
   animationType?: BadgeAnimationType;
 }
 
+const DEFAULT_BADGE_LOTTIE_URL = 'effects/placeholder.json';
+
+function withDefaultBadgeMotion(badge: BadgeDefinition): BadgeDefinition {
+  return {
+    ...badge,
+    lottieUrl: badge.lottieUrl ?? DEFAULT_BADGE_LOTTIE_URL,
+    animationType: 'lottie',
+  };
+}
+
 const COMMON_BADGES: BadgeDefinition[] = [
   {
     id: 'badge-newcomer',
@@ -412,7 +422,7 @@ export const ALL_BADGES: BadgeDefinition[] = [
   ...EPIC_BADGES,
   ...LEGENDARY_BADGES,
   ...MYTHIC_BADGES,
-];
+].map(withDefaultBadgeMotion);
 
 /** Get badge by ID */
 export function getBadgeById(id: string): BadgeDefinition | undefined {

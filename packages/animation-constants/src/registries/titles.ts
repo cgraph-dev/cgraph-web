@@ -83,6 +83,16 @@ export interface TitleAnimation {
   glowColor?: string;
 }
 
+const DEFAULT_TITLE_LOTTIE_URL = 'effects/placeholder.json';
+
+function withDefaultTitleMotion(title: Title): Title {
+  return {
+    ...title,
+    lottieUrl: title.lottieUrl ?? DEFAULT_TITLE_LOTTIE_URL,
+    animationType: 'lottie',
+  };
+}
+
 // Rarity color schemes
 export const RARITY_COLORS: Record<
   TitleRarity,
@@ -96,7 +106,7 @@ export const RARITY_COLORS: Record<
   mythic: { primary: '#ef4444', secondary: '#dc2626', glow: 'rgba(239, 68, 68, 0.5)' },
 };
 
-export const TITLES: Title[] = [
+const RAW_TITLES: Title[] = [
   {
     id: 'newcomer',
     name: 'Newcomer',
@@ -784,6 +794,8 @@ export const TITLES: Title[] = [
     animation: { type: 'glow', speed: 2.5, intensity: 50 },
   },
 ];
+
+export const TITLES: Title[] = RAW_TITLES.map(withDefaultTitleMotion);
 
 /**
  * Get title by ID
