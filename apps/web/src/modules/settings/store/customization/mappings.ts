@@ -104,6 +104,7 @@ import { ALL_TITLES } from '@/data/titlesCollection';
 export interface TitleDisplay {
   name: string;
   gradient: string;
+  lottieUrl: string;
 }
 
 /**
@@ -111,7 +112,14 @@ export interface TitleDisplay {
  * Generated dynamically from the static titles collection.
  */
 export const TITLE_DISPLAY_NAMES: Record<string, TitleDisplay> = Object.fromEntries(
-  ALL_TITLES.map((t) => [t.id, { name: t.displayName, gradient: t.gradient }])
+  ALL_TITLES.map((t) => [
+    t.id,
+    {
+      name: t.displayName,
+      gradient: t.gradient,
+      lottieUrl: t.lottieUrl ?? '/lottie/effects/placeholder.json',
+    },
+  ])
 );
 
 /**
@@ -189,6 +197,8 @@ export interface BadgeDisplay {
   color: string;
   name: string;
   rarity: BadgeRarity;
+  lottieUrl: string;
+  animationType: 'lottie';
 }
 
 /**
@@ -203,6 +213,8 @@ export const BADGE_DISPLAY_MAP: Record<string, BadgeDisplay> = Object.fromEntrie
       color: BADGE_RARITY_HEX[b.rarity],
       name: b.name,
       rarity: b.rarity,
+      lottieUrl: b.lottieUrl ?? '/lottie/effects/placeholder.json',
+      animationType: 'lottie',
     },
   ])
 );

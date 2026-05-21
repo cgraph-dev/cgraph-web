@@ -10,6 +10,7 @@ import { motion } from 'motion/react';
 import { EyeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import { Button } from '@/components/ui/button';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import type { Title } from '../types';
 import type { TitleAnimationType } from '@/data/titlesCollection';
 
@@ -27,10 +28,12 @@ function AnimatedTitleText({
   name,
   animationType,
   gradient,
+  lottieUrl,
 }: {
   name: string;
   animationType: TitleAnimationType;
   gradient: string;
+  lottieUrl: string;
 }) {
   // Base text styling
   const baseClass = `text-lg font-bold ${gradient}`;
@@ -147,8 +150,15 @@ function AnimatedTitleText({
   const animProps: Record<string, unknown> = getAnimationVariants();
 
   return (
-    <motion.h4 className={baseClass} {...animProps}>
-      {name}
+    <motion.h4 className={`${baseClass} relative inline-flex overflow-hidden rounded-md px-1`} {...animProps}>
+      <LottieAssetRenderer
+        path={lottieUrl}
+        fallbackPath="/lottie/effects/placeholder.json"
+        label={`${name} title animation`}
+        className="pointer-events-none absolute inset-[-65%] opacity-45"
+        fallback={null}
+      />
+      <span className="relative z-10">{name}</span>
     </motion.h4>
   );
 }
@@ -222,6 +232,7 @@ export function TitlesSection({
                         name={title.name}
                         animationType={title.animationType}
                         gradient={title.gradient}
+                        lottieUrl={title.lottieUrl}
                       />
                     ) : (
                       <h4 className={`text-xl font-bold ${title.gradient}`}>{title.name}</h4>

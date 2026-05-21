@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { LockClosedIcon, SparklesIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import { GlassCard } from '@/shared/components/ui';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import type { Badge, Rarity } from '../types';
 import { tweens } from '@/lib/animation-presets';
 
@@ -30,6 +31,25 @@ export function BadgesSection({
   getRarityColor,
 }: BadgesSectionProps) {
   const isMaxEquipped = equippedBadges.length >= 5;
+
+  function renderBadgeIcon(badge: Badge, className: string) {
+    if (badge.animationType === 'lottie' && badge.lottieUrl) {
+      return (
+        <span className={className}>
+          <LottieAssetRenderer
+            path={badge.lottieUrl}
+            fallbackPath="/lottie/effects/placeholder.json"
+            label={`${badge.name} animation`}
+            className="pointer-events-none absolute inset-[-35%] z-0 opacity-70"
+            fallback={null}
+          />
+          <span className="relative z-10 select-none leading-none">{badge.icon}</span>
+        </span>
+      );
+    }
+
+    return <span className={className}>{badge.icon}</span>;
+  }
 
   return (
     <div>
@@ -107,7 +127,10 @@ export function BadgesSection({
               >
                 {badge ? (
                   <>
-                    <span className="text-4xl drop-shadow-lg">{badge.icon}</span>
+                    {renderBadgeIcon(
+                      badge,
+                      'relative flex h-12 w-12 items-center justify-center text-4xl drop-shadow-lg'
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -182,7 +205,12 @@ export function BadgesSection({
                 )}
 
                 {/* Badge Icon */}
-                <div className="mb-3 text-center text-5xl">{badge.icon}</div>
+                <div className="mb-3 flex justify-center text-5xl">
+                  {renderBadgeIcon(
+                    badge,
+                    'relative flex h-14 w-14 items-center justify-center text-5xl leading-none'
+                  )}
+                </div>
 
                 {/* Badge Name */}
                 <h4 className="mb-1 truncate text-center text-sm font-semibold text-[var(--token-text-primary)]">

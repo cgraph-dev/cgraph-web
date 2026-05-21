@@ -28,6 +28,8 @@ import { useThemeStore } from '@/stores/theme/store';
 import { socketLogger as logger } from '../logger';
 import { normalizeConversation, normalizeMessage } from '../api-utils';
 import { applyOwnItemEquipped, applyOwnItemUnequipped, applyOwnProfileUpdate } from '../identity';
+import { getBrowserDeviceId } from '../device/browser-device';
+import { shouldLogoutForDeviceRevocation } from './deviceRevocation';
 import { shouldDropIncomingCall } from './incomingCallDedup';
 
 interface SessionResumeState {
@@ -201,7 +203,11 @@ export function joinUserChannel(
     return null;
   }
 
-  const joinParams: Record<string, unknown> = { include_contact_presence: true };
+  const browserDeviceId = getBrowserDeviceId();
+  const joinParams: Record<string, unknown> = {
+    include_contact_presence: true,
+    device_id: browserDeviceId,
+  };
 
   try {
     const savedSessionId = sessionStorage.getItem('ws_session_id');
@@ -609,10 +615,21 @@ export function joinUserChannel(
   // this device, we simply log out. All crypto cleanup happens on mobile/desktop.
   channel.on('device_revoked', (payload) => {
     const data = updateSessionResumeState(payload, sessionState);
-    const revokedDeviceId = data['device_id'];
     const reason = typeof data['reason'] === 'string' ? data['reason'] : 'revoked_by_user';
 
-    logger.warn('Device revocation received:', { revokedDeviceId, reason });
+    if (!shouldLogoutForDeviceRevocation(data, browserDeviceId)) {
+      logger.warn('Ignoring device revocation for a different device:', {
+        revokedDeviceId: data['device_id'],
+        currentDeviceId: browserDeviceId,
+        reason,
+      });
+      return;
+    }
+
+    logger.warn('Current browser device revocation received:', {
+      revokedDeviceId: data['device_id'],
+      reason,
+    });
     useAuthStore.getState().logout();
   });
 

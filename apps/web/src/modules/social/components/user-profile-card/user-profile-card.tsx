@@ -107,6 +107,7 @@ function titleFromApi(
       animation: { type: asString(titleRecord.animation_type, 'none'), speed: 1, intensity: 1 },
       color: asString(titleRecord.color, '#ffffff'),
       gradient: asString(titleRecord.gradient),
+      lottieUrl: asString(titleRecord.lottie_url, '/lottie/effects/placeholder.json'),
     };
   }
 
@@ -120,6 +121,7 @@ function titleFromApi(
       rarity: 'common',
       animation: { type: 'none', speed: 1, intensity: 1 },
       color: '#ffffff',
+      lottieUrl: '/lottie/effects/placeholder.json',
     };
   }
 
@@ -130,6 +132,7 @@ function titleFromApi(
     animation: { type: title.animationType, speed: 1, intensity: 1 },
     color: title.colors[0] ?? '#ffffff',
     gradient: title.gradient,
+    lottieUrl: title.lottieUrl ?? '/lottie/effects/placeholder.json',
   };
 }
 

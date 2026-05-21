@@ -16,6 +16,8 @@ import type {
   ProfileCardUserV2,
 } from './types';
 import type { ProfileCardUser } from '../profile-card';
+const GENERIC_BADGE_LOTTIE_URL = '/lottie/effects/placeholder.json';
+
 const NAMEPLATE_MAP: Record<string, NameplateVariant> = {
   cosmic: 'cosmic',
   aurora: 'aurora',
@@ -45,6 +47,8 @@ function resolveBadgesFromIds(badgeIds: readonly string[]): ProfileBadge[] {
           name: def.name,
           icon: def.icon,
           rarity: mapRarityToDisplayTier(def.rarity),
+          lottieUrl: def.lottieUrl ?? GENERIC_BADGE_LOTTIE_URL,
+          animationType: 'lottie',
         }
       : { id, name: id, icon: '◇', rarity: 'dim' satisfies BadgeDisplayTier }; // fallback badge tier
   });
@@ -63,12 +67,17 @@ function resolveBadgesFromIds(badgeIds: readonly string[]): ProfileBadge[] {
 
 /** Map Achievement[] from user data → ProfileBadge[] */
 function resolveBadgesFromUser(user: ProfileCardUser): ProfileBadge[] {
-  const badges: ProfileBadge[] = (user.equippedBadges ?? []).slice(0, 3).map((a) => ({
-    id: a.id,
-    name: a.title,
-    icon: a.icon,
-    rarity: mapRarityToDisplayTier(a.rarity),
-  }));
+  const badges: ProfileBadge[] = (user.equippedBadges ?? []).slice(0, 3).map((a) => {
+    const def = getBadgeById(a.id);
+    return {
+      id: a.id,
+      name: a.title,
+      icon: a.icon,
+      rarity: mapRarityToDisplayTier(a.rarity),
+      lottieUrl: def?.lottieUrl ?? GENERIC_BADGE_LOTTIE_URL,
+      animationType: 'lottie',
+    };
+  });
 
   while (badges.length < 3) {
     badges.push({
@@ -104,6 +113,7 @@ function resolveTitle(titleId: string | null): ProfileCardUser['equippedTitle'] 
     animation: { type: def.animationType, speed: 1, intensity: 1 },
     color: def.colors[0] ?? '#ffffff',
     gradient: def.gradient,
+    lottieUrl: def.lottieUrl ?? '/lottie/effects/placeholder.json',
   };
 }
 /**

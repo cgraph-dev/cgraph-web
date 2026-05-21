@@ -10,6 +10,7 @@ import { getBorderById } from '@/data/avatar-borders';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
 import { BADGE_DISPLAY_MAP } from '@/modules/settings/store/customization/mappings';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import type { MiniProfileCardProps } from './types';
 
 export const MiniProfileCard = memo(function MiniProfileCard({
@@ -83,11 +84,18 @@ export const MiniProfileCard = memo(function MiniProfileCard({
             {resolved.slice(0, 5).map((badge) => (
               <div
                 key={badge.name}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-sm"
+                className="relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-md text-sm"
                 style={{ background: `${badge.color}25`, border: `1px solid ${badge.color}40` }}
                 title={badge.name}
               >
-                {badge.icon}
+                <LottieAssetRenderer
+                  path={badge.lottieUrl}
+                  fallbackPath="/lottie/effects/placeholder.json"
+                  label={`${badge.name} animation`}
+                  className="pointer-events-none absolute inset-[-35%] opacity-70"
+                  fallback={null}
+                />
+                <span className="relative z-10">{badge.icon}</span>
               </div>
             ))}
           </div>

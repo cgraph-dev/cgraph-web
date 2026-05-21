@@ -19,6 +19,7 @@ import { useCustomizationStore } from '@/modules/settings/store/customization/cu
 import { InlineTitle } from '@/shared/components/ui';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
 import { BADGE_DISPLAY_MAP } from '@/modules/settings/store/customization/mappings';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import {
   MAX_MUTUAL_FRIENDS_DISPLAY,
   MAX_BADGES_DISPLAY,
@@ -123,7 +124,7 @@ export const FullProfileCard = memo(function FullProfileCard({
                   return (
                     <div
                       key={badge.id}
-                      className="group relative flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium"
+                      className="group relative flex items-center gap-1.5 overflow-hidden rounded-lg border px-3 py-1.5 text-xs font-medium"
                       style={{
                         borderColor: `${color}40`,
                         background: `linear-gradient(135deg, ${color}15, ${color}25)`,
@@ -131,8 +132,21 @@ export const FullProfileCard = memo(function FullProfileCard({
                       }}
                       title={staticBadge?.name || badge.description}
                     >
-                      {staticBadge && <span className="text-sm">{staticBadge.icon}</span>}
-                      <span>{staticBadge?.name || badge.description || badge.id}</span>
+                      {staticBadge && (
+                        <>
+                          <LottieAssetRenderer
+                            path={staticBadge.lottieUrl}
+                            fallbackPath="/lottie/effects/placeholder.json"
+                            label={`${staticBadge.name} animation`}
+                            className="pointer-events-none absolute inset-[-45%] opacity-50"
+                            fallback={null}
+                          />
+                          <span className="relative z-10 text-sm">{staticBadge.icon}</span>
+                        </>
+                      )}
+                      <span className="relative z-10">
+                        {staticBadge?.name || badge.description || badge.id}
+                      </span>
                     </div>
                   );
                 });

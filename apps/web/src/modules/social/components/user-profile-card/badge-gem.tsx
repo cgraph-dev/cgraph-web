@@ -1,6 +1,7 @@
 import { memo } from 'react';
 
 import { cn } from '@/lib/utils';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
 import { BADGE_RARITY_CONFIG } from './constants';
 import type { ProfileBadge } from './types';
@@ -102,7 +103,16 @@ export const BadgeGem = memo(function BadgeGem({
           />
         )}
 
-        {/* Badge icon */}
+        {/* Badge animation and icon */}
+        {badge.animationType === 'lottie' && badge.lottieUrl && (
+          <LottieAssetRenderer
+            path={badge.lottieUrl}
+            fallbackPath="/lottie/effects/placeholder.json"
+            label={`${badge.name} animation`}
+            className="pointer-events-none absolute inset-[-28%] z-[2] opacity-75"
+            fallback={null}
+          />
+        )}
         <span className="relative z-[3] select-none text-[18px] leading-none">
           {badge.icon}
         </span>

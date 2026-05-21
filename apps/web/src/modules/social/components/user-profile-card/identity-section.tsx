@@ -3,6 +3,7 @@ import { type TargetAndTransition, type Transition, motion } from 'motion/react'
 import { durations } from '@cgraph/animation-constants';
 
 import { cn } from '@/lib/utils';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
 import { BadgeGem } from './badge-gem';
 import type { IdentityProps } from './types';
@@ -104,12 +105,14 @@ function TitlePill({
   titleColor,
   titleAnimationType,
   titleGradient,
+  titleLottieUrl,
 }: {
   title: string | null;
   accentColor: string;
   titleColor?: string;
   titleAnimationType?: string;
   titleGradient?: string;
+  titleLottieUrl?: string;
 }): React.ReactElement {
   const hasTitle = title !== null;
   const pillColor = hasTitle ? (titleColor ?? accentColor) : accentColor;
@@ -131,7 +134,7 @@ function TitlePill({
   return (
     <div
       className={cn(
-        'mb-[10px] inline-flex items-center overflow-hidden rounded-full px-[10px] py-[3px]',
+        'relative mb-[10px] inline-flex items-center overflow-hidden rounded-full px-[10px] py-[3px]',
         hasTitle ? 'border' : 'border border-white/[0.04] bg-white/[0.025]'
       )}
       style={
@@ -144,9 +147,18 @@ function TitlePill({
           : undefined
       }
     >
+      {hasTitle && (
+        <LottieAssetRenderer
+          path={titleLottieUrl ?? '/lottie/effects/placeholder.json'}
+          fallbackPath="/lottie/effects/placeholder.json"
+          label={`${title} title animation`}
+          className="pointer-events-none absolute inset-[-65%] opacity-45"
+          fallback={null}
+        />
+      )}
       <motion.span
         className={cn(
-          'text-[10px] font-bold uppercase tracking-[0.05em]',
+          'relative z-10 text-[10px] font-bold uppercase tracking-[0.05em]',
           useGradientClasses ? titleGradient : undefined
         )}
         style={{
@@ -167,6 +179,7 @@ export const IdentitySection = memo(function IdentitySection({
   titleColor,
   titleAnimationType,
   titleGradient,
+  titleLottieUrl,
   bio,
   badges,
   accentColor,
@@ -180,6 +193,7 @@ export const IdentitySection = memo(function IdentitySection({
         titleColor={titleColor}
         titleAnimationType={titleAnimationType}
         titleGradient={titleGradient}
+        titleLottieUrl={titleLottieUrl}
       />
 
       {!compact && (

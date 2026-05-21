@@ -7,24 +7,10 @@
 
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
+import { getBrowserDeviceId } from '@/lib/device/browser-device';
 import type { PushSubscriptionResult } from './types';
 
 const logger = createLogger('WebPush:Backend');
-
-/**
- * Get or create a unique device ID for this browser
- */
-function getDeviceId(): string {
-  const storageKey = 'cgraph_device_id';
-  let deviceId = localStorage.getItem(storageKey);
-
-  if (!deviceId) {
-    deviceId = `web-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem(storageKey, deviceId);
-  }
-
-  return deviceId;
-}
 
 /**
  * Get a friendly browser name
@@ -57,7 +43,7 @@ export async function registerPushWithBackend(
         keys: subscriptionData.keys,
         expirationTime: subscriptionData.expirationTime,
       },
-      device_id: getDeviceId(),
+      device_id: getBrowserDeviceId(),
       device_name: getBrowserName(),
     });
 

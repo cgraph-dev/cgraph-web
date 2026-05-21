@@ -6,6 +6,7 @@ import type {
   NameplateBorderStyle,
   NameplateParticleType,
 } from '@cgraph/animation-constants';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
 type NameplateSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -216,9 +217,16 @@ export const NameplateRenderer = memo(function NameplateRenderer({
     ? `linear-gradient(135deg, ${nameplate.barGradient[0]} 0%, ${nameplate.barGradient[1]} 100%)`
     : 'transparent';
 
-  const textStyles = getTextEffectStyles(nameplate.textEffect, nameplate.textColor, nameplate.textColorSecondary);
+  const textStyles = getTextEffectStyles(
+    nameplate.textEffect,
+    nameplate.textColor,
+    nameplate.textColorSecondary
+  );
 
   const borderStyles = getBorderStyles(nameplate.borderStyle, nameplate.borderColor);
+  const lottiePath =
+    nameplate.lottieUrl ??
+    (nameplate.lottieFile ? `/lottie/nameplates/${nameplate.lottieFile}` : null);
 
   // "None" selected — render plain text only
   if (nameplate.id === 'plate_none') {
@@ -241,6 +249,16 @@ export const NameplateRenderer = memo(function NameplateRenderer({
         width: width ?? undefined,
       }}
     >
+      {lottiePath && (
+        <LottieAssetRenderer
+          path={lottiePath}
+          fallbackPath="/lottie/nameplates/placeholder.json"
+          label={`${nameplate.name} nameplate`}
+          className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
+          fallback={null}
+        />
+      )}
+
       {/* Particle overlay */}
       {showParticles && <ParticleOverlay type={nameplate.particleType} />}
 

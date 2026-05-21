@@ -13,6 +13,8 @@ export interface Border {
   animation: string;
   colors: string[];
   unlocked: boolean;
+  serverItemId?: string;
+  serverItemType?: string;
   unlockRequirement?: string;
 }
 
@@ -21,7 +23,10 @@ export interface Title {
   name: string;
   animationType: TitleAnimationType;
   gradient: string;
+  lottieUrl: string;
   unlocked: boolean;
+  serverItemId?: string;
+  serverItemType?: string;
   unlockRequirement?: string;
 }
 
@@ -32,6 +37,10 @@ export interface Badge {
   icon: string;
   rarity: Rarity;
   unlocked: boolean;
+  lottieUrl?: string;
+  animationType?: string;
+  serverItemId?: string;
+  serverItemType?: string;
   unlockRequirement?: string;
 }
 

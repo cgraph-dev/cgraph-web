@@ -27,6 +27,7 @@ export interface TitleDefinition {
   animationType: TitleAnimationType;
   gradient: string; // Tailwind gradient classes
   colors: string[]; // Primary colors for animation effects
+  lottieUrl?: string;
   isPremium: boolean;
   unlocked: boolean;
   unlockRequirement?: string;

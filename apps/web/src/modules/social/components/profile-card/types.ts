@@ -35,6 +35,7 @@ export interface ProfileCardUser {
     animation: { type: string; speed: number; intensity: number };
     color: string;
     gradient?: string;
+    lottieUrl?: string;
   };
   equippedBadges?: Achievement[];
   // Stats

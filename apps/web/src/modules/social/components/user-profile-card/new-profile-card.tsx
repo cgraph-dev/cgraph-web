@@ -90,6 +90,7 @@ export const NewProfileCard = memo(function NewProfileCard({
           titleColor={user.equippedTitle?.color}
           titleAnimationType={user.equippedTitle?.animation?.type}
           titleGradient={user.equippedTitle?.gradient}
+          titleLottieUrl={user.equippedTitle?.lottieUrl}
           bio={user.bio ?? null}
           badges={user.profileBadges ?? []}
           accentColor={accentColor}

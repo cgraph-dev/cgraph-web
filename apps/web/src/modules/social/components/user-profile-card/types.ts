@@ -79,6 +79,8 @@ export interface ProfileBadge {
   icon: string;
   rarity: BadgeDisplayTier;
   tooltipLabel?: string;
+  lottieUrl?: string;
+  animationType?: string;
 }
 
 /**
@@ -140,6 +142,7 @@ export interface IdentityProps {
   titleColor?: string;
   titleAnimationType?: string;
   titleGradient?: string;
+  titleLottieUrl?: string;
   bio: string | null;
   badges: ProfileBadge[];
   accentColor: string;

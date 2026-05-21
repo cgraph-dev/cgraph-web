@@ -9,6 +9,11 @@ import { durations } from '@cgraph/animation-constants';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { http } from '@/lib/api-client';
+import {
+  applyOwnIdentityPatch,
+  applyOwnItemEquipped,
+  applyOwnItemUnequipped,
+} from '@/lib/identity';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import toast from 'react-hot-toast';
@@ -23,6 +28,13 @@ import { getV2BorderType } from './constants';
 export type SectionId = 'borders' | 'titles' | 'badges' | 'name-styles' | 'nameplates';
 
 type InventoryType = 'avatar_border' | 'title' | 'badge' | 'nameplate';
+
+const GENERIC_BADGE_LOTTIE_URL = '/lottie/effects/placeholder.json';
+
+interface InventoryEquipTarget {
+  readonly itemType: string;
+  readonly itemId: string;
+}
 
 interface InventoryItemPayload {
   readonly itemType?: unknown;
@@ -39,6 +51,7 @@ interface InventoryItemPayload {
 
 interface InventoryOwnership {
   readonly owned: Record<InventoryType, ReadonlySet<string>>;
+  readonly equipTargets: Record<InventoryType, ReadonlyMap<string, InventoryEquipTarget>>;
   readonly equipped: {
     readonly avatarBorder: string | null;
     readonly title: string | null;
@@ -54,6 +67,12 @@ function createEmptyOwnership(): InventoryOwnership {
       title: new Set(),
       badge: new Set(),
       nameplate: new Set(),
+    },
+    equipTargets: {
+      avatar_border: new Map(),
+      title: new Map(),
+      badge: new Map(),
+      nameplate: new Map(),
     },
     equipped: {
       avatarBorder: null,
@@ -94,6 +113,138 @@ function normalizeCatalogKey(value: string): string {
   return value.replace(/-/g, '_');
 }
 
+function addKeyVariant(target: Set<string>, value: string | null | undefined): void {
+  if (!value) return;
+  target.add(value);
+  target.add(value.toLowerCase());
+  target.add(value.replace(/-/g, '_'));
+  target.add(value.replace(/_/g, '-'));
+}
+
+function addPrefixedVariants(target: Set<string>, rawKey: string, type: InventoryType): void {
+  const dashKey = rawKey.replace(/_/g, '-').toLowerCase();
+  const underscoreKey = rawKey.replace(/-/g, '_').toLowerCase();
+  const unprefixedDash = dashKey.replace(/^(badge|title|border|plate|nameplate)-/, '');
+  const unprefixedUnderscore = underscoreKey.replace(
+    /^(badge|title|border|plate|nameplate)_/,
+    ''
+  );
+
+  addKeyVariant(target, unprefixedDash);
+  addKeyVariant(target, unprefixedUnderscore);
+
+  if (type === 'badge') {
+    addKeyVariant(target, `badge-${unprefixedDash}`);
+    addKeyVariant(target, `badge_${unprefixedUnderscore}`);
+  }
+
+  if (type === 'title') {
+    addKeyVariant(target, `title-${unprefixedDash}`);
+    addKeyVariant(target, `title_${unprefixedUnderscore}`);
+  }
+
+  if (type === 'avatar_border') {
+    addKeyVariant(target, `border-${unprefixedDash}`);
+    addKeyVariant(target, `border_${unprefixedUnderscore}`);
+  }
+
+  if (type === 'nameplate') {
+    addKeyVariant(target, `plate-${unprefixedDash}`);
+    addKeyVariant(target, `plate_${unprefixedUnderscore}`);
+    addKeyVariant(target, `nameplate-${unprefixedDash}`);
+    addKeyVariant(target, `nameplate_${unprefixedUnderscore}`);
+  }
+}
+
+function catalogKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+const NAMEPLATE_ALIAS_IDS: Readonly<Record<string, string>> = {
+  'default-plate': 'plate_none',
+  'simple-gradient': 'plate_starter',
+  'clean-border': 'plate_simple_dark',
+  'minimal-dark': 'plate_simple_dark',
+  'minimal-light': 'plate_starter',
+  'ocean-wave': 'plate_ocean_wave',
+};
+
+const TITLE_ALIAS_IDS: Readonly<Record<string, string>> = {
+  'new-user': 'title-newbie',
+  chatter: 'title-chatterbox',
+  'forum-reader': 'title-forum-master',
+};
+
+function createCatalogLookup(type: InventoryType): ReadonlyMap<string, string> {
+  const lookup = new Map<string, string>();
+  const add = (key: string | null | undefined, catalogId: string) => {
+    if (!key) return;
+    lookup.set(key, catalogId);
+    lookup.set(catalogKey(key), catalogId);
+    lookup.set(key.replace(/-/g, '_'), catalogId);
+    lookup.set(key.replace(/_/g, '-'), catalogId);
+  };
+
+  if (type === 'avatar_border') {
+    for (const border of ALL_BORDERS) {
+      add(border.id, border.id);
+      add(border.name, border.id);
+    }
+  }
+
+  if (type === 'title') {
+    for (const [key, titleId] of Object.entries(TITLE_ALIAS_IDS)) add(key, titleId);
+    for (const title of ALL_TITLES) {
+      add(title.id, title.id);
+      add(title.name, title.id);
+      add(title.displayName, title.id);
+      add(title.id.replace(/^title[-_]/, ''), title.id);
+    }
+  }
+
+  if (type === 'badge') {
+    for (const badge of ALL_BADGES) {
+      add(badge.id, badge.id);
+      add(badge.name, badge.id);
+      add(badge.id.replace(/^badge[-_]/, ''), badge.id);
+    }
+  }
+
+  if (type === 'nameplate') {
+    for (const [key, plateId] of Object.entries(NAMEPLATE_ALIAS_IDS)) add(key, plateId);
+    for (const plate of NAMEPLATE_REGISTRY) {
+      add(plate.id, plate.id);
+      add(plate.name, plate.id);
+      add(plate.id.replace(/^plate[-_]/, ''), plate.id);
+      add(plate.id.replace(/^nameplate[-_]/, ''), plate.id);
+    }
+  }
+
+  return lookup;
+}
+
+const CATALOG_LOOKUPS: Record<InventoryType, ReadonlyMap<string, string>> = {
+  avatar_border: createCatalogLookup('avatar_border'),
+  title: createCatalogLookup('title'),
+  badge: createCatalogLookup('badge'),
+  nameplate: createCatalogLookup('nameplate'),
+};
+
+function resolveCatalogItemId(type: InventoryType, keys: readonly string[]): string | null {
+  const lookup = CATALOG_LOOKUPS[type];
+
+  for (const key of keys) {
+    const direct = lookup.get(key) ?? lookup.get(catalogKey(key));
+    if (direct) return direct;
+  }
+
+  return null;
+}
+
 function readItemKeys(item: InventoryItemPayload, type: InventoryType): string[] {
   const rawKeys = [
     readString(item.itemSlug ?? item.item_slug),
@@ -111,9 +262,19 @@ function readItemKeys(item: InventoryItemPayload, type: InventoryType): string[]
       keys.add(rawKey);
       keys.add(normalizeCatalogKey(rawKey));
     }
+    addPrefixedVariants(keys, rawKey, type);
   }
 
   return [...keys];
+}
+
+function createMutableEquipTargets(): Record<InventoryType, Map<string, InventoryEquipTarget>> {
+  return {
+    avatar_border: new Map(),
+    title: new Map(),
+    badge: new Map(),
+    nameplate: new Map(),
+  };
 }
 
 function buildInventoryOwnership(items: readonly InventoryItemPayload[]): InventoryOwnership {
@@ -123,19 +284,26 @@ function buildInventoryOwnership(items: readonly InventoryItemPayload[]): Invent
     badge: new Set(),
     nameplate: new Set(),
   };
+  const equipTargets = createMutableEquipTargets();
   const equippedBadges: string[] = [];
   let equippedAvatarBorder: string | null = null;
   let equippedTitle: string | null = null;
   let equippedNameplate: string | null = null;
 
   for (const item of items) {
-    const type = normalizeInventoryType(item.itemType ?? item.item_type);
+    const rawType = readString(item.itemType ?? item.item_type);
+    const type = normalizeInventoryType(rawType);
     const itemKeys = type ? readItemKeys(item, type) : [];
-    const itemId = itemKeys[0] ?? null;
+    const itemId = type ? (resolveCatalogItemId(type, itemKeys) ?? itemKeys[0] ?? null) : null;
+    const serverItemId = readString(item.itemId ?? item.item_id);
 
     if (!type || !itemId) continue;
 
     itemKeys.forEach((itemKey) => owned[type].add(itemKey));
+    if (serverItemId) {
+      const target = { itemType: rawType ?? type, itemId: serverItemId };
+      itemKeys.forEach((itemKey) => equipTargets[type].set(itemKey, target));
+    }
 
     if ((item.equippedAt ?? item.equipped_at) == null) continue;
 
@@ -147,6 +315,7 @@ function buildInventoryOwnership(items: readonly InventoryItemPayload[]): Invent
 
   return {
     owned,
+    equipTargets,
     equipped: {
       avatarBorder: equippedAvatarBorder,
       title: equippedTitle,
@@ -178,6 +347,7 @@ function hydrateEquippedCosmetics(ownership: InventoryOwnership) {
 
 /** Map static BorderDefinition to the component's Border type */
 function mapBorderDefinition(b: BorderDefinition, ownership: InventoryOwnership): Border {
+  const equipTarget = ownership.equipTargets.avatar_border.get(b.id);
   return {
     id: b.id,
     name: b.name,
@@ -185,24 +355,31 @@ function mapBorderDefinition(b: BorderDefinition, ownership: InventoryOwnership)
     animation: b.animationType,
     colors: b.colors,
     unlocked: ownership.owned.avatar_border.has(b.id),
+    serverItemId: equipTarget?.itemId,
+    serverItemType: equipTarget?.itemType,
     unlockRequirement: b.unlockRequirement,
   };
 }
 
 /** Map static TitleDefinition to the component's Title type */
 function mapTitleDefinition(t: TitleDefinition, ownership: InventoryOwnership): Title {
+  const equipTarget = ownership.equipTargets.title.get(t.id);
   return {
     id: t.id,
     name: t.name,
     animationType: t.animationType,
     gradient: t.gradient,
+    lottieUrl: t.lottieUrl ?? '/lottie/effects/placeholder.json',
     unlocked: ownership.owned.title.has(t.id),
+    serverItemId: equipTarget?.itemId,
+    serverItemType: equipTarget?.itemType,
     unlockRequirement: t.unlockRequirement,
   };
 }
 
 /** Map static BadgeDefinition to the component's Badge type */
 function mapBadgeDefinition(b: BadgeDefinition, ownership: InventoryOwnership): Badge {
+  const equipTarget = ownership.equipTargets.badge.get(b.id);
   return {
     id: b.id,
     name: b.name,
@@ -210,6 +387,10 @@ function mapBadgeDefinition(b: BadgeDefinition, ownership: InventoryOwnership): 
     icon: b.icon,
     rarity: b.rarity,
     unlocked: ownership.owned.badge.has(b.id),
+    lottieUrl: b.lottieUrl ?? GENERIC_BADGE_LOTTIE_URL,
+    animationType: 'lottie',
+    serverItemId: equipTarget?.itemId,
+    serverItemType: equipTarget?.itemType,
     unlockRequirement: b.unlockRequirement,
   };
 }
@@ -305,6 +486,9 @@ export function useIdentityCustomization() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [isLoadingIdentity, setIsLoadingIdentity] = useState(true);
   const [ownedNameplateIds, setOwnedNameplateIds] = useState<readonly string[]>([]);
+  const [inventoryEquipTargets, setInventoryEquipTargets] = useState<
+    Record<InventoryType, ReadonlyMap<string, InventoryEquipTarget>>
+  >(createMutableEquipTargets);
 
   // Load cosmetic ownership from the backend. Static lists below are metadata only.
   useEffect(() => {
@@ -316,6 +500,7 @@ export function useIdentityCustomization() {
       setTitles(ALL_TITLES.map((t) => mapTitleDefinition(t, ownership)));
       setBadges(ALL_BADGES.map((b) => mapBadgeDefinition(b, ownership)));
       setOwnedNameplateIds([...ownership.owned.nameplate]);
+      setInventoryEquipTargets(ownership.equipTargets);
       setIsLoadingIdentity(false);
     }
 
@@ -383,6 +568,47 @@ export function useIdentityCustomization() {
     setEquippedTitle(titleId);
   }
 
+  function resolveEquipTarget(type: InventoryType, itemId: string): InventoryEquipTarget | null {
+    return inventoryEquipTargets[type].get(itemId) ?? null;
+  }
+
+  function isAlreadyEquippedError(error: unknown): boolean {
+    if (isRecord(error)) {
+      const response = isRecord(error.response) ? error.response : null;
+      if (response?.status === 409) return true;
+    }
+
+    return error instanceof Error && /already equipped/i.test(error.message);
+  }
+
+  async function persistEquipTarget(
+    type: InventoryType,
+    itemId: string,
+    mode: 'equip' | 'unequip'
+  ) {
+    const target = resolveEquipTarget(type, itemId);
+    if (!target) return;
+
+    try {
+      if (mode === 'equip') {
+        await http.put('/api/v1/cosmetics/equip', {
+          item_type: target.itemType,
+          item_id: target.itemId,
+        });
+      } else {
+        await http.delete('/api/v1/cosmetics/unequip', {
+          data: {
+            item_type: target.itemType,
+            item_id: target.itemId,
+          },
+        });
+      }
+    } catch (error) {
+      if (mode === 'equip' && isAlreadyEquippedError(error)) return;
+      throw error;
+    }
+  }
+
   // --- Preview helpers ---
 
   function handlePreviewItem(itemId: string, _type: 'border' | 'title') {
@@ -406,7 +632,20 @@ export function useIdentityCustomization() {
       return;
     }
     clearPreview();
+    const previousBorderId = selectedBorderId;
     applyBorderToStore(borderId);
+    applyOwnItemEquipped('avatar_border', borderId);
+
+    void persistEquipTarget('avatar_border', borderId, 'equip').catch((error) => {
+      if (previousBorderId) {
+        applyBorderToStore(previousBorderId);
+        applyOwnItemEquipped('avatar_border', previousBorderId);
+      } else {
+        selectBorderId(null);
+        applyOwnItemUnequipped('avatar_border');
+      }
+      toast.error(error instanceof Error ? error.message : 'Could not equip avatar border');
+    });
   };
 
   const handleEquipTitle = (titleId: string, titleItem: Title) => {
@@ -415,7 +654,16 @@ export function useIdentityCustomization() {
       return;
     }
     clearPreview();
+    const previousTitle = equippedTitle;
     applyTitleToStore(titleId);
+    applyOwnItemEquipped('title', titleId);
+
+    void persistEquipTarget('title', titleId, 'equip').catch((error) => {
+      applyTitleToStore(previousTitle);
+      if (previousTitle) applyOwnItemEquipped('title', previousTitle);
+      else applyOwnItemUnequipped('title');
+      toast.error(error instanceof Error ? error.message : 'Could not equip title');
+    });
   };
 
   const handleToggleBadge = (badgeId: string, badge: Badge) => {
@@ -426,9 +674,21 @@ export function useIdentityCustomization() {
     if (equippedBadges.includes(badgeId)) {
       const newBadges = equippedBadges.filter((id) => id !== badgeId);
       setEquippedBadges(newBadges);
+      applyOwnItemUnequipped('badge', badgeId);
+      void persistEquipTarget('badge', badgeId, 'unequip').catch((error) => {
+        setEquippedBadges([...equippedBadges]);
+        applyOwnItemEquipped('badge', badgeId);
+        toast.error(error instanceof Error ? error.message : 'Could not unequip badge');
+      });
     } else if (equippedBadges.length < 5) {
       const newBadges = [...equippedBadges, badgeId];
       setEquippedBadges(newBadges);
+      applyOwnItemEquipped('badge', badgeId);
+      void persistEquipTarget('badge', badgeId, 'equip').catch((error) => {
+        setEquippedBadges([...equippedBadges]);
+        applyOwnItemUnequipped('badge', badgeId);
+        toast.error(error instanceof Error ? error.message : 'Could not equip badge');
+      });
     } else {
       toast.error('Maximum 5 badges can be equipped');
     }
@@ -454,10 +714,22 @@ export function useIdentityCustomization() {
   };
 
   // --- Display Name Style handlers ---
-  const handleFontChange = (font: string) => setDisplayNameFont(font);
-  const handleEffectChange = (effect: string) => setDisplayNameEffect(effect);
-  const handleColorChange = (color: string) => setDisplayNameColor(color);
-  const handleSecondaryColorChange = (color: string | null) => setDisplayNameSecondaryColor(color);
+  const handleFontChange = (font: string) => {
+    setDisplayNameFont(font);
+    useAuthStore.getState().updateUser({ displayNameFont: font });
+  };
+  const handleEffectChange = (effect: string) => {
+    setDisplayNameEffect(effect);
+    useAuthStore.getState().updateUser({ displayNameEffect: effect });
+  };
+  const handleColorChange = (color: string) => {
+    setDisplayNameColor(color);
+    useAuthStore.getState().updateUser({ displayNameColor: color });
+  };
+  const handleSecondaryColorChange = (color: string | null) => {
+    setDisplayNameSecondaryColor(color);
+    useAuthStore.getState().updateUser({ displayNameSecondaryColor: color });
+  };
 
   // --- Nameplate handlers ---
   const handleEquipNameplate = (nameplateId: string | null) => {
@@ -467,6 +739,22 @@ export function useIdentityCustomization() {
     }
 
     setEquippedNameplate(nameplateId);
+    if (nameplateId) {
+      applyOwnItemEquipped('nameplate', nameplateId);
+      void persistEquipTarget('nameplate', nameplateId, 'equip').catch((error) => {
+        setEquippedNameplate(equippedNameplate);
+        if (equippedNameplate) applyOwnItemEquipped('nameplate', equippedNameplate);
+        else applyOwnItemUnequipped('nameplate');
+        toast.error(error instanceof Error ? error.message : 'Could not equip nameplate');
+      });
+    } else if (equippedNameplate) {
+      applyOwnIdentityPatch({ equippedNameplateId: null });
+      void persistEquipTarget('nameplate', equippedNameplate, 'unequip').catch((error) => {
+        setEquippedNameplate(equippedNameplate);
+        applyOwnItemEquipped('nameplate', equippedNameplate);
+        toast.error(error instanceof Error ? error.message : 'Could not unequip nameplate');
+      });
+    }
   };
 
   return {
