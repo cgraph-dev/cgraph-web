@@ -10,15 +10,12 @@
 import {
   TITLES as SHARED_TITLES,
   TITLE_RARITY_COLORS as SHARED_TITLE_RARITY_COLORS,
-  type Title as SharedTitle,
-  type TitleAnimationType as SharedTitleAnimationType,
-  type TitleCategory as SharedTitleCategory,
-  type TitleRarity as SharedTitleRarity,
 } from '@cgraph/animation-constants';
+import type { Title } from '@cgraph/animation-constants';
 
-export type TitleRarity = SharedTitleRarity;
-export type TitleAnimationType = SharedTitleAnimationType;
-export type TitleCategoryId = SharedTitleCategory;
+export type TitleRarity = (typeof SHARED_TITLES)[number]['rarity'];
+export type TitleAnimationType = (typeof SHARED_TITLES)[number]['animation']['type'];
+export type TitleCategoryId = (typeof SHARED_TITLES)[number]['category'];
 
 export interface TitleDefinition {
   id: string;
@@ -86,7 +83,7 @@ export const TITLE_BADGE_COLORS: Record<TitleRarity, { bg: string; text: string;
 // Backward-compatible name used by older UI code.
 export const TITLE_RARITY_COLORS = TITLE_BADGE_COLORS;
 
-const CATEGORY_META: Record<SharedTitleCategory, { name: string; icon: string }> = {
+const CATEGORY_META: Record<TitleCategoryId, { name: string; icon: string }> = {
   achievement: { name: 'Achievements', icon: 'Trophy' },
   premium: { name: 'Premium', icon: 'Gem' },
   event: { name: 'Events', icon: 'Sparkles' },
@@ -105,17 +102,17 @@ const RARITY_TEXT_CLASS: Record<TitleRarity, string> = {
 
 const STARTER_TITLE_IDS = new Set(['newcomer']);
 
-function gradientClassForTitle(title: SharedTitle): string {
+function gradientClassForTitle(title: Title): string {
   return RARITY_TEXT_CLASS[title.rarity];
 }
 
-function colorsForTitle(title: SharedTitle): string[] {
+function colorsForTitle(title: Title): string[] {
   return title.gradientColors && title.gradientColors.length > 0
     ? [...title.gradientColors]
     : [title.color];
 }
 
-function isStarterTitle(title: SharedTitle): boolean {
+function isStarterTitle(title: Title): boolean {
   return (
     title.rarity === 'free' ||
     STARTER_TITLE_IDS.has(title.id) ||
@@ -123,7 +120,7 @@ function isStarterTitle(title: SharedTitle): boolean {
   );
 }
 
-function toTitleDefinition(title: SharedTitle): TitleDefinition {
+function toTitleDefinition(title: Title): TitleDefinition {
   return {
     id: title.id,
     name: title.name,
@@ -143,9 +140,15 @@ function toTitleDefinition(title: SharedTitle): TitleDefinition {
 
 export const ALL_TITLES: TitleDefinition[] = SHARED_TITLES.map(toTitleDefinition);
 
-export const TITLE_CATEGORIES: TitleCategory[] = (
-  ['achievement', 'premium', 'event', 'leaderboard', 'special'] as const
-).map((category) => ({
+const CATEGORY_ORDER: TitleCategoryId[] = [
+  'achievement',
+  'premium',
+  'event',
+  'leaderboard',
+  'special',
+];
+
+export const TITLE_CATEGORIES: TitleCategory[] = CATEGORY_ORDER.map((category) => ({
   id: category,
   ...CATEGORY_META[category],
   titles: ALL_TITLES.filter((title) => title.category === category),
