@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AnimationItem } from 'lottie-web';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { loadLottieSvgPlayer } from './lottie-player';
 
 interface LottieAssetRendererProps {
@@ -11,22 +12,6 @@ interface LottieAssetRendererProps {
   readonly className?: string;
   readonly style?: React.CSSProperties;
   readonly fallback?: React.ReactNode;
-}
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
-
-  useEffect(() => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = (event: MediaQueryListEvent) => setReduced(event.matches);
-    media.addEventListener('change', handler);
-    return () => media.removeEventListener('change', handler);
-  }, []);
-
-  return reduced;
 }
 
 function useIsVisible(ref: React.RefObject<HTMLElement | null>): boolean {
@@ -70,7 +55,7 @@ export function LottieAssetRenderer({
 }: LottieAssetRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<AnimationItem | null>(null);
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
   const isVisible = useIsVisible(containerRef);
   const resolvedPath = resolveLottieAssetPath(path);
   const resolvedFallbackPath = fallbackPath ? resolveLottieAssetPath(fallbackPath) : null;

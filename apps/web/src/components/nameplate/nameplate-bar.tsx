@@ -13,6 +13,7 @@
 
 import { useEffect, useRef, useState, memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   getNameplateById,
   type NameplateEntry,
@@ -35,21 +36,6 @@ export interface NameplateBarProps {
   height?: number;
   /** Actual username to display inside the nameplate. */
   username?: string;
-}
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  return reduced;
 }
 /** Resolve border CSS for the given border style. */
 function resolveBorderStyle(
@@ -257,7 +243,7 @@ export const NameplateBar = memo(function NameplateBar({
   height = BAR_HEIGHT,
   username,
 }: NameplateBarProps) {
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
 
   // Resolve entry from shared registry
   const entry: NameplateEntry | undefined = nameplateId ? getNameplateById(nameplateId) : undefined;

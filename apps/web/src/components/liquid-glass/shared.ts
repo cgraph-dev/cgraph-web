@@ -6,6 +6,7 @@
  *
  */
 import type { Transition } from 'motion/react';
+import { getReducedMotionPreference } from '@/lib/motion/reduced-motion';
 
 /* ── Spring-physics transition presets ──────────────────────────────────────── */
 
@@ -120,6 +121,5 @@ export type GlowColor = keyof typeof glowColors;
 
 /** Prefers Reduced Motion. */
 export function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return getReducedMotionPreference();
 }

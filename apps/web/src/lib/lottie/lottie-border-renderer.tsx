@@ -14,6 +14,7 @@
 
 import { useRef, useEffect, useState, memo } from 'react';
 import type { AnimationItem } from 'lottie-web';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { loadLottieCanvasPlayer } from './lottie-player';
 export interface LottieBorderConfig {
   /** Loop the animation. @default true */
@@ -56,21 +57,6 @@ function pauseManagedAnimation(anim: AnimationItem | null) {
   anim.pause();
 }
 
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  return reduced;
-}
 /**
  * Renders a Lottie animation as a circular ring border around children (avatar).
  *
@@ -93,7 +79,7 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
 
   const totalSize = avatarSize + borderWidth * 2;
   // Use canvas for all Lottie borders to prevent browser freezing with heavily layered AI-traced SVGs

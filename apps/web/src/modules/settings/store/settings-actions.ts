@@ -7,6 +7,7 @@
  */
 
 import { http } from '@/lib/api-client';
+import { getSystemReducedMotionPreference } from '@/lib/motion/reduced-motion';
 import { AxiosError } from 'axios';
 import type {
   UserSettings,
@@ -569,7 +570,7 @@ export function createSettingsActions(
     getShouldReduceMotion: () => {
       const { reduceMotion } = get().settings.appearance;
       if (reduceMotion) return true;
-      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      return getSystemReducedMotionPreference();
     },
   };
 }

@@ -16,6 +16,8 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getReducedMotionPreference } from '@/lib/motion/reduced-motion';
+import { useReducedMotion } from './useReducedMotion';
 
 interface AdaptiveMotionConfig {
   /** Minimum acceptable FPS before reducing motion (default: 30) */
@@ -84,12 +86,10 @@ export function useAdaptiveMotion(config: AdaptiveMotionConfig = {}): AdaptiveMo
     ...DEFAULT_CONFIG,
     ...config,
   };
+  const reducedMotionPreference = useReducedMotion();
 
   const [state, setState] = useState<AdaptiveMotionState>(() => {
-    const prefersReducedMotion =
-      typeof window !== 'undefined'
-        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        : false;
+    const prefersReducedMotion = getReducedMotionPreference();
 
     const isLowEndDevice = detectLowEndDevice();
 
@@ -169,24 +169,15 @@ export function useAdaptiveMotion(config: AdaptiveMotionConfig = {}): AdaptiveMo
     measureFps,
   ]);
 
-  // Listen for prefers-reduced-motion changes
+  // Keep adaptive state synced to the centralized reduced-motion preference owner.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setState((prev) => ({
-        ...prev,
-        prefersReducedMotion: e.matches,
-        shouldAnimate: !forceReduced && !e.matches,
-        motionScale: e.matches ? 0.3 : prev.isLowEndDevice ? 0.7 : 1,
-      }));
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [forceReduced]);
+    setState((prev) => ({
+      ...prev,
+      prefersReducedMotion: reducedMotionPreference,
+      shouldAnimate: !forceReduced && !reducedMotionPreference,
+      motionScale: reducedMotionPreference ? 0.3 : prev.isLowEndDevice ? 0.5 : 1,
+    }));
+  }, [forceReduced, reducedMotionPreference]);
 
   return state;
 }

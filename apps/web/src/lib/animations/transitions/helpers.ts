@@ -7,6 +7,7 @@
 
 import { Variants, Transition } from 'motion/react';
 
+import { getReducedMotionPreference } from '@/lib/motion/reduced-motion';
 import { easings, staggerConfigs } from './core';
 /**
  * Creates a staggered container variant
@@ -98,8 +99,7 @@ export const safeCSSProps = ['transform', 'opacity', 'filter', 'backdrop-filter'
  * Respects user's motion preferences
  */
 export function getReducedMotion(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return getReducedMotionPreference();
 }
 
 /**

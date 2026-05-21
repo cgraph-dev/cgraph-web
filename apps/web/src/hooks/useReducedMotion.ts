@@ -4,6 +4,10 @@
  */
 import { useState, useEffect } from 'react';
 import { useAnimationSpeed } from '@/modules/settings/store/customization';
+import {
+  getReducedMotionPreference,
+  subscribeReducedMotionPreference,
+} from '@/lib/motion/reduced-motion';
 
 /**
  * Hook that checks both system reduced-motion preference and
@@ -16,16 +20,12 @@ import { useAnimationSpeed } from '@/modules/settings/store/customization';
  *   <motion.div animate={reducedMotion ? {} : { scale: 1.1 }} />
  */
 export function useReducedMotion(): boolean {
-  const [prefersReduced, setPrefersReduced] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
+  const [prefersReduced, setPrefersReduced] = useState(getReducedMotionPreference);
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    return subscribeReducedMotionPreference(() => {
+      setPrefersReduced(getReducedMotionPreference());
+    });
   }, []);
 
   return prefersReduced;

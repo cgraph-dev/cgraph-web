@@ -12,25 +12,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { AnimationItem } from 'lottie-web';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 import { lottieCache } from './lottie-cache';
 import { loadLottieSvgPlayer } from './lottie-player';
 import type { LottieAnimationData } from './lottie-types';
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  return reduced;
-}
 interface UseLottieConfig {
   /** Unicode codepoint to load (e.g. "1f600"). */
   codepoint: string;
@@ -72,7 +58,7 @@ export function useLottie({
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const animRef = useRef<AnimationItem | null>(null);
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
 
   // Load animation data and initialise lottie-web player
   useEffect(() => {

@@ -8,12 +8,8 @@
 import { durations } from '@cgraph/animation-constants';
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PasswordToggleButton } from './password-toggle-button';
-
-function prefersReducedMotion() {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -40,7 +36,7 @@ interface RegisterFormFieldsProps {
  * Register Form Fields component.
  */
 export function RegisterFormFields(props: RegisterFormFieldsProps) {
-  const reduced = prefersReducedMotion();
+  const reduced = useReducedMotion();
 
   return (
     <>
