@@ -93,7 +93,19 @@ export type {
 export type { ForumRank, LeaderboardEntry } from './forum-leaderboard';
 
 // identity
-export type { CanonicalUserIdentity, IdentityCosmetics, IdentityStatus } from './identity';
+export type {
+  CanonicalIdentityFields,
+  CanonicalUserIdentity,
+  IdentityCosmetics,
+  IdentityStatus,
+} from './identity';
+export {
+  IDENTITY_STATUSES,
+  canonicalIdentityFromApi,
+  identityFieldsFromApi,
+  isIdentityStatus,
+  normalizeIdentityStatus,
+} from './identity';
 
 // locale
 export type { SupportedLocale } from './locale';
