@@ -113,7 +113,7 @@ export function useForumPermissions({
       }
     };
     load();
-  }, [basePath, targetId, targetType, forumId]);
+  }, [basePath, targetId, targetType, forumId, perms]);
   const handleSave = async () => {
     setSaving(true);
     try {

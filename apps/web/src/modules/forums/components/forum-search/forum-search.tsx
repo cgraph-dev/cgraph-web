@@ -11,7 +11,7 @@
  * - Keyboard navigation
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import {
   MagnifyingGlassIcon,
@@ -68,7 +68,8 @@ export function ForumSearch({
   const { addToHistory, getSuggestions } = useSearchHistory();
   const debouncedQuery = useDebounce(query, 300);
 
-  const performSearch = async (searchQuery: string) => {
+  const performSearch = useCallback(
+    async (searchQuery: string) => {
       if (!onSearch) return;
 
       setIsLoading(true);
@@ -82,7 +83,9 @@ export function ForumSearch({
       } finally {
         setIsLoading(false);
       }
-    };
+    },
+    [filters, onSearch]
+  );
 
   // Perform search when query changes
   useEffect(() => {

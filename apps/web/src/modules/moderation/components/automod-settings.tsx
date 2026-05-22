@@ -3,7 +3,7 @@
  * Part of group settings
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheckIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
@@ -44,7 +44,7 @@ export function AutomodSettings({ groupId }: { groupId: string }) {
   const [showEditor, setShowEditor] = useState(false);
   const [editingRule, setEditingRule] = useState<Partial<AutomodRule>>({});
 
-  async function fetchRules() {
+  const fetchRules = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await http.get(`/api/v1/groups/${groupId}/automod`);
@@ -54,7 +54,7 @@ export function AutomodSettings({ groupId }: { groupId: string }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [groupId]);
 
   useEffect(() => {
     fetchRules();

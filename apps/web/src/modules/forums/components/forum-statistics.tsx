@@ -1,7 +1,7 @@
 /**
  * Forum statistics dashboard component.
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ChatBubbleLeftRightIcon,
   DocumentTextIcon,
@@ -56,7 +56,7 @@ export function ForumStatistics({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -71,7 +71,7 @@ export function ForumStatistics({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [forumId]);
 
   // Initial fetch
   useEffect(() => {

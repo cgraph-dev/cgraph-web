@@ -12,7 +12,7 @@
  *
  */
 
-import { useState, useEffect, useRef, type RefObject } from 'react';
+import { useState, useEffect, useRef, useCallback, type RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -88,7 +88,7 @@ export default function MentionAutocomplete({
   }, [debouncedQuery, onSearch]);
 
   // Detect @ in input
-  function handleInput(): void {
+  const handleInput = useCallback((): void => {
     const el = inputRef.current;
     if (!el) return;
 
@@ -114,7 +114,7 @@ export default function MentionAutocomplete({
       setIsOpen(false);
       setQuery('');
     }
-  }
+  }, [inputRef]);
 
   // Attach input listener
   useEffect(() => {
@@ -131,7 +131,8 @@ export default function MentionAutocomplete({
   }, [inputRef, handleInput]);
 
   // Insert mention into input
-  const insertMention = (username: string) => {
+  const insertMention = useCallback(
+    (username: string) => {
       const el = inputRef.current;
       if (!el) return;
 
@@ -160,7 +161,9 @@ export default function MentionAutocomplete({
       onMention(username);
       setIsOpen(false);
       setQuery('');
-    };
+    },
+    [inputRef, onMention]
+  );
 
   // Keyboard navigation
   useEffect(() => {

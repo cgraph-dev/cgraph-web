@@ -1,7 +1,7 @@
 /**
  * Hook for username change flow.
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
@@ -131,7 +131,7 @@ export function useUsernameChange({
   }, [debouncedUsername, currentUsername]);
 
   // Load history
-  async function loadHistory() {
+  const loadHistory = useCallback(async () => {
     historyAbortRef.current?.abort();
     historyAbortRef.current = new AbortController();
     const signal = historyAbortRef.current.signal;
@@ -153,7 +153,7 @@ export function useUsernameChange({
         setLoadingHistory(false);
       }
     }
-  }
+  }, []);
 
   useEffect(() => {
     if (showHistory && history.length === 0) {

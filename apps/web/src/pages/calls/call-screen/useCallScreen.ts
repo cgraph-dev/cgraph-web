@@ -2,7 +2,7 @@
  * useCallScreen hook - state and logic for call screen
  */
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCall } from '@/lib/webrtc';
 import { useAuthStore } from '@/modules/auth/store';
@@ -50,8 +50,13 @@ export function useCallScreen() {
   const [callDuration, setCallDuration] = useState(0);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const callStartTimeRef = useRef<number | null>(null);
+  const callInitKeyRef = useRef<string | null>(null);
 
   const callType: CallType = callTypeParam === 'video' ? 'video' : 'audio';
+  const callInitKey = useMemo(
+    () => `${recipientId ?? ''}:${callType}:${isIncoming}:${roomId ?? ''}`,
+    [callType, isIncoming, recipientId, roomId]
+  );
 
   // Fetch recipient info
   useEffect(() => {
@@ -71,6 +76,8 @@ export function useCallScreen() {
   useEffect(() => {
     async function initCall() {
       if (!recipientId) return;
+      if (callInitKeyRef.current === callInitKey) return;
+      callInitKeyRef.current = callInitKey;
 
       const options = {
         video: callType === 'video',
@@ -85,7 +92,7 @@ export function useCallScreen() {
     }
 
     initCall();
-  }, []);
+  }, [answerCall, callInitKey, callType, isIncoming, recipientId, roomId, startCall]);
 
   // Track call duration
   useEffect(() => {
@@ -106,7 +113,7 @@ export function useCallScreen() {
   }, [callState.status]);
 
   // Auto-hide controls
-  function resetControlsTimeout() {
+  const resetControlsTimeout = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
@@ -116,7 +123,7 @@ export function useCallScreen() {
         setShowControls(false);
       }
     }, 5000);
-  }
+  }, [callState.status]);
 
   useEffect(() => {
     resetControlsTimeout();

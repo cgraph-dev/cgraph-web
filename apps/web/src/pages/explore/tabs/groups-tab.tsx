@@ -4,7 +4,7 @@
  * Groups-only community discovery within the Explore page.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   MagnifyingGlassIcon,
   UserGroupIcon,
@@ -37,23 +37,28 @@ export function GroupsTab() {
   const [sort, setSort] = useState<SortOption>('popular');
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const offsetRef = useRef(0);
+  const searchRef = useRef('');
   const observerRef = useRef<HTMLDivElement | null>(null);
 
-  async function fetchGroups(reset = false) {
+  const setOffsetValue = useCallback((value: number) => {
+    offsetRef.current = value;
+  }, []);
+
+  const fetchGroups = useCallback(async (reset = false, searchValue = searchRef.current) => {
     try {
       setIsLoading(true);
-      const currentOffset = reset ? 0 : offset;
+      const currentOffset = reset ? 0 : offsetRef.current;
 
       const res = await http.get('/api/v1/explore', {
         params: {
           type: 'group',
           category: category ?? undefined,
           sort,
-          q: search || undefined,
+          q: searchValue || undefined,
           limit: 20,
           offset: currentOffset,
         },
@@ -66,10 +71,10 @@ export function GroupsTab() {
 
       if (reset) {
         setGroups(items);
-        setOffset(items.length);
+        setOffsetValue(items.length);
       } else {
         setGroups((prev) => [...prev, ...items]);
-        setOffset((prev) => prev + items.length);
+        setOffsetValue(currentOffset + items.length);
       }
       setCategories(cats);
       setHasMore(items.length >= 20);
@@ -80,21 +85,22 @@ export function GroupsTab() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [category, setOffsetValue, sort]);
 
   useEffect(() => {
-    setOffset(0);
+    setOffsetValue(0);
     setHasMore(true);
     fetchGroups(true);
-  }, [category, sort]);
+  }, [category, fetchGroups, setOffsetValue, sort]);
 
   function handleSearch(value: string) {
+    searchRef.current = value;
     setSearch(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      setOffset(0);
+      setOffsetValue(0);
       setHasMore(true);
-      fetchGroups(true);
+      fetchGroups(true, value);
     }, 300);
   }
 

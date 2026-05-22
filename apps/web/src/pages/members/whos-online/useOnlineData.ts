@@ -2,7 +2,7 @@
  * Hook for fetching online data
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { http } from '@/lib/api-client';
 import { ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
@@ -44,7 +44,7 @@ export function useOnlineData(autoRefresh: boolean) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  async function fetchOnlineData() {
+  const fetchOnlineData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -102,7 +102,7 @@ export function useOnlineData(autoRefresh: boolean) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
 
   // Initial fetch
   useEffect(() => {

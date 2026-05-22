@@ -13,7 +13,7 @@
  *
  */
 
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
 import { tweens, springs } from '@/lib/animation-presets';
@@ -32,7 +32,7 @@ export interface GroupJoinCelebrationProps {
  * Group Join Celebration component.
  */
 export function GroupJoinCelebration({ groupName, show, onComplete }: GroupJoinCelebrationProps) {
-  const fireCelebration = () => {
+  const fireCelebration = useCallback(() => {
     // Big center burst
     confetti({
       particleCount: 100,
@@ -55,7 +55,7 @@ export function GroupJoinCelebration({ groupName, show, onComplete }: GroupJoinC
         origin: { x: 1, y: 0.65 },
       });
     }, 200);
-  };
+  }, []);
 
   useEffect(() => {
     if (!show) return;

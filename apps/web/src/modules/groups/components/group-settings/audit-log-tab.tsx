@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   MagnifyingGlassIcon,
@@ -110,7 +110,7 @@ export function AuditLogTab({ groupId }: AuditLogTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const fetchAuditLog = async (cursor?: string) => {
+  const fetchAuditLog = useCallback(async (cursor?: string) => {
     setLoading(true);
     try {
       const res = await http.get(`/api/v1/groups/${groupId}/audit-log`, {
@@ -125,7 +125,7 @@ export function AuditLogTab({ groupId }: AuditLogTabProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
     fetchAuditLog();

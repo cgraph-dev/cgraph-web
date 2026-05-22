@@ -3,7 +3,7 @@
  * Shows pending appeals with approve/deny actions
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { entranceVariants, staggerConfigs } from '@/lib/animation-presets';
 import { ShieldExclamationIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
@@ -35,7 +35,7 @@ export function AppealsQueue({ groupId }: { groupId: string }) {
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [reviewReason, setReviewReason] = useState('');
 
-  async function fetchAppeals() {
+  const fetchAppeals = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -47,7 +47,7 @@ export function AppealsQueue({ groupId }: { groupId: string }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filter, groupId]);
 
   useEffect(() => {
     fetchAppeals();

@@ -8,7 +8,7 @@
  *
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
@@ -54,7 +54,7 @@ export function ChannelPermissionsPanel({
     Record<string, { allow: number; deny: number }>
   >({});
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [permsRes, rolesRes] = await Promise.all([
@@ -93,7 +93,7 @@ export function ChannelPermissionsPanel({
     } finally {
       setLoading(false);
     }
-  };
+  }, [channelId, groupId]);
 
   useEffect(() => {
     fetchData();

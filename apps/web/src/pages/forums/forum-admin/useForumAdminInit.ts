@@ -169,7 +169,21 @@ export function useForumAdminInit(deps: InitDeps) {
           });
       }
     }
-  }, [forum]);
+  }, [
+    forum,
+    forumSlug,
+    setAnalytics,
+    setAppearance,
+    setCategories,
+    setDescription,
+    setIsNsfw,
+    setIsPublic,
+    setMembers,
+    setModQueue,
+    setModerators,
+    setName,
+    setRules,
+  ]);
 
   // Redirect if not owner/moderator
   useEffect(() => {

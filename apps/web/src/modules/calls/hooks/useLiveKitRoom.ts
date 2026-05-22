@@ -7,7 +7,7 @@
  *
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Room, RoomEvent, ConnectionState, type RemoteParticipant } from 'livekit-client';
 import { LiveKitService } from '@/lib/webrtc/livekitService';
 import type { LiveKitParticipant } from '@/lib/webrtc/livekitService';
@@ -90,7 +90,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
   const cleanupRef = useRef<(() => void) | null>(null);
   const roomRef = useRef<Room | null>(null);
   // Fetch token from backend
-  const fetchToken = async (): Promise<{
+  const fetchToken = useCallback(async (): Promise<{
     token: string;
     url: string;
     e2ee_key?: string;
@@ -107,9 +107,9 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
       e2ee_enabled?: boolean;
     }>('/api/v1/livekit/token', body);
     return response.data;
-  };
+  }, [channelId, groupId, roomName]);
   // Update participants from room state
-  const updateParticipants = (lkRoom: Room) => {
+  const updateParticipants = useCallback((lkRoom: Room) => {
     const mapped: LiveKitParticipant[] = [];
     lkRoom.remoteParticipants.forEach((p: RemoteParticipant) => {
       mapped.push({
@@ -124,9 +124,9 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
       });
     });
     setParticipants(mapped);
-  };
+  }, []);
   // Connect
-  const connect = async () => {
+  const connect = useCallback(async () => {
     try {
       setError(null);
       setConnectionState(ConnectionState.Connecting);
@@ -195,7 +195,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
       setError(message);
       setConnectionState(ConnectionState.Disconnected);
     }
-  };
+  }, [audioEnabled, fetchToken, updateParticipants, videoEnabled]);
   // Media controls
   const toggleMute = async () => {
     const lkRoom = roomRef.current;
@@ -257,7 +257,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
         roomRef.current = null;
       }
     };
-  }, [autoConnect]);
+  }, [autoConnect, connect]);
 
   return {
     connectionState,

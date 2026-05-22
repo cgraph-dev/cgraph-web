@@ -193,17 +193,25 @@ export function useModerationLog(filters?: {
   page?: number;
 }) {
   const { moderationLog, isLoadingLog, fetchModerationLog } = useModerationStore();
+  const { moderatorId, action, targetType, page } = filters ?? {};
+  const hasFilters = filters != null;
+  const normalizedFilters = useMemo(
+    () =>
+      hasFilters
+        ? {
+            moderatorId,
+            action,
+            targetType,
+            page,
+          }
+        : undefined,
+    [action, hasFilters, moderatorId, page, targetType]
+  );
 
   // Fetch log on mount or filter change
   useEffect(() => {
-    fetchModerationLog(filters);
-  }, [
-    fetchModerationLog,
-    filters?.moderatorId,
-    filters?.action,
-    filters?.targetType,
-    filters?.page,
-  ]);
+    fetchModerationLog(normalizedFilters);
+  }, [fetchModerationLog, normalizedFilters]);
 
   const logByAction = useMemo(() => {
     const map: Record<string, ModerationLogEntry[]> = {};

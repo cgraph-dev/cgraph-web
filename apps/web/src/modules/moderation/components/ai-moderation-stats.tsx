@@ -33,15 +33,13 @@ const ACTION_LABELS: Record<string, string> = {
  * AI moderation stats with donut chart and auto-action rate.
  */
 export function AIModrationStats({ data }: AIModrationStatsProps) {
-  const entries = data || [];
-
   const { pieData, totalDecisions, autoActionCount, autoActionRate } = useMemo(() => {
     // Aggregate by action type
     const byAction = new Map<string, number>();
     let total = 0;
     let autoCount = 0;
 
-    for (const entry of entries) {
+    for (const entry of data) {
       const current = byAction.get(entry.ai_action) || 0;
       byAction.set(entry.ai_action, current + entry.count);
       total += entry.count;
@@ -60,7 +58,7 @@ export function AIModrationStats({ data }: AIModrationStatsProps) {
       autoActionCount: autoCount,
       autoActionRate: total > 0 ? Math.round((autoCount / total) * 100) : 0,
     };
-  }, [entries]);
+  }, [data]);
 
   return (
     <Card>

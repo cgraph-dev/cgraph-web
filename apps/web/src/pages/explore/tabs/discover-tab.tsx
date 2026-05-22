@@ -4,7 +4,7 @@
  * Community discovery (groups + forums). Formerly the full explore-page.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   MagnifyingGlassIcon,
   SparklesIcon,
@@ -37,22 +37,27 @@ export function DiscoverTab() {
   const [sort, setSort] = useState<SortOption>('popular');
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const offsetRef = useRef(0);
+  const searchRef = useRef('');
   const observerRef = useRef<HTMLDivElement | null>(null);
 
-  async function fetchCommunities(reset = false) {
+  const setOffsetValue = useCallback((value: number) => {
+    offsetRef.current = value;
+  }, []);
+
+  const fetchCommunities = useCallback(async (reset = false, searchValue = searchRef.current) => {
     try {
       setIsLoading(true);
-      const currentOffset = reset ? 0 : offset;
+      const currentOffset = reset ? 0 : offsetRef.current;
 
       const res = await http.get('/api/v1/explore', {
         params: {
           category: category ?? undefined,
           sort,
-          q: search || undefined,
+          q: searchValue || undefined,
           limit: 20,
           offset: currentOffset,
         },
@@ -63,10 +68,10 @@ export function DiscoverTab() {
 
       if (reset) {
         setCommunities(items);
-        setOffset(items.length);
+        setOffsetValue(items.length);
       } else {
         setCommunities((prev) => [...prev, ...items]);
-        setOffset((prev) => prev + items.length);
+        setOffsetValue(currentOffset + items.length);
       }
       setCategories(cats);
       setHasMore(items.length >= 20);
@@ -77,23 +82,24 @@ export function DiscoverTab() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [category, setOffsetValue, sort]);
 
   // Reset and fetch when filters change
   useEffect(() => {
-    setOffset(0);
+    setOffsetValue(0);
     setHasMore(true);
     fetchCommunities(true);
-  }, [category, sort]);
+  }, [category, fetchCommunities, setOffsetValue, sort]);
 
   // Debounced search
   function handleSearch(value: string) {
+    searchRef.current = value;
     setSearch(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      setOffset(0);
+      setOffsetValue(0);
       setHasMore(true);
-      fetchCommunities(true);
+      fetchCommunities(true, value);
     }, 300);
   }
 

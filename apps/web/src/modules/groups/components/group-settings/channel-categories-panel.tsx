@@ -7,7 +7,7 @@
  *
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, Reorder } from 'motion/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { apiClient, http } from '@/lib/api-client';
@@ -36,7 +36,7 @@ export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps)
   const [editName, setEditName] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       const [catRes, chanRes] = await Promise.all([
@@ -72,7 +72,7 @@ export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
     fetchCategories();

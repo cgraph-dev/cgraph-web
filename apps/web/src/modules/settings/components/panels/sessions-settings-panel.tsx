@@ -1,7 +1,7 @@
 /**
  * Active sessions management panel.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import {
   DevicePhoneMobileIcon,
@@ -79,7 +79,7 @@ export function SessionsSettingsPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRevoking, setIsRevoking] = useState<string | null>(null);
 
-  async function fetchSessions() {
+  const fetchSessions = useCallback(async () => {
     try {
       const response = await http.get('/api/v1/me/sessions');
       const data = response.data?.data || response.data?.sessions || [];
@@ -101,7 +101,7 @@ export function SessionsSettingsPanel() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     fetchSessions();

@@ -3,7 +3,7 @@
  * Opens when clicking "View Thread" or reply count on a parent message
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { entranceVariants, springs } from '@/lib/animation-presets';
 import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
@@ -39,7 +39,7 @@ export function ThreadPanel({ isOpen, onClose, parentMessage, conversationId }: 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Fetch thread replies
-  const fetchReplies = async () => {
+  const fetchReplies = useCallback(async () => {
     if (!parentMessage) return;
     setLoading(true);
     try {
@@ -50,7 +50,7 @@ export function ThreadPanel({ isOpen, onClose, parentMessage, conversationId }: 
     } finally {
       setLoading(false);
     }
-  };
+  }, [parentMessage]);
 
   useEffect(() => {
     if (isOpen && parentMessage) {

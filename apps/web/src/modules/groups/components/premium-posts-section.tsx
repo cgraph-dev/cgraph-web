@@ -7,7 +7,7 @@
  *
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CurrencyDollarIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { createLogger } from '@/lib/logger';
 import { listPremiumPosts } from '@/modules/groups/services/premium-post-api';
@@ -51,7 +51,7 @@ export function PremiumPostsSection({
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchPosts = async (): Promise<void> => {
+  const fetchPosts = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     try {
       const fetched = await listPremiumPosts(groupId);
@@ -61,7 +61,7 @@ export function PremiumPostsSection({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
     void fetchPosts();
