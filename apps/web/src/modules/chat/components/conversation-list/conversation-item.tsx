@@ -29,6 +29,7 @@ export function ConversationItem({
   conversation,
   currentUserId,
   typingUsers,
+  draftPreview,
   onClick,
 }: ConversationItemProps) {
   const [showMenu, setShowMenu] = useState(false);
@@ -48,6 +49,7 @@ export function ConversationItem({
       : typingUsers.length > 1
         ? 'Several people are typing...'
         : null;
+  const messagePreview = conversation.lastMessage?.content || 'No messages yet';
 
   return (
     <NavLink to={`/messages/${conversation.id}`}>
@@ -104,10 +106,12 @@ export function ConversationItem({
             <div className="mt-0.5 flex items-center justify-between">
               {typingText ? (
                 <span className="truncate text-sm text-primary-400">{typingText}</span>
-              ) : (
-                <span className="truncate text-sm text-gray-400">
-                  {conversation.lastMessage?.content || 'No messages yet'}
+              ) : draftPreview ? (
+                <span className="truncate text-sm text-gray-300">
+                  <span className="font-medium text-primary-300">Draft:</span> {draftPreview}
                 </span>
+              ) : (
+                <span className="truncate text-sm text-gray-400">{messagePreview}</span>
               )}
 
               {conversation.unreadCount > 0 && (

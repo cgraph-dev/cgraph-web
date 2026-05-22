@@ -11,6 +11,7 @@ const CONVERSATIONS_STORE = 'conversations';
 const PENDING_STORE = 'pending_messages';
 const SYNC_META_STORE = 'sync_meta';
 const DRAFTS_STORE = 'drafts';
+export const DRAFTS_CHANGED_EVENT = 'cgraph:drafts-changed';
 
 export interface CachedMessage {
   readonly id: string;
@@ -425,6 +426,7 @@ export async function saveDraft(conversationId: string, text: string): Promise<v
       updatedAt: Date.now(),
     });
   });
+  notifyDraftsChanged(conversationId);
 }
 
 /** Read a draft for a conversation, or `null` if none exists. */
@@ -466,6 +468,7 @@ export async function deleteDraft(conversationId: string): Promise<void> {
     const store = tx.objectStore(DRAFTS_STORE);
     store.delete(conversationId);
   });
+  notifyDraftsChanged(conversationId);
 }
 
 /** Return every stored draft, newest first. Used for conversation-list previews. */
@@ -498,4 +501,13 @@ export async function getAllDrafts(): Promise<DraftRecord[]> {
     };
     tx.onerror = () => reject(tx.error);
   });
+}
+
+function notifyDraftsChanged(conversationId: string): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent(DRAFTS_CHANGED_EVENT, {
+      detail: { conversationId },
+    })
+  );
 }

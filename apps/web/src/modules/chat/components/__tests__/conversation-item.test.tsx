@@ -102,6 +102,21 @@ describe('ConversationItem', () => {
     expect(screen.getByText('Hello!')).toBeInTheDocument();
   });
 
+  it('renders draft preview before the last message', () => {
+    renderWithRouter(
+      <ConversationItem
+        conversation={baseConversation}
+        currentUserId="user-1"
+        typingUsers={[]}
+        draftPreview="Follow up after lunch"
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Draft:')).toBeInTheDocument();
+    expect(screen.getByText(/Follow up after lunch/)).toBeInTheDocument();
+    expect(screen.queryByText('Hello!')).not.toBeInTheDocument();
+  });
+
   it('shows typing indicator for single user', () => {
     renderWithRouter(
       <ConversationItem
@@ -112,6 +127,20 @@ describe('ConversationItem', () => {
       />
     );
     expect(screen.getByText(/Bob.*typing/i)).toBeInTheDocument();
+  });
+
+  it('keeps typing indicator above a draft preview', () => {
+    renderWithRouter(
+      <ConversationItem
+        conversation={baseConversation}
+        currentUserId="user-1"
+        typingUsers={['Bob']}
+        draftPreview="Follow up after lunch"
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/Bob.*typing/i)).toBeInTheDocument();
+    expect(screen.queryByText('Draft:')).not.toBeInTheDocument();
   });
 
   it('shows typing indicator for multiple users', () => {

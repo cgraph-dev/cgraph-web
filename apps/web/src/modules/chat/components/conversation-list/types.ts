@@ -14,6 +14,7 @@ export interface ConversationItemProps {
   conversation: Conversation;
   currentUserId?: string;
   typingUsers: readonly string[];
+  draftPreview?: string | null;
   onClick: () => void;
 }
 

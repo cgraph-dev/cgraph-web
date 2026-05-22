@@ -231,9 +231,13 @@ on the routed DM surface.
   were intentionally deleted from production web on 2026-05-21 instead of being promoted as a
   cross-platform customization feature.
 
-- **#10 Implement draft autosave** — Partial. Draft persistence exists, but
-  `apps/web/src/modules/chat/components/conversation-list/conversation-item.tsx` still renders only
-  typing/last-message state and does not surface a `Draft: ...` preview.
+- **#10 Implement draft autosave** — Closed for the shared conversation-list preview path. Drafts
+  persist in IndexedDB, draft save/clear now emits a browser-scoped draft-change event, and
+  `apps/web/src/modules/chat/components/conversation-list/conversation-list.tsx` reloads stored
+  drafts so `ConversationItem` renders `Draft: ...` ahead of the last-message preview while keeping
+  live typing indicators highest priority. Covered by
+  `apps/web/src/modules/chat/components/__tests__/conversation-item.test.tsx` and the full web
+  Vitest suite on 2026-05-22.
 
 - **#19 Consolidate `forumStore` slice monolith** — Partial. `useForumListStore`,
   `useForumDetailStore`, and `useForumModerationStore` exist, but they are still thin selector hooks

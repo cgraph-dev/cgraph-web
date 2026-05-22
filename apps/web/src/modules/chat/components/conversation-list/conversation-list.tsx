@@ -11,12 +11,13 @@
  *   (RowType enum, fixed heights, getRow / renderRow pattern)
  */
 
-import { useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { BookmarkIcon as PinIcon } from '@heroicons/react/24/outline';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useChatStore, type Conversation } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
+import { DRAFTS_CHANGED_EVENT, getAllDrafts } from '@/lib/offline/indexeddb-cache';
 import type { ConversationListProps } from './types';
 import { useConversationList } from './useConversationList';
 import { ConversationListHeader } from './conversation-list-header';
@@ -32,6 +33,7 @@ import { buildRows, rowHeight, rowKey, RowType, type Row } from './rows';
 export function ConversationList({ className = '' }: ConversationListProps) {
   const { user } = useAuthStore();
   const typingUsers = useChatStore((s) => s.typingUsers);
+  const draftPreviews = useDraftPreviews();
   const {
     searchQuery,
     setSearchQuery,
@@ -108,6 +110,7 @@ export function ConversationList({ className = '' }: ConversationListProps) {
                     row={row}
                     currentUserId={user?.id}
                     typingUsers={typingUsers}
+                    draftPreviews={draftPreviews}
                     onClickConversation={handleConversationClick}
                   />
                 </div>
@@ -128,6 +131,7 @@ interface RenderedRowProps {
   readonly row: Row;
   readonly currentUserId: string | undefined;
   readonly typingUsers: Record<string, readonly string[]>;
+  readonly draftPreviews: Readonly<Record<string, string>>;
   readonly onClickConversation: (conversation: Conversation) => void;
 }
 
@@ -135,6 +139,7 @@ function RenderedRow({
   row,
   currentUserId,
   typingUsers,
+  draftPreviews,
   onClickConversation,
 }: RenderedRowProps): React.ReactNode {
   switch (row.type) {
@@ -153,10 +158,65 @@ function RenderedRow({
           conversation={row.conversation}
           currentUserId={currentUserId}
           typingUsers={[...(typingUsers[row.conversation.id] ?? [])]}
+          draftPreview={draftPreviews[row.conversation.id] ?? null}
           onClick={() => onClickConversation(row.conversation)}
         />
       );
   }
+}
+
+function useDraftPreviews(): Readonly<Record<string, string>> {
+  const [draftPreviews, setDraftPreviews] = useState<Record<string, string>>({});
+
+  const loadDrafts = useCallback(() => {
+    let cancelled = false;
+    void getAllDrafts()
+      .then((drafts) => {
+        if (cancelled) return;
+        const next: Record<string, string> = {};
+        for (const draft of drafts) {
+          const preview = draft.text.replace(/\s+/g, ' ').trim();
+          if (preview.length > 0) {
+            next[draft.conversationId] = preview;
+          }
+        }
+        setDraftPreviews((current) => (areDraftPreviewsEqual(current, next) ? current : next));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDraftPreviews((current) =>
+            Object.keys(current).length === 0 ? current : {}
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const cancelInitialLoad = loadDrafts();
+    const handleDraftsChanged = () => {
+      loadDrafts();
+    };
+    window.addEventListener(DRAFTS_CHANGED_EVENT, handleDraftsChanged);
+    return () => {
+      cancelInitialLoad();
+      window.removeEventListener(DRAFTS_CHANGED_EVENT, handleDraftsChanged);
+    };
+  }, [loadDrafts]);
+
+  return draftPreviews;
+}
+
+function areDraftPreviewsEqual(
+  current: Readonly<Record<string, string>>,
+  next: Readonly<Record<string, string>>
+): boolean {
+  const currentKeys = Object.keys(current);
+  const nextKeys = Object.keys(next);
+  if (currentKeys.length !== nextKeys.length) return false;
+  return nextKeys.every((key) => current[key] === next[key]);
 }
 
 function SectionHeader({ label }: { readonly label: 'pinned' | 'all' }): React.ReactNode {
