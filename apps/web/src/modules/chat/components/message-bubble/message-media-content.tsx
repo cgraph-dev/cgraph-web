@@ -17,8 +17,10 @@ import { FileMessage } from '@/modules/chat/components/file-message';
 import { FileIcon } from './icons';
 import { mapVisualizerTheme } from './utils';
 import { toast } from '@/shared/components/ui';
-import { http } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import { LockClosedIcon, CurrencyDollarIcon } from '@heroicons/react/24/solid';
+import { useNavigate } from 'react-router-dom';
+import { getNodesActionFeedback } from '@/modules/nodes/utils/nodes-error-feedback';
 
 import { ContactCardMessage } from '@/modules/chat/components/contact-card-message';
 import type { ContactCardData } from '@cgraph/shared-types';
@@ -115,14 +117,19 @@ interface LockedFileOverlayProps {
  * "Unlock" button. Calls PUT /api/v1/paid-dm/:fileId/unlock on click.
  */
 function LockedFileOverlay({ message, nodesPrice }: LockedFileOverlayProps) {
+  const navigate = useNavigate();
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [isLocked, setIsLocked] = useState(true);
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [showAddNodes, setShowAddNodes] = useState(false);
 
   const metaUrl = metaString(message.metadata?.url);
   const filename = metaString(message.metadata?.filename) ?? 'File';
 
   async function handleUnlock(): Promise<void> {
     setIsUnlocking(true);
+    setUnlockError(null);
+    setShowAddNodes(false);
     try {
       const paidFileId =
         metaString(message.metadata?.paid_dm_file_id) ?? metaString(message.metadata?.paidDmFileId);
@@ -131,11 +138,27 @@ function LockedFileOverlay({ message, nodesPrice }: LockedFileOverlayProps) {
         throw new Error('Missing paid file id');
       }
 
-      await http.put(`/api/v1/paid-dm/${paidFileId}/unlock`, { message_id: message.id });
+      const unlockResult = await apiClient.paidDms.unlockFile(paidFileId, {
+        message_id: message.id,
+      });
+      if (!unlockResult.ok) {
+        throw unlockResult;
+      }
       setIsLocked(false);
       toast.success(`File unlocked for ${nodesPrice} Nodes`);
-    } catch {
-      toast.error('Failed to unlock file. Check your Node balance.');
+    } catch (error) {
+      const feedback = getNodesActionFeedback(error, 'paidFileUnlock');
+
+      if (feedback.alreadyComplete && metaUrl) {
+        setIsLocked(false);
+        toast.success('File already unlocked');
+        return;
+      }
+
+      const messageText = feedback.detail ?? feedback.title;
+      setUnlockError(messageText);
+      setShowAddNodes(feedback.shouldOpenShop);
+      toast.error(feedback.title, feedback.detail);
     } finally {
       setIsUnlocking(false);
     }
@@ -188,6 +211,21 @@ function LockedFileOverlay({ message, nodesPrice }: LockedFileOverlayProps) {
         >
           {isUnlocking ? 'Unlocking…' : `Unlock for ${nodesPrice} Nodes`}
         </button>
+
+        {unlockError && (
+          <div className="mx-4 max-w-[16rem] rounded-md border border-red-400/30 bg-red-500/15 px-3 py-2 text-center text-xs font-medium text-red-100">
+            <p>{unlockError}</p>
+            {showAddNodes && (
+              <button
+                type="button"
+                onClick={() => navigate('/me/wallet/shop')}
+                className="mt-2 rounded bg-red-100 px-2 py-1 text-[11px] font-semibold text-red-950 transition-colors hover:bg-white"
+              >
+                Add Nodes
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Filename bar */}

@@ -178,6 +178,57 @@ describe('ContentUnlockOverlay', () => {
     expect(toast.error).toHaveBeenCalledWith('Unlock failed. Please try again.');
     expect(mockNavigate).not.toHaveBeenCalled();
   });
+
+  it('treats already_unlocked as completed and calls onUnlocked', () => {
+    const mutate = vi.fn();
+    mockUseUnlockContent.mockReturnValue({ mutate, isPending: false });
+    const onUnlocked = vi.fn();
+
+    render(<ContentUnlockOverlay {...makeDefaultProps({ onUnlocked })} />);
+    fireEvent.click(screen.getByText('Unlock for 200 Nodes'));
+
+    const { onError } = mutate.mock.calls[0]![1]!;
+    onError({
+      response: {
+        data: {
+          error: {
+            code: 'already_unlocked',
+            message: 'Already unlocked',
+          },
+        },
+      },
+    });
+
+    expect(toast.success).toHaveBeenCalledWith('Content already unlocked');
+    expect(onUnlocked).toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('shows rate-limit copy for throttled unlock attempts', () => {
+    const mutate = vi.fn();
+    mockUseUnlockContent.mockReturnValue({ mutate, isPending: false });
+
+    render(<ContentUnlockOverlay {...makeDefaultProps()} />);
+    fireEvent.click(screen.getByText('Unlock for 200 Nodes'));
+
+    const { onError } = mutate.mock.calls[0]![1]!;
+    onError({
+      response: {
+        data: {
+          error: {
+            code: 'rate_limited',
+            message: 'Too many attempts',
+          },
+        },
+      },
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Too many attempts. Please wait a moment and try again.'
+    );
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
   it('does not crash when onUnlocked is undefined', () => {
     const mutate = vi.fn();
     mockUseUnlockContent.mockReturnValue({ mutate, isPending: false });

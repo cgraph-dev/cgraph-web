@@ -9,6 +9,7 @@ import { GiftIcon, XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outlin
 import { cn } from '@/lib/utils';
 import { FocusTrap } from '@/shared/components/accessibility';
 import { useSendGift, useNodeWallet } from '../hooks/useNodes';
+import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
 import { MIN_TIP, PLATFORM_CUT_PERCENT } from '@cgraph/shared-types/nodes';
 import toast from 'react-hot-toast';
 
@@ -61,8 +62,8 @@ export function GiftModal({
           setShowSuccess(true);
           toast.success(`Gifted \u2115 ${amount} to @${recipientUsername}`);
         },
-        onError: () => {
-          toast.error('Gift failed. Please try again.');
+        onError: (error) => {
+          toast.error(formatNodesToast(getNodesActionFeedback(error, 'gift')));
         },
       }
     );

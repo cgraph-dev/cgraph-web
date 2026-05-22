@@ -23,6 +23,7 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 import { TipModal } from '../tip-modal';
+import toast from 'react-hot-toast';
 const makeDefaultProps = (overrides?: Record<string, unknown>) => ({
   recipientId: 'user-2',
   recipientName: 'alice',
@@ -208,6 +209,54 @@ describe('TipModal', () => {
     onSuccess();
 
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows rate-limit copy when the server throttles tipping', () => {
+    const mutate = vi.fn();
+    mockUseSendTip.mockReturnValue({ mutate, isPending: false });
+
+    render(<TipModal {...makeDefaultProps()} />);
+    fireEvent.click(screen.getByText(/Send/));
+
+    const { onError } = mutate.mock.calls[0]![1];
+    onError({
+      response: {
+        data: {
+          error: {
+            code: 'rate_limited',
+            message: 'Too many attempts',
+          },
+        },
+      },
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Too many attempts. Please wait a moment and try again.'
+    );
+  });
+
+  it('shows self-tip copy when the server rejects sending Nodes to yourself', () => {
+    const mutate = vi.fn();
+    mockUseSendTip.mockReturnValue({ mutate, isPending: false });
+
+    render(<TipModal {...makeDefaultProps()} />);
+    fireEvent.click(screen.getByText(/Send/));
+
+    const { onError } = mutate.mock.calls[0]![1];
+    onError({
+      response: {
+        data: {
+          error: {
+            code: 'self_tip',
+            message: 'Cannot tip yourself',
+          },
+        },
+      },
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Cannot send Nodes to yourself. Choose another recipient.'
+    );
   });
   it('calls onClose when Cancel is clicked', () => {
     const onClose = vi.fn();

@@ -48,6 +48,7 @@ vi.mock('motion/react', () => ({
 }));
 
 import { GiftModal } from '../gift-modal';
+import toast from 'react-hot-toast';
 
 function makeDefaultProps(overrides?: Partial<Parameters<typeof GiftModal>[0]>) {
   return {
@@ -217,5 +218,49 @@ describe('GiftModal', () => {
     render(<GiftModal {...makeDefaultProps({ onClose })} />);
     fireEvent.click(screen.getByText('Cancel'));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows self-gift copy when the server rejects sending Nodes to yourself', () => {
+    render(<GiftModal {...makeDefaultProps()} />);
+
+    fireEvent.click(screen.getByText('Send Gift'));
+
+    const { onError } = mutateFn.mock.calls[0]![1];
+    onError({
+      response: {
+        data: {
+          error: {
+            code: 'self_gift',
+            message: 'Cannot gift yourself',
+          },
+        },
+      },
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Cannot send Nodes to yourself. Choose another recipient.'
+    );
+  });
+
+  it('shows rate-limit copy when the server throttles gifts', () => {
+    render(<GiftModal {...makeDefaultProps()} />);
+
+    fireEvent.click(screen.getByText('Send Gift'));
+
+    const { onError } = mutateFn.mock.calls[0]![1];
+    onError({
+      response: {
+        data: {
+          error: {
+            code: 'rate_limited',
+            message: 'Too many attempts',
+          },
+        },
+      },
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Too many attempts. Please wait a moment and try again.'
+    );
   });
 });

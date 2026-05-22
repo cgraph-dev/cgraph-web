@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useSendTip, useNodeWallet } from '../hooks/useNodes';
+import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
 import { MIN_TIP } from '@cgraph/shared-types/nodes';
 import toast from 'react-hot-toast';
 
@@ -49,8 +50,8 @@ export function TipModal({
           toast.success(`Tipped \u2115 ${amount} to @${recipientName}`);
           onClose();
         },
-        onError: () => {
-          toast.error('Tip failed. Please try again.');
+        onError: (error) => {
+          toast.error(formatNodesToast(getNodesActionFeedback(error, 'tip')));
         },
       }
     );

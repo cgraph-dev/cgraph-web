@@ -10,7 +10,7 @@
 import { useNavigate } from 'react-router-dom';
 import { GlassCard } from '@/shared/components/ui';
 import { useUnlockContent } from '@/modules/nodes/hooks/useNodes';
-import { NodesApiError } from '@/modules/nodes/services/nodesApi';
+import { formatNodesToast, getNodesActionFeedback } from '@/modules/nodes/utils/nodes-error-feedback';
 import toast from 'react-hot-toast';
 
 export interface ContentUnlockOverlayProps {
@@ -30,36 +30,20 @@ export function ContentUnlockOverlay({ postId, price, onUnlocked }: ContentUnloc
         toast.success('Content unlocked!');
         onUnlocked?.();
       },
-      onError: (error: unknown) => {
-        let msg: string | undefined;
+      onError: (error) => {
+        const feedback = getNodesActionFeedback(error, 'contentUnlock');
 
-        if (error instanceof NodesApiError) {
-          msg = error.code;
-        } else if (
-          error instanceof Object &&
-          'response' in error &&
-          error.response instanceof Object &&
-          'data' in error.response &&
-          error.response.data instanceof Object &&
-          'error' in error.response.data
-        ) {
-          const responseError = error.response.data.error;
-          if (typeof responseError === 'string') {
-            msg = responseError;
-          } else if (
-            responseError instanceof Object &&
-            'code' in responseError &&
-            typeof responseError.code === 'string'
-          ) {
-            msg = responseError.code;
-          }
+        if (feedback.alreadyComplete) {
+          toast.success('Content already unlocked');
+          onUnlocked?.();
+          return;
         }
 
-        if (msg === 'insufficient_balance') {
-          toast.error('Not enough Nodes');
+        if (feedback.shouldOpenShop) {
+          toast.error(feedback.title);
           navigate('/me/wallet/shop');
         } else {
-          toast.error('Unlock failed. Please try again.');
+          toast.error(formatNodesToast(feedback));
         }
       },
     });

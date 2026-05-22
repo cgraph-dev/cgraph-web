@@ -140,6 +140,7 @@ async function installMessagingApiMocks(
   options: {
     initialMessages?: MessageFixture[];
     messageRequestStatus?: 'accepted' | 'pending';
+    paidFileUnlockMode?: 'ok' | 'insufficient' | 'already' | 'rate';
   } = {}
 ): Promise<{
   attachmentUploads: string[];
@@ -147,6 +148,7 @@ async function installMessagingApiMocks(
   deletedMessages: string[];
   editedMessages: Record<string, unknown>[];
   forwardedMessages: Record<string, unknown>[];
+  paidFileUnlocks: string[];
   pinnedMessages: string[];
   requestActions: string[];
   sentMessages: Record<string, unknown>[];
@@ -158,6 +160,7 @@ async function installMessagingApiMocks(
   const deletedMessages: string[] = [];
   const editedMessages: Record<string, unknown>[] = [];
   const forwardedMessages: Record<string, unknown>[] = [];
+  const paidFileUnlocks: string[] = [];
   const pinnedMessages: string[] = [];
   const requestActions: string[] = [];
   const sentMessages: Record<string, unknown>[] = [];
@@ -187,6 +190,7 @@ async function installMessagingApiMocks(
     }),
   ];
   const messageRequestStatus = options.messageRequestStatus ?? 'accepted';
+  const paidFileUnlockMode = options.paidFileUnlockMode ?? 'ok';
   const friendUser = conversation.participants[1].user;
   const archivedConversation = { ...conversation, isArchived: true };
   let spaceState = {
@@ -490,12 +494,55 @@ async function installMessagingApiMocks(
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: {} }) });
   });
 
+  await page.route('**/api/v1/paid-dm/*/unlock', async (route, request) => {
+    paidFileUnlocks.push(request.method());
+
+    if (paidFileUnlockMode === 'insufficient') {
+      await route.fulfill({
+        status: 402,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { code: 'insufficient_balance', message: 'Not enough Nodes' },
+        }),
+      });
+      return;
+    }
+
+    if (paidFileUnlockMode === 'already') {
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { code: 'already_unlocked', message: 'Already unlocked' },
+        }),
+      });
+      return;
+    }
+
+    if (paidFileUnlockMode === 'rate') {
+      await route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { code: 'rate_limited', message: 'Too many attempts' },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { id: 'paid-file-1', status: 'unlocked' } }),
+    });
+  });
+
   return {
     attachmentUploads,
     conversationActions,
     deletedMessages,
     editedMessages,
     forwardedMessages,
+    paidFileUnlocks,
     pinnedMessages,
     requestActions,
     sentMessages,
@@ -505,6 +552,22 @@ async function installMessagingApiMocks(
 }
 
 test.describe('DM media composer', () => {
+  function lockedPaidFileMessage() {
+    return messageFixture({
+      id: 'msg-paid-file',
+      senderId: FRIEND_USER_ID,
+      content: 'locked-proof.pdf',
+      messageType: 'file',
+      metadata: {
+        url: 'https://cdn.cgraph.test/locked-proof.pdf',
+        filename: 'locked-proof.pdf',
+        paid_dm_file_id: 'paid-file-1',
+        nodes_price: 75,
+        is_file_locked: true,
+      },
+    });
+  }
+
   test('attaches and sends a routed cloud-DM file in the browser', async ({ page }) => {
     const { attachmentUploads, sentMessages } = await installMessagingApiMocks(page);
 
@@ -541,6 +604,70 @@ test.describe('DM media composer', () => {
           }),
         })
       );
+  });
+
+  test('shows paid-file insufficient-balance recovery without false unlock success', async ({
+    page,
+  }) => {
+    const { paidFileUnlocks } = await installMessagingApiMocks(page, {
+      initialMessages: [lockedPaidFileMessage()],
+      paidFileUnlockMode: 'insufficient',
+    });
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await expect(page.getByRole('button', { name: 'Unlock for 75 Nodes' })).toBeVisible();
+    await page.getByRole('button', { name: 'Unlock for 75 Nodes' }).click();
+
+    await expect
+      .poll(() => paidFileUnlocks, { message: 'paid file unlock endpoint was called' })
+      .toContain('PUT');
+    await expect(
+      page.getByLabel('Conversation messages').getByText('Add Nodes to continue.')
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add Nodes' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Unlock for 75 Nodes' })).toBeVisible();
+  });
+
+  test('treats already-unlocked paid files as accessible after server reconciliation', async ({
+    page,
+  }) => {
+    const { paidFileUnlocks } = await installMessagingApiMocks(page, {
+      initialMessages: [lockedPaidFileMessage()],
+      paidFileUnlockMode: 'already',
+    });
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await page.getByRole('button', { name: 'Unlock for 75 Nodes' }).click();
+
+    await expect
+      .poll(() => paidFileUnlocks, { message: 'paid file unlock endpoint was called' })
+      .toContain('PUT');
+    await expect(page.getByRole('button', { name: 'Unlock for 75 Nodes' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /locked-proof\.pdf/i })).toHaveAttribute(
+      'href',
+      'https://cdn.cgraph.test/locked-proof.pdf'
+    );
+  });
+
+  test('keeps paid files locked with clear rate-limit copy', async ({ page }) => {
+    const { paidFileUnlocks } = await installMessagingApiMocks(page, {
+      initialMessages: [lockedPaidFileMessage()],
+      paidFileUnlockMode: 'rate',
+    });
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await page.getByRole('button', { name: 'Unlock for 75 Nodes' }).click();
+
+    await expect
+      .poll(() => paidFileUnlocks, { message: 'paid file unlock endpoint was called' })
+      .toContain('PUT');
+    await expect(
+      page.getByLabel('Conversation messages').getByText('Please wait a moment and try again.')
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Unlock for 75 Nodes' })).toBeVisible();
   });
 
   test('records and sends a routed cloud-DM voice message in the browser', async ({ page }) => {

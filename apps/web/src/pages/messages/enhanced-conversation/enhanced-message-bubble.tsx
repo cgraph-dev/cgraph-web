@@ -17,6 +17,7 @@ import {
 } from '@/modules/chat/components/animated-reaction-bubble';
 import { MessageActionMenu } from '@/modules/chat/components/message-bubble/message-action-menu';
 import { MessageEditForm } from '@/modules/chat/components/message-bubble/message-edit-form';
+import { MessageMediaContent } from '@/modules/chat/components/message-bubble/message-media-content';
 import { ReadReceipts } from '@/modules/chat/components/message-bubble/read-receipts';
 import type { ReadByEntry } from '@/modules/chat/components/message-bubble/types';
 import { GlassCard } from '@/shared/components/ui';
@@ -32,6 +33,14 @@ import type { EnhancedMessageBubbleProps } from './types';
 import { FADE_IN } from '@/lib/animations/transitions';
 
 const logger = createLogger('EnhancedMessageBubble');
+
+function isLockedNodesFile(message: EnhancedMessageBubbleProps['message']): boolean {
+  return (
+    (message.metadata?.is_file_locked === true || message.metadata?.isFileLocked === true) &&
+    (typeof message.metadata?.nodes_price === 'number' ||
+      typeof message.metadata?.nodesPrice === 'number')
+  );
+}
 
 /** Convert backend receipt metadata into the avatar receipt component shape. */
 function readReceiptEntries(
@@ -317,9 +326,18 @@ export function EnhancedMessageBubble({
                       />
                     )}
 
-                  {hasFileAttachment && (
-                    <FileMessage message={message} isOwnMessage={isOwn} className="mt-2" />
-                  )}
+                  {hasFileAttachment &&
+                    (isLockedNodesFile(message) && !isOwn ? (
+                      <div className="mt-2">
+                        <MessageMediaContent
+                          message={message}
+                          isOwn={isOwn}
+                          voiceVisualizerTheme="matrix-green"
+                        />
+                      </div>
+                    ) : (
+                      <FileMessage message={message} isOwnMessage={isOwn} className="mt-2" />
+                    ))}
                 </>
               )}
 
