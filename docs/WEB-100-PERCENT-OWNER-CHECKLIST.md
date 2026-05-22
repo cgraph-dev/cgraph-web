@@ -88,7 +88,16 @@ validation open at this point in the sequence.
 `POST /api/v1/me/delete-account`, asserts the password payload, and verifies the follow-up auth
 logout side effect. The stricter release-readiness documents still keep real provider delivery,
 paired QR approval, group edge proof, package-version consumption, and final broad browser
-validation open.
+validation open at this point in the sequence.
+
+2026-05-23 group-settings permission proof: production web commit `5351b03` gates group settings
+management tabs by owner/admin/member permissions and adds
+`apps/web/e2e/group-settings-permissions.spec.ts`. The routed proof verifies owners still see
+Overview/Roles/Members/Invites/Channels/Audit Log/AutoMod and can save overview changes, while
+ordinary members only see personal Notifications/Danger actions and do not issue admin
+`PATCH /api/v1/groups/:groupId` requests. The stricter release-readiness documents still keep
+endpoint-level permission-denied copy, paired QR approval, provider delivery, package-version
+consumption, and final broad browser validation open.
 
 2026-05-23 Nodes negative-path proof: production web commit `436d4ff` centralizes Nodes failure
 copy, keeps routed paid files locked on failed unlock, treats already-unlocked server responses as

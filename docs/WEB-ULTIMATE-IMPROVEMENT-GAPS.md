@@ -193,7 +193,10 @@ on the routed DM surface.
    mute/unmute, and channel message menus wire edit, delete, report, pin, and copy-link actions.
    Production web commit `e6bc90eda7e794e1173cd223ad836e9d36ee0619` adds focused Chromium Playwright
    proof that a metadata-less `/groups/:groupId` entry resolves to the mounted default channel route
-   after group data loads. Older-message search and channel-granular notification semantics remain
+   after group data loads. Production web commit `5351b03` adds group settings permission gating and
+   routed proof that owners keep management access while ordinary members only see personal
+   Notifications/Danger actions and do not issue admin group PATCH requests. Older-message search,
+   endpoint-level permission-denied copy, and channel-granular notification semantics remain
    separate group-behavior owner decisions, not route-validity blockers.
 
 3. **Create a canonical web identity model** — Partial, narrowed. The shared identity projection now
