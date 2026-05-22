@@ -33,6 +33,39 @@ const tokens = {
   expires_in: 900,
 };
 
+interface MockJsonResponse {
+  readonly body: unknown;
+  readonly status?: number;
+}
+
+interface AuthRouteMockOptions {
+  readonly phoneRequestResponses?: readonly MockJsonResponse[];
+  readonly phoneVerifyResponses?: readonly MockJsonResponse[];
+  readonly phoneCallFallbackResponses?: readonly MockJsonResponse[];
+  readonly registrationLockResponses?: readonly MockJsonResponse[];
+  readonly profileUpdateResponses?: readonly MockJsonResponse[];
+}
+
+function mockResponse(body: unknown, status = 200): MockJsonResponse {
+  return { body, status };
+}
+
+function selectMockResponse(
+  responses: readonly MockJsonResponse[] | undefined,
+  index: number,
+  fallback: MockJsonResponse
+): MockJsonResponse {
+  if (!responses || responses.length === 0) {
+    return fallback;
+  }
+
+  return responses[Math.min(index, responses.length - 1)] ?? fallback;
+}
+
+async function fulfillMockResponse(route: Route, response: MockJsonResponse): Promise<void> {
+  await fulfillJson(route, response.body, response.status ?? 200);
+}
+
 function readJsonRequest(route: Route): unknown {
   const body = route.request().postData();
 
@@ -53,13 +86,16 @@ async function fulfillJson(route: Route, data: unknown, status = 200): Promise<v
   });
 }
 
-async function installAuthRouteMocks(page: Page) {
+async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions = {}) {
   const requests = {
     forgotPassword: [] as unknown[],
     login: [] as unknown[],
+    phoneCallFallback: [] as unknown[],
     phoneRequest: [] as unknown[],
     phoneVerify: [] as unknown[],
+    profileUpdate: [] as unknown[],
     register: [] as unknown[],
+    registrationLock: [] as unknown[],
     resetPassword: [] as unknown[],
     resendVerification: [] as unknown[],
     twoFactor: [] as unknown[],
@@ -171,34 +207,115 @@ async function installAuthRouteMocks(page: Page) {
 
     if (path === '/api/v1/auth/phone/request') {
       const body = readJsonRequest(route);
+      const attempt = requests.phoneRequest.length;
       requests.phoneRequest.push(body);
 
-      await fulfillJson(route, {
-        session_id: 'phone-session-uat',
-        expires_in: 300,
-        transport: 'sms',
-        retry_after: 0,
-        call_fallback_available_after: 0,
-        debug_verification_code: '123456',
-      });
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.phoneRequestResponses,
+          attempt,
+          mockResponse({
+            session_id: 'phone-session-uat',
+            expires_in: 300,
+            transport: 'sms',
+            retry_after: 0,
+            call_fallback_available_after: 0,
+            debug_verification_code: '123456',
+          })
+        )
+      );
+      return;
+    }
+
+    if (path === '/api/v1/auth/phone/call-fallback') {
+      const body = readJsonRequest(route);
+      const attempt = requests.phoneCallFallback.length;
+      requests.phoneCallFallback.push(body);
+
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.phoneCallFallbackResponses,
+          attempt,
+          mockResponse({
+            session_id: 'phone-session-voice-uat',
+            expires_in: 300,
+            transport: 'voice',
+            retry_after: 0,
+            call_fallback_available_after: 0,
+            debug_verification_code: '654321',
+          })
+        )
+      );
       return;
     }
 
     if (path === '/api/v1/auth/phone/verify') {
       const body = readJsonRequest(route);
+      const attempt = requests.phoneVerify.length;
       requests.phoneVerify.push(body);
 
-      await fulfillJson(route, {
-        user: authUser({
-          email: null,
-          username: 'phone_owner',
-          phone_number: '+14155551234',
-        }),
-        tokens,
-        is_new_user: false,
-        session_id: 'phone-session-uat',
-        next_step: 'completed',
-      });
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.phoneVerifyResponses,
+          attempt,
+          mockResponse({
+            user: authUser({
+              email: null,
+              username: 'phone_owner',
+              phone_number: '+14155551234',
+            }),
+            tokens,
+            is_new_user: false,
+            session_id: 'phone-session-uat',
+            next_step: 'completed',
+          })
+        )
+      );
+      return;
+    }
+
+    if (path === '/api/v1/auth/registration-lock/verify') {
+      const body = readJsonRequest(route);
+      const attempt = requests.registrationLock.length;
+      requests.registrationLock.push(body);
+
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.registrationLockResponses,
+          attempt,
+          mockResponse({
+            user: authUser({
+              email: null,
+              username: 'locked_phone_owner',
+              phone_number: '+14155551234',
+            }),
+            tokens,
+            is_new_user: false,
+            session_id: 'phone-lock-session-uat',
+            next_step: 'completed',
+          })
+        )
+      );
+      return;
+    }
+
+    if (path === '/api/v1/me' && request.method() === 'PUT') {
+      const body = readJsonRequest(route);
+      const attempt = requests.profileUpdate.length;
+      requests.profileUpdate.push(body);
+
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.profileUpdateResponses,
+          attempt,
+          mockResponse(authUser({ display_name: 'Phone Founder', username: 'phone_founder' }))
+        )
+      );
       return;
     }
 
@@ -221,6 +338,18 @@ async function installAuthRouteMocks(page: Page) {
   });
 
   return requests;
+}
+
+async function requestPhoneCode(page: Page): Promise<void> {
+  await page.getByPlaceholder('(415) 555-1234').fill('(415) 555-1234');
+  await page.getByRole('button', { name: /^next$/i }).click();
+  await expect(page.getByRole('heading', { name: /enter the verification code/i })).toBeVisible();
+}
+
+async function fillOtpCode(page: Page, code: string): Promise<void> {
+  for (const [index, digit] of code.split('').entries()) {
+    await page.getByLabel(`Code digit ${index + 1}`).fill(digit);
+  }
 }
 
 test.describe('auth and account lifecycle routes', () => {
@@ -307,13 +436,8 @@ test.describe('auth and account lifecycle routes', () => {
 
     await page.goto('/login/phone');
     await expect(page.getByText('Phone login')).toBeVisible();
-    await page.getByPlaceholder('(415) 555-1234').fill('(415) 555-1234');
-    await page.getByRole('button', { name: /^next$/i }).click();
-
-    await expect(page.getByRole('heading', { name: /enter the verification code/i })).toBeVisible();
-    for (const [index, digit] of ['1', '2', '3', '4', '5', '6'].entries()) {
-      await page.getByLabel(`Code digit ${index + 1}`).fill(digit);
-    }
+    await requestPhoneCode(page);
+    await fillOtpCode(page, '123456');
 
     await expect(page).toHaveURL(/\/messages$/);
     expect(requests.phoneRequest[0]).toMatchObject({
@@ -326,5 +450,182 @@ test.describe('auth and account lifecycle routes', () => {
       code: '123456',
       session_id: 'phone-session-uat',
     });
+  });
+
+  test('completes new-user phone registration through profile and permissions', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page, {
+      phoneVerifyResponses: [
+        mockResponse({
+          user: authUser({
+            email: null,
+            username: '',
+            display_name: '',
+            phone_number: '+14155551234',
+          }),
+          tokens,
+          is_new_user: true,
+          session_id: 'new-phone-session-uat',
+          next_step: 'profile',
+        }),
+      ],
+      profileUpdateResponses: [
+        mockResponse(
+          authUser({
+            email: null,
+            username: 'phone_founder',
+            display_name: 'Phone Founder',
+            phone_number: '+14155551234',
+          })
+        ),
+      ],
+    });
+
+    await page.goto('/register/phone');
+    await expect(page.getByText('Signal-style registration')).toBeVisible();
+    await requestPhoneCode(page);
+    await fillOtpCode(page, '123456');
+
+    await expect(page.getByRole('heading', { name: /set up your profile/i })).toBeVisible();
+    await page.getByLabel(/display name/i).fill('Phone Founder');
+    await page.getByLabel(/username/i).fill('phone_founder');
+    await page.getByRole('button', { name: /^continue$/i }).click();
+
+    await expect(page.getByRole('heading', { name: /choose your permissions/i })).toBeVisible();
+    const skipPermissionButton = page.getByRole('button', { name: /skip for now/i });
+    if (await skipPermissionButton.isVisible({ timeout: 1_000 }).catch(() => false)) {
+      await skipPermissionButton.click();
+    }
+    await page.getByRole('button', { name: /continue to cgraph/i }).click();
+
+    await expect(page).toHaveURL(/\/messages$/);
+    expect(requests.profileUpdate[0]).toMatchObject({
+      user: {
+        display_name: 'Phone Founder',
+        username: 'phone_founder',
+      },
+    });
+  });
+
+  test('allows phone OTP resend and voice-call fallback from the code screen', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page, {
+      phoneRequestResponses: [
+        mockResponse({
+          session_id: 'phone-session-uat',
+          expires_in: 300,
+          transport: 'sms',
+          retry_after: 0,
+          call_fallback_available_after: 0,
+          debug_verification_code: '123456',
+        }),
+        mockResponse({
+          session_id: 'phone-session-retry-uat',
+          expires_in: 300,
+          transport: 'sms',
+          retry_after: 0,
+          call_fallback_available_after: 0,
+          debug_verification_code: '234567',
+        }),
+      ],
+      phoneCallFallbackResponses: [
+        mockResponse({
+          session_id: 'phone-session-voice-uat',
+          expires_in: 300,
+          transport: 'voice',
+          retry_after: 0,
+          call_fallback_available_after: 0,
+          debug_verification_code: '654321',
+        }),
+      ],
+    });
+
+    await page.goto('/login/phone');
+    await requestPhoneCode(page);
+
+    await page.getByRole('button', { name: /resend sms/i }).click();
+    await expect.poll(() => requests.phoneRequest.length).toBe(2);
+
+    await page.getByRole('button', { name: /call me instead/i }).click();
+    await expect.poll(() => requests.phoneCallFallback.length).toBe(1);
+    await expect(page.getByText(/we are calling/i)).toBeVisible();
+    await expect(page.getByText(/last delivery method: voice call/i)).toBeVisible();
+
+    expect(requests.phoneCallFallback[0]).toMatchObject({
+      phone_number: '+14155551234',
+    });
+  });
+
+  test('completes phone login through registration-lock PIN verification', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page, {
+      phoneVerifyResponses: [
+        mockResponse({
+          user: authUser({
+            email: null,
+            username: 'locked_phone_owner',
+            phone_number: '+14155551234',
+          }),
+          tokens: null,
+          is_new_user: false,
+          session_id: 'phone-lock-session-uat',
+          next_step: 'registration_lock',
+        }),
+      ],
+      registrationLockResponses: [
+        mockResponse({
+          user: authUser({
+            email: null,
+            username: 'locked_phone_owner',
+            phone_number: '+14155551234',
+          }),
+          tokens,
+          is_new_user: false,
+          session_id: 'phone-lock-session-uat',
+          next_step: 'completed',
+        }),
+      ],
+    });
+
+    await page.goto('/login/phone');
+    await requestPhoneCode(page);
+    await fillOtpCode(page, '123456');
+
+    await expect(page.getByRole('heading', { name: /enter your pin/i })).toBeVisible();
+    await page.getByLabel(/enter pin/i).fill('1234');
+    await page.getByRole('button', { name: /^submit$/i }).click();
+
+    await expect(page).toHaveURL(/\/messages$/);
+    expect(requests.registrationLock[0]).toMatchObject({
+      session_id: 'phone-lock-session-uat',
+      pin: '1234',
+    });
+  });
+
+  test('keeps native-device-required phone sign-in on web with a clear recovery message', async ({
+    page,
+  }) => {
+    await installAuthRouteMocks(page, {
+      phoneVerifyResponses: [
+        mockResponse({
+          user: authUser({
+            email: null,
+            username: 'native_required_owner',
+            phone_number: '+14155551234',
+          }),
+          tokens: null,
+          is_new_user: false,
+          session_id: 'native-required-session-uat',
+          next_step: 'device_attestation',
+        }),
+      ],
+    });
+
+    await page.goto('/login/phone');
+    await requestPhoneCode(page);
+    await fillOtpCode(page, '123456');
+
+    await expect(
+      page.getByText(/requires native device verification.*switch back to email on web/i)
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: /enter the verification code/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/login\/phone$/);
   });
 });

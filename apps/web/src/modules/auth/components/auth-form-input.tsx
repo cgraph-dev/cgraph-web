@@ -10,7 +10,7 @@
  * - Error messages
  */
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   EyeIcon,
@@ -44,10 +44,13 @@ export function AuthFormInput({
   variant = 'default',
   showValidation = true,
   type,
+  id,
   className = '',
   ref,
   ...props
 }: AuthFormInputProps & { ref?: React.Ref<HTMLInputElement> }) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [hasValue, setHasValue] = useState(!!props.value || !!props.defaultValue);
@@ -92,6 +95,7 @@ export function AuthFormInput({
           )}
           <input
             ref={ref}
+            id={inputId}
             type={inputType}
             className={`peer w-full rounded-xl border bg-[var(--token-bg-secondary)] px-4 pb-2 pt-6 text-foreground placeholder-transparent transition-all focus:outline-none focus:ring-2 ${icon ? 'pl-12' : ''} ${isPassword ? 'pr-12' : ''} ${getBorderColor()} `}
             placeholder={label}
@@ -101,6 +105,7 @@ export function AuthFormInput({
             {...props}
           />
           <motion.label
+            htmlFor={inputId}
             animate={{
               y: isFocused || hasValue ? -10 : 0,
               scale: isFocused || hasValue ? 0.85 : 1,
@@ -152,13 +157,16 @@ export function AuthFormInput({
   if (variant === 'filled') {
     return (
       <div className={className}>
-        <label className="mb-1.5 block text-sm font-medium text-white/70">{label}</label>
+        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-white/70">
+          {label}
+        </label>
         <div className="relative">
           {icon && (
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">{icon}</div>
           )}
           <input
             ref={ref}
+            id={inputId}
             type={inputType}
             className={`w-full rounded-xl border-0 bg-[var(--token-card-bg)] px-4 py-3 text-foreground placeholder-foreground-muted/40 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/30 ${icon ? 'pl-12' : ''} ${isPassword ? 'pr-12' : ''} `}
             onFocus={handleFocus}
@@ -201,13 +209,16 @@ export function AuthFormInput({
   // Default variant
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-sm font-medium text-white/70">{label}</label>
+      <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-white/70">
+        {label}
+      </label>
       <div className="relative">
         {icon && (
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">{icon}</div>
         )}
         <input
           ref={ref}
+          id={inputId}
           type={inputType}
           className={`w-full rounded-xl border bg-[var(--token-bg-secondary)] px-4 py-3 text-foreground placeholder-foreground-muted/40 transition-all focus:scale-[1.01] focus:outline-none focus:ring-2 ${icon ? 'pl-12' : ''} ${isPassword ? 'pr-12' : ''} ${getBorderColor()} `}
           onFocus={handleFocus}
