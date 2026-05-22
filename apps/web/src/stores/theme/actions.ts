@@ -335,7 +335,6 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
 
       if (theme && typeof theme === 'object' && !Array.isArray(theme)) {
         get().applyServerTheme({ ...theme });
-        applyServerAppShellTheme({ ...theme });
         set({ isLoading: false });
       } else {
         set({ isLoading: false });
@@ -369,6 +368,7 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
 
   applyServerTheme: (theme) => {
     const updates = normalizeServerTheme(theme, get());
+    applyServerAppShellTheme(theme);
     set({ ...updates, lastSyncedAt: Date.now(), error: null });
   },
 

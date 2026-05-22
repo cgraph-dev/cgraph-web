@@ -18,6 +18,9 @@ import { useGroupStore } from '@/modules/groups/store';
 import { initErrorTracking, reportWebVitals } from '@/lib/error-tracking';
 import { startAutoSync, stopAutoSync } from '@/lib/offline/sync-service';
 import { useAuthStore } from '@/modules/auth/store';
+import { useSettingsStore } from '@/modules/settings/store';
+import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { useThemeStore } from '@/stores/theme/store';
 import { useDesktopInit } from '@/lib/desktop/use-desktop-init';
 import { applyOtherUserIdentityPayload } from '@/lib/identity/otherIdentitySync';
 import '@/lib/theme/theme-globals.css';
@@ -89,6 +92,17 @@ function getUserIdFromPayload(payload: Record<string, unknown>) {
   return typeof userId === 'string' ? userId : null;
 }
 
+function getStringFromPayload(
+  payload: Record<string, unknown>,
+  keys: readonly string[]
+): string | null {
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === 'string') return value;
+  }
+  return null;
+}
+
 /**
  * App component.
  */
@@ -135,6 +149,46 @@ export default function App() {
 
     window.addEventListener('cgraph:e2e-identity-patch', handleIdentityPatch);
     return () => window.removeEventListener('cgraph:e2e-identity-patch', handleIdentityPatch);
+  }, []);
+
+  useEffect(() => {
+    if (!isE2EAuthBypass) return undefined;
+
+    const handlePreferenceSync = (event: Event) => {
+      if (!(event instanceof CustomEvent) || !isRecord(event.detail)) return;
+
+      const surface = getStringFromPayload(event.detail, ['surface', 'type']);
+      if (surface === 'settings') {
+        const section = getStringFromPayload(event.detail, ['section']);
+        const changes = event.detail.changes;
+        if (!section || !isRecord(changes)) return;
+
+        const incomingAt =
+          getStringFromPayload(event.detail, ['last_updated_at', 'lastUpdatedAt']) ??
+          new Date(Date.now() + 1).toISOString();
+
+        useSettingsStore.getState().mergeSettingsFromSync(section, changes, incomingAt);
+        return;
+      }
+
+      if (surface === 'customization') {
+        const changes = event.detail.changes ?? event.detail.customizations;
+        if (isRecord(changes)) {
+          useCustomizationStore.getState().applyServerSettings(changes);
+        }
+        return;
+      }
+
+      if (surface === 'theme') {
+        const theme = event.detail.theme ?? event.detail.changes;
+        if (isRecord(theme)) {
+          useThemeStore.getState().applyServerTheme(theme);
+        }
+      }
+    };
+
+    window.addEventListener('cgraph:e2e-preference-sync', handlePreferenceSync);
+    return () => window.removeEventListener('cgraph:e2e-preference-sync', handlePreferenceSync);
   }, []);
 
   return (

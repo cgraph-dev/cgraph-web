@@ -143,6 +143,7 @@ export function PrivacySettingsPanel() {
             Who can send you direct messages
           </h3>
           <select
+            aria-label="Who can send you direct messages"
             value={selectivePrivacy.messageRequests.mode}
             onChange={(e) => {
               const value = e.target.value;
@@ -174,6 +175,7 @@ export function PrivacySettingsPanel() {
             Who can see your online status
           </h3>
           <select
+            aria-label="Who can see your online status"
             value={settings.privacy.showOnlineStatus ? 'everyone' : 'nobody'}
             onChange={async (e) => {
               try {
@@ -197,6 +199,7 @@ export function PrivacySettingsPanel() {
             Who can add you to groups
           </h3>
           <select
+            aria-label="Who can add you to groups"
             value={settings.privacy.allowGroupInvites}
             onChange={async (e) => {
               try {
@@ -222,6 +225,7 @@ export function PrivacySettingsPanel() {
         <GlassCard variant="default" className="aurora-social-panel p-4">
           <h3 className="mb-2 font-medium text-[var(--token-text-primary)]">Profile Visibility</h3>
           <select
+            aria-label="Profile visibility"
             value={settings.privacy.profileVisibility}
             onChange={async (e) => {
               try {
@@ -371,6 +375,7 @@ export function PrivacySettingsPanel() {
             Who can see your phone number
           </p>
           <select
+            aria-label="Phone number visibility"
             value={selectivePrivacy.phoneNumber.mode}
             onChange={(e) => {
               const value = e.target.value;
@@ -422,6 +427,7 @@ export function PrivacySettingsPanel() {
             Control who can start voice and video calls with you
           </p>
           <select
+            aria-label="Who can call you"
             value={selectivePrivacy.calls.mode}
             onChange={(e) => {
               const value = e.target.value;
@@ -453,6 +459,7 @@ export function PrivacySettingsPanel() {
             Set default auto-delete timer for new conversations
           </p>
           <select
+            aria-label="Vanish messages default"
             value={String(settings.privacy.autoDeleteDefault ?? 'off')}
             onChange={async (e) => {
               try {
