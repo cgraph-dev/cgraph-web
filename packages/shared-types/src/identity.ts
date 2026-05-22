@@ -101,10 +101,16 @@ function identityRecords(raw: Record<string, unknown>): readonly Record<string, 
   return customization ? [raw, customization] : [raw];
 }
 
+/**
+ * Checks whether a raw presence string is a supported identity status.
+ */
 export function isIdentityStatus(value: string | null): value is IdentityStatus {
   return IDENTITY_STATUSES.some((status) => status === value);
 }
 
+/**
+ * Converts unknown or missing presence values into the shared offline fallback.
+ */
 export function normalizeIdentityStatus(value: string | null): IdentityStatus {
   return isIdentityStatus(value) ? value : 'offline';
 }
