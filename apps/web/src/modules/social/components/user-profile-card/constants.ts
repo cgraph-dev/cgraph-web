@@ -115,6 +115,7 @@ export const ACCENT_THEMES: Record<AccentThemeId, AccentTheme> = {
   },
 };
 
+/** Return a known profile-card accent theme id, or undefined for stale/custom values. */
 export function normalizeAccentThemeId(value: string | null | undefined): AccentThemeId | undefined {
   switch (value) {
     case 'signal-noir':
