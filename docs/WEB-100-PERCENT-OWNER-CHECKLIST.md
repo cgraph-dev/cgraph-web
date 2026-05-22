@@ -1,6 +1,6 @@
 # Web 100 Percent Owner Checklist
 
-Status date: 2026-05-21
+Status date: 2026-05-23
 
 Current checklist state: 50 / 50 owner-level implementation rows are closed for this execution
 contract, but this is not the same as full Level 2 release-readiness or a complete web-workstream
@@ -26,6 +26,78 @@ auth identity while opening the mini profile card on hover, and preserves authen
 auth re-check fails for non-401/403 reasons. `cgraph-packages` commit
 `4f6927f18e6eb4ff8ba644df0d58188d1fb6c974` owns the matching shared `httpClient` logout behavior,
 and web/mobile package mirrors now point at that canonical package commit.
+
+2026-05-21 production-web follow-up proof: `cgraph-web` commit
+`8e7e202e7349a850e96593b57d62758115663347` adds a stable browser device ID for socket and push
+registration, gates device-revocation logout to explicit current-device revocations, routes
+identity-customization equips through backend inventory targets with optimistic own-profile sync,
+normalizes Lottie cosmetic asset paths with runtime fallbacks, animates badges/titles across
+customization and profile-card surfaces, and replaces the broken Groups no-selection rectangle with
+a full messaging-style empty state. `cgraph-packages` commit
+`3358129f8dd658e6c7c97845181d856c44e3be7e` makes the shared badge/title registries default to Lottie
+motion metadata, and production web commit `452bc9d7f25da7f4965339ceec1e05c9e0c5d576` syncs that
+mirror. This strengthens the checklist rows below, but it does not close the final owner sign-off
+questions.
+
+2026-05-21 app-shell/theme proof: `cgraph-backend` commit `133152be845465d4ca3a66ce8cfe2ecbc15c5cfb`
+changes the persisted app-theme default to Aurora and migrates non-explicit legacy app-theme rows to
+Aurora, while preserving users who explicitly chose a different app theme. `cgraph-web` commit
+`d664846f953d54eae1727069cda6ae999da0955ba` removes the old legacy local theme key from first paint,
+ignores non-explicit server app-shell modes during theme sync, and persists explicit app-theme
+selections back to the backend. `cgraph-web` commit `9ca329a25689483c5fb51ad6183efb583bc440e9` then
+centralizes reduced-motion preference reads through one motion preference owner used by Lottie,
+nameplates, auth effects, liquid-glass helpers, transition helpers, adaptive motion, and the
+settings motion helper. This improves theme and motion ownership, but it still does not close the
+final live routed sign-off questions below.
+
+2026-05-22 preference-sync proof: `cgraph-web` commit `416de9fe7023777d3b8a13301c009f230a5e66ad`
+fixes server-applied app-shell theme sync, gives the privacy selects accessible route-proof labels,
+and adds `apps/web/e2e/settings-preference-sync.spec.ts` to verify server-hydrated privacy values,
+reload persistence, routed settings live sync, customization profile-card live sync, and app-shell
+theme live sync. This closes the earlier routed reload/live-sync proof gap for the checklist layer,
+while the stricter docs still keep real multi-tab/device socket validation and broad final browser
+validation open.
+
+2026-05-22 Nodes wallet/shop browser proof: `cgraph-web` commit
+`69ee0b4b4b8a88f898805577af2716f73a5b7ae2` adds `apps/web/e2e/nodes-wallet-shop.spec.ts` to verify
+routed wallet balance and transaction rendering, wallet failure without false zero-balance UI,
+transaction-history failure while wallet state remains visible, shop bundle rendering, checkout
+failure toast, bundle-load failure without empty-success UI, and the true empty-shop state. This
+closes the strict wallet/shop browser recheck item. The later 2026-05-23 Nodes negative-path slice
+narrows the tip/gift/unlock risk described below.
+
+2026-05-23 auth/account browser proof: `apps/web/e2e/auth-account-routes.spec.ts` now verifies
+routed email login with 2FA, registration, forgot-password, reset-password, verify-email token and
+resend states, QR login session creation, and existing-user phone login OTP completion against
+mocked backend contracts. This closes the strict broad auth route browser-proof item, while real
+mail-provider delivery and the remaining phone registration-lock, call-fallback, and new-user
+completion branches stayed open until the later phone-flow proof below.
+
+2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
+`apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
+permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and
+native-device-required recovery. `AuthFormInput` now associates visible labels with inputs so the
+phone profile step is accessible by label. The stricter release-readiness documents still keep real
+provider delivery, paired QR approval, destructive account lifecycle proof, and final broad browser
+validation open at this point in the sequence.
+
+2026-05-23 account-deletion lifecycle proof: production web commit `93febe9` extends
+`apps/web/e2e/settings-preference-sync.spec.ts` to browser-verify the mounted
+`/me/settings/delete-account` route. The proof cancels a pending deletion through
+`DELETE /api/v1/me/delete-account`, schedules deletion through password-confirmed
+`POST /api/v1/me/delete-account`, asserts the password payload, and verifies the follow-up auth
+logout side effect. The stricter release-readiness documents still keep real provider delivery,
+paired QR approval, group edge proof, package-version consumption, and final broad browser
+validation open.
+
+2026-05-23 Nodes negative-path proof: production web commit `436d4ff` centralizes Nodes failure
+copy, keeps routed paid files locked on failed unlock, treats already-unlocked server responses as
+accessible, exposes Add Nodes recovery for insufficient balance, and wires routed Cloud Chat through
+the locked-file owner instead of bypassing it with the plain file renderer.
+`apps/web/e2e/dm-media-composer.spec.ts` now browser-verifies routed paid-file insufficient-balance,
+already-unlocked, and rate-limit states; focused component tests cover tip, gift, and content-unlock
+negative copy. Stripe handoff success, deeper retry UX, and final broad browser validation remain
+open in the stricter release-readiness documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -266,21 +338,36 @@ Required implementation-time questions:
       through `apps/web/src/lib/identity/ownIdentitySync.ts`. Routed browser proof for a live friend
       avatar-border/title update is covered by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
       The top sidebar avatar now consumes the same auth identity avatar URL and avatar-border owner,
-      opens a mini `UserProfileCard` on hover, and clicks through to the public profile route.
+      opens a mini `UserProfileCard` on hover, and clicks through to the public profile route. The
+      2026-05-22 production web commit `8e2374fb63f1e368632960575a8f3a0ffeb3b1aa` adds focused
+      browser proof for the sidebar mini-card profile theme, avatar border, nameplate, display-name
+      effect, and public-profile click-through. Production web commit
+      `dae3416c16b50ff4d8cfad4fc1e96bebbb0895c1` extends that proof to the full public profile
+      header. The 2026-05-21 follow-up commit keeps title/badge/nameplate Lottie paths normalized
+      through `apps/web/src/lib/lottie/lottie-asset-renderer.tsx` and renders those cosmetic layers
+      in customization, full profile, mini/hover card, and preview-card surfaces. The later
+      2026-05-21 package/web cleanup makes display-name effects and nameplates Lottie-backed catalog
+      metadata too, while deleting the old CSS/canvas particle renderers from avatar borders,
+      nameplates, and global background effects.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
       settings/customization/theme, gates settings section panels until bootstrap readiness is
       fulfilled, proves extended notification fields round-trip through the backend settings
       response, routes Calls/Stickers reset through the server settings API with rollback proof, and
-      adds backend/user-channel sync events for server-owned customization and theme patches.
-      Validated with focused backend/web store tests plus web typecheck.
+      adds backend/user-channel sync events for server-owned customization and theme patches. The
+      2026-05-22 preference-sync proof verifies privacy reload plus settings/customization/theme
+      live-sync behavior on mounted web routes. Validated with focused backend/web store tests,
+      Chromium route proof, and web typecheck.
 - [x] Customization inventory and equipped-state ownership are consistent end to end for the
       identity-customization route and backend save contract. The 2026-05-15 slice hydrates
       ownership/equipped state from `/api/v1/cosmetics/inventory`, keeps local cosmetic definitions
       as presentation metadata, rejects unowned customization saves in the backend, exposes
       inventory catalog keys from the backend, and validates the path with focused backend/web tests
-      plus web typecheck.
+      plus web typecheck. The 2026-05-21 follow-up maps backend inventory item IDs/slugs to the web
+      catalog before equip/unequip, persists equips through `/api/v1/cosmetics/equip`, rolls back on
+      failure, and immediately patches the own identity/profile preview owner so selections no
+      longer appear dead.
 
 ### D. Finish Missing First-Class Routed Products
 
@@ -330,11 +417,13 @@ Required implementation-time questions:
 ### F. Validation And Release Truth
 
 - [x] Focused browser UAT is run for auth, DMs, groups, social, settings, Nodes, identity cosmetics,
-      and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
+      and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16 and by focused
+      auth/account route proof in `apps/web/e2e/auth-account-routes.spec.ts` on 2026-05-23.
 - [x] Regression tests exist for the critical routed behaviors that were previously fake, partial,
       or misrouted. Current route-owned coverage includes `apps/web/e2e/dm-media-composer.spec.ts`,
       `apps/web/e2e/broadcasts.spec.ts`, `apps/web/e2e/spaces.spec.ts`,
-      `apps/web/e2e/vault.spec.ts`, and `apps/web/e2e/web-owner-uat.spec.ts`.
+      `apps/web/e2e/vault.spec.ts`, `apps/web/e2e/auth-account-routes.spec.ts`, and
+      `apps/web/e2e/web-owner-uat.spec.ts`.
 - [x] The support matrix matches the routed app after the final validation pass.
 - [x] No document still claims a feature is working if browser verification has not happened.
 
