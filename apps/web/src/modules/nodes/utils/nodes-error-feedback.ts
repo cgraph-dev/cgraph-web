@@ -46,6 +46,9 @@ function codeFromErrorPayload(value: unknown): string | undefined {
   return codeFromErrorPayload(value.error);
 }
 
+/**
+ * Extract the normalized backend error code from Nodes action failures.
+ */
 export function getNodesErrorCode(error: unknown): string | undefined {
   if (error instanceof NodesApiError) {
     return normalizeCode(error.code);
@@ -68,6 +71,9 @@ export function getNodesErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Convert Nodes action failures into consistent user-facing recovery states.
+ */
 export function getNodesActionFeedback(
   error: unknown,
   action: NodesActionKind
@@ -129,6 +135,9 @@ export function getNodesActionFeedback(
   }
 }
 
+/**
+ * Build a compact toast message from normalized Nodes failure feedback.
+ */
 export function formatNodesToast(feedback: NodesActionFeedback): string {
   return feedback.detail ? `${feedback.title}. ${feedback.detail}` : feedback.title;
 }
