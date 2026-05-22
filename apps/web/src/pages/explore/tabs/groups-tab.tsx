@@ -48,44 +48,47 @@ export function GroupsTab() {
     offsetRef.current = value;
   }, []);
 
-  const fetchGroups = useCallback(async (reset = false, searchValue = searchRef.current) => {
-    try {
-      setIsLoading(true);
-      const currentOffset = reset ? 0 : offsetRef.current;
+  const fetchGroups = useCallback(
+    async (reset = false, searchValue = searchRef.current) => {
+      try {
+        setIsLoading(true);
+        const currentOffset = reset ? 0 : offsetRef.current;
 
-      const res = await http.get('/api/v1/explore', {
-        params: {
-          type: 'group',
-          category: category ?? undefined,
-          sort,
-          q: searchValue || undefined,
-          limit: 20,
-          offset: currentOffset,
-        },
-      });
-      const payload = res.data?.data ?? res.data;
-      const items: Community[] = (payload?.communities ?? []).filter(
-        (c: Community) => c.type === 'group'
-      );
-      const cats: string[] = payload?.categories ?? [];
+        const res = await http.get('/api/v1/explore', {
+          params: {
+            type: 'group',
+            category: category ?? undefined,
+            sort,
+            q: searchValue || undefined,
+            limit: 20,
+            offset: currentOffset,
+          },
+        });
+        const payload = res.data?.data ?? res.data;
+        const items: Community[] = (payload?.communities ?? []).filter(
+          (c: Community) => c.type === 'group'
+        );
+        const cats: string[] = payload?.categories ?? [];
 
-      if (reset) {
-        setGroups(items);
-        setOffsetValue(items.length);
-      } else {
-        setGroups((prev) => [...prev, ...items]);
-        setOffsetValue(currentOffset + items.length);
+        if (reset) {
+          setGroups(items);
+          setOffsetValue(items.length);
+        } else {
+          setGroups((prev) => [...prev, ...items]);
+          setOffsetValue(currentOffset + items.length);
+        }
+        setCategories(cats);
+        setHasMore(items.length >= 20);
+      } catch (err) {
+        captureError(err instanceof Error ? err : new Error('Groups fetch error'), {
+          component: 'GroupsTab',
+        });
+      } finally {
+        setIsLoading(false);
       }
-      setCategories(cats);
-      setHasMore(items.length >= 20);
-    } catch (err) {
-      captureError(err instanceof Error ? err : new Error('Groups fetch error'), {
-        component: 'GroupsTab',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [category, setOffsetValue, sort]);
+    },
+    [category, setOffsetValue, sort]
+  );
 
   useEffect(() => {
     setOffsetValue(0);

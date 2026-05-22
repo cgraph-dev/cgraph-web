@@ -110,22 +110,25 @@ export function AuditLogTab({ groupId }: AuditLogTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const fetchAuditLog = useCallback(async (cursor?: string) => {
-    setLoading(true);
-    try {
-      const res = await http.get(`/api/v1/groups/${groupId}/audit-log`, {
-        params: { cursor, limit: PER_PAGE },
-      });
-      setEntries(res.data.data || []);
-      setNextCursor(res.data.meta?.next_cursor ?? null);
-      setHasNext(res.data.meta?.has_next ?? false);
-    } catch (error) {
-      logger.error('Failed to fetch audit log', error);
-      setEntries([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [groupId]);
+  const fetchAuditLog = useCallback(
+    async (cursor?: string) => {
+      setLoading(true);
+      try {
+        const res = await http.get(`/api/v1/groups/${groupId}/audit-log`, {
+          params: { cursor, limit: PER_PAGE },
+        });
+        setEntries(res.data.data || []);
+        setNextCursor(res.data.meta?.next_cursor ?? null);
+        setHasNext(res.data.meta?.has_next ?? false);
+      } catch (error) {
+        logger.error('Failed to fetch audit log', error);
+        setEntries([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [groupId]
+  );
 
   useEffect(() => {
     fetchAuditLog();
