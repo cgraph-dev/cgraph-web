@@ -55,7 +55,25 @@ async function fulfillJson(route: Route, body: unknown, status = 200): Promise<v
   });
 }
 
-async function installPreferenceMocks(page: Page): Promise<void> {
+function readJsonRequest(route: Route): unknown {
+  const body = route.request().postData();
+
+  if (!body) return null;
+
+  try {
+    return JSON.parse(body);
+  } catch {
+    return body;
+  }
+}
+
+async function installPreferenceMocks(page: Page) {
+  const requests = {
+    cancelDeletion: [] as unknown[],
+    logout: [] as unknown[],
+    scheduleDeletion: [] as unknown[],
+  };
+
   await page.addInitScript(() => {
     localStorage.clear();
     sessionStorage.clear();
@@ -110,6 +128,29 @@ async function installPreferenceMocks(page: Page): Promise<void> {
       return;
     }
 
+    if (path === '/api/v1/me/delete-account' && method === 'DELETE') {
+      requests.cancelDeletion.push(readJsonRequest(route));
+      await fulfillJson(route, { data: { message: 'Account deletion cancelled.' } });
+      return;
+    }
+
+    if (path === '/api/v1/me/delete-account' && method === 'POST') {
+      requests.scheduleDeletion.push(readJsonRequest(route));
+      await fulfillJson(route, {
+        data: {
+          scheduled_for: '2026-06-22T00:00:00.000Z',
+          grace_period_days: 30,
+        },
+      });
+      return;
+    }
+
+    if (path === '/api/v1/auth/logout' && method === 'POST') {
+      requests.logout.push(readJsonRequest(route));
+      await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
     if (path === '/api/v1/conversations') {
       await fulfillJson(route, { data: [], meta: { page: 1, total: 0 } });
       return;
@@ -132,6 +173,8 @@ async function installPreferenceMocks(page: Page): Promise<void> {
 
     await fulfillJson(route, { data: {} });
   });
+
+  return requests;
 }
 
 test.describe('Settings preference sync', () => {
@@ -243,5 +286,28 @@ test.describe('Settings preference sync', () => {
     });
 
     await expect(page.locator('html')).toHaveClass(/theme-light/);
+  });
+
+  test('proves routed account deletion scheduling and grace-period cancellation', async ({
+    page,
+  }) => {
+    const requests = await installPreferenceMocks(page);
+
+    await page.goto('/me/settings/delete-account');
+
+    await expect(page.getByRole('heading', { name: /delete my account/i })).toBeVisible();
+    await page.getByRole('button', { name: /cancel pending deletion/i }).click();
+
+    await expect(page.getByText('Account deletion cancelled.')).toBeVisible();
+    await expect.poll(() => requests.cancelDeletion.length).toBe(1);
+
+    await page.getByRole('button', { name: /start deletion process/i }).click();
+    await page.getByPlaceholder('Enter your current password').fill('CGraph!2026Password');
+    await page.getByPlaceholder('Type DELETE to confirm').fill('DELETE');
+    await page.getByRole('button', { name: /final confirmation/i }).click();
+
+    await expect.poll(() => requests.scheduleDeletion.length).toBe(1);
+    expect(requests.scheduleDeletion[0]).toMatchObject({ password: 'CGraph!2026Password' });
+    await expect.poll(() => requests.logout.length).toBe(1);
   });
 });
