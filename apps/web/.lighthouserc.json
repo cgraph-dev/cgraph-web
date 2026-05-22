@@ -38,13 +38,13 @@
         "uses-responsive-images": "warn",
         "largest-contentful-paint": [
           "error",
-          { "maxNumericValue": 4000, "aggregationMethod": "median" }
+          { "maxNumericValue": 2500, "aggregationMethod": "median" }
         ],
         "cumulative-layout-shift": [
           "error",
-          { "maxNumericValue": 0.25, "aggregationMethod": "median" }
+          { "maxNumericValue": 0.1, "aggregationMethod": "median" }
         ],
-        "total-blocking-time": ["error", { "maxNumericValue": 600, "aggregationMethod": "median" }],
+        "total-blocking-time": ["error", { "maxNumericValue": 300, "aggregationMethod": "median" }],
         "interactive": ["warn", { "maxNumericValue": 3500, "aggregationMethod": "median" }],
         "first-contentful-paint": [
           "warn",
