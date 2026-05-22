@@ -15,8 +15,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { createPortal } from 'react-dom';
 import { NewProfileCard } from './new-profile-card';
 import { useProfileCardNavigation } from './hooks';
-import { HOVER_DELAY_MS } from './constants';
-import type { UserProfileCardProps, CardPosition, ProfileCardUser } from './types';
+import { HOVER_DELAY_MS, normalizeAccentThemeId } from './constants';
+import type { UserProfileCardProps, CardPosition, ProfileCardUser, ProfileCardUserV2 } from './types';
 import { springs } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 import { useFriendStore } from '@/modules/social/store';
@@ -136,9 +136,10 @@ function titleFromApi(
   };
 }
 
-function profileCardUserFromApi(userData: Record<string, unknown>): ProfileCardUser {
+function profileCardUserFromApi(userData: Record<string, unknown>): ProfileCardUserV2 {
   const identity = identityFieldsFromApi(userData);
   const displayName = identity.displayName ?? identity.username;
+  const profileTheme = normalizeAccentThemeId(identity.profileTheme);
 
   return {
     id: identity.id,
@@ -161,6 +162,12 @@ function profileCardUserFromApi(userData: Record<string, unknown>): ProfileCardU
     isOnline: identity.status === 'online' || asBool(userData.is_online),
     lastSeen: asString(userData.last_seen_at) || asString(userData.last_active_at),
     pronouns: asString(userData.pronouns),
+    accentTheme: profileTheme,
+    nameplateId: identity.equippedNameplateId ?? undefined,
+    displayNameFont: identity.displayNameFont ?? undefined,
+    displayNameEffect: identity.displayNameEffect ?? undefined,
+    displayNameColor: identity.displayNameColor ?? undefined,
+    displayNameSecondaryColor: identity.displayNameSecondaryColor ?? undefined,
     profile_theme: identity.profileTheme ?? undefined,
     equipped_nameplate: identity.equippedNameplateId ?? undefined,
     display_name_font: identity.displayNameFont ?? undefined,

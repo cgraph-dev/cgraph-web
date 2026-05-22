@@ -115,6 +115,21 @@ export const ACCENT_THEMES: Record<AccentThemeId, AccentTheme> = {
   },
 };
 
+export function normalizeAccentThemeId(value: string | null | undefined): AccentThemeId | undefined {
+  switch (value) {
+    case 'signal-noir':
+    case 'aurora-glass':
+    case 'retro-terminal':
+    case 'solarpunk-canopy':
+    case 'deep-space':
+    case 'sakura-dream':
+    case 'ember-forge':
+      return value;
+    default:
+      return undefined;
+  }
+}
+
 // V2 NAMEPLATE STYLES
 
 interface NameplateStyle {

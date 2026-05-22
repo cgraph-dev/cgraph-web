@@ -13,6 +13,7 @@ export {
   useProfileCardData,
   HOVER_DELAY_MS,
   DEFAULT_PLACEHOLDER_USER,
+  normalizeAccentThemeId,
 } from './user-profile-card/index';
 
 export type {

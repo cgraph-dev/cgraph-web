@@ -110,6 +110,7 @@ export interface CardShellProps {
   children: React.ReactNode;
   accentColor: string;
   className?: string;
+  profileThemeId?: string;
 }
 
 export interface BannerProps {

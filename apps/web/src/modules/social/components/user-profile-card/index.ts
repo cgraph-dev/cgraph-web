@@ -63,6 +63,7 @@ export {
   NAMEPLATE_STYLES,
   BADGE_RARITY_CONFIG,
   PULSE_TIERS,
+  normalizeAccentThemeId,
   getPulseTier,
   getPulseFilled,
   mapRarityToDisplayTier,

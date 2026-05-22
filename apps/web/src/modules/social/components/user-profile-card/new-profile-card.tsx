@@ -5,7 +5,7 @@ import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
 import { ActionButtons } from './action-buttons';
 import { AvatarZone } from './avatar-zone';
 import { BannerCanvas } from './banner-canvas';
-import { ACCENT_THEMES } from './constants';
+import { ACCENT_THEMES, normalizeAccentThemeId } from './constants';
 import { IdentitySection } from './identity-section';
 import { Nameplate } from './nameplate';
 import { CardShell } from './profile-card-shell';
@@ -26,10 +26,17 @@ export const NewProfileCard = memo(function NewProfileCard({
   onViewProfile = NOOP,
   className,
 }: NewProfileCardProps) {
-  const theme = ACCENT_THEMES[user.accentTheme ?? DEFAULT_PROFILE_THEME_ID];
+  const themeId = user.accentTheme ?? normalizeAccentThemeId(user.profile_theme) ?? DEFAULT_PROFILE_THEME_ID;
+  const theme = ACCENT_THEMES[themeId] ?? ACCENT_THEMES[DEFAULT_PROFILE_THEME_ID];
   const accentColor = theme.accent;
   const isMini = variant === 'mini';
   const isPreview = mode === 'preview';
+  const nameplateId = user.nameplateId ?? user.equipped_nameplate;
+  const displayNameFont = user.displayNameFont ?? user.display_name_font;
+  const displayNameEffect = user.displayNameEffect ?? user.display_name_effect;
+  const displayNameColor = user.displayNameColor ?? user.display_name_color;
+  const displayNameSecondaryColor =
+    user.displayNameSecondaryColor ?? user.display_name_secondary_color;
 
   const initials = user.displayName
     .split(' ')
@@ -41,7 +48,7 @@ export const NewProfileCard = memo(function NewProfileCard({
   const tipEnabled = (user.pulseFilled ?? 0) > 0;
 
   return (
-    <CardShell accentColor={accentColor} className={className}>
+    <CardShell accentColor={accentColor} className={className} profileThemeId={themeId}>
       {/* Banner */}
       <BannerCanvas
         bannerType={user.bannerType ?? 'static'}
@@ -77,11 +84,11 @@ export const NewProfileCard = memo(function NewProfileCard({
         {/* Nameplate */}
         <Nameplate
           displayName={user.displayName}
-          nameplateId={user.nameplateId}
-          displayNameFont={user.displayNameFont}
-          displayNameEffect={user.displayNameEffect}
-          displayNameColor={user.displayNameColor}
-          displayNameSecondaryColor={user.displayNameSecondaryColor}
+          nameplateId={nameplateId}
+          displayNameFont={displayNameFont}
+          displayNameEffect={displayNameEffect}
+          displayNameColor={displayNameColor}
+          displayNameSecondaryColor={displayNameSecondaryColor}
         />
 
         {/* Identity (compact in mini) */}

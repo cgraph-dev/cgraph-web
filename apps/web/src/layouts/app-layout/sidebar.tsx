@@ -11,8 +11,11 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { ArrowRightOnRectangleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { PresenceStatusSelector } from '@/shared/components/presence-status-selector';
 import type { User } from '@/modules/auth/store';
-import { UserProfileCard } from '@/modules/social/components/user-profile-card';
-import type { ProfileCardUser } from '@/modules/social/components/profile-card';
+import {
+  normalizeAccentThemeId,
+  UserProfileCard,
+  type ProfileCardUserV2,
+} from '@/modules/social/components/user-profile-card';
 import type { NavItem } from './constants';
 import { loop } from '@/lib/animation-presets';
 import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
@@ -21,7 +24,9 @@ type IconComponent = (props: { className?: string }) => ReactNode;
 
 const tapSpring = { type: 'spring' as const, stiffness: 400, damping: 24 };
 
-function sidebarProfileCardUser(user: User): ProfileCardUser {
+function sidebarProfileCardUser(user: User): ProfileCardUserV2 {
+  const profileTheme = normalizeAccentThemeId(user.profileTheme);
+
   return {
     id: user.id,
     username: user.username ?? '',
@@ -37,6 +42,12 @@ function sidebarProfileCardUser(user: User): ProfileCardUser {
     streak: user.streak ?? 0,
     equippedBadges: [],
     isOnline: user.status === 'online',
+    accentTheme: profileTheme,
+    nameplateId: user.equippedNameplateId ?? undefined,
+    displayNameFont: user.displayNameFont ?? undefined,
+    displayNameEffect: user.displayNameEffect ?? undefined,
+    displayNameColor: user.displayNameColor ?? undefined,
+    displayNameSecondaryColor: user.displayNameSecondaryColor ?? undefined,
     profile_theme: user.profileTheme ?? undefined,
     equipped_nameplate: user.equippedNameplateId ?? undefined,
     display_name_font: user.displayNameFont ?? undefined,

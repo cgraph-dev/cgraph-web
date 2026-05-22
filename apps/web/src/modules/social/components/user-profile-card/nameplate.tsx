@@ -134,7 +134,11 @@ export const Nameplate = memo(function Nameplate({
   const effectConfig = effectKey ? NAME_EFFECTS[effectKey] : null;
 
   return (
-    <div className="relative z-[2] flex flex-col items-center px-4 pt-[22px]">
+    <div
+      className="relative z-[2] flex flex-col items-center px-4 pt-[22px]"
+      data-nameplate-id={nameplateId ?? undefined}
+      data-display-name-effect={displayNameEffect ?? undefined}
+    >
       <div
         className="relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-xl px-[26px] pb-[10px] pt-2 backdrop-blur-[20px] backdrop-saturate-[1.6]"
         style={{

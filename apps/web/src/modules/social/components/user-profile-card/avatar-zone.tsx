@@ -91,7 +91,10 @@ export const AvatarZone = memo(function AvatarZone({
   );
 
   return (
-    <div className="relative z-[6] -mt-[60px] flex justify-center">
+    <div
+      className="relative z-[6] -mt-[60px] flex justify-center"
+      data-avatar-border-id={avatarBorderId}
+    >
       <div className="relative h-[86px] w-[86px]">
         {/* Ambient halo glow behind avatar */}
         <div

@@ -14,7 +14,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import type React from 'react';
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const PROFILE_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{1,79}$/;
+const INVALID_PROFILE_IDS = new Set(['undefined', 'null', 'nan', 'object-object']);
+
+function isValidProfileId(userId: string | undefined): userId is string {
+  if (!userId) return false;
+
+  const normalized = userId.trim().toLowerCase().replaceAll(/[\s[\]]/g, '-');
+  return PROFILE_ID_RE.test(userId) && !INVALID_PROFILE_IDS.has(normalized);
+}
+
 import {
   PaintBrushIcon,
   ChatBubbleLeftIcon,
@@ -174,9 +183,8 @@ export function UserProfile() {
     setFriendshipStatus,
   });
 
-  // Guard against invalid userId — reject anything that isn't a UUID v1-5 to
-  // avoid retry-loops on routes like /user/undefined or /user/{}.
-  if (!userId || !UUID_RE.test(userId)) {
+  // Guard against broken route params while still allowing UUIDs and profile handles.
+  if (!isValidProfileId(userId)) {
     return <ProfileInvalidUser onGoBack={() => navigate(-1)} />;
   }
 
