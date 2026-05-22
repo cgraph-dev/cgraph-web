@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { VoiceMessageRecorder } from '@/components/media/voice-message-recorder';
+import { FilePriceInput } from '@/modules/chat/components/message-input/file-price-input';
 import type { MessageInputAreaProps, StickerSelection } from './types';
 import { tweens } from '@/lib/animation-presets';
 
@@ -52,6 +53,7 @@ function isImageFile(file: File): boolean {
 export function MessageInputArea({
   messageInput,
   attachment,
+  attachmentNodePrice,
   isSending,
   isVoiceMode,
   replyTo,
@@ -60,6 +62,7 @@ export function MessageInputArea({
   onMessageChange,
   onFileSelect,
   onClearAttachment,
+  onAttachmentNodePriceChange,
   onClearReply,
   onGifSelect,
   onStickerSelect,
@@ -157,30 +160,40 @@ export function MessageInputArea({
         className="flex-shrink-0 rounded-none border-t border-[var(--token-card-border)] p-4"
       >
         {attachment && (
-          <div className="mb-3 flex items-center gap-3 rounded-lg border border-[var(--token-card-border)] bg-white/[0.06] px-3 py-2">
-            {imagePreviewUrl ? (
-              <img
-                src={imagePreviewUrl}
-                alt={attachment.name}
-                className="h-12 w-12 rounded-md object-cover"
-              />
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/[0.08]">
-                <PaperClipIcon className="h-5 w-5 text-gray-400" />
+          <div className="mb-3 rounded-lg border border-[var(--token-card-border)] bg-white/[0.06] px-3 py-2">
+            <div className="flex items-center gap-3">
+              {imagePreviewUrl ? (
+                <img
+                  src={imagePreviewUrl}
+                  alt={attachment.name}
+                  className="h-12 w-12 rounded-md object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-white/[0.08]">
+                  <PaperClipIcon className="h-5 w-5 text-gray-400" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-white">{attachment.name}</p>
+                <p className="text-xs text-gray-400">{formatFileSize(attachment.size)}</p>
               </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-white">{attachment.name}</p>
-              <p className="text-xs text-gray-400">{formatFileSize(attachment.size)}</p>
+              <button
+                type="button"
+                onClick={handleClearAttachment}
+                className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white"
+                title="Remove attachment"
+                aria-label="Remove attachment"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleClearAttachment}
-              className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white"
-              title="Remove attachment"
-            >
-              <XMarkIcon className="h-4 w-4" />
-            </button>
+
+            <div className="mt-3">
+              <FilePriceInput
+                nodesPrice={attachmentNodePrice}
+                onChange={onAttachmentNodePriceChange}
+              />
+            </div>
           </div>
         )}
 

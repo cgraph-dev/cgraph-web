@@ -289,6 +289,35 @@ describe('sendMessage', () => {
       })
     );
   });
+
+  it('sends paid file lock fields as root fields plus metadata', async () => {
+    mockApi.post.mockResolvedValueOnce({ data: { message: makeMsg({ messageType: 'image' }) } });
+    const metadata = {
+      fileUrl: 'https://cdn.example.com/paid.png',
+      fileName: 'paid.png',
+      fileSize: 4096,
+      fileMimeType: 'image/png',
+      paid_dm_file_id: 'paid-file-1',
+      nodes_price: 25,
+      is_file_locked: true,
+    };
+
+    await useChatStore.getState().sendMessage('conv-1', 'paid.png', undefined, {
+      type: 'image',
+      metadata,
+    });
+
+    expect(mockApi.post).toHaveBeenCalledWith(
+      '/api/v1/conversations/conv-1/messages',
+      expect.objectContaining({
+        content: 'paid.png',
+        content_type: 'image',
+        nodes_price: 25,
+        is_file_locked: true,
+        metadata,
+      })
+    );
+  });
 });
 
 // 4. Edit / Delete Message

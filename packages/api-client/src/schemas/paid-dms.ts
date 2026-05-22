@@ -10,7 +10,7 @@ import { z } from 'zod';
 // Paid file status
 // ---------------------------------------------------------------------------
 
-export const PaidFileStatusSchema = z.enum(['pending', 'unlocked', 'expired']);
+export const PaidFileStatusSchema = z.enum(['pending', 'paid', 'expired']);
 
 export type PaidFileStatus = z.infer<typeof PaidFileStatusSchema>;
 

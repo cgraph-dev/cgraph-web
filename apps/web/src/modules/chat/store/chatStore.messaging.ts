@@ -135,6 +135,19 @@ export function createMessagingActions(_set: Set, get: Get) {
         if (metadata.thumbnailUrl) payload.thumbnail_url = metadata.thumbnailUrl;
       }
 
+      if (typeof metadata.nodes_price === 'number') {
+        payload.nodes_price = metadata.nodes_price;
+      }
+      if (typeof metadata.nodesPrice === 'number') {
+        payload.nodes_price = metadata.nodesPrice;
+      }
+      if (typeof metadata.is_file_locked === 'boolean') {
+        payload.is_file_locked = metadata.is_file_locked;
+      }
+      if (typeof metadata.isFileLocked === 'boolean') {
+        payload.is_file_locked = metadata.isFileLocked;
+      }
+
       if (metadata && Object.keys(metadata).length > 0) {
         payload.metadata = metadata;
       }

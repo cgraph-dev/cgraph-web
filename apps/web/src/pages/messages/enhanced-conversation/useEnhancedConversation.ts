@@ -130,6 +130,7 @@ export function useEnhancedConversation() {
 
   const [messageInput, setMessageInput] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [attachmentNodePrice, setAttachmentNodePrice] = useState<number | null>(null);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -356,6 +357,16 @@ export function useEnhancedConversation() {
     }, 5000);
   };
 
+  const handleAttachmentSelected = useCallback((file: File) => {
+    setAttachment(file);
+    setAttachmentNodePrice(null);
+  }, []);
+
+  const handleClearAttachment = useCallback(() => {
+    setAttachment(null);
+    setAttachmentNodePrice(null);
+  }, []);
+
   function addOptimisticVoiceMessage(uploaded: UploadedVoiceMessage) {
     if (!conversationId) return;
 
@@ -466,7 +477,7 @@ export function useEnhancedConversation() {
 
       setMessageInput('');
       setReplyTo(null);
-      setAttachment(null);
+      handleClearAttachment();
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -517,6 +528,35 @@ export function useEnhancedConversation() {
         content = content || uploaded.filename;
         contentType = messageContentTypeForMime(uploaded.contentType, uploaded.filename);
         metadata = buildMessageAttachmentMetadata(uploaded);
+
+        if (attachmentNodePrice !== null) {
+          if (!callRecipientId) {
+            throw new Error('Paid file attachments require a direct Cloud Chat recipient.');
+          }
+
+          const paidFile = await apiClient.paidDms.sendFile({
+            receiver_id: callRecipientId,
+            file_url: uploaded.url,
+            file_type: uploaded.contentType,
+            nodes_price: attachmentNodePrice,
+          });
+
+          if (!paidFile.ok) {
+            throw new Error(paidFile.error.message);
+          }
+
+          metadata = {
+            ...metadata,
+            paid_dm_file_id: paidFile.data.id,
+            paidDmFileId: paidFile.data.id,
+            paid_dm_expires_at: paidFile.data.expires_at,
+            paidDmExpiresAt: paidFile.data.expires_at,
+            nodes_price: paidFile.data.nodes_required,
+            nodesPrice: paidFile.data.nodes_required,
+            is_file_locked: true,
+            isFileLocked: true,
+          };
+        }
       }
 
       // Optimistic: show message in the list immediately with a sending indicator
@@ -553,7 +593,7 @@ export function useEnhancedConversation() {
       });
       setMessageInput('');
       setReplyTo(null);
-      setAttachment(null);
+      handleClearAttachment();
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -603,12 +643,15 @@ export function useEnhancedConversation() {
     // State
     messageInput,
     attachment,
+    attachmentNodePrice,
     isVoiceMode,
     handleMessageChange,
     isSending,
     replyTo,
     setReplyTo,
-    setAttachment,
+    setAttachment: handleAttachmentSelected,
+    setAttachmentNodePrice,
+    clearAttachment: handleClearAttachment,
     setIsVoiceMode,
     // Refs
     messagesEndRef,

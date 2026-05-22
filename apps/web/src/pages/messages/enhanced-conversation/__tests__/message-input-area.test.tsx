@@ -37,6 +37,7 @@ function makeProps(overrides: Partial<MessageInputAreaProps> = {}): MessageInput
   return {
     messageInput: '',
     attachment: null,
+    attachmentNodePrice: null,
     isSending: false,
     isVoiceMode: false,
     replyTo: null,
@@ -44,6 +45,7 @@ function makeProps(overrides: Partial<MessageInputAreaProps> = {}): MessageInput
     onMessageChange: vi.fn(),
     onFileSelect: vi.fn(),
     onClearAttachment: vi.fn(),
+    onAttachmentNodePriceChange: vi.fn(),
     onClearReply: vi.fn(),
     onVoiceComplete: vi.fn(),
     onSend: vi.fn(),
@@ -89,5 +91,18 @@ describe('EnhancedConversation MessageInputArea', () => {
 
     expect(props.onSend).toHaveBeenCalled();
     expect(props.onVoiceModeChange).not.toHaveBeenCalled();
+  });
+
+  it('shows the per-file paid DM control when an attachment is selected', async () => {
+    const user = userEvent.setup();
+    const props = makeProps({
+      attachment: new File(['photo'], 'photo.png', { type: 'image/png' }),
+    });
+
+    render(<MessageInputArea {...props} inputContainerRef={createRef<HTMLDivElement>()} />);
+
+    await user.click(screen.getByRole('button', { name: /lock for nodes/i }));
+
+    expect(props.onAttachmentNodePriceChange).toHaveBeenCalledWith(10);
   });
 });

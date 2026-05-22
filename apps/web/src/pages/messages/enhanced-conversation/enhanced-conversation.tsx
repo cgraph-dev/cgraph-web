@@ -34,12 +34,15 @@ export default function EnhancedConversation() {
     user,
     messageInput,
     attachment,
+    attachmentNodePrice,
     isVoiceMode,
     replyTo,
     messageRequest,
     handleMessageChange,
     isSending,
     setAttachment,
+    setAttachmentNodePrice,
+    clearAttachment,
     setIsVoiceMode,
     setReplyTo,
     messagesEndRef,
@@ -208,6 +211,7 @@ export default function EnhancedConversation() {
         <MessageInputArea
           messageInput={messageInput}
           attachment={attachment}
+          attachmentNodePrice={attachmentNodePrice}
           isSending={isSending}
           isVoiceMode={isVoiceMode}
           replyTo={replyTo}
@@ -215,7 +219,8 @@ export default function EnhancedConversation() {
           onVoiceModeChange={setIsVoiceMode}
           onMessageChange={handleMessageChange}
           onFileSelect={setAttachment}
-          onClearAttachment={() => setAttachment(null)}
+          onClearAttachment={clearAttachment}
+          onAttachmentNodePriceChange={setAttachmentNodePrice}
           onClearReply={() => setReplyTo(null)}
           onGifSelect={handleGifSelect}
           onStickerSelect={handleStickerSelect}

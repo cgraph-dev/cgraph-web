@@ -47,6 +47,7 @@ export interface ConversationHeaderProps {
 export interface MessageInputAreaProps {
   messageInput: string;
   attachment: File | null;
+  attachmentNodePrice: number | null;
   isSending: boolean;
   isVoiceMode: boolean;
   replyTo: Message | null;
@@ -54,6 +55,7 @@ export interface MessageInputAreaProps {
   onMessageChange: (value: string) => void;
   onFileSelect: (file: File) => void;
   onClearAttachment: () => void;
+  onAttachmentNodePriceChange: (price: number | null) => void;
   onClearReply: () => void;
   onGifSelect: (gif: GifResult) => void;
   onStickerSelect: (sticker: StickerSelection) => void;

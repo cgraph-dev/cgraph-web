@@ -124,7 +124,14 @@ function LockedFileOverlay({ message, nodesPrice }: LockedFileOverlayProps) {
   async function handleUnlock(): Promise<void> {
     setIsUnlocking(true);
     try {
-      await http.put(`/api/v1/paid-dm/${message.id}/unlock`);
+      const paidFileId =
+        metaString(message.metadata?.paid_dm_file_id) ?? metaString(message.metadata?.paidDmFileId);
+
+      if (!paidFileId) {
+        throw new Error('Missing paid file id');
+      }
+
+      await http.put(`/api/v1/paid-dm/${paidFileId}/unlock`, { message_id: message.id });
       setIsLocked(false);
       toast.success(`File unlocked for ${nodesPrice} Nodes`);
     } catch {
@@ -194,13 +201,14 @@ function LockedFileOverlay({ message, nodesPrice }: LockedFileOverlayProps) {
 
 function isFileLocked(message: Message): boolean {
   return (
-    message.metadata?.is_file_locked === true &&
-    metaNumber(message.metadata?.nodes_price) !== undefined
+    (message.metadata?.is_file_locked === true || message.metadata?.isFileLocked === true) &&
+    (metaNumber(message.metadata?.nodes_price) !== undefined ||
+      metaNumber(message.metadata?.nodesPrice) !== undefined)
   );
 }
 
 function getNodesPrice(message: Message): number {
-  return metaNumber(message.metadata?.nodes_price) ?? 0;
+  return metaNumber(message.metadata?.nodes_price) ?? metaNumber(message.metadata?.nodesPrice) ?? 0;
 }
 
 /**
