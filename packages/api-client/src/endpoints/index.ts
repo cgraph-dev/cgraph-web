@@ -95,7 +95,15 @@ export type { Invite, RedeemInviteResponse } from './invites';
 export { createSettingsEndpoints } from './settings';
 export type { AllSettings, SettingsCategory } from './settings';
 export { createUploadEndpoints } from './upload';
-export type { UploadResult } from './upload';
+export type {
+  CompleteMultipartUploadInput,
+  MultipartUploadComplete,
+  MultipartUploadCompletedPart,
+  MultipartUploadPart,
+  MultipartUploadStart,
+  StartMultipartUploadInput,
+  UploadResult,
+} from './upload';
 export { createMessagingEndpoints } from './messaging';
 export type {
   Message,

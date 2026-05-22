@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMessageAttachmentMetadata,
   buildMessageAttachmentSendPayload,
+  MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES,
+  multipartUploadProgress,
   messageContentTypeForMime,
+  shouldUseMultipartMessageUpload,
 } from './media';
 
 describe('message attachment contract', () => {
@@ -43,5 +46,16 @@ describe('message attachment contract', () => {
       fileMimeType: 'image/png',
       thumbnailUrl: '/uploads/file-thumb.png',
     });
+  });
+
+  it('defines the shared multipart threshold and progress math', () => {
+    expect(shouldUseMultipartMessageUpload(MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES)).toBe(false);
+    expect(shouldUseMultipartMessageUpload(MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES + 1)).toBe(
+      true
+    );
+
+    expect(multipartUploadProgress(5, 2, 10)).toBe(70);
+    expect(multipartUploadProgress(100, 100, 10)).toBe(100);
+    expect(multipartUploadProgress(1, 1, 0)).toBe(0);
   });
 });

@@ -19,6 +19,7 @@ import type {
   MediaFailedEvent,
 } from '@cgraph/shared-types';
 import { logger } from '@/lib/logger';
+import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
 
 import { compressImage, shouldCompress } from '../components/media/client-image-compressor';
 
@@ -86,30 +87,26 @@ export function useMediaUpload(conversationId: string): UseMediaUploadReturn {
 
       try {
         // Client-side pre-compression for images
-        let uploadBlob: Blob = file;
+        let uploadFile = file;
         let fileName = file.name;
 
         if (file.type.startsWith('image/') && (await shouldCompress(file))) {
           const compressed: CompressedImage = await compressImage(file);
-          uploadBlob = compressed.blob;
           // Keep original extension but note compression happened
           const ext = compressed.blob.type === 'image/webp' ? '.webp' : '.jpg';
           fileName = file.name.replace(/\.[^.]+$/, ext);
+          uploadFile = new File([compressed.blob], fileName, {
+            type: compressed.blob.type || file.type,
+          });
         }
 
-        // Build FormData for upload
-        const formData = new FormData();
-        formData.append('file', uploadBlob, fileName);
-        formData.append('conversation_id', conversationId);
+        const uploaded = await uploadMessageAttachment(uploadFile, {
+          context: 'message',
+          signal: controller.signal,
+          onProgress: (pct) => setState((prev) => ({ ...prev, uploadProgress: pct })),
+        });
 
-        // Upload with progress tracking
-        const uploadResponse = await uploadWithProgress(
-          formData,
-          (pct) => setState((prev) => ({ ...prev, uploadProgress: pct })),
-          controller.signal
-        );
-
-        const uploadId = uploadResponse.upload_id;
+        const uploadId = uploaded.uploadId ?? uploaded.url;
         setState((prev) => ({
           ...prev,
           uploadId,
@@ -150,51 +147,6 @@ export function useMediaUpload(conversationId: string): UseMediaUploadReturn {
     error: state.error,
     uploadId: state.uploadId,
   };
-}
-
-// ---------------------------------------------------------------------------
-// Internal — upload with XMLHttpRequest for progress
-// ---------------------------------------------------------------------------
-
-interface UploadResponse {
-  readonly upload_id: string;
-}
-
-function uploadWithProgress(
-  formData: FormData,
-  onProgress: (pct: number) => void,
-  signal: AbortSignal
-): Promise<UploadResponse> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/v1/uploads');
-
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable) {
-        onProgress(Math.round((e.loaded / e.total) * 100));
-      }
-    });
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data: UploadResponse = JSON.parse(xhr.responseText);
-          resolve(data);
-        } catch {
-          reject(new Error('Invalid response'));
-        }
-      } else {
-        reject(new Error(`Upload failed: ${xhr.status}`));
-      }
-    });
-
-    xhr.addEventListener('error', () => reject(new Error('Network error')));
-    xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
-
-    signal.addEventListener('abort', () => xhr.abort());
-
-    xhr.send(formData);
-  });
 }
 
 // ---------------------------------------------------------------------------

@@ -102,6 +102,62 @@ export interface MediaUploadState {
   readonly uploadId: string | null;
 }
 
+/** S3-compatible multipart uploads require every non-final part to be at least 5 MiB. */
+export const MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES = 5 * 1024 * 1024;
+
+/** Message attachments above this size should use the resumable multipart flow. */
+export const MESSAGE_UPLOAD_MULTIPART_THRESHOLD_BYTES = MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES;
+
+/** Keep browser upload pressure predictable while still allowing large files to move quickly. */
+export const MESSAGE_UPLOAD_MAX_PARALLEL_PARTS = 3;
+
+/** A server-issued direct-upload URL for one multipart part. */
+export interface MultipartUploadPart {
+  readonly part_number: number;
+  readonly presigned_url: string;
+}
+
+/** The server-owned upload session returned by `/api/v1/uploads/start`. */
+export interface MultipartUploadStart {
+  readonly upload_id: string;
+  readonly key: string;
+  readonly parts: ReadonlyArray<MultipartUploadPart>;
+  readonly expires_at: string;
+}
+
+/** A completed part submitted to `/api/v1/uploads/complete`. */
+export interface MultipartUploadCompletedPart {
+  readonly part_number: number;
+  readonly etag: string;
+}
+
+/** The finalized object returned by `/api/v1/uploads/complete`. */
+export interface MultipartUploadComplete {
+  readonly upload_id: string;
+  readonly key: string;
+  readonly url: string;
+}
+
+/** True when a message attachment should use the multipart upload flow. */
+export function shouldUseMultipartMessageUpload(
+  fileSize: number,
+  threshold = MESSAGE_UPLOAD_MULTIPART_THRESHOLD_BYTES
+): boolean {
+  return Number.isFinite(fileSize) && fileSize > threshold;
+}
+
+/** Computes aggregate upload progress from completed and currently uploading bytes. */
+export function multipartUploadProgress(
+  completedBytes: number,
+  inFlightBytes: number,
+  totalBytes: number
+): number {
+  if (!Number.isFinite(totalBytes) || totalBytes <= 0) return 0;
+
+  const loaded = Math.max(0, completedBytes) + Math.max(0, inFlightBytes);
+  return Math.min(100, Math.max(0, Math.round((loaded / totalBytes) * 100)));
+}
+
 export const MESSAGE_ATTACHMENT_CONTENT_TYPES = [
   'image',
   'video',
@@ -114,6 +170,7 @@ export type MessageAttachmentContentType = (typeof MESSAGE_ATTACHMENT_CONTENT_TY
 
 /** Uploaded file data after `/api/v1/uploads` accepts a message attachment. */
 export interface UploadedMessageAttachment {
+  readonly uploadId?: string;
   readonly url: string;
   readonly filename: string;
   readonly contentType: string;

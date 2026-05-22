@@ -140,13 +140,22 @@ export type {
   MediaCompleteEvent,
   MediaFailedEvent,
   MediaUploadState,
+  MultipartUploadComplete,
+  MultipartUploadCompletedPart,
+  MultipartUploadPart,
+  MultipartUploadStart,
   UploadedMessageAttachment,
 } from './media';
 export {
   MESSAGE_ATTACHMENT_CONTENT_TYPES,
+  MESSAGE_UPLOAD_MAX_PARALLEL_PARTS,
+  MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES,
+  MESSAGE_UPLOAD_MULTIPART_THRESHOLD_BYTES,
   buildMessageAttachmentMetadata,
   buildMessageAttachmentSendPayload,
   messageContentTypeForMime,
+  multipartUploadProgress,
+  shouldUseMultipartMessageUpload,
 } from './media';
 
 // media-album

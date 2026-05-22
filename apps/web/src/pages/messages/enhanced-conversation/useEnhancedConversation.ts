@@ -10,13 +10,10 @@ import { useAuthStore } from '@/modules/auth/store';
 import { useMessageActions } from '@/modules/chat/hooks/useMessageActions';
 import { useMessageRequestStore } from '@/modules/chat/store/message-request-store';
 import { socketManager } from '@/lib/socket';
-import { apiClient, http } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
-import {
-  buildMessageAttachmentMetadata,
-  messageContentTypeForMime,
-  type UploadedMessageAttachment,
-} from '@cgraph/shared-types';
+import { buildMessageAttachmentMetadata, messageContentTypeForMime } from '@cgraph/shared-types';
+import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
 import { getDirectCallRoute, type DirectCallType } from './call-routing';
 import {
   uploadVoiceMessage,
@@ -86,28 +83,6 @@ function sendConversationTyping(topic: string, isTyping: boolean): void {
       detail: { topic, isTyping },
     })
   );
-}
-
-async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('context', 'message');
-
-  const response = await http.post('/api/v1/uploads', formData);
-  const data = isRecord(response.data) && isRecord(response.data.data) ? response.data.data : null;
-  const url = stringValue(data?.url);
-
-  if (!data || !url) {
-    throw new Error('Upload response did not include a file URL');
-  }
-
-  return {
-    url,
-    filename: stringValue(data.original_filename) ?? stringValue(data.filename) ?? file.name,
-    contentType: stringValue(data.content_type) ?? file.type,
-    size: numberValue(data.size) ?? file.size,
-    thumbnailUrl: stringValue(data.thumbnail_url),
-  };
 }
 
 /**
@@ -524,7 +499,7 @@ export function useEnhancedConversation() {
 
     try {
       if (attachment) {
-        const uploaded = await uploadAttachment(attachment);
+        const uploaded = await uploadMessageAttachment(attachment, { context: 'message' });
         content = content || uploaded.filename;
         contentType = messageContentTypeForMime(uploaded.contentType, uploaded.filename);
         metadata = buildMessageAttachmentMetadata(uploaded);

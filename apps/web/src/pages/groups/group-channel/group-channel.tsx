@@ -20,10 +20,8 @@ import { useAuthStore } from '@/modules/auth/store';
 import { socketManager } from '@/lib/socket';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
-import {
-  buildMessageAttachmentSendPayload,
-  type UploadedMessageAttachment,
-} from '@cgraph/shared-types';
+import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
+import { buildMessageAttachmentSendPayload } from '@cgraph/shared-types';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
 
 import { ChannelHeader } from './channel-header';
@@ -104,28 +102,6 @@ function dispatchE2EGroupChannelAction(
     })
   );
   return true;
-}
-
-async function uploadAttachment(file: File): Promise<UploadedMessageAttachment> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('context', 'message');
-
-  const response = await http.post('/api/v1/uploads', formData);
-  const data = isRecord(response.data) && isRecord(response.data.data) ? response.data.data : null;
-  const url = stringValue(data?.url);
-
-  if (!data || !url) {
-    throw new Error('Upload response did not include a file URL');
-  }
-
-  return {
-    url,
-    filename: stringValue(data.original_filename) ?? stringValue(data.filename) ?? file.name,
-    contentType: stringValue(data.content_type) ?? file.type,
-    size: numberValue(data.size) ?? file.size,
-    thumbnailUrl: stringValue(data.thumbnail_url),
-  };
 }
 
 interface UploadedChannelVoiceMessage {
@@ -387,7 +363,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
       const trimmedContent = messageInput.trim();
 
       if (attachment) {
-        const uploaded = await uploadAttachment(attachment);
+        const uploaded = await uploadMessageAttachment(attachment, { context: 'message' });
         await sendChannelMessage(
           channelId,
           trimmedContent || uploaded.filename,
