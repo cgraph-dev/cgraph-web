@@ -34,6 +34,7 @@ export interface UserProfileData {
   // Cosmetic customization (rendered on other users' profiles)
   avatarBorderId?: string | null;
   profileTheme?: string | null;
+  equippedNameplateId?: string | null;
   displayNameFont?: string | null;
   displayNameEffect?: string | null;
   displayNameColor?: string | null;

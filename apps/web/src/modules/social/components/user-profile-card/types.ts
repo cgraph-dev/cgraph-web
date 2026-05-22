@@ -136,6 +136,9 @@ export interface NameplateProps {
   displayNameEffect?: string;
   displayNameColor?: string;
   displayNameSecondaryColor?: string | null;
+  className?: string;
+  displayNameClassName?: string;
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 export interface IdentityProps {

@@ -11,6 +11,7 @@ import {
 } from '@cgraph/animation-constants';
 
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
+import { cn } from '@/lib/utils';
 import type { NameplateProps } from './types';
 
 function getNameFontKey(font?: string): NameFont | null {
@@ -83,6 +84,26 @@ function getNameEffectStyles(
       return color ? { color } : {};
   }
 }
+
+function getDisplayNameTag(headingLevel?: 1 | 2 | 3 | 4 | 5 | 6) {
+  switch (headingLevel) {
+    case 1:
+      return 'h1';
+    case 2:
+      return 'h2';
+    case 3:
+      return 'h3';
+    case 4:
+      return 'h4';
+    case 5:
+      return 'h5';
+    case 6:
+      return 'h6';
+    default:
+      return 'span';
+  }
+}
+
 export const Nameplate = memo(function Nameplate({
   displayName,
   nameplateId,
@@ -90,8 +111,12 @@ export const Nameplate = memo(function Nameplate({
   displayNameEffect,
   displayNameColor,
   displayNameSecondaryColor,
+  className,
+  displayNameClassName,
+  headingLevel,
 }: NameplateProps) {
   const entry = nameplateId ? getNameplateById(nameplateId) : undefined;
+  const DisplayNameTag = getDisplayNameTag(headingLevel);
 
   const hasEntry = entry != null && entry.id !== 'plate_none';
 
@@ -135,7 +160,7 @@ export const Nameplate = memo(function Nameplate({
 
   return (
     <div
-      className="relative z-[2] flex flex-col items-center px-4 pt-[22px]"
+      className={cn('relative z-[2] flex flex-col items-center px-4 pt-[22px]', className)}
       data-nameplate-id={nameplateId ?? undefined}
       data-display-name-effect={displayNameEffect ?? undefined}
     >
@@ -161,8 +186,11 @@ export const Nameplate = memo(function Nameplate({
         {hasEntry && entry.emblem && <span className="relative z-[1] text-sm">{entry.emblem}</span>}
 
         {/* Display name */}
-        <span
-          className="relative z-[1] text-[1.2rem] font-black leading-[1.1] tracking-[0.025em]"
+        <DisplayNameTag
+          className={cn(
+            'relative z-[1] text-[1.2rem] font-black leading-[1.1] tracking-[0.025em]',
+            displayNameClassName
+          )}
           style={{
             fontFamily: "'Inter', system-ui",
             ...textStyles,
@@ -178,7 +206,7 @@ export const Nameplate = memo(function Nameplate({
             />
           )}
           <span className="relative z-[1]">{displayName}</span>
-        </span>
+        </DisplayNameTag>
       </div>
     </div>
   );

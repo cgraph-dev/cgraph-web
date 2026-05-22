@@ -5,6 +5,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
+import { identityFieldsFromApi } from '@/lib/identity';
 import type { Achievement } from '@cgraph/shared-types';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
 
@@ -12,7 +13,6 @@ const logger = createLogger('useProfileData');
 
 /** Stable empty array for stub achievements (avoids new reference each render) */
 const EMPTY_ACHIEVEMENTS: Achievement[] = [];
-
 interface UseProfileDataOptions {
   userId: string | undefined;
   isOwnProfile: boolean;
@@ -29,6 +29,18 @@ interface UseProfileDataReturn {
   totalUnlocked: number;
   showAllAchievements: boolean;
   setShowAllAchievements: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+function profileStatusFromIdentity(status: unknown): UserProfileData['status'] {
+  switch (status) {
+    case 'online':
+    case 'idle':
+    case 'dnd':
+    case 'offline':
+      return status;
+    default:
+      return 'offline';
+  }
 }
 
 /**
@@ -94,16 +106,17 @@ export function useProfileData({
         if (controller.signal.aborted) return;
         // Backend wraps in { data: { ... } }, axios also puts body in .data
         const userData = response.data?.data || response.data?.user || response.data;
+        const identity = identityFieldsFromApi(userData);
 
         setProfile({
-          id: userData.id,
-          username: userData.username,
-          displayName: userData.display_name,
-          avatarUrl: userData.avatar_url,
-          bannerUrl: userData.banner_url,
+          id: identity.id || userData.id,
+          username: identity.username || userData.username,
+          displayName: identity.displayName ?? userData.display_name,
+          avatarUrl: identity.avatarUrl ?? userData.avatar_url,
+          bannerUrl: identity.bannerUrl ?? userData.banner_url,
           bio: userData.bio,
-          status: userData.status || 'offline',
-          statusMessage: userData.custom_status || userData.status_message,
+          status: profileStatusFromIdentity(identity.status || userData.status),
+          statusMessage: identity.statusMessage ?? userData.custom_status ?? userData.status_message,
           isVerified: userData.is_verified || false,
           isPremium: userData.is_premium || false,
           createdAt: userData.inserted_at || userData.created_at,
@@ -127,13 +140,34 @@ export function useProfileData({
           friendsCount: userData.friends_count || 0,
           // Title system - equipped title ID
           equippedTitle:
-            userData.equipped_title || userData.equipped_title_id || userData.title_id || null,
-          profileTheme: userData.profile_theme || userData.profileTheme || null,
-          avatarBorderId: userData.avatar_border_id || userData.avatarBorderId || null,
-          displayNameFont: userData.display_name_font || null,
-          displayNameEffect: userData.display_name_effect || null,
-          displayNameColor: userData.display_name_color || null,
-          displayNameSecondaryColor: userData.display_name_secondary_color || null,
+            identity.equippedTitleId ??
+            userData.equipped_title ??
+            userData.equipped_title_id ??
+            userData.title_id ??
+            null,
+          profileTheme: identity.profileTheme ?? userData.profileTheme ?? userData.profile_theme ?? null,
+          avatarBorderId:
+            identity.avatarBorderId ?? userData.avatarBorderId ?? userData.avatar_border_id ?? null,
+          equippedNameplateId:
+            identity.equippedNameplateId ??
+            userData.equippedNameplateId ??
+            userData.equipped_nameplate_id ??
+            userData.equipped_nameplate ??
+            null,
+          displayNameFont:
+            identity.displayNameFont ?? userData.displayNameFont ?? userData.display_name_font ?? null,
+          displayNameEffect:
+            identity.displayNameEffect ??
+            userData.displayNameEffect ??
+            userData.display_name_effect ??
+            null,
+          displayNameColor:
+            identity.displayNameColor ?? userData.displayNameColor ?? userData.display_name_color ?? null,
+          displayNameSecondaryColor:
+            identity.displayNameSecondaryColor ??
+            userData.displayNameSecondaryColor ??
+            userData.display_name_secondary_color ??
+            null,
         });
 
         // Backend returns is_friend/friend_request_sent/friend_request_received booleans

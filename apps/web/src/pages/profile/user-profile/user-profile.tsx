@@ -198,6 +198,7 @@ export function UserProfile() {
   return (
     <div
       className="relative flex-1 overflow-y-auto bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950"
+      data-profile-theme-id={activeProfileTheme.id}
       style={getProfileThemePageStyle(activeProfileTheme)}
     >
       <div className="pointer-events-none absolute inset-0 bg-dark-950/40" />

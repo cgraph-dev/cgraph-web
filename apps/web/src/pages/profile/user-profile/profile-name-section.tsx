@@ -8,6 +8,7 @@ import type { UserProfileData } from '@/types/profile.types';
 import { InlineTitle } from '@/shared/components/ui';
 import { springs } from '@/lib/animation-presets';
 import { PulseBadge } from '@/modules/pulse/components';
+import { Nameplate } from '@/modules/social/components/user-profile-card/nameplate';
 import type { PulseTier } from '@/modules/pulse/types';
 
 interface ProfileNameSectionProps {
@@ -42,6 +43,15 @@ function aggregatePulse(profile: UserProfileData): AggregatedPulse | null {
   return { score: total, tier: bestTier };
 }
 
+function hasDisplayNameCosmetics(profile: UserProfileData): boolean {
+  return Boolean(
+    profile.equippedNameplateId ||
+      profile.displayNameFont ||
+      profile.displayNameEffect ||
+      profile.displayNameColor
+  );
+}
+
 /**
  */
 /**
@@ -49,13 +59,29 @@ function aggregatePulse(profile: UserProfileData): AggregatedPulse | null {
  */
 export function ProfileNameSection({ profile }: ProfileNameSectionProps) {
   const pulse = aggregatePulse(profile);
+  const displayName = profile.displayName || profile.username;
+  const renderCosmeticNameplate = hasDisplayNameCosmetics(profile);
 
   return (
     <div>
       <div className="flex items-center gap-2">
-        <h1 className="bg-gradient-to-r from-white via-primary-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
-          {profile.displayName || profile.username}
-        </h1>
+        {renderCosmeticNameplate ? (
+          <Nameplate
+            displayName={displayName}
+            nameplateId={profile.equippedNameplateId}
+            displayNameFont={profile.displayNameFont ?? undefined}
+            displayNameEffect={profile.displayNameEffect ?? undefined}
+            displayNameColor={profile.displayNameColor ?? undefined}
+            displayNameSecondaryColor={profile.displayNameSecondaryColor ?? undefined}
+            className="items-start px-0 pt-0"
+            displayNameClassName="text-2xl"
+            headingLevel={1}
+          />
+        ) : (
+          <h1 className="bg-gradient-to-r from-white via-primary-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+            {displayName}
+          </h1>
+        )}
         {profile.isVerified && (
           <motion.div whileHover={{ rotate: 360 }} transition={springs.bouncy}>
             <CheckBadgeIcon className="h-6 w-6 text-primary-500" />
