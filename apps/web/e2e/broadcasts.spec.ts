@@ -185,7 +185,7 @@ test.describe('Broadcast routes', () => {
       .poll(() => publishedPosts, { message: 'publish endpoint received post content' })
       .toContainEqual(expect.objectContaining({ content: 'Published from routed web' }));
     await expect(
-      page.getByRole('main', { name: /broadcast feed/i }).getByText('Published from routed web')
+      page.locator('article').filter({ hasText: 'Published from routed web' })
     ).toBeVisible();
   });
 

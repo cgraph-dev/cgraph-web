@@ -1,4 +1,5 @@
 import { test as setup, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
 
 const authFile = 'playwright/.auth/user.json';
 
@@ -8,7 +9,8 @@ const authFile = 'playwright/.auth/user.json';
  */
 setup('authenticate', async ({ page }) => {
   // Check if we're in CI or need to skip auth
-  const skipAuth = process.env.SKIP_AUTH === 'true';
+  const skipAuth = process.env.SKIP_AUTH === 'true' || process.env.VITE_E2E_AUTH_BYPASS === 'true';
+  await mkdir('playwright/.auth', { recursive: true });
 
   if (skipAuth) {
     // Create empty auth state for unauthenticated tests
@@ -20,14 +22,14 @@ setup('authenticate', async ({ page }) => {
   await page.goto('/login');
 
   // Wait for login form
-  await expect(page.getByRole('heading', { name: /sign in|log in/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /sign in|log in|welcome back/i })).toBeVisible();
 
   // Fill in test credentials
   const testEmail = process.env.TEST_USER_EMAIL || 'test@cgraph.dev';
   const testPassword = process.env.TEST_USER_PASSWORD || 'testpassword123';
 
-  await page.getByLabel(/email/i).fill(testEmail);
-  await page.getByLabel(/password/i).fill(testPassword);
+  await page.getByRole('textbox', { name: /email|username/i }).fill(testEmail);
+  await page.getByRole('textbox', { name: /^password$/i }).fill(testPassword);
 
   // Submit login form
   await page.getByRole('button', { name: /sign in|log in/i }).click();
