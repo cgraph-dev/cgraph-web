@@ -13,6 +13,7 @@
  */
 
 import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useMemo } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { RoleManager } from '../role-manager';
 import type { GroupSettingsProps } from './types';
@@ -28,6 +29,7 @@ import { AutomodTab } from './automod-tab';
 import { DangerTab } from './danger-tab';
 import { ConfirmModal } from './confirm-modal';
 import { SaveBar } from './save-bar';
+import { SETTINGS_TABS } from './constants';
 import { FADE_UP } from '@/lib/animations/transitions';
 
 /**
@@ -39,6 +41,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
     activeTab,
     setActiveTab,
     isOwner,
+    permissions,
     formData,
     handleFormChange,
     hasChanges,
@@ -53,6 +56,43 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
     handleDelete,
   } = useGroupSettings(groupId);
 
+  const visibleTabs = useMemo(
+    () =>
+      SETTINGS_TABS.filter((tab) => {
+        switch (tab.id) {
+          case 'overview':
+            return permissions.canManageGroup;
+          case 'roles':
+            return permissions.canManageRoles;
+          case 'members':
+            return permissions.canManageMembers;
+          case 'invites':
+            return permissions.canManageInvites;
+          case 'channels':
+            return permissions.canManageChannels;
+          case 'audit-log':
+            return permissions.canViewAuditLog;
+          case 'automod':
+            return permissions.canManageAutomod;
+          case 'notifications':
+          case 'danger':
+            return true;
+          default:
+            return false;
+        }
+      }),
+    [permissions]
+  );
+  const visibleTabIds = visibleTabs.map((tab) => tab.id);
+  const effectiveActiveTab =
+    !activeGroup || visibleTabIds.includes(activeTab) ? activeTab : visibleTabs[0]?.id;
+
+  useEffect(() => {
+    if (activeGroup && effectiveActiveTab && effectiveActiveTab !== activeTab) {
+      setActiveTab(effectiveActiveTab);
+    }
+  }, [activeGroup, activeTab, effectiveActiveTab, setActiveTab]);
+
   if (!activeGroup) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -61,10 +101,28 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
     );
   }
 
+  if (!effectiveActiveTab) {
+    return (
+      <div className="flex h-full items-center justify-center bg-[var(--token-card-bg)] p-8">
+        <div className="max-w-md rounded-2xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-6 text-center">
+          <h2 className="text-lg font-bold text-white">Group settings unavailable</h2>
+          <p className="mt-2 text-sm text-gray-400">
+            You do not have access to manage or personalize this group.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full bg-[var(--token-card-bg)]">
       {/* Sidebar */}
-      <SettingsSidebar group={activeGroup} activeTab={activeTab} onTabChange={setActiveTab} />
+      <SettingsSidebar
+        group={activeGroup}
+        activeTab={effectiveActiveTab}
+        onTabChange={setActiveTab}
+        tabs={visibleTabs}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
@@ -82,39 +140,39 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
         )}
 
         <AnimatePresence mode="wait">
-          {activeTab === 'overview' && (
+          {effectiveActiveTab === 'overview' && (
             <OverviewTab
               key="overview"
               group={activeGroup}
               formData={formData}
               onChange={handleFormChange}
-              isAdmin={isOwner}
+              isAdmin={permissions.canManageGroup}
             />
           )}
 
-          {activeTab === 'roles' && (
+          {effectiveActiveTab === 'roles' && (
             <motion.div key="roles" {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="h-full">
               <RoleManager groupId={groupId} />
             </motion.div>
           )}
 
-          {activeTab === 'members' && <MembersTab key="members" groupId={groupId} />}
+          {effectiveActiveTab === 'members' && <MembersTab key="members" groupId={groupId} />}
 
-          {activeTab === 'invites' && (
+          {effectiveActiveTab === 'invites' && (
             <InvitesTab key="invites" groupId={groupId} groupName={activeGroup.name} />
           )}
 
-          {activeTab === 'channels' && <ChannelsTab key="channels" groupId={groupId} />}
+          {effectiveActiveTab === 'channels' && <ChannelsTab key="channels" groupId={groupId} />}
 
-          {activeTab === 'notifications' && (
+          {effectiveActiveTab === 'notifications' && (
             <NotificationsTab key="notifications" groupId={groupId} />
           )}
 
-          {activeTab === 'audit-log' && <AuditLogTab key="audit-log" groupId={groupId} />}
+          {effectiveActiveTab === 'audit-log' && <AuditLogTab key="audit-log" groupId={groupId} />}
 
-          {activeTab === 'automod' && <AutomodTab key="automod" groupId={groupId} />}
+          {effectiveActiveTab === 'automod' && <AutomodTab key="automod" groupId={groupId} />}
 
-          {activeTab === 'danger' && (
+          {effectiveActiveTab === 'danger' && (
             <DangerTab
               key="danger"
               isOwner={isOwner}
@@ -127,7 +185,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
 
       {/* Save Bar */}
       <SaveBar
-        hasChanges={hasChanges}
+        hasChanges={permissions.canManageGroup && hasChanges}
         isSaving={isSaving}
         onSave={handleSave}
         onReset={handleReset}

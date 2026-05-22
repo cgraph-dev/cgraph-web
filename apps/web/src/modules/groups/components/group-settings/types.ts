@@ -52,6 +52,17 @@ export interface SettingsTab {
   icon: React.ElementType;
 }
 
+export interface GroupSettingsPermissions {
+  canManageGroup: boolean;
+  canManageRoles: boolean;
+  canManageChannels: boolean;
+  canManageMembers: boolean;
+  canManageInvites: boolean;
+  canViewAuditLog: boolean;
+  canManageAutomod: boolean;
+  isOwner: boolean;
+}
+
 export interface AuditLogTabProps {
   groupId: string;
 }

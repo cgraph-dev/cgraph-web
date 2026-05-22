@@ -7,12 +7,18 @@ interface SettingsSidebarProps {
   group: Group;
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  tabs?: typeof SETTINGS_TABS;
 }
 
 /**
  * Settings Sidebar component.
  */
-export function SettingsSidebar({ group, activeTab, onTabChange }: SettingsSidebarProps) {
+export function SettingsSidebar({
+  group,
+  activeTab,
+  onTabChange,
+  tabs = SETTINGS_TABS,
+}: SettingsSidebarProps) {
   return (
     <div className="w-56 border-r border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] p-5 backdrop-blur-2xl backdrop-saturate-[1.8]">
       <div className="mb-6 flex items-center gap-3 border-b border-[var(--token-border-muted)] pb-4">
@@ -32,7 +38,7 @@ export function SettingsSidebar({ group, activeTab, onTabChange }: SettingsSideb
       </div>
 
       <nav className="space-y-1">
-        {SETTINGS_TABS.map((tab) => (
+        {tabs.map((tab) => (
           <motion.button
             key={tab.id}
             whileHover={{ x: 2 }}

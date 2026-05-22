@@ -5,8 +5,16 @@ import { useAuthStore } from '@/modules/auth/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { createLogger } from '@/lib/logger';
 import type { TabId, OverviewFormData } from './types';
+import { PERMISSIONS } from '../role-manager/constants';
 
 const logger = createLogger('GroupSettings');
+const ADMINISTRATOR = PERMISSIONS.ADMINISTRATOR?.value ?? 0;
+const MANAGE_GROUP = PERMISSIONS.MANAGE_GROUP?.value ?? 0;
+const MANAGE_ROLES = PERMISSIONS.MANAGE_ROLES?.value ?? 0;
+const MANAGE_CHANNELS = PERMISSIONS.MANAGE_CHANNELS?.value ?? 0;
+const KICK_MEMBERS = PERMISSIONS.KICK_MEMBERS?.value ?? 0;
+const BAN_MEMBERS = PERMISSIONS.BAN_MEMBERS?.value ?? 0;
+const VIEW_AUDIT_LOG = PERMISSIONS.VIEW_AUDIT_LOG?.value ?? 0;
 
 /**
  * Hook for managing group settings.
@@ -26,6 +34,22 @@ export function useGroupSettings(groupId: string) {
 
   const activeGroup = groups.find((g) => g.id === groupId);
   const isOwner = activeGroup?.ownerId === user?.id;
+  const permissionMask =
+    activeGroup?.myMember?.roles.reduce((mask, role) => mask | role.permissions, 0) ?? 0;
+  const isAdministrator = Boolean(permissionMask & ADMINISTRATOR);
+  const hasPermission = (permission: number) =>
+    Boolean(isOwner || isAdministrator || (permissionMask & permission));
+  const permissions = {
+    isOwner,
+    canManageGroup: hasPermission(MANAGE_GROUP),
+    canManageRoles: hasPermission(MANAGE_ROLES),
+    canManageChannels: hasPermission(MANAGE_CHANNELS),
+    canManageMembers:
+      hasPermission(KICK_MEMBERS) || hasPermission(BAN_MEMBERS) || hasPermission(MANAGE_ROLES),
+    canManageInvites: hasPermission(MANAGE_GROUP),
+    canViewAuditLog: hasPermission(VIEW_AUDIT_LOG),
+    canManageAutomod: hasPermission(MANAGE_GROUP),
+  };
 
   const [formData, setFormData] = useState<OverviewFormData>({
     name: activeGroup?.name || '',
@@ -92,6 +116,7 @@ export function useGroupSettings(groupId: string) {
     activeTab,
     setActiveTab,
     isOwner,
+    permissions,
     formData,
     handleFormChange,
     hasChanges,
