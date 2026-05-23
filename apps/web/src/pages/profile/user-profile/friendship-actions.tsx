@@ -59,7 +59,7 @@ export function FriendshipActions({
         </motion.div>
         <Dropdown
           trigger={
-            <Button variant="ghost">
+            <Button variant="ghost" aria-label="Friend actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }
@@ -107,7 +107,7 @@ export function FriendshipActions({
         </motion.div>
         <Dropdown
           trigger={
-            <Button variant="ghost">
+            <Button variant="ghost" aria-label="Profile actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }
@@ -146,7 +146,7 @@ export function FriendshipActions({
         </motion.div>
         <Dropdown
           trigger={
-            <Button variant="ghost">
+            <Button variant="ghost" aria-label="Profile actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }
@@ -195,7 +195,7 @@ export function FriendshipActions({
         </motion.div>
         <Dropdown
           trigger={
-            <Button variant="ghost">
+            <Button variant="ghost" aria-label="Profile actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }

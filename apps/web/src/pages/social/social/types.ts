@@ -56,6 +56,8 @@ export interface FriendsTabProps {
   onSearchChange: (query: string) => void;
   onAcceptRequest: (requestId: string) => void;
   onDeclineRequest: (requestId: string) => void;
+  onCancelRequest: (requestId: string) => void;
+  onRemoveFriend: (friendshipId: string) => void;
   isLoading?: boolean;
   error?: string | null;
   onRetry?: () => void;

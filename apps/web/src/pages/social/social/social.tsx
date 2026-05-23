@@ -47,6 +47,7 @@ interface SocialMainPaneProps {
   tab: SocialTab;
   friends: readonly Friend[];
   pendingRequests: readonly FriendRequest[];
+  sentRequests: readonly FriendRequest[];
   notifications: readonly Notification[];
   searchResults: readonly SearchResult[];
   onOpenRoute: (route: string) => void;
@@ -54,6 +55,8 @@ interface SocialMainPaneProps {
   joiningGroupId: string | null;
   onAcceptRequest: (requestId: string) => void;
   onDeclineRequest: (requestId: string) => void;
+  onCancelRequest: (requestId: string) => void;
+  onRemoveFriend: (friendshipId: string) => void;
   onMarkNotificationRead: (notificationId: string) => void;
 }
 
@@ -61,6 +64,7 @@ function SocialMainPane({
   tab,
   friends,
   pendingRequests,
+  sentRequests,
   notifications,
   searchResults,
   onOpenRoute,
@@ -68,6 +72,8 @@ function SocialMainPane({
   joiningGroupId,
   onAcceptRequest,
   onDeclineRequest,
+  onCancelRequest,
+  onRemoveFriend,
   onMarkNotificationRead,
 }: SocialMainPaneProps) {
   if (tab === 'notifications') {
@@ -161,7 +167,7 @@ function SocialMainPane({
         <h2 className="text-xl font-black tracking-tight text-white">Friends</h2>
       </div>
 
-      <div className="mb-8 grid max-w-3xl grid-cols-3 gap-3">
+      <div className="mb-8 grid max-w-3xl grid-cols-4 gap-3">
         <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
           <span className="block text-2xl font-black text-white">{friends.length}</span>
           <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
@@ -180,9 +186,48 @@ function SocialMainPane({
             Requests
           </span>
         </div>
+        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
+          <span className="block text-2xl font-black text-white">{sentRequests.length}</span>
+          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
+            Sent
+          </span>
+        </div>
       </div>
 
       <div className="grid max-w-3xl gap-3">
+        {friends.slice(0, 6).map((friend) => (
+          <div
+            key={friend.id}
+            className="bg-[var(--token-card-bg)]/45 flex items-center gap-3 rounded-2xl border border-[var(--token-card-border)] px-4 py-3"
+          >
+            <UsersIcon className="h-5 w-5 text-primary-400" />
+            <button
+              type="button"
+              onClick={() => onOpenRoute(`/user/${friend.id}`)}
+              className="min-w-0 flex-1 text-left"
+            >
+              <span className="block truncate text-sm font-bold text-white">
+                {friend.displayName || friend.username}
+              </span>
+              <span className="block truncate text-xs text-white/35">@{friend.username}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenRoute(`/messages?userId=${friend.id}`)}
+              className="rounded-lg bg-primary-500/10 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-primary-300"
+            >
+              Message
+            </button>
+            <button
+              type="button"
+              onClick={() => onRemoveFriend(friend.friendshipId)}
+              className="rounded-lg border border-red-500/20 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-red-300/80"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+
         {pendingRequests.slice(0, 6).map((request) => (
           <div
             key={request.id}
@@ -208,6 +253,28 @@ function SocialMainPane({
               className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-white/50"
             >
               Decline
+            </button>
+          </div>
+        ))}
+
+        {sentRequests.slice(0, 6).map((request) => (
+          <div
+            key={request.id}
+            className="bg-[var(--token-card-bg)]/45 flex items-center gap-3 rounded-2xl border border-[var(--token-card-border)] px-4 py-3"
+          >
+            <UserPlusIcon className="h-5 w-5 text-white/35" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold text-white">
+                {request.user.displayName || request.user.username}
+              </span>
+              <span className="block truncate text-xs text-white/35">@{request.user.username}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => onCancelRequest(request.id)}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-white/50"
+            >
+              Cancel
             </button>
           </div>
         ))}
@@ -240,6 +307,7 @@ export function Social() {
     fetchSentRequests,
     acceptRequest,
     declineRequest,
+    removeFriend,
     clearError,
   } = useFriendStore();
 
@@ -490,12 +558,15 @@ export function Social() {
                   onSearchChange={setSearchQuery}
                   onAcceptRequest={acceptRequest}
                   onDeclineRequest={declineRequest}
+                  onCancelRequest={removeFriend}
+                  onRemoveFriend={removeFriend}
                   isLoading={isLoading}
                   error={error}
                   onRetry={() => {
                     clearError();
                     fetchFriends();
                     fetchPendingRequests();
+                    fetchSentRequests();
                   }}
                 />
               )}
@@ -528,6 +599,7 @@ export function Social() {
           tab={tab}
           friends={filteredFriends}
           pendingRequests={pendingRequests}
+          sentRequests={sentRequests}
           notifications={notifications}
           searchResults={searchResults}
           onOpenRoute={navigate}
@@ -535,6 +607,8 @@ export function Social() {
           joiningGroupId={joiningGroupId}
           onAcceptRequest={acceptRequest}
           onDeclineRequest={declineRequest}
+          onCancelRequest={removeFriend}
+          onRemoveFriend={removeFriend}
           onMarkNotificationRead={handleMarkAsRead}
         />
       </main>

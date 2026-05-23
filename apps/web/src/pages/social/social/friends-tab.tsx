@@ -10,6 +10,7 @@ import {
   CheckIcon,
   XMarkIcon,
   ChatBubbleLeftRightIcon,
+  UserMinusIcon,
 } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import UserProfileCard from '@/modules/social/components/user-profile-card';
@@ -32,11 +33,12 @@ export function FriendsTab({
   onSearchChange,
   onAcceptRequest,
   onDeclineRequest,
+  onCancelRequest,
+  onRemoveFriend,
   isLoading,
   error,
   onRetry,
 }: FriendsTabProps) {
-  void sentRequests; // Reserved for sent requests section
   const navigate = useNavigate();
 
   // Show error state with retry button
@@ -128,6 +130,7 @@ export function FriendsTab({
                         }}
                         className="border-primary-500/20 bg-primary-500/10 hover:bg-primary-500/16 rounded-xl border p-2.5 text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all"
                         title="Accept"
+                        aria-label={`Accept friend request from ${request.user?.displayName || request.user?.username || 'user'}`}
                       >
                         <CheckIcon className="h-5 w-5" />
                       </motion.button>
@@ -140,10 +143,65 @@ export function FriendsTab({
                         }}
                         className="rounded-xl bg-[var(--token-card-bg)] p-2.5 text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400"
                         title="Decline"
+                        aria-label={`Decline friend request from ${request.user?.displayName || request.user?.username || 'user'}`}
                       >
                         <XMarkIcon className="h-5 w-5" />
                       </motion.button>
                     </div>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sent Requests */}
+      {sentRequests.length > 0 && (
+        <div>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white/40">
+            <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+            Sent Requests ({sentRequests.length})
+            <span className="h-px flex-1 bg-gradient-to-l from-white/10 to-transparent" />
+          </h3>
+          <div className="space-y-2">
+            {sentRequests.map((request, index) => (
+              <motion.div
+                key={request.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <GlassCard variant="crystal" className="p-4">
+                  <div className="flex items-center gap-3">
+                    <UserProfileCard userId={request.user?.id || ''} trigger="both">
+                      <div className="shadow-primary-500/20 ring-primary-500/20 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-violet-600 font-medium text-white shadow-lg ring-2">
+                        {request.user?.username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    </UserProfileCard>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-white">
+                        {request.user?.displayName || request.user?.username || 'Unknown User'}
+                      </p>
+                      <p className="truncate text-sm text-white/40">
+                        @{request.user?.username || 'unknown'}
+                      </p>
+                    </div>
+
+                    <motion.button
+                      whileHover={{ opacity: 0.9 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        onCancelRequest(request.id);
+                        HapticFeedback.medium();
+                      }}
+                      className="rounded-xl bg-[var(--token-card-bg)] p-2.5 text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400"
+                      title="Cancel Request"
+                      aria-label={`Cancel friend request to ${request.user?.displayName || request.user?.username || 'user'}`}
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </motion.button>
                   </div>
                 </GlassCard>
               </motion.div>
@@ -204,8 +262,23 @@ export function FriendsTab({
                       }}
                       className="hover:bg-primary-500/10 hover:border-primary-500/20 rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-2.5 text-white/40 opacity-0 backdrop-blur-md transition-all hover:text-primary-300 group-hover:opacity-100"
                       title="Send Message"
+                      aria-label={`Message ${friend.displayName || friend.username}`}
                     >
                       <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ opacity: 0.9 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFriend(friend.friendshipId);
+                        HapticFeedback.medium();
+                      }}
+                      className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-2.5 text-white/35 opacity-0 backdrop-blur-md transition-all hover:border-red-500/25 hover:bg-red-500/10 hover:text-red-300 group-hover:opacity-100"
+                      title="Remove Friend"
+                      aria-label={`Remove ${friend.displayName || friend.username} from friends`}
+                    >
+                      <UserMinusIcon className="h-5 w-5" />
                     </motion.button>
                   </div>
                 </GlassCard>

@@ -44,6 +44,7 @@ export function useProfileActions({
     sentRequests,
     pendingRequests,
     friends,
+    fetchFriends,
     fetchSentRequests,
     fetchPendingRequests,
   } = useFriendStore();
@@ -64,13 +65,14 @@ export function useProfileActions({
     }
   }, [profile?.bio]);
 
-  // Ensure sent/pending requests are loaded for friendship ID lookups
+  // Ensure friendship/request records are loaded for friendship ID lookups
   useEffect(() => {
     if (!isOwnProfile && profile) {
+      fetchFriends();
       fetchSentRequests();
       fetchPendingRequests();
     }
-  }, [isOwnProfile, profile, fetchSentRequests, fetchPendingRequests]);
+  }, [isOwnProfile, profile, fetchFriends, fetchSentRequests, fetchPendingRequests]);
 
   // File upload handler
   async function handleFileUpload(file: File, type: 'avatar' | 'banner') {
