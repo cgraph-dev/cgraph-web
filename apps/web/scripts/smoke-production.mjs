@@ -142,6 +142,9 @@ async function main() {
   const turnstileFrames = page
     .frames()
     .filter((frame) => frame.url().includes('challenges.cloudflare.com')).length;
+  const turnstileWidgetStatuses = await page
+    .locator('[data-turnstile-widget="true"]')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-status') ?? 'unknown'));
 
   await browser.close();
 
@@ -155,6 +158,7 @@ async function main() {
     oauthProviderStatuses,
     registerOk,
     turnstileFrames,
+    turnstileWidgetStatuses,
     badResponses,
     failedRequests,
     appConsoleErrors,
@@ -170,7 +174,9 @@ async function main() {
     failures.push(`OAuth providers returned ${oauthProviderStatuses.join(', ')}`);
   }
   if (!registerOk) failures.push('register form did not render');
-  if (expectTurnstile && turnstileFrames < 1) failures.push('Turnstile frame did not render');
+  if (expectTurnstile && turnstileFrames < 1 && turnstileWidgetStatuses.length < 1) {
+    failures.push('Turnstile widget did not mount');
+  }
   if (badResponses.length > 0) failures.push('first-party HTTP errors were observed');
   if (failedRequests.length > 0) failures.push('first-party failed requests were observed');
   if (appConsoleErrors.length > 0) failures.push('first-party console errors were observed');

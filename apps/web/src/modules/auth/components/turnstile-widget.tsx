@@ -125,6 +125,7 @@ export function TurnstileWidget({
   const onTokenChangeRef = useRef(onTokenChange);
   const onErrorRef = useRef(onError);
   const [status, setStatus] = useState<TurnstileStatus>('idle');
+  const [retryNonce, setRetryNonce] = useState(0);
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
@@ -163,28 +164,36 @@ export function TurnstileWidget({
           widgetIdRef.current = null;
         }
 
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
-          sitekey: siteKey,
-          theme,
-          size,
-          callback: (token) => {
-            setStatus('ready');
-            onTokenChangeRef.current(token);
-          },
-          'expired-callback': () => {
-            onTokenChangeRef.current(null);
-          },
-          'error-callback': () => {
+        try {
+          widgetIdRef.current = window.turnstile.render(containerRef.current, {
+            sitekey: siteKey,
+            theme,
+            size,
+            callback: (token) => {
+              setStatus('ready');
+              onTokenChangeRef.current(token);
+            },
+            'expired-callback': () => {
+              onTokenChangeRef.current(null);
+            },
+            'error-callback': () => {
+              setStatus('error');
+              onTokenChangeRef.current(null);
+              onErrorRef.current?.();
+            },
+            'unsupported-callback': () => {
+              setStatus('error');
+              onTokenChangeRef.current(null);
+              onErrorRef.current?.();
+            },
+          });
+        } catch {
+          if (!cancelled) {
             setStatus('error');
             onTokenChangeRef.current(null);
             onErrorRef.current?.();
-          },
-          'unsupported-callback': () => {
-            setStatus('error');
-            onTokenChangeRef.current(null);
-            onErrorRef.current?.();
-          },
-        });
+          }
+        }
       })
       .catch(() => {
         if (!cancelled) {
@@ -203,7 +212,7 @@ export function TurnstileWidget({
         widgetIdRef.current = null;
       }
     };
-  }, [siteKey, size, theme]);
+  }, [retryNonce, siteKey, size, theme]);
 
   useEffect(() => {
     if (resetSignal === undefined) {
@@ -217,9 +226,37 @@ export function TurnstileWidget({
     return null;
   }
 
+  const retryWidget = () => {
+    onTokenChangeRef.current(null);
+
+    if (widgetIdRef.current && window.turnstile) {
+      window.turnstile.remove(widgetIdRef.current);
+      widgetIdRef.current = null;
+    }
+
+    setStatus('idle');
+    setRetryNonce((value) => value + 1);
+  };
+
   return (
-    <div className={`flex min-h-[65px] justify-center ${className}`} data-status={status}>
+    <div
+      className={`flex min-h-[65px] justify-center ${className}`}
+      data-status={status}
+      data-turnstile-widget="true"
+    >
       <div ref={containerRef} />
+      {status === 'error' && (
+        <div className="flex flex-col items-center justify-center gap-2 text-center text-xs text-red-300">
+          <span role="alert">Security check could not load.</span>
+          <button
+            type="button"
+            onClick={retryWidget}
+            className="rounded border border-red-300/40 px-3 py-1 text-red-100 transition hover:border-red-200 hover:bg-red-500/10"
+          >
+            Retry
+          </button>
+        </div>
+      )}
     </div>
   );
 }
