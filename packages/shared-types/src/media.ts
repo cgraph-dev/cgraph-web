@@ -208,6 +208,14 @@ export type MessageUploadBlockReason =
   | 'blocked_extension'
   | 'blocked_content_type';
 
+const MESSAGE_UPLOAD_BLOCKED_EXTENSION_SET: ReadonlySet<string> = new Set(
+  MESSAGE_UPLOAD_BLOCKED_EXTENSIONS
+);
+
+const MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPE_SET: ReadonlySet<string> = new Set(
+  MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPES
+);
+
 function filenameExtension(filename: string): string {
   const safeName = filename.trim().toLowerCase().split(/[\\/]/u).pop() ?? '';
   const dot = safeName.lastIndexOf('.');
@@ -225,16 +233,12 @@ export function getMessageUploadBlockReason(
   contentType = ''
 ): MessageUploadBlockReason | null {
   const extension = filenameExtension(filename);
-  if (MESSAGE_UPLOAD_BLOCKED_EXTENSIONS.includes(extension as MessageUploadBlockedExtension)) {
+  if (MESSAGE_UPLOAD_BLOCKED_EXTENSION_SET.has(extension)) {
     return 'blocked_extension';
   }
 
   const normalizedType = baseContentType(contentType);
-  if (
-    MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPES.includes(
-      normalizedType as MessageUploadBlockedContentType
-    )
-  ) {
+  if (MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPE_SET.has(normalizedType)) {
     return 'blocked_content_type';
   }
 
