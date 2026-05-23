@@ -635,6 +635,31 @@ describe('groupStore (modules)', () => {
     });
   });
 
+  describe('searchChannelMessages', () => {
+    beforeEach(() => {
+      useGroupStore.setState({ groups: [mockGroup], activeGroupId: 'group-1' });
+    });
+
+    it('searches channel messages without replacing the loaded timeline', async () => {
+      mockedApi.get.mockResolvedValue({
+        data: { data: [{ ...mockMessage, id: 'older-msg', content: 'Ancient proof' }] },
+      });
+      useGroupStore.setState({ channelMessages: { 'channel-1': [mockMessage2] } });
+
+      const results = await useGroupStore.getState().searchChannelMessages('channel-1', 'ancient');
+
+      expect(mockedApi.get).toHaveBeenCalledWith(
+        '/api/v1/groups/group-1/channels/channel-1/messages',
+        {
+          params: { search: 'ancient', limit: 25 },
+        }
+      );
+      expect(results).toHaveLength(1);
+      expect(results[0]!.id).toBe('older-msg');
+      expect(useGroupStore.getState().channelMessages['channel-1']).toEqual([mockMessage2]);
+    });
+  });
+
   // sendChannelMessage
   describe('sendChannelMessage', () => {
     beforeEach(() => {

@@ -165,6 +165,7 @@ export interface GroupState {
   fetchGroups: () => Promise<void>;
   fetchGroup: (groupId: string) => Promise<void>;
   fetchChannelMessages: (channelId: string, before?: string) => Promise<void>;
+  searchChannelMessages: (channelId: string, query: string) => Promise<readonly ChannelMessage[]>;
   fetchMembers: (groupId: string) => Promise<void>;
   sendChannelMessage: (
     channelId: string,

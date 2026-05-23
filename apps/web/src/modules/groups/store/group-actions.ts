@@ -331,6 +331,30 @@ export function createGroupActions(
       }
     },
 
+    searchChannelMessages: async (channelId: string, query: string) => {
+      const trimmedQuery = query.trim();
+      if (trimmedQuery.length < 2) return [];
+
+      const response = await http.get(channelMessagesPath(get(), channelId), {
+        params: { search: trimmedQuery, limit: 25 },
+      });
+      const dataMessages = ensureArray<Record<string, unknown>>(response.data, 'data');
+      const rawMessages =
+        dataMessages.length > 0
+          ? dataMessages
+          : ensureArray<Record<string, unknown>>(response.data, 'messages');
+      const results = rawMessages.map(normalizeChannelMessage);
+
+      for (const msg of results) {
+        if (msg.is_encrypted && msg.encrypted_content) {
+          msg.content = '🔒 Open on mobile or desktop to read';
+          msg.metadata = { ...msg.metadata, decryptionFailed: false };
+        }
+      }
+
+      return results;
+    },
+
     fetchMembers: async (groupId: string) => {
       const result = await apiClient.groups.getMembers(groupId);
       if (!result.ok) {

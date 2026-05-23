@@ -812,6 +812,41 @@ async function installOwnerUatMocks(page: Page) {
         return;
       }
 
+      const channelSearch = url.searchParams.get('search') ?? url.searchParams.get('q') ?? '';
+      if (channelSearch.toLowerCase().includes('ancient')) {
+        await fulfillJson(route, {
+          data: [
+            channelMessage({
+              id: 'group-msg-uat-ancient',
+              content: 'Ancient launch transcript proof',
+              created_at: '2025-12-01T00:00:00.000Z',
+            }),
+          ],
+          page_info: {
+            has_next_page: false,
+            has_previous_page: false,
+            start_cursor: null,
+            end_cursor: null,
+            per_page: 25,
+          },
+        });
+        return;
+      }
+
+      if (channelSearch) {
+        await fulfillJson(route, {
+          data: [],
+          page_info: {
+            has_next_page: false,
+            has_previous_page: false,
+            start_cursor: null,
+            end_cursor: null,
+            per_page: 25,
+          },
+        });
+        return;
+      }
+
       await fulfillJson(route, {
         data: [
           channelMessage({
@@ -1199,6 +1234,11 @@ test.describe('Web owner focused UAT', () => {
     await groupSearch.fill('Group routed');
     await expect(page.getByText('1/1')).toBeVisible();
     await page.getByRole('button', { name: /next result/i }).click();
+    await groupSearch.fill('ancient');
+    await expect(page.getByText('1/1')).toBeVisible();
+    await expect(page.locator('#group-message-group-msg-uat-ancient')).toContainText(
+      'Ancient launch transcript proof'
+    );
     await page.getByRole('button', { name: /close search/i }).click();
     await expect(groupSearch).not.toBeVisible();
 

@@ -207,6 +207,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     typingUsers,
     hasMoreMessages,
     fetchChannelMessages,
+    searchChannelMessages,
     fetchGroup,
     fetchMembers,
     sendChannelMessage,
@@ -226,6 +227,9 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const [showPinned, setShowPinned] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [remoteSearchMatches, setRemoteSearchMatches] = useState<readonly ChannelMessage[]>([]);
+  const [isSearchingChannel, setIsSearchingChannel] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [activeSearchIndex, setActiveSearchIndex] = useState(0);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
@@ -258,11 +262,21 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
       ))
   );
 
-  const searchMatches = useMemo(() => {
+  const localSearchMatches = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (query.length < 2) return [];
     return messages.filter((message) => message.content.toLowerCase().includes(query));
   }, [messages, searchQuery]);
+
+  const searchMatches = useMemo(() => {
+    if (remoteSearchMatches.length === 0) return localSearchMatches;
+
+    const seen = new Set(localSearchMatches.map((message) => message.id));
+    return [
+      ...localSearchMatches,
+      ...remoteSearchMatches.filter((message) => !seen.has(message.id)),
+    ];
+  }, [localSearchMatches, remoteSearchMatches]);
 
   const scrollToMessage = useCallback((messageId: string) => {
     const target = document.getElementById(`group-message-${messageId}`);
@@ -313,9 +327,50 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
   useEffect(() => {
     setSearchQuery('');
+    setRemoteSearchMatches([]);
+    setSearchError(null);
     setActiveSearchIndex(0);
     setHighlightedMessageId(null);
   }, [channelId]);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    setRemoteSearchMatches([]);
+    setSearchError(null);
+
+    if (!channelId || query.length < 2) {
+      setIsSearchingChannel(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearchingChannel(true);
+
+    const timeoutId = window.setTimeout(() => {
+      void searchChannelMessages(channelId, query)
+        .then((results) => {
+          if (!cancelled) {
+            setRemoteSearchMatches(results);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            logger.error('Failed to search channel messages:', error);
+            setSearchError('Search unavailable');
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsSearchingChannel(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [channelId, searchChannelMessages, searchQuery]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -383,9 +438,13 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   useEffect(() => {
     const activeMatch = searchMatches[activeSearchIndex];
     if (activeMatch) {
-      scrollToMessage(activeMatch.id);
+      const didScroll = scrollToMessage(activeMatch.id);
+      if (!didScroll) {
+        addChannelMessage(activeMatch);
+        window.setTimeout(() => scrollToMessage(activeMatch.id), 0);
+      }
     }
-  }, [activeSearchIndex, scrollToMessage, searchMatches]);
+  }, [activeSearchIndex, addChannelMessage, scrollToMessage, searchMatches]);
 
   // Handle typing indicator
   function handleTyping() {
@@ -778,9 +837,13 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
             <span className="min-w-[92px] text-right text-xs text-gray-400">
               {searchQuery.trim().length < 2
                 ? 'Type 2+ chars'
-                : searchMatches.length > 0
-                  ? `${activeSearchIndex + 1}/${searchMatches.length}`
-                  : 'No results'}
+                : isSearchingChannel
+                  ? 'Searching...'
+                  : searchError
+                    ? searchError
+                    : searchMatches.length > 0
+                      ? `${activeSearchIndex + 1}/${searchMatches.length}`
+                      : 'No results'}
             </span>
             <button
               onClick={() => moveSearch(-1)}
