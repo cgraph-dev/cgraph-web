@@ -25,6 +25,18 @@ function isFirstPartyUrl(url) {
   return url.startsWith(baseUrl) || url.startsWith(apiOrigin);
 }
 
+function matchesApiPath(url, path) {
+  try {
+    const parsed = new URL(url);
+    return (
+      (url.startsWith(baseUrl) || url.startsWith(apiOrigin)) &&
+      parsed.pathname === path
+    );
+  } catch {
+    return false;
+  }
+}
+
 function isThirdPartyFrameNoise(url) {
   return url.includes('challenges.cloudflare.com') || url === 'about:srcdoc';
 }
@@ -32,7 +44,7 @@ function isThirdPartyFrameNoise(url) {
 function waitForOAuthProviders(page) {
   return page
     .waitForResponse(
-      (response) => response.url().startsWith(`${apiOrigin}/api/v1/auth/oauth/providers`),
+      (response) => matchesApiPath(response.url(), '/api/v1/auth/oauth/providers'),
       { timeout: 20_000 }
     )
     .catch(() => null);
@@ -111,7 +123,7 @@ async function main() {
   const loginOk = await page.getByRole('button', { name: /sign in/i }).isVisible();
 
   const countriesResponse = page.waitForResponse(
-    (response) => response.url().startsWith(`${apiOrigin}/api/v1/auth/phone/countries`),
+    (response) => matchesApiPath(response.url(), '/api/v1/auth/phone/countries'),
     { timeout: 20_000 }
   );
   await page.goto(`${baseUrl}/login/phone`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
