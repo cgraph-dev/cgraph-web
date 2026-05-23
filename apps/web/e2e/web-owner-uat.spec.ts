@@ -7,6 +7,7 @@ const GROUP_ID = 'group-uat';
 const TEXT_CHANNEL_ID = 'text-uat';
 const VOICE_CHANNEL_ID = 'voice-uat';
 const LIVE_AVATAR_BORDER_ID = 'border_cyberpunk_epic_01';
+const LIVE_TITLE_ID = 'founding_member';
 const GIF_DATA_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
 const friendUser = {
@@ -262,6 +263,7 @@ async function installOwnerUatMocks(page: Page) {
   const threadReplyRequests: Record<string, unknown>[] = [];
   const groupUnpinRequests: string[] = [];
   const notificationPatches: Record<string, unknown>[] = [];
+  const channelNotificationPatches: Record<string, unknown>[] = [];
   const reportRequests: Record<string, unknown>[] = [];
   const pinnedMessageIds = new Set<string>();
   const threadRepliesByParent = new Map<string, Record<string, unknown>[]>();
@@ -285,6 +287,7 @@ async function installOwnerUatMocks(page: Page) {
   let currentGroupDescription = group.description;
   let currentGroupIsPublic = group.is_public;
   let currentNotificationLevel: 'mentions' | 'none' = 'mentions';
+  let currentChannelNotificationMode: 'mentions_only' | 'none' = 'mentions_only';
   let friendRoleIds: string[] = [];
   let settingsChannels = [
     {
@@ -610,6 +613,29 @@ async function installOwnerUatMocks(page: Page) {
       return;
     }
 
+    if (path === `/api/v1/notification-preferences/channel/${TEXT_CHANNEL_ID}`) {
+      if (method === 'PUT') {
+        const body = request.postDataJSON() as Record<string, unknown>;
+        channelNotificationPatches.push(body);
+        if (body.mode === 'none' || body.mode === 'mentions_only') {
+          currentChannelNotificationMode = body.mode;
+        }
+      }
+
+      await fulfillJson(route, {
+        data: {
+          preference: {
+            id: 'channel-pref-uat',
+            target_type: 'channel',
+            target_id: TEXT_CHANNEL_ID,
+            mode: currentChannelNotificationMode,
+            muted_until: null,
+          },
+        },
+      });
+      return;
+    }
+
     if (path === `/api/v1/groups/${GROUP_ID}/members`) {
       await fulfillJson(route, { data: groupMembersResponse() });
       return;
@@ -928,6 +954,7 @@ async function installOwnerUatMocks(page: Page) {
     groupReactionRequests,
     groupSettingsPatches,
     groupUnpinRequests,
+    channelNotificationPatches,
     notificationPatches,
     reportRequests,
     sentDmMessages,
@@ -952,6 +979,7 @@ test.describe('Web owner focused UAT', () => {
       groupReactionRequests,
       groupSettingsPatches,
       groupUnpinRequests,
+      channelNotificationPatches,
       notificationPatches,
       reportRequests,
       sentDmMessages,
@@ -971,20 +999,20 @@ test.describe('Web owner focused UAT', () => {
       .toContainEqual(expect.objectContaining({ content: 'DM routed UAT send' }));
 
     await page.evaluate(
-      ({ userId, avatarBorderId }) => {
+      ({ userId, avatarBorderId, titleId }) => {
         window.dispatchEvent(
           new CustomEvent('cgraph:e2e-identity-patch', {
             detail: {
               userId,
               customization: {
                 avatar_border_id: avatarBorderId,
-                title_id: 'title-founder',
+                title_id: titleId,
               },
             },
           })
         );
       },
-      { userId: FRIEND_ID, avatarBorderId: LIVE_AVATAR_BORDER_ID }
+      { userId: FRIEND_ID, avatarBorderId: LIVE_AVATAR_BORDER_ID, titleId: LIVE_TITLE_ID }
     );
     await expect(
       page.locator(`[data-avatar-border-id="${LIVE_AVATAR_BORDER_ID}"]`).first()
@@ -1174,21 +1202,25 @@ test.describe('Web owner focused UAT', () => {
     await page.getByRole('button', { name: /close search/i }).click();
     await expect(groupSearch).not.toBeVisible();
 
-    await page.getByRole('button', { name: /mute group/i }).click();
+    await page.getByRole('button', { name: /mute channel/i }).click();
     await expect
-      .poll(() => notificationPatches, { message: 'group mute endpoint received the patch' })
+      .poll(() => channelNotificationPatches, {
+        message: 'channel mute endpoint received the patch',
+      })
       .toContainEqual(
         expect.objectContaining({
-          notifications: 'none',
-          suppress_everyone: false,
+          mode: 'none',
+          muted_until: null,
         })
       );
-    await expect(page.getByRole('button', { name: /unmute group/i })).toBeVisible();
-    await page.getByRole('button', { name: /unmute group/i }).click();
+    await expect(page.getByRole('button', { name: /unmute channel/i })).toBeVisible();
+    await page.getByRole('button', { name: /unmute channel/i }).click();
     await expect
-      .poll(() => notificationPatches, { message: 'group unmute endpoint received the patch' })
-      .toContainEqual(expect.objectContaining({ notifications: 'mentions' }));
-    await expect(page.getByRole('button', { name: /mute group/i })).toBeVisible();
+      .poll(() => channelNotificationPatches, {
+        message: 'channel unmute endpoint received the patch',
+      })
+      .toContainEqual(expect.objectContaining({ mode: 'mentions_only' }));
+    await expect(page.getByRole('button', { name: /mute channel/i })).toBeVisible();
 
     const ownGroupMessage = page.locator('#group-message-group-msg-uat-sent-1');
     await ownGroupMessage.hover();

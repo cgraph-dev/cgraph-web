@@ -91,7 +91,7 @@ export function ChannelHeader({
                 ? 'bg-white/[0.08] text-red-300'
                 : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
             }`}
-            title={notificationLevel === 'none' ? 'Unmute Group' : 'Mute Group'}
+            title={notificationLevel === 'none' ? 'Unmute Channel' : 'Mute Channel'}
             aria-pressed={notificationLevel === 'none'}
           >
             <NotificationIcon className="h-5 w-5" />

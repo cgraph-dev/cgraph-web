@@ -38,6 +38,7 @@ import type { ChannelMessage, StickerSelection, VoiceRecordingData } from './typ
 const logger = createLogger('GroupChannel');
 
 type GroupChannelSurface = 'text' | 'announcement' | 'forum';
+type NotificationLevel = 'all' | 'mentions' | 'none';
 
 interface GroupChannelProps {
   surface?: GroupChannelSurface;
@@ -87,6 +88,23 @@ function stringValue(value: unknown): string | null {
 
 function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function notificationLevelFromPreference(
+  preference: unknown,
+  fallback: NotificationLevel
+): NotificationLevel {
+  if (!isRecord(preference) || typeof preference.id !== 'string') return fallback;
+
+  const mode = preference.mode;
+  if (mode === 'all' || mode === 'none') return mode;
+  if (mode === 'mentions' || mode === 'mentions_only') return 'mentions';
+  return fallback;
+}
+
+function notificationPreferenceMode(level: NotificationLevel): 'all' | 'mentions_only' | 'none' {
+  if (level === 'mentions') return 'mentions_only';
+  return level;
 }
 
 function dispatchE2EGroupChannelAction(
@@ -226,7 +244,9 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const messages = channelId ? (channelMessages[channelId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES;
   const typing = channelId ? typingUsers[channelId] || [] : [];
   const groupMembers = groupId ? members[groupId] || [] : [];
-  const notificationLevel = group?.myMember?.notifications ?? 'mentions';
+  const groupNotificationLevel = group?.myMember?.notifications ?? 'mentions';
+  const [channelNotificationLevel, setChannelNotificationLevel] =
+    useState<NotificationLevel>(groupNotificationLevel);
   const canManageMessages = Boolean(
     group &&
     currentUserId &&
@@ -322,6 +342,35 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     next.delete('scrollTo');
     setSearchParams(next, { replace: true });
   }, [messages, scrollToMessage, scrollToMessageId, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!channelId) {
+      setChannelNotificationLevel(groupNotificationLevel);
+      return;
+    }
+
+    let cancelled = false;
+    setChannelNotificationLevel(groupNotificationLevel);
+
+    void (async () => {
+      try {
+        const response = await http.get(`/api/v1/notification-preferences/channel/${channelId}`);
+        const data = isRecord(response.data) ? response.data.data : null;
+        const preference = isRecord(data) ? data.preference : null;
+        if (!cancelled) {
+          setChannelNotificationLevel(
+            notificationLevelFromPreference(preference, groupNotificationLevel)
+          );
+        }
+      } catch (error) {
+        logger.error('Failed to load channel notification preference:', error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [channelId, groupNotificationLevel]);
 
   useEffect(() => {
     if (searchMatches.length === 0) {
@@ -660,20 +709,22 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   }
 
   async function handleToggleNotifications(): Promise<void> {
-    if (!groupId || isSavingNotifications) return;
+    if (!channelId || isSavingNotifications) return;
 
-    const nextLevel = notificationLevel === 'none' ? 'mentions' : 'none';
+    const previousLevel = channelNotificationLevel;
+    const nextLevel = channelNotificationLevel === 'none' ? 'mentions' : 'none';
     setIsSavingNotifications(true);
+    setChannelNotificationLevel(nextLevel);
     try {
-      await http.patch(`/api/v1/groups/${groupId}/members/me/notifications`, {
-        notifications: nextLevel,
-        suppress_everyone: group?.myMember?.suppressEveryone ?? false,
+      await http.put(`/api/v1/notification-preferences/channel/${channelId}`, {
+        mode: notificationPreferenceMode(nextLevel),
+        muted_until: null,
       });
-      await fetchGroup(groupId);
-      toast.success(nextLevel === 'none' ? 'Group muted.' : 'Group notifications restored.');
+      toast.success(nextLevel === 'none' ? 'Channel muted.' : 'Channel notifications restored.');
     } catch (error) {
-      logger.error('Failed to update group notifications:', error);
-      toast.error('Failed to update group notifications.');
+      setChannelNotificationLevel(previousLevel);
+      logger.error('Failed to update channel notifications:', error);
+      toast.error('Failed to update channel notifications.');
     } finally {
       setIsSavingNotifications(false);
     }
@@ -705,7 +756,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
           channelLabel={copy.label}
           isSearchOpen={showSearch}
           onToggleSearch={() => setShowSearch((current) => !current)}
-          notificationLevel={notificationLevel}
+          notificationLevel={channelNotificationLevel}
           isSavingNotifications={isSavingNotifications}
           onToggleNotifications={handleToggleNotifications}
           showMembers={showMembers}
