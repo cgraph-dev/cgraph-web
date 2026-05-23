@@ -48,10 +48,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+/**
+ * Checks whether a raw provider string is one of the OAuth providers supported by the web app.
+ */
 export function isOAuthProvider(value: string): value is OAuthProvider {
   return knownOAuthProviders.some((provider) => provider === value);
 }
 
+/**
+ * Normalizes provider payloads returned by backend discovery into a supported OAuth provider ID.
+ */
 export function toOAuthProvider(value: unknown): OAuthProvider | null {
   if (typeof value === 'string' && isOAuthProvider(value)) {
     return value;
@@ -64,6 +70,9 @@ export function toOAuthProvider(value: unknown): OAuthProvider | null {
   return null;
 }
 
+/**
+ * Reads configured OAuth providers from either flat or API-envelope backend responses.
+ */
 export function readDiscoveredOAuthProviders(payload: unknown): OAuthProvider[] {
   const data = isRecord(payload) && 'data' in payload ? payload.data : payload;
   const candidates = isRecord(data) && Array.isArray(data.providers) ? data.providers : data;
