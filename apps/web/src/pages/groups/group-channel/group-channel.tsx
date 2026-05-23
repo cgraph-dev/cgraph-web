@@ -90,6 +90,21 @@ function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
+function getResponseStatus(error: unknown): number | null {
+  if (!isRecord(error) || !isRecord(error.response)) return null;
+
+  const status = error.response.status;
+  return typeof status === 'number' ? status : null;
+}
+
+function getPinMessageError(error: unknown): string {
+  if (getResponseStatus(error) === 403) {
+    return 'You do not have permission to pin messages in this channel.';
+  }
+
+  return 'Failed to pin message.';
+}
+
 function notificationLevelFromPreference(
   preference: unknown,
   fallback: NotificationLevel
@@ -722,8 +737,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
       toast.success('Message pinned.');
     } catch (error) {
       logger.error('Failed to pin group message:', error);
-      toast.error('Failed to pin message.');
-      throw error;
+      toast.error(getPinMessageError(error));
     }
   }
 

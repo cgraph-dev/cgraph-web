@@ -13,6 +13,31 @@ const currentUser = {
   status: 'online',
 };
 
+const friendUser = {
+  id: 'permission-edge-friend',
+  username: 'permission-friend',
+  displayName: 'Permission Friend',
+  display_name: 'Permission Friend',
+  avatarUrl: null,
+  avatar_url: null,
+  status: 'online',
+};
+
+const permissionDeniedMessage = {
+  id: 'permission-pin-denied',
+  channel_id: 'permission-edge-general',
+  sender_id: friendUser.id,
+  author: friendUser,
+  content: 'Permission denied pin route proof',
+  message_type: 'text',
+  is_pinned: false,
+  is_edited: false,
+  reply_to_id: null,
+  metadata: {},
+  reactions: [],
+  created_at: '2026-01-01T00:00:00.000Z',
+};
+
 const ordinaryMemberGroup = {
   id: GROUP_ID,
   name: 'Permission Edge Hub',
@@ -98,13 +123,23 @@ async function installGroupPermissionMocks(
   {
     groupFixture = ordinaryMemberGroup,
     allowGroupPatch = false,
+    denyPinCreate = false,
+    denyPinList = false,
+    denyPinDelete = false,
+    seedPinnedMessage = false,
   }: {
     readonly groupFixture?: typeof ordinaryMemberGroup;
     readonly allowGroupPatch?: boolean;
+    readonly denyPinCreate?: boolean;
+    readonly denyPinList?: boolean;
+    readonly denyPinDelete?: boolean;
+    readonly seedPinnedMessage?: boolean;
   } = {}
 ) {
   const requests = {
     groupPatches: [] as unknown[],
+    pinCreates: [] as unknown[],
+    pinDeletes: [] as string[],
   };
 
   await page.addInitScript(() => {
@@ -141,6 +176,107 @@ async function installGroupPermissionMocks(
       }
 
       await fulfillJson(route, { data: groupFixture });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/members` && method === 'GET') {
+      await fulfillJson(route, {
+        data: [
+          groupFixture.myMember,
+          {
+            id: 'member-friend',
+            user_id: friendUser.id,
+            user: friendUser,
+            roles: groupFixture.roles,
+            notifications: 'mentions',
+            joined_at: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      });
+      return;
+    }
+
+    if (
+      path === `/api/v1/groups/${GROUP_ID}/channels/permission-edge-general/messages` &&
+      method === 'GET'
+    ) {
+      await fulfillJson(route, {
+        data: [permissionDeniedMessage],
+        meta: {
+          has_next_page: false,
+          has_previous_page: false,
+          start_cursor: null,
+          end_cursor: null,
+          per_page: 50,
+        },
+      });
+      return;
+    }
+
+    if (
+      path === `/api/v1/groups/${GROUP_ID}/channels/permission-edge-general/thread-counts` &&
+      method === 'POST'
+    ) {
+      await fulfillJson(route, { data: { [permissionDeniedMessage.id]: 0 } });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/channels/permission-edge-general/pins`) {
+      if (method === 'POST') {
+        const body = request.postDataJSON();
+        requests.pinCreates.push(body);
+        if (denyPinCreate) {
+          await fulfillJson(route, { message: 'Forbidden' }, 403);
+          return;
+        }
+
+        await fulfillJson(route, { data: { message_id: permissionDeniedMessage.id } }, 201);
+        return;
+      }
+
+      if (denyPinList) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      await fulfillJson(route, {
+        data: seedPinnedMessage
+          ? [
+              {
+                id: `pin-${permissionDeniedMessage.id}`,
+                channel_id: 'permission-edge-general',
+                message_id: permissionDeniedMessage.id,
+                pinned_by_id: CURRENT_USER_ID,
+                position: 0,
+                pinned_at: '2026-01-01T00:00:00.000Z',
+              },
+            ]
+          : [],
+      });
+      return;
+    }
+
+    if (
+      path ===
+      `/api/v1/groups/${GROUP_ID}/channels/permission-edge-general/pins/pin-${permissionDeniedMessage.id}`
+    ) {
+      requests.pinDeletes.push(`pin-${permissionDeniedMessage.id}`);
+      if (denyPinDelete) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
+    if (
+      path === `/api/v1/notification-preferences/channel/permission-edge-general` &&
+      method === 'GET'
+    ) {
+      await fulfillJson(route, {
+        data: { preference: { id: 'pref-channel', mode: 'mentions_only' } },
+      });
       return;
     }
 
@@ -227,5 +363,76 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByText('Delete Group')).toHaveCount(0);
 
     expect(requests.groupPatches).toEqual([]);
+  });
+
+  test('keeps channel state unchanged and shows endpoint 403 copy when pinning is denied', async ({
+    page,
+  }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      denyPinCreate: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/channels/permission-edge-general`);
+
+    const message = page.locator(`#group-message-${permissionDeniedMessage.id}`);
+    await expect(message).toContainText(permissionDeniedMessage.content);
+
+    await message.hover();
+    await message.getByTitle('More Actions').click();
+    await page.getByRole('menuitem', { name: /^Pin$/ }).click();
+
+    await expect
+      .poll(() => requests.pinCreates, { message: 'pin create endpoint received message_id' })
+      .toContainEqual(expect.objectContaining({ message_id: permissionDeniedMessage.id }));
+    await expect(
+      page.getByText('You do not have permission to pin messages in this channel.')
+    ).toBeVisible();
+    await expect(message).not.toContainText('Pinned');
+    await expect(page.getByRole('complementary', { name: /pinned messages/i })).toHaveCount(0);
+  });
+
+  test('shows endpoint 403 copy when the pinned panel cannot list pins', async ({ page }) => {
+    await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      denyPinList: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/channels/permission-edge-general`);
+
+    await page.getByTitle('Pinned Messages').click();
+    const pinnedPanel = page.getByRole('complementary', { name: /pinned messages/i });
+    await expect(pinnedPanel).toContainText(
+      'You do not have permission to view pinned messages in this channel.'
+    );
+  });
+
+  test('keeps pinned panel state unchanged and shows endpoint 403 copy when unpinning is denied', async ({
+    page,
+  }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      seedPinnedMessage: true,
+      denyPinDelete: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/channels/permission-edge-general`);
+
+    await page.getByTitle('Pinned Messages').click();
+    const pinnedPanel = page.getByRole('complementary', { name: /pinned messages/i });
+    await expect(pinnedPanel).toContainText(permissionDeniedMessage.content);
+
+    await pinnedPanel.getByText(permissionDeniedMessage.content).hover();
+    await pinnedPanel
+      .getByRole('button', { name: `Unpin ${permissionDeniedMessage.content}` })
+      .click();
+
+    await expect
+      .poll(() => requests.pinDeletes, { message: 'unpin endpoint received the pin id' })
+      .toContain(`pin-${permissionDeniedMessage.id}`);
+    await expect(pinnedPanel).toContainText(
+      'You do not have permission to unpin messages in this channel.'
+    );
+    await expect(pinnedPanel).toContainText(permissionDeniedMessage.content);
   });
 });
