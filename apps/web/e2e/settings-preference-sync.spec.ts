@@ -71,6 +71,7 @@ async function installPreferenceMocks(page: Page) {
   const requests = {
     cancelDeletion: [] as unknown[],
     logout: [] as unknown[],
+    oauthStart: [] as unknown[],
     scheduleDeletion: [] as unknown[],
   };
 
@@ -85,7 +86,36 @@ async function installPreferenceMocks(page: Page) {
     const method = request.method();
 
     if ((path === '/api/v1/me' || path === '/api/v1/users/me') && method === 'GET') {
-      await fulfillJson(route, { data: currentUser, user: currentUser });
+      await fulfillJson(route, {
+        data: {
+          ...currentUser,
+          connected_accounts: [
+            {
+              id: 'acct-google',
+              provider: 'google',
+              provider_name: 'Google',
+              email: 'e2e@example.com',
+              linked_at: '2026-05-23T00:00:00.000Z',
+            },
+          ],
+        },
+        user: currentUser,
+      });
+      return;
+    }
+
+    if (path === '/api/v1/auth/oauth/providers' && method === 'GET') {
+      await fulfillJson(route, { data: { providers: ['google', { provider: 'tiktok' }] } });
+      return;
+    }
+
+    if (path === '/api/v1/auth/oauth/google' && method === 'GET') {
+      requests.oauthStart.push(readJsonRequest(route));
+      await fulfillJson(route, {
+        authorization_url: '/auth/oauth/google/callback?code=e2e-code&state=e2e-state',
+        state: 'e2e-state',
+        provider: 'google',
+      });
       return;
     }
 
@@ -309,5 +339,20 @@ test.describe('Settings preference sync', () => {
     await expect.poll(() => requests.scheduleDeletion.length).toBe(1);
     expect(requests.scheduleDeletion[0]).toMatchObject({ password: 'CGraph!2026Password' });
     await expect.poll(() => requests.logout.length).toBe(1);
+  });
+
+  test('discovers connected-account providers from backend configuration on the routed settings page', async ({
+    page,
+  }) => {
+    await installPreferenceMocks(page);
+
+    await page.goto('/me/settings/connected-accounts');
+
+    await expect(page.getByRole('heading', { name: /^Connected Accounts$/ })).toBeVisible();
+    await expect(page.getByText('Google')).toBeVisible();
+    await expect(page.getByText('Connected · e2e@example.com')).toBeVisible();
+    await expect(page.getByText('TikTok')).toBeVisible();
+    await expect(page.getByText('Apple')).toHaveCount(0);
+    await expect(page.getByText('Facebook')).toHaveCount(0);
   });
 });

@@ -5,7 +5,13 @@
 
 import { useEffect, useState, type ReactElement } from 'react';
 import { motion } from 'motion/react';
-import { OAuthProvider, openOAuthPopup, providerColors, providerNames } from '@/lib/oauth';
+import {
+  OAuthProvider,
+  openOAuthPopup,
+  providerColors,
+  providerNames,
+  readDiscoveredOAuthProviders,
+} from '@/lib/oauth';
 import { useAuthStore, mapUserFromApi } from '@/modules/auth/store';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
@@ -73,39 +79,6 @@ const providerIcons: Record<OAuthProvider, () => ReactElement> = {
   facebook: FacebookIcon,
   tiktok: TikTokIcon,
 };
-
-const knownProviders: readonly OAuthProvider[] = ['google', 'apple', 'facebook', 'tiktok'];
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isOAuthProvider(value: string): value is OAuthProvider {
-  return knownProviders.some((provider) => provider === value);
-}
-
-function toOAuthProvider(value: unknown): OAuthProvider | null {
-  if (typeof value === 'string' && isOAuthProvider(value)) {
-    return value;
-  }
-
-  if (isRecord(value)) {
-    return toOAuthProvider(value.provider ?? value.name ?? value.id);
-  }
-
-  return null;
-}
-
-function readDiscoveredProviders(payload: unknown): OAuthProvider[] {
-  const data = isRecord(payload) && 'data' in payload ? payload.data : payload;
-  const candidates = isRecord(data) && Array.isArray(data.providers) ? data.providers : data;
-
-  if (!Array.isArray(candidates)) {
-    return [];
-  }
-
-  return [...new Set(candidates.map(toOAuthProvider).filter((provider) => provider !== null))];
-}
 
 // Provider-specific hover glow colors
 const providerGlow: Record<OAuthProvider, { ring: string; shadow: string; bg: string }> = {
@@ -285,7 +258,7 @@ export function OAuthButtonGroup({
       .get('/api/v1/auth/oauth/providers')
       .then((response) => {
         if (isMounted) {
-          setDiscoveredProviders(readDiscoveredProviders(response.data));
+          setDiscoveredProviders(readDiscoveredOAuthProviders(response.data));
         }
       })
       .catch((error) => {

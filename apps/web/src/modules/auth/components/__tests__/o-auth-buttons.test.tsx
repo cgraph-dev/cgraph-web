@@ -32,6 +32,28 @@ vi.mock('@/lib/oauth', () => ({
     facebook: 'Facebook',
     tiktok: 'TikTok',
   },
+  readDiscoveredOAuthProviders: (payload: unknown) => {
+    const data =
+      typeof payload === 'object' && payload !== null && 'data' in payload
+        ? (payload as { data: unknown }).data
+        : payload;
+    const candidates =
+      typeof data === 'object' && data !== null && 'providers' in data
+        ? (data as { providers: unknown }).providers
+        : data;
+    if (!Array.isArray(candidates)) return [];
+    return candidates
+      .map((value) => {
+        if (typeof value === 'string') return value;
+        if (typeof value === 'object' && value !== null && 'provider' in value) {
+          return (value as { provider: unknown }).provider;
+        }
+        return null;
+      })
+      .filter((value): value is 'google' | 'apple' | 'facebook' | 'tiktok' =>
+        value === 'google' || value === 'apple' || value === 'facebook' || value === 'tiktok'
+      );
+  },
 }));
 
 vi.mock('@/modules/auth/store', () => ({

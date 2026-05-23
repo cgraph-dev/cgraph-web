@@ -7,6 +7,13 @@ import { api as http } from './api';
 
 export type OAuthProvider = 'google' | 'apple' | 'facebook' | 'tiktok';
 
+export const knownOAuthProviders: readonly OAuthProvider[] = [
+  'google',
+  'apple',
+  'facebook',
+  'tiktok',
+];
+
 interface OAuthAuthorizationResponse {
   authorization_url: string;
   state: string;
@@ -35,6 +42,37 @@ interface OAuthTokenResponse {
     refresh_token: string;
     expires_in: number;
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+export function isOAuthProvider(value: string): value is OAuthProvider {
+  return knownOAuthProviders.some((provider) => provider === value);
+}
+
+export function toOAuthProvider(value: unknown): OAuthProvider | null {
+  if (typeof value === 'string' && isOAuthProvider(value)) {
+    return value;
+  }
+
+  if (isRecord(value)) {
+    return toOAuthProvider(value.provider ?? value.name ?? value.id);
+  }
+
+  return null;
+}
+
+export function readDiscoveredOAuthProviders(payload: unknown): OAuthProvider[] {
+  const data = isRecord(payload) && 'data' in payload ? payload.data : payload;
+  const candidates = isRecord(data) && Array.isArray(data.providers) ? data.providers : data;
+
+  if (!Array.isArray(candidates)) {
+    return [];
+  }
+
+  return [...new Set(candidates.map(toOAuthProvider).filter((provider) => provider !== null))];
 }
 
 /**

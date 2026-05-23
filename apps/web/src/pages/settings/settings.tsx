@@ -19,11 +19,13 @@ import {
   FaceSmileIcon,
   PhoneIcon,
   ArrowPathIcon,
+  LinkIcon,
 } from '@heroicons/react/24/outline';
 import { GlassSearchInput } from '@/components/ui/glass-search-input';
 
 // These components are available for extended settings functionality
 import { AccountSettings } from '@/modules/settings/components/account-settings';
+import { ConnectedAccounts } from '@/pages/settings/connected-accounts';
 import { default as DeleteAccount } from '@/pages/settings/delete-account';
 import { default as DataExport } from '@/pages/settings/data-export';
 import {
@@ -54,6 +56,12 @@ import {
 // Moved to /me/invites: invites/referrals
 const settingsSections = [
   { id: 'account', label: 'Account', icon: UserIcon, description: 'Email, username, password' },
+  {
+    id: 'connected-accounts',
+    label: 'Connected Accounts',
+    icon: LinkIcon,
+    description: 'External sign-in providers',
+  },
   {
     id: 'security',
     label: 'Security',
@@ -320,6 +328,9 @@ export default function Settings() {
             ) : (
               <>
                 {section === 'account' && <AccountSettings key="account" />}
+                {section === 'connected-accounts' && (
+                  <ConnectedAccounts key="connected-accounts" />
+                )}
                 {section === 'security' && <SecuritySettingsPanel key="security" />}
                 {section === 'notifications' && <NotificationSettingsPanel key="notifications" />}
                 {section === 'dnd-schedule' && <DndSchedulePanel key="dnd-schedule" />}

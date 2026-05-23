@@ -9,6 +9,12 @@ import { entranceVariants, springs, staggerConfigs } from '@/lib/animation-prese
 import { LinkIcon, XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import {
+  OAuthProvider,
+  providerNames,
+  readDiscoveredOAuthProviders,
+  toOAuthProvider,
+} from '@/lib/oauth';
 
 const logger = createLogger('ConnectedAccounts');
 
@@ -20,36 +26,86 @@ interface ConnectedAccount {
   linked_at: string;
 }
 
-const PROVIDERS = [
-  { id: 'google', name: 'Google', icon: '🔵' },
-  { id: 'apple', name: 'Apple', icon: '🍎' },
-  { id: 'facebook', name: 'Facebook', icon: '🔷' },
-  { id: 'tiktok', name: 'TikTok', icon: '🎵' },
-];
+const providerInitials: Record<OAuthProvider, string> = {
+  google: 'G',
+  apple: 'A',
+  facebook: 'F',
+  tiktok: 'T',
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isConnectedAccount(value: unknown): value is ConnectedAccount {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.provider === 'string' &&
+    typeof value.provider_name === 'string' &&
+    typeof value.linked_at === 'string' &&
+    (value.email === undefined || typeof value.email === 'string')
+  );
+}
+
+function readUserFromMeResponse(payload: unknown): Record<string, unknown> {
+  if (!isRecord(payload)) {
+    return {};
+  }
+
+  return isRecord(payload.data) ? payload.data : payload;
+}
+
+function readConnectedAccounts(payload: unknown): ConnectedAccount[] {
+  const user = readUserFromMeResponse(payload);
+  return Array.isArray(user.connected_accounts)
+    ? user.connected_accounts.filter(isConnectedAccount)
+    : [];
+}
+
+function getProviderLabel(provider: string, account?: ConnectedAccount): string {
+  const knownProvider = toOAuthProvider(provider);
+  if (knownProvider) {
+    return providerNames[knownProvider];
+  }
+
+  return account?.provider_name || provider;
+}
+
+function getProviderInitial(provider: string, account?: ConnectedAccount): string {
+  const knownProvider = toOAuthProvider(provider);
+  const label = getProviderLabel(provider, account);
+  return knownProvider ? providerInitials[knownProvider] : label.charAt(0).toUpperCase();
+}
 
 /**
  * Connected Accounts component.
  */
 export function ConnectedAccounts() {
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
-  const [_loading, setLoading] = useState(true);
+  const [availableProviders, setAvailableProviders] = useState<OAuthProvider[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchAccounts = useCallback(async () => {
+  const fetchConnectedAccountState = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await http.get('/api/v1/me');
-      const user = data.data || data;
-      setAccounts(user.connected_accounts || []);
+      const [meResponse, providerResponse] = await Promise.all([
+        http.get('/api/v1/me'),
+        http.get('/api/v1/auth/oauth/providers'),
+      ]);
+      setAccounts(readConnectedAccounts(meResponse.data));
+      setAvailableProviders(readDiscoveredOAuthProviders(providerResponse.data));
     } catch (error) {
       logger.warn('Failed to fetch connected accounts', error);
+      setAvailableProviders([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
+    fetchConnectedAccountState();
+  }, [fetchConnectedAccountState]);
 
   const handleLink = async (provider: string) => {
     try {
@@ -77,6 +133,8 @@ export function ConnectedAccounts() {
   };
 
   const isLinked = (provider: string) => accounts.find((a) => a.provider === provider);
+  const linkedProviderIds = accounts.map((account) => account.provider);
+  const providerRows = [...new Set([...linkedProviderIds, ...availableProviders])];
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -104,20 +162,25 @@ export function ConnectedAccounts() {
         }}
         className="space-y-3"
       >
-        {PROVIDERS.map((provider) => {
-          const linked = isLinked(provider.id);
+        {providerRows.map((provider) => {
+          const linked = isLinked(provider);
+          const providerId = toOAuthProvider(provider);
+          const providerIsAvailable = Boolean(
+            providerId && availableProviders.some((availableProvider) => availableProvider === providerId)
+          );
+          const label = getProviderLabel(provider, linked);
           return (
             <motion.div
-              key={provider.id}
+              key={provider}
               variants={entranceVariants.fadeUp}
               className="aurora-social-panel flex items-center justify-between rounded-2xl p-4"
             >
               <div className="flex items-center gap-3">
                 <span className="border-primary-500/20 bg-primary-500/10 flex h-11 w-11 items-center justify-center rounded-xl border text-xl text-primary-300">
-                  {provider.icon}
+                  {getProviderInitial(provider, linked)}
                 </span>
                 <div>
-                  <span className="font-medium text-white">{provider.name}</span>
+                  <span className="font-medium text-white">{label}</span>
                   {linked && (
                     <div className="flex items-center gap-1 text-xs text-primary-300">
                       <CheckCircleIcon className="h-3.5 w-3.5" />
@@ -137,7 +200,8 @@ export function ConnectedAccounts() {
                 </button>
               ) : (
                 <button
-                  onClick={() => handleLink(provider.id)}
+                  onClick={() => providerId && handleLink(providerId)}
+                  disabled={!providerIsAvailable}
                   className="aurora-social-button flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium"
                 >
                   <LinkIcon className="h-4 w-4" />
@@ -147,6 +211,14 @@ export function ConnectedAccounts() {
             </motion.div>
           );
         })}
+        {!loading && providerRows.length === 0 && (
+          <motion.div
+            variants={entranceVariants.fadeUp}
+            className="aurora-social-panel rounded-2xl p-4 text-sm text-white/50"
+          >
+            No external account providers are available right now.
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );
