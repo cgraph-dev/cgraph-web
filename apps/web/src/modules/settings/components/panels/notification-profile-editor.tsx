@@ -49,8 +49,9 @@ const PRESET_COLORS = [
  */
 export function NotificationProfileEditor(): React.ReactNode {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const isNew = id === 'new';
+  const { id, detail } = useParams<{ id?: string; detail?: string }>();
+  const profileId = id ?? detail;
+  const isNew = profileId === 'new';
 
   const { profiles, fetchProfiles, createProfile, updateProfile, updateSchedule, deleteProfile } =
     useNotificationProfileStore();
@@ -70,12 +71,12 @@ export function NotificationProfileEditor(): React.ReactNode {
 
   // Load existing profile data
   useEffect(() => {
-    if (!isNew && id) {
+    if (!isNew && profileId) {
       fetchProfiles();
     }
-  }, [isNew, id, fetchProfiles]);
+  }, [isNew, profileId, fetchProfiles]);
 
-  const existingProfile = isNew ? null : profiles.find((p) => p.id === id);
+  const existingProfile = isNew ? null : profiles.find((p) => p.id === profileId);
 
   useEffect(() => {
     if (existingProfile) {
@@ -120,7 +121,7 @@ export function NotificationProfileEditor(): React.ReactNode {
               days_enabled: [...daysEnabled],
             });
           }
-          navigate('/settings/notification-profiles');
+          navigate('/me/settings/notification-profiles');
         }
       } else if (existingProfile) {
         await updateProfile(existingProfile.id, {
@@ -140,7 +141,7 @@ export function NotificationProfileEditor(): React.ReactNode {
           });
         }
 
-        navigate('/settings/notification-profiles');
+        navigate('/me/settings/notification-profiles');
       }
     } catch (err) {
       logger.error('Failed to save profile', err);
@@ -153,7 +154,7 @@ export function NotificationProfileEditor(): React.ReactNode {
     if (existingProfile) {
       HapticFeedback.heavy();
       await deleteProfile(existingProfile.id);
-      navigate('/settings/notification-profiles');
+      navigate('/me/settings/notification-profiles');
     }
   }
 
@@ -163,7 +164,7 @@ export function NotificationProfileEditor(): React.ReactNode {
         <button
           onClick={() => {
             HapticFeedback.light();
-            navigate('/settings/notification-profiles');
+            navigate('/me/settings/notification-profiles');
           }}
           className="aurora-social-button-muted flex h-10 w-10 items-center justify-center rounded-xl text-[var(--token-text-secondary)]"
         >

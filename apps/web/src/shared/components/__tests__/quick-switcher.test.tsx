@@ -48,6 +48,12 @@ describe('QuickSwitcher', () => {
     expect(screen.getByText('Appearance')).toBeTruthy();
   });
 
+  it('routes default settings pages to mounted Me destinations', () => {
+    render(<QuickSwitcher isOpen={true} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByText('Appearance'));
+    expect(mockNavigate).toHaveBeenCalledWith('/me/appearance/themes');
+  });
+
   it('shows custom items', () => {
     render(<QuickSwitcher isOpen={true} onClose={vi.fn()} items={testItems} />);
     expect(screen.getByText('Alice Chat')).toBeTruthy();

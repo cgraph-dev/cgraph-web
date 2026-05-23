@@ -179,7 +179,8 @@ function SettingsBootstrapGate({
  */
 export default function Settings() {
   const navigate = useNavigate();
-  const { section = 'account' } = useParams();
+  const { section: routeSection = 'account', detail } = useParams();
+  const section = detail ? `${routeSection}/${detail}` : routeSection;
   const [searchQuery, setSearchQuery] = useState('');
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const userId = useAuthStore((state) => state.user?.id);

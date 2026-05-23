@@ -348,7 +348,7 @@ export function BillingSettingsPanel() {
               <button
                 onClick={() => {
                   HapticFeedback.light();
-                  navigate('/settings/subscription-manage');
+                  navigate('/me/subscription');
                 }}
                 className="aurora-social-button-muted flex w-full items-center justify-between rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-widest text-[var(--token-text-secondary)] transition-all"
               >
@@ -358,7 +358,7 @@ export function BillingSettingsPanel() {
               <button
                 onClick={() => {
                   HapticFeedback.light();
-                  navigate('/settings/account');
+                  navigate('/me/settings/account');
                 }}
                 className="aurora-social-button-muted flex w-full items-center justify-between rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-widest text-[var(--token-text-secondary)] transition-all"
               >

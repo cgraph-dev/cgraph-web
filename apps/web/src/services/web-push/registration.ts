@@ -128,7 +128,7 @@ export async function showTestNotification(): Promise<boolean> {
     badge: '/badge-72x72.png',
     tag: 'test-notification',
     data: {
-      url: '/settings/notifications',
+      url: '/me/settings/notifications',
       type: 'test',
     },
   });

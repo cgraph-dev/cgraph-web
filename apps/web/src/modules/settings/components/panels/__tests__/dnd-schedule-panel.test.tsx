@@ -110,7 +110,7 @@ describe('DndSchedulePanel', () => {
     });
     expect(mockUpdateLocaleSettings).toHaveBeenCalledWith({ timezone: 'UTC' });
     expect(mockToast.success).toHaveBeenCalledWith('Schedule saved');
-    expect(mockNavigate).toHaveBeenCalledWith('/settings/notifications');
+    expect(mockNavigate).toHaveBeenCalledWith('/me/settings/notifications');
   });
 
   it('clears quiet hour times when the schedule is disabled', async () => {

@@ -64,7 +64,7 @@ export function NotificationProfilesPanel(): React.ReactNode {
 
   function handleProfileClick(profile: NotificationProfile): void {
     HapticFeedback.light();
-    navigate(`/settings/notification-profiles/${profile.id}`);
+    navigate(`/me/settings/notification-profiles/${profile.id}`);
   }
 
   function handleContextMenu(e: React.MouseEvent, profile: NotificationProfile): void {
@@ -96,7 +96,7 @@ export function NotificationProfilesPanel(): React.ReactNode {
         <button
           onClick={() => {
             HapticFeedback.light();
-            navigate('/settings/notifications');
+            navigate('/me/settings/notifications');
           }}
           className="aurora-social-button-muted flex h-10 w-10 items-center justify-center rounded-xl text-[var(--token-text-secondary)]"
         >
@@ -219,7 +219,7 @@ export function NotificationProfilesPanel(): React.ReactNode {
         <button
           onClick={() => {
             HapticFeedback.medium();
-            navigate('/settings/notification-profiles/new');
+            navigate('/me/settings/notification-profiles/new');
           }}
           className="aurora-social-button flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-[var(--token-text-primary)]"
         >

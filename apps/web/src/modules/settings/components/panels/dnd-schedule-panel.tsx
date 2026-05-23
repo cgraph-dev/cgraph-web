@@ -71,7 +71,7 @@ export function DndSchedulePanel() {
       }
 
       toast.success('Schedule saved');
-      navigate('/settings/notifications');
+      navigate('/me/settings/notifications');
     } catch {
       toast.error('Failed to save schedule');
     }
@@ -85,7 +85,7 @@ export function DndSchedulePanel() {
           aria-label="Back to notification settings"
           onClick={() => {
             HapticFeedback.light();
-            navigate('/settings/notifications');
+            navigate('/me/settings/notifications');
           }}
           className="aurora-social-button-muted flex h-10 w-10 items-center justify-center rounded-xl text-[var(--token-text-secondary)]"
         >

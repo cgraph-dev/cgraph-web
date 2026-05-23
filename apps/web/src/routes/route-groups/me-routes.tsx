@@ -99,6 +99,14 @@ export function MeRoutes() {
         }
       />
       <Route
+        path="settings/:section/:detail"
+        element={
+          <RouteErrorBoundary routeName="Settings">
+            <Settings />
+          </RouteErrorBoundary>
+        }
+      />
+      <Route
         path="settings/app-theme"
         element={
           <RouteErrorBoundary routeName="App Theme">

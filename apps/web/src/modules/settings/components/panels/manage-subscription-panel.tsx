@@ -66,7 +66,7 @@ export function ManageSubscriptionPanel() {
         <button
           onClick={() => {
             HapticFeedback.light();
-            navigate('/settings/billing');
+            navigate('/me/subscription');
           }}
           className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] text-[var(--token-text-secondary)] transition-all hover:bg-[var(--token-bg-tertiary)] hover:text-[var(--token-text-primary)]"
         >

@@ -28,15 +28,15 @@ export function CheckoutReturn() {
       // Sync subscription state from backend
       fetchBillingStatus();
       // Redirect to billing settings after 3s
-      const timer = setTimeout(() => navigate('/settings/billing', { replace: true }), 3000);
+      const timer = setTimeout(() => navigate('/me/subscription', { replace: true }), 3000);
       return () => clearTimeout(timer);
     } else if (checkoutStatus === 'cancelled') {
       setStatus('cancelled');
-      const timer = setTimeout(() => navigate('/settings/billing', { replace: true }), 3000);
+      const timer = setTimeout(() => navigate('/me/subscription', { replace: true }), 3000);
       return () => clearTimeout(timer);
     } else {
       // Unknown status — redirect immediately
-      navigate('/settings/billing', { replace: true });
+      navigate('/me/subscription', { replace: true });
       return undefined;
     }
   }, [searchParams, navigate, fetchBillingStatus]);

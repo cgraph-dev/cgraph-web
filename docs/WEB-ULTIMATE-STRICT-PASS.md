@@ -264,6 +264,9 @@ Corrective note: two older strict-pass findings are no longer accurate in curren
   `/groups/:groupId`.
 - The command-palette Create Group action now routes to `/groups?create=true` and opens the mounted
   groups-shell create modal instead of sending users to non-mounted `/groups/create`.
+- The settings dead-end sweep now keeps notification-profile editor routes mounted at
+  `/me/settings/notification-profiles/:id`, redirects old billing/subscription settings paths to
+  `/me/subscription`, and moves command-palette settings shortcuts to mounted Me destinations.
 - The routed DM header now builds `/call/:recipientId/:callType`; live audio/video call-entry launch
   is browser-verified, so the remaining calls gap is broader media/incoming/history flow coverage.
 
@@ -1030,10 +1033,12 @@ Done when:
 ### Carry-Over Web Gaps
 
 - [x] Replace the Social Hub placeholder main pane with real selected-entity content.
-- [ ] Remove remaining dead-end or placeholder-only navigation targets.
-      The command-palette Create Group dead end was fixed on 2026-05-23 and covered by
-      `quick-switcher.test.tsx` plus `server-list.test.tsx`; the broader route inventory still needs
-      one final sweep before this box can be truthfully closed.
+- [ ] Remove remaining dead-end or placeholder-only navigation targets. The command-palette Create
+      Group dead end was fixed on 2026-05-23 and covered by `quick-switcher.test.tsx` plus
+      `server-list.test.tsx`. The same dead-end sweep now routes notification-profile editor,
+      billing/subscription, web-push notification, and command-palette settings destinations to
+      mounted Me/settings surfaces, covered by focused settings panel and quick-switcher tests; the
+      broader route inventory still needs one final sweep before this box can be truthfully closed.
 - [x] Move customization inventory/equipped state fully onto authoritative backend-owned data for
       the routed identity-customization surface and backend save contract.
 - [ ] Finish upload hardening items that still block a real production claim.

@@ -334,7 +334,7 @@ export function NotificationSettingsPanel() {
             <button
               onClick={() => {
                 HapticFeedback.light();
-                navigate('/settings/notification-profiles');
+                navigate('/me/settings/notification-profiles');
               }}
               className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold hover:scale-[1.02] active:scale-[0.98]"
             >
