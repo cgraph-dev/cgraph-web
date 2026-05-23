@@ -202,6 +202,16 @@ vi.mock('../role-manager', () => ({
 }));
 
 const mockSetActiveTab = vi.fn();
+const mockPermissions = {
+  isOwner: true,
+  canManageGroup: true,
+  canManageRoles: true,
+  canManageChannels: true,
+  canManageMembers: true,
+  canManageInvites: true,
+  canViewAuditLog: true,
+  canManageAutomod: true,
+};
 const mockUseGroupSettings = {
   activeGroup: {
     id: 'g-1',
@@ -215,6 +225,7 @@ const mockUseGroupSettings = {
   activeTab: 'overview',
   setActiveTab: mockSetActiveTab,
   isOwner: true,
+  permissions: mockPermissions,
   formData: { name: 'Test Group', description: 'desc' },
   handleFormChange: vi.fn(),
   hasChanges: false,
@@ -286,6 +297,7 @@ describe('GroupSettings', () => {
       channels: [],
     };
     mockUseGroupSettings.activeTab = 'overview';
+    mockUseGroupSettings.permissions = mockPermissions;
   });
 
   it('renders settings sidebar', () => {
