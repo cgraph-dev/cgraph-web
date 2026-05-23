@@ -43,8 +43,13 @@ export const GIF_CATEGORIES: GifCategory[] = [
 /**
  * Local storage keys
  */
-export const FAVORITES_KEY = 'cgraph-gif-favorites';
-export const RECENT_KEY = 'cgraph-gif-recent';
+export const GIF_STORAGE_SCHEMA_VERSION = 1;
+export const GIF_STORAGE_PREFIX = `cgraph:gif-picker:v${GIF_STORAGE_SCHEMA_VERSION}`;
+export const FAVORITES_KEY = `${GIF_STORAGE_PREFIX}:favorites`;
+export const RECENT_KEY = `${GIF_STORAGE_PREFIX}:recent`;
+export const LEGACY_GIF_STORAGE_PREFIX = ['cgraph', 'gif'].join('-');
+export const LEGACY_FAVORITES_KEY = `${LEGACY_GIF_STORAGE_PREFIX}-favorites`;
+export const LEGACY_RECENT_KEY = `${LEGACY_GIF_STORAGE_PREFIX}-recent`;
 
 /**
  * Limits
