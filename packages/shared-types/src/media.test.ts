@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMessageAttachmentMetadata,
   buildMessageAttachmentSendPayload,
+  getMessageUploadBlockReason,
+  isAllowedMessageUpload,
   MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES,
   multipartUploadProgress,
   messageContentTypeForMime,
@@ -57,5 +59,15 @@ describe('message attachment contract', () => {
     expect(multipartUploadProgress(5, 2, 10)).toBe(70);
     expect(multipartUploadProgress(100, 100, 10)).toBe(100);
     expect(multipartUploadProgress(1, 1, 0)).toBe(0);
+  });
+
+  it('blocks dangerous upload metadata before transfer starts', () => {
+    expect(getMessageUploadBlockReason('invoice.exe', 'text/plain')).toBe('blocked_extension');
+    expect(getMessageUploadBlockReason('safe.txt', 'application/x-msdownload')).toBe(
+      'blocked_content_type'
+    );
+    expect(getMessageUploadBlockReason('Photo.JPG', 'image/jpeg; charset=utf-8')).toBeNull();
+    expect(isAllowedMessageUpload('avatar.png', 'image/png')).toBe(true);
+    expect(isAllowedMessageUpload('script.ps1', 'text/plain')).toBe(false);
   });
 });

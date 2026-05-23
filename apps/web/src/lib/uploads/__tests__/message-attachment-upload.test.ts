@@ -113,6 +113,15 @@ describe('uploadMessageAttachment', () => {
     expect(progress.at(-1)).toBe(100);
   });
 
+  it('rejects dangerous files before calling the upload API', async () => {
+    await expect(
+      uploadMessageAttachment(new File(['echo bad'], 'payload.ps1', { type: 'text/plain' }))
+    ).rejects.toThrow('This file extension is not allowed');
+
+    expect(http.post).not.toHaveBeenCalled();
+    expect(apiClient.upload.startMultipartUpload).not.toHaveBeenCalled();
+  });
+
   it('uses multipart direct uploads for large attachments', async () => {
     vi.mocked(apiClient.upload.startMultipartUpload).mockResolvedValue({
       ok: true,

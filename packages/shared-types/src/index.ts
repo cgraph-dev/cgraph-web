@@ -148,11 +148,15 @@ export type {
 } from './media';
 export {
   MESSAGE_ATTACHMENT_CONTENT_TYPES,
+  MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPES,
+  MESSAGE_UPLOAD_BLOCKED_EXTENSIONS,
   MESSAGE_UPLOAD_MAX_PARALLEL_PARTS,
   MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES,
   MESSAGE_UPLOAD_MULTIPART_THRESHOLD_BYTES,
   buildMessageAttachmentMetadata,
   buildMessageAttachmentSendPayload,
+  getMessageUploadBlockReason,
+  isAllowedMessageUpload,
   messageContentTypeForMime,
   multipartUploadProgress,
   shouldUseMultipartMessageUpload,

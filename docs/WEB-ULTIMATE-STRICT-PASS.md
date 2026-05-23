@@ -573,7 +573,9 @@ These previously verified issues still matter and still belong in the web fix pl
 - group entry-point routing still has bare-route producers that depend on route-owner redirection
 - profile-card hydration and preference bootstrap are now source-backed, but broader
   profile/cosmetic reload and live-update browser proof remains open
-- upload antivirus still metadata-only
+- upload antivirus can still run metadata-only in production until a real ClamAV service is
+  provisioned, but dangerous executable/script upload metadata is now rejected at the shared package
+  contract, web upload adapter, direct presign endpoint, and server-ingested `/api/v1/uploads` path
 - broad web verification coverage still not strong enough to claim "100% working"
 
 ## 6. Auth and onboarding still are not covered enough to claim whole-web readiness
@@ -1041,7 +1043,12 @@ Done when:
       broader route inventory still needs one final sweep before this box can be truthfully closed.
 - [x] Move customization inventory/equipped state fully onto authoritative backend-owned data for
       the routed identity-customization surface and backend save contract.
-- [ ] Finish upload hardening items that still block a real production claim.
+- [ ] Finish upload hardening items that still block a real production claim. The 2026-05-23
+      hardening slice adds shared `@cgraph/shared-types` blocked upload metadata rules, rejects
+      dangerous files in the routed web message attachment adapter before transfer, and makes the
+      backend reject dangerous filenames on server-ingested `/api/v1/uploads` before storage, with
+      focused package/web/backend tests. This remains open until production has a provisioned,
+      reachable ClamAV scanner and the final browser/API pass proves upload failure UX end to end.
 - [x] Browser-verify the surfaced phone-auth entry points from both login and register while keeping
       the existing web visual style intact.
 - [x] Verify the remaining phone flow for new-user registration, OTP retry, call fallback,

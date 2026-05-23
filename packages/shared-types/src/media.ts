@@ -168,6 +168,84 @@ export const MESSAGE_ATTACHMENT_CONTENT_TYPES = [
 
 export type MessageAttachmentContentType = (typeof MESSAGE_ATTACHMENT_CONTENT_TYPES)[number];
 
+/** Executable/script upload extensions blocked before bytes are accepted. */
+export const MESSAGE_UPLOAD_BLOCKED_EXTENSIONS = [
+  'exe',
+  'scr',
+  'bat',
+  'com',
+  'pif',
+  'cmd',
+  'cpl',
+  'msi',
+  'vbs',
+  'vbe',
+  'js',
+  'jse',
+  'wsf',
+  'wsh',
+  'ps1',
+  'dll',
+] as const;
+
+/** Dangerous MIME types blocked before upload starts. */
+export const MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPES = [
+  'application/x-msdownload',
+  'application/x-msdos-program',
+  'application/x-executable',
+  'application/x-dosexec',
+  'application/x-sh',
+  'application/x-bat',
+  'application/x-msi',
+  'application/vnd.microsoft.portable-executable',
+] as const;
+
+export type MessageUploadBlockedExtension = (typeof MESSAGE_UPLOAD_BLOCKED_EXTENSIONS)[number];
+export type MessageUploadBlockedContentType =
+  (typeof MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPES)[number];
+
+export type MessageUploadBlockReason =
+  | 'blocked_extension'
+  | 'blocked_content_type';
+
+function filenameExtension(filename: string): string {
+  const safeName = filename.trim().toLowerCase().split(/[\\/]/u).pop() ?? '';
+  const dot = safeName.lastIndexOf('.');
+  if (dot < 0 || dot === safeName.length - 1) return '';
+  return safeName.slice(dot + 1);
+}
+
+function baseContentType(contentType: string): string {
+  return contentType.split(';', 1)[0]?.trim().toLowerCase() ?? '';
+}
+
+/** Returns why a message upload is blocked before transfer, or null when allowed. */
+export function getMessageUploadBlockReason(
+  filename: string,
+  contentType = ''
+): MessageUploadBlockReason | null {
+  const extension = filenameExtension(filename);
+  if (MESSAGE_UPLOAD_BLOCKED_EXTENSIONS.includes(extension as MessageUploadBlockedExtension)) {
+    return 'blocked_extension';
+  }
+
+  const normalizedType = baseContentType(contentType);
+  if (
+    MESSAGE_UPLOAD_BLOCKED_CONTENT_TYPES.includes(
+      normalizedType as MessageUploadBlockedContentType
+    )
+  ) {
+    return 'blocked_content_type';
+  }
+
+  return null;
+}
+
+/** True when a message upload is safe enough to start client-side transfer. */
+export function isAllowedMessageUpload(filename: string, contentType = ''): boolean {
+  return getMessageUploadBlockReason(filename, contentType) === null;
+}
+
 /** Uploaded file data after `/api/v1/uploads` accepts a message attachment. */
 export interface UploadedMessageAttachment {
   readonly uploadId?: string;

@@ -1,6 +1,7 @@
 import {
   MESSAGE_UPLOAD_MAX_PARALLEL_PARTS,
   MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES,
+  getMessageUploadBlockReason,
   multipartUploadProgress,
   shouldUseMultipartMessageUpload,
   type MultipartUploadCompletedPart,
@@ -29,6 +30,25 @@ function numberValue(value: unknown): number | null {
 
 function contentTypeFor(file: File): string {
   return file.type || 'application/octet-stream';
+}
+
+function uploadBlockedMessage(reason: ReturnType<typeof getMessageUploadBlockReason>): string {
+  if (reason === 'blocked_extension') {
+    return 'This file extension is not allowed for security reasons.';
+  }
+
+  if (reason === 'blocked_content_type') {
+    return 'This file type is not allowed for security reasons.';
+  }
+
+  return 'This file cannot be uploaded.';
+}
+
+function assertAllowedMessageUpload(file: File): void {
+  const reason = getMessageUploadBlockReason(file.name, contentTypeFor(file));
+  if (reason) {
+    throw new Error(uploadBlockedMessage(reason));
+  }
 }
 
 function uploadedAttachmentFromResponse(
@@ -290,6 +310,8 @@ export async function uploadMessageAttachment(
   file: File,
   options: UploadMessageAttachmentOptions = {}
 ): Promise<UploadedMessageAttachment> {
+  assertAllowedMessageUpload(file);
+
   const context = options.context ?? 'message';
   const onProgress = options.onProgress ?? (() => undefined);
 
