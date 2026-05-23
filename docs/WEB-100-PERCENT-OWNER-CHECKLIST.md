@@ -99,6 +99,16 @@ ordinary members only see personal Notifications/Danger actions and do not issue
 endpoint-level permission-denied copy, paired QR approval, provider delivery, package-version
 consumption, and final broad browser validation open.
 
+2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
+discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,
+and uses `/api/v1/auth/oauth/providers` to decide which account-linking actions render. The focused
+unit proof covers configured-provider parsing and empty-provider behavior, while
+`apps/web/e2e/settings-preference-sync.spec.ts` browser-verifies the routed settings page showing
+Google/TikTok from backend discovery while hiding unavailable Apple/Facebook account-linking
+actions. The stricter release-readiness documents still keep real provider delivery, paired QR
+approval, endpoint-level group permission copy, package-version consumption, and final broad
+browser validation open.
+
 2026-05-23 Nodes negative-path proof: production web commit `436d4ff` centralizes Nodes failure
 copy, keeps routed paid files locked on failed unlock, treats already-unlocked server responses as
 accessible, exposes Add Nodes recovery for insufficient balance, and wires routed Cloud Chat through
