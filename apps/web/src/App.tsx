@@ -18,11 +18,14 @@ import { useGroupStore } from '@/modules/groups/store';
 import { initErrorTracking, reportWebVitals } from '@/lib/error-tracking';
 import { startAutoSync, stopAutoSync } from '@/lib/offline/sync-service';
 import { useAuthStore } from '@/modules/auth/store';
-import { useSettingsStore } from '@/modules/settings/store';
-import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import { useThemeStore } from '@/stores/theme/store';
 import { useDesktopInit } from '@/lib/desktop/use-desktop-init';
 import { applyOtherUserIdentityPayload } from '@/lib/identity/otherIdentitySync';
+import {
+  applyCustomizationPreferenceSync,
+  applySettingsPreferenceSync,
+  applyThemePreferenceSync,
+  startPreferenceSyncBus,
+} from '@/lib/preferences/preference-sync-bus';
 import '@/lib/theme/theme-globals.css';
 import '@/styles/customization-effects.css';
 
@@ -116,6 +119,8 @@ export default function App() {
   // No-op when running in browser — all Tauri APIs are gated by isTauri()
   useDesktopInit();
 
+  useEffect(() => startPreferenceSyncBus(), []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -158,6 +163,9 @@ export default function App() {
       if (!(event instanceof CustomEvent) || !isRecord(event.detail)) return;
 
       const surface = getStringFromPayload(event.detail, ['surface', 'type']);
+      const userId = getUserIdFromPayload(event.detail) ?? useAuthStore.getState().user?.id ?? null;
+      if (!userId) return;
+
       if (surface === 'settings') {
         const section = getStringFromPayload(event.detail, ['section']);
         const changes = event.detail.changes;
@@ -167,14 +175,19 @@ export default function App() {
           getStringFromPayload(event.detail, ['last_updated_at', 'lastUpdatedAt']) ??
           new Date(Date.now() + 1).toISOString();
 
-        useSettingsStore.getState().mergeSettingsFromSync(section, changes, incomingAt);
+        applySettingsPreferenceSync({
+          userId,
+          section,
+          changes,
+          lastUpdatedAt: incomingAt,
+        });
         return;
       }
 
       if (surface === 'customization') {
         const changes = event.detail.changes ?? event.detail.customizations;
         if (isRecord(changes)) {
-          useCustomizationStore.getState().applyServerSettings(changes);
+          applyCustomizationPreferenceSync({ userId, changes });
         }
         return;
       }
@@ -182,7 +195,7 @@ export default function App() {
       if (surface === 'theme') {
         const theme = event.detail.theme ?? event.detail.changes;
         if (isRecord(theme)) {
-          useThemeStore.getState().applyServerTheme(theme);
+          applyThemePreferenceSync({ userId, changes: theme });
         }
       }
     };

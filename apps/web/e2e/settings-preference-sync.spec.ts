@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 
 const CURRENT_USER_ID = 'e2e-user';
+const PREFERENCE_SYNC_CHANNEL = 'cgraph:preference-sync:v1';
 
 const currentUser = {
   id: CURRENT_USER_ID,
@@ -316,6 +317,73 @@ test.describe('Settings preference sync', () => {
     });
 
     await expect(page.locator('html')).toHaveClass(/theme-light/);
+  });
+
+  test('applies preference sync across already-open tabs through the browser sync bus', async ({
+    context,
+    page,
+  }) => {
+    await installPreferenceMocks(page);
+    const secondPage = await context.newPage();
+    await installPreferenceMocks(secondPage);
+
+    await page.goto('/me/settings/privacy');
+    await secondPage.goto('/me/settings/privacy');
+
+    const firstTabMessageRequests = page.getByLabel('Who can send you direct messages');
+    const secondTabMessageRequests = secondPage.getByLabel('Who can send you direct messages');
+    const secondTabOnlineStatus = secondPage.getByLabel('Who can see your online status');
+    const secondTabGroupInvites = secondPage.getByLabel('Who can add you to groups');
+
+    await expect(page.getByRole('heading', { name: /^Privacy$/ })).toBeVisible();
+    await expect(secondPage.getByRole('heading', { name: /^Privacy$/ })).toBeVisible();
+    await expect(firstTabMessageRequests).toHaveValue('contacts');
+    await expect(secondTabMessageRequests).toHaveValue('contacts');
+
+    await page.evaluate(
+      ({ channelName, userId }) => {
+        const channel = new BroadcastChannel(channelName);
+        channel.postMessage({
+          kind: 'settings',
+          userId,
+          sourceId: 'playwright-driver',
+          payload: {
+            section: 'privacy',
+            lastUpdatedAt: new Date(Date.now() + 10_000).toISOString(),
+            changes: {
+              show_online_status: true,
+              allow_group_invites: 'nobody',
+              selective_privacy: {
+                message_requests: {
+                  mode: 'everyone',
+                  always_allow_user_ids: [],
+                  never_allow_user_ids: [],
+                },
+                phone_number: {
+                  mode: 'nobody',
+                  always_allow_user_ids: [],
+                  never_allow_user_ids: [],
+                },
+                calls: {
+                  mode: 'contacts',
+                  always_allow_user_ids: [],
+                  never_allow_user_ids: [],
+                },
+              },
+            },
+          },
+        });
+        channel.close();
+      },
+      { channelName: PREFERENCE_SYNC_CHANNEL, userId: CURRENT_USER_ID }
+    );
+
+    await expect(firstTabMessageRequests).toHaveValue('everyone');
+    await expect(secondTabMessageRequests).toHaveValue('everyone');
+    await expect(secondTabOnlineStatus).toHaveValue('everyone');
+    await expect(secondTabGroupInvites).toHaveValue('nobody');
+
+    await secondPage.close();
   });
 
   test('proves routed account deletion scheduling and grace-period cancellation', async ({

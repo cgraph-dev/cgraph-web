@@ -23,12 +23,15 @@ import { useFriendStore } from '@/modules/social/store';
 import { normalizeIncomingRequestEvent } from '@/modules/social/store/friend-normalizers';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import { useSettingsStore } from '@/modules/settings/store/settingsStore.impl';
-import { useThemeStore } from '@/stores/theme/store';
 import { socketLogger as logger } from '../logger';
 import { normalizeConversation, normalizeMessage } from '../api-utils';
 import { applyOwnItemEquipped, applyOwnItemUnequipped, applyOwnProfileUpdate } from '../identity';
 import { getBrowserDeviceId } from '../device/browser-device';
+import {
+  applyCustomizationPreferenceSync,
+  applySettingsPreferenceSync,
+  applyThemePreferenceSync,
+} from '../preferences/preference-sync-bus';
 import { shouldLogoutForDeviceRevocation } from './deviceRevocation';
 import { shouldDropIncomingCall } from './incomingCallDedup';
 
@@ -472,7 +475,12 @@ export function joinUserChannel(
         : {};
 
     logger.log('Settings synced from another device:', { section, changes: changesRecord });
-    useSettingsStore.getState().mergeSettingsFromSync(section, changesRecord, incomingAt);
+    applySettingsPreferenceSync({
+      userId,
+      section,
+      changes: changesRecord,
+      lastUpdatedAt: incomingAt,
+    });
   });
 
   channel.on('customization_synced', (payload) => {
@@ -486,7 +494,7 @@ export function joinUserChannel(
 
     const changesRecord = objectToRecord(changes);
     logger.log('Customizations synced from another device:', changesRecord);
-    useCustomizationStore.getState().applyServerSettings(changesRecord);
+    applyCustomizationPreferenceSync({ userId, changes: changesRecord });
   });
 
   channel.on('theme_synced', (payload) => {
@@ -500,7 +508,7 @@ export function joinUserChannel(
 
     const themeRecord = objectToRecord(theme);
     logger.log('Theme synced from another device:', themeRecord);
-    useThemeStore.getState().applyServerTheme(themeRecord);
+    applyThemePreferenceSync({ userId, changes: themeRecord });
   });
 
   // === Task 5 (C5): Connection displacement ===
