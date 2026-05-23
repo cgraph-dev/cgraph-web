@@ -95,7 +95,7 @@ const QUICK_ACTIONS: QuickSwitcherItem[] = [
     type: 'action',
     name: 'Create Group',
     subtitle: 'Start a new group',
-    path: '/groups/create',
+    path: '/groups?create=true',
     icon: UserGroupIcon,
   },
   {

@@ -2,10 +2,10 @@
  * ServerList component
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   PlusIcon,
   ChatBubbleLeftRightIcon,
@@ -33,6 +33,22 @@ export function ServerList({ groups, activeGroupId }: ServerListProps) {
   const [isJoining, setIsJoining] = useState(false);
   const { joinGroup } = useGroupStore();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('create') === 'true') {
+      setShowCreateModal(true);
+    }
+  }, [searchParams]);
+
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+    if (searchParams.has('create')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('create');
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
 
   const handleJoinByInvite = async () => {
     if (!inviteCode.trim()) return;
@@ -160,7 +176,7 @@ export function ServerList({ groups, activeGroupId }: ServerListProps) {
       {/* Create Group Modal */}
       <AnimatePresence>
         {showCreateModal && (
-          <CreateGroupModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+          <CreateGroupModal isOpen={showCreateModal} onClose={closeCreateModal} />
         )}
       </AnimatePresence>
 

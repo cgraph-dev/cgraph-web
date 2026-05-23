@@ -78,6 +78,14 @@ describe('QuickSwitcher', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('routes create group to the mounted groups shell', () => {
+    const onClose = vi.fn();
+    render(<QuickSwitcher isOpen={true} onClose={onClose} />);
+    fireEvent.click(screen.getByText('Create Group'));
+    expect(mockNavigate).toHaveBeenCalledWith('/groups?create=true');
+    expect(onClose).toHaveBeenCalled();
+  });
+
   it('shows keyboard shortcuts footer', () => {
     render(<QuickSwitcher isOpen={true} onClose={vi.fn()} />);
     expect(screen.getByText('Navigate')).toBeTruthy();
