@@ -14,6 +14,41 @@ function result(overrides: Partial<SearchResult>): SearchResult {
 }
 
 describe('getDiscoverResultRoute', () => {
+  it('prefers safe backend canonical URLs for users', () => {
+    expect(
+      getDiscoverResultRoute(
+        result({ id: 'user-1', type: 'user', canonicalUrl: '/user/backend-canonical' })
+      )
+    ).toBe('/user/backend-canonical');
+  });
+
+  it('prefers safe backend canonical URLs for groups', () => {
+    expect(
+      getDiscoverResultRoute(
+        result({
+          id: 'group-1',
+          type: 'group',
+          defaultChannelId: 'channel-1',
+          canonicalUrl: '/groups/group-1/channels/backend-channel',
+        })
+      )
+    ).toBe('/groups/group-1/channels/backend-channel');
+  });
+
+  it('rejects unsafe backend canonical URLs and falls back to local route rules', () => {
+    expect(
+      getDiscoverResultRoute(
+        result({
+          id: 'group-1',
+          type: 'group',
+          defaultChannelId: 'channel-1',
+          canonicalUrl: 'https://evil.example/groups/group-1',
+          route: 'javascript:alert(1)',
+        })
+      )
+    ).toBe('/groups/group-1/channels/channel-1');
+  });
+
   it('opens users on their profile route', () => {
     expect(getDiscoverResultRoute(result({ id: 'user-1', type: 'user' }))).toBe('/user/user-1');
   });

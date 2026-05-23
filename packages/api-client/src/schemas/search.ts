@@ -68,6 +68,7 @@ export const SearchUserSchema = z.object({
   username: z.string(),
   display_name: z.string().nullable().optional(),
   avatar_url: z.string().nullable().optional(),
+  canonical_url: z.string().nullable().optional(),
   avatar_border_id: z.string().nullable().optional(),
   status: z.string().optional(),
   level: z.number().optional(),
@@ -87,6 +88,7 @@ export const SearchGroupSchema = z.object({
   is_public: z.boolean().optional(),
   is_member: z.boolean().optional(),
   default_channel_id: z.string().nullable().optional(),
+  canonical_url: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   created_at: z.string().optional(),
 });
@@ -122,6 +124,7 @@ export const SearchForumSchema = z.object({
   post_count: z.number().optional(),
   member_count: z.number().optional(),
   is_public: z.boolean().optional(),
+  canonical_url: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   created_at: z.string().optional(),
 });

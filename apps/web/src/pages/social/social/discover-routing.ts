@@ -1,10 +1,36 @@
 import type { SearchResult } from './types';
 import { getGroupDestinationRoute } from '@/modules/groups/routing';
 
+function safeInAppRoute(route: string | undefined, resultType: SearchResult['type']): string | null {
+  const trimmed = route?.trim();
+  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//')) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(trimmed, 'https://web.cgraph.org');
+    if (parsed.origin !== 'https://web.cgraph.org') {
+      return null;
+    }
+
+    const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    if (resultType === 'user' && path.startsWith('/user/')) return path;
+    if (resultType === 'group' && path.startsWith('/groups/')) return path;
+    if (resultType === 'forum' && path.startsWith('/forums')) return path;
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 /**
  * Resolves a search result into the app route it should open.
  */
 export function getDiscoverResultRoute(result: SearchResult): string {
+  const backendCanonicalRoute = safeInAppRoute(result.canonicalUrl, result.type);
+  if (backendCanonicalRoute) return backendCanonicalRoute;
+
   if (result.type === 'group') {
     const canonicalRoute = getGroupDestinationRoute({
       groupId: result.id,
@@ -15,10 +41,11 @@ export function getDiscoverResultRoute(result: SearchResult): string {
       return canonicalRoute;
     }
 
-    return result.route ?? canonicalRoute ?? `/groups/${result.id}`;
+    return safeInAppRoute(result.route, result.type) ?? canonicalRoute ?? `/groups/${result.id}`;
   }
 
-  if (result.route) return result.route;
+  const backendRoute = safeInAppRoute(result.route, result.type);
+  if (backendRoute) return backendRoute;
 
   if (result.type === 'user') {
     return `/user/${result.id}`;

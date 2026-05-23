@@ -299,6 +299,7 @@ export function Social() {
         name: user.display_name || user.username,
         description: `@${user.username}`,
         avatarUrl: user.avatar_url ?? undefined,
+        canonicalUrl: user.canonical_url ?? undefined,
       });
     }
     for (const group of searchGroups) {
@@ -309,6 +310,7 @@ export function Social() {
         description: group.description || '',
         slug: group.slug,
         defaultChannelId: group.default_channel_id ?? undefined,
+        canonicalUrl: group.canonical_url ?? undefined,
         memberCount: group.member_count,
         isJoined: group.is_member,
       });
@@ -320,6 +322,7 @@ export function Social() {
         name: forum.name,
         description: forum.description || '',
         slug: forum.slug,
+        canonicalUrl: forum.canonical_url ?? undefined,
         route: forum.slug ? `/forums/${forum.slug}` : undefined,
         memberCount: forum.post_count,
       });

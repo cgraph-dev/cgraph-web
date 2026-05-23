@@ -140,6 +140,7 @@ async function installSocialMocks(page: Page): Promise<{
           slug: 'social-systems',
           description: 'Selected entity routing proof',
           default_channel_id: CHANNEL_ID,
+          canonical_url: `/groups/${GROUP_ID}/channels/${CHANNEL_ID}?source=backend-search`,
           member_count: 18,
           is_member: groupJoined,
         },
@@ -210,6 +211,13 @@ test.describe('Social hub main pane', () => {
       .poll(() => joinedGroups, { message: 'group join endpoint was called' })
       .toContain(GROUP_ID);
     await expect(page).toHaveURL(new RegExp(`/groups/${GROUP_ID}/channels/${CHANNEL_ID}$`));
+
+    await page.goto('/social/discover');
+    await page.getByPlaceholder(/search cgraph/i).fill('social');
+    await mainPane.getByRole('button', { name: /^open$/i }).click();
+    await expect(page).toHaveURL(
+      new RegExp(`/groups/${GROUP_ID}/channels/${CHANNEL_ID}\\?source=backend-search$`)
+    );
 
     await page.goto('/social/friends');
     await expect(
