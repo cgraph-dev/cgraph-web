@@ -43,6 +43,11 @@ export type {
   RevenueBreakdownData,
   SubscriberGrowthData,
   ContentAnalyticsEnhanced,
+  PremiumThread,
+  CreatorTier,
+  CreatorApplication,
+  CreatorSearchResult,
+  SubscriberEntry,
 } from './creatorStore.types';
 
 const emptyPayouts: PayoutRequest[] = [];

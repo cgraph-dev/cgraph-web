@@ -13,4 +13,9 @@ export type {
   EarningsData,
   SubscriberAnalytics,
   ContentAnalytics,
+  PremiumThread,
+  CreatorTier,
+  CreatorApplication,
+  CreatorSearchResult,
+  SubscriberEntry,
 } from './creatorStore';

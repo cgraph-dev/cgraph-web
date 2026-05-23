@@ -1,14 +1,10 @@
-import type { ReactNode } from 'react';
+import { ForumMonetizationPanel } from '@/modules/forums/components/forum-monetization-panel';
 
 interface NodeGatingPanelProps {
   readonly forumId: string;
 }
 
 /** Node Gating Panel. */
-export function NodeGatingPanel(_props: NodeGatingPanelProps): ReactNode {
-  return (
-    <div className="border-border/50 text-muted-foreground rounded-lg border p-4 text-sm">
-      Node Gating — coming soon
-    </div>
-  );
+export function NodeGatingPanel({ forumId }: NodeGatingPanelProps) {
+  return <ForumMonetizationPanel forumId={forumId} />;
 }
