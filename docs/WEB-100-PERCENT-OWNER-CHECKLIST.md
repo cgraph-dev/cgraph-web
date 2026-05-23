@@ -106,8 +106,14 @@ unit proof covers configured-provider parsing and empty-provider behavior, while
 `apps/web/e2e/settings-preference-sync.spec.ts` browser-verifies the routed settings page showing
 Google/TikTok from backend discovery while hiding unavailable Apple/Facebook account-linking
 actions. The stricter release-readiness documents still keep real provider delivery, paired QR
-approval, endpoint-level group permission copy, package-version consumption, and final broad
-browser validation open.
+approval, endpoint-level group permission copy, package-version consumption, and final broad browser
+validation open.
+
+2026-05-23 GIF storage schema proof: production web commit `dd6de12` moves the GIF picker favorites
+and recent caches to schema-versioned keys, migrates the old `cgraph-gif-favorites` and
+`cgraph-gif-recent` keys one time, removes the legacy keys after migration, and verifies the behavior
+with focused hook tests plus the storage policy gate. This closes the low-risk feature-cache
+schema-versioning hardening row without changing the broader product-maturity sign-off status.
 
 2026-05-23 Nodes negative-path proof: production web commit `436d4ff` centralizes Nodes failure
 copy, keeps routed paid files locked on failed unlock, treats already-unlocked server responses as
