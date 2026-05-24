@@ -234,7 +234,7 @@ export interface GroupState {
   joinPublicGroup: (groupId: string) => Promise<Group | null>;
   createRole: (
     groupId: string,
-    data: { name: string; color: string; permissions: number }
+    data: { name: string; color: string; permissions: number; is_mentionable?: boolean }
   ) => Promise<Role>;
   updateRole: (
     groupId: string,
@@ -243,8 +243,8 @@ export interface GroupState {
       name: string;
       color: string;
       permissions: number;
-      hoist: boolean;
-      mentionable: boolean;
+      is_hoisted: boolean;
+      is_mentionable: boolean;
     }>
   ) => Promise<Role>;
   deleteRole: (groupId: string, roleId: string) => Promise<void>;

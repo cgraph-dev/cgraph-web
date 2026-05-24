@@ -65,8 +65,8 @@ const surfaceCopy: Record<
 };
 
 const EMPTY_MESSAGES: readonly ChannelMessage[] = [];
-const ADMINISTRATOR_PERMISSION = 1 << 0;
-const MANAGE_MESSAGES_PERMISSION = 1 << 6;
+const ADMINISTRATOR_PERMISSION = 0x80000000;
+const MANAGE_MESSAGES_PERMISSION = 1 << 7;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

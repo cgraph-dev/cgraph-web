@@ -13,6 +13,12 @@ vi.mock('@heroicons/react/24/outline', () => ({
     <svg data-testid="icon-ShieldCheckIcon" {...props} />
   ),
   PlusIcon: (props: Record<string, unknown>) => <svg data-testid="icon-PlusIcon" {...props} />,
+  ChevronUpIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="icon-ChevronUpIcon" {...props} />
+  ),
+  ChevronDownIcon: (props: Record<string, unknown>) => (
+    <svg data-testid="icon-ChevronDownIcon" {...props} />
+  ),
 }));
 
 const mockRoles = [

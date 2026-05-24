@@ -24,6 +24,7 @@ export interface RoleManagerProps {
 export interface RoleEditorProps {
   role: Role;
   isNew: boolean;
+  isSaving?: boolean;
   onUpdate: (updates: Partial<Role>) => void;
   onDelete: () => void;
   onSave: () => void;
@@ -34,6 +35,7 @@ export interface RoleEditorProps {
  */
 export interface ToggleProps {
   value: boolean;
+  disabled?: boolean;
   onChange: (value: boolean) => void;
 }
 

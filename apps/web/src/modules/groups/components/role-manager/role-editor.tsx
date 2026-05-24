@@ -11,7 +11,14 @@ import type { RoleEditorProps } from './types';
 /**
  * Role Editor component.
  */
-export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEditorProps) {
+export function RoleEditor({
+  role,
+  isNew,
+  isSaving = false,
+  onUpdate,
+  onDelete,
+  onSave,
+}: RoleEditorProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['general', 'permissions'])
   );
@@ -57,18 +64,23 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
         <div className="flex items-center gap-2">
           {!role.isDefault && (
             <motion.button
+              type="button"
               whileTap={{ scale: 0.95 }}
+              disabled={isSaving}
               onClick={onDelete}
-              className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2 text-red-400 hover:bg-red-500/20"
+              className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2 text-red-400 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <TrashIcon className="h-4 w-4" />
               Delete
             </motion.button>
           )}
           <motion.button
+            type="button"
             whileTap={{ scale: 0.95 }}
+            disabled={isSaving}
+            aria-busy={isSaving}
             onClick={onSave}
-            className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-white"
+            className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-white disabled:cursor-wait disabled:opacity-70"
           >
             <CheckIcon className="h-4 w-4" />
             Save Changes
@@ -79,6 +91,7 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
       {/* General Section */}
       <GlassCard variant="frosted" className="overflow-hidden">
         <button
+          type="button"
           onClick={() => toggleSection('general')}
           className="flex w-full items-center justify-between p-4 transition-colors hover:bg-[var(--token-card-bg)/0.6]"
         >
@@ -104,9 +117,11 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
                   <label className="mb-2 block text-sm font-medium text-gray-300">Role Name</label>
                   <input
                     type="text"
+                    aria-label="Role name"
+                    disabled={isSaving}
                     value={role.name}
                     onChange={(e) => onUpdate({ name: e.target.value })}
-                    className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
+                    className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:border-primary-500 focus:outline-none disabled:cursor-wait disabled:opacity-70"
                   />
                 </div>
 
@@ -116,14 +131,17 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
                   <div className="flex flex-wrap gap-2">
                     {ROLE_COLORS.map((color) => (
                       <motion.button
+                        type="button"
                         key={color}
                         whileTap={{ scale: 0.9 }}
+                        disabled={isSaving}
                         onClick={() => onUpdate({ color })}
+                        aria-label={`Set role color ${color}`}
                         className={`h-8 w-8 rounded-full ${
                           role.color === color
                             ? 'ring-2 ring-white ring-offset-2 ring-offset-dark-800'
                             : ''
-                        }`}
+                        } disabled:cursor-wait disabled:opacity-70`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
@@ -139,7 +157,11 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
                         Show members with this role in a separate group
                       </p>
                     </div>
-                    <Toggle value={!role.isDefault} onChange={(v) => onUpdate({ isDefault: !v })} />
+                    <Toggle
+                      value={!role.isDefault}
+                      disabled={isSaving}
+                      onChange={(v) => onUpdate({ isDefault: !v })}
+                    />
                   </div>
 
                   <div className="flex items-center justify-between rounded-lg bg-[var(--token-card-bg)/0.4] p-3">
@@ -149,6 +171,7 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
                     </div>
                     <Toggle
                       value={role.isMentionable}
+                      disabled={isSaving}
                       onChange={(v) => onUpdate({ isMentionable: v })}
                     />
                   </div>
@@ -162,6 +185,7 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
       {/* Permissions Section */}
       <GlassCard variant="frosted" className="overflow-hidden">
         <button
+          type="button"
           onClick={() => toggleSection('permissions')}
           className="flex w-full items-center justify-between p-4 transition-colors hover:bg-[var(--token-card-bg)/0.6]"
         >
@@ -199,6 +223,7 @@ export function RoleEditor({ role, isNew, onUpdate, onDelete, onSave }: RoleEdit
                     </div>
                     <Toggle
                       value={hasPermission(perm.value)}
+                      disabled={isSaving}
                       onChange={() => togglePermission(perm.value)}
                     />
                   </div>

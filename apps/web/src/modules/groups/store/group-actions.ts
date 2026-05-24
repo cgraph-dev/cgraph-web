@@ -9,9 +9,9 @@ import { createLogger } from '@/lib/logger';
 import { identityFieldsFromApi } from '@/lib/identity';
 import { useAuthStore } from '@/modules/auth/store';
 import { ensureArray, ensureObject } from '@/lib/api-utils';
-import { asStringOrNull, asRecordOrEmpty, asRecordOrUndef, asEnum } from '@/lib/api-utils';
+import { asStringOrNull, asRecordOrEmpty, asRecordOrUndef, asEnum, isRecord } from '@/lib/api-utils';
 import { normalizeChannelMessage } from './channel-message-normalizer';
-import type { Group, GroupState, Channel, ChannelMessage, Member } from './group-types';
+import type { Group, GroupState, Channel, ChannelMessage, Member, Role } from './group-types';
 
 const logger = createLogger('GroupActions');
 
@@ -19,6 +19,33 @@ const MAX_MEMBERS_PER_GROUP = 1000;
 const MAX_DISCOVERABLE_GROUPS = 100;
 const MAX_CHANNEL_MESSAGES = 200; // Per-channel cap (down from 500)
 const MAX_TOTAL_MESSAGES = 2000; // Global cap across all channels
+const ROLE_PERMISSION_BITS: Record<string, number> = {
+  view_channels: 1 << 0,
+  send_messages: 1 << 1,
+  send_files: 1 << 2,
+  embed_links: 1 << 3,
+  add_reactions: 1 << 4,
+  use_external_emojis: 1 << 5,
+  mention_everyone: 1 << 6,
+  manage_messages: 1 << 7,
+  read_message_history: 1 << 8,
+  connect_voice: 1 << 9,
+  speak_voice: 1 << 10,
+  mute_members: 1 << 11,
+  deafen_members: 1 << 12,
+  move_members: 1 << 13,
+  manage_channels: 1 << 14,
+  manage_roles: 1 << 15,
+  manage_group: 1 << 16,
+  kick_members: 1 << 17,
+  ban_members: 1 << 18,
+  create_invites: 1 << 19,
+  change_nickname: 1 << 20,
+  manage_nicknames: 1 << 21,
+  manage_emojis: 1 << 22,
+  manage_automod: 1 << 23,
+  administrator: 0x80000000,
+};
 
 /**
  * Evict messages from the channel with the most messages (excluding the
@@ -81,16 +108,7 @@ function normalizeGroup(raw: Record<string, unknown>): Group {
       channels: ensureArray<Record<string, unknown>>(c.channels).map(normalizeChannel),
     })),
     channels: channels.map(normalizeChannel),
-    roles: roles.map((r) => ({
-      id: String(r.id ?? ''),
-      name: String(r.name ?? ''),
-      color: String(r.color ?? ''),
-      position: Number(r.position ?? 0),
-      permissions: Number(r.permissions ?? 0),
-      isDefault: r.is_default === true || r.isDefault === true,
-      isMentionable:
-        r.is_mentionable === true || r.mentionable === true || r.isMentionable === true,
-    })),
+    roles: roles.map(normalizeRole),
     myMember: myMemberRaw ? normalizeGroupMember(myMemberRaw) : null,
     createdAt: String(raw.created_at ?? raw.createdAt ?? raw.inserted_at ?? ''),
     is_node_gated: raw.is_node_gated === true || raw.isNodeGated === true,
@@ -121,6 +139,28 @@ function normalizeChannel(raw: Record<string, unknown>): Channel {
     unreadCount: Number(raw.unread_count ?? raw.unreadCount ?? 0),
     lastMessageAt: asStringOrNull(raw.last_message_at ?? raw.lastMessageAt),
   };
+}
+
+function normalizeRole(raw: Record<string, unknown>): Role {
+  return {
+    id: String(raw.id ?? ''),
+    name: String(raw.name ?? ''),
+    color: String(raw.color ?? ''),
+    position: Number(raw.position ?? 0),
+    permissions: normalizeRolePermissions(raw.permissions ?? raw.permission_map),
+    isDefault: raw.is_default === true || raw.isDefault === true,
+    isMentionable: raw.is_mentionable === true || raw.mentionable === true || raw.isMentionable === true,
+  };
+}
+
+function normalizeRolePermissions(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (!isRecord(value)) return 0;
+
+  return Object.entries(value).reduce((mask, [key, enabled]) => {
+    const bit = ROLE_PERMISSION_BITS[key];
+    return enabled === true && typeof bit === 'number' ? mask + bit : mask;
+  }, 0);
 }
 
 function normalizeGroupMember(raw: Record<string, unknown>): Member {
@@ -157,16 +197,7 @@ function normalizeGroupMember(raw: Record<string, unknown>): Member {
       displayNameColor: identity.displayNameColor,
       displayNameSecondaryColor: identity.displayNameSecondaryColor,
     },
-    roles: memberRoles.map((r) => ({
-      id: String(r.id ?? ''),
-      name: String(r.name ?? ''),
-      color: String(r.color ?? ''),
-      position: Number(r.position ?? 0),
-      permissions: Number(r.permissions ?? 0),
-      isDefault: r.is_default === true || r.isDefault === true,
-      isMentionable:
-        r.is_mentionable === true || r.mentionable === true || r.isMentionable === true,
-    })),
+    roles: memberRoles.map(normalizeRole),
     joinedAt: String(raw.joined_at ?? raw.joinedAt ?? ''),
   };
 }
@@ -736,10 +767,11 @@ export function createGroupActions(
 
     createRole: async (
       groupId: string,
-      data: { name: string; color: string; permissions: number }
+      data: { name: string; color: string; permissions: number; is_mentionable?: boolean }
     ) => {
       const res = await http.post(`/api/v1/groups/${groupId}/roles`, data);
-      const role = ensureObject<import('./group-types').Role>(res.data?.data ?? res.data);
+      const roleRaw = ensureObject<Record<string, unknown>>(res.data?.data ?? res.data);
+      const role = roleRaw ? normalizeRole(roleRaw) : null;
       if (!role) throw new Error('Invalid response: missing role data');
       set((state) => ({
         groups: state.groups.map((g) =>
@@ -756,12 +788,13 @@ export function createGroupActions(
         name: string;
         color: string;
         permissions: number;
-        hoist: boolean;
-        mentionable: boolean;
+        is_hoisted: boolean;
+        is_mentionable: boolean;
       }>
     ) => {
       const res = await http.put(`/api/v1/groups/${groupId}/roles/${roleId}`, data);
-      const role = ensureObject<import('./group-types').Role>(res.data?.data ?? res.data);
+      const roleRaw = ensureObject<Record<string, unknown>>(res.data?.data ?? res.data);
+      const role = roleRaw ? normalizeRole(roleRaw) : null;
       if (!role) throw new Error('Invalid response: missing role data');
       set((state) => ({
         groups: state.groups.map((g) =>

@@ -110,6 +110,46 @@ const ownerGroup = {
   },
 };
 
+const roleManagementRoles = [
+  {
+    id: 'role-admin',
+    name: 'Admin',
+    color: '#ffffff',
+    position: 2,
+    permissions: 0x80000000,
+    is_default: false,
+    is_mentionable: true,
+  },
+  {
+    id: 'role-mod',
+    name: 'Moderator',
+    color: '#22c55e',
+    position: 1,
+    permissions: 128,
+    is_default: false,
+    is_mentionable: true,
+  },
+  {
+    id: 'role-member',
+    name: 'Member',
+    color: '#94a3b8',
+    position: 0,
+    permissions: 3,
+    is_default: true,
+    is_mentionable: false,
+  },
+];
+
+const roleManagementGroup = {
+  ...ordinaryMemberGroup,
+  owner_id: CURRENT_USER_ID,
+  roles: roleManagementRoles,
+  myMember: {
+    ...ordinaryMemberGroup.myMember,
+    roles: [roleManagementRoles[0]],
+  },
+};
+
 async function fulfillJson(route: Route, body: unknown, status = 200): Promise<void> {
   await route.fulfill({
     status,
@@ -136,11 +176,19 @@ async function installGroupPermissionMocks(
     readonly seedPinnedMessage?: boolean;
   } = {}
 ) {
+  let currentGroupFixture = groupFixture;
+  let roleState = groupFixture.roles.map((role) => ({ ...role }));
   const requests = {
     groupPatches: [] as unknown[],
     pinCreates: [] as unknown[],
     pinDeletes: [] as string[],
+    roleCreates: [] as unknown[],
+    roleUpdates: [] as Array<{ roleId: string; body: unknown }>,
+    roleDeletes: [] as string[],
+    roleReorders: [] as unknown[],
   };
+
+  const groupResponse = () => ({ ...currentGroupFixture, roles: roleState });
 
   await page.addInitScript(() => {
     localStorage.clear();
@@ -158,7 +206,7 @@ async function installGroupPermissionMocks(
     }
 
     if (path === '/api/v1/groups' && method === 'GET') {
-      await fulfillJson(route, { data: [groupFixture] });
+      await fulfillJson(route, { data: [groupResponse()] });
       return;
     }
 
@@ -167,7 +215,8 @@ async function installGroupPermissionMocks(
         const body = request.postDataJSON();
         requests.groupPatches.push(body);
         if (allowGroupPatch) {
-          await fulfillJson(route, { data: { ...groupFixture, ...body } });
+          currentGroupFixture = { ...currentGroupFixture, ...body };
+          await fulfillJson(route, { data: groupResponse() });
           return;
         }
 
@@ -175,19 +224,98 @@ async function installGroupPermissionMocks(
         return;
       }
 
-      await fulfillJson(route, { data: groupFixture });
+      await fulfillJson(route, { data: groupResponse() });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/roles/reorder` && method === 'PUT') {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      const roleIds = Array.isArray(body.role_ids)
+        ? body.role_ids.filter((roleId): roleId is string => typeof roleId === 'string')
+        : [];
+      requests.roleReorders.push(body);
+      const byId = new Map(roleState.map((role) => [role.id, role]));
+      const orderedRoles = roleIds
+        .map((roleId, index) => {
+          const role = byId.get(roleId);
+          if (!role) return null;
+          return { ...role, position: roleIds.length - index - 1 };
+        })
+        .filter((role): role is (typeof roleState)[number] => role !== null);
+      const untouchedRoles = roleState.filter((role) => !roleIds.includes(role.id));
+      roleState = [...orderedRoles, ...untouchedRoles].sort((a, b) => b.position - a.position);
+      await fulfillJson(route, { data: roleState });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/roles` && method === 'GET') {
+      await fulfillJson(route, { data: roleState });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/roles` && method === 'POST') {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      requests.roleCreates.push(body);
+      const createdRole = {
+        id: 'role-ops',
+        name: typeof body.name === 'string' ? body.name : 'Ops Lead',
+        color: typeof body.color === 'string' ? body.color : '#10b981',
+        position: roleState.length,
+        permissions: typeof body.permissions === 'number' ? body.permissions : 0,
+        is_default: false,
+        is_mentionable: body.is_mentionable === true,
+      };
+      roleState = [createdRole, ...roleState].sort((a, b) => b.position - a.position);
+      await fulfillJson(route, { data: createdRole }, 201);
+      return;
+    }
+
+    if (path.startsWith(`/api/v1/groups/${GROUP_ID}/roles/`) && method === 'PUT') {
+      const roleId = path.split('/').pop() ?? '';
+      const body = request.postDataJSON() as Record<string, unknown>;
+      requests.roleUpdates.push({ roleId, body });
+      const existingRole = roleState.find((role) => role.id === roleId);
+      const updatedRole = {
+        ...(existingRole ?? {
+          id: roleId,
+          name: 'Updated Role',
+          color: '#10b981',
+          position: 0,
+          permissions: 0,
+          is_default: false,
+          is_mentionable: false,
+        }),
+        name: typeof body.name === 'string' ? body.name : existingRole?.name,
+        color: typeof body.color === 'string' ? body.color : existingRole?.color,
+        permissions:
+          typeof body.permissions === 'number' ? body.permissions : existingRole?.permissions,
+        is_mentionable:
+          typeof body.is_mentionable === 'boolean'
+            ? body.is_mentionable
+            : existingRole?.is_mentionable,
+      };
+      roleState = roleState.map((role) => (role.id === roleId ? updatedRole : role));
+      await fulfillJson(route, { data: updatedRole });
+      return;
+    }
+
+    if (path.startsWith(`/api/v1/groups/${GROUP_ID}/roles/`) && method === 'DELETE') {
+      const roleId = path.split('/').pop() ?? '';
+      requests.roleDeletes.push(roleId);
+      roleState = roleState.filter((role) => role.id !== roleId);
+      await route.fulfill({ status: 204, body: '' });
       return;
     }
 
     if (path === `/api/v1/groups/${GROUP_ID}/members` && method === 'GET') {
       await fulfillJson(route, {
         data: [
-          groupFixture.myMember,
+          groupResponse().myMember,
           {
             id: 'member-friend',
             user_id: friendUser.id,
             user: friendUser,
-            roles: groupFixture.roles,
+            roles: roleState,
             notifications: 'mentions',
             joined_at: '2026-01-01T00:00:00.000Z',
           },
@@ -434,5 +562,56 @@ test.describe('Group settings permissions', () => {
       'You do not have permission to unpin messages in this channel.'
     );
     await expect(pinnedPanel).toContainText(permissionDeniedMessage.content);
+  });
+
+  test('verifies routed role create, update, reorder, and delete contracts', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /create role/i }).click();
+    await page.getByLabel('Role name').fill('Ops Lead');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+
+    await expect
+      .poll(() => requests.roleCreates, { message: 'role create endpoint received payload' })
+      .toContainEqual(
+        expect.objectContaining({
+          name: 'Ops Lead',
+          is_mentionable: false,
+        })
+      );
+    await expect(page.getByText('Ops Lead').first()).toBeVisible();
+
+    await page.getByLabel('Role name').fill('Ops Captain');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await expect
+      .poll(() => requests.roleUpdates, { message: 'role update endpoint received payload' })
+      .toContainEqual(
+        expect.objectContaining({
+          roleId: 'role-ops',
+          body: expect.objectContaining({ name: 'Ops Captain' }),
+        })
+      );
+    await expect(page.getByText('Ops Captain').first()).toBeVisible();
+
+    await page.getByRole('button', { name: /move ops captain down/i }).click();
+    await expect
+      .poll(() => requests.roleReorders, { message: 'role reorder endpoint received role_ids' })
+      .toContainEqual(
+        expect.objectContaining({
+          role_ids: ['role-admin', 'role-ops', 'role-mod', 'role-member'],
+        })
+      );
+
+    await page.getByRole('button', { name: /^Delete$/ }).click();
+    await expect
+      .poll(() => requests.roleDeletes, { message: 'role delete endpoint received role id' })
+      .toContain('role-ops');
+    await expect(page.getByText('Ops Captain')).toHaveCount(0);
   });
 });

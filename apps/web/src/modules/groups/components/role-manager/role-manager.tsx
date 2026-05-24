@@ -14,7 +14,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Reorder } from 'motion/react';
-import { ShieldCheckIcon, PlusIcon } from '@heroicons/react/24/outline';
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ShieldCheckIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import { useGroupStore, type Role } from '@/modules/groups/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { PERMISSIONS, ROLE_COLORS } from './constants';
@@ -35,6 +40,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
 
   const activeGroup = groups.find((g) => g.id === groupId);
@@ -50,12 +56,27 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
     const roleIds = newOrder.map((r) => r.id).filter((id) => !id.startsWith('temp-'));
     if (roleIds.length > 0) {
       http
-        .post(`/api/v1/groups/${groupId}/roles/reorder`, { role_ids: roleIds })
-        .catch((e) => logger.error('Role creation failed', e));
+        .put(`/api/v1/groups/${groupId}/roles/reorder`, { role_ids: roleIds })
+        .catch((e) => logger.error('Role reorder failed', e));
     }
   };
 
+  const handleMoveRole = (roleId: string, delta: -1 | 1) => {
+    if (isSaving) return;
+    const currentIndex = roles.findIndex((role) => role.id === roleId);
+    const nextIndex = currentIndex + delta;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= roles.length) return;
+
+    const nextRoles = [...roles];
+    const [movedRole] = nextRoles.splice(currentIndex, 1);
+    if (!movedRole) return;
+
+    nextRoles.splice(nextIndex, 0, movedRole);
+    handleReorder(nextRoles);
+  };
+
   const handleCreateRole = () => {
+    if (isSaving) return;
     const sendMessages = PERMISSIONS.SEND_MESSAGES?.value ?? 0;
     const addReactions = PERMISSIONS.ADD_REACTIONS?.value ?? 0;
     const newRole: Role = {
@@ -74,6 +95,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   };
 
   const handleDeleteRole = (roleId: string) => {
+    if (isSaving) return;
     setRoles(roles.filter((r) => r.id !== roleId));
     if (selectedRole?.id === roleId) {
       setSelectedRole(null);
@@ -85,35 +107,51 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   };
 
   const handleUpdateRole = (updates: Partial<Role>) => {
-    if (!selectedRole) return;
+    setSelectedRole((currentRole) => {
+      if (!currentRole) return currentRole;
 
-    const updatedRole = { ...selectedRole, ...updates };
-    setRoles(roles.map((r) => (r.id === selectedRole.id ? updatedRole : r)));
-    setSelectedRole(updatedRole);
+      const updatedRole = { ...currentRole, ...updates };
+      setRoles((currentRoles) =>
+        currentRoles.map((role) => (role.id === currentRole.id ? updatedRole : role))
+      );
+      return updatedRole;
+    });
+  };
 
+  const handleSaveRole = () => {
+    if (!selectedRole || isSaving) return;
+    setIsSaving(true);
     if (selectedRole.id.startsWith('temp-')) {
-      // Create new role on backend via store action
       createRole(groupId, {
-        name: updatedRole.name,
-        color: updatedRole.color,
-        permissions: updatedRole.permissions,
+        name: selectedRole.name,
+        color: selectedRole.color,
+        permissions: selectedRole.permissions,
+        is_mentionable: selectedRole.isMentionable,
       })
         .then((created) => {
           setRoles((prev) =>
-            prev.map((r) => (r.id === selectedRole.id ? { ...r, id: created.id } : r))
+            prev.map((r) => (r.id === selectedRole.id ? created : r))
           );
-          setSelectedRole((prev) => (prev ? { ...prev, id: created.id } : prev));
+          setSelectedRole(created);
           setIsCreating(false);
+          HapticFeedback.success();
         })
-        .catch((e) => logger.error('Role creation failed', e));
+        .catch((e) => logger.error('Role creation failed', e))
+        .finally(() => setIsSaving(false));
     } else {
-      // Update existing role on backend via store action
       updateRole(groupId, selectedRole.id, {
-        name: updatedRole.name,
-        color: updatedRole.color,
-        permissions: updatedRole.permissions,
-        mentionable: updatedRole.isMentionable,
-      }).catch((e) => logger.error('Role update failed', e));
+        name: selectedRole.name,
+        color: selectedRole.color,
+        permissions: selectedRole.permissions,
+        is_mentionable: selectedRole.isMentionable,
+      })
+        .then((updated) => {
+          setRoles((prev) => prev.map((r) => (r.id === selectedRole.id ? updated : r)));
+          setSelectedRole(updated);
+          HapticFeedback.success();
+        })
+        .catch((e) => logger.error('Role update failed', e))
+        .finally(() => setIsSaving(false));
     }
   };
 
@@ -127,39 +165,66 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
             Roles
           </h3>
           <motion.button
+            type="button"
             whileTap={{ scale: 0.9 }}
+            disabled={isSaving}
             onClick={handleCreateRole}
             aria-label="Create role"
-            className="bg-primary-600/20 hover:bg-primary-600/30 rounded-lg p-1.5 text-primary-400"
+            className="bg-primary-600/20 hover:bg-primary-600/30 rounded-lg p-1.5 text-primary-400 disabled:cursor-wait disabled:opacity-50"
           >
             <PlusIcon className="h-4 w-4" />
           </motion.button>
         </div>
 
         <Reorder.Group axis="y" values={roles} onReorder={handleReorder} className="space-y-1">
-          {roles.map((role) => (
+          {roles.map((role, index) => (
             <Reorder.Item key={role.id} value={role} className="cursor-grab active:cursor-grabbing">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setSelectedRole(role);
-                  setIsCreating(false);
-                }}
+              <div
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
                   selectedRole?.id === role.id
                     ? 'border-primary-500/50 bg-primary-600/20 border'
                     : 'hover:bg-[var(--token-card-bg)]'
                 }`}
               >
-                <div
-                  className="h-3 w-3 flex-shrink-0 rounded-full"
-                  style={{ backgroundColor: role.color }}
-                />
-                <span className="flex-1 truncate text-left text-sm font-medium text-gray-300">
-                  {role.name}
-                </span>
-                {role.isDefault && <span className="text-[10px] text-gray-500">DEFAULT</span>}
-              </motion.button>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setSelectedRole(role);
+                    setIsCreating(false);
+                  }}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <div
+                    className="h-3 w-3 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: role.color }}
+                  />
+                  <span className="flex-1 truncate text-left text-sm font-medium text-gray-300">
+                    {role.name}
+                  </span>
+                  {role.isDefault && <span className="text-[10px] text-gray-500">DEFAULT</span>}
+                </motion.button>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleMoveRole(role.id, -1)}
+                    disabled={isSaving || index === 0}
+                  aria-label={`Move ${role.name} up`}
+                    className="rounded p-1 text-gray-500 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ChevronUpIcon className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveRole(role.id, 1)}
+                    disabled={isSaving || index === roles.length - 1}
+                  aria-label={`Move ${role.name} down`}
+                    className="rounded p-1 text-gray-500 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ChevronDownIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </Reorder.Item>
           ))}
         </Reorder.Group>
@@ -175,12 +240,10 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
           <RoleEditor
             role={selectedRole}
             isNew={isCreating}
+            isSaving={isSaving}
             onUpdate={handleUpdateRole}
             onDelete={() => handleDeleteRole(selectedRole.id)}
-            onSave={() => {
-              setIsCreating(false);
-              HapticFeedback.success();
-            }}
+            onSave={handleSaveRole}
           />
         ) : (
           <div className="flex h-full items-center justify-center">
