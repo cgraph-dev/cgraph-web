@@ -210,7 +210,9 @@ export function RoleEditor({
                   <div
                     key={key}
                     className={`flex items-center justify-between rounded-lg p-3 ${
-                      perm.danger ? 'border border-red-500/20 bg-red-500/5' : 'bg-[var(--token-card-bg)/0.4]'
+                      perm.danger
+                        ? 'border border-red-500/20 bg-red-500/5'
+                        : 'bg-[var(--token-card-bg)/0.4]'
                     }`}
                   >
                     <div>

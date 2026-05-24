@@ -129,9 +129,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
         is_mentionable: selectedRole.isMentionable,
       })
         .then((created) => {
-          setRoles((prev) =>
-            prev.map((r) => (r.id === selectedRole.id ? created : r))
-          );
+          setRoles((prev) => prev.map((r) => (r.id === selectedRole.id ? created : r)));
           setSelectedRole(created);
           setIsCreating(false);
           HapticFeedback.success();
@@ -209,7 +207,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
                     type="button"
                     onClick={() => handleMoveRole(role.id, -1)}
                     disabled={isSaving || index === 0}
-                  aria-label={`Move ${role.name} up`}
+                    aria-label={`Move ${role.name} up`}
                     className="rounded p-1 text-gray-500 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     <ChevronUpIcon className="h-3.5 w-3.5" />
@@ -218,7 +216,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
                     type="button"
                     onClick={() => handleMoveRole(role.id, 1)}
                     disabled={isSaving || index === roles.length - 1}
-                  aria-label={`Move ${role.name} down`}
+                    aria-label={`Move ${role.name} down`}
                     className="rounded p-1 text-gray-500 hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
                   >
                     <ChevronDownIcon className="h-3.5 w-3.5" />

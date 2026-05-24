@@ -9,7 +9,13 @@ import { createLogger } from '@/lib/logger';
 import { identityFieldsFromApi } from '@/lib/identity';
 import { useAuthStore } from '@/modules/auth/store';
 import { ensureArray, ensureObject } from '@/lib/api-utils';
-import { asStringOrNull, asRecordOrEmpty, asRecordOrUndef, asEnum, isRecord } from '@/lib/api-utils';
+import {
+  asStringOrNull,
+  asRecordOrEmpty,
+  asRecordOrUndef,
+  asEnum,
+  isRecord,
+} from '@/lib/api-utils';
 import { normalizeChannelMessage } from './channel-message-normalizer';
 import type { Group, GroupState, Channel, ChannelMessage, Member, Role } from './group-types';
 
@@ -149,7 +155,8 @@ function normalizeRole(raw: Record<string, unknown>): Role {
     position: Number(raw.position ?? 0),
     permissions: normalizeRolePermissions(raw.permissions ?? raw.permission_map),
     isDefault: raw.is_default === true || raw.isDefault === true,
-    isMentionable: raw.is_mentionable === true || raw.mentionable === true || raw.isMentionable === true,
+    isMentionable:
+      raw.is_mentionable === true || raw.mentionable === true || raw.isMentionable === true,
   };
 }
 
