@@ -22,6 +22,9 @@ function extractErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+/**
+ * Returns true when an API or structured-client error represents a permission denial.
+ */
 export function isForbiddenError(error: unknown): boolean {
   if (isRecord(error) && isRecord(error.response)) {
     const status = error.response.status;
@@ -32,6 +35,9 @@ export function isForbiddenError(error: unknown): boolean {
   return message.includes('forbidden') || message.includes('permission');
 }
 
+/**
+ * Maps group permission denials to route-specific copy and preserves normal API errors otherwise.
+ */
 export function getGroupPermissionError(
   error: unknown,
   forbiddenCopy: string,
