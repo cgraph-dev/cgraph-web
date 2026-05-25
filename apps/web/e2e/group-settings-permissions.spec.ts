@@ -342,10 +342,7 @@ async function installGroupPermissionMocks(
       return;
     }
 
-    if (
-      path === `/api/v1/groups/${GROUP_ID}/members/member-friend/roles` &&
-      method === 'PUT'
-    ) {
+    if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/roles` && method === 'PUT') {
       const body = request.postDataJSON();
       requests.memberRoleUpdates.push({ memberId: 'member-friend', body });
       if (denyMemberRoleUpdate) {

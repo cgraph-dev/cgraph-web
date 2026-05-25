@@ -59,20 +59,18 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
     // Persist new role order to backend
     const roleIds = newOrder.map((r) => r.id).filter((id) => !id.startsWith('temp-'));
     if (roleIds.length > 0) {
-      http
-        .put(`/api/v1/groups/${groupId}/roles/reorder`, { role_ids: roleIds })
-        .catch((error) => {
-          logger.error('Role reorder failed', error);
-          setRoles(previousRoles);
-          setMutationError(
-            getGroupPermissionError(
-              error,
-              'You do not have permission to reorder roles in this group.',
-              'Could not reorder roles. Please try again.'
-            )
-          );
-          HapticFeedback.error();
-        });
+      http.put(`/api/v1/groups/${groupId}/roles/reorder`, { role_ids: roleIds }).catch((error) => {
+        logger.error('Role reorder failed', error);
+        setRoles(previousRoles);
+        setMutationError(
+          getGroupPermissionError(
+            error,
+            'You do not have permission to reorder roles in this group.',
+            'Could not reorder roles. Please try again.'
+          )
+        );
+        HapticFeedback.error();
+      });
     }
   };
 

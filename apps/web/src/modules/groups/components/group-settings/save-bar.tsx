@@ -11,7 +11,13 @@ interface SaveBarProps {
 /**
  * Save Bar component.
  */
-export function SaveBar({ hasChanges, isSaving, errorMessage = null, onSave, onReset }: SaveBarProps) {
+export function SaveBar({
+  hasChanges,
+  isSaving,
+  errorMessage = null,
+  onSave,
+  onReset,
+}: SaveBarProps) {
   return (
     <AnimatePresence>
       {hasChanges && (
@@ -19,7 +25,7 @@ export function SaveBar({ hasChanges, isSaving, errorMessage = null, onSave, onR
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-0 left-0 right-0 border-t border-[var(--token-border-muted)] bg-[var(--token-card-bg)]/90 p-4 backdrop-blur-sm"
+          className="bg-[var(--token-card-bg)]/90 fixed bottom-0 left-0 right-0 border-t border-[var(--token-border-muted)] p-4 backdrop-blur-sm"
         >
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
             <div>
@@ -33,7 +39,7 @@ export function SaveBar({ hasChanges, isSaving, errorMessage = null, onSave, onR
             <div className="flex gap-3">
               <button
                 onClick={onReset}
-                className="rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)/0.3] px-5 py-2.5 text-[13px] font-bold text-white/40 transition-all hover:bg-[var(--token-card-bg)/0.6] hover:text-white/80 hover:border-[var(--token-card-border)] active:scale-[0.98]"
+                className="rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)/0.3] px-5 py-2.5 text-[13px] font-bold text-white/40 transition-all hover:border-[var(--token-card-border)] hover:bg-[var(--token-card-bg)/0.6] hover:text-white/80 active:scale-[0.98]"
               >
                 Reset
               </button>

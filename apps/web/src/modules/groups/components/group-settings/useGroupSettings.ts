@@ -40,7 +40,7 @@ export function useGroupSettings(groupId: string) {
     activeGroup?.myMember?.roles.reduce((mask, role) => mask | role.permissions, 0) ?? 0;
   const isAdministrator = Boolean(permissionMask & ADMINISTRATOR);
   const hasPermission = (permission: number) =>
-    Boolean(isOwner || isAdministrator || (permissionMask & permission));
+    Boolean(isOwner || isAdministrator || permissionMask & permission);
   const permissions = {
     isOwner,
     canManageGroup: hasPermission(MANAGE_GROUP),
