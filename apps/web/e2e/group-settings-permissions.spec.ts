@@ -164,8 +164,15 @@ async function installGroupPermissionMocks(
     groupFixture = ordinaryMemberGroup,
     allowGroupPatch = false,
     denyRoleCreate = false,
+    denyRoleUpdate = false,
+    denyRoleDelete = false,
     denyRoleReorder = false,
+    denyInviteList = false,
     denyInviteCreate = false,
+    denyInviteDelete = false,
+    denyMemberKick = false,
+    denyMemberBan = false,
+    denyMemberMute = false,
     denyMemberRoleUpdate = false,
     denyPinCreate = false,
     denyPinList = false,
@@ -175,8 +182,15 @@ async function installGroupPermissionMocks(
     readonly groupFixture?: typeof ordinaryMemberGroup;
     readonly allowGroupPatch?: boolean;
     readonly denyRoleCreate?: boolean;
+    readonly denyRoleUpdate?: boolean;
+    readonly denyRoleDelete?: boolean;
     readonly denyRoleReorder?: boolean;
+    readonly denyInviteList?: boolean;
     readonly denyInviteCreate?: boolean;
+    readonly denyInviteDelete?: boolean;
+    readonly denyMemberKick?: boolean;
+    readonly denyMemberBan?: boolean;
+    readonly denyMemberMute?: boolean;
     readonly denyMemberRoleUpdate?: boolean;
     readonly denyPinCreate?: boolean;
     readonly denyPinList?: boolean;
@@ -194,7 +208,12 @@ async function installGroupPermissionMocks(
     roleUpdates: [] as Array<{ roleId: string; body: unknown }>,
     roleDeletes: [] as string[],
     roleReorders: [] as unknown[],
+    inviteLists: 0,
     inviteCreates: [] as unknown[],
+    inviteDeletes: [] as string[],
+    memberKicks: [] as string[],
+    memberBans: [] as string[],
+    memberMutes: [] as string[],
     memberRoleUpdates: [] as Array<{ memberId: string; body: unknown }>,
   };
 
@@ -292,6 +311,10 @@ async function installGroupPermissionMocks(
       const roleId = path.split('/').pop() ?? '';
       const body = request.postDataJSON() as Record<string, unknown>;
       requests.roleUpdates.push({ roleId, body });
+      if (denyRoleUpdate) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
       const existingRole = roleState.find((role) => role.id === roleId);
       const updatedRole = {
         ...(existingRole ?? {
@@ -320,6 +343,10 @@ async function installGroupPermissionMocks(
     if (path.startsWith(`/api/v1/groups/${GROUP_ID}/roles/`) && method === 'DELETE') {
       const roleId = path.split('/').pop() ?? '';
       requests.roleDeletes.push(roleId);
+      if (denyRoleDelete) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
       roleState = roleState.filter((role) => role.id !== roleId);
       await route.fulfill({ status: 204, body: '' });
       return;
@@ -342,6 +369,39 @@ async function installGroupPermissionMocks(
       return;
     }
 
+    if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend` && method === 'DELETE') {
+      requests.memberKicks.push('member-friend');
+      if (denyMemberKick) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/ban` && method === 'POST') {
+      requests.memberBans.push('member-friend');
+      if (denyMemberBan) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/mute` && method === 'POST') {
+      requests.memberMutes.push('member-friend');
+      if (denyMemberMute) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
     if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/roles` && method === 'PUT') {
       const body = request.postDataJSON();
       requests.memberRoleUpdates.push({ memberId: 'member-friend', body });
@@ -356,6 +416,12 @@ async function installGroupPermissionMocks(
 
     if (path === `/api/v1/groups/${GROUP_ID}/invites`) {
       if (method === 'GET') {
+        requests.inviteLists += 1;
+        if (denyInviteList) {
+          await fulfillJson(route, { message: 'Forbidden' }, 403);
+          return;
+        }
+
         await fulfillJson(route, {
           data: [
             {
@@ -395,6 +461,17 @@ async function installGroupPermissionMocks(
         });
         return;
       }
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/invites/invite-edge` && method === 'DELETE') {
+      requests.inviteDeletes.push('invite-edge');
+      if (denyInviteDelete) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      await fulfillJson(route, { data: { ok: true } });
+      return;
     }
 
     if (
@@ -488,6 +565,21 @@ async function installGroupPermissionMocks(
 
     if (path === '/api/v1/settings' || path.startsWith('/api/v1/settings/')) {
       await fulfillJson(route, { data: {} });
+      return;
+    }
+
+    if (path === '/api/v1/onboarding/status' && method === 'GET') {
+      await fulfillJson(route, {
+        data: {
+          completed: true,
+          steps: {
+            send_first_message: true,
+            join_or_create_hub: true,
+            customize_profile: true,
+            enable_e2ee_backup: true,
+          },
+        },
+      });
       return;
     }
 
@@ -743,6 +835,44 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByText('Blocked Role')).toHaveCount(0);
   });
 
+  test('shows endpoint 403 copy when role update and delete are denied', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+      denyRoleUpdate: true,
+      denyRoleDelete: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
+
+    await page.getByText('Moderator').first().click();
+    await page.getByLabel('Role name').fill('Blocked Moderator');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+
+    await expect
+      .poll(() => requests.roleUpdates, { message: 'role update reached backend' })
+      .toContainEqual(
+        expect.objectContaining({
+          roleId: 'role-mod',
+          body: expect.objectContaining({ name: 'Blocked Moderator' }),
+        })
+      );
+    await expect(
+      page.getByText('You do not have permission to update roles in this group.')
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: /^Delete$/ }).click();
+
+    await expect
+      .poll(() => requests.roleDeletes, { message: 'role delete reached backend' })
+      .toContain('role-mod');
+    await expect(
+      page.getByText('You do not have permission to delete roles in this group.')
+    ).toBeVisible();
+    await expect(page.getByText('Blocked Moderator').first()).toBeVisible();
+  });
+
   test('shows endpoint 403 copy when invite creation is denied', async ({ page }) => {
     const requests = await installGroupPermissionMocks(page, {
       groupFixture: ownerGroup,
@@ -762,6 +892,46 @@ test.describe('Group settings permissions', () => {
     await expect(
       page.getByText('You do not have permission to create invites for this group.')
     ).toBeVisible();
+  });
+
+  test('shows endpoint 403 copy when invite list and delete are denied', async ({ page }) => {
+    const listRequests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      denyInviteList: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Invites$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Invites$/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Create Invite$/ }).click();
+
+    await expect
+      .poll(() => listRequests.inviteLists, { message: 'invite list reached backend' })
+      .toBeGreaterThan(0);
+    await expect(
+      page.getByText('You do not have permission to view invites for this group.')
+    ).toBeVisible();
+
+    await page.unroute('**/api/v1/**');
+    const deleteRequests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      denyInviteDelete: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Invites$/ }).click();
+    await page.getByRole('button', { name: /^Create Invite$/ }).click();
+    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
+    await expect(page.getByText('EDGE403')).toBeVisible();
+    await page.getByRole('button', { name: /delete invite edge403/i }).click();
+
+    await expect
+      .poll(() => deleteRequests.inviteDeletes, { message: 'invite delete reached backend' })
+      .toContain('invite-edge');
+    await expect(
+      page.getByText('You do not have permission to delete invites for this group.')
+    ).toBeVisible();
+    await expect(page.getByText('EDGE403')).toBeVisible();
   });
 
   test('shows endpoint 403 copy when member role assignment is denied', async ({ page }) => {
@@ -792,5 +962,52 @@ test.describe('Group settings permissions', () => {
     await expect(
       page.getByText('You do not have permission to update member roles in this group.')
     ).toBeVisible();
+  });
+
+  test('shows endpoint 403 copy when member moderation actions are denied', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+      denyMemberKick: true,
+      denyMemberBan: true,
+      denyMemberMute: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Members$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /member actions for permission friend/i }).click();
+    await page.getByRole('button', { name: /^Kick$/ }).click();
+    await page.getByRole('button', { name: /^Confirm Kick$/ }).click();
+    await expect
+      .poll(() => requests.memberKicks, { message: 'member kick reached backend' })
+      .toContain('member-friend');
+    await expect(
+      page.getByText('You do not have permission to kick members from this group.')
+    ).toBeVisible();
+    await expect(page.getByText('Permission Friend')).toBeVisible();
+
+    await page.getByRole('button', { name: /member actions for permission friend/i }).click();
+    await page.getByRole('button', { name: /^Ban$/ }).click();
+    await page.getByRole('button', { name: /^Confirm Ban$/ }).click();
+    await expect
+      .poll(() => requests.memberBans, { message: 'member ban reached backend' })
+      .toContain('member-friend');
+    await expect(
+      page.getByText('You do not have permission to ban members from this group.')
+    ).toBeVisible();
+    await expect(page.getByText('Permission Friend')).toBeVisible();
+
+    await page.getByRole('button', { name: /member actions for permission friend/i }).click();
+    await page.getByRole('button', { name: /^Mute$/ }).click();
+    await page.getByRole('button', { name: /^Confirm Mute$/ }).click();
+    await expect
+      .poll(() => requests.memberMutes, { message: 'member mute reached backend' })
+      .toContain('member-friend');
+    await expect(
+      page.getByText('You do not have permission to mute members in this group.')
+    ).toBeVisible();
+    await expect(page.getByText('Permission Friend')).toBeVisible();
+    await expect(page.getByText('muted')).toHaveCount(0);
   });
 });

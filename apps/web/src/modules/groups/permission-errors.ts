@@ -26,6 +26,10 @@ function extractErrorMessage(error: unknown, fallback: string): string {
  * Returns true when an API or structured-client error represents a permission denial.
  */
 export function isForbiddenError(error: unknown): boolean {
+  if (isRecord(error) && error.status === 403) {
+    return true;
+  }
+
   if (isRecord(error) && isRecord(error.response)) {
     const status = error.response.status;
     if (status === 403) return true;
