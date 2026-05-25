@@ -3,8 +3,7 @@
  */
 
 import type { Message } from '@/modules/chat/store/chatStore.impl';
-import type { GifResult } from '@/modules/chat/components/gif-picker';
-import type { VoiceRecordingData } from './voice-message-upload';
+import type { MessagePayload } from '@/modules/chat/components/message-input';
 
 export interface StickerSelection {
   id: string;
@@ -45,22 +44,14 @@ export interface ConversationHeaderProps {
 }
 
 export interface MessageInputAreaProps {
-  messageInput: string;
-  attachment: File | null;
+  conversationId?: string;
   attachmentNodePrice: number | null;
   isSending: boolean;
-  isVoiceMode: boolean;
   replyTo: Message | null;
-  onVoiceModeChange: (value: boolean) => void;
-  onMessageChange: (value: string) => void;
-  onFileSelect: (file: File) => void;
-  onClearAttachment: () => void;
+  onTyping: (isTyping: boolean) => void;
   onAttachmentNodePriceChange: (price: number | null) => void;
   onClearReply: () => void;
-  onGifSelect: (gif: GifResult) => void;
-  onStickerSelect: (sticker: StickerSelection) => void;
-  onVoiceComplete: (data: VoiceRecordingData) => void;
-  onSend: () => void;
+  onPayloadSend: (payload: MessagePayload) => Promise<void>;
 }
 
 export interface TypingIndicatorProps {

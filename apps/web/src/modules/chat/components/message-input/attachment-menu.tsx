@@ -46,6 +46,8 @@ export function AttachmentMenu({
         whileTap={{ scale: 0.9 }}
         onClick={() => onToggle('file')}
         className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white"
+        aria-label="Attach file"
+        title="Attach file"
       >
         <PlusCircleIcon className="h-6 w-6" />
       </motion.button>
@@ -64,6 +66,8 @@ export function AttachmentMenu({
                 whileTap={{ scale: 0.9 }}
                 onClick={onFileSelect}
                 className="rounded-xl bg-blue-500/20 p-3 text-blue-400 hover:bg-blue-500/30"
+                aria-label="Attach photo or video"
+                title="Photo or video"
               >
                 <PhotoIcon className="h-6 w-6" />
               </motion.button>
@@ -72,6 +76,8 @@ export function AttachmentMenu({
                 whileTap={{ scale: 0.9 }}
                 onClick={onFileSelect}
                 className="rounded-xl bg-green-500/20 p-3 text-green-400 hover:bg-green-500/30"
+                aria-label="Attach document"
+                title="Document"
               >
                 <DocumentIcon className="h-6 w-6" />
               </motion.button>
@@ -80,6 +86,8 @@ export function AttachmentMenu({
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onToggle('gif')}
                 className="bg-purple-500/20 hover:bg-purple-500/30 rounded-xl p-3 text-purple-400"
+                aria-label="Open GIF picker"
+                title="GIF"
               >
                 <GifIcon className="h-6 w-6" />
               </motion.button>

@@ -12,6 +12,9 @@ export interface MessageInputProps {
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly className?: string;
+  readonly maxAttachments?: number;
+  readonly nodesPrice?: number | null;
+  readonly onNodesPriceChange?: (price: number | null) => void;
   /**
    * Channel slow-mode window in seconds. When greater than 0 the
    * composer enforces a per-user cooldown surfaced as a countdown pill.

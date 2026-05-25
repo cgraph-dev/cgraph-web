@@ -1,108 +1,142 @@
 import { createRef } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MessageInputArea } from '../message-input-area';
 import type { MessageInputAreaProps } from '../types';
+import type { MessagePayload } from '@/modules/chat/components/message-input';
 
-vi.mock('@/components/media/voice-message-recorder', () => ({
-  VoiceMessageRecorder: ({
-    onComplete,
-    onCancel,
-  }: {
-    onComplete: (data: { blob: Blob; duration: number; waveform: number[] }) => void;
-    onCancel: () => void;
-  }) => (
-    <div data-testid="voice-recorder">
-      <button
-        type="button"
-        onClick={() =>
-          onComplete({
-            blob: new Blob(['voice'], { type: 'audio/webm' }),
-            duration: 4,
-            waveform: [0.2, 0.8],
-          })
-        }
-      >
-        Send recorded voice
-      </button>
-      <button type="button" onClick={onCancel}>
-        Cancel recorded voice
-      </button>
-    </div>
-  ),
+const sharedInputMock = vi.hoisted(() => ({
+  props: null as null | Record<string, unknown>,
+}));
+
+vi.mock('@/modules/chat/components/message-input', () => ({
+  MessageInput: (props: Record<string, unknown>) => {
+    sharedInputMock.props = props;
+
+    return (
+      <div data-testid="shared-message-input">
+        <button
+          type="button"
+          onClick={() =>
+            (props.onSend as (payload: MessagePayload) => void)({
+              content: 'hello',
+              type: 'text',
+            })
+          }
+        >
+          Send shared payload
+        </button>
+        <button type="button" onClick={() => (props.onTyping as (value: boolean) => void)(true)}>
+          Start typing
+        </button>
+        <button
+          type="button"
+          onClick={() => (props.onNodesPriceChange as (price: number | null) => void)(10)}
+        >
+          Lock for Nodes
+        </button>
+        <button type="button" onClick={() => (props.onCancelReply as () => void)()}>
+          Cancel reply
+        </button>
+      </div>
+    );
+  },
 }));
 
 function makeProps(overrides: Partial<MessageInputAreaProps> = {}): MessageInputAreaProps {
   return {
-    messageInput: '',
-    attachment: null,
+    conversationId: 'conv-1',
     attachmentNodePrice: null,
     isSending: false,
-    isVoiceMode: false,
     replyTo: null,
-    onVoiceModeChange: vi.fn(),
-    onMessageChange: vi.fn(),
-    onFileSelect: vi.fn(),
-    onClearAttachment: vi.fn(),
+    onTyping: vi.fn(),
     onAttachmentNodePriceChange: vi.fn(),
     onClearReply: vi.fn(),
-    onVoiceComplete: vi.fn(),
-    onSend: vi.fn(),
+    onPayloadSend: vi.fn(),
     ...overrides,
   };
 }
 
 describe('EnhancedConversation MessageInputArea', () => {
-  it('offers voice recording when there is no text or attachment to send', async () => {
+  beforeEach(() => {
+    sharedInputMock.props = null;
+  });
+
+  it('routes the Cloud Chat composer through the shared message input contract', async () => {
     const user = userEvent.setup();
     const props = makeProps();
 
     render(<MessageInputArea {...props} inputContainerRef={createRef<HTMLDivElement>()} />);
 
-    await user.click(screen.getByRole('button', { name: /record voice message/i }));
-
-    expect(props.onVoiceModeChange).toHaveBeenCalledWith(true);
-    expect(screen.queryByRole('button', { name: /send message/i })).not.toBeInTheDocument();
-  });
-
-  it('passes completed voice recordings back to the routed conversation owner', async () => {
-    const user = userEvent.setup();
-    const props = makeProps({ isVoiceMode: true });
-
-    render(<MessageInputArea {...props} inputContainerRef={createRef<HTMLDivElement>()} />);
-
-    await user.click(screen.getByRole('button', { name: /send recorded voice/i }));
-
-    expect(props.onVoiceComplete).toHaveBeenCalledWith({
-      blob: expect.any(Blob),
-      duration: 4,
-      waveform: [0.2, 0.8],
-    });
-  });
-
-  it('keeps the regular send button when text is present', async () => {
-    const user = userEvent.setup();
-    const props = makeProps({ messageInput: 'hello' });
-
-    render(<MessageInputArea {...props} inputContainerRef={createRef<HTMLDivElement>()} />);
-
-    await user.click(screen.getByRole('button', { name: /send message/i }));
-
-    expect(props.onSend).toHaveBeenCalled();
-    expect(props.onVoiceModeChange).not.toHaveBeenCalled();
-  });
-
-  it('shows the per-file paid DM control when an attachment is selected', async () => {
-    const user = userEvent.setup();
-    const props = makeProps({
-      attachment: new File(['photo'], 'photo.png', { type: 'image/png' }),
+    expect(screen.getByTestId('shared-message-input')).toBeInTheDocument();
+    expect(sharedInputMock.props).toMatchObject({
+      conversationId: 'conv-1',
+      disabled: false,
+      maxAttachments: 1,
+      nodesPrice: null,
     });
 
+    await user.click(screen.getByRole('button', { name: /send shared payload/i }));
+
+    expect(props.onPayloadSend).toHaveBeenCalledWith({ content: 'hello', type: 'text' });
+  });
+
+  it('keeps typing and paid-file pricing owned by the routed conversation owner', async () => {
+    const user = userEvent.setup();
+    const props = makeProps({ attachmentNodePrice: 5 });
+
     render(<MessageInputArea {...props} inputContainerRef={createRef<HTMLDivElement>()} />);
 
+    await user.click(screen.getByRole('button', { name: /start typing/i }));
     await user.click(screen.getByRole('button', { name: /lock for nodes/i }));
 
+    expect(props.onTyping).toHaveBeenCalledWith(true);
     expect(props.onAttachmentNodePriceChange).toHaveBeenCalledWith(10);
+    expect(sharedInputMock.props).toMatchObject({
+      nodesPrice: 5,
+    });
+  });
+
+  it('maps route-owned reply messages into the shared reply contract', async () => {
+    const user = userEvent.setup();
+    const props = makeProps({
+      replyTo: {
+        id: 'msg-1',
+        conversationId: 'conv-1',
+        senderId: 'user-2',
+        content: 'original message',
+        encryptedContent: null,
+        isEncrypted: false,
+        messageType: 'text',
+        replyToId: null,
+        replyTo: null,
+        isPinned: false,
+        isEdited: false,
+        deletedAt: null,
+        metadata: {},
+        reactions: [],
+        sender: {
+          id: 'user-2',
+          username: 'ada',
+          displayName: 'Ada',
+          avatarUrl: null,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
+    render(<MessageInputArea {...props} inputContainerRef={createRef<HTMLDivElement>()} />);
+
+    expect(sharedInputMock.props?.replyTo).toEqual({
+      id: 'msg-1',
+      author: 'Ada',
+      content: 'original message',
+    });
+
+    await user.click(screen.getByRole('button', { name: /cancel reply/i }));
+
+    expect(props.onClearReply).toHaveBeenCalled();
   });
 });

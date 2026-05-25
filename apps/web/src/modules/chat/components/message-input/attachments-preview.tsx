@@ -33,21 +33,28 @@ export function AttachmentsPreview({ attachments, onRemove }: AttachmentsPreview
                 animate={{ scale: 1 }}
                 className="group relative"
               >
-                {file.type.startsWith('image/') ? (
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    className="h-16 w-16 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--token-card-bg)/0.6]">
-                    <DocumentIcon className="h-8 w-8 text-gray-400" />
-                  </div>
-                )}
+                <div className="w-20">
+                  {file.type.startsWith('image/') ? (
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      className="h-16 w-16 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--token-card-bg)/0.6]">
+                      <DocumentIcon className="h-8 w-8 text-gray-400" />
+                    </div>
+                  )}
+                  <p className="mt-1 truncate text-xs text-white/70" title={file.name}>
+                    {file.name}
+                  </p>
+                </div>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => onRemove(index)}
                   className="absolute -right-1 -top-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-label={`Remove ${file.name}`}
+                  title="Remove attachment"
                 >
                   <XMarkIcon className="h-3 w-3" />
                 </motion.button>

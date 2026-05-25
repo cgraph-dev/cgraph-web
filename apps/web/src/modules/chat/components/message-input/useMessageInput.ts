@@ -22,6 +22,15 @@ interface UseMessageInputOptions {
   readonly slowModeSeconds?: number;
   /** ISO instant the slow-mode cooldown lifts (server-provided). */
   readonly slowModeRetryAt?: string | null;
+  /** Maximum files this composer can own for one send. */
+  readonly maxAttachments?: number;
+}
+
+interface StickerPayload {
+  readonly id: string;
+  readonly packId: string;
+  readonly label: string;
+  readonly emoji: string;
 }
 
 /** Manages message input state, attachments, mentions, typing indicators, and send logic. */
@@ -32,6 +41,7 @@ export function useMessageInput({
   conversationId,
   slowModeSeconds,
   slowModeRetryAt,
+  maxAttachments = 10,
 }: UseMessageInputOptions) {
   const { draftText, hydrated: draftHydrated, setDraftText, clearDraft } = useDraft(conversationId);
   const slowMode = useSlowModeCountdown({ slowModeSeconds, slowModeRetryAt });
@@ -134,15 +144,16 @@ export function useMessageInput({
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setAttachments((prev) => [...prev, ...files].slice(0, 10)); // Max 10 files
+    setAttachments((prev) => [...prev, ...files].slice(0, maxAttachments));
     setAttachmentMode('none');
+    e.target.value = '';
   };
 
   // Handle file drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
-    setAttachments((prev) => [...prev, ...files].slice(0, 10));
+    setAttachments((prev) => [...prev, ...files].slice(0, maxAttachments));
   };
 
   // Remove attachment
@@ -156,6 +167,7 @@ export function useMessageInput({
     onSend({
       content: '',
       type: 'voice',
+      replyToId: replyTo?.id,
       metadata: {
         audio: data.blob,
         duration: data.duration,
@@ -171,6 +183,7 @@ export function useMessageInput({
     onSend({
       content: '',
       type: 'gif',
+      replyToId: replyTo?.id,
       metadata: {
         gifId: gif.id,
         gifTitle: gif.title,
@@ -180,6 +193,22 @@ export function useMessageInput({
         gifHeight: gif.height,
         gifSource: gif.source,
       },
+    });
+    setAttachmentMode('none');
+    HapticFeedback.medium();
+  };
+
+  const handleStickerSelect = (sticker: StickerPayload) => {
+    onSend({
+      content: sticker.emoji,
+      type: 'sticker',
+      metadata: {
+        stickerId: sticker.id,
+        stickerPackId: sticker.packId,
+        stickerLabel: sticker.label,
+        stickerEmoji: sticker.emoji,
+      },
+      replyToId: replyTo?.id,
     });
     setAttachmentMode('none');
     HapticFeedback.medium();
@@ -219,6 +248,7 @@ export function useMessageInput({
     handleDrop,
     removeAttachment,
     handleVoiceMessage,
+    handleStickerSelect,
     handleGifSelect,
     handleMentionSelect,
     toggleAttachmentMode,

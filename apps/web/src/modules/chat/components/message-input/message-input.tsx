@@ -34,6 +34,15 @@ import { SlowModePill } from './slow-mode-pill';
 import type { MessageInputProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
 
+const STICKERS = [
+  { id: 'wave', packId: 'cgraph-default', label: 'Wave', emoji: '👋' },
+  { id: 'thumbs-up', packId: 'cgraph-default', label: 'Thumbs up', emoji: '👍' },
+  { id: 'fire', packId: 'cgraph-default', label: 'Fire', emoji: '🔥' },
+  { id: 'party', packId: 'cgraph-default', label: 'Party', emoji: '🎉' },
+  { id: 'heart', packId: 'cgraph-default', label: 'Heart', emoji: '💜' },
+  { id: 'sparkles', packId: 'cgraph-default', label: 'Sparkles', emoji: '✨' },
+] as const;
+
 /** Rich message input with text, attachments, emoji, stickers, GIFs, voice, mentions, and view-once support. */
 export function MessageInput({
   conversationId,
@@ -45,6 +54,9 @@ export function MessageInput({
   placeholder = 'Type a message...',
   disabled = false,
   className = '',
+  maxAttachments = 10,
+  nodesPrice = null,
+  onNodesPriceChange,
   slowModeSeconds,
   slowModeRetryAt,
   headerSlot,
@@ -73,6 +85,7 @@ export function MessageInput({
     handleDrop,
     removeAttachment,
     handleVoiceMessage,
+    handleStickerSelect,
     handleGifSelect,
     handleMentionSelect,
     toggleAttachmentMode,
@@ -88,6 +101,7 @@ export function MessageInput({
     conversationId,
     slowModeSeconds,
     slowModeRetryAt,
+    maxAttachments,
   });
 
   const hasContent = message.trim().length > 0 || attachments.length > 0;
@@ -111,6 +125,9 @@ export function MessageInput({
             attachmentMode={attachmentMode}
             onToggle={toggleAttachmentMode}
             onFileSelect={() => fileInputRef.current?.click()}
+            hasFile={attachments.length > 0}
+            nodesPrice={nodesPrice}
+            onNodesPriceChange={onNodesPriceChange}
           />
 
           {/* Text Input */}
@@ -171,6 +188,34 @@ export function MessageInput({
         )}
       </AnimatePresence>
 
+      {/* Sticker Picker */}
+      <AnimatePresence>
+        {attachmentMode === 'sticker' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            role="menu"
+            aria-label="Sticker picker"
+            className="bg-[var(--token-card-bg)]/95 absolute bottom-full left-0 mb-2 grid w-64 grid-cols-3 gap-2 rounded-xl border border-[var(--token-card-border)] p-3 shadow-2xl backdrop-blur-xl"
+          >
+            {STICKERS.map((sticker) => (
+              <button
+                key={sticker.id}
+                type="button"
+                role="menuitem"
+                onClick={() => handleStickerSelect(sticker)}
+                className="rounded-lg border border-white/10 bg-white/[0.06] p-3 text-2xl transition-colors hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-primary-500"
+                aria-label={`Send sticker ${sticker.label}`}
+                title={sticker.label}
+              >
+                {sticker.emoji}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* GIF Picker — lazy-loaded */}
       <AnimatePresence>
         {attachmentMode === 'gif' && (
@@ -195,7 +240,8 @@ export function MessageInput({
       <input
         ref={fileInputRef}
         type="file"
-        multiple
+        multiple={maxAttachments !== 1}
+        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip"
         onChange={handleFileSelect}
         className="hidden"
       />

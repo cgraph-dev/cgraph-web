@@ -111,6 +111,14 @@ anchor/latest behavior. `apps/web/e2e/group-channel-scroll.spec.ts` browser-veri
 `/groups/:groupId/channels/:channelId?scrollTo=...` lands on the target message, an incoming message
 stays below the reader instead of yanking the viewport, and jump-to-latest reaches the new message.
 
+2026-05-25 Cloud Chat composer convergence proof: production web now routes the live DM composer
+through the shared `modules/chat` `MessageInput` adapter while keeping the routed Cloud Chat owner
+responsible for upload, paid-file, GIF, sticker, voice-note, reply, and typing contracts. Focused
+component tests prove the adapter boundary, and the full routed
+`apps/web/e2e/dm-media-composer.spec.ts` Chromium proof revalidates the browser route. The broader
+strict-pass DM surface convergence row remains open until list/action/bubble/media ownership
+converges too.
+
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,
 and uses `/api/v1/auth/oauth/providers` to decide which account-linking actions render. The focused

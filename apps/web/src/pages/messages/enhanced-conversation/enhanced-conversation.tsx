@@ -32,18 +32,11 @@ export default function EnhancedConversation() {
     conversationMessages,
     typing,
     user,
-    messageInput,
-    attachment,
     attachmentNodePrice,
-    isVoiceMode,
     replyTo,
     messageRequest,
-    handleMessageChange,
     isSending,
-    setAttachment,
     setAttachmentNodePrice,
-    clearAttachment,
-    setIsVoiceMode,
     setReplyTo,
     messagesEndRef,
     inputContainerRef,
@@ -53,10 +46,8 @@ export default function EnhancedConversation() {
     showScrollToLatest,
     newMessagesBelow,
     scrollToLatestMessages,
-    handleSend,
-    handleGifSelect,
-    handleStickerSelect,
-    handleVoiceComplete,
+    handleTyping,
+    handleComposerPayload,
     handleAvatarClick,
     handleStartCall,
     handleMessageRequestAccepted,
@@ -209,23 +200,15 @@ export default function EnhancedConversation() {
 
         {/* Input Area */}
         <MessageInputArea
-          messageInput={messageInput}
-          attachment={attachment}
+          conversationId={conversationId}
           attachmentNodePrice={attachmentNodePrice}
           isSending={isSending}
-          isVoiceMode={isVoiceMode}
           replyTo={replyTo}
           inputContainerRef={inputContainerRef}
-          onVoiceModeChange={setIsVoiceMode}
-          onMessageChange={handleMessageChange}
-          onFileSelect={setAttachment}
-          onClearAttachment={clearAttachment}
+          onTyping={handleTyping}
           onAttachmentNodePriceChange={setAttachmentNodePrice}
           onClearReply={() => setReplyTo(null)}
-          onGifSelect={handleGifSelect}
-          onStickerSelect={handleStickerSelect}
-          onVoiceComplete={handleVoiceComplete}
-          onSend={handleSend}
+          onPayloadSend={handleComposerPayload}
         />
 
         {messageActions.showForwardModal && messageActions.messageToForward && (

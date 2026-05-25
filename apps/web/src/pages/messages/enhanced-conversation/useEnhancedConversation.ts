@@ -14,14 +14,13 @@ import { apiClient } from '@/lib/api-client';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { buildMessageAttachmentMetadata, messageContentTypeForMime } from '@cgraph/shared-types';
 import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
+import type { MessagePayload } from '@/modules/chat/components/message-input';
 import { getDirectCallRoute, type DirectCallType } from './call-routing';
 import {
   uploadVoiceMessage,
   type UploadedVoiceMessage,
   type VoiceRecordingData,
 } from './voice-message-upload';
-import type { GifResult } from '@/modules/chat/components/gif-picker';
-import type { StickerSelection } from './types';
 const logger = createLogger('EnhancedConversation');
 
 interface PendingMessageRequest {
@@ -103,10 +102,7 @@ export function useEnhancedConversation() {
     getRecipientId,
   } = useChatStore();
 
-  const [messageInput, setMessageInput] = useState('');
-  const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentNodePrice, setAttachmentNodePrice] = useState<number | null>(null);
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [messageRequest, setMessageRequest] = useState<PendingMessageRequest | null>(null);
@@ -310,37 +306,26 @@ export function useEnhancedConversation() {
     return () => window.cancelAnimationFrame(frame);
   }, [conversationMessages.length, scrollToMessageId]);
 
-  const handleMessageChange = (value: string) => {
-    setMessageInput(value);
-    if (value.trim()) setIsVoiceMode(false);
-    if (!conversationId) return;
+  const handleTyping = useCallback(
+    (isTyping: boolean) => {
+      if (!conversationId) return;
 
-    const topic = `conversation:${conversationId}`;
+      const topic = `conversation:${conversationId}`;
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
 
-    if (!value.trim()) {
-      sendConversationTyping(topic, false);
-      return;
-    }
+      sendConversationTyping(topic, isTyping);
 
-    sendConversationTyping(topic, true);
-    typingTimeoutRef.current = setTimeout(() => {
-      sendConversationTyping(topic, false);
-    }, 5000);
-  };
-
-  const handleAttachmentSelected = useCallback((file: File) => {
-    setAttachment(file);
-    setAttachmentNodePrice(null);
-  }, []);
-
-  const handleClearAttachment = useCallback(() => {
-    setAttachment(null);
-    setAttachmentNodePrice(null);
-  }, []);
+      if (isTyping) {
+        typingTimeoutRef.current = setTimeout(() => {
+          sendConversationTyping(topic, false);
+        }, 5000);
+      }
+    },
+    [conversationId]
+  );
 
   function addOptimisticVoiceMessage(uploaded: UploadedVoiceMessage) {
     if (!conversationId) return;
@@ -389,7 +374,6 @@ export function useEnhancedConversation() {
     try {
       const uploaded = await uploadVoiceMessage(conversationId, recording);
       addOptimisticVoiceMessage(uploaded);
-      setIsVoiceMode(false);
       setReplyTo(null);
 
       if (typingTimeoutRef.current) {
@@ -410,7 +394,8 @@ export function useEnhancedConversation() {
   async function sendRichMessage(
     content: string,
     contentType: Message['messageType'],
-    metadata: Record<string, unknown>
+    metadata: Record<string, unknown>,
+    replyToId?: string
   ): Promise<void> {
     if (!conversationId || isSending) return;
 
@@ -426,7 +411,7 @@ export function useEnhancedConversation() {
         encryptedContent: null,
         isEncrypted: false,
         messageType: contentType,
-        replyToId: replyTo?.id ?? null,
+        replyToId: replyToId ?? replyTo?.id ?? null,
         replyTo: null,
         isPinned: false,
         isEdited: false,
@@ -444,15 +429,14 @@ export function useEnhancedConversation() {
       } satisfies Message);
       window.requestAnimationFrame(() => scrollToLatestMessages('auto'));
 
-      await sendMessage(conversationId, content, replyTo?.id, {
+      await sendMessage(conversationId, content, replyToId ?? replyTo?.id, {
         type: contentType,
         metadata,
       });
       window.requestAnimationFrame(() => scrollToLatestMessages('smooth'));
 
-      setMessageInput('');
       setReplyTo(null);
-      handleClearAttachment();
+      setAttachmentNodePrice(null);
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -466,36 +450,57 @@ export function useEnhancedConversation() {
     }
   }
 
-  const handleGifSelect = (gif: GifResult) => {
-    void sendRichMessage(gif.url, 'gif', {
-      gifId: gif.id,
-      gifTitle: gif.title,
-      gifUrl: gif.url,
-      gifPreviewUrl: gif.previewUrl,
-      gifWidth: gif.width,
-      gifHeight: gif.height,
-      gifSource: gif.source,
-    });
-  };
+  async function handleComposerPayload(payload: MessagePayload): Promise<void> {
+    if (!conversationId || isSending) return;
 
-  const handleStickerSelect = (sticker: StickerSelection) => {
-    void sendRichMessage(sticker.emoji, 'sticker', {
-      stickerId: sticker.id,
-      stickerPackId: sticker.packId,
-      stickerLabel: sticker.label,
-      stickerEmoji: sticker.emoji,
-    });
-  };
+    const payloadMetadata = payload.metadata ?? {};
 
-  // Handle send message
-  const handleSend = async () => {
-    if (!conversationId || (!messageInput.trim() && !attachment) || isSending) return;
+    if (payload.type === 'voice') {
+      const audio = payloadMetadata.audio;
+      if (!(audio instanceof Blob)) {
+        logger.error('Voice composer payload did not include an audio blob');
+        HapticFeedback.error();
+        return;
+      }
+
+      await handleVoiceComplete({
+        blob: audio,
+        duration: typeof payloadMetadata.duration === 'number' ? payloadMetadata.duration : 0,
+        waveform: Array.isArray(payloadMetadata.waveform)
+          ? payloadMetadata.waveform.filter((value): value is number => typeof value === 'number')
+          : [],
+      });
+      return;
+    }
+
+    if (payload.type === 'gif') {
+      await sendRichMessage(
+        String(payloadMetadata.gifUrl ?? payload.content),
+        'gif',
+        payloadMetadata,
+        payload.replyToId
+      );
+      return;
+    }
+
+    if (payload.type === 'sticker') {
+      await sendRichMessage(payload.content, 'sticker', payloadMetadata, payload.replyToId);
+      return;
+    }
+
+    const attachment = payload.attachments?.[0] ?? null;
+    if (!payload.content.trim() && !attachment) return;
 
     HapticFeedback.medium();
     setIsSending(true);
-    let content = messageInput.trim();
+    let content = payload.content.trim();
     let contentType: Message['messageType'] = 'text';
-    let metadata: Record<string, unknown> = {};
+    let metadata: Record<string, unknown> = payload.isViewOnce
+      ? {
+          is_view_once: true,
+          isViewOnce: true,
+        }
+      : {};
 
     try {
       if (attachment) {
@@ -566,9 +571,8 @@ export function useEnhancedConversation() {
         type: contentType,
         metadata,
       });
-      setMessageInput('');
       setReplyTo(null);
-      handleClearAttachment();
+      setAttachmentNodePrice(null);
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -580,7 +584,7 @@ export function useEnhancedConversation() {
     } finally {
       setIsSending(false);
     }
-  };
+  }
 
   // Handle avatar click
   const handleAvatarClick = (userId: string) => {
@@ -616,18 +620,11 @@ export function useEnhancedConversation() {
     callRecipientId,
     messageRequest,
     // State
-    messageInput,
-    attachment,
     attachmentNodePrice,
-    isVoiceMode,
-    handleMessageChange,
     isSending,
     replyTo,
     setReplyTo,
-    setAttachment: handleAttachmentSelected,
     setAttachmentNodePrice,
-    clearAttachment: handleClearAttachment,
-    setIsVoiceMode,
     // Refs
     messagesEndRef,
     inputContainerRef,
@@ -637,10 +634,8 @@ export function useEnhancedConversation() {
     showScrollToLatest,
     newMessagesBelow,
     scrollToLatestMessages,
-    handleSend,
-    handleGifSelect,
-    handleStickerSelect,
-    handleVoiceComplete,
+    handleTyping,
+    handleComposerPayload,
     handleAvatarClick,
     handleStartCall,
     handleMessageRequestAccepted,

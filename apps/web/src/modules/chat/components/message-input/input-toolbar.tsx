@@ -47,6 +47,8 @@ export function InputToolbar({
         whileTap={{ scale: 0.9 }}
         onClick={() => onToggleMode('emoji')}
         className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-yellow-400"
+        aria-label="Open emoji picker"
+        title="Emoji"
       >
         <FaceSmileIcon className="h-6 w-6" />
       </motion.button>
@@ -57,6 +59,8 @@ export function InputToolbar({
         whileTap={{ scale: 0.9 }}
         onClick={() => onToggleMode('sticker')}
         className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-purple-400"
+        aria-label="Open sticker picker"
+        title="Sticker"
       >
         <span className="text-lg">🎨</span>
       </motion.button>
@@ -98,6 +102,8 @@ export function InputToolbar({
         whileTap={{ scale: 0.9 }}
         onClick={() => onToggleMode('gif')}
         className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-green-400"
+        aria-label="Open GIF picker"
+        title="GIF"
       >
         <GifIcon className="h-6 w-6" />
       </motion.button>
@@ -112,6 +118,8 @@ export function InputToolbar({
             ? 'bg-red-500 text-white'
             : 'text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white'
         }`}
+        aria-label={isRecording ? 'Voice recorder active' : 'Record voice message'}
+        title={isRecording ? 'Voice recorder active' : 'Record voice message'}
       >
         <MicrophoneIcon className="h-6 w-6" />
       </motion.button>
@@ -124,6 +132,8 @@ export function InputToolbar({
         disabled={disabled || !canSend}
         className="rounded-xl bg-primary-600 p-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
         style={{ backgroundColor: primaryColor }}
+        aria-label="Send message"
+        title="Send message"
       >
         <PaperAirplaneIcon className="h-6 w-6" />
       </motion.button>
