@@ -249,6 +249,21 @@ function getNodesPrice(message: Message): number {
   return metaNumber(message.metadata?.nodes_price) ?? metaNumber(message.metadata?.nodesPrice) ?? 0;
 }
 
+function StickerMediaContent({ message }: Pick<MessageMediaContentProps, 'message'>) {
+  const stickerLabel = metaString(message.metadata?.stickerLabel);
+  const stickerEmoji = metaString(message.metadata?.stickerEmoji) ?? message.content;
+
+  return (
+    <div
+      className="mb-2 flex flex-col items-center gap-1"
+      aria-label={`Sticker ${stickerLabel ?? stickerEmoji}`}
+    >
+      <span className="text-5xl leading-none">{stickerEmoji}</span>
+      {stickerLabel && <span className="text-xs text-white/55">{stickerLabel}</span>}
+    </div>
+  );
+}
+
 /**
  * Render the media body of a message based on its type.
  */
@@ -311,6 +326,10 @@ export function MessageMediaContent({
 
   if (message.messageType === 'gif') {
     return <GifMessage message={message} isOwnMessage={isOwn} className="mb-2" />;
+  }
+
+  if (message.messageType === 'sticker') {
+    return <StickerMediaContent message={message} />;
   }
 
   if (message.messageType === 'contact' && message.linkPreview?.firstName) {

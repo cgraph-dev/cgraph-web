@@ -76,6 +76,7 @@ export const MessageBubble = memo(function MessageBubble({
 
   const bubbleCssClass = getMessageBubbleClass(bubbleStyle);
   const effectCssClass = getMessageEffectClass(messageEffect ?? 'none');
+  const canShowActionMenu = Boolean(onToggleMenu && (onEdit || onPin || onForward || onDelete));
 
   const bubbleInlineStyle: React.CSSProperties = {};
   if (bubbleColor) bubbleInlineStyle.backgroundColor = bubbleColor;
@@ -96,9 +97,7 @@ export const MessageBubble = memo(function MessageBubble({
       >
         <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[70%]`}>
           <div className="rounded-2xl border border-transparent bg-[var(--token-card-bg)/0.4] px-4 py-2 backdrop-blur-[8px] dark:border-[var(--token-border-muted)] dark:bg-[var(--token-bg-secondary)]">
-            <p className="text-sm italic text-gray-500 dark:text-gray-500">
-              [This message was deleted]
-            </p>
+            <p className="text-sm italic text-gray-500 dark:text-gray-500">Message deleted</p>
           </div>
         </div>
       </motion.div>
@@ -202,6 +201,12 @@ export const MessageBubble = memo(function MessageBubble({
             )}
             style={bubbleInlineStyle}
           >
+            {message.isPinned && (
+              <div className="bg-primary-500/15 mb-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-primary-200">
+                Pinned
+              </div>
+            )}
+
             <MessageMediaContent
               message={message}
               isOwn={isOwn}
@@ -213,6 +218,7 @@ export const MessageBubble = memo(function MessageBubble({
               message.messageType !== 'voice' &&
               message.messageType !== 'audio' &&
               message.messageType !== 'gif' &&
+              message.messageType !== 'sticker' &&
               message.messageType !== 'file' &&
               message.messageType !== 'contact' && (
                 <>
@@ -321,13 +327,26 @@ export const MessageBubble = memo(function MessageBubble({
           {/* Actions (for other messages, show on right) */}
           {!isOwn && showActions && (
             <div className="flex items-center gap-1">
-              <button
-                onClick={onReply}
-                className="rounded p-1 text-gray-500 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white dark:hover:bg-[var(--token-card-bg)/0.8]"
-                title="Reply"
-              >
-                <ReplyIcon />
-              </button>
+              {canShowActionMenu ? (
+                <MessageActionMenu
+                  onReply={onReply}
+                  onPin={onPin}
+                  onForward={onForward}
+                  onDelete={onDelete}
+                  isMenuOpen={isMenuOpen}
+                  onToggleMenu={onToggleMenu}
+                  isOwn={false}
+                />
+              ) : (
+                <button
+                  onClick={onReply}
+                  className="rounded p-1 text-gray-500 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white dark:hover:bg-[var(--token-card-bg)/0.8]"
+                  title="Reply"
+                  aria-label="Reply to message"
+                >
+                  <ReplyIcon />
+                </button>
+              )}
             </div>
           )}
         </div>

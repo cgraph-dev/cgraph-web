@@ -1,6 +1,6 @@
 # Web 100 Percent Owner Checklist
 
-Status date: 2026-05-23
+Status date: 2026-05-26
 
 Current checklist state: 50 / 50 owner-level implementation rows are closed for this execution
 contract, but this is not the same as full Level 2 release-readiness or a complete web-workstream
@@ -118,6 +118,15 @@ component tests prove the adapter boundary, and the full routed
 `apps/web/e2e/dm-media-composer.spec.ts` Chromium proof revalidates the browser route. The broader
 strict-pass DM surface convergence row remains open until list/action/bubble/media ownership
 converges too.
+
+2026-05-26 Cloud Chat bubble/action/media convergence proof: production web now makes
+`EnhancedMessageBubble` a thin route adapter over shared `modules/chat` `MessageBubble`. The shared
+bubble owns sticker rendering, pinned badges, read receipts, message media rendering, delete copy,
+and the message action menu for the routed DM surface. Focused component tests cover the shared
+pinned/sticker behavior, and the full routed `apps/web/e2e/dm-media-composer.spec.ts` Chromium proof
+revalidates reply, edit, pin, forward, delete, read receipts, file unlock states, voice, GIF,
+sticker, typing, calls, and message-request gates. The strict-pass row remains open until
+route-owned message list/page orchestration also converges.
 
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,

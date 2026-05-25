@@ -164,6 +164,13 @@ describe('MessageBubble', () => {
 
       expect(screen.getByTestId('reactions')).toBeInTheDocument();
     });
+
+    it('renders a pinned badge from the shared bubble surface', () => {
+      const message = createMockMessage({ isPinned: true });
+      render(<MessageBubble {...defaultProps} message={message} />);
+
+      expect(screen.getByText('Pinned')).toBeInTheDocument();
+    });
   });
 
   describe('message types', () => {

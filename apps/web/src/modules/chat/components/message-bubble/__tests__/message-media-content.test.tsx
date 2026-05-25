@@ -151,6 +151,18 @@ describe('MessageMediaContent', () => {
     expect(screen.getByTestId('gif-message')).toBeInTheDocument();
   });
 
+  it('renders sticker messages with accessible label and caption', () => {
+    const msg = {
+      ...baseMessage,
+      content: '✨',
+      messageType: 'sticker' as const,
+      metadata: { stickerEmoji: '✨', stickerLabel: 'Sparkle' },
+    };
+    render(<MessageMediaContent {...defaultProps} message={msg} />);
+    expect(screen.getByLabelText('Sticker Sparkle')).toBeInTheDocument();
+    expect(screen.getByText('Sparkle')).toBeInTheDocument();
+  });
+
   it('returns null when image message has no URL', () => {
     const msg = { ...baseMessage, messageType: 'image' as const, metadata: {} };
     const { container } = render(<MessageMediaContent {...defaultProps} message={msg} />);
