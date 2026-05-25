@@ -23,6 +23,7 @@ import { http } from '@/lib/api-client';
 import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
 import { buildMessageAttachmentSendPayload } from '@cgraph/shared-types';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
+import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
 
 import { ChannelHeader } from './channel-header';
 import { MessagesArea } from './messages-area';
@@ -67,6 +68,13 @@ const surfaceCopy: Record<
 const EMPTY_MESSAGES: readonly ChannelMessage[] = [];
 const ADMINISTRATOR_PERMISSION = 0x80000000;
 const MANAGE_MESSAGES_PERMISSION = 1 << 7;
+const SCROLL_BOTTOM_THRESHOLD_PX = 96;
+
+interface GroupScrollSnapshot {
+  channelId: string | null;
+  lastMessageId: string | null;
+  length: number;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -88,6 +96,30 @@ function stringValue(value: unknown): string | null {
 
 function numberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function isNearScrollBottom(container: HTMLDivElement | null): boolean {
+  if (!container) return true;
+
+  const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+  return distanceFromBottom <= SCROLL_BOTTOM_THRESHOLD_PX;
+}
+
+function isE2EChannelMessagePayload(
+  value: unknown,
+  channelId: string | undefined
+): value is ChannelMessage {
+  if (!channelId || !isRecord(value)) return false;
+
+  return (
+    value.channelId === channelId &&
+    typeof value.id === 'string' &&
+    typeof value.authorId === 'string' &&
+    typeof value.content === 'string' &&
+    typeof value.createdAt === 'string' &&
+    isRecord(value.author) &&
+    Array.isArray(value.reactions)
+  );
 }
 
 function getResponseStatus(error: unknown): number | null {
@@ -249,8 +281,16 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const scrollSnapshotRef = useRef<GroupScrollSnapshot>({
+    channelId: null,
+    lastMessageId: null,
+    length: 0,
+  });
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showScrollToLatest, setShowScrollToLatest] = useState(false);
+  const [newMessagesBelow, setNewMessagesBelow] = useState(0);
 
   // Thread panel state
   const threadOpen = useChannelThreadStore((s) => s.activeThread !== null);
@@ -261,6 +301,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const group = groups.find((g) => g.id === groupId);
   const channel = group ? findGroupChannel(group, channelId) : null;
   const messages = channelId ? (channelMessages[channelId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES;
+  const lastMessageId = messages.at(-1)?.id ?? null;
   const typing = channelId ? typingUsers[channelId] || [] : [];
   const groupMembers = groupId ? members[groupId] || [] : [];
   const groupNotificationLevel = group?.myMember?.notifications ?? 'mentions';
@@ -308,6 +349,22 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     }, 3000);
 
     return true;
+  }, []);
+
+  const scrollToLatestMessages = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    setNewMessagesBelow(0);
+    setShowScrollToLatest(false);
+  }, []);
+
+  const handleMessagesScroll = useCallback(() => {
+    if (isNearScrollBottom(messagesScrollRef.current)) {
+      setNewMessagesBelow(0);
+      setShowScrollToLatest(false);
+      return;
+    }
+
+    setShowScrollToLatest(true);
   }, []);
 
   // Join channel and fetch data
@@ -387,12 +444,70 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     };
   }, [channelId, searchChannelMessages, searchQuery]);
 
-  // Scroll to bottom on new messages
+  // Guarded autoscroll keeps older-message anchors stable while still following live/latest chat.
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!channelId) {
+      scrollSnapshotRef.current = { channelId: null, lastMessageId: null, length: 0 };
+      setNewMessagesBelow(0);
+      setShowScrollToLatest(false);
+      return undefined;
     }
-  }, [messages.length]);
+
+    const previous = scrollSnapshotRef.current;
+    const currentLength = messages.length;
+    const channelChanged = previous.channelId !== channelId;
+    const firstLoadedBatch = previous.length === 0 && currentLength > 0;
+    const addedMessages = Math.max(currentLength - previous.length, 0);
+    const latestMessage = messages.at(-1);
+    const latestMessageIsOwn = Boolean(
+      latestMessage?.authorId && currentUserId && latestMessage.authorId === currentUserId
+    );
+
+    scrollSnapshotRef.current = {
+      channelId,
+      lastMessageId,
+      length: currentLength,
+    };
+
+    if (currentLength === 0) {
+      setNewMessagesBelow(0);
+      setShowScrollToLatest(false);
+      return undefined;
+    }
+
+    if (scrollToMessageId) {
+      return undefined;
+    }
+
+    if (channelChanged || firstLoadedBatch) {
+      const frame = window.requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+        setNewMessagesBelow(0);
+        setShowScrollToLatest(false);
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    if (addedMessages === 0 || previous.lastMessageId === lastMessageId) {
+      return undefined;
+    }
+
+    if (isNearScrollBottom(messagesScrollRef.current) || latestMessageIsOwn) {
+      const frame = window.requestAnimationFrame(() => scrollToLatestMessages());
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    setNewMessagesBelow((count) => Math.min(999, count + addedMessages));
+    setShowScrollToLatest(true);
+    return undefined;
+  }, [
+    channelId,
+    currentUserId,
+    lastMessageId,
+    messages,
+    scrollToLatestMessages,
+    scrollToMessageId,
+  ]);
 
   // Fetch thread reply counts when messages load
   useEffect(() => {
@@ -408,10 +523,34 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     const exists = messages.some((message) => message.id === scrollToMessageId);
     if (!exists || !scrollToMessage(scrollToMessageId)) return;
 
-    const next = new URLSearchParams(searchParams);
-    next.delete('scrollTo');
-    setSearchParams(next, { replace: true });
-  }, [messages, scrollToMessage, scrollToMessageId, searchParams, setSearchParams]);
+    setNewMessagesBelow(0);
+    setShowScrollToLatest(scrollToMessageId !== lastMessageId);
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('scrollTo');
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [
+    lastMessageId,
+    messages,
+    scrollToMessage,
+    scrollToMessageId,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  useEffect(() => {
+    if (import.meta.env.VITE_E2E_AUTH_BYPASS !== 'true') return undefined;
+
+    const handleE2EAddGroupMessage = (event: Event) => {
+      if (!(event instanceof CustomEvent)) return;
+      if (!isE2EChannelMessagePayload(event.detail, channelId)) return;
+      addChannelMessage(event.detail);
+    };
+
+    window.addEventListener('cgraph:e2e-add-group-message', handleE2EAddGroupMessage);
+    return () =>
+      window.removeEventListener('cgraph:e2e-add-group-message', handleE2EAddGroupMessage);
+  }, [addChannelMessage, channelId]);
 
   useEffect(() => {
     if (!channelId) {
@@ -821,7 +960,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   return (
     <div className="flex flex-1">
       {/* Main content */}
-      <div className="flex flex-1 flex-col">
+      <div className="relative flex min-h-0 flex-1 flex-col">
         <ChannelHeader
           channelName={channel.name}
           channelTopic={channel.topic ?? undefined}
@@ -896,6 +1035,10 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
           channelName={channel.name}
           typing={typing}
           messagesEndRef={messagesEndRef}
+          messagesScrollRef={messagesScrollRef}
+          newMessagesBelow={newMessagesBelow}
+          onScroll={handleMessagesScroll}
+          onJumpToLatest={scrollToLatestMessages}
           onLoadMore={handleLoadMore}
           onReply={setReplyTo}
           onOpenThread={(msg) => groupId && channelId && openThread(groupId, channelId, msg)}
@@ -911,6 +1054,12 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
           currentUserId={currentUserId}
           canManageMessages={canManageMessages}
           highlightedMessageId={highlightedMessageId}
+        />
+
+        <ScrollToBottomButton
+          visible={showScrollToLatest}
+          newCount={newMessagesBelow}
+          onClick={scrollToLatestMessages}
         />
 
         <MessageInput

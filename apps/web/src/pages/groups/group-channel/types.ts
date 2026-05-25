@@ -87,6 +87,10 @@ export interface MessagesAreaProps {
   channelName: string;
   typing: readonly string[];
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  messagesScrollRef: React.RefObject<HTMLDivElement | null>;
+  newMessagesBelow: number;
+  onScroll: () => void;
+  onJumpToLatest: () => void;
   onLoadMore: () => void;
   onReply: (message: ChannelMessage) => void;
   onOpenThread: (message: ChannelMessage) => void;

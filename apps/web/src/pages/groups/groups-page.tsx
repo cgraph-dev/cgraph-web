@@ -74,7 +74,7 @@ export default function Groups() {
   };
 
   return (
-    <div className="aurora-hub-shell">
+    <div className="aurora-hub-shell max-h-screen flex-1">
       {/* Loading state */}
       {isLoadingGroups && groups.length === 0 && <LoadingOverlay />}
 
@@ -94,7 +94,7 @@ export default function Groups() {
 
       {/* Channel Content */}
       <div
-        className="aurora-hub-main relative z-10 flex flex-col bg-transparent"
+        className="aurora-hub-main relative z-10 flex h-full min-w-0 flex-col bg-transparent"
         aria-label="Group content"
         tabIndex={0}
       >

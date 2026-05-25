@@ -5,6 +5,7 @@
  */
 
 import { HashtagIcon } from '@heroicons/react/24/outline';
+import { NewMessagesBar } from '@/modules/chat/components/new-messages-bar';
 import { ChannelMessageItem } from './channel-message-item';
 import type { MessagesAreaProps } from './types';
 
@@ -20,6 +21,10 @@ export function MessagesArea({
   channelName,
   typing,
   messagesEndRef,
+  messagesScrollRef,
+  newMessagesBelow,
+  onScroll,
+  onJumpToLatest,
   onLoadMore,
   onReply,
   onOpenThread,
@@ -39,7 +44,20 @@ export function MessagesArea({
   const hasMessages = groupedMessages.some((g) => g.messages.length > 0);
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto p-4">
+    <div
+      ref={messagesScrollRef}
+      onScroll={onScroll}
+      className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4"
+      aria-label={`Messages in #${channelName}`}
+    >
+      {newMessagesBelow > 0 && (
+        <NewMessagesBar
+          count={newMessagesBelow}
+          onJump={onJumpToLatest}
+          className="rounded-full bg-[var(--token-bg-primary)]/80 backdrop-blur-md"
+        />
+      )}
+
       {/* Welcome message */}
       {!hasMessages && !isLoadingMessages && (
         <div className="py-8 text-center">
