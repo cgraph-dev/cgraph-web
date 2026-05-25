@@ -1,7 +1,7 @@
 /**
  * Converstion message list with virtualization.
  */
-import { useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { motion, AnimatePresence } from 'motion/react';
@@ -107,9 +107,14 @@ interface MessageListProps {
   onEditContentChange: (content: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   /** unknown.  Scroll container ref for virtualizer. If omitted, a wrapper div is created. */
-  scrollContainerRef?: React.RefObject<HTMLDivElement>;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  /** Message id requested by route search/pinned navigation. */
+  scrollToMessageId?: string | null;
+  /** Changes when the route wants to repeat a scroll to the same message id. */
+  scrollToMessageRequestKey?: string | number | null;
+  onScrollToMessageComplete?: (messageId: string) => void;
 }
 
 // Flat row type for virtualizer
@@ -140,10 +145,14 @@ export function MessageList({
   onCancelEdit,
   messagesEndRef,
   scrollContainerRef,
+  scrollToMessageId,
+  scrollToMessageRequestKey,
+  onScrollToMessageComplete,
 }: MessageListProps) {
   const navigate = useNavigate();
   const fallbackRef = useRef<HTMLDivElement>(null);
   const containerRef = scrollContainerRef ?? fallbackRef;
+  const lastScrollRequestRef = useRef<string | null>(null);
 
   // Group messages by date
   const groupedMessages = useMemo<MessageGroup[]>(() => {
@@ -189,6 +198,81 @@ export function MessageList({
     overscan: 10,
     getItemKey: (index) => flatRows[index]?.key ?? String(index),
   });
+
+  const scrollTargetIndex = useMemo(() => {
+    if (!scrollToMessageId) return -1;
+
+    return flatRows.findIndex((row) => {
+      if (row.type === 'message') return row.message.id === scrollToMessageId;
+      if (row.type === 'album') {
+        return row.album.messages.some((message) => message.id === scrollToMessageId);
+      }
+      return false;
+    });
+  }, [flatRows, scrollToMessageId]);
+
+  useEffect(() => {
+    if (!scrollToMessageId || scrollTargetIndex < 0) {
+      if (!scrollToMessageId) lastScrollRequestRef.current = null;
+      return undefined;
+    }
+
+    const requestKey = `${scrollToMessageId}:${scrollTargetIndex}:${scrollToMessageRequestKey ?? 'route'}`;
+    if (lastScrollRequestRef.current === requestKey) {
+      return undefined;
+    }
+    lastScrollRequestRef.current = requestKey;
+
+    const align = scrollTargetIndex >= flatRows.length - 1 ? 'end' : 'center';
+    virtualizer.scrollToIndex(scrollTargetIndex, { align });
+
+    let frame = 0;
+    let attempts = 0;
+    let cancelled = false;
+
+    const scrollDomTarget = () => {
+      if (cancelled) return;
+
+      const target = document.getElementById(`message-${scrollToMessageId}`);
+      const container = containerRef.current;
+      if (!target || !container) {
+        if (attempts < 8) {
+          attempts += 1;
+          frame = window.requestAnimationFrame(scrollDomTarget);
+        }
+        return;
+      }
+
+      const targetRect = target.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const targetTop = targetRect.top - containerRect.top + container.scrollTop;
+      const nextTop =
+        align === 'end'
+          ? targetTop - container.clientHeight + targetRect.height + 24
+          : targetTop - container.clientHeight / 2 + targetRect.height / 2;
+
+      container.scrollTo({
+        top: Math.max(0, nextTop),
+        behavior: 'smooth',
+      });
+      onScrollToMessageComplete?.(scrollToMessageId);
+    };
+
+    frame = window.requestAnimationFrame(scrollDomTarget);
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [
+    containerRef,
+    flatRows.length,
+    onScrollToMessageComplete,
+    scrollTargetIndex,
+    scrollToMessageId,
+    scrollToMessageRequestKey,
+    virtualizer,
+  ]);
 
   const renderRow = (row: VirtualRow) => {
     if (row.type === 'album') {
@@ -309,6 +393,11 @@ export function MessageList({
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = flatRows[virtualRow.index];
           if (!row) return null;
+          const hasActiveMenu =
+            activeMessageMenu &&
+            ((row.type === 'message' && row.message.id === activeMessageMenu) ||
+              (row.type === 'album' &&
+                row.album.messages.some((message) => message.id === activeMessageMenu)));
 
           return (
             <div
@@ -321,6 +410,7 @@ export function MessageList({
                 left: 0,
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
+                zIndex: hasActiveMenu ? 20 : 1,
               }}
             >
               {renderRow(row)}

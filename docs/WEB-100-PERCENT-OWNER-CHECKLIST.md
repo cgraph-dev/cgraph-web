@@ -128,6 +128,15 @@ revalidates reply, edit, pin, forward, delete, read receipts, file unlock states
 sticker, typing, calls, and message-request gates. The strict-pass row remains open until
 route-owned message list/page orchestration also converges.
 
+2026-05-26 Cloud Chat list convergence proof: production web now renders the routed DM conversation
+through shared `modules/chat` `MessageList`, with the route shell passing backend action handlers,
+typing state, edit state, and id-based search/pinned/latest scroll requests into the shared list
+contract. The shared list owns virtualization, message-row rendering, active-menu stacking, and
+guarded scroll-to-message behavior. Typecheck, lint, production build, and the full routed
+`apps/web/e2e/dm-media-composer.spec.ts` Chromium proof pass against the rebuilt preview. This
+closes the owner checklist's shared composer/list/action/media stack row, while final broad release
+validation remains tracked by the strict-pass and maturity scorecard documents.
+
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,
 and uses `/api/v1/auth/oauth/providers` to decide which account-linking actions render. The focused

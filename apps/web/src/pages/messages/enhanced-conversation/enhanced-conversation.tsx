@@ -9,15 +9,15 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useEnhancedConversation } from './useEnhancedConversation';
-import { EnhancedMessageBubble } from './enhanced-message-bubble';
 import { ConversationHeader } from './conversation-header';
 import { MessageInputArea } from './message-input-area';
-import { TypingIndicator } from './typing-indicator';
 import { LoadingSpinner } from './loading-spinner';
+import { MessageList } from '@/modules/chat/components';
 import { MessageRequestBanner } from '@/modules/chat/components/message-request-banner';
 import { ForwardMessageModal } from '@/modules/chat/components/forward-message-modal';
 import { NewMessagesBar } from '@/modules/chat/components/new-messages-bar';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
+import { DEFAULT_UI_PREFERENCES } from '@/pages/messages/conversation/types';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 
@@ -26,10 +26,16 @@ import { FADE_IN } from '@/lib/animations/transitions';
  */
 export default function EnhancedConversation() {
   const [showPinnedMessages, setShowPinnedMessages] = useState(false);
+  const [manualScrollTarget, setManualScrollTarget] = useState<{
+    messageId: string;
+    requestKey: number;
+  } | null>(null);
+  const [consumedRouteScrollTarget, setConsumedRouteScrollTarget] = useState<string | null>(null);
   const {
     conversationId,
     conversation,
     conversationMessages,
+    scrollToMessageId,
     typing,
     user,
     attachmentNodePrice,
@@ -48,7 +54,6 @@ export default function EnhancedConversation() {
     scrollToLatestMessages,
     handleTyping,
     handleComposerPayload,
-    handleAvatarClick,
     handleStartCall,
     handleMessageRequestAccepted,
     handleMessageRequestRejected,
@@ -58,13 +63,50 @@ export default function EnhancedConversation() {
   const pinnedMessages = conversationMessages.filter(
     (message) => message.isPinned && !message.deletedAt
   );
+  const routeScrollTargetKey = scrollToMessageId ? `${conversationId}:${scrollToMessageId}` : null;
 
   const scrollToMessage = (messageId: string) => {
-    document.getElementById(`message-${messageId}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-    });
+    if (routeScrollTargetKey) {
+      setConsumedRouteScrollTarget(routeScrollTargetKey);
+    }
+    setManualScrollTarget((previous) => ({
+      messageId,
+      requestKey: (previous?.requestKey ?? 0) + 1,
+    }));
     setShowPinnedMessages(false);
+  };
+
+  const routeScrollTarget =
+    routeScrollTargetKey && consumedRouteScrollTarget !== routeScrollTargetKey
+      ? scrollToMessageId
+      : null;
+  const activeScrollToMessageId = manualScrollTarget?.messageId ?? routeScrollTarget;
+  const activeScrollRequestKey =
+    manualScrollTarget?.requestKey ??
+    (routeScrollTarget ? `${conversationId}:${routeScrollTarget}` : null);
+
+  const handleScrollToMessageComplete = (messageId: string) => {
+    if (manualScrollTarget?.messageId === messageId) {
+      setManualScrollTarget(null);
+    }
+    if (routeScrollTargetKey && scrollToMessageId === messageId) {
+      setConsumedRouteScrollTarget(routeScrollTargetKey);
+    }
+  };
+
+  const handlePinMessage = (messageId: string) => {
+    const message = conversationMessages.find((entry) => entry.id === messageId);
+    if (!message) return;
+
+    messageActions.handlePinMessage(message.id, message.conversationId);
+  };
+
+  const handleJumpToLatest = () => {
+    const latestMessage = conversationMessages.at(-1);
+    if (latestMessage) {
+      scrollToMessage(latestMessage.id);
+    }
+    scrollToLatestMessages('auto');
   };
 
   if (!conversation) {
@@ -153,49 +195,38 @@ export default function EnhancedConversation() {
           aria-label="Conversation messages"
         >
           {newMessagesBelow > 0 && (
-            <NewMessagesBar count={newMessagesBelow} onJump={() => scrollToLatestMessages()} />
+            <NewMessagesBar count={newMessagesBelow} onJump={handleJumpToLatest} />
           )}
 
-          {conversationMessages.map((message, index) => {
-            const isOwn = message.senderId === user?.id;
-            const prevMessage = conversationMessages[index - 1];
-            const showAvatar =
-              !isOwn && (!prevMessage || prevMessage.senderId !== message.senderId);
-
-            return (
-              <EnhancedMessageBubble
-                key={message.id}
-                message={message}
-                isOwn={isOwn}
-                showAvatar={showAvatar}
-                onReply={() => setReplyTo(message)}
-                onEdit={() => messageActions.handleStartEdit(message)}
-                onDelete={() => messageActions.handleDeleteMessage(message.id)}
-                onPin={() => messageActions.handlePinMessage(message.id, message.conversationId)}
-                onForward={() => messageActions.handleOpenForward(message, true)}
-                isMenuOpen={messageActions.activeMessageMenu === message.id}
-                onToggleMenu={() => messageActions.handleToggleMessageMenu(message.id)}
-                isEditing={messageActions.editingMessageId === message.id}
-                editContent={messageActions.editContent}
-                onEditContentChange={messageActions.setEditContent}
-                onSaveEdit={messageActions.handleSaveEdit}
-                onCancelEdit={messageActions.handleCancelEdit}
-                index={index}
-                onAvatarClick={handleAvatarClick}
-              />
-            );
-          })}
-
-          {/* Typing indicator */}
-          <TypingIndicator isVisible={typing.length > 0} />
-
-          <div ref={messagesEndRef} />
+          <MessageList
+            messages={[...conversationMessages]}
+            userId={user?.id}
+            uiPreferences={DEFAULT_UI_PREFERENCES}
+            typing={typing}
+            onReply={setReplyTo}
+            onEdit={messageActions.handleStartEdit}
+            onDelete={messageActions.handleDeleteMessage}
+            onPin={handlePinMessage}
+            onForward={(message) => messageActions.handleOpenForward(message, true)}
+            activeMessageMenu={messageActions.activeMessageMenu}
+            onToggleMenu={messageActions.handleToggleMessageMenu}
+            editingMessageId={messageActions.editingMessageId}
+            editContent={messageActions.editContent}
+            onEditContentChange={messageActions.setEditContent}
+            onSaveEdit={messageActions.handleSaveEdit}
+            onCancelEdit={messageActions.handleCancelEdit}
+            messagesEndRef={messagesEndRef}
+            scrollContainerRef={messagesScrollRef}
+            scrollToMessageId={activeScrollToMessageId}
+            scrollToMessageRequestKey={activeScrollRequestKey}
+            onScrollToMessageComplete={handleScrollToMessageComplete}
+          />
         </div>
 
         <ScrollToBottomButton
           visible={showScrollToLatest}
           newCount={newMessagesBelow}
-          onClick={() => scrollToLatestMessages()}
+          onClick={handleJumpToLatest}
         />
 
         {/* Input Area */}

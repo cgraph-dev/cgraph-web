@@ -42,7 +42,7 @@ export function MessageInputArea({
   return (
     <div
       ref={inputContainerRef}
-      className="flex-shrink-0 border-t border-[var(--token-card-border)] p-4"
+      className="relative z-40 flex-shrink-0 border-t border-[var(--token-card-border)] p-4"
     >
       <MessageInput
         conversationId={conversationId}

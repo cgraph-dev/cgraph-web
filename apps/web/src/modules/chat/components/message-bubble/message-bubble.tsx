@@ -172,7 +172,7 @@ export const MessageBubble = memo(function MessageBubble({
 
         <div className="flex items-center gap-2">
           {/* Actions (for own messages, show on left) */}
-          {isOwn && showActions && (
+          {isOwn && (showActions || isMenuOpen) && (
             <MessageActionMenu
               onReply={onReply}
               onEdit={onEdit}
@@ -325,7 +325,7 @@ export const MessageBubble = memo(function MessageBubble({
           </div>
 
           {/* Actions (for other messages, show on right) */}
-          {!isOwn && showActions && (
+          {!isOwn && (showActions || isMenuOpen) && (
             <div className="flex items-center gap-1">
               {canShowActionMenu ? (
                 <MessageActionMenu

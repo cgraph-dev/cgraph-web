@@ -615,6 +615,7 @@ export function useEnhancedConversation() {
     conversationId,
     conversation,
     conversationMessages,
+    scrollToMessageId,
     typing,
     user,
     callRecipientId,
