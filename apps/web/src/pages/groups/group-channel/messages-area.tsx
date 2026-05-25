@@ -54,7 +54,7 @@ export function MessagesArea({
         <NewMessagesBar
           count={newMessagesBelow}
           onJump={onJumpToLatest}
-          className="rounded-full bg-[var(--token-bg-primary)]/80 backdrop-blur-md"
+          className="bg-[var(--token-bg-primary)]/80 rounded-full backdrop-blur-md"
         />
       )}
 

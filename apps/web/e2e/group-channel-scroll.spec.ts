@@ -229,9 +229,7 @@ test.describe('Group channel scrolling', () => {
   test('keeps routed anchors stable for new messages until the user jumps to latest', async ({
     page,
   }) => {
-    const messages = Array.from({ length: 36 }, (_, index) =>
-      groupMessageApiFixture(index + 1)
-    );
+    const messages = Array.from({ length: 36 }, (_, index) => groupMessageApiFixture(index + 1));
     await installGroupScrollMocks(page, messages);
 
     await page.goto(`/groups/${GROUP_ID}/channels/${TEXT_CHANNEL_ID}?scrollTo=group-scroll-msg-6`);

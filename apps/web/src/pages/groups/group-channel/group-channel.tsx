@@ -529,14 +529,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.delete('scrollTo');
     setSearchParams(nextSearchParams, { replace: true });
-  }, [
-    lastMessageId,
-    messages,
-    scrollToMessage,
-    scrollToMessageId,
-    searchParams,
-    setSearchParams,
-  ]);
+  }, [lastMessageId, messages, scrollToMessage, scrollToMessageId, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (import.meta.env.VITE_E2E_AUTH_BYPASS !== 'true') return undefined;
