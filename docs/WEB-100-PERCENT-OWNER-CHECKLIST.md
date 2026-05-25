@@ -99,6 +99,12 @@ ordinary members only see personal Notifications/Danger actions and do not issue
 endpoint-level permission-denied copy, paired QR approval, provider delivery, package-version
 consumption, and final broad browser validation open.
 
+2026-05-25 group-settings permission-edge proof: production web now surfaces route-specific 403 copy
+for denied overview saves, role creation, role reorder rollback, invite creation, and member role
+assignment on `/groups/:groupId/settings`. The same routed Playwright spec verifies each backend
+request and visible denial message. Remaining strict group work is invite list/delete 403, role
+update/delete 403, kick/ban/mute permission-denied paths, and stronger group scroll behavior.
+
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,
 and uses `/api/v1/auth/oauth/providers` to decide which account-linking actions render. The focused
@@ -106,8 +112,8 @@ unit proof covers configured-provider parsing and empty-provider behavior, while
 `apps/web/e2e/settings-preference-sync.spec.ts` browser-verifies the routed settings page showing
 Google/TikTok from backend discovery while hiding unavailable Apple/Facebook account-linking
 actions. The stricter release-readiness documents still keep real provider delivery, paired QR
-approval, endpoint-level group permission copy, package-version consumption, and final broad browser
-validation open.
+approval, the remaining group invite/member/role permission edges, package-version consumption, and
+final broad browser validation open.
 
 2026-05-23 GIF storage schema proof: production web commit `dd6de12` moves the GIF picker favorites
 and recent caches to schema-versioned keys, migrates the old `cgraph-gif-favorites` and
@@ -345,8 +351,11 @@ Required implementation-time questions:
 - [x] Routed group admin and settings surfaces are mounted and usable. Verified by
       `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-17 for cold settings-route ownership, overview
       save, invite creation, member role assignment, role-tab render, and settings-channel creation.
-      Remaining release-readiness work is permission-edge coverage and deeper role CRUD/reorder
-      proof, tracked in `docs/WEB-ULTIMATE-STRICT-PASS.md`.
+      `apps/web/e2e/group-settings-permissions.spec.ts` now also verifies endpoint-level 403 copy
+      for denied overview save, role create/reorder, invite creation, and member role assignment.
+      Remaining release-readiness work is invite list/delete 403, role update/delete 403,
+      kick/ban/mute permission-denied paths, and stronger group scroll proof, tracked in
+      `docs/WEB-ULTIMATE-STRICT-PASS.md`.
 
 ### C. Converge Identity, Settings, And Customization Ownership
 

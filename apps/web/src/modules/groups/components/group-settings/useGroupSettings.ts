@@ -6,6 +6,7 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { createLogger } from '@/lib/logger';
 import type { TabId, OverviewFormData } from './types';
 import { PERMISSIONS } from '../role-manager/constants';
+import { getGroupPermissionError } from '../../permission-errors';
 
 const logger = createLogger('GroupSettings');
 const ADMINISTRATOR = PERMISSIONS.ADMINISTRATOR?.value ?? 0;
@@ -31,6 +32,7 @@ export function useGroupSettings(groupId: string) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const activeGroup = groups.find((g) => g.id === groupId);
   const isOwner = activeGroup?.ownerId === user?.id;
@@ -60,10 +62,12 @@ export function useGroupSettings(groupId: string) {
   const handleFormChange = (data: OverviewFormData) => {
     setFormData(data);
     setHasChanges(true);
+    setSaveError(null);
   };
 
   const handleSave = async () => {
     setIsSaving(true);
+    setSaveError(null);
     try {
       await updateGroup(groupId, {
         name: formData.name,
@@ -74,6 +78,13 @@ export function useGroupSettings(groupId: string) {
       HapticFeedback.success();
     } catch (error) {
       logger.error('Failed to save:', error);
+      setSaveError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to update group settings.',
+          'Could not save group settings. Please try again.'
+        )
+      );
       HapticFeedback.error();
     } finally {
       setIsSaving(false);
@@ -87,6 +98,7 @@ export function useGroupSettings(groupId: string) {
       isPublic: activeGroup?.isPublic || false,
     });
     setHasChanges(false);
+    setSaveError(null);
   };
 
   const handleLeave = async () => {
@@ -122,6 +134,7 @@ export function useGroupSettings(groupId: string) {
     hasChanges,
     isSaving,
     handleSave,
+    saveError,
     handleReset,
     showLeaveConfirm,
     setShowLeaveConfirm,

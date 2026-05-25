@@ -47,6 +47,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
     hasChanges,
     isSaving,
     handleSave,
+    saveError,
     handleReset,
     showLeaveConfirm,
     setShowLeaveConfirm,
@@ -187,6 +188,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
       <SaveBar
         hasChanges={permissions.canManageGroup && hasChanges}
         isSaving={isSaving}
+        errorMessage={saveError}
         onSave={handleSave}
         onReset={handleReset}
       />

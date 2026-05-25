@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface SaveBarProps {
   hasChanges: boolean;
   isSaving: boolean;
+  errorMessage?: string | null;
   onSave: () => void;
   onReset: () => void;
 }
@@ -10,7 +11,7 @@ interface SaveBarProps {
 /**
  * Save Bar component.
  */
-export function SaveBar({ hasChanges, isSaving, onSave, onReset }: SaveBarProps) {
+export function SaveBar({ hasChanges, isSaving, errorMessage = null, onSave, onReset }: SaveBarProps) {
   return (
     <AnimatePresence>
       {hasChanges && (
@@ -20,8 +21,15 @@ export function SaveBar({ hasChanges, isSaving, onSave, onReset }: SaveBarProps)
           exit={{ y: 100, opacity: 0 }}
           className="fixed bottom-0 left-0 right-0 border-t border-[var(--token-border-muted)] bg-[var(--token-card-bg)]/90 p-4 backdrop-blur-sm"
         >
-          <div className="mx-auto flex max-w-2xl items-center justify-between">
-            <p className="text-sm text-gray-400">You have unsaved changes</p>
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-400">You have unsaved changes</p>
+              {errorMessage && (
+                <p role="alert" className="mt-1 text-sm text-red-300">
+                  {errorMessage}
+                </p>
+              )}
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={onReset}

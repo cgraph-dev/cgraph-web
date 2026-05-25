@@ -14,6 +14,7 @@ import {
 } from './members-tab/index';
 import type { GroupMember, GroupRole, MemberAction } from './members-tab/index';
 import { FADE_UP } from '@/lib/animations/transitions';
+import { getGroupPermissionError } from '../../permission-errors';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -37,6 +38,7 @@ export function MembersTab({ groupId }: MembersTabProps) {
   const [availableRoles, setAvailableRoles] = useState<GroupRole[]>([]);
   const [roleModalMemberId, setRoleModalMemberId] = useState<string | null>(null);
   const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set());
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -83,8 +85,16 @@ export function MembersTab({ groupId }: MembersTabProps) {
           };
         })
       );
+      setErrorMessage(null);
     } catch (error) {
       logger.error('Failed to fetch members', error);
+      setErrorMessage(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to view members in this group.',
+          'Could not load members. Please try again.'
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -112,21 +122,37 @@ export function MembersTab({ groupId }: MembersTabProps) {
       })
       .catch((error: unknown) => {
         logger.error('Failed to fetch roles', error);
+        setErrorMessage(
+          getGroupPermissionError(
+            error,
+            'You do not have permission to view roles in this group.',
+            'Could not load roles. Please try again.'
+          )
+        );
       });
   }, [fetchMembers, groupId]);
 
   const handleKick = async (memberId: string) => {
+    setErrorMessage(null);
     try {
       const result = await apiClient.groups.kickMember(groupId, memberId);
-      if (!result.ok) throw new Error(result.error.message);
+      if (!result.ok) throw result.error;
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
     } catch (error) {
       logger.error('Failed to kick member', error);
+      setErrorMessage(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to kick members from this group.',
+          'Could not kick member. Please try again.'
+        )
+      );
     }
     setConfirmAction({ memberId: '', action: 'none' });
   };
 
   const handleBan = async (memberId: string) => {
+    setErrorMessage(null);
     try {
       const params: Record<string, string> = {};
       if (banDuration !== 'permanent') params.duration = banDuration;
@@ -134,22 +160,38 @@ export function MembersTab({ groupId }: MembersTabProps) {
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
     } catch (error) {
       logger.error('Failed to ban member', error);
+      setErrorMessage(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to ban members from this group.',
+          'Could not ban member. Please try again.'
+        )
+      );
     }
     setConfirmAction({ memberId: '', action: 'none' });
     setBanDuration('permanent');
   };
 
   const handleMute = async (memberId: string) => {
+    setErrorMessage(null);
     try {
       await http.post(`/api/v1/groups/${groupId}/members/${memberId}/mute`);
       setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, isMuted: true } : m)));
     } catch (error) {
       logger.error('Failed to mute member', error);
+      setErrorMessage(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to mute members in this group.',
+          'Could not mute member. Please try again.'
+        )
+      );
     }
     setConfirmAction({ memberId: '', action: 'none' });
   };
 
   const handleUnmute = async (memberId: string) => {
+    setErrorMessage(null);
     try {
       await http.delete(`/api/v1/groups/${groupId}/members/${memberId}/mute`);
       setMembers((prev) =>
@@ -157,6 +199,13 @@ export function MembersTab({ groupId }: MembersTabProps) {
       );
     } catch (error) {
       logger.error('Failed to unmute member', error);
+      setErrorMessage(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to unmute members in this group.',
+          'Could not unmute member. Please try again.'
+        )
+      );
     }
   };
 
@@ -183,15 +232,23 @@ export function MembersTab({ groupId }: MembersTabProps) {
 
   const handleSaveRoles = async () => {
     if (!roleModalMemberId) return;
+    setErrorMessage(null);
     try {
       await http.put(`/api/v1/groups/${groupId}/members/${roleModalMemberId}/roles`, {
         role_ids: Array.from(selectedRoleIds),
       });
       fetchMembers();
+      setRoleModalMemberId(null);
     } catch (error) {
       logger.error('Failed to save member roles', error);
+      setErrorMessage(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to update member roles in this group.',
+          'Could not save member roles. Please try again.'
+        )
+      );
     }
-    setRoleModalMemberId(null);
   };
 
   const filtered = members.filter((m) => {
@@ -217,6 +274,15 @@ export function MembersTab({ groupId }: MembersTabProps) {
         roleFilter={roleFilter}
         onRoleFilterChange={setRoleFilter}
       />
+
+      {errorMessage && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+        >
+          {errorMessage}
+        </div>
+      )}
 
       <GlassCard variant="frosted" className="divide-y divide-gray-700/50">
         {loading ? (

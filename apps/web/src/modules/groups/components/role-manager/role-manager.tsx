@@ -27,6 +27,7 @@ import { RoleEditor } from './role-editor';
 import type { RoleManagerProps } from './types';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { getGroupPermissionError } from '../../permission-errors';
 
 const logger = createLogger('RoleManager');
 
@@ -42,6 +43,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [mutationError, setMutationError] = useState<string | null>(null);
 
   const activeGroup = groups.find((g) => g.id === groupId);
 
@@ -50,14 +52,27 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   }, [activeGroup?.roles]);
 
   const handleReorder = (newOrder: Role[]) => {
+    const previousRoles = roles;
     setRoles(newOrder);
+    setMutationError(null);
     HapticFeedback.light();
     // Persist new role order to backend
     const roleIds = newOrder.map((r) => r.id).filter((id) => !id.startsWith('temp-'));
     if (roleIds.length > 0) {
       http
         .put(`/api/v1/groups/${groupId}/roles/reorder`, { role_ids: roleIds })
-        .catch((e) => logger.error('Role reorder failed', e));
+        .catch((error) => {
+          logger.error('Role reorder failed', error);
+          setRoles(previousRoles);
+          setMutationError(
+            getGroupPermissionError(
+              error,
+              'You do not have permission to reorder roles in this group.',
+              'Could not reorder roles. Please try again.'
+            )
+          );
+          HapticFeedback.error();
+        });
     }
   };
 
@@ -77,6 +92,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
 
   const handleCreateRole = () => {
     if (isSaving) return;
+    setMutationError(null);
     const sendMessages = PERMISSIONS.SEND_MESSAGES?.value ?? 0;
     const addReactions = PERMISSIONS.ADD_REACTIONS?.value ?? 0;
     const newRole: Role = {
@@ -96,13 +112,28 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
 
   const handleDeleteRole = (roleId: string) => {
     if (isSaving) return;
+    setMutationError(null);
+    const previousRoles = roles;
+    const previousSelectedRole = selectedRole;
     setRoles(roles.filter((r) => r.id !== roleId));
     if (selectedRole?.id === roleId) {
       setSelectedRole(null);
     }
     HapticFeedback.warning();
     if (!roleId.startsWith('temp-')) {
-      deleteRole(groupId, roleId).catch((e) => logger.error('Role deletion failed', e));
+      deleteRole(groupId, roleId).catch((error) => {
+        logger.error('Role deletion failed', error);
+        setRoles(previousRoles);
+        setSelectedRole(previousSelectedRole);
+        setMutationError(
+          getGroupPermissionError(
+            error,
+            'You do not have permission to delete roles in this group.',
+            'Could not delete role. Please try again.'
+          )
+        );
+        HapticFeedback.error();
+      });
     }
   };
 
@@ -121,6 +152,8 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   const handleSaveRole = () => {
     if (!selectedRole || isSaving) return;
     setIsSaving(true);
+    setMutationError(null);
+    const savingRole = selectedRole;
     if (selectedRole.id.startsWith('temp-')) {
       createRole(groupId, {
         name: selectedRole.name,
@@ -134,7 +167,20 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
           setIsCreating(false);
           HapticFeedback.success();
         })
-        .catch((e) => logger.error('Role creation failed', e))
+        .catch((error) => {
+          logger.error('Role creation failed', error);
+          setRoles((prev) => prev.filter((role) => role.id !== savingRole.id));
+          setSelectedRole(null);
+          setIsCreating(false);
+          setMutationError(
+            getGroupPermissionError(
+              error,
+              'You do not have permission to create roles in this group.',
+              'Could not create role. Please try again.'
+            )
+          );
+          HapticFeedback.error();
+        })
         .finally(() => setIsSaving(false));
     } else {
       updateRole(groupId, selectedRole.id, {
@@ -148,7 +194,17 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
           setSelectedRole(updated);
           HapticFeedback.success();
         })
-        .catch((e) => logger.error('Role update failed', e))
+        .catch((error) => {
+          logger.error('Role update failed', error);
+          setMutationError(
+            getGroupPermissionError(
+              error,
+              'You do not have permission to update roles in this group.',
+              'Could not update role. Please try again.'
+            )
+          );
+          HapticFeedback.error();
+        })
         .finally(() => setIsSaving(false));
     }
   };
@@ -234,6 +290,15 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
 
       {/* Role Editor */}
       <div className="flex-1 overflow-y-auto p-6">
+        {mutationError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+          >
+            {mutationError}
+          </div>
+        )}
+
         {selectedRole ? (
           <RoleEditor
             role={selectedRole}

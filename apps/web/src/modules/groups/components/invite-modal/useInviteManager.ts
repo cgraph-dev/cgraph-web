@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { createLogger } from '@/lib/logger';
 import { apiClient } from '@/lib/api-client';
+import { getGroupPermissionError } from '../../permission-errors';
 
 const logger = createLogger('InviteModal');
 
@@ -61,6 +62,7 @@ export function useInviteManager(groupId?: string) {
   const [expiration, setExpiration] = useState<number | null>(24 * 60 * 60);
   const [maxUses, setMaxUses] = useState<number | null>(null);
   const [invites, setInvites] = useState<Invite[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Fetch existing invites
   useEffect(() => {
@@ -68,7 +70,17 @@ export function useInviteManager(groupId?: string) {
     apiClient.groups
       .getInvites(groupId)
       .then((result) => {
-        if (!result.ok) return;
+        if (!result.ok) {
+          setErrorMessage(
+            getGroupPermissionError(
+              result.error,
+              'You do not have permission to view invites for this group.',
+              'Could not load invites. Please try again.'
+            )
+          );
+          return;
+        }
+        setErrorMessage(null);
         setInvites(
           result.data.map((inv) => ({
             id: inv.id,
@@ -85,12 +97,22 @@ export function useInviteManager(groupId?: string) {
           }))
         );
       })
-      .catch((e) => logger.error('Invite creation failed', e));
+      .catch((error) => {
+        logger.error('Invite load failed', error);
+        setErrorMessage(
+          getGroupPermissionError(
+            error,
+            'You do not have permission to view invites for this group.',
+            'Could not load invites. Please try again.'
+          )
+        );
+      });
   }, [groupId]);
 
   const handleGenerateInvite = async () => {
     if (!groupId) return;
     setIsGenerating(true);
+    setErrorMessage(null);
     try {
       const result = await apiClient.groups.createInvite(groupId, {
         max_uses: maxUses ?? undefined,
@@ -117,6 +139,13 @@ export function useInviteManager(groupId?: string) {
       HapticFeedback.success();
     } catch (error) {
       logger.error('Failed to generate invite:', error);
+      setErrorMessage(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to create invites for this group.',
+          'Could not generate invite. Please try again.'
+        )
+      );
       HapticFeedback.error();
     } finally {
       setIsGenerating(false);
@@ -135,12 +164,36 @@ export function useInviteManager(groupId?: string) {
   };
 
   const handleDeleteInvite = (inviteId: string) => {
+    setErrorMessage(null);
+    const previousInvites = invites;
     setInvites(invites.filter((i) => i.id !== inviteId));
     HapticFeedback.warning();
     if (groupId) {
       apiClient.groups
         .deleteInvite(groupId, inviteId)
-        .catch((e) => logger.error('Invite deletion failed', e));
+        .then((result) => {
+          if (!result.ok) {
+            setInvites(previousInvites);
+            setErrorMessage(
+              getGroupPermissionError(
+                result.error,
+                'You do not have permission to delete invites for this group.',
+                'Could not delete invite. Please try again.'
+              )
+            );
+          }
+        })
+        .catch((error) => {
+          logger.error('Invite deletion failed', error);
+          setInvites(previousInvites);
+          setErrorMessage(
+            getGroupPermissionError(
+              error,
+              'You do not have permission to delete invites for this group.',
+              'Could not delete invite. Please try again.'
+            )
+          );
+        });
     }
   };
 
@@ -167,6 +220,7 @@ export function useInviteManager(groupId?: string) {
     maxUses,
     setMaxUses,
     invites,
+    errorMessage,
     handleGenerateInvite,
     handleCopyLink,
     handleDeleteInvite,
