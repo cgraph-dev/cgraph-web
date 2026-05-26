@@ -218,6 +218,15 @@ async function installGroupPermissionMocks(
 ) {
   let currentGroupFixture = groupFixture;
   let roleState = groupFixture.roles.map((role) => ({ ...role }));
+  let friendMember: Record<string, unknown> | null = {
+    id: 'member-friend',
+    user_id: friendUser.id,
+    user: friendUser,
+    notifications: 'mentions',
+    joined_at: '2026-01-01T00:00:00.000Z',
+    is_muted: false,
+    muted_until: null,
+  };
   const requests = {
     groupPatches: [] as unknown[],
     pinCreates: [] as unknown[],
@@ -232,6 +241,7 @@ async function installGroupPermissionMocks(
     memberKicks: [] as string[],
     memberBans: [] as string[],
     memberMutes: [] as string[],
+    memberUnmutes: [] as string[],
     memberRoleUpdates: [] as Array<{ memberId: string; body: unknown }>,
     leaves: [] as string[],
     deletes: [] as string[],
@@ -412,14 +422,7 @@ async function installGroupPermissionMocks(
       await fulfillJson(route, {
         data: [
           groupResponse().myMember,
-          {
-            id: 'member-friend',
-            user_id: friendUser.id,
-            user: friendUser,
-            roles: roleState,
-            notifications: 'mentions',
-            joined_at: '2026-01-01T00:00:00.000Z',
-          },
+          ...(friendMember ? [{ ...friendMember, roles: roleState }] : []),
         ],
       });
       return;
@@ -432,7 +435,8 @@ async function installGroupPermissionMocks(
         return;
       }
 
-      await fulfillJson(route, { data: { ok: true } });
+      friendMember = null;
+      await route.fulfill({ status: 204, body: '' });
       return;
     }
 
@@ -443,7 +447,15 @@ async function installGroupPermissionMocks(
         return;
       }
 
-      await fulfillJson(route, { data: { ok: true } });
+      friendMember = null;
+      await fulfillJson(route, {
+        data: {
+          id: 'ban-edge',
+          group_id: GROUP_ID,
+          user_id: friendUser.id,
+          reason: 'moderation action',
+        },
+      });
       return;
     }
 
@@ -454,7 +466,27 @@ async function installGroupPermissionMocks(
         return;
       }
 
-      await fulfillJson(route, { data: { ok: true } });
+      friendMember = friendMember
+        ? {
+            ...friendMember,
+            is_muted: true,
+            muted_until: '2026-12-31T00:00:00.000Z',
+          }
+        : friendMember;
+      await fulfillJson(route, { data: friendMember });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/mute` && method === 'DELETE') {
+      requests.memberUnmutes.push('member-friend');
+      friendMember = friendMember
+        ? {
+            ...friendMember,
+            is_muted: false,
+            muted_until: null,
+          }
+        : friendMember;
+      await fulfillJson(route, { data: friendMember });
       return;
     }
 
@@ -1346,6 +1378,71 @@ test.describe('Group settings permissions', () => {
     await expect(
       page.getByText('You do not have permission to update member roles in this group.')
     ).toBeVisible();
+  });
+
+  test('reconciles successful member mute and unmute on the routed members tab', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Members$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /member actions for permission friend/i }).click();
+    await page.getByRole('button', { name: /^Mute$/ }).click();
+    await page.getByRole('button', { name: /^Confirm Mute$/ }).click();
+
+    await expect
+      .poll(() => requests.memberMutes, { message: 'member mute reached backend' })
+      .toContain('member-friend');
+    await expect(page.getByText('muted')).toBeVisible();
+
+    await page.getByRole('button', { name: /member actions for permission friend/i }).click();
+    await page.getByRole('button', { name: /^Unmute$/ }).click();
+
+    await expect
+      .poll(() => requests.memberUnmutes, { message: 'member unmute reached backend' })
+      .toContain('member-friend');
+    await expect(page.getByText('muted')).toHaveCount(0);
+  });
+
+  test('reconciles successful member kick on the routed members tab', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Members$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /member actions for permission friend/i }).click();
+    await page.getByRole('button', { name: /^Kick$/ }).click();
+    await page.getByRole('button', { name: /^Confirm Kick$/ }).click();
+
+    await expect
+      .poll(() => requests.memberKicks, { message: 'member kick reached backend' })
+      .toContain('member-friend');
+    await expect(page.getByText('Permission Friend')).toHaveCount(0);
+  });
+
+  test('reconciles successful member ban on the routed members tab', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Members$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /member actions for permission friend/i }).click();
+    await page.getByRole('button', { name: /^Ban$/ }).click();
+    await page.getByRole('button', { name: /^Confirm Ban$/ }).click();
+
+    await expect
+      .poll(() => requests.memberBans, { message: 'member ban reached backend' })
+      .toContain('member-friend');
+    await expect(page.getByText('Permission Friend')).toHaveCount(0);
   });
 
   test('shows endpoint 403 copy when member moderation actions are denied', async ({ page }) => {

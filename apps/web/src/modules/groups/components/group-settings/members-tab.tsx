@@ -58,6 +58,9 @@ export function MembersTab({ groupId }: MembersTabProps) {
           const rawDisplayName = m.display_name ?? m.displayName ?? mUser.display_name ?? null;
           const rawAvatarUrl = m.avatar_url ?? m.avatarUrl ?? mUser.avatar_url ?? null;
           const rawMutedUntil = m.muted_until ?? m.mutedUntil ?? null;
+          const mutedUntil = typeof rawMutedUntil === 'string' ? rawMutedUntil : null;
+          const mutedUntilTime = mutedUntil ? Date.parse(mutedUntil) : Number.NaN;
+          const hasActiveMutedUntil = Number.isFinite(mutedUntilTime) && mutedUntilTime > Date.now();
           const rawRoles: Array<{ id: string; name: string; color: string }> = Array.isArray(
             m.roles
           )
@@ -80,8 +83,8 @@ export function MembersTab({ groupId }: MembersTabProps) {
             role: String(m.role ?? 'member'),
             roles: rawRoles,
             joinedAt: String(m.joined_at ?? m.joinedAt ?? m.inserted_at ?? ''),
-            isMuted: !!(m.is_muted ?? m.isMuted),
-            mutedUntil: typeof rawMutedUntil === 'string' ? rawMutedUntil : null,
+            isMuted: Boolean(m.is_muted ?? m.isMuted ?? hasActiveMutedUntil),
+            mutedUntil,
           };
         })
       );

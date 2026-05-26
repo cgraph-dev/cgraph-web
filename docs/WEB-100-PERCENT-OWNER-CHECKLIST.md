@@ -125,6 +125,14 @@ payload-validation error copy, and browser-verifies those routed states in
 `apps/web/e2e/group-settings-permissions.spec.ts`, including routed reorder hierarchy copy and
 invalid color/permission detail rendering.
 
+2026-05-26 member-management moderation proof: production backend now mounts the member unmute route,
+returns explicit `is_muted` truth in member JSON, and proves kick removal, ban creation plus
+membership removal, and mute/unmute state transitions in
+`test/cgraph_web/controllers/api/v1/group_member_controller_test.exs`. Production web now derives
+member muted state from the backend contract and browser-verifies successful mute, unmute, kick, and
+ban reconciliation on `/groups/:groupId/settings` in
+`apps/web/e2e/group-settings-permissions.spec.ts`.
+
 2026-05-25 group scroll proof: production web now constrains the routed groups shell height, lets
 the group message list own scroll state, and replaces naive group-channel autoscroll with guarded
 anchor/latest behavior. `apps/web/e2e/group-channel-scroll.spec.ts` browser-verifies that
