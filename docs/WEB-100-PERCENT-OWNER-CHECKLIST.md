@@ -117,13 +117,13 @@ banner uploads against `POST /api/v1/groups/:groupId/avatar` and
 saved through the group `PATCH` contract.
 
 2026-05-26 role-management validation and hierarchy proof: production backend now trims role names,
-rejects blank role names, marks the seeded Member role as the default role, blocks default-role
-mutation, and enforces that non-owner role managers can update/delete only roles below their highest
-role. Production web now keeps blank role names local without calling create, preserves specific
-backend default-role and highest-role error copy, and browser-verifies those routed states in
-`apps/web/e2e/group-settings-permissions.spec.ts`, including routed reorder hierarchy copy.
-Remaining strict role work is broader invalid color/permission payload validation in
-`WEB-ULTIMATE-STRICT-PASS.md`.
+rejects blank role names, validates role colors as hex, rejects unknown permission bits, marks the
+seeded Member role as the default role, blocks default-role mutation, and enforces that non-owner
+role managers can update/delete only roles below their highest role. Production web now keeps blank
+role names local without calling create, preserves specific backend default-role, highest-role, and
+payload-validation error copy, and browser-verifies those routed states in
+`apps/web/e2e/group-settings-permissions.spec.ts`, including routed reorder hierarchy copy and
+invalid color/permission detail rendering.
 
 2026-05-25 group scroll proof: production web now constrains the routed groups shell height, lets
 the group message list own scroll state, and replaces naive group-channel autoscroll with guarded

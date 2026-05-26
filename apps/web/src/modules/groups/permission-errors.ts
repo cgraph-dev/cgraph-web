@@ -2,17 +2,55 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function humanizeFieldName(field: string): string {
+  return field.replace(/_/g, ' ');
+}
+
+function formatDetailValue(value: unknown): string[] {
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap(formatDetailValue);
+  }
+
+  return [];
+}
+
+function extractDetailsMessage(details: unknown): string | null {
+  if (!isRecord(details)) return null;
+
+  const messages = Object.entries(details).flatMap(([field, value]) =>
+    formatDetailValue(value).map((message) => `${humanizeFieldName(field)} ${message}`)
+  );
+
+  return messages.length > 0 ? messages.join('; ') : null;
+}
+
+function isValidationMessage(message: string | null): boolean {
+  return (message ?? '').trim().toLowerCase() === 'validation failed';
+}
+
 function extractErrorMessage(error: unknown, fallback: string): string {
   if (typeof error === 'string' && error) return error;
   if (!isRecord(error)) return fallback;
 
   if (isRecord(error.response) && isRecord(error.response.data)) {
     const data = error.response.data;
-    if (typeof data.message === 'string' && data.message) return data.message;
-    if (typeof data.error === 'string' && data.error) return data.error;
-    if (isRecord(data.error) && typeof data.error.message === 'string') {
-      return data.error.message;
-    }
+    const directMessage =
+      (typeof data.message === 'string' && data.message) ||
+      (typeof data.error === 'string' && data.error) ||
+      (isRecord(data.error) && typeof data.error.message === 'string'
+        ? data.error.message
+        : null);
+    const detailsMessage =
+      extractDetailsMessage(data.details) ||
+      (isRecord(data.error) ? extractDetailsMessage(data.error.details) : null);
+
+    if (detailsMessage && isValidationMessage(directMessage)) return detailsMessage;
+    if (detailsMessage && !directMessage) return detailsMessage;
+    if (directMessage) return directMessage;
   }
 
   if (typeof error.message === 'string' && error.message) return error.message;

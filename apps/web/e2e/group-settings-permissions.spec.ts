@@ -172,7 +172,9 @@ async function installGroupPermissionMocks(
     denyRoleDelete = false,
     denyRoleReorder = false,
     roleReorderErrorMessage = 'Forbidden',
+    roleUpdateErrorBody,
     roleUpdateErrorMessage = 'Forbidden',
+    roleUpdateErrorStatus = 403,
     roleDeleteErrorMessage = 'Forbidden',
     denyInviteList = false,
     denyInviteCreate = false,
@@ -195,7 +197,9 @@ async function installGroupPermissionMocks(
     readonly denyRoleDelete?: boolean;
     readonly denyRoleReorder?: boolean;
     readonly roleReorderErrorMessage?: string;
+    readonly roleUpdateErrorBody?: unknown;
     readonly roleUpdateErrorMessage?: string;
+    readonly roleUpdateErrorStatus?: number;
     readonly roleDeleteErrorMessage?: string;
     readonly denyInviteList?: boolean;
     readonly denyInviteCreate?: boolean;
@@ -364,7 +368,7 @@ async function installGroupPermissionMocks(
       const body = request.postDataJSON() as Record<string, unknown>;
       requests.roleUpdates.push({ roleId, body });
       if (denyRoleUpdate) {
-        await fulfillJson(route, { message: roleUpdateErrorMessage }, 403);
+        await fulfillJson(route, roleUpdateErrorBody ?? { message: roleUpdateErrorMessage }, roleUpdateErrorStatus);
         return;
       }
       const existingRole = roleState.find((role) => role.id === roleId);
@@ -1150,6 +1154,42 @@ test.describe('Group settings permissions', () => {
       );
     await expect(page.getByText('The default role cannot be modified.')).toBeVisible();
     await expect(page.getByRole('button', { name: /^Delete$/ })).toHaveCount(0);
+  });
+
+  test('shows backend role payload validation details on routed role save', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+      denyRoleUpdate: true,
+      roleUpdateErrorStatus: 422,
+      roleUpdateErrorBody: {
+        error: {
+          message: 'Validation failed',
+          details: {
+            color: ['must be a valid hex color'],
+            permissions: ['contains unknown permission bits'],
+          },
+        },
+      },
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
+
+    await page.getByText('Moderator').first().click();
+    await page.getByLabel('Role name').fill('Validation Edge');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+
+    await expect
+      .poll(() => requests.roleUpdates, { message: 'role validation update reached backend' })
+      .toContainEqual(
+        expect.objectContaining({
+          roleId: 'role-mod',
+          body: expect.objectContaining({ name: 'Validation Edge' }),
+        })
+      );
+    await expect(page.getByText(/color must be a valid hex color/i)).toBeVisible();
+    await expect(page.getByText(/permissions contains unknown permission bits/i)).toBeVisible();
   });
 
   test('shows endpoint 403 copy when invite creation is denied', async ({ page }) => {
