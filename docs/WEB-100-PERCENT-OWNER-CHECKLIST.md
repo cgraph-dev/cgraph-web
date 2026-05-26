@@ -133,8 +133,13 @@ group invite links instead of letting those URLs fall into the catch-all route. 
 invite preview truth through `GET /api/v1/invites/:code`, redeems through
 `POST /api/v1/invites/:code/join`, navigates to the joined group's canonical channel route, and
 keeps expired invites on the invite page without redeeming them. Browser proof lives in
-`apps/web/e2e/group-invite-landing.spec.ts`. Backend-side usage counter consumption remains tracked
-in the stricter release-readiness docs.
+`apps/web/e2e/group-invite-landing.spec.ts`.
+
+2026-05-26 backend invite-consumption proof: production backend now redeems group invites by locking
+the invite row and performing lifecycle validation, member insert, and use-count increment inside
+one transaction. Expired, revoked, maxed, and duplicate-member attempts no longer consume invite
+uses. Focused proof lives in `apps/backend/test/cgraph/groups/invites_test.exs`, and route-level
+error-envelope proof lives in `apps/backend/test/cgraph_web/controllers/api/v1/invite_controller_test.exs`.
 
 2026-05-26 Cloud Chat bubble/action/media convergence proof: production web now makes
 `EnhancedMessageBubble` a thin route adapter over shared `modules/chat` `MessageBubble`. The shared
