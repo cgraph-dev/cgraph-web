@@ -33,6 +33,7 @@ export function useGroupSettings(groupId: string) {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [dangerError, setDangerError] = useState<string | null>(null);
 
   const activeGroup = groups.find((g) => g.id === groupId);
   const isOwner = activeGroup?.ownerId === user?.id;
@@ -63,6 +64,7 @@ export function useGroupSettings(groupId: string) {
     setFormData(data);
     setHasChanges(true);
     setSaveError(null);
+    setDangerError(null);
   };
 
   const handleSave = async () => {
@@ -102,23 +104,41 @@ export function useGroupSettings(groupId: string) {
   };
 
   const handleLeave = async () => {
+    setDangerError(null);
     try {
       await leaveGroup(groupId);
       HapticFeedback.warning();
       navigate('/groups');
     } catch (error) {
       logger.error('Failed to leave group:', error);
+      setShowLeaveConfirm(false);
+      setDangerError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to leave this group.',
+          'Could not leave group. Please try again.'
+        )
+      );
       HapticFeedback.error();
     }
   };
 
   const handleDelete = async () => {
+    setDangerError(null);
     try {
       await deleteGroup(groupId);
       HapticFeedback.warning();
       navigate('/groups');
     } catch (error) {
       logger.error('Failed to delete group:', error);
+      setShowDeleteConfirm(false);
+      setDangerError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to delete this group.',
+          'Could not delete group. Please try again.'
+        )
+      );
       HapticFeedback.error();
     }
   };
@@ -136,6 +156,7 @@ export function useGroupSettings(groupId: string) {
     handleSave,
     saveError,
     handleReset,
+    dangerError,
     showLeaveConfirm,
     setShowLeaveConfirm,
     showDeleteConfirm,

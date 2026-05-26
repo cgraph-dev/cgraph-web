@@ -7,19 +7,24 @@ import { FADE_UP } from '@/lib/animations/transitions';
 /**
  * Danger Tab component.
  */
-export function DangerTab({ isOwner, onLeave, onDelete }: DangerTabProps) {
+export function DangerTab({ isOwner, errorMessage, onLeave, onDelete }: DangerTabProps) {
   return (
-    <motion.div
-      {...FADE_UP}
-      exit={{ opacity: 0, y: -20 }}
-      className="max-w-2xl"
-    >
+    <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="max-w-2xl">
       <h2 className="mb-2 text-2xl font-bold text-red-400">Danger Zone</h2>
       <p className="mb-6 text-gray-400">
         These actions are irreversible. Please proceed with caution.
       </p>
 
       <div className="space-y-4">
+        {errorMessage && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+          >
+            {errorMessage}
+          </div>
+        )}
+
         <GlassCard variant="frosted" className="border border-red-500/30 p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -27,6 +32,7 @@ export function DangerTab({ isOwner, onLeave, onDelete }: DangerTabProps) {
               <p className="text-sm text-gray-400">You will need an invite to rejoin.</p>
             </div>
             <motion.button
+              type="button"
               whileTap={{ scale: 0.98 }}
               onClick={onLeave}
               className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2 text-red-400 hover:bg-red-500/20"
@@ -47,6 +53,7 @@ export function DangerTab({ isOwner, onLeave, onDelete }: DangerTabProps) {
                 </p>
               </div>
               <motion.button
+                type="button"
                 whileTap={{ scale: 0.98 }}
                 onClick={onDelete}
                 className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"

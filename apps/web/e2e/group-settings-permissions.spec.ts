@@ -177,6 +177,8 @@ async function installGroupPermissionMocks(
     denyPinCreate = false,
     denyPinList = false,
     denyPinDelete = false,
+    denyLeave = false,
+    denyDelete = false,
     seedPinnedMessage = false,
   }: {
     readonly groupFixture?: typeof ordinaryMemberGroup;
@@ -195,6 +197,8 @@ async function installGroupPermissionMocks(
     readonly denyPinCreate?: boolean;
     readonly denyPinList?: boolean;
     readonly denyPinDelete?: boolean;
+    readonly denyLeave?: boolean;
+    readonly denyDelete?: boolean;
     readonly seedPinnedMessage?: boolean;
   } = {}
 ) {
@@ -215,6 +219,8 @@ async function installGroupPermissionMocks(
     memberBans: [] as string[],
     memberMutes: [] as string[],
     memberRoleUpdates: [] as Array<{ memberId: string; body: unknown }>,
+    leaves: [] as string[],
+    deletes: [] as string[],
   };
 
   const groupResponse = () => ({ ...currentGroupFixture, roles: roleState });
@@ -253,7 +259,29 @@ async function installGroupPermissionMocks(
         return;
       }
 
+      if (method === 'DELETE') {
+        requests.deletes.push(GROUP_ID);
+        if (denyDelete) {
+          await fulfillJson(route, { message: 'Forbidden' }, 403);
+          return;
+        }
+
+        await fulfillJson(route, { data: { ok: true } });
+        return;
+      }
+
       await fulfillJson(route, { data: groupResponse() });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/leave` && method === 'POST') {
+      requests.leaves.push(GROUP_ID);
+      if (denyLeave) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      await fulfillJson(route, { data: { ok: true } });
       return;
     }
 
@@ -663,6 +691,41 @@ test.describe('Group settings permissions', () => {
     expect(requests.groupPatches).toEqual([]);
   });
 
+  test('shows route-owned danger copy when leave is denied', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      denyLeave: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Danger Zone$/ }).click();
+    await page.getByRole('button', { name: /^Leave$/ }).click();
+    await expect(page.locator('h2').filter({ hasText: 'Leave Group' })).toBeVisible();
+    await page.getByRole('button', { name: /^Leave$/ }).last().click();
+
+    await expect
+      .poll(() => requests.leaves, { message: 'leave endpoint reached backend' })
+      .toContain(GROUP_ID);
+    await expect(page.getByText('You do not have permission to leave this group.')).toBeVisible();
+  });
+
+  test('shows route-owned danger copy when delete is denied', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      denyDelete: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Danger Zone$/ }).click();
+    await page.getByRole('button', { name: /^Delete$/ }).click();
+    await expect(page.locator('h2').filter({ hasText: 'Delete Group' })).toBeVisible();
+    await page.getByRole('button', { name: /^Delete$/ }).last().click();
+
+    await expect
+      .poll(() => requests.deletes, { message: 'delete endpoint reached backend' })
+      .toContain(GROUP_ID);
+    await expect(page.getByText('You do not have permission to delete this group.')).toBeVisible();
+  });
+
   test('keeps channel state unchanged and shows endpoint 403 copy when pinning is denied', async ({
     page,
   }) => {
@@ -801,6 +864,54 @@ test.describe('Group settings permissions', () => {
       .toContainEqual(expect.objectContaining({ name: 'Permission Edge Hub Blocked' }));
     await expect(
       page.getByText('You do not have permission to update group settings.')
+    ).toBeVisible();
+  });
+
+  test('verifies node-gated access save contract', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      allowGroupPatch: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await expect(page.getByRole('heading', { name: /^Overview$/ })).toBeVisible();
+    await expect(page.getByText('Node-Gated Access')).toBeVisible();
+
+    await page.getByLabel('Toggle node gating').click();
+    await page.getByRole('button', { name: /^Save Gating Settings$/ }).click();
+
+    await expect
+      .poll(() => requests.groupPatches, { message: 'node-gating patch reached backend' })
+      .toContainEqual(
+        expect.objectContaining({
+          is_node_gated: true,
+          gate_type: 'monthly',
+          gate_price_nodes: 10,
+        })
+      );
+  });
+
+  test('shows route-owned node-gated access copy when save is denied', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await expect(page.getByRole('heading', { name: /^Overview$/ })).toBeVisible();
+    await page.getByLabel('Toggle node gating').click();
+    await page.getByRole('button', { name: /^Save Gating Settings$/ }).click();
+
+    await expect
+      .poll(() => requests.groupPatches, { message: 'node-gating denied patch reached backend' })
+      .toContainEqual(
+        expect.objectContaining({
+          is_node_gated: true,
+          gate_type: 'monthly',
+          gate_price_nodes: 10,
+        })
+      );
+    await expect(
+      page.getByText('You do not have permission to update node-gated access for this group.')
     ).toBeVisible();
   });
 

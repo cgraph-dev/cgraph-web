@@ -241,6 +241,31 @@ describe('useGroupSettings', () => {
     });
 
     expect(mockHapticFeedback.error).toHaveBeenCalled();
+    expect(result.current.dangerError).toBe('Leave failed');
+  });
+
+  it('maps forbidden leave failures to danger-zone copy', async () => {
+    mockGroups.push(makeGroup());
+    mockLeaveGroup.mockRejectedValueOnce(new Error('Forbidden'));
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    await act(async () => {
+      await result.current.handleLeave();
+    });
+
+    expect(result.current.dangerError).toBe('You do not have permission to leave this group.');
+  });
+
+  it('maps forbidden delete failures to danger-zone copy', async () => {
+    mockGroups.push(makeGroup());
+    mockDeleteGroup.mockRejectedValueOnce(new Error('Forbidden'));
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    await act(async () => {
+      await result.current.handleDelete();
+    });
+
+    expect(result.current.dangerError).toBe('You do not have permission to delete this group.');
   });
 
   it('setActiveTab changes the active tab', () => {

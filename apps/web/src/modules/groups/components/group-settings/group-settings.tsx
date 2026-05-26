@@ -49,6 +49,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
     handleSave,
     saveError,
     handleReset,
+    dangerError,
     showLeaveConfirm,
     setShowLeaveConfirm,
     showDeleteConfirm,
@@ -177,6 +178,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
             <DangerTab
               key="danger"
               isOwner={isOwner}
+              errorMessage={dangerError}
               onLeave={() => setShowLeaveConfirm(true)}
               onDelete={() => setShowDeleteConfirm(true)}
             />

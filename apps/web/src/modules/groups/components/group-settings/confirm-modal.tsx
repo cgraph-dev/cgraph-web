@@ -34,12 +34,14 @@ export function ConfirmModal({
 
         <div className="flex gap-3">
           <button
+            type="button"
             onClick={onClose}
             className="flex-1 rounded-xl bg-[var(--token-card-bg)/0.6] py-3 text-gray-300 transition-colors hover:bg-[var(--token-card-bg)/0.8]"
           >
             Cancel
           </button>
           <motion.button
+            type="button"
             whileTap={{ scale: 0.98 }}
             onClick={onConfirm}
             className={`flex-1 rounded-xl py-3 font-semibold ${

@@ -12,6 +12,7 @@ import { CurrencyDollarIcon, InformationCircleIcon } from '@heroicons/react/24/o
 import { useGroupStore } from '@/modules/groups/store';
 import { createLogger } from '@/lib/logger';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { getGroupPermissionError } from '../../permission-errors';
 import type { Group } from '@/modules/groups/store';
 
 const logger = createLogger('NodeGatingSection');
@@ -69,8 +70,13 @@ export function NodeGatingSection({
       });
       HapticFeedback.success();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to save gating settings';
-      setError(message);
+      setError(
+        getGroupPermissionError(
+          err,
+          'You do not have permission to update node-gated access for this group.',
+          'Could not save node-gated access. Please try again.'
+        )
+      );
       logger.error('Failed to save node gating settings:', err);
       HapticFeedback.error();
     } finally {
@@ -97,6 +103,7 @@ export function NodeGatingSection({
           <p className="text-xs text-gray-400">Members must pay Nodes to access this group</p>
         </div>
         <motion.button
+          type="button"
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsEnabled(!isEnabled)}
           className={`h-6 w-12 rounded-full transition-colors ${
@@ -123,6 +130,7 @@ export function NodeGatingSection({
               {GATE_TYPE_OPTIONS.map((option) => (
                 <button
                   key={option.value}
+                  type="button"
                   onClick={() => setGateType(option.value)}
                   className={`rounded-lg border p-3 text-left transition-all ${
                     gateType === option.value
@@ -180,6 +188,7 @@ export function NodeGatingSection({
           {/* Save button */}
           {hasChanges && (
             <motion.button
+              type="button"
               whileTap={{ scale: 0.98 }}
               onClick={() => void handleSave()}
               disabled={isSaving || price < MIN_GATE_PRICE}

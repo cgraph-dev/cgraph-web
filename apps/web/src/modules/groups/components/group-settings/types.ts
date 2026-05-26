@@ -33,6 +33,7 @@ export interface ChannelsTabProps {
 
 export interface DangerTabProps {
   isOwner: boolean;
+  errorMessage?: string | null;
   onLeave: () => void;
   onDelete: () => void;
 }

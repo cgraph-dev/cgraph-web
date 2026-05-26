@@ -105,6 +105,12 @@ assignment, and kick/ban/mute actions on `/groups/:groupId/settings`. The same r
 spec verifies each backend request and visible denial message. Remaining strict group work is richer
 admin edge-state breadth beyond the focused 403 contract.
 
+2026-05-26 group-settings admin-edge proof: production web now gives the routed Danger Zone its own
+visible error owner for failed leave/delete actions and maps node-gated access save failures to
+route-specific copy. `apps/web/e2e/group-settings-permissions.spec.ts` browser-verifies the
+node-gated access PATCH payload, node-gated 403 copy, leave 403 copy, and delete 403 copy on
+`/groups/:groupId/settings`.
+
 2026-05-25 group scroll proof: production web now constrains the routed groups shell height, lets
 the group message list own scroll state, and replaces naive group-channel autoscroll with guarded
 anchor/latest behavior. `apps/web/e2e/group-channel-scroll.spec.ts` browser-verifies that
