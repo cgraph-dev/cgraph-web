@@ -44,6 +44,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [roleNameError, setRoleNameError] = useState<string | null>(null);
 
   const activeGroup = groups.find((g) => g.id === groupId);
 
@@ -66,7 +67,8 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
           getGroupPermissionError(
             error,
             'You do not have permission to reorder roles in this group.',
-            'Could not reorder roles. Please try again.'
+            'Could not reorder roles. Please try again.',
+            { preferSpecificServerCopy: true }
           )
         );
         HapticFeedback.error();
@@ -91,6 +93,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   const handleCreateRole = () => {
     if (isSaving) return;
     setMutationError(null);
+    setRoleNameError(null);
     const sendMessages = PERMISSIONS.SEND_MESSAGES?.value ?? 0;
     const addReactions = PERMISSIONS.ADD_REACTIONS?.value ?? 0;
     const newRole: Role = {
@@ -111,6 +114,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   const handleDeleteRole = (roleId: string) => {
     if (isSaving) return;
     setMutationError(null);
+    setRoleNameError(null);
     const previousRoles = roles;
     const previousSelectedRole = selectedRole;
     setRoles(roles.filter((r) => r.id !== roleId));
@@ -127,7 +131,8 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
           getGroupPermissionError(
             error,
             'You do not have permission to delete roles in this group.',
-            'Could not delete role. Please try again.'
+            'Could not delete role. Please try again.',
+            { preferSpecificServerCopy: true }
           )
         );
         HapticFeedback.error();
@@ -136,6 +141,10 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
   };
 
   const handleUpdateRole = (updates: Partial<Role>) => {
+    if (typeof updates.name === 'string' && updates.name.trim().length > 0) {
+      setRoleNameError(null);
+    }
+
     setSelectedRole((currentRole) => {
       if (!currentRole) return currentRole;
 
@@ -149,18 +158,35 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
 
   const handleSaveRole = () => {
     if (!selectedRole || isSaving) return;
+    const trimmedName = selectedRole.name.trim();
+
+    if (!trimmedName) {
+      setRoleNameError('Role name is required.');
+      HapticFeedback.error();
+      return;
+    }
+
     setIsSaving(true);
     setMutationError(null);
-    const savingRole = selectedRole;
+    setRoleNameError(null);
+    const savingRole = { ...selectedRole, name: trimmedName };
+
+    if (savingRole.name !== selectedRole.name) {
+      setSelectedRole(savingRole);
+      setRoles((prev) =>
+        prev.map((role) => (role.id === selectedRole.id ? { ...role, name: savingRole.name } : role))
+      );
+    }
+
     if (selectedRole.id.startsWith('temp-')) {
       createRole(groupId, {
-        name: selectedRole.name,
-        color: selectedRole.color,
-        permissions: selectedRole.permissions,
-        is_mentionable: selectedRole.isMentionable,
+        name: savingRole.name,
+        color: savingRole.color,
+        permissions: savingRole.permissions,
+        is_mentionable: savingRole.isMentionable,
       })
         .then((created) => {
-          setRoles((prev) => prev.map((r) => (r.id === selectedRole.id ? created : r)));
+          setRoles((prev) => prev.map((r) => (r.id === savingRole.id ? created : r)));
           setSelectedRole(created);
           setIsCreating(false);
           HapticFeedback.success();
@@ -174,21 +200,22 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
             getGroupPermissionError(
               error,
               'You do not have permission to create roles in this group.',
-              'Could not create role. Please try again.'
+              'Could not create role. Please try again.',
+              { preferSpecificServerCopy: true }
             )
           );
           HapticFeedback.error();
         })
         .finally(() => setIsSaving(false));
     } else {
-      updateRole(groupId, selectedRole.id, {
-        name: selectedRole.name,
-        color: selectedRole.color,
-        permissions: selectedRole.permissions,
-        is_mentionable: selectedRole.isMentionable,
+      updateRole(groupId, savingRole.id, {
+        name: savingRole.name,
+        color: savingRole.color,
+        permissions: savingRole.permissions,
+        is_mentionable: savingRole.isMentionable,
       })
         .then((updated) => {
-          setRoles((prev) => prev.map((r) => (r.id === selectedRole.id ? updated : r)));
+          setRoles((prev) => prev.map((r) => (r.id === savingRole.id ? updated : r)));
           setSelectedRole(updated);
           HapticFeedback.success();
         })
@@ -198,7 +225,8 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
             getGroupPermissionError(
               error,
               'You do not have permission to update roles in this group.',
-              'Could not update role. Please try again.'
+              'Could not update role. Please try again.',
+              { preferSpecificServerCopy: true }
             )
           );
           HapticFeedback.error();
@@ -244,6 +272,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
                   onClick={() => {
                     setSelectedRole(role);
                     setIsCreating(false);
+                    setRoleNameError(null);
                   }}
                   className="flex min-w-0 flex-1 items-center gap-3"
                 >
@@ -302,6 +331,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
             role={selectedRole}
             isNew={isCreating}
             isSaving={isSaving}
+            nameError={roleNameError}
             onUpdate={handleUpdateRole}
             onDelete={() => handleDeleteRole(selectedRole.id)}
             onSave={handleSaveRole}

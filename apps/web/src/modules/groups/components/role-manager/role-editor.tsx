@@ -15,6 +15,7 @@ export function RoleEditor({
   role,
   isNew,
   isSaving = false,
+  nameError,
   onUpdate,
   onDelete,
   onSave,
@@ -118,11 +119,22 @@ export function RoleEditor({
                   <input
                     type="text"
                     aria-label="Role name"
+                    aria-invalid={nameError ? true : undefined}
+                    aria-describedby={nameError ? 'role-name-error' : undefined}
                     disabled={isSaving}
                     value={role.name}
                     onChange={(e) => onUpdate({ name: e.target.value })}
-                    className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:border-primary-500 focus:outline-none disabled:cursor-wait disabled:opacity-70"
+                    className={`w-full rounded-lg border bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:outline-none disabled:cursor-wait disabled:opacity-70 ${
+                      nameError
+                        ? 'border-red-500/70 focus:border-red-400'
+                        : 'border-[var(--token-card-border)] focus:border-primary-500'
+                    }`}
                   />
+                  {nameError && (
+                    <p id="role-name-error" role="alert" className="mt-2 text-sm text-red-300">
+                      {nameError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Role Color */}

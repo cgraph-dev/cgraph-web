@@ -3,12 +3,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function extractErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message;
   if (typeof error === 'string' && error) return error;
   if (!isRecord(error)) return fallback;
-
-  if (typeof error.message === 'string' && error.message) return error.message;
-  if (typeof error.error === 'string' && error.error) return error.error;
 
   if (isRecord(error.response) && isRecord(error.response.data)) {
     const data = error.response.data;
@@ -19,7 +15,23 @@ function extractErrorMessage(error: unknown, fallback: string): string {
     }
   }
 
+  if (typeof error.message === 'string' && error.message) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error.error === 'string' && error.error) return error.error;
+
   return fallback;
+}
+
+function hasSpecificForbiddenMessage(message: string, forbiddenCopy: string): boolean {
+  const normalized = message.trim().toLowerCase();
+
+  return (
+    normalized.length > 0 &&
+    normalized !== 'forbidden' &&
+    normalized !== 'permission denied' &&
+    normalized !== 'unauthorized' &&
+    normalized !== forbiddenCopy.trim().toLowerCase()
+  );
 }
 
 /**
@@ -45,7 +57,21 @@ export function isForbiddenError(error: unknown): boolean {
 export function getGroupPermissionError(
   error: unknown,
   forbiddenCopy: string,
-  fallbackCopy: string
+  fallbackCopy: string,
+  options: { preferSpecificServerCopy?: boolean } = {}
 ): string {
-  return isForbiddenError(error) ? forbiddenCopy : extractErrorMessage(error, fallbackCopy);
+  const serverMessage = extractErrorMessage(error, fallbackCopy);
+
+  if (!isForbiddenError(error)) {
+    return serverMessage;
+  }
+
+  if (
+    options.preferSpecificServerCopy === true &&
+    hasSpecificForbiddenMessage(serverMessage, forbiddenCopy)
+  ) {
+    return serverMessage;
+  }
+
+  return forbiddenCopy;
 }

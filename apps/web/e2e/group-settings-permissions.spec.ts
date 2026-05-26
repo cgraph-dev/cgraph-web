@@ -171,6 +171,8 @@ async function installGroupPermissionMocks(
     denyRoleUpdate = false,
     denyRoleDelete = false,
     denyRoleReorder = false,
+    roleUpdateErrorMessage = 'Forbidden',
+    roleDeleteErrorMessage = 'Forbidden',
     denyInviteList = false,
     denyInviteCreate = false,
     denyInviteDelete = false,
@@ -191,6 +193,8 @@ async function installGroupPermissionMocks(
     readonly denyRoleUpdate?: boolean;
     readonly denyRoleDelete?: boolean;
     readonly denyRoleReorder?: boolean;
+    readonly roleUpdateErrorMessage?: string;
+    readonly roleDeleteErrorMessage?: string;
     readonly denyInviteList?: boolean;
     readonly denyInviteCreate?: boolean;
     readonly denyInviteDelete?: boolean;
@@ -358,7 +362,7 @@ async function installGroupPermissionMocks(
       const body = request.postDataJSON() as Record<string, unknown>;
       requests.roleUpdates.push({ roleId, body });
       if (denyRoleUpdate) {
-        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        await fulfillJson(route, { message: roleUpdateErrorMessage }, 403);
         return;
       }
       const existingRole = roleState.find((role) => role.id === roleId);
@@ -390,7 +394,7 @@ async function installGroupPermissionMocks(
       const roleId = path.split('/').pop() ?? '';
       requests.roleDeletes.push(roleId);
       if (denyRoleDelete) {
-        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        await fulfillJson(route, { message: roleDeleteErrorMessage }, 403);
         return;
       }
       roleState = roleState.filter((role) => role.id !== roleId);
@@ -902,6 +906,27 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByText('Ops Captain')).toHaveCount(0);
   });
 
+  test('keeps invalid role names local and does not call create endpoint', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /create role/i }).click();
+    await page.getByLabel('Role name').fill('   ');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+
+    await expect(page.getByText('Role name is required.')).toBeVisible();
+    await expect
+      .poll(() => requests.roleCreates.length, {
+        message: 'blank role name never reached create endpoint',
+      })
+      .toBe(0);
+  });
+
   test('shows endpoint 403 copy when overview save is denied', async ({ page }) => {
     const requests = await installGroupPermissionMocks(page, {
       groupFixture: ownerGroup,
@@ -1041,6 +1066,64 @@ test.describe('Group settings permissions', () => {
       page.getByText('You do not have permission to delete roles in this group.')
     ).toBeVisible();
     await expect(page.getByText('Blocked Moderator').first()).toBeVisible();
+  });
+
+  test('shows backend role hierarchy copy on routed role save', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+      denyRoleUpdate: true,
+      roleUpdateErrorMessage: 'You can only manage roles below your highest role.',
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
+
+    await page.getByText('Admin').first().click();
+    await page.getByLabel('Role name').fill('Blocked Admin');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+
+    await expect
+      .poll(() => requests.roleUpdates, { message: 'admin role update reached backend' })
+      .toContainEqual(
+        expect.objectContaining({
+          roleId: 'role-admin',
+          body: expect.objectContaining({ name: 'Blocked Admin' }),
+        })
+      );
+    await expect(
+      page.getByText('You can only manage roles below your highest role.')
+    ).toBeVisible();
+  });
+
+  test('shows backend default-role copy and hides destructive default controls', async ({
+    page,
+  }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+      denyRoleUpdate: true,
+      roleUpdateErrorMessage: 'The default role cannot be modified.',
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Member DEFAULT$/ }).click();
+    await page.getByLabel('Role name').fill('Renamed Member');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+
+    await expect
+      .poll(() => requests.roleUpdates, {
+        message: 'default role update reached backend',
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          roleId: 'role-member',
+          body: expect.objectContaining({ name: 'Renamed Member' }),
+        })
+      );
+    await expect(page.getByText('The default role cannot be modified.')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Delete$/ })).toHaveCount(0);
   });
 
   test('shows endpoint 403 copy when invite creation is denied', async ({ page }) => {

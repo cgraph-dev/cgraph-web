@@ -25,6 +25,7 @@ export interface RoleEditorProps {
   role: Role;
   isNew: boolean;
   isSaving?: boolean;
+  nameError?: string | null;
   onUpdate: (updates: Partial<Role>) => void;
   onDelete: () => void;
   onSave: () => void;
