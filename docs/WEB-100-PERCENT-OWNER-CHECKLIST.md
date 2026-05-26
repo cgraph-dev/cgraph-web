@@ -121,8 +121,9 @@ rejects blank role names, marks the seeded Member role as the default role, bloc
 mutation, and enforces that non-owner role managers can update/delete only roles below their highest
 role. Production web now keeps blank role names local without calling create, preserves specific
 backend default-role and highest-role error copy, and browser-verifies those routed states in
-`apps/web/e2e/group-settings-permissions.spec.ts`. Remaining strict role work is role reorder
-hierarchy plus broader payload validation in `WEB-ULTIMATE-STRICT-PASS.md`.
+`apps/web/e2e/group-settings-permissions.spec.ts`, including routed reorder hierarchy copy.
+Remaining strict role work is broader invalid color/permission payload validation in
+`WEB-ULTIMATE-STRICT-PASS.md`.
 
 2026-05-25 group scroll proof: production web now constrains the routed groups shell height, lets
 the group message list own scroll state, and replaces naive group-channel autoscroll with guarded

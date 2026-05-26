@@ -171,6 +171,7 @@ async function installGroupPermissionMocks(
     denyRoleUpdate = false,
     denyRoleDelete = false,
     denyRoleReorder = false,
+    roleReorderErrorMessage = 'Forbidden',
     roleUpdateErrorMessage = 'Forbidden',
     roleDeleteErrorMessage = 'Forbidden',
     denyInviteList = false,
@@ -193,6 +194,7 @@ async function installGroupPermissionMocks(
     readonly denyRoleUpdate?: boolean;
     readonly denyRoleDelete?: boolean;
     readonly denyRoleReorder?: boolean;
+    readonly roleReorderErrorMessage?: string;
     readonly roleUpdateErrorMessage?: string;
     readonly roleDeleteErrorMessage?: string;
     readonly denyInviteList?: boolean;
@@ -314,7 +316,7 @@ async function installGroupPermissionMocks(
         : [];
       requests.roleReorders.push(body);
       if (denyRoleReorder) {
-        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        await fulfillJson(route, { message: roleReorderErrorMessage }, 403);
         return;
       }
       const byId = new Map(roleState.map((role) => [role.id, role]));
@@ -1089,6 +1091,30 @@ test.describe('Group settings permissions', () => {
         expect.objectContaining({
           roleId: 'role-admin',
           body: expect.objectContaining({ name: 'Blocked Admin' }),
+        })
+      );
+    await expect(
+      page.getByText('You can only manage roles below your highest role.')
+    ).toBeVisible();
+  });
+
+  test('shows backend role hierarchy copy on routed role reorder', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: roleManagementGroup,
+      denyRoleReorder: true,
+      roleReorderErrorMessage: 'You can only manage roles below your highest role.',
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /move moderator up/i }).click();
+    await expect
+      .poll(() => requests.roleReorders, { message: 'role hierarchy reorder reached backend' })
+      .toContainEqual(
+        expect.objectContaining({
+          role_ids: ['role-mod', 'role-admin', 'role-member'],
         })
       );
     await expect(
