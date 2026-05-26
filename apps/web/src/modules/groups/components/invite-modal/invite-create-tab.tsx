@@ -1,6 +1,7 @@
 /**
  * Invite link creation tab component.
  */
+import { useId } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ClockIcon,
@@ -40,6 +41,9 @@ export function InviteCreateTab({
   onGenerate,
   onCopyLink,
 }: InviteCreateTabProps) {
+  const expirationSelectId = useId();
+  const maxUsesSelectId = useId();
+
   return (
     <motion.div
       key="create"
@@ -51,11 +55,15 @@ export function InviteCreateTab({
       <div className="mb-6 space-y-4">
         {/* Expiration */}
         <div>
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-300">
+          <label
+            htmlFor={expirationSelectId}
+            className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-300"
+          >
             <ClockIcon className="h-4 w-4" />
             Expire after
           </label>
           <select
+            id={expirationSelectId}
             value={expiration ?? ''}
             onChange={(e) => setExpiration(e.target.value ? Number(e.target.value) : null)}
             className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
@@ -70,11 +78,15 @@ export function InviteCreateTab({
 
         {/* Max Uses */}
         <div>
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-300">
+          <label
+            htmlFor={maxUsesSelectId}
+            className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-300"
+          >
             <UserGroupIcon className="h-4 w-4" />
             Max number of uses
           </label>
           <select
+            id={maxUsesSelectId}
             value={maxUses ?? ''}
             onChange={(e) => setMaxUses(e.target.value ? Number(e.target.value) : null)}
             className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:border-primary-500 focus:outline-none"

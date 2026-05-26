@@ -119,6 +119,15 @@ component tests prove the adapter boundary, and the full routed
 strict-pass DM surface convergence row remains open until list/action/bubble/media ownership
 converges too.
 
+2026-05-26 group invite lifecycle proof: production web now normalizes generated and loaded group
+invites from backend-owned lifecycle fields, including explicit server `null` values for unlimited
+or no-expiry invites. `apps/web/e2e/group-settings-permissions.spec.ts` browser-verifies selected
+expiry/max-use create payloads, unlimited invite payload omission, generated-link rendering, and the
+managed invite row copy for finite and unlimited invites on `/groups/:groupId/settings`. Focused
+hook tests verify the local invite manager respects the server response over optimistic fallback
+values. The stricter release-readiness documents still keep redemption, expiry, and
+usage-consumption lifecycle proof open.
+
 2026-05-26 Cloud Chat bubble/action/media convergence proof: production web now makes
 `EnhancedMessageBubble` a thin route adapter over shared `modules/chat` `MessageBubble`. The shared
 bubble owns sticker rendering, pinned badges, read receipts, message media rendering, delete copy,

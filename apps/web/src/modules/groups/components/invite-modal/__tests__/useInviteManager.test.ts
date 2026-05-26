@@ -44,7 +44,8 @@ vi.mock('@/lib/logger', () => ({
 describe('useInviteManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockApiGet.mockResolvedValue({ data: { data: [] } });
+    mockApiGet.mockImplementation(() => new Promise(() => undefined));
+    mockApiDelete.mockResolvedValue({ data: { data: { ok: true } }, status: 200 });
     Object.assign(navigator, {
       clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
     });
@@ -112,6 +113,75 @@ describe('useInviteManager', () => {
     });
     expect(result.current.inviteLink).toContain('NEWCODE');
     expect(result.current.invites).toHaveLength(1);
+  });
+
+  it('uses server-owned lifecycle fields for generated invites', async () => {
+    mockApiPost.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'inv-new',
+          code: 'NEWCODE',
+          max_uses: 10,
+          uses: 2,
+          expires_at: '2026-05-27T00:00:00.000Z',
+          created_by: { id: 'u-2', username: 'moderator' },
+          created_at: '2026-05-26T00:00:00.000Z',
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useInviteManager('g-1'));
+
+    act(() => {
+      result.current.setExpiration(3600);
+      result.current.setMaxUses(5);
+    });
+
+    await act(async () => {
+      await result.current.handleGenerateInvite();
+    });
+
+    expect(mockApiPost).toHaveBeenCalledWith('/api/v1/groups/g-1/invites', {
+      max_uses: 5,
+      expires_in: 3600,
+    });
+    expect(result.current.invites[0]).toMatchObject({
+      code: 'NEWCODE',
+      maxUses: 10,
+      uses: 2,
+      expiresAt: '2026-05-27T00:00:00.000Z',
+      createdBy: { id: 'u-2', username: 'moderator' },
+    });
+  });
+
+  it('respects server null lifecycle fields over local fallback selections', async () => {
+    mockApiPost.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'inv-new',
+          code: 'NEWCODE',
+          max_uses: null,
+          expires_at: null,
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useInviteManager('g-1'));
+
+    act(() => {
+      result.current.setExpiration(3600);
+      result.current.setMaxUses(5);
+    });
+
+    await act(async () => {
+      await result.current.handleGenerateInvite();
+    });
+
+    expect(result.current.invites[0]).toMatchObject({
+      code: 'NEWCODE',
+      maxUses: null,
+      expiresAt: null,
+    });
   });
 
   it('does not generate invite without groupId', async () => {

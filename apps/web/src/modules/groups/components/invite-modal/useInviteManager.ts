@@ -23,6 +23,108 @@ export interface Invite {
   createdAt: string;
 }
 
+interface InviteRecord {
+  readonly id?: unknown;
+  readonly code?: unknown;
+  readonly url?: unknown;
+  readonly max_uses?: unknown;
+  readonly maxUses?: unknown;
+  readonly uses?: unknown;
+  readonly expires_at?: unknown;
+  readonly expiresAt?: unknown;
+  readonly creator_id?: unknown;
+  readonly creatorId?: unknown;
+  readonly creator_username?: unknown;
+  readonly creatorUsername?: unknown;
+  readonly created_by?: unknown;
+  readonly createdBy?: unknown;
+  readonly creator?: unknown;
+  readonly created_at?: unknown;
+  readonly createdAt?: unknown;
+}
+
+interface InviteFallback {
+  readonly id?: string;
+  readonly maxUses?: number | null;
+  readonly expiresAt?: string | null;
+  readonly createdBy?: Invite['createdBy'];
+  readonly createdAt?: string;
+}
+
+function readString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function readNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function readNullableNumber(value: unknown): number | null | undefined {
+  if (value === null) return null;
+  return readNumber(value);
+}
+
+function readNullableString(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  return readString(value);
+}
+
+function readRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value))
+    : undefined;
+}
+
+function firstDefined<T>(...values: Array<T | undefined>): T | undefined {
+  return values.find((value): value is T => value !== undefined);
+}
+
+function normalizeInvite(invite: InviteRecord, fallback: InviteFallback = {}): Invite {
+  const code = readString(invite.code) ?? '';
+  const createdByRecord =
+    readRecord(invite.created_by) ?? readRecord(invite.createdBy) ?? readRecord(invite.creator);
+  const creatorId =
+    readString(invite.creator_id) ??
+    readString(invite.creatorId) ??
+    readString(createdByRecord?.id) ??
+    fallback.createdBy?.id ??
+    '';
+  const creatorUsername =
+    readString(invite.creator_username) ??
+    readString(invite.creatorUsername) ??
+    readString(createdByRecord?.username) ??
+    fallback.createdBy?.username ??
+    'unknown';
+
+  return {
+    id: readString(invite.id) ?? fallback.id ?? code,
+    code,
+    url: readString(invite.url) ?? `${window.location.origin}/invite/${code}`,
+    maxUses:
+      firstDefined(
+        readNullableNumber(invite.max_uses),
+        readNullableNumber(invite.maxUses),
+        fallback.maxUses
+      ) ?? null,
+    uses: readNumber(invite.uses) ?? 0,
+    expiresAt:
+      firstDefined(
+        readNullableString(invite.expires_at),
+        readNullableString(invite.expiresAt),
+        fallback.expiresAt
+      ) ?? null,
+    createdBy: {
+      id: creatorId,
+      username: creatorUsername,
+    },
+    createdAt:
+      readString(invite.created_at) ??
+      readString(invite.createdAt) ??
+      fallback.createdAt ??
+      new Date().toISOString(),
+  };
+}
+
 export const EXPIRATION_OPTIONS = [
   { value: null, label: 'Never' },
   { value: 30 * 60, label: '30 minutes' },
@@ -81,21 +183,7 @@ export function useInviteManager(groupId?: string) {
           return;
         }
         setErrorMessage(null);
-        setInvites(
-          result.data.map((inv) => ({
-            id: inv.id,
-            code: inv.code,
-            url: `${window.location.origin}/invite/${inv.code}`,
-            maxUses: inv.max_uses ?? inv.maxUses ?? null,
-            uses: inv.uses ?? 0,
-            expiresAt: inv.expires_at ?? inv.expiresAt ?? null,
-            createdBy: {
-              id: String(inv.creator_id ?? inv.creatorId ?? ''),
-              username: String(inv.creator_username ?? inv.creatorUsername ?? 'unknown'),
-            },
-            createdAt: inv.created_at ?? inv.createdAt ?? new Date().toISOString(),
-          }))
-        );
+        setInvites(result.data.map((inv) => normalizeInvite(inv)));
       })
       .catch((error) => {
         logger.error('Invite load failed', error);
@@ -120,22 +208,16 @@ export function useInviteManager(groupId?: string) {
       });
       if (!result.ok) throw new Error(result.error.message);
       const inv = result.data;
-      const inviteCode = inv.code;
-      const inviteUrl = `${window.location.origin}/invite/${inviteCode}`;
-
-      const newInvite: Invite = {
-        id: inv.id || Date.now().toString(),
-        code: inviteCode,
-        url: inviteUrl,
+      const newInvite = normalizeInvite(inv, {
+        id: Date.now().toString(),
         maxUses,
-        uses: 0,
         expiresAt: expiration ? new Date(Date.now() + expiration * 1000).toISOString() : null,
         createdBy: { id: 'me', username: 'You' },
         createdAt: new Date().toISOString(),
-      };
+      });
 
-      setInvites([newInvite, ...invites]);
-      setInviteLink(inviteUrl);
+      setInvites((currentInvites) => [newInvite, ...currentInvites]);
+      setInviteLink(newInvite.url);
       HapticFeedback.success();
     } catch (error) {
       logger.error('Failed to generate invite:', error);

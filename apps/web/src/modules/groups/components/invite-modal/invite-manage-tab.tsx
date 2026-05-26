@@ -47,6 +47,7 @@ export function InviteManageTab({
         invites.map((invite) => (
           <motion.div
             key={invite.id}
+            data-testid={`invite-row-${invite.code}`}
             {...FADE_IN}
             className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] p-4"
           >

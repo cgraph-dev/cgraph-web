@@ -440,7 +440,12 @@ async function installGroupPermissionMocks(
       }
 
       if (method === 'POST') {
-        const body = request.postDataJSON();
+        const body = request.postDataJSON() as Record<string, unknown>;
+        const requestedMaxUses = typeof body.max_uses === 'number' ? body.max_uses : null;
+        const requestedExpiresIn = typeof body.expires_in === 'number' ? body.expires_in : null;
+        const expiresAt = requestedExpiresIn
+          ? new Date(Date.now() + requestedExpiresIn * 1000).toISOString()
+          : null;
         requests.inviteCreates.push(body);
         if (denyInviteCreate) {
           await fulfillJson(route, { message: 'Forbidden' }, 403);
@@ -451,9 +456,9 @@ async function installGroupPermissionMocks(
           data: {
             id: 'invite-new',
             code: 'NEW403',
-            max_uses: null,
+            max_uses: requestedMaxUses,
             uses: 0,
-            expires_at: null,
+            expires_at: expiresAt,
             creator_id: CURRENT_USER_ID,
             creator_username: currentUser.username,
             created_at: '2026-01-01T00:00:00.000Z',
@@ -892,6 +897,71 @@ test.describe('Group settings permissions', () => {
     await expect(
       page.getByText('You do not have permission to create invites for this group.')
     ).toBeVisible();
+  });
+
+  test('creates invites with selected expiry and max-use lifecycle fields', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Invites$/ }).click();
+    await page.getByRole('button', { name: /^Create Invite$/ }).click();
+    await expect(page.getByText('Invite People')).toBeVisible();
+
+    await page.getByLabel(/expire after/i).selectOption({ label: '6 hours' });
+    await page.getByLabel(/max number of uses/i).selectOption({ label: '5 uses' });
+    await page.getByRole('button', { name: /generate new link/i }).click();
+
+    await expect
+      .poll(() => requests.inviteCreates, {
+        message: 'invite create endpoint received selected lifecycle fields',
+      })
+      .toContainEqual(
+        expect.objectContaining({
+          expires_in: 21600,
+          max_uses: 5,
+        })
+      );
+    await expect(page.locator('input[readonly]')).toHaveValue(/\/invite\/NEW403$/);
+
+    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
+    const generatedInvite = page.getByTestId('invite-row-NEW403');
+    await expect(generatedInvite).toContainText('NEW403');
+    await expect(generatedInvite).toContainText('0 / 5 uses');
+    await expect(generatedInvite).toContainText(/[0-9]+ hours/);
+  });
+
+  test('omits invite lifecycle fields when no expiry and no usage limit are selected', async ({
+    page,
+  }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Invites$/ }).click();
+    await page.getByRole('button', { name: /^Create Invite$/ }).click();
+    await expect(page.getByText('Invite People')).toBeVisible();
+
+    await page.getByLabel(/expire after/i).selectOption({ label: 'Never' });
+    await page.getByLabel(/max number of uses/i).selectOption({ label: 'No limit' });
+    await page.getByRole('button', { name: /generate new link/i }).click();
+
+    await expect
+      .poll(() => requests.inviteCreates.length, {
+        message: 'invite create endpoint received the unlimited invite request',
+      })
+      .toBeGreaterThan(0);
+    expect(requests.inviteCreates[0]).not.toHaveProperty('expires_in');
+    expect(requests.inviteCreates[0]).not.toHaveProperty('max_uses');
+    await expect(page.locator('input[readonly]')).toHaveValue(/\/invite\/NEW403$/);
+
+    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
+    const generatedInvite = page.getByTestId('invite-row-NEW403');
+    await expect(generatedInvite).toContainText('NEW403');
+    await expect(generatedInvite).toContainText('0 uses');
+    await expect(generatedInvite).toContainText('Never expires');
   });
 
   test('shows endpoint 403 copy when invite list and delete are denied', async ({ page }) => {
