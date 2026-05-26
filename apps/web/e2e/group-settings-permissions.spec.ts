@@ -2,6 +2,10 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 
 const CURRENT_USER_ID = 'e2e-user';
 const GROUP_ID = 'group-permission-edge';
+const ONE_PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
+  'base64'
+);
 
 const currentUser = {
   id: CURRENT_USER_ID,
@@ -221,6 +225,8 @@ async function installGroupPermissionMocks(
     memberRoleUpdates: [] as Array<{ memberId: string; body: unknown }>,
     leaves: [] as string[],
     deletes: [] as string[],
+    iconUploads: 0,
+    bannerUploads: 0,
   };
 
   const groupResponse = () => ({ ...currentGroupFixture, roles: roleState });
@@ -282,6 +288,18 @@ async function installGroupPermissionMocks(
       }
 
       await fulfillJson(route, { data: { ok: true } });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/avatar` && method === 'POST') {
+      requests.iconUploads += 1;
+      await fulfillJson(route, { url: '/uploads/group-icon.png' });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/banner` && method === 'POST') {
+      requests.bannerUploads += 1;
+      await fulfillJson(route, { url: '/uploads/group-banner.png' });
       return;
     }
 
@@ -663,6 +681,42 @@ test.describe('Group settings permissions', () => {
     await expect
       .poll(() => requests.groupPatches)
       .toContainEqual(expect.objectContaining({ name: 'Permission Edge Hub Verified' }));
+  });
+
+  test('uploads group icon and banner through backend-owned settings URLs', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      allowGroupPatch: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await expect(page.getByRole('heading', { name: /^Overview$/ })).toBeVisible();
+
+    await page.getByLabel('Upload group icon').setInputFiles({
+      name: 'group-icon.png',
+      mimeType: 'image/png',
+      buffer: ONE_PIXEL_PNG,
+    });
+
+    await expect
+      .poll(() => requests.iconUploads, { message: 'icon upload reached backend' })
+      .toBe(1);
+    await expect
+      .poll(() => requests.groupPatches, { message: 'icon URL patch reached backend' })
+      .toContainEqual(expect.objectContaining({ icon_url: '/uploads/group-icon.png' }));
+
+    await page.getByLabel('Upload group banner').setInputFiles({
+      name: 'group-banner.png',
+      mimeType: 'image/png',
+      buffer: ONE_PIXEL_PNG,
+    });
+
+    await expect
+      .poll(() => requests.bannerUploads, { message: 'banner upload reached backend' })
+      .toBe(1);
+    await expect
+      .poll(() => requests.groupPatches, { message: 'banner URL patch reached backend' })
+      .toContainEqual(expect.objectContaining({ banner_url: '/uploads/group-banner.png' }));
   });
 
   test('limits settings tabs for non-admin members and avoids admin writes', async ({ page }) => {

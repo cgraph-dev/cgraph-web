@@ -111,6 +111,11 @@ route-specific copy. `apps/web/e2e/group-settings-permissions.spec.ts` browser-v
 node-gated access PATCH payload, node-gated 403 copy, leave 403 copy, and delete 403 copy on
 `/groups/:groupId/settings`.
 
+2026-05-26 group-settings media proof: the same routed settings spec now verifies group icon and
+banner uploads against `POST /api/v1/groups/:groupId/avatar` and
+`POST /api/v1/groups/:groupId/banner`, then verifies the resulting backend-owned media URLs are
+saved through the group `PATCH` contract.
+
 2026-05-25 group scroll proof: production web now constrains the routed groups shell height, lets
 the group message list own scroll state, and replaces naive group-channel autoscroll with guarded
 anchor/latest behavior. `apps/web/e2e/group-channel-scroll.spec.ts` browser-verifies that

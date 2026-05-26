@@ -133,6 +133,7 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
         <input
           ref={bannerInputRef}
           type="file"
+          aria-label="Upload group banner"
           accept="image/*"
           className="sr-only"
           onChange={handleBannerChange}
@@ -140,6 +141,7 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
         <input
           ref={iconInputRef}
           type="file"
+          aria-label="Upload group icon"
           accept="image/*"
           className="sr-only"
           onChange={handleIconChange}
