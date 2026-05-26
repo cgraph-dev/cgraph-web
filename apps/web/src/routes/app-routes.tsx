@@ -23,6 +23,7 @@ import {
   GroupAnnouncementChannel,
   GroupForumChannel,
   GroupSettingsPage,
+  GroupInviteLanding,
   ExploreGroups,
   // Explore (unified)
   ExplorePage,
@@ -133,6 +134,7 @@ export function AppRoutes() {
           <Route path=":groupId/settings" element={<GroupSettingsPage />} />
         </Route>
         <Route path="groups/explore" element={<ExploreGroups />} />
+        <Route path="invite/:code" element={<GroupInviteLanding />} />
 
         {/* Explore — unified discovery destination with tabs */}
         <Route path="explore" element={<ExplorePage />} />

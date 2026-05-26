@@ -54,6 +54,7 @@ export const GroupAnnouncementChannel = lazyRetry(
 );
 export const GroupForumChannel = lazyRetry(() => import('@/pages/groups/group-forum-channel'));
 export const GroupSettingsPage = lazyRetry(() => import('@/pages/groups/group-settings-page'));
+export const GroupInviteLanding = lazyRetry(() => import('@/pages/groups/invite-landing'));
 export const ExploreGroups = lazyRetry(() => import('@/pages/groups/explore-groups'));
 
 export const ExplorePage = lazyRetry(() => import('@/pages/explore/explore-page'));

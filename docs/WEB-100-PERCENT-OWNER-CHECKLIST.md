@@ -128,6 +128,14 @@ hook tests verify the local invite manager respects the server response over opt
 values. The stricter release-readiness documents still keep redemption, expiry, and
 usage-consumption lifecycle proof open.
 
+2026-05-26 group invite-link route proof: production web now mounts `/invite/:code` for generated
+group invite links instead of letting those URLs fall into the catch-all route. The new route loads
+invite preview truth through `GET /api/v1/invites/:code`, redeems through
+`POST /api/v1/invites/:code/join`, navigates to the joined group's canonical channel route, and
+keeps expired invites on the invite page without redeeming them. Browser proof lives in
+`apps/web/e2e/group-invite-landing.spec.ts`. Backend-side usage counter consumption remains tracked
+in the stricter release-readiness docs.
+
 2026-05-26 Cloud Chat bubble/action/media convergence proof: production web now makes
 `EnhancedMessageBubble` a thin route adapter over shared `modules/chat` `MessageBubble`. The shared
 bubble owns sticker rendering, pinned badges, read receipts, message media rendering, delete copy,
