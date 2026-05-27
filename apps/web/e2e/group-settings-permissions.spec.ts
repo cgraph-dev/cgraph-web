@@ -563,7 +563,7 @@ async function installGroupPermissionMocks(
         return;
       }
 
-      await fulfillJson(route, { data: { ok: true } });
+      await route.fulfill({ status: 204, body: '' });
       return;
     }
 
@@ -1308,6 +1308,27 @@ test.describe('Group settings permissions', () => {
     await expect(generatedInvite).toContainText('NEW403');
     await expect(generatedInvite).toContainText('0 uses');
     await expect(generatedInvite).toContainText('Never expires');
+  });
+
+  test('reconciles successful invite delete on the routed manage-invites tab', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^Invites$/ }).click();
+    await page.getByRole('button', { name: /^Create Invite$/ }).click();
+    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
+
+    const inviteRow = page.getByTestId('invite-row-EDGE403');
+    await expect(inviteRow).toContainText('EDGE403');
+    await page.getByRole('button', { name: /delete invite edge403/i }).click();
+
+    await expect
+      .poll(() => requests.inviteDeletes, { message: 'invite delete reached backend' })
+      .toContain('invite-edge');
+    await expect(inviteRow).toHaveCount(0);
+    await expect(page.getByText('No active invites')).toBeVisible();
   });
 
   test('shows endpoint 403 copy when invite list and delete are denied', async ({ page }) => {

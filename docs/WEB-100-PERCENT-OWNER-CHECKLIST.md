@@ -153,8 +153,16 @@ or no-expiry invites. `apps/web/e2e/group-settings-permissions.spec.ts` browser-
 expiry/max-use create payloads, unlimited invite payload omission, generated-link rendering, and the
 managed invite row copy for finite and unlimited invites on `/groups/:groupId/settings`. Focused
 hook tests verify the local invite manager respects the server response over optimistic fallback
-values. The stricter release-readiness documents still keep redemption, expiry, and
-usage-consumption lifecycle proof open.
+values.
+
+2026-05-27 group invite management closure proof: production backend now treats explicit
+`expires_in` as the server-owned source for `expires_at`, keeps omitted expiry as a permanent
+invite, and deletes invites through the mounted
+`DELETE /api/v1/groups/:group_id/invites/:id` route. Focused backend proof lives in
+`apps/backend/test/cgraph/groups/invites_test.exs` and
+`apps/backend/test/cgraph_web/controllers/api/v1/invite_controller_test.exs`. Production web now
+browser-verifies successful routed invite-delete reconciliation on the manage-invites tab in
+`apps/web/e2e/group-settings-permissions.spec.ts`.
 
 2026-05-26 group invite-link route proof: production web now mounts `/invite/:code` for generated
 group invite links instead of letting those URLs fall into the catch-all route. The new route loads
