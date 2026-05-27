@@ -143,6 +143,7 @@ const apiCircuitBreaker = new CircuitBreaker({
   resetTimeout: 30_000,
 });
 
+/** Reset the shared API circuit after an explicit user retry action. */
 export function resetApiCircuitBreaker(): void {
   apiCircuitBreaker.reset();
 }
