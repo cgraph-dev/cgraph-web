@@ -251,7 +251,9 @@ the locked-file owner instead of bypassing it with the plain file renderer.
 `apps/web/e2e/dm-media-composer.spec.ts` now browser-verifies routed paid-file insufficient-balance,
 already-unlocked, and rate-limit states; focused component tests cover tip, gift, and content-unlock
 negative copy. Later 2026-05-27 production proof closes profile tip/gift and forum content-unlock
-retry UX; Stripe handoff success and final broad browser validation remain open in the stricter
+retry UX, and 2026-05-28 production proof adds coded backend paid-file validation, not-found,
+insufficient-balance, success, and duplicate-unlock contracts plus routed failed-then-explicit-retry
+success. Stripe handoff success and final broad browser validation remain open in the stricter
 release-readiness documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web

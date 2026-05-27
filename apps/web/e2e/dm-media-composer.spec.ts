@@ -140,7 +140,7 @@ async function installMessagingApiMocks(
   options: {
     initialMessages?: MessageFixture[];
     messageRequestStatus?: 'accepted' | 'pending';
-    paidFileUnlockMode?: 'ok' | 'insufficient' | 'already' | 'rate';
+    paidFileUnlockMode?: 'ok' | 'insufficient' | 'already' | 'rate' | 'fail-then-success';
   } = {}
 ): Promise<{
   attachmentUploads: string[];
@@ -530,9 +530,32 @@ async function installMessagingApiMocks(
       return;
     }
 
+    if (paidFileUnlockMode === 'fail-then-success' && paidFileUnlocks.length === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { code: 'unlock_failed', message: 'Unlock failed' },
+        }),
+      });
+      return;
+    }
+
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify({ data: { id: 'paid-file-1', status: 'unlocked' } }),
+      body: JSON.stringify({
+        data: {
+          id: 'paid-file-1',
+          sender_id: FRIEND_USER_ID,
+          receiver_id: CURRENT_USER_ID,
+          file_url: 'https://cdn.cgraph.test/locked-proof.pdf',
+          file_type: 'application/pdf',
+          nodes_required: 75,
+          status: 'paid',
+          expires_at: null,
+          inserted_at: '2026-01-01T00:00:00.000Z',
+        },
+      }),
     });
   });
 
@@ -668,6 +691,38 @@ test.describe('DM media composer', () => {
       page.getByLabel('Conversation messages').getByText('Please wait a moment and try again.')
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Unlock for 75 Nodes' })).toBeVisible();
+  });
+
+  test('keeps paid files locked until a second explicit unlock succeeds', async ({ page }) => {
+    const { paidFileUnlocks } = await installMessagingApiMocks(page, {
+      initialMessages: [lockedPaidFileMessage()],
+      paidFileUnlockMode: 'fail-then-success',
+    });
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await page.getByRole('button', { name: 'Unlock for 75 Nodes' }).click();
+
+    await expect
+      .poll(() => paidFileUnlocks.length, { message: 'paid file unlock endpoint was called once' })
+      .toBe(1);
+    await expect(
+      page
+        .getByLabel('Conversation messages')
+        .getByText('Failed to unlock file. Check your Node balance.')
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Unlock for 75 Nodes' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Unlock for 75 Nodes' }).click();
+
+    await expect
+      .poll(() => paidFileUnlocks.length, { message: 'paid file unlock endpoint was called twice' })
+      .toBe(2);
+    await expect(page.getByRole('button', { name: 'Unlock for 75 Nodes' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /locked-proof\.pdf/i })).toHaveAttribute(
+      'href',
+      'https://cdn.cgraph.test/locked-proof.pdf'
+    );
   });
 
   test('records and sends a routed cloud-DM voice message in the browser', async ({ page }) => {
