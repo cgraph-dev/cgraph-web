@@ -119,6 +119,13 @@ browser-verifies mounted `/qr-login` session creation, stale-code expiry, and ex
 Code retry. This closes the stale QR cleanup route/contract gap; paired approval from a real second
 client remains an external/mobile-lab proof item, not a local route checkbox.
 
+2026-05-28 initial final-validation proof: production web commit `01f55bf` passed a rebuilt
+`web-owner-uat.spec.ts` browser pass covering auth entry, routed DM send, incoming-call accept/end,
+group send/media/GIF/sticker/voice/search/mute/actions/settings, Social discovery, Settings privacy,
+Nodes wallet, call history callback, and voice-room entry. Vercel deployed the commit and
+`pnpm --filter @cgraph/web smoke:production` passed against `web.cgraph.org`. This moves final
+validation out of zero, but it is not the full strict per-suite release signoff.
+
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and
