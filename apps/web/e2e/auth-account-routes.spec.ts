@@ -44,6 +44,7 @@ interface AuthRouteMockOptions {
   readonly phoneCallFallbackResponses?: readonly MockJsonResponse[];
   readonly registrationLockResponses?: readonly MockJsonResponse[];
   readonly profileUpdateResponses?: readonly MockJsonResponse[];
+  readonly qrSessionResponses?: readonly MockJsonResponse[];
   readonly resetPasswordResponses?: readonly MockJsonResponse[];
 }
 
@@ -95,6 +96,7 @@ async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions =
     phoneRequest: [] as unknown[],
     phoneVerify: [] as unknown[],
     profileUpdate: [] as unknown[],
+    qrSession: [] as unknown[],
     register: [] as unknown[],
     registrationLock: [] as unknown[],
     resetPassword: [] as unknown[],
@@ -196,11 +198,21 @@ async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions =
     }
 
     if (path === '/api/v1/auth/qr-session') {
-      await fulfillJson(route, {
-        session_id: 'qr-session-uat',
-        qr_payload: 'cgraph://qr-login/qr-session-uat',
-        expires_in: 300,
-      });
+      const attempt = requests.qrSession.length;
+      requests.qrSession.push(null);
+
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.qrSessionResponses,
+          attempt,
+          mockResponse({
+            session_id: 'qr-session-uat',
+            qr_payload: 'cgraph://qr-login/qr-session-uat',
+            expires_in: 300,
+          })
+        )
+      );
       return;
     }
 
@@ -505,6 +517,32 @@ test.describe('auth and account lifecycle routes', () => {
       code: '123456',
       session_id: 'phone-session-uat',
     });
+  });
+
+  test('expires stale QR login sessions and requests a fresh code on retry', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page, {
+      qrSessionResponses: [
+        mockResponse({
+          session_id: 'qr-session-expiring-uat',
+          qr_payload: 'cgraph://qr-login/qr-session-expiring-uat',
+          expires_in: 1,
+        }),
+        mockResponse({
+          session_id: 'qr-session-fresh-uat',
+          qr_payload: 'cgraph://qr-login/qr-session-fresh-uat',
+          expires_in: 300,
+        }),
+      ],
+    });
+
+    await page.goto('/qr-login');
+    await expect(page.getByText(/waiting for scan/i)).toBeVisible();
+    await expect(page.getByText(/qr code expired/i)).toBeVisible({ timeout: 5_000 });
+
+    await page.getByRole('button', { name: /generate new code/i }).click();
+
+    await expect(page.getByText(/waiting for scan/i)).toBeVisible();
+    await expect.poll(() => requests.qrSession.length).toBe(2);
   });
 
   test('completes new-user phone registration through profile and permissions', async ({ page }) => {

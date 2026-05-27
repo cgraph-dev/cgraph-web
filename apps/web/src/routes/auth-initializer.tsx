@@ -21,7 +21,7 @@ import { authLogger, themeLogger } from '@/lib/logger';
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 const E2E_ONBOARDING_COMPLETED_KEY = 'cgraph-e2e-onboarding-completed';
 const PUBLIC_AUTH_ROUTE_PATTERN =
-  /^\/(login|register|forgot-password|reset-password|verify-email)(\/|$)/;
+  /^\/(login|qr-login|register|forgot-password|reset-password|verify-email)(\/|$)/;
 
 const E2E_USER: User = {
   id: 'e2e-user',

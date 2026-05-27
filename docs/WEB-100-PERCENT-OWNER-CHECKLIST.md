@@ -112,6 +112,13 @@ missing-param validation. Production web `auth-account-routes.spec.ts` browser-v
 reset-password success plus invalid, expired, and reused-token recovery. This closes the strict
 password-reset confirm contract while real mail-provider delivery remains tracked separately.
 
+2026-05-28 QR-login proof: production backend `qr_auth_controller_test.exs` now proves QR session
+creation, coded stale-session, missing-parameter, and invalid-signature failures, valid approval
+broadcast, and one-time session consumption. Production web `auth-account-routes.spec.ts`
+browser-verifies mounted `/qr-login` session creation, stale-code expiry, and explicit Generate New
+Code retry. This closes the stale QR cleanup route/contract gap; paired approval from a real second
+client remains an external/mobile-lab proof item, not a local route checkbox.
+
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and

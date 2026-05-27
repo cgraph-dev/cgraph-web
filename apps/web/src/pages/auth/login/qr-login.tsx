@@ -40,6 +40,17 @@ interface QrSession {
 const QR_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 const QR_SIZE = 256;
 
+function getExpiryMs(expiresInSeconds: number): number {
+  return Number.isFinite(expiresInSeconds) && expiresInSeconds > 0
+    ? expiresInSeconds * 1000
+    : QR_EXPIRY_MS;
+}
+
+function isExpiredJoinResponse(response: unknown): boolean {
+  if (!isRecord(response)) return false;
+  return response.reason === 'session_not_found_or_expired';
+}
+
 // Component
 
 /** QR code login tab/section for the login page. */
@@ -113,6 +124,11 @@ export function QrLogin() {
         })
         .receive('error', (resp: unknown) => {
           logger.error('Failed to join QR auth channel:', resp);
+          if (isExpiredJoinResponse(resp)) {
+            setState('expired');
+            setError(null);
+            return;
+          }
           setState('error');
           setError('Failed to connect. Please try again.');
         });
@@ -165,13 +181,10 @@ export function QrLogin() {
 
       // Set expiry timer
       if (expiryTimerRef.current) clearTimeout(expiryTimerRef.current);
-      expiryTimerRef.current = setTimeout(
-        () => {
-          setState('expired');
-          disconnectChannel();
-        },
-        qrSession.expiresIn * 1000 || QR_EXPIRY_MS
-      );
+      expiryTimerRef.current = setTimeout(() => {
+        setState('expired');
+        disconnectChannel();
+      }, getExpiryMs(qrSession.expiresIn));
     } catch (err) {
       logger.error('Failed to create QR session:', err);
       setError('Failed to create QR session. Please try again.');
