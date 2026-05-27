@@ -40,9 +40,12 @@ const bundle = {
 };
 
 interface NodesMockOptions {
-  readonly walletMode?: 'ok' | 'error';
-  readonly transactionsMode?: 'ok' | 'error' | 'empty';
-  readonly bundlesMode?: 'ok' | 'error' | 'empty';
+  readonly walletMode?: 'ok' | 'error' | 'error-once';
+  readonly walletFailuresBeforeSuccess?: number;
+  readonly transactionsMode?: 'ok' | 'error' | 'error-once' | 'empty';
+  readonly transactionFailuresBeforeSuccess?: number;
+  readonly bundlesMode?: 'ok' | 'error' | 'error-once' | 'empty';
+  readonly bundleFailuresBeforeSuccess?: number;
   readonly checkoutMode?: 'ok' | 'error';
 }
 
@@ -86,7 +89,12 @@ async function installNodesMocks(
 
     if (path === '/api/v1/nodes/wallet' && method === 'GET') {
       calls.wallet += 1;
-      if (options.walletMode === 'error') {
+      const failuresBeforeSuccess =
+        options.walletFailuresBeforeSuccess ?? (options.walletMode === 'error-once' ? 1 : 0);
+      if (
+        options.walletMode === 'error' ||
+        (failuresBeforeSuccess > 0 && calls.wallet <= failuresBeforeSuccess)
+      ) {
         await fulfillJson(route, errorBody('wallet_unavailable', 'Wallet API unavailable'), 503);
         return;
       }
@@ -97,7 +105,13 @@ async function installNodesMocks(
 
     if (path === '/api/v1/nodes/transactions' && method === 'GET') {
       calls.transactions += 1;
-      if (options.transactionsMode === 'error') {
+      const failuresBeforeSuccess =
+        options.transactionFailuresBeforeSuccess ??
+        (options.transactionsMode === 'error-once' ? 1 : 0);
+      if (
+        options.transactionsMode === 'error' ||
+        (failuresBeforeSuccess > 0 && calls.transactions <= failuresBeforeSuccess)
+      ) {
         await fulfillJson(
           route,
           errorBody('transactions_unavailable', 'Transaction API unavailable'),
@@ -112,7 +126,12 @@ async function installNodesMocks(
 
     if (path === '/api/v1/nodes/bundles' && method === 'GET') {
       calls.bundles += 1;
-      if (options.bundlesMode === 'error') {
+      const failuresBeforeSuccess =
+        options.bundleFailuresBeforeSuccess ?? (options.bundlesMode === 'error-once' ? 1 : 0);
+      if (
+        options.bundlesMode === 'error' ||
+        (failuresBeforeSuccess > 0 && calls.bundles <= failuresBeforeSuccess)
+      ) {
         await fulfillJson(route, errorBody('bundles_unavailable', 'Bundles API unavailable'), 503);
         return;
       }
@@ -187,6 +206,25 @@ test.describe('Nodes wallet and shop routed browser behavior', () => {
     await expect(page.getByText('Available Balance')).toHaveCount(0);
   });
 
+  test('recovers the wallet route after retry without rendering a false zero balance', async ({
+    page,
+  }) => {
+    const calls = await installNodesMocks(page, { walletFailuresBeforeSuccess: 100 });
+
+    await page.goto('/me/wallet');
+
+    await expect(page.getByText('Wallet unavailable')).toBeVisible();
+    await expect(page.getByText('Available Balance')).toHaveCount(0);
+
+    calls.wallet = 100;
+    await page.getByRole('button', { name: 'Retry' }).click();
+
+    await expect.poll(() => calls.wallet).toBeGreaterThanOrEqual(101);
+    await expect(page.getByText('Available Balance')).toBeVisible();
+    await expect(page.getByText(/1,250/)).toBeVisible();
+    await expect(page.getByText('Wallet unavailable')).toHaveCount(0);
+  });
+
   test('keeps wallet visible while transaction history failure is explicit', async ({ page }) => {
     await installNodesMocks(page, { transactionsMode: 'error' });
 
@@ -198,6 +236,25 @@ test.describe('Nodes wallet and shop routed browser behavior', () => {
     await expect(page.getByText('Transaction API unavailable')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
     await expect(page.getByText('No transactions yet')).toHaveCount(0);
+  });
+
+  test('recovers transaction history after retry while keeping wallet balance visible', async ({
+    page,
+  }) => {
+    const calls = await installNodesMocks(page, { transactionFailuresBeforeSuccess: 100 });
+
+    await page.goto('/me/wallet');
+
+    await expect(page.getByText('Available Balance')).toBeVisible();
+    await expect(page.getByText('Transaction history unavailable')).toBeVisible();
+
+    calls.transactions = 100;
+    await page.getByRole('button', { name: 'Retry' }).click();
+
+    await expect.poll(() => calls.transactions).toBeGreaterThanOrEqual(101);
+    await expect(page.getByText('Tip Received')).toBeVisible();
+    await expect(page.getByText(/\+.*250/)).toBeVisible();
+    await expect(page.getByText('Transaction history unavailable')).toHaveCount(0);
   });
 
   test('renders shop bundles and handles checkout failure as a user-facing error', async ({
@@ -227,6 +284,23 @@ test.describe('Nodes wallet and shop routed browser behavior', () => {
     await expect(page.getByText('Bundles API unavailable')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Purchase' })).toHaveCount(0);
+  });
+
+  test('recovers shop bundles after retry without showing the empty-shop state', async ({ page }) => {
+    const calls = await installNodesMocks(page, { bundleFailuresBeforeSuccess: 100 });
+
+    await page.goto('/me/wallet/shop');
+
+    await expect(page.getByText('Shop unavailable')).toBeVisible();
+    await expect(page.getByText('No Node bundles are available right now.')).toHaveCount(0);
+
+    calls.bundles = 100;
+    await page.getByRole('button', { name: 'Retry' }).click();
+
+    await expect.poll(() => calls.bundles).toBeGreaterThanOrEqual(101);
+    await expect(page.getByText('Starter Pack')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Purchase' })).toBeVisible();
+    await expect(page.getByText('Shop unavailable')).toHaveCount(0);
   });
 
   test('shows a distinct empty state when the shop loads with no bundles', async ({ page }) => {

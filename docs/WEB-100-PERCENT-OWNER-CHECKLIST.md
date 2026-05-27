@@ -1,6 +1,6 @@
 # Web 100 Percent Owner Checklist
 
-Status date: 2026-05-26
+Status date: 2026-05-27
 
 Current checklist state: 50 / 50 owner-level implementation rows are closed for this execution
 contract, but this is not the same as full Level 2 release-readiness or a complete web-workstream
@@ -73,6 +73,12 @@ lives in `apps/backend/test/cgraph_web/controllers/nodes_controller_test.exs` fo
 Stripe-rejection, and unknown-bundle contracts. The routed web proof remains
 `apps/web/e2e/nodes-wallet-shop.spec.ts`, which verifies checkout failure copy on the mounted shop
 route.
+
+2026-05-27 Nodes wallet/shop retry proof: the backend controller test now also proves authenticated
+wallet balance, filtered transaction history, and active shop bundle schema responses. The routed
+web proof now holds wallet, transaction-history, and bundle APIs in real failure long enough to
+render the mounted error states, resets the API circuit on user-triggered Retry, and verifies the
+wallet/shop routes recover without showing false zero-balance or empty-shop success UI.
 
 2026-05-23 auth/account browser proof: `apps/web/e2e/auth-account-routes.spec.ts` now verifies
 routed email login with 2FA, registration, forgot-password, reset-password, verify-email token and
@@ -225,8 +231,8 @@ accessible, exposes Add Nodes recovery for insufficient balance, and wires route
 the locked-file owner instead of bypassing it with the plain file renderer.
 `apps/web/e2e/dm-media-composer.spec.ts` now browser-verifies routed paid-file insufficient-balance,
 already-unlocked, and rate-limit states; focused component tests cover tip, gift, and content-unlock
-negative copy. Stripe handoff success, deeper retry UX, and final broad browser validation remain
-open in the stricter release-readiness documents.
+negative copy. Stripe handoff success, tip/gift/unlock retry UX, and final broad browser validation
+remain open in the stricter release-readiness documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
@@ -556,8 +562,8 @@ Required implementation-time questions:
 - [x] Regression tests exist for the critical routed behaviors that were previously fake, partial,
       or misrouted. Current route-owned coverage includes `apps/web/e2e/dm-media-composer.spec.ts`,
       `apps/web/e2e/broadcasts.spec.ts`, `apps/web/e2e/spaces.spec.ts`,
-      `apps/web/e2e/vault.spec.ts`, `apps/web/e2e/auth-account-routes.spec.ts`, and
-      `apps/web/e2e/web-owner-uat.spec.ts`.
+      `apps/web/e2e/vault.spec.ts`, `apps/web/e2e/auth-account-routes.spec.ts`,
+      `apps/web/e2e/nodes-wallet-shop.spec.ts`, and `apps/web/e2e/web-owner-uat.spec.ts`.
 - [x] The support matrix matches the routed app after the final validation pass.
 - [x] No document still claims a feature is working if browser verification has not happened.
 

@@ -143,6 +143,10 @@ const apiCircuitBreaker = new CircuitBreaker({
   resetTimeout: 30_000,
 });
 
+export function resetApiCircuitBreaker(): void {
+  apiCircuitBreaker.reset();
+}
+
 // Axios response interceptor — feed circuit breaker
 api.interceptors.response.use(
   (response) => {
