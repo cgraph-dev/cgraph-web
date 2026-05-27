@@ -16,6 +16,10 @@ import { calculatePasswordStrength } from './utils';
 import { ValidatingView, ExpiredView, SuccessView } from './state-views';
 import { ResetPasswordForm } from './reset-password-form';
 
+function isInvalidResetToken(code: string | undefined, message: string): boolean {
+  return code === 'invalid_reset_token' || /invalid|expired|already been used/i.test(message);
+}
+
 /**
  * Reset Password component.
  */
@@ -71,6 +75,11 @@ export default function ResetPassword() {
       );
 
       if (!result.ok) {
+        if (isInvalidResetToken(result.error.code, result.error.message)) {
+          setState('expired');
+          return;
+        }
+
         throw new Error(result.error.message);
       }
 

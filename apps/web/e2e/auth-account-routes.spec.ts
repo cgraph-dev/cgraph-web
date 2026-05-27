@@ -44,6 +44,7 @@ interface AuthRouteMockOptions {
   readonly phoneCallFallbackResponses?: readonly MockJsonResponse[];
   readonly registrationLockResponses?: readonly MockJsonResponse[];
   readonly profileUpdateResponses?: readonly MockJsonResponse[];
+  readonly resetPasswordResponses?: readonly MockJsonResponse[];
 }
 
 function mockResponse(body: unknown, status = 200): MockJsonResponse {
@@ -160,9 +161,17 @@ async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions =
 
     if (path === '/api/v1/auth/reset-password') {
       const body = readJsonRequest(route);
+      const attempt = requests.resetPassword.length;
       requests.resetPassword.push(body);
 
-      await fulfillJson(route, { success: true, message: 'Password reset' });
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.resetPasswordResponses,
+          attempt,
+          mockResponse({ success: true, message: 'Password reset' })
+        )
+      );
       return;
     }
 
@@ -425,6 +434,52 @@ test.describe('auth and account lifecycle routes', () => {
     await page.getByRole('button', { name: /resend verification email/i }).click();
     await expect(page.getByText(/new verification email sent/i)).toBeVisible();
     expect(requests.resendVerification[0]).toMatchObject({ email: 'owner-uat@cgraph.dev' });
+  });
+
+  test('keeps invalid, expired, and replayed reset tokens on the recovery route', async ({
+    page,
+  }) => {
+    const invalidResetToken = {
+      error: {
+        code: 'invalid_reset_token',
+        message: 'Invalid or expired reset token',
+      },
+    };
+    const requests = await installAuthRouteMocks(page, {
+      resetPasswordResponses: [
+        mockResponse(invalidResetToken, 400),
+        mockResponse(invalidResetToken, 400),
+        mockResponse({ success: true, message: 'Password reset' }),
+        mockResponse(invalidResetToken, 400),
+      ],
+    });
+
+    async function submitReset(token: string) {
+      await page.goto(`/reset-password?token=${token}`);
+      await page.getByPlaceholder('Enter new password').fill(strongPassword);
+      await page.getByPlaceholder('Confirm new password').fill(strongPassword);
+      await page.getByRole('button', { name: /^reset password/i }).click();
+    }
+
+    await submitReset('invalid-token-uat');
+    await expect(page.getByRole('heading', { name: /link expired/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /request new link/i })).toBeVisible();
+
+    await submitReset('expired-token-uat');
+    await expect(page.getByRole('heading', { name: /link expired/i })).toBeVisible();
+
+    await submitReset('replay-token-uat');
+    await expect(page.getByRole('heading', { name: /password reset/i })).toBeVisible();
+
+    await submitReset('replay-token-uat');
+    await expect(page.getByRole('heading', { name: /link expired/i })).toBeVisible();
+
+    expect(requests.resetPassword).toEqual([
+      expect.objectContaining({ token: 'invalid-token-uat' }),
+      expect.objectContaining({ token: 'expired-token-uat' }),
+      expect.objectContaining({ token: 'replay-token-uat' }),
+      expect.objectContaining({ token: 'replay-token-uat' }),
+    ]);
   });
 
   test('renders QR login and verifies phone login entry plus OTP completion', async ({ page }) => {

@@ -106,6 +106,12 @@ mocked backend contracts. This closes the strict broad auth route browser-proof 
 mail-provider delivery and the remaining phone registration-lock, call-fallback, and new-user
 completion branches stayed open until the later phone-flow proof below.
 
+2026-05-28 reset-token proof: production backend `auth_controller_test.exs` now proves valid
+password reset, login with the new password, replay rejection, invalid token, expired token, and
+missing-param validation. Production web `auth-account-routes.spec.ts` browser-verifies mounted
+reset-password success plus invalid, expired, and reused-token recovery. This closes the strict
+password-reset confirm contract while real mail-provider delivery remains tracked separately.
+
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and
