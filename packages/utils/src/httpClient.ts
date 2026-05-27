@@ -38,6 +38,8 @@ export type RetryConfig = {
   maxBackoffMs?: number;
   retryOnStatuses?: number[];
   retryOnNetworkError?: boolean;
+  /** Retry POST/PUT/PATCH/DELETE requests. Defaults to false to protect non-idempotent writes. */
+  retryMutatingRequests?: boolean;
 };
 
 export type IdempotencyConfig = {
@@ -202,12 +204,13 @@ export function createHttpClient(options: HttpClientOptions): AxiosInstance {
       const isAuthRequest =
         cfg?.url?.includes('/auth/login') || cfg?.url?.includes('/auth/register');
 
-      // Helper to generate fresh idempotency key for retry
-      const regenerateIdempotencyKey = (config: InternalAxiosRequestConfig) => {
+      // Keep one idempotency key per logical request. A retry with a new key can
+      // duplicate paid actions instead of deduplicating them server-side.
+      const ensureIdempotencyKey = (config: InternalAxiosRequestConfig) => {
         if (idempotency?.enabled !== false) {
           const header = idempotency?.header || 'Idempotency-Key';
           const method = (config.method || '').toLowerCase();
-          if (MUTATING_METHODS.includes(method)) {
+          if (MUTATING_METHODS.includes(method) && !config.headers[header]) {
             const key = idempotency?.generate ? idempotency.generate() : createIdempotencyKey();
             config.headers[header] = key;
           }
@@ -234,7 +237,7 @@ export function createHttpClient(options: HttpClientOptions): AxiosInstance {
           return new Promise((resolve, reject) => {
             enqueueRefresh((token) => {
               if (cfg.headers) cfg.headers.Authorization = `Bearer ${token}`;
-              regenerateIdempotencyKey(cfg);
+              ensureIdempotencyKey(cfg);
               resolve(instance(cfg));
             }, reject);
           });
@@ -259,7 +262,7 @@ export function createHttpClient(options: HttpClientOptions): AxiosInstance {
           resolveQueue(tokens.accessToken);
 
           if (cfg.headers) cfg.headers.Authorization = `Bearer ${tokens.accessToken}`;
-          regenerateIdempotencyKey(cfg);
+          ensureIdempotencyKey(cfg);
           return instance(cfg);
         } catch (refreshErr) {
           isRefreshing = false;
@@ -279,6 +282,7 @@ export function createHttpClient(options: HttpClientOptions): AxiosInstance {
       const maxBackoff = retryCfg.maxBackoffMs ?? 5000;
       const retryStatuses = retryCfg.retryOnStatuses || defaultRetryStatuses;
       const shouldRetryNetwork = retryCfg.retryOnNetworkError ?? true;
+      const retryMutatingRequests = retryCfg.retryMutatingRequests ?? false;
 
       if (cfg) {
         cfg.metadata = cfg.metadata || {};
@@ -287,13 +291,18 @@ export function createHttpClient(options: HttpClientOptions): AxiosInstance {
 
         const isNetworkError = !error.response;
         const retryableStatus = status ? retryStatuses.includes(status) : false;
+        const method = (cfg.method || '').toLowerCase();
+        const mutatingRequest = MUTATING_METHODS.includes(method);
 
-        if (attempt < maxAttempts && (retryableStatus || (shouldRetryNetwork && isNetworkError))) {
+        if (
+          attempt < maxAttempts &&
+          (!mutatingRequest || retryMutatingRequests) &&
+          (retryableStatus || (shouldRetryNetwork && isNetworkError))
+        ) {
           cfg.metadata.retryCount = attempt + 1;
           const delay = Math.min(backoff * Math.pow(2, attempt), maxBackoff);
           await sleep(delay);
-          // Generate a fresh idempotency key for retry to avoid conflicts
-          regenerateIdempotencyKey(cfg);
+          ensureIdempotencyKey(cfg);
           return instance(cfg);
         }
       }

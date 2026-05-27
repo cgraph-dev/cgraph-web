@@ -87,7 +87,17 @@ tip/gift error codes and adds `apps/web/e2e/nodes-profile-actions.spec.ts`, whic
 `/user/:userId` profile route, submits tip and gift actions, verifies canonical insufficient-balance
 copy stays visible after the first server rejection, retries, and only shows success after the
 server accepts the second request. This closes tip/gift retry UX at the strict routed-browser layer;
-unlock retry breadth remains tracked in `docs/WEB-ULTIMATE-STRICT-PASS.md`.
+forum content-unlock retry breadth is closed by the next proof note.
+
+2026-05-27 Nodes content-unlock route-contract proof: production backend controller proof now covers
+insufficient-balance, successful unlock, duplicate unlock, free-thread, and unknown-thread contracts
+for `POST /api/v1/nodes/unlock`. Production web now preserves backend gated-thread fields through
+forum post normalization, mounts `ContentUnlockOverlay` on the routed forum post page, disables
+automatic HTTP and React Query retries for Nodes money mutations, preserves idempotency keys for
+explicit mutating retries, and adds `apps/web/e2e/nodes-content-unlock.spec.ts`. That routed browser
+proof verifies insufficient-balance navigation to `/me/wallet/shop`, not-gated/not-found retryable
+errors, explicit server failure without false success, and gate removal only after the user's second
+explicit unlock action succeeds. This closes the strict forum content-unlock retry breadth item.
 
 2026-05-23 auth/account browser proof: `apps/web/e2e/auth-account-routes.spec.ts` now verifies
 routed email login with 2FA, registration, forgot-password, reset-password, verify-email token and
@@ -240,8 +250,9 @@ accessible, exposes Add Nodes recovery for insufficient balance, and wires route
 the locked-file owner instead of bypassing it with the plain file renderer.
 `apps/web/e2e/dm-media-composer.spec.ts` now browser-verifies routed paid-file insufficient-balance,
 already-unlocked, and rate-limit states; focused component tests cover tip, gift, and content-unlock
-negative copy. Stripe handoff success, tip/gift/unlock retry UX, and final broad browser validation
-remain open in the stricter release-readiness documents.
+negative copy. Later 2026-05-27 production proof closes profile tip/gift and forum content-unlock
+retry UX; Stripe handoff success and final broad browser validation remain open in the stricter
+release-readiness documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent

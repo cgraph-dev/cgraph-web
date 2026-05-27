@@ -9,6 +9,11 @@ import { safeRedirect } from '@/lib/security';
 import { nodesApi } from '../services/nodesApi';
 import type { TransactionType } from '../types';
 import toast from 'react-hot-toast';
+
+const nodesMoneyMutationOptions = {
+  retry: false,
+} as const;
+
 export const nodesKeys = {
   all: ['nodes'] as const,
   wallet: () => [...nodesKeys.all, 'wallet'] as const,
@@ -47,6 +52,7 @@ export function useSendTip() {
   return useMutation({
     mutationFn: ({ recipientId, amount }: { recipientId: string; amount: number }) =>
       nodesApi.sendTip(recipientId, amount),
+    ...nodesMoneyMutationOptions,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: nodesKeys.wallet() });
       queryClient.invalidateQueries({ queryKey: nodesKeys.transactions() });
@@ -59,6 +65,7 @@ export function useUnlockContent() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (threadId: string) => nodesApi.unlockContent(threadId),
+    ...nodesMoneyMutationOptions,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: nodesKeys.wallet() });
       queryClient.invalidateQueries({ queryKey: nodesKeys.transactions() });
@@ -71,6 +78,7 @@ export function useUnlockContent() {
 export function useCreateCheckout() {
   return useMutation({
     mutationFn: (bundleId: string) => nodesApi.createCheckout(bundleId),
+    ...nodesMoneyMutationOptions,
     onSuccess: (data) => {
       // Redirect to Stripe Checkout (validated against trusted domains)
       const checkoutUrl = data.checkout_url ?? data.url;
@@ -97,6 +105,7 @@ export function useSendGift() {
       readonly amount: number;
       readonly message?: string;
     }) => nodesApi.sendGift(recipientId, amount, message),
+    ...nodesMoneyMutationOptions,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: nodesKeys.wallet() });
       queryClient.invalidateQueries({ queryKey: nodesKeys.transactions() });

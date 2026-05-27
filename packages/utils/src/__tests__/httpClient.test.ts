@@ -14,6 +14,39 @@ function unauthorized(config: InternalAxiosRequestConfig): AxiosError {
   return new AxiosError('Request failed with status code 401', undefined, config, {}, response);
 }
 
+function serverUnavailable(config: InternalAxiosRequestConfig): AxiosError {
+  const response: AxiosResponse = {
+    config,
+    data: { error: 'unavailable' },
+    headers: {},
+    status: 503,
+    statusText: 'Service Unavailable',
+  };
+
+  return new AxiosError('Request failed with status code 503', undefined, config, {}, response);
+}
+
+function headerValue(config: InternalAxiosRequestConfig, name: string): string | undefined {
+  const headers = config.headers as unknown;
+
+  if (
+    headers &&
+    typeof headers === 'object' &&
+    'get' in headers &&
+    typeof headers.get === 'function'
+  ) {
+    const value = headers.get(name);
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  if (config.headers && name in config.headers) {
+    const value = config.headers[name];
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  return undefined;
+}
+
 describe('createHttpClient auth refresh', () => {
   it('does not log out a newer session when a stale refresh fails', async () => {
     let refreshToken = 'old-refresh';
@@ -121,5 +154,97 @@ describe('createHttpClient auth refresh', () => {
       accessToken: 'fresh-access',
       refreshToken: 'fresh-refresh',
     });
+  });
+});
+
+describe('createHttpClient retry safety', () => {
+  it('retries safe requests on retryable server errors', async () => {
+    const client = createHttpClient({
+      baseURL: 'https://api.example.test',
+      retry: { attempts: 1, backoffMs: 0, maxBackoffMs: 0 },
+    });
+
+    let attempts = 0;
+
+    client.defaults.adapter = async (config) => {
+      attempts += 1;
+
+      if (attempts === 1) {
+        throw serverUnavailable(config);
+      }
+
+      return {
+        config,
+        data: { ok: true },
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+      };
+    };
+
+    await expect(client.get('/api/v1/me')).resolves.toMatchObject({ status: 200 });
+    expect(attempts).toBe(2);
+  });
+
+  it('does not automatically retry mutating requests', async () => {
+    const client = createHttpClient({
+      baseURL: 'https://api.example.test',
+      retry: { attempts: 3, backoffMs: 0, maxBackoffMs: 0 },
+    });
+
+    let attempts = 0;
+
+    client.defaults.adapter = async (config) => {
+      attempts += 1;
+      throw serverUnavailable(config);
+    };
+
+    await expect(client.post('/api/v1/nodes/unlock', { thread_id: 'thread-1' })).rejects.toThrow(
+      'Request failed with status code 503'
+    );
+    expect(attempts).toBe(1);
+  });
+
+  it('preserves idempotency keys when mutating retries are explicitly enabled', async () => {
+    let generated = 0;
+    const client = createHttpClient({
+      baseURL: 'https://api.example.test',
+      retry: {
+        attempts: 1,
+        backoffMs: 0,
+        maxBackoffMs: 0,
+        retryMutatingRequests: true,
+      },
+      idempotency: {
+        generate: () => {
+          generated += 1;
+          return `key-${generated}`;
+        },
+      },
+    });
+
+    const idempotencyKeys: Array<string | undefined> = [];
+
+    client.defaults.adapter = async (config) => {
+      idempotencyKeys.push(headerValue(config, 'Idempotency-Key'));
+
+      if (idempotencyKeys.length === 1) {
+        throw serverUnavailable(config);
+      }
+
+      return {
+        config,
+        data: { ok: true },
+        headers: {},
+        status: 200,
+        statusText: 'OK',
+      };
+    };
+
+    await expect(client.post('/api/v1/nodes/unlock', { thread_id: 'thread-1' })).resolves.toMatchObject(
+      { status: 200 }
+    );
+    expect(idempotencyKeys).toEqual(['key-1', 'key-1']);
+    expect(generated).toBe(1);
   });
 });

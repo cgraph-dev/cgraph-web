@@ -216,6 +216,19 @@ export function normalizePost(raw: Record<string, unknown>, fallbackForumId = ''
               : null,
       };
     })(),
+    isContentGated: bool(raw.isContentGated ?? raw.is_content_gated),
+    gatePriceNodes:
+      typeof raw.gatePriceNodes === 'number'
+        ? raw.gatePriceNodes
+        : typeof raw.gate_price_nodes === 'number'
+          ? raw.gate_price_nodes
+          : undefined,
+    gatePreviewChars:
+      typeof raw.gatePreviewChars === 'number'
+        ? raw.gatePreviewChars
+        : typeof raw.gate_preview_chars === 'number'
+          ? raw.gate_preview_chars
+          : undefined,
     createdAt: str(raw.createdAt ?? raw.created_at),
     updatedAt: str(raw.updatedAt ?? raw.updated_at),
   };

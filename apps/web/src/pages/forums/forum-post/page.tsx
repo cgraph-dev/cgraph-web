@@ -14,6 +14,7 @@ import { useParams } from 'react-router-dom';
 import { useForumStore } from '@/modules/forums/store';
 import { useAuthStore } from '@/modules/auth/store';
 import EditHistoryModal from '@/modules/forums/components/edit-history-modal';
+import { ContentUnlockOverlay } from '@/modules/nodes/components/content-unlock-overlay';
 
 import { useForumPostActions } from './useForumPostActions';
 import { PostVoteSidebar } from './post-vote-sidebar';
@@ -96,6 +97,18 @@ export default function ForumPost() {
             </div>
           </div>
         </article>
+
+        {currentPost.isContentGated && (
+          <ContentUnlockOverlay
+            postId={currentPost.id}
+            price={currentPost.gatePriceNodes ?? 0}
+            onUnlocked={() => {
+              if (postId) {
+                void fetchPost(postId);
+              }
+            }}
+          />
+        )}
 
         {/* Comment input */}
         <CommentInput
