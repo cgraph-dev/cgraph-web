@@ -66,6 +66,14 @@ failure toast, bundle-load failure without empty-success UI, and the true empty-
 closes the strict wallet/shop browser recheck item. The later 2026-05-23 Nodes negative-path slice
 narrows the tip/gift/unlock risk described below.
 
+2026-05-27 Nodes checkout route-contract proof: production backend now creates checkout sessions
+through an injectable Stripe session owner and returns canonical `/me/wallet` and `/me/wallet/shop`
+success/cancel routes instead of relying on the legacy `/nodes` redirect. Focused backend proof
+lives in `apps/backend/test/cgraph_web/controllers/nodes_controller_test.exs` for success,
+Stripe-rejection, and unknown-bundle contracts. The routed web proof remains
+`apps/web/e2e/nodes-wallet-shop.spec.ts`, which verifies checkout failure copy on the mounted shop
+route.
+
 2026-05-23 auth/account browser proof: `apps/web/e2e/auth-account-routes.spec.ts` now verifies
 routed email login with 2FA, registration, forgot-password, reset-password, verify-email token and
 resend states, QR login session creation, and existing-user phone login OTP completion against
