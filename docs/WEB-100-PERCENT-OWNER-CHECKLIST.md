@@ -80,6 +80,15 @@ web proof now holds wallet, transaction-history, and bundle APIs in real failure
 render the mounted error states, resets the API circuit on user-triggered Retry, and verifies the
 wallet/shop routes recover without showing false zero-balance or empty-shop success UI.
 
+2026-05-27 Nodes profile tip/gift proof: production backend controller proof now covers
+insufficient-balance and successful response contracts for `POST /api/v1/nodes/tip` and
+`POST /api/v1/nodes/gift`. Production web also aligns the shared Nodes failure mapper with backend
+tip/gift error codes and adds `apps/web/e2e/nodes-profile-actions.spec.ts`, which opens the mounted
+`/user/:userId` profile route, submits tip and gift actions, verifies canonical insufficient-balance
+copy stays visible after the first server rejection, retries, and only shows success after the
+server accepts the second request. This closes tip/gift retry UX at the strict routed-browser layer;
+unlock retry breadth remains tracked in `docs/WEB-ULTIMATE-STRICT-PASS.md`.
+
 2026-05-23 auth/account browser proof: `apps/web/e2e/auth-account-routes.spec.ts` now verifies
 routed email login with 2FA, registration, forgot-password, reset-password, verify-email token and
 resend states, QR login session creation, and existing-user phone login OTP completion against

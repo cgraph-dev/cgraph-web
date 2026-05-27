@@ -107,6 +107,7 @@ export function getNodesActionFeedback(
     case 'self_tip':
     case 'cannot_gift_self':
     case 'cannot_tip_self':
+    case 'cannot_tip_yourself':
       return {
         code,
         title: 'Cannot send Nodes to yourself',
@@ -117,6 +118,7 @@ export function getNodesActionFeedback(
 
     case 'rate_limited':
     case 'too_many_requests':
+    case 'gift_rate_limit_exceeded':
       return {
         code,
         title: 'Too many attempts',
