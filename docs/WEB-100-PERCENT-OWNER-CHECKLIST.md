@@ -207,8 +207,7 @@ default.
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and
 native-device-required recovery. `AuthFormInput` now associates visible labels with inputs so the
 phone profile step is accessible by label. The stricter release-readiness documents still keep real
-provider delivery, paired QR approval, destructive account lifecycle proof, and final broad browser
-validation open at this point in the sequence.
+provider delivery, paired QR approval, and external/lab validation open.
 
 2026-05-23 account-deletion lifecycle proof: production web commit `93febe9` extends
 `apps/web/e2e/settings-preference-sync.spec.ts` to browser-verify the mounted
@@ -216,8 +215,7 @@ validation open at this point in the sequence.
 `DELETE /api/v1/me/delete-account`, schedules deletion through password-confirmed
 `POST /api/v1/me/delete-account`, asserts the password payload, and verifies the follow-up auth
 logout side effect. The stricter release-readiness documents still keep real provider delivery,
-paired QR approval, group edge proof, package-version consumption, and final broad browser
-validation open at this point in the sequence.
+paired QR approval, and external/lab validation open.
 
 2026-05-23 group-settings permission proof: production web commit `5351b03` gates group settings
 management tabs by owner/admin/member permissions and adds
@@ -225,8 +223,7 @@ management tabs by owner/admin/member permissions and adds
 Overview/Roles/Members/Invites/Channels/Audit Log/AutoMod and can save overview changes, while
 ordinary members only see personal Notifications/Danger actions and do not issue admin
 `PATCH /api/v1/groups/:groupId` requests. The stricter release-readiness documents still keep
-endpoint-level permission-denied copy, paired QR approval, provider delivery, package-version
-consumption, and final broad browser validation open.
+paired QR approval, provider delivery, and external/lab validation open.
 
 2026-05-25 group-settings permission-edge proof: production web now surfaces route-specific 403 copy
 for denied overview saves, role create/update/reorder/delete, invite list/create/delete, member role
@@ -321,7 +318,7 @@ typing state, edit state, and id-based search/pinned/latest scroll requests into
 contract. The shared list owns virtualization, message-row rendering, active-menu stacking, and
 guarded scroll-to-message behavior. Typecheck, lint, production build, and the full routed
 `apps/web/e2e/dm-media-composer.spec.ts` Chromium proof pass against the rebuilt preview. This
-closes the owner checklist's shared composer/list/action/media stack row, while final broad release
+closes the owner checklist's shared composer/list/action/media stack row, while external/lab
 validation remains tracked by the strict-pass and maturity scorecard documents.
 
 2026-05-28 Cloud Chat surface-shell convergence proof: production web now routes the opened DM
@@ -339,7 +336,7 @@ unit proof covers configured-provider parsing and empty-provider behavior, while
 `apps/web/e2e/settings-preference-sync.spec.ts` browser-verifies the routed settings page showing
 Google/TikTok from backend discovery while hiding unavailable Apple/Facebook account-linking
 actions. The stricter release-readiness documents still keep real provider delivery, paired QR
-approval, package-version consumption, and final broad browser validation open.
+approval, and external/lab validation open.
 
 2026-05-23 GIF storage schema proof: production web commit `dd6de12` moves the GIF picker favorites
 and recent caches to schema-versioned keys, migrates the old `cgraph-gif-favorites` and
@@ -358,8 +355,8 @@ negative copy. Later 2026-05-27 production proof closes profile tip/gift and for
 retry UX, and 2026-05-28 production proof adds coded backend paid-file validation, not-found,
 insufficient-balance, success, and duplicate-unlock contracts plus routed failed-then-explicit-retry
 success. Later 2026-05-28 production proof closes local Stripe checkout handoff success on the
-mounted shop route; real hosted payment completion/webhook settlement and final broad browser
-validation remain open in the stricter release-readiness documents.
+mounted shop route; real hosted payment completion/webhook settlement and external/lab validation
+remain open in the stricter release-readiness documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent
