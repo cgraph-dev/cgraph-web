@@ -187,6 +187,13 @@ now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no
 message is sent, and keeps the full DM media/composer suite green. This proves local route/API
 failure UX; provisioning a reachable production ClamAV scanner remains an external deployment task.
 
+2026-05-29 backend scanner-readiness proof: production backend commit `1781330` exposes antivirus
+backend and failure-policy state through `CGraph.HealthCheck` and `/ready`, passed focused
+health/upload controller tests, and was deployed to Fly as
+`deployment-01KSRANV213HDJVJ5AZMRADFJ0`. The live production `/ready` route now reports
+`antivirus:"metadata_only"`, so scanner visibility is real, while the strict ClamAV provisioning
+task remains open until production reports a reachable byte scanner.
+
 2026-05-28 Stripe checkout handoff proof: production web extends
 `apps/web/e2e/nodes-wallet-shop.spec.ts` to cover the successful checkout path. The browser route
 posts to `/api/v1/nodes/checkout`, receives a backend-owned Stripe checkout URL, follows it through
