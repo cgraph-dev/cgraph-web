@@ -1,6 +1,6 @@
 # Web 100 Percent Owner Checklist
 
-Status date: 2026-05-27
+Status date: 2026-05-29
 
 Current checklist state: 50 / 50 owner-level implementation rows are closed for this execution
 contract, but this is not the same as full Level 2 release-readiness or a complete web-workstream
@@ -152,6 +152,14 @@ focused Chromium group/forum tests across `apps/web/e2e/group-settings-permissio
 build passed `apps/web/e2e/web-owner-uat.spec.ts`, replaying the mounted owner route path for
 incoming-call accept/end, manual call route controls, call-history callback, group media/actions,
 voice room entry, and adjacent auth/social/settings/Nodes surfaces.
+
+2026-05-29 combined route-validation proof: the production-built web app passed 78 / 78 Chromium
+tests in one route pass across auth/account, DM media/composer, Social main-pane, settings
+preference sync, Nodes wallet/shop, group settings permissions, group channel scroll, bare group
+entry redirect, group invite landing, owner UAT, and sidebar/public-profile reload specs. This
+closes the checklist layer's local broad route/contract browser pass, while real external provider
+delivery, paired QR/mobile approval, physical cross-device sync, hosted Stripe settlement/webhooks,
+and production-like two-client media negotiation remain strict-release sign-off work.
 
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
