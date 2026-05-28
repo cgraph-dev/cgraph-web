@@ -35,6 +35,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSocket } from '@/lib/socket';
+import { useAuthStore } from '@/modules/auth/store';
 import {
   WebRTCManager,
   getWebRTCManager,
@@ -88,6 +89,7 @@ export interface UseCallReturn {
  */
 export function useCall(): UseCallReturn {
   const socketManager = useSocket();
+  const token = useAuthStore((state) => state.token);
   const [manager, setManager] = useState<WebRTCManager | null>(null);
   const [callState, setCallState] = useState<CallState>({
     roomId: null,
@@ -108,42 +110,58 @@ export function useCall(): UseCallReturn {
 
   // Initialize manager when socket is available
   useEffect(() => {
-    const socket = socketManager.getSocket();
-    if (!socket) return;
+    let isCurrent = true;
 
-    const rtcManager = getWebRTCManager(socket);
-    setManager(rtcManager);
+    const initializeManager = async () => {
+      if (!socketManager.getSocket() && token) {
+        await socketManager.connect();
+      }
 
-    // Set up event handlers
-    rtcManager.on({
-      onIncomingCall: (callerId, callerName, roomId) => {
-        setIncomingCall({ callerId, callerName, roomId });
-      },
-      onCallConnected: () => {
-        setCallState((prev) => ({ ...prev, status: 'connected' }));
-      },
-      onCallEnded: () => {
-        setCallState((prev) => ({ ...prev, status: 'ended' }));
-        setIncomingCall(null);
-      },
-      onParticipantJoined: () => {
-        setCallState(rtcManager.getState());
-      },
-      onParticipantLeft: () => {
-        setCallState(rtcManager.getState());
-      },
-      onRemoteStream: () => {
-        setCallState(rtcManager.getState());
-      },
-      onError: (error) => {
-        setCallState((prev) => ({ ...prev, error }));
-      },
+      if (!isCurrent) return;
+
+      const socket = socketManager.getSocket();
+      if (!socket) return;
+
+      const rtcManager = getWebRTCManager(socket);
+      setManager(rtcManager);
+
+      // Set up event handlers
+      rtcManager.on({
+        onIncomingCall: (callerId, callerName, roomId) => {
+          setIncomingCall({ callerId, callerName, roomId });
+        },
+        onCallConnected: () => {
+          setCallState((prev) => ({ ...prev, status: 'connected' }));
+        },
+        onCallEnded: () => {
+          setCallState((prev) => ({ ...prev, status: 'ended' }));
+          setIncomingCall(null);
+        },
+        onParticipantJoined: () => {
+          setCallState(rtcManager.getState());
+        },
+        onParticipantLeft: () => {
+          setCallState(rtcManager.getState());
+        },
+        onRemoteStream: () => {
+          setCallState(rtcManager.getState());
+        },
+        onError: (error) => {
+          setCallState((prev) => ({ ...prev, error }));
+        },
+      });
+    };
+
+    initializeManager().catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      setCallState((prev) => ({ ...prev, error: message }));
     });
 
     return () => {
+      isCurrent = false;
       destroyWebRTCManager();
     };
-  }, [socketManager]);
+  }, [socketManager, token]);
 
   async function startCall(
     targetUserId: string,

@@ -6,8 +6,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useWebRTC } from '../useWebRTC';
+import { useAuthStore } from '@/modules/auth/store';
 
 // --- Mocks ----------------------------------------------------------------
 
@@ -56,10 +57,13 @@ vi.mock('@/lib/webrtc/webrtcService', () => ({
   })),
 }));
 
-const mockGetSocket = vi.fn().mockReturnValue({ id: 'socket-1' });
+const mockSocket = { id: 'socket-1' };
+const mockGetSocket = vi.fn().mockReturnValue(mockSocket);
+const mockConnect = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/lib/socket', () => ({
   useSocket: vi.fn(() => ({
     getSocket: mockGetSocket,
+    connect: mockConnect,
   })),
 }));
 
@@ -73,6 +77,9 @@ vi.mock('@/components/feedback/toast', () => ({
 describe('useWebRTC', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetSocket.mockReturnValue(mockSocket);
+    mockConnect.mockResolvedValue(undefined);
+    useAuthStore.setState({ token: null });
     mockGetState.mockReturnValue({
       roomId: null,
       status: 'idle',
@@ -108,6 +115,18 @@ describe('useWebRTC', () => {
     const { result } = renderHook(() => useWebRTC());
     // Should still render with idle defaults
     expect(result.current.callState.status).toBe('idle');
+  });
+
+  it('connects before creating the manager when an auth token exists but socket is not ready', async () => {
+    const connectedSocket = { id: 'socket-after-connect' };
+    useAuthStore.setState({ token: 'auth-token' });
+    mockGetSocket.mockReturnValueOnce(null).mockReturnValue(connectedSocket);
+
+    const { WebRTCManager } = await import('@/lib/webrtc/webrtcService');
+    renderHook(() => useWebRTC());
+
+    await waitFor(() => expect(mockConnect).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(WebRTCManager).toHaveBeenCalledWith(connectedSocket));
   });
 
   // --- startCall -----------------------------------------------------------

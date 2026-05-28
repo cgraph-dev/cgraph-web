@@ -1010,8 +1010,12 @@ Done when:
 - [ ] Verify deeper peer media negotiation against a production-like WebRTC session.
       Local browser proof now exists in `apps/web/e2e/webrtc-negotiation.spec.ts`: Chromium creates
       two real `RTCPeerConnection` peers, exchanges offer/answer/ICE, and receives generated
-      audio/video tracks on both sides. This remains open until a production-like two-client
-      TURN/network session is exercised.
+      audio/video tracks on both sides. The 2026-05-29 call-hook race fix also makes `useCall` and
+      `useWebRTC` wait for an authenticated socket before creating their WebRTC managers; focused
+      hook tests plus the routed DM voice/video launch browser slice are green. This remains open
+      until a production-like two-client TURN/network session is exercised; the current Fly
+      production secrets list does not include `WEBRTC_TURN_URL`, so that final proof needs TURN
+      infrastructure before it can be truthfully closed.
 
 Done when:
 

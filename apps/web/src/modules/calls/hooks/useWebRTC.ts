@@ -11,6 +11,7 @@ import { useSocket } from '@/lib/socket';
 import { WebRTCManager, CallState, CallEventHandler } from '@/lib/webrtc/webrtcService';
 import { toast } from '@/components/feedback/toast';
 import { logger } from '@/lib/logger';
+import { useAuthStore } from '@/modules/auth/store';
 
 export interface UseWebRTCOptions {
   conversationId?: string;
@@ -69,6 +70,7 @@ export interface UseWebRTCReturn {
 export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
   const { conversationId: _conversationId, onCallConnected, onCallEnded, onError } = options;
   const socketManager = useSocket();
+  const token = useAuthStore((state) => state.token);
   const webrtcManagerRef = useRef<WebRTCManager | null>(null);
   const isEndingRef = useRef(false);
 
@@ -94,15 +96,25 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
-  // Initialize WebRTC manager — only runs when socket changes, NOT on callback changes
+  // Initialize WebRTC manager once the authenticated socket is available.
   useEffect(() => {
-    const socket = socketManager.getSocket();
-    if (!socket) {
-      logger.warn('Socket not available for WebRTC initialization');
-      return;
-    }
+    let isCurrent = true;
 
-    if (!webrtcManagerRef.current) {
+    const initializeManager = async () => {
+      if (!socketManager.getSocket() && token) {
+        await socketManager.connect();
+      }
+
+      if (!isCurrent) return;
+
+      const socket = socketManager.getSocket();
+      if (!socket) {
+        logger.warn('Socket not available for WebRTC initialization');
+        return;
+      }
+
+      if (webrtcManagerRef.current) return;
+
       webrtcManagerRef.current = new WebRTCManager(socket);
 
       // Register event handlers (use refs so callbacks are always current)
@@ -136,9 +148,17 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
       };
 
       webrtcManagerRef.current.on(handlers);
-    }
+    };
+
+    initializeManager().catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to initialize WebRTC manager:', error);
+      onErrorRef.current?.(message);
+      setCallState((prev) => ({ ...prev, error: message }));
+    });
 
     return () => {
+      isCurrent = false;
       // Only clean up the manager if we're truly unmounting, not on callback changes.
       // The manager persists in the ref and is cleaned up when the component unmounts.
       if (webrtcManagerRef.current) {
@@ -146,7 +166,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
         webrtcManagerRef.current = null;
       }
     };
-  }, [socketManager]); // Only depends on socket — NOT on callbacks
+  }, [socketManager, token]);
 
   /**
    * Start a new call with a target user
