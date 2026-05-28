@@ -309,11 +309,22 @@ describe('useLiveKitRoom', () => {
   });
 
   it('auto-connects when autoConnect is true', async () => {
-    renderHook(() => useLiveKitRoom({ roomName: 'test-room', autoConnect: true }));
+    let result: { current: ReturnType<typeof useLiveKitRoom> } | undefined;
+
+    await act(async () => {
+      const rendered = renderHook(() =>
+        useLiveKitRoom({ roomName: 'test-room', autoConnect: true })
+      );
+      result = rendered.result;
+      await Promise.resolve();
+    });
 
     // Wait for the auto-connect effect
     await vi.waitFor(() => {
       expect(mockApiPost).toHaveBeenCalled();
+    });
+    await vi.waitFor(() => {
+      expect(result?.current.connectionState).toBe('connected');
     });
   });
 });

@@ -23,12 +23,14 @@ describe('AutomodSettings', () => {
   it('renders the heading', async () => {
     render(<AutomodSettings groupId="g1" />);
     expect(screen.getByText('AutoMod Rules')).toBeInTheDocument();
+    await screen.findByText('No automod rules configured');
   });
 
-  it('shows loading state initially', () => {
+  it('shows loading state initially', async () => {
     render(<AutomodSettings groupId="g1" />);
     // Component starts in loading state
     expect(screen.getByText('AutoMod Rules')).toBeInTheDocument();
+    await screen.findByText('No automod rules configured');
   });
 
   it('shows empty state after loading when no rules', async () => {

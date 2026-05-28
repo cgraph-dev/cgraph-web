@@ -1,6 +1,6 @@
 /** @module data-storage-panel tests */
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('motion/react', () => ({
@@ -184,13 +184,16 @@ describe('DataStoragePanel', () => {
         r.getAttribute('value') === 'never'
     );
     if (photosNever === undefined) throw new Error('photos never radio missing');
-    fireEvent.click(photosNever);
-
-    await vi.advanceTimersByTimeAsync(600);
+    await act(async () => {
+      fireEvent.click(photosNever);
+      await vi.advanceTimersByTimeAsync(600);
+    });
 
     const handles = getMockedStore();
-    expect(handles.__mockUpdateMediaSettings).toHaveBeenCalledWith({
-      autoDownloadPhotos: 'never',
+    await waitFor(() => {
+      expect(handles.__mockUpdateMediaSettings).toHaveBeenCalledWith({
+        autoDownloadPhotos: 'never',
+      });
     });
   });
 

@@ -82,9 +82,11 @@ describe('NotificationSettingsPanel', () => {
     expect(screen.getByText(/Email Notifications/i)).toBeInTheDocument();
   });
 
-  it('calls fetchSettings on mount', () => {
+  it('calls fetchSettings on mount', async () => {
     renderPanel();
-    expect(mockFetchSettings).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockFetchSettings).toHaveBeenCalled();
+    });
   });
 
   it('renders toggle switches', async () => {

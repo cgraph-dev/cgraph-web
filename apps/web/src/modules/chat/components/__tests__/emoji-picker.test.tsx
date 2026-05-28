@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { EmojiPicker } from '../emoji-picker';
 
 // Mock dependencies
@@ -19,6 +19,16 @@ vi.mock('@/lib/animations/AnimationEngine', () => ({
   HapticFeedback: { light: vi.fn() },
 }));
 
+vi.mock('../emoji-picker/useEmojiPicker', async () => {
+  const actual = await vi.importActual<typeof import('../emoji-picker/useEmojiPicker')>(
+    '../emoji-picker/useEmojiPicker'
+  );
+  return {
+    ...actual,
+    useAnimatedEmojiCatalog: () => ({ catalog: new Map(), loading: false }),
+  };
+});
+
 describe('EmojiPicker', () => {
   const onSelect = vi.fn();
   const onClose = vi.fn();
@@ -29,15 +39,14 @@ describe('EmojiPicker', () => {
 
   it('renders without crashing', () => {
     render(<EmojiPicker isOpen={true} onClose={onClose} onSelect={onSelect} />);
-    expect(document.body).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: /emoji picker/i })).toBeInTheDocument();
   });
 
   it('calls onSelect when emoji is clicked', () => {
     render(<EmojiPicker isOpen={true} onClose={onClose} onSelect={onSelect} />);
-    const buttons = document.querySelectorAll('button');
-    if (buttons.length > 0) {
-      buttons[0]!.click();
-    }
-    expect(document.body).toBeTruthy();
+    const emojiButton = screen.getAllByRole('button', { name: /select emoji/i })[0];
+    if (emojiButton === undefined) throw new Error('emoji button missing');
+    fireEvent.click(emojiButton);
+    expect(onSelect).toHaveBeenCalled();
   });
 });

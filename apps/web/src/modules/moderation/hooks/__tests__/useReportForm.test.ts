@@ -141,7 +141,7 @@ describe('useReportForm', () => {
       result.current.setDescription('Targeted abuse');
     });
 
-    act(() => {
+    await act(async () => {
       result.current.handleSubmit();
     });
 
@@ -169,7 +169,7 @@ describe('useReportForm', () => {
       result.current.setSelectedCategory('spam');
     });
 
-    act(() => {
+    await act(async () => {
       result.current.handleSubmit();
     });
 

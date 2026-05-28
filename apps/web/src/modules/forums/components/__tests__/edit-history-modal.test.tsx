@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 vi.mock('@/shared/components/ui', () => ({
   GlassCard: ({
@@ -53,26 +53,31 @@ describe('EditHistoryModal', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('renders modal header when open', () => {
+  it('renders modal header when open', async () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
     expect(screen.getByText('Edit History')).toBeInTheDocument();
+    await screen.findByText('No edit history available');
   });
 
-  it('renders close button', () => {
+  it('renders close button', async () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
     expect(screen.getByRole('button', { name: /close edit history/i })).toBeInTheDocument();
+    await screen.findByText('No edit history available');
   });
 
-  it('calls onClose when close button is clicked', () => {
+  it('calls onClose when close button is clicked', async () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
     fireEvent.click(screen.getByRole('button', { name: /close edit history/i }));
     expect(onClose).toHaveBeenCalledOnce();
+    await waitFor(() => {
+      expect(mockFetchEditHistory).toHaveBeenCalledWith('post-1');
+    });
   });
 
-  it('calls onClose when backdrop is clicked', () => {
+  it('calls onClose when backdrop is clicked', async () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
     const backdrop = document.querySelector('.bg-black\\/60');
@@ -80,6 +85,9 @@ describe('EditHistoryModal', () => {
       fireEvent.click(backdrop);
       expect(onClose).toHaveBeenCalledOnce();
     }
+    await waitFor(() => {
+      expect(mockFetchEditHistory).toHaveBeenCalledWith('post-1');
+    });
   });
 
   it('shows empty state when no history exists', async () => {
@@ -88,10 +96,12 @@ describe('EditHistoryModal', () => {
     expect(await screen.findByText('No edit history available')).toBeInTheDocument();
   });
 
-  it('fetches edit history on open', () => {
+  it('fetches edit history on open', async () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
-    expect(mockFetchEditHistory).toHaveBeenCalledWith('post-1');
+    await waitFor(() => {
+      expect(mockFetchEditHistory).toHaveBeenCalledWith('post-1');
+    });
   });
 
   it('renders history entries when data is loaded', async () => {
@@ -111,9 +121,10 @@ describe('EditHistoryModal', () => {
     expect(screen.getAllByText('Edit #1').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders GlassCard wrapper', () => {
+  it('renders GlassCard wrapper', async () => {
     mockFetchEditHistory.mockResolvedValue([]);
     render(<EditHistoryModal postId="post-1" isOpen={true} onClose={onClose} />);
     expect(screen.getByTestId('glass-card')).toBeInTheDocument();
+    await screen.findByText('No edit history available');
   });
 });
