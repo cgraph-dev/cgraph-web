@@ -173,6 +173,13 @@ authenticated user's visible records. Production packages preserve that backend 
 Focused backend, package, and web tests are green; deeper WebRTC media negotiation remains in the
 strict release-readiness document.
 
+2026-05-28 linked WebRTC signaling proof: production web extends
+`apps/web/src/lib/webrtc/__tests__/peerConnection.test.ts` with a linked two-peer Phoenix-channel
+harness. The focused proof drives caller and callee through offer, answer, ICE candidate,
+remote-stream, and connected-state handoff using the shared WebRTC signaling owner. This narrows the
+call-media gap, while a real production-like two-browser media session across network conditions
+remains a strict-release proof item.
+
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and

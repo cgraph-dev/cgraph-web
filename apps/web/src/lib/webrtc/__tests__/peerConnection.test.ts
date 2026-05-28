@@ -56,6 +56,43 @@ function createMockChannel(): Channel & { handlers: Record<string, ((data: unkno
   } as unknown as Channel & { handlers: Record<string, ((data: unknown) => void)[]> };
 }
 
+function createLocalStream(label: string): MediaStream {
+  return {
+    getTracks: vi.fn(() => [
+      { kind: 'audio', id: `${label}-audio` },
+      { kind: 'video', id: `${label}-video` },
+    ]),
+  } as unknown as MediaStream;
+}
+
+function linkSignaling(
+  source: ReturnType<typeof createMockChannel>,
+  sourceUserId: string,
+  target: ReturnType<typeof createMockChannel>
+): void {
+  source.push = vi.fn((event: string, payload: unknown) => {
+    const record = typeof payload === 'object' && payload !== null ? { ...payload } : {};
+    const handler = target.handlers[event]?.[0];
+
+    if (handler) {
+      if (event === 'signal:offer' || event === 'signal:answer') {
+        void handler({ from: sourceUserId, sdp: record['sdp'] });
+      }
+
+      if (event === 'signal:ice_candidate') {
+        void handler({ from: sourceUserId, candidate: record['candidate'] });
+      }
+    }
+
+    return { receive: vi.fn().mockReturnThis() };
+  }) as Channel['push'];
+}
+
+async function flushSignaling(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 describe('setupChannelHandlers', () => {
   let channel: ReturnType<typeof createMockChannel>;
   let state: CallState;
@@ -199,6 +236,89 @@ describe('setupChannelHandlers', () => {
       pc.onconnectionstatechange?.();
       expect(state.status).toBe('connected');
       expect(eventHandlers.onCallConnected).toHaveBeenCalled();
+    });
+
+    it('links two peers through offer, answer, ICE, remote stream, and connected-state handoff', async () => {
+      const callerChannel = createMockChannel();
+      const calleeChannel = createMockChannel();
+      const callerState = createDefaultCallState();
+      const calleeState = createDefaultCallState();
+      const callerPeers = new Map<string, RTCPeerConnection>();
+      const calleePeers = new Map<string, RTCPeerConnection>();
+      const callerHandlers: CallEventHandler = {
+        onRemoteStream: vi.fn(),
+        onCallConnected: vi.fn(),
+      };
+      const calleeHandlers: CallEventHandler = {
+        onRemoteStream: vi.fn(),
+        onCallConnected: vi.fn(),
+      };
+
+      linkSignaling(callerChannel, 'caller-user', calleeChannel);
+      linkSignaling(calleeChannel, 'callee-user', callerChannel);
+
+      setupChannelHandlers(
+        callerChannel,
+        createLocalStream('caller'),
+        callerPeers,
+        callerState,
+        callerHandlers,
+        endCallFn
+      );
+      setupChannelHandlers(
+        calleeChannel,
+        createLocalStream('callee'),
+        calleePeers,
+        calleeState,
+        calleeHandlers,
+        endCallFn
+      );
+
+      const joined = callerChannel.handlers['participant:joined']![0]!;
+      await joined({
+        participant_id: 'callee-user',
+        user_id: 'callee-user',
+        device: 'web',
+        media: { audio: true, video: true },
+      });
+      await flushSignaling();
+
+      const callerPc = callerPeers.get('callee-user') as unknown as MockPeerConnection;
+      const calleePc = calleePeers.get('caller-user') as unknown as MockPeerConnection;
+
+      expect(callerPc).toBeDefined();
+      expect(calleePc).toBeDefined();
+      expect(callerPc.createOffer).toHaveBeenCalled();
+      expect(calleePc.setRemoteDescription).toHaveBeenCalledWith({
+        type: 'offer',
+        sdp: 'mock-sdp',
+      });
+      expect(calleePc.createAnswer).toHaveBeenCalled();
+      expect(callerPc.setRemoteDescription).toHaveBeenCalledWith({
+        type: 'answer',
+        sdp: 'mock-answer-sdp',
+      });
+
+      callerPc.onicecandidate?.({
+        candidate: { toJSON: () => ({ candidate: 'caller-candidate' }) },
+      } as RTCPeerConnectionIceEvent);
+      await flushSignaling();
+
+      expect(calleePc.addIceCandidate).toHaveBeenCalledWith({
+        candidate: 'caller-candidate',
+      });
+
+      const remoteStream = {} as MediaStream;
+      callerPc.ontrack?.({ streams: [remoteStream] } as unknown as RTCTrackEvent);
+
+      expect(callerState.remoteStreams.get('callee-user')).toBe(remoteStream);
+      expect(callerHandlers.onRemoteStream).toHaveBeenCalledWith('callee-user', remoteStream);
+
+      callerPc.connectionState = 'connected';
+      callerPc.onconnectionstatechange?.();
+
+      expect(callerState.status).toBe('connected');
+      expect(callerHandlers.onCallConnected).toHaveBeenCalled();
     });
   });
 
