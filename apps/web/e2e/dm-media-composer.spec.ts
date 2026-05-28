@@ -141,6 +141,7 @@ async function installMessagingApiMocks(
     initialMessages?: MessageFixture[];
     messageRequestStatus?: 'accepted' | 'pending';
     paidFileUnlockMode?: 'ok' | 'insufficient' | 'already' | 'rate' | 'fail-then-success';
+    uploadMode?: 'ok' | 'scanner-unavailable';
   } = {}
 ): Promise<{
   attachmentUploads: string[];
@@ -446,6 +447,20 @@ async function installMessagingApiMocks(
   await page.route('**/api/v1/uploads', async (route) => {
     attachmentUploads.push(route.request().method());
 
+    if (options.uploadMode === 'scanner-unavailable') {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: {
+            code: 'SCANNER_UNAVAILABLE',
+            message: 'Upload temporarily disabled because antivirus scanner is unreachable',
+          },
+        }),
+      });
+      return;
+    }
+
     await route.fulfill({
       status: 201,
       contentType: 'application/json',
@@ -627,6 +642,31 @@ test.describe('DM media composer', () => {
           }),
         })
       );
+  });
+
+  test('surfaces scanner-unavailable upload failures without sending a fake attachment', async ({
+    page,
+  }) => {
+    const { attachmentUploads, sentMessages } = await installMessagingApiMocks(page, {
+      uploadMode: 'scanner-unavailable',
+    });
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await expect(page.getByPlaceholder(/type a message/i)).toBeVisible();
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'proof.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('browser-proof'),
+    });
+    await page.getByRole('button', { name: /send message/i }).click();
+
+    await expect
+      .poll(() => attachmentUploads, { message: 'attachment upload endpoint was called' })
+      .toContain('POST');
+    await expect(page.getByText('Message not sent')).toBeVisible();
+    await expect(page.getByText(/antivirus scanner is unreachable/i)).toBeVisible();
+    expect(sentMessages).toEqual([]);
   });
 
   test('shows paid-file insufficient-balance recovery without false unlock success', async ({

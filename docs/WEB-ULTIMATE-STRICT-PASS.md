@@ -1103,8 +1103,10 @@ Done when:
       hardening slice adds shared `@cgraph/shared-types` blocked upload metadata rules, rejects
       dangerous files in the routed web message attachment adapter before transfer, and makes the
       backend reject dangerous filenames on server-ingested `/api/v1/uploads` before storage, with
-      focused package/web/backend tests. This remains open until production has a provisioned,
-      reachable ClamAV scanner and the final browser/API pass proves upload failure UX end to end.
+      focused package/web/backend tests. The 2026-05-28 follow-up browser-verifies
+      scanner-unavailable `/api/v1/uploads` failure UX in the routed DM composer and proves no fake
+      attachment message is sent. This remains open until production has a provisioned, reachable
+      ClamAV scanner.
 - [x] Browser-verify the surfaced phone-auth entry points from both login and register while keeping
       the existing web visual style intact.
 - [x] Verify the remaining phone flow for new-user registration, OTP retry, call fallback,

@@ -144,6 +144,12 @@ build passed `apps/web/e2e/web-owner-uat.spec.ts`, replaying the mounted owner r
 incoming-call accept/end, manual call route controls, call-history callback, group media/actions,
 voice room entry, and adjacent auth/social/settings/Nodes surfaces.
 
+2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
+route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
+now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment
+message is sent, and keeps the full DM media/composer suite green. This proves local route/API
+failure UX; provisioning a reachable production ClamAV scanner remains an external deployment task.
+
 2026-05-28 call-history contract proof: production backend now serializes server-owned
 `end_reason` / `missed_seen` fields on call history and scopes call detail lookup to the
 authenticated user's visible records. Production packages preserve that backend envelope in

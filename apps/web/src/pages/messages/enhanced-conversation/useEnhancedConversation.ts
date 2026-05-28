@@ -11,7 +11,9 @@ import { useMessageActions } from '@/modules/chat/hooks/useMessageActions';
 import { useMessageRequestStore } from '@/modules/chat/store/message-request-store';
 import { socketManager } from '@/lib/socket';
 import { apiClient } from '@/lib/api-client';
+import { getErrorMessage } from '@/lib/api';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { toast } from '@/shared/components/ui';
 import { buildMessageAttachmentMetadata, messageContentTypeForMime } from '@cgraph/shared-types';
 import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
 import type { MessagePayload } from '@/modules/chat/components/message-input';
@@ -581,6 +583,7 @@ export function useEnhancedConversation() {
     } catch (error) {
       logger.error('Failed to send message:', error);
       HapticFeedback.error();
+      toast.error('Message not sent', getErrorMessage(error));
     } finally {
       setIsSending(false);
     }
