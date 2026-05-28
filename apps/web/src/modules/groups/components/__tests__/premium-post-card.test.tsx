@@ -196,13 +196,24 @@ describe('PremiumPostCard', () => {
   });
 
   it('shows loading state during purchase', async () => {
+    const updatedPost = createMockPost({ purchased: true });
+    let resolvePurchase: (post: PremiumPost) => void = () => {};
     mockPurchasePremiumPost.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 200))
+      () =>
+        new Promise<PremiumPost>((resolve) => {
+          resolvePurchase = resolve;
+        })
     );
     render(<PremiumPostCard post={createMockPost()} onPurchaseSuccess={onPurchaseSuccess} />);
     fireEvent.click(screen.getByText('Unlock for 50 Nodes'));
 
     expect(screen.getByText('Unlocking...')).toBeInTheDocument();
+
+    resolvePurchase(updatedPost);
+
+    await waitFor(() => {
+      expect(onPurchaseSuccess).toHaveBeenCalledWith(updatedPost);
+    });
   });
 
   it('shows insufficient nodes error', async () => {
