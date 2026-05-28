@@ -441,6 +441,8 @@ export type {
   SyncPackagesList,
 } from './e2ee';
 export {
+  CallEndReasonSchema,
+  CallHistoryDataSchema,
   CallHistorySchema,
   CallInfoSchema,
   CallStateSchema,
@@ -451,6 +453,7 @@ export {
   MissedSeenResultSchema,
 } from './calls';
 export type {
+  CallEndReason,
   CallHistory,
   CallInfo,
   CallState,

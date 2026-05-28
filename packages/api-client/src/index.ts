@@ -538,6 +538,8 @@ export {
 export type { DeviceInfo } from './schemas/e2ee';
 export {
   CallHistorySchema,
+  CallHistoryDataSchema,
+  CallEndReasonSchema,
   CallInfoSchema,
   CallStateSchema,
   CallTypeSchema,
@@ -546,7 +548,7 @@ export {
   MissedCallCountSchema,
   MissedSeenResultSchema,
 } from './schemas/calls';
-export type { CallState, CallType, IceServer } from './schemas/calls';
+export type { CallEndReason, CallState, CallType, IceServer } from './schemas/calls';
 export {
   AvatarUploadResultSchema,
   GalleryMetaSchema,

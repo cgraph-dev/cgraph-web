@@ -196,9 +196,29 @@ function isRecordLike(value: unknown): value is Record<string, unknown> {
  */
 function extractPageInfo(response: { data: unknown }): PageInfo | undefined {
   const body = response.data;
-  if (!isRecordLike(body) || !('page_info' in body)) {
+  if (!isRecordLike(body)) {
     return undefined;
   }
+
+  if ('meta' in body) {
+    const meta = body.meta;
+    if (!isRecordLike(meta)) {
+      return undefined;
+    }
+
+    return {
+      has_next_page: typeof meta.has_more === 'boolean' ? meta.has_more : false,
+      has_previous_page: false,
+      start_cursor: null,
+      end_cursor: typeof meta.cursor === 'string' ? meta.cursor : null,
+      total_count: undefined,
+    };
+  }
+
+  if (!('page_info' in body)) {
+    return undefined;
+  }
+
   const pi = body.page_info;
   if (!isRecordLike(pi)) {
     return undefined;

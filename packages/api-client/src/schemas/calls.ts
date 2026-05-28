@@ -24,6 +24,16 @@ export const CallStateSchema = z.enum([
 ]);
 export type CallState = z.infer<typeof CallStateSchema>;
 
+export const CallEndReasonSchema = z.enum([
+  'completed',
+  'rejected',
+  'missed',
+  'timeout',
+  'failed',
+  'busy',
+]);
+export type CallEndReason = z.infer<typeof CallEndReasonSchema>;
+
 export const IceServerSchema = z.object({
   urls: z.union([z.string(), z.array(z.string())]),
   username: z.string().optional(),
@@ -43,6 +53,8 @@ export const CallInfoSchema = z.object({
   started_at: z.string().nullable().optional(),
   ended_at: z.string().nullable().optional(),
   duration_seconds: z.number().nullable().optional(),
+  end_reason: CallEndReasonSchema.nullable().optional(),
+  missed_seen: z.boolean().optional(),
   inserted_at: z.string(),
 });
 export type CallInfo = z.infer<typeof CallInfoSchema>;
@@ -57,6 +69,8 @@ export const CallHistorySchema = z.object({
   has_more: z.boolean(),
 });
 export type CallHistory = z.infer<typeof CallHistorySchema>;
+
+export const CallHistoryDataSchema = z.array(CallInfoSchema);
 
 // ---------------------------------------------------------------------------
 // MissedCallCount

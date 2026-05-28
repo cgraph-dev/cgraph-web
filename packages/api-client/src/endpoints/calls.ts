@@ -12,8 +12,8 @@ import type { AxiosInstance } from 'axios';
 import { apiCall } from '../schemas/api-result';
 import type { ApiResult } from '../schemas/api-result';
 import {
+  CallHistoryDataSchema,
   CallInfoSchema,
-  CallHistorySchema,
   MissedCallCountSchema,
   MissedSeenResultSchema,
   IceServersResultSchema,
@@ -52,7 +52,19 @@ export function createCallsEndpoints(http: AxiosInstance) {
      * The backend caps `limit` at 100 and defaults to 50.
      */
     async getHistory(params?: GetCallHistoryParams): Promise<ApiResult<CallHistory>> {
-      return apiCall(() => http.get('/api/v1/calls', { params }), CallHistorySchema);
+      const result = await apiCall(() => http.get('/api/v1/calls', { params }), CallHistoryDataSchema);
+
+      if (!result.ok) return result;
+
+      return {
+        ok: true,
+        data: {
+          calls: result.data,
+          cursor: result.pageInfo?.end_cursor ?? null,
+          has_more: result.pageInfo?.has_next_page ?? false,
+        },
+        ...(result.pageInfo ? { pageInfo: result.pageInfo } : {}),
+      };
     },
 
     /**
