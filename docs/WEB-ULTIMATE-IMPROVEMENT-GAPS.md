@@ -343,9 +343,13 @@ on the routed DM surface.
   were below the hard limits while the remaining image/unused-code/accessibility findings stayed as
   warnings for separate polish work.
 
-- **#45 Load-test matrix (k6)** — Partial. The matrix exists, but
-  `scripts/load-tests/broadcast-publish.js` is still an explicit no-op because broadcast publishing
-  itself is not implemented end-to-end.
+- **#45 Load-test matrix (k6)** — Closed for the current backend load-test matrix. Production
+  backend commit `4110c7f75b0124bf62f2c60caae40d68600a62ee` replaces the stale broken/no-op matrix
+  assumption with real `k6` scenarios for uploads, group channel operations, sustained search, and
+  owner broadcast publish/list traffic, and wires them into `k6/load.js`. Verification on
+  2026-05-28: every `k6/*.js` file passed `node --check`, every scenario passed `k6 inspect`, and
+  the backend broadcast route contract passed
+  `mix test test/cgraph_web/controllers/api/v1/broadcast_controller_test.exs` with 17 tests.
 
 ## Deferred / trigger-gated items still unstarted
 
