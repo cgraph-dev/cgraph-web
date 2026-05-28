@@ -115,10 +115,30 @@ const createUIStub = () => {
     return false;
   }
 
+  const uiOnlyProps = new Set([
+    'borderGradient',
+    'glow',
+    'glowColor',
+    'hover3D',
+    'intensity',
+    'particles',
+    'shimmer',
+    'spotlight',
+    'themeVariant',
+    'variant',
+  ]);
+
+  const toDomProps = (props: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(props).filter(([key]) => !uiOnlyProps.has(key)));
+
   const comp =
     (name: string) => (props: Record<string, unknown> & { ref?: React.Ref<unknown> }) => {
       const { children, ref, ...rest } = props;
-      const elementProps: Record<string, unknown> = { ...rest, ref, 'data-testid': `ui-${name}` };
+      const elementProps: Record<string, unknown> = {
+        ...toDomProps(rest),
+        ref,
+        'data-testid': `ui-${name}`,
+      };
       return createElement('div', elementProps, isReactNode(children) ? children : null);
     };
   const toastFn = Object.assign(() => {}, {
