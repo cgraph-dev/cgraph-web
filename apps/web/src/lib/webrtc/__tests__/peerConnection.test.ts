@@ -12,26 +12,31 @@ import { setupChannelHandlers } from '../peerConnection';
 import type { CallState, CallEventHandler } from '../types';
 import { createDefaultCallState } from '../types';
 
-// Mock RTCPeerConnection
-const mockPC = {
-  addTrack: vi.fn(),
-  createOffer: vi.fn().mockResolvedValue({ type: 'offer', sdp: 'mock-sdp' }),
-  createAnswer: vi.fn().mockResolvedValue({ type: 'answer', sdp: 'mock-sdp' }),
-  setLocalDescription: vi.fn().mockResolvedValue(undefined),
-  setRemoteDescription: vi.fn().mockResolvedValue(undefined),
-  addIceCandidate: vi.fn().mockResolvedValue(undefined),
-  close: vi.fn(),
-  getSenders: vi.fn().mockReturnValue([]),
-  onicecandidate: null,
-  ontrack: null,
-  onconnectionstatechange: null,
-  connectionState: 'new',
-};
+// Mock RTCPeerConnection while keeping each instance inspectable.
+const peerConnectionInstances: MockPeerConnection[] = [];
 
-vi.stubGlobal(
-  'RTCPeerConnection',
-  vi.fn(() => ({ ...mockPC }))
-);
+class MockPeerConnection {
+  readonly config?: RTCConfiguration;
+  addTrack = vi.fn();
+  createOffer = vi.fn().mockResolvedValue({ type: 'offer', sdp: 'mock-sdp' });
+  createAnswer = vi.fn().mockResolvedValue({ type: 'answer', sdp: 'mock-answer-sdp' });
+  setLocalDescription = vi.fn().mockResolvedValue(undefined);
+  setRemoteDescription = vi.fn().mockResolvedValue(undefined);
+  addIceCandidate = vi.fn().mockResolvedValue(undefined);
+  close = vi.fn();
+  getSenders = vi.fn().mockReturnValue([]);
+  onicecandidate: ((event: RTCPeerConnectionIceEvent) => void) | null = null;
+  ontrack: ((event: RTCTrackEvent) => void) | null = null;
+  onconnectionstatechange: (() => void) | null = null;
+  connectionState: RTCPeerConnectionState = 'new';
+
+  constructor(config?: RTCConfiguration) {
+    this.config = config;
+    peerConnectionInstances.push(this);
+  }
+}
+
+vi.stubGlobal('RTCPeerConnection', vi.fn((config?: RTCConfiguration) => new MockPeerConnection(config)));
 vi.stubGlobal('RTCSessionDescription', vi.fn((init: unknown) => init));
 vi.stubGlobal('RTCIceCandidate', vi.fn((init: unknown) => init));
 
@@ -60,6 +65,7 @@ describe('setupChannelHandlers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    peerConnectionInstances.length = 0;
     channel = createMockChannel();
     state = createDefaultCallState();
     eventHandlers = {
@@ -119,6 +125,81 @@ describe('setupChannelHandlers', () => {
       expect(state.participants).toHaveLength(1);
       expect(state.participants[0]!.userId).toBe('user-123');
     });
+
+    it('creates a peer connection with backend ICE, local tracks, and an outbound offer', async () => {
+      const audioTrack = { kind: 'audio' } as MediaStreamTrack;
+      const videoTrack = { kind: 'video' } as MediaStreamTrack;
+      const localStream = {
+        getTracks: vi.fn(() => [audioTrack, videoTrack]),
+      } as unknown as MediaStream;
+      const iceServers: RTCIceServer[] = [
+        {
+          urls: 'turn:turn.cgraph.test:3478',
+          username: 'turn-user',
+          credential: 'turn-secret',
+        },
+      ];
+
+      setupChannelHandlers(
+        channel,
+        localStream,
+        peerConnections,
+        state,
+        eventHandlers,
+        endCallFn,
+        iceServers
+      );
+
+      const handler = channel.handlers['participant:joined']![0]!;
+      await handler({
+        participant_id: 'user-123',
+        user_id: 'user-123',
+        device: 'web',
+        media: { audio: true, video: true },
+      });
+
+      const pc = peerConnectionInstances[0]!;
+      expect(pc.config).toEqual({ iceServers });
+      expect(pc.addTrack).toHaveBeenCalledWith(audioTrack, localStream);
+      expect(pc.addTrack).toHaveBeenCalledWith(videoTrack, localStream);
+      expect(pc.createOffer).toHaveBeenCalled();
+      expect(pc.setLocalDescription).toHaveBeenCalledWith({ type: 'offer', sdp: 'mock-sdp' });
+      expect(channel.push).toHaveBeenCalledWith('signal:offer', {
+        to: 'user-123',
+        sdp: { type: 'offer', sdp: 'mock-sdp' },
+      });
+      expect(peerConnections.get('user-123')).toBe(pc);
+    });
+
+    it('routes ICE candidates, remote streams, and connected state from the peer connection', async () => {
+      setupChannelHandlers(channel, null, peerConnections, state, eventHandlers, endCallFn);
+
+      const handler = channel.handlers['participant:joined']![0]!;
+      await handler({
+        participant_id: 'user-123',
+        user_id: 'user-123',
+        device: 'web',
+        media: { audio: true, video: true },
+      });
+
+      const pc = peerConnectionInstances[0]!;
+      const candidate = { toJSON: () => ({ candidate: 'ice-candidate' }) };
+      pc.onicecandidate?.({ candidate } as RTCPeerConnectionIceEvent);
+      expect(channel.push).toHaveBeenCalledWith('signal:ice_candidate', {
+        to: 'user-123',
+        candidate: { candidate: 'ice-candidate' },
+      });
+
+      const remoteStream = {} as MediaStream;
+      pc.ontrack?.({ streams: [remoteStream] } as unknown as RTCTrackEvent);
+      expect(state.remoteStreams.get('user-123')).toBe(remoteStream);
+      expect(eventHandlers.onRemoteStream).toHaveBeenCalledWith('user-123', remoteStream);
+
+      pc.connectionState = 'connected';
+      pc.onconnectionstatechange?.();
+      expect(state.status).toBe('connected');
+      expect(eventHandlers.onCallConnected).toHaveBeenCalled();
+    });
   });
 
   describe('participant:left handler', () => {
@@ -165,6 +246,28 @@ describe('setupChannelHandlers', () => {
       // No peer connections should be created
       expect(peerConnections.size).toBe(0);
     });
+
+    it('answers valid remote offers through the same signaling channel', async () => {
+      setupChannelHandlers(channel, null, peerConnections, state, eventHandlers, endCallFn);
+
+      const handler = channel.handlers['signal:offer']![0]!;
+      await handler({
+        from: 'user-456',
+        sdp: { type: 'offer', sdp: 'remote-sdp' },
+      });
+
+      const pc = peerConnectionInstances[0]!;
+      expect(pc.setRemoteDescription).toHaveBeenCalledWith({ type: 'offer', sdp: 'remote-sdp' });
+      expect(pc.createAnswer).toHaveBeenCalled();
+      expect(pc.setLocalDescription).toHaveBeenCalledWith({
+        type: 'answer',
+        sdp: 'mock-answer-sdp',
+      });
+      expect(channel.push).toHaveBeenCalledWith('signal:answer', {
+        to: 'user-456',
+        sdp: { type: 'answer', sdp: 'mock-answer-sdp' },
+      });
+    });
   });
 
   describe('signal:answer handler', () => {
@@ -177,6 +280,29 @@ describe('setupChannelHandlers', () => {
 
       // Should not throw
     });
+
+    it('applies a valid remote answer to the existing peer connection', async () => {
+      setupChannelHandlers(channel, null, peerConnections, state, eventHandlers, endCallFn);
+
+      const joined = channel.handlers['participant:joined']![0]!;
+      await joined({
+        participant_id: 'user-123',
+        user_id: 'user-123',
+        device: 'web',
+        media: { audio: true, video: true },
+      });
+
+      const answer = channel.handlers['signal:answer']![0]!;
+      await answer({
+        from: 'user-123',
+        sdp: { type: 'answer', sdp: 'remote-answer-sdp' },
+      });
+
+      expect(peerConnectionInstances[0]!.setRemoteDescription).toHaveBeenCalledWith({
+        type: 'answer',
+        sdp: 'remote-answer-sdp',
+      });
+    });
   });
 
   describe('signal:ice_candidate handler', () => {
@@ -188,6 +314,28 @@ describe('setupChannelHandlers', () => {
       await handler({ from: 123 });
 
       // Should not throw
+    });
+
+    it('applies a valid remote ICE candidate to the matching peer connection', async () => {
+      setupChannelHandlers(channel, null, peerConnections, state, eventHandlers, endCallFn);
+
+      const joined = channel.handlers['participant:joined']![0]!;
+      await joined({
+        participant_id: 'user-123',
+        user_id: 'user-123',
+        device: 'web',
+        media: { audio: true, video: true },
+      });
+
+      const iceCandidate = channel.handlers['signal:ice_candidate']![0]!;
+      await iceCandidate({
+        from: 'user-123',
+        candidate: { candidate: 'remote-candidate' },
+      });
+
+      expect(peerConnectionInstances[0]!.addIceCandidate).toHaveBeenCalledWith({
+        candidate: 'remote-candidate',
+      });
     });
   });
 
