@@ -185,14 +185,21 @@ remains a strict-release lab item.
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment
 message is sent, and keeps the full DM media/composer suite green. This proves local route/API
-failure UX; provisioning a reachable production ClamAV scanner remains an external deployment task.
+failure UX; the production ClamAV provisioning task is closed by the 2026-05-29 proof below.
 
 2026-05-29 backend scanner-readiness proof: production backend commit `1781330` exposes antivirus
 backend and failure-policy state through `CGraph.HealthCheck` and `/ready`, passed focused
 health/upload controller tests, and was deployed to Fly as
 `deployment-01KSRANV213HDJVJ5AZMRADFJ0`. The live production `/ready` route now reports
 `antivirus:"metadata_only"`, so scanner visibility is real, while the strict ClamAV provisioning
-task remains open until production reports a reachable byte scanner.
+task stays open until the follow-up production image below reports a reachable byte scanner.
+
+2026-05-29 production ClamAV proof: production backend commit `ff91f16` installs ClamAV in the Fly
+image, seeds daily/main/bytecode signatures during the remote build, starts `clamd` beside Phoenix
+when `ANTIVIRUS_BACKEND=clamav`, switches Fly production to fail-closed ClamAV mode, and raises the
+machine to 2 GB memory for scanner headroom. The deployed image
+`deployment-01KSRB6TCYX4KZ7041RYN3YJ1K` reports `antivirus:"ok"` from
+`https://cgraph-backend-prod-v2.fly.dev/ready`, with Fly machine checks passing.
 
 2026-05-28 Stripe checkout handoff proof: production web extends
 `apps/web/e2e/nodes-wallet-shop.spec.ts` to cover the successful checkout path. The browser route
