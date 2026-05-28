@@ -15,8 +15,8 @@ vi.mock('motion/react', () => ({
           _exit,
           _transition,
           _variants,
-          _whileHover,
-          _whileTap,
+          whileHover: _whileHover,
+          whileTap: _whileTap,
           _layout,
           _layoutId,
           ...safe

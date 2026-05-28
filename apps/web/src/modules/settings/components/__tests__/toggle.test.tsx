@@ -14,7 +14,7 @@ vi.mock('motion/react', () => ({
       onClick,
       disabled,
       style,
-      _whileTap,
+      whileTap: _whileTap,
       ...rest
     }: {
       children: React.ReactNode;
@@ -22,7 +22,7 @@ vi.mock('motion/react', () => ({
       onClick?: () => void;
       disabled?: boolean;
       style?: React.CSSProperties;
-      _whileTap?: unknown;
+      whileTap?: unknown;
       [key: string]: unknown;
     }) => (
       <button className={className} onClick={onClick} disabled={disabled} style={style} {...rest}>

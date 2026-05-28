@@ -17,11 +17,15 @@ vi.mock('motion/react', () => ({
       children,
       onClick,
       className,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
       ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
       onClick?: (e: unknown) => void;
       className?: string;
+      whileHover?: unknown;
+      whileTap?: unknown;
     }) => (
       <div onClick={onClick} className={className} {...rest}>
         {children}
@@ -33,6 +37,8 @@ vi.mock('motion/react', () => ({
       disabled,
       className,
       'aria-label': ariaLabel,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
       ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
@@ -40,6 +46,8 @@ vi.mock('motion/react', () => ({
       disabled?: boolean;
       className?: string;
       'aria-label'?: string;
+      whileHover?: unknown;
+      whileTap?: unknown;
     }) => (
       <button
         onClick={onClick}
