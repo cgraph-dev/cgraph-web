@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { X } from 'lucide-react';
 
 import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
 
@@ -24,6 +25,7 @@ export const NewProfileCard = memo(function NewProfileCard({
   onTip = NOOP,
   onAddFriend = NOOP,
   onViewProfile = NOOP,
+  onClose,
   className,
 }: NewProfileCardProps) {
   const themeId = user.accentTheme ?? normalizeAccentThemeId(user.profile_theme) ?? DEFAULT_PROFILE_THEME_ID;
@@ -46,9 +48,21 @@ export const NewProfileCard = memo(function NewProfileCard({
     .toUpperCase();
 
   const tipEnabled = (user.pulseFilled ?? 0) > 0;
+  const showCloseButton = variant === 'full' && mode === 'popout' && Boolean(onClose);
 
   return (
     <CardShell accentColor={accentColor} className={className} profileThemeId={themeId}>
+      {showCloseButton && (
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+          className="absolute right-3 top-3 z-20 grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-black/45 text-white/70 shadow-lg backdrop-blur transition hover:border-white/20 hover:bg-black/65 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      )}
+
       {/* Banner */}
       <BannerCanvas
         bannerType={user.bannerType ?? 'static'}

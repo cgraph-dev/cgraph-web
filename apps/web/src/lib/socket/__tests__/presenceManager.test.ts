@@ -398,16 +398,22 @@ describe('joinPresenceLobby', () => {
       customization: {
         avatar_border_id: 'border_cyberpunk_epic_01',
         title_id: 'title-founder',
+        equipped_badges: ['badge-founder'],
+        equipped_nameplate: 'plate_aurora',
       },
     });
 
     expect(useFriendStore.getState().friends[0]).toMatchObject({
       avatarBorderId: 'border_cyberpunk_epic_01',
       equippedTitleId: 'title-founder',
+      equippedBadgeIds: ['badge-founder'],
+      equippedNameplateId: 'plate_aurora',
     });
     expect(useChatStore.getState().conversations[0]!.participants[1]!.user).toMatchObject({
       avatarBorderId: 'border_cyberpunk_epic_01',
       equippedTitleId: 'title-founder',
+      equippedBadgeIds: ['badge-founder'],
+      equippedNameplateId: 'plate_aurora',
     });
   });
 });

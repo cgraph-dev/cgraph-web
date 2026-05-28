@@ -607,7 +607,11 @@ Required implementation-time questions:
       in customization, full profile, mini/hover card, and preview-card surfaces. The later
       2026-05-21 package/web cleanup makes display-name effects and nameplates Lottie-backed catalog
       metadata too, while deleting the old CSS/canvas particle renderers from avatar borders,
-      nameplates, and global background effects.
+      nameplates, and global background effects. The 2026-05-28 production web sender-card proof
+      extends the same live routed path to backend-shaped `equipped_badges` and
+      `equipped_nameplate` friend patches: `otherIdentitySync`, `presenceManager`, and `chatStore`
+      preserve the fields, then `apps/web/e2e/web-owner-uat.spec.ts` opens the routed DM sender
+      profile card and verifies the live `plate_aurora` nameplate plus `badge-founder` badge.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
@@ -681,7 +685,9 @@ Required implementation-time questions:
       2026-05-28 40-test Chromium slice covering auth/account, DM media/composer, social main pane,
       settings preference sync, and Nodes wallet/shop routes. A follow-up 2026-05-28 replay passed
       46 / 46 focused group/forum route tests plus the owner UAT route covering current call and
-      voice-room flows.
+      voice-room flows. A later 2026-05-28 sender-card replay passed `web-owner-uat.spec.ts` after
+      proving live routed avatar-border, title, nameplate, and badge convergence from the same
+      backend-shaped friend customization patch.
 - [x] Regression tests exist for the critical routed behaviors that were previously fake, partial,
       or misrouted. Current route-owned coverage includes `apps/web/e2e/dm-media-composer.spec.ts`,
       `apps/web/e2e/broadcasts.spec.ts`, `apps/web/e2e/spaces.spec.ts`,

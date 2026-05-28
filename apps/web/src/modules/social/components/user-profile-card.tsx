@@ -23,6 +23,8 @@ export type {
   MutualFriend,
   ProfileCardUser,
   ProfileCardUserV2,
+  BadgeDisplayTier,
+  ProfileBadge,
   NewProfileCardProps,
 } from './user-profile-card/index';
 

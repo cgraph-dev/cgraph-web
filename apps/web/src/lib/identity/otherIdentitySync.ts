@@ -59,13 +59,22 @@ export function otherUserIdentityPatchFromPayload(
   if (hasKey(records, ['equippedTitleId', 'equipped_title_id', 'titleId', 'title_id'])) {
     patch.equippedTitleId = identity.equippedTitleId;
   }
-  if (hasKey(records, ['equippedBadgeIds', 'equipped_badge_ids', 'equippedBadges', 'badges'])) {
+  if (
+    hasKey(records, [
+      'equippedBadgeIds',
+      'equipped_badge_ids',
+      'equippedBadges',
+      'equipped_badges',
+      'badges',
+    ])
+  ) {
     patch.equippedBadgeIds = identity.equippedBadgeIds;
   }
   if (
     hasKey(records, [
       'equippedNameplateId',
       'equipped_nameplate_id',
+      'equipped_nameplate',
       'nameplateId',
       'nameplate_id',
       'preset_name',

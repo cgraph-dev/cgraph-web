@@ -8,6 +8,8 @@ const TEXT_CHANNEL_ID = 'text-uat';
 const VOICE_CHANNEL_ID = 'voice-uat';
 const LIVE_AVATAR_BORDER_ID = 'border_cyberpunk_epic_01';
 const LIVE_TITLE_ID = 'founding_member';
+const LIVE_BADGE_ID = 'badge-founder';
+const LIVE_NAMEPLATE_ID = 'plate_aurora';
 const GIF_DATA_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
 const friendUser = {
@@ -1034,7 +1036,7 @@ test.describe('Web owner focused UAT', () => {
       .toContainEqual(expect.objectContaining({ content: 'DM routed UAT send' }));
 
     await page.evaluate(
-      ({ userId, avatarBorderId, titleId }) => {
+      ({ userId, avatarBorderId, titleId, badgeId, nameplateId }) => {
         window.dispatchEvent(
           new CustomEvent('cgraph:e2e-identity-patch', {
             detail: {
@@ -1042,17 +1044,30 @@ test.describe('Web owner focused UAT', () => {
               customization: {
                 avatar_border_id: avatarBorderId,
                 title_id: titleId,
+                equipped_badges: [badgeId],
+                equipped_nameplate: nameplateId,
               },
             },
           })
         );
       },
-      { userId: FRIEND_ID, avatarBorderId: LIVE_AVATAR_BORDER_ID, titleId: LIVE_TITLE_ID }
+      {
+        userId: FRIEND_ID,
+        avatarBorderId: LIVE_AVATAR_BORDER_ID,
+        titleId: LIVE_TITLE_ID,
+        badgeId: LIVE_BADGE_ID,
+        nameplateId: LIVE_NAMEPLATE_ID,
+      }
     );
     await expect(
       page.locator(`[data-avatar-border-id="${LIVE_AVATAR_BORDER_ID}"]`).first()
     ).toBeVisible();
     await expect(page.getByText('Founder').first()).toBeVisible();
+
+    await page.locator(`[data-avatar-border-id="${LIVE_AVATAR_BORDER_ID}"]`).first().click();
+    await expect(page.locator(`[data-nameplate-id="${LIVE_NAMEPLATE_ID}"]`).first()).toBeVisible();
+    await expect(page.locator(`[data-badge-id="${LIVE_BADGE_ID}"]`).first()).toBeVisible();
+    await page.getByLabel('Close').click();
 
     await page.evaluate((callerId) => {
       window.dispatchEvent(

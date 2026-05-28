@@ -593,6 +593,8 @@ describe('conversation management', () => {
       displayName: 'Bobby',
       avatarBorderId: 'border_cyberpunk_epic_01',
       equippedTitleId: 'title-founder',
+      equippedBadgeIds: ['badge-founder'],
+      equippedNameplateId: 'plate_aurora',
     });
 
     const state = useChatStore.getState();
@@ -600,21 +602,29 @@ describe('conversation management', () => {
       displayName: 'Bobby',
       avatarBorderId: 'border_cyberpunk_epic_01',
       equippedTitleId: 'title-founder',
+      equippedBadgeIds: ['badge-founder'],
+      equippedNameplateId: 'plate_aurora',
     });
     expect(state.conversations[0]!.lastMessage?.sender).toMatchObject({
       displayName: 'Bobby',
       avatarBorderId: 'border_cyberpunk_epic_01',
       equippedTitleId: 'title-founder',
+      equippedBadgeIds: ['badge-founder'],
+      equippedNameplateId: 'plate_aurora',
     });
     expect(state.messages['conv-1']![0]!.sender).toMatchObject({
       displayName: 'Bobby',
       avatarBorderId: 'border_cyberpunk_epic_01',
       equippedTitleId: 'title-founder',
+      equippedBadgeIds: ['badge-founder'],
+      equippedNameplateId: 'plate_aurora',
     });
     expect(state.messages['conv-1']![0]!.replyTo?.sender).toMatchObject({
       displayName: 'Bobby',
       avatarBorderId: 'border_cyberpunk_epic_01',
       equippedTitleId: 'title-founder',
+      equippedBadgeIds: ['badge-founder'],
+      equippedNameplateId: 'plate_aurora',
     });
     expect(state.archivedConversations[0]!.participants[1]!.user.avatarBorderId).toBe(
       'border_cyberpunk_epic_01'

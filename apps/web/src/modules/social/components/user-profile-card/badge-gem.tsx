@@ -47,6 +47,7 @@ export const BadgeGem = memo(function BadgeGem({
   return (
     <div
       className={cn('group/gem relative', isDim && 'opacity-[0.16]')}
+      data-badge-id={badge.id}
       style={
         !noAnim && config.animation
           ? { animation: config.animation }

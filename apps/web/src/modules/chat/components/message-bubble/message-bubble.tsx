@@ -1,6 +1,7 @@
 /** Message Bubble — memoized message display with media, reactions, and actions. */
 
 import { useState, memo } from 'react';
+import type { Achievement, AchievementRarity } from '@cgraph/shared-types';
 import { motion } from 'motion/react';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { Lock, ShieldAlert } from 'lucide-react';
@@ -15,8 +16,16 @@ import RichMediaEmbed from '@/modules/chat/components/rich-media-embed';
 import { MarkdownContent } from '@/modules/chat/components/markdown-content';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import UserProfileCard from '@/modules/social/components/user-profile-card';
+import type {
+  BadgeDisplayTier,
+  ProfileBadge,
+  ProfileCardUser,
+  ProfileCardUserV2,
+} from '@/modules/social/components/user-profile-card';
 import { aggregateReactions, handleRemoveReaction } from '@/lib/chat';
 import { cn } from '@/lib/utils';
+import { getBadgeById } from '@/data/badgesCollection';
+import { getTitleById } from '@/data/titlesCollection';
 
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import type { MessageBubbleProps } from './types';
@@ -34,6 +43,116 @@ import { ForwardedBadge } from './forwarded-badge';
 import { InlineTitle, DisplayName } from '@/shared/components/ui';
 import { springs, tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
+
+type SenderIdentity = MessageBubbleProps['message']['sender'];
+
+const ACHIEVEMENT_RARITY_BY_VALUE: Record<string, AchievementRarity> = {
+  common: 'common',
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
+  mythic: 'mythic',
+};
+
+function achievementRarity(value: string | undefined): AchievementRarity {
+  return value ? (ACHIEVEMENT_RARITY_BY_VALUE[value] ?? 'common') : 'common';
+}
+
+function badgeAchievementFromId(id: string): Achievement {
+  const badge = getBadgeById(id);
+
+  return {
+    id,
+    title: badge?.name ?? id,
+    description: badge?.description ?? '',
+    category: 'social',
+    rarity: achievementRarity(badge?.rarity),
+    icon: badge?.icon ?? '◇',
+    maxProgress: 1,
+    isHidden: false,
+    unlocked: true,
+  };
+}
+
+function badgeDisplayTier(value: string | undefined): BadgeDisplayTier {
+  switch (value) {
+    case 'rare':
+    case 'epic':
+    case 'legendary':
+      return value;
+    case 'mythic':
+      return 'legendary';
+    default:
+      return 'dim';
+  }
+}
+
+function profileBadgeFromId(id: string): ProfileBadge {
+  const badge = getBadgeById(id);
+
+  return {
+    id,
+    name: badge?.name ?? id,
+    icon: badge?.icon ?? '◇',
+    rarity: badgeDisplayTier(badge?.rarity),
+    lottieUrl: badge?.lottieUrl ?? '/lottie/effects/placeholder.json',
+    animationType: 'lottie',
+  };
+}
+
+function titleFromId(titleId: string | null | undefined): ProfileCardUser['equippedTitle'] {
+  if (!titleId) return undefined;
+  const title = getTitleById(titleId);
+
+  if (!title) {
+    return {
+      id: titleId,
+      name: titleId,
+      rarity: 'common',
+      animation: { type: 'none', speed: 1, intensity: 1 },
+      color: '#ffffff',
+      lottieUrl: '/lottie/effects/placeholder.json',
+    };
+  }
+
+  return {
+    id: title.id,
+    name: title.displayName,
+    rarity: title.rarity,
+    animation: { type: title.animationType, speed: 1, intensity: 1 },
+    color: title.colors[0] ?? '#ffffff',
+    gradient: title.gradient,
+    lottieUrl: title.lottieUrl ?? '/lottie/effects/placeholder.json',
+  };
+}
+
+function profileCardUserFromSender(sender: SenderIdentity): ProfileCardUserV2 {
+  const displayName = sender.displayName || sender.username || 'User';
+  const equippedBadgeIds = sender.equippedBadgeIds ?? [];
+
+  return {
+    id: sender.id,
+    username: sender.username || sender.id,
+    displayName,
+    avatarUrl: sender.avatarUrl ?? '',
+    avatarBorderId: sender.avatarBorderId ?? undefined,
+    level: 1,
+    xp: 0,
+    xpToNextLevel: 100,
+    pulse: 0,
+    streak: 0,
+    equippedTitle: titleFromId(sender.equippedTitleId),
+    equippedBadges: equippedBadgeIds.map(badgeAchievementFromId),
+    profileBadges: equippedBadgeIds.map(profileBadgeFromId),
+    isOnline: false,
+    profile_theme: sender.profileTheme ?? sender.theme ?? undefined,
+    equipped_nameplate: sender.equippedNameplateId ?? undefined,
+    display_name_font: sender.displayNameFont ?? undefined,
+    display_name_effect: sender.displayNameEffect ?? undefined,
+    display_name_color: sender.displayNameColor ?? undefined,
+    display_name_secondary_color: sender.displayNameSecondaryColor ?? undefined,
+  };
+}
 
 export const MessageBubble = memo(function MessageBubble({
   message,
@@ -73,6 +192,7 @@ export const MessageBubble = memo(function MessageBubble({
     ? (ownMessageEffect ?? 'none')
     : (message.sender?.messageEffect ?? 'none');
   const equippedTitleId = isOwn ? ownEquippedTitle : (message.sender?.equippedTitleId ?? null);
+  const senderProfileUser = message.sender ? profileCardUserFromSender(message.sender) : undefined;
 
   const bubbleCssClass = getMessageBubbleClass(bubbleStyle);
   const effectCssClass = getMessageEffectClass(messageEffect ?? 'none');
@@ -120,7 +240,12 @@ export const MessageBubble = memo(function MessageBubble({
       {!isOwn && (
         <div className="w-8 flex-shrink-0">
           {showAvatar && message.sender?.id && (
-            <UserProfileCard userId={message.sender.id} trigger="both" className="cursor-pointer">
+            <UserProfileCard
+              userId={message.sender.id}
+              user={senderProfileUser}
+              trigger="both"
+              className="cursor-pointer"
+            >
               <ThemedAvatar
                 src={message.sender?.avatarUrl}
                 alt={message.sender?.displayName || message.sender?.username || 'User'}
