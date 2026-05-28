@@ -6,8 +6,6 @@ import { AxiosError } from 'axios';
 import type { User, WalletChallenge, AuthState, TwoFactorRequired } from './authStore.types';
 import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
 
-const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
-
 function getResponseStatus(error: unknown): number | null {
   if (error instanceof AxiosError && typeof error.response?.status === 'number') {
     return error.response.status;
@@ -66,12 +64,6 @@ export function createLoginAction(set: Set, _get: Get) {
     turnstileToken?: string | null
   ): Promise<TwoFactorRequired | void> => {
     set({ isLoading: true, error: null }, false, 'login/start');
-
-    if (isE2EAuthBypass) {
-      const message = 'Invalid credentials';
-      set({ error: message, isLoading: false }, false, 'login/e2e_error');
-      throw new Error(message);
-    }
 
     try {
       authLogger.info('[Auth] Attempting login...', { identifier: email });

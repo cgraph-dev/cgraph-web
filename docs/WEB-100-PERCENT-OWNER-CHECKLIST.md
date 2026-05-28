@@ -126,6 +126,16 @@ Nodes wallet, call history callback, and voice-room entry. Vercel deployed the c
 `pnpm --filter @cgraph/web smoke:production` passed against `web.cgraph.org`. This moves final
 validation out of zero, but it is not the full strict per-suite release signoff.
 
+2026-05-28 targeted final-validation proof: production web now keeps `VITE_E2E_AUTH_BYPASS` scoped
+to route guards, Turnstile, and test bootstrap instead of hard-failing the explicit login action.
+After rebuilding the app with the same E2E env, the focused Chromium Playwright slice passed 40 / 40
+tests across `apps/web/e2e/auth-account-routes.spec.ts`, `apps/web/e2e/dm-media-composer.spec.ts`,
+`apps/web/e2e/social-main-pane.spec.ts`, `apps/web/e2e/settings-preference-sync.spec.ts`, and
+`apps/web/e2e/nodes-wallet-shop.spec.ts`. This proves the local auth, DM, social, settings, and
+Nodes browser routes still agree with their mocked backend contracts; external-provider checks,
+paired QR/mobile approval, physical cross-device sync, Stripe handoff success, and deeper two-client
+media negotiation remain strict-release gaps.
+
 2026-05-28 call-history contract proof: production backend now serializes server-owned
 `end_reason` / `missed_seen` fields on call history and scopes call detail lookup to the
 authenticated user's visible records. Production packages preserve that backend envelope in
@@ -606,8 +616,10 @@ Required implementation-time questions:
 ### F. Validation And Release Truth
 
 - [x] Focused browser UAT is run for auth, DMs, groups, social, settings, Nodes, identity cosmetics,
-      and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16 and by focused
-      auth/account route proof in `apps/web/e2e/auth-account-routes.spec.ts` on 2026-05-23.
+      and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16, focused
+      auth/account route proof in `apps/web/e2e/auth-account-routes.spec.ts` on 2026-05-23, and a
+      2026-05-28 40-test Chromium slice covering auth/account, DM media/composer, social main pane,
+      settings preference sync, and Nodes wallet/shop routes.
 - [x] Regression tests exist for the critical routed behaviors that were previously fake, partial,
       or misrouted. Current route-owned coverage includes `apps/web/e2e/dm-media-composer.spec.ts`,
       `apps/web/e2e/broadcasts.spec.ts`, `apps/web/e2e/spaces.spec.ts`,
