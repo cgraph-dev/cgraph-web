@@ -58,6 +58,13 @@ theme live sync. This closes the earlier routed reload/live-sync proof gap for t
 while the stricter docs still keep real multi-tab/device socket validation and broad final browser
 validation open.
 
+2026-05-28 separate-profile settings proof: production web extends
+`apps/web/e2e/settings-preference-sync.spec.ts` to open the Privacy route in two isolated browser
+profiles and apply the same server-shaped settings sync payload to both mounted routes. This proves
+the route/store contract can consume backend-shaped settings sync outside a same-context
+BroadcastChannel tab pair, while a real physical second-device socket delivery lab remains a
+strict-release proof item.
+
 2026-05-22 Nodes wallet/shop browser proof: `cgraph-web` commit
 `69ee0b4b4b8a88f898805577af2716f73a5b7ae2` adds `apps/web/e2e/nodes-wallet-shop.spec.ts` to verify
 routed wallet balance and transaction rendering, wallet failure without false zero-balance UI,

@@ -386,6 +386,74 @@ test.describe('Settings preference sync', () => {
     await secondPage.close();
   });
 
+  test('applies the same server-shaped settings sync in separate browser profiles', async ({
+    browser,
+    page,
+  }) => {
+    await installPreferenceMocks(page);
+    const secondContext = await browser.newContext();
+    const secondProfile = await secondContext.newPage();
+
+    try {
+      await installPreferenceMocks(secondProfile);
+
+      await page.goto('/me/settings/privacy');
+      await secondProfile.goto('/me/settings/privacy');
+
+      const firstProfileMessageRequests = page.getByLabel('Who can send you direct messages');
+      const secondProfileMessageRequests = secondProfile.getByLabel(
+        'Who can send you direct messages'
+      );
+      const secondProfileOnlineStatus = secondProfile.getByLabel('Who can see your online status');
+      const secondProfileGroupInvites = secondProfile.getByLabel('Who can add you to groups');
+
+      await expect(page.getByRole('heading', { name: /^Privacy$/ })).toBeVisible();
+      await expect(secondProfile.getByRole('heading', { name: /^Privacy$/ })).toBeVisible();
+      await expect(firstProfileMessageRequests).toHaveValue('contacts');
+      await expect(secondProfileMessageRequests).toHaveValue('contacts');
+
+      const syncPayload = {
+        surface: 'settings',
+        section: 'privacy',
+        last_updated_at: new Date(Date.now() + 10_000).toISOString(),
+        changes: {
+          show_online_status: true,
+          allow_group_invites: 'nobody',
+          selective_privacy: {
+            message_requests: {
+              mode: 'everyone',
+              always_allow_user_ids: [],
+              never_allow_user_ids: [],
+            },
+            phone_number: {
+              mode: 'nobody',
+              always_allow_user_ids: [],
+              never_allow_user_ids: [],
+            },
+            calls: {
+              mode: 'contacts',
+              always_allow_user_ids: [],
+              never_allow_user_ids: [],
+            },
+          },
+        },
+      };
+
+      for (const targetPage of [page, secondProfile]) {
+        await targetPage.evaluate((detail) => {
+          window.dispatchEvent(new CustomEvent('cgraph:e2e-preference-sync', { detail }));
+        }, syncPayload);
+      }
+
+      await expect(firstProfileMessageRequests).toHaveValue('everyone');
+      await expect(secondProfileMessageRequests).toHaveValue('everyone');
+      await expect(secondProfileOnlineStatus).toHaveValue('everyone');
+      await expect(secondProfileGroupInvites).toHaveValue('nobody');
+    } finally {
+      await secondContext.close();
+    }
+  });
+
   test('proves routed account deletion scheduling and grace-period cancellation', async ({
     page,
   }) => {
