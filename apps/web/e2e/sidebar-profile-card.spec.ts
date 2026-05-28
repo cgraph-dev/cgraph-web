@@ -109,5 +109,16 @@ test.describe('Sidebar profile identity', () => {
     await expect(publicProfile.locator(`[data-profile-theme-id="${PROFILE_THEME_ID}"]`)).toBeVisible();
     await expect(publicProfile.locator(`[data-nameplate-id="${NAMEPLATE_ID}"]`)).toBeVisible();
     await expect(publicProfile.locator('[data-display-name-effect="neon"]')).toBeVisible();
+
+    await page.reload();
+    await expect(page).toHaveURL(new RegExp(`/user/${CURRENT_USER_ID}$`));
+    await expect(page.getByRole('heading', { name: /e2e user/i })).toBeVisible();
+
+    const reloadedPublicProfile = page.getByRole('main');
+    await expect(
+      reloadedPublicProfile.locator(`[data-profile-theme-id="${PROFILE_THEME_ID}"]`)
+    ).toBeVisible();
+    await expect(reloadedPublicProfile.locator(`[data-nameplate-id="${NAMEPLATE_ID}"]`)).toBeVisible();
+    await expect(reloadedPublicProfile.locator('[data-display-name-effect="neon"]')).toBeVisible();
   });
 });

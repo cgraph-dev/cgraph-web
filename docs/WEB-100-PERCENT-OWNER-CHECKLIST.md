@@ -602,7 +602,9 @@ Required implementation-time questions:
       browser proof for the sidebar mini-card profile theme, avatar border, nameplate, display-name
       effect, and public-profile click-through. Production web commit
       `dae3416c16b50ff4d8cfad4fc1e96bebbb0895c1` extends that proof to the full public profile
-      header. The 2026-05-21 follow-up commit keeps title/badge/nameplate Lottie paths normalized
+      header. The later 2026-05-28 production web proof reloads the public profile route and
+      verifies the same profile theme, nameplate, and display-name effect survive route reload. The
+      2026-05-21 follow-up commit keeps title/badge/nameplate Lottie paths normalized
       through `apps/web/src/lib/lottie/lottie-asset-renderer.tsx` and renders those cosmetic layers
       in customization, full profile, mini/hover card, and preview-card surfaces. The later
       2026-05-21 package/web cleanup makes display-name effects and nameplates Lottie-backed catalog
