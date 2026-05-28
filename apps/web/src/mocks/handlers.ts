@@ -458,6 +458,35 @@ const messageHandlers = [
     });
   }),
 
+  // List shared media in conversation
+  http.get('*/api/v1/conversations/:id/media', ({ params }) => {
+    return HttpResponse.json({
+      data: {
+        media: [
+          {
+            id: 'media-1',
+            content: 'https://example.com/photo.jpg',
+            content_type: 'image',
+            sender_id: 'user-1',
+            sender: mockUser({ id: 'user-1' }),
+            conversation_id: readRouteParam(params, 'id'),
+            file_url: 'https://example.com/photo.jpg',
+            file_name: 'photo.jpg',
+            file_size: 12345,
+            file_mime_type: 'image/jpeg',
+            thumbnail_url: 'https://example.com/photo-thumb.jpg',
+            link_preview: null,
+            inserted_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+        meta: {
+          has_next_page: false,
+          end_cursor: null,
+        },
+      },
+    });
+  }),
+
   // Send message
   http.post(`${API_BASE}/api/v1/conversations/:id/messages`, async ({ params, request }) => {
     const id = readRouteParam(params, 'id');
@@ -604,6 +633,44 @@ const settingsHandlers = [
   }),
 ];
 
+// Onboarding Handlers
+
+const onboardingHandlers = [
+  http.get('*/api/v1/onboarding/status', () => {
+    return HttpResponse.json({
+      data: {
+        completed: true,
+        steps: {
+          send_first_message: true,
+          join_or_create_hub: true,
+          customize_profile: true,
+          enable_e2ee_backup: true,
+        },
+      },
+    });
+  }),
+
+  http.post('*/api/v1/onboarding/complete-step', async ({ request }) => {
+    const body = await readJsonRecord(request);
+    const completedStep = readString(body, 'step');
+    return HttpResponse.json({
+      data: {
+        completed: false,
+        steps: {
+          send_first_message: completedStep === 'send_first_message',
+          join_or_create_hub: completedStep === 'join_or_create_hub',
+          customize_profile: completedStep === 'customize_profile',
+          enable_e2ee_backup: completedStep === 'enable_e2ee_backup',
+        },
+      },
+    });
+  }),
+
+  http.post('*/api/v1/onboarding/skip', () => {
+    return HttpResponse.json({ data: { completed: true } });
+  }),
+];
+
 // Notifications Handlers
 
 const notificationHandlers = [
@@ -725,6 +792,7 @@ export const handlers = [
   ...messageHandlers,
   ...friendHandlers,
   ...settingsHandlers,
+  ...onboardingHandlers,
   ...notificationHandlers,
   ...forumHandlers,
   ...uploadHandlers,

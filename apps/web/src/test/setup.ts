@@ -122,6 +122,7 @@ const createUIStub = () => {
     'hover3D',
     'intensity',
     'particles',
+    'secondaryColor',
     'shimmer',
     'spotlight',
     'themeVariant',

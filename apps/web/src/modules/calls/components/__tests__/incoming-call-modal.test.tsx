@@ -21,7 +21,19 @@ vi.mock('@heroicons/react/24/outline', () => ({
 }));
 
 vi.mock('@/shared/components/ui', () => ({
-  GlassCard: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
+  GlassCard: ({
+    children,
+    glow: _glow,
+    glowColor: _glowColor,
+    borderGradient: _borderGradient,
+    hover3D: _hover3D,
+    shimmer: _shimmer,
+    variant: _variant,
+    ...props
+  }: {
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
     <div data-testid="glass-card" {...props}>
       {children}
     </div>

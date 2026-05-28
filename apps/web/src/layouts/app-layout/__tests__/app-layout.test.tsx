@@ -258,6 +258,10 @@ vi.mock('@/components/logo/logo-icon', () => ({
   LogoIcon: () => <div data-testid="animated-logo" />,
 }));
 
+vi.mock('@/modules/onboarding/onboarding-tutorial', () => ({
+  OnboardingTutorial: () => <div data-testid="onboarding-tutorial" />,
+}));
+
 vi.mock('@/components/theme/themed-avatar', () => ({
   ThemedAvatar: ({ alt }: { alt?: string }) => <div data-testid="themed-avatar">{alt}</div>,
 }));
@@ -281,12 +285,23 @@ vi.mock('motion/react', () => ({
       children,
       className,
       style,
+      animate: _animate,
+      exit: _exit,
+      initial: _initial,
+      transition: _transition,
+      variants: _variants,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      layout: _layout,
+      layoutId: _layoutId,
+      ...rest
     }: {
       children?: React.ReactNode;
       className?: string;
       style?: React.CSSProperties;
+      [key: string]: unknown;
     }) => (
-      <div className={className} style={style}>
+      <div className={className} style={style} {...rest}>
         {children}
       </div>
     ),
@@ -294,12 +309,23 @@ vi.mock('motion/react', () => ({
       children,
       className,
       style,
+      animate: _animate,
+      exit: _exit,
+      initial: _initial,
+      transition: _transition,
+      variants: _variants,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      layout: _layout,
+      layoutId: _layoutId,
+      ...rest
     }: {
       children?: React.ReactNode;
       className?: string;
       style?: React.CSSProperties;
+      [key: string]: unknown;
     }) => (
-      <span className={className} style={style}>
+      <span className={className} style={style} {...rest}>
         {children}
       </span>
     ),
@@ -308,6 +334,15 @@ vi.mock('motion/react', () => ({
       className,
       style,
       onClick,
+      animate: _animate,
+      exit: _exit,
+      initial: _initial,
+      transition: _transition,
+      variants: _variants,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      layout: _layout,
+      layoutId: _layoutId,
       ...rest
     }: {
       children?: React.ReactNode;

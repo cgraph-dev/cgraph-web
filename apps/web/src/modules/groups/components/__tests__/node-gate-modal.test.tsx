@@ -17,6 +17,15 @@ vi.mock('motion/react', () => ({
       children,
       onClick,
       className,
+      animate: _animate,
+      exit: _exit,
+      initial: _initial,
+      transition: _transition,
+      variants: _variants,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      layout: _layout,
+      layoutId: _layoutId,
       ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
@@ -32,6 +41,15 @@ vi.mock('motion/react', () => ({
       onClick,
       disabled,
       className,
+      animate: _animate,
+      exit: _exit,
+      initial: _initial,
+      transition: _transition,
+      variants: _variants,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      layout: _layout,
+      layoutId: _layoutId,
       ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
