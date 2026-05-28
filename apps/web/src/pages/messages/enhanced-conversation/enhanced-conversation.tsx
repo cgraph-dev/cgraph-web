@@ -6,19 +6,16 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'motion/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useEnhancedConversation } from './useEnhancedConversation';
 import { ConversationHeader } from './conversation-header';
 import { MessageInputArea } from './message-input-area';
 import { LoadingSpinner } from './loading-spinner';
-import { MessageList, DEFAULT_UI_PREFERENCES } from '@/modules/chat/components';
+import { ConversationSurface, MessageList, DEFAULT_UI_PREFERENCES } from '@/modules/chat/components';
 import { MessageRequestBanner } from '@/modules/chat/components/message-request-banner';
 import { ForwardMessageModal } from '@/modules/chat/components/forward-message-modal';
 import { NewMessagesBar } from '@/modules/chat/components/new-messages-bar';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
-import { tweens } from '@/lib/animation-presets';
-import { FADE_IN } from '@/lib/animations/transitions';
 
 /**
  * Enhanced Conversation component.
@@ -113,14 +110,8 @@ export default function EnhancedConversation() {
   }
 
   return (
-    <>
-      {/* Main Container */}
-      <motion.div
-        className="relative flex h-full max-h-screen flex-1 flex-col overflow-hidden"
-        {...FADE_IN}
-        transition={tweens.smooth}
-      >
-        {/* Header */}
+    <ConversationSurface
+      header={
         <ConversationHeader
           conversationName={conversation.name || 'Conversation'}
           isTyping={typing.length > 0}
@@ -131,12 +122,11 @@ export default function EnhancedConversation() {
           onStartVoiceCall={() => handleStartCall('audio')}
           onStartVideoCall={() => handleStartCall('video')}
         />
-
-        {showPinnedMessages && pinnedMessages.length > 0 && (
-          <motion.aside
+      }
+      pinnedPanel={
+        showPinnedMessages && pinnedMessages.length > 0 ? (
+          <aside
             className="border-primary-500/20 absolute right-4 top-20 z-30 w-[min(22rem,calc(100%-2rem))] rounded-lg border bg-dark-900/95 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl"
-            initial={{ opacity: 0, y: -8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
             role="region"
             aria-label="Pinned messages"
           >
@@ -172,10 +162,11 @@ export default function EnhancedConversation() {
                 </button>
               ))}
             </div>
-          </motion.aside>
-        )}
-
-        {conversationId && messageRequest && (
+          </aside>
+        ) : null
+      }
+      requestBanner={
+        conversationId && messageRequest ? (
           <MessageRequestBanner
             conversationId={conversationId}
             requesterName={messageRequest.requesterName}
@@ -184,18 +175,15 @@ export default function EnhancedConversation() {
             onAccepted={handleMessageRequestAccepted}
             onRejected={handleMessageRequestRejected}
           />
-        )}
-
-        {/* Messages Area */}
-        <div
-          ref={messagesScrollRef}
-          onScroll={handleMessagesScroll}
-          className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6"
-          aria-label="Conversation messages"
-        >
-          {newMessagesBelow > 0 && (
+        ) : null
+      }
+      messagesScrollRef={messagesScrollRef}
+      onMessagesScroll={handleMessagesScroll}
+      messages={
+        <>
+          {newMessagesBelow > 0 ? (
             <NewMessagesBar count={newMessagesBelow} onJump={handleJumpToLatest} />
-          )}
+          ) : null}
 
           <MessageList
             messages={[...conversationMessages]}
@@ -220,15 +208,16 @@ export default function EnhancedConversation() {
             scrollToMessageRequestKey={activeScrollRequestKey}
             onScrollToMessageComplete={handleScrollToMessageComplete}
           />
-        </div>
-
+        </>
+      }
+      scrollControl={
         <ScrollToBottomButton
           visible={showScrollToLatest}
           newCount={newMessagesBelow}
           onClick={handleJumpToLatest}
         />
-
-        {/* Input Area */}
+      }
+      composer={
         <MessageInputArea
           conversationId={conversationId}
           attachmentNodePrice={attachmentNodePrice}
@@ -240,8 +229,9 @@ export default function EnhancedConversation() {
           onClearReply={() => setReplyTo(null)}
           onPayloadSend={handleComposerPayload}
         />
-
-        {messageActions.showForwardModal && messageActions.messageToForward && (
+      }
+      modalLayer={
+        messageActions.showForwardModal && messageActions.messageToForward ? (
           <ForwardMessageModal
             isOpen={messageActions.showForwardModal}
             message={messageActions.messageToForward}
@@ -250,8 +240,8 @@ export default function EnhancedConversation() {
               messageActions.handleForwardMessage(conversationIds, true)
             }
           />
-        )}
-      </motion.div>
-    </>
+        ) : null
+      }
+    />
   );
 }

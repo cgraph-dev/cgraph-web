@@ -310,6 +310,14 @@ guarded scroll-to-message behavior. Typecheck, lint, production build, and the f
 closes the owner checklist's shared composer/list/action/media stack row, while final broad release
 validation remains tracked by the strict-pass and maturity scorecard documents.
 
+2026-05-28 Cloud Chat surface-shell convergence proof: production web now routes the opened DM
+conversation through shared `modules/chat/components/conversation-surface.tsx` for the stable
+header, message-scroll region, composer, floating-control, request-banner, pinned-panel, and modal
+slots. The Cloud Chat route still owns backend data/actions and slot composition, so this narrows
+but does not fully close the strict page-shell convergence row. Focused proof lives in
+`apps/web/src/modules/chat/components/__tests__/conversation-surface.test.tsx`, plus the existing
+conversation route and composer adapter tests.
+
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,
 and uses `/api/v1/auth/oauth/providers` to decide which account-linking actions render. The focused

@@ -32,6 +32,8 @@ export { default as RichMediaEmbed } from './rich-media-embed';
 export { ReplyPreview, type ReplyPreviewProps } from './reply-preview';
 // Conversation Components
 export { ConversationHeader } from './conversation-header';
+export { ConversationSurface, default as ConversationSurfaceDefault } from './conversation-surface';
+export type { ConversationSurfaceProps } from './conversation-surface';
 export { ConversationInput } from './conversation-input';
 export { TypingIndicator } from './typing-indicator';
 // Animation Components
