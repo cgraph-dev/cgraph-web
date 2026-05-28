@@ -4,6 +4,7 @@ import {
   getGroupChannelRoute,
   getGroupLiveKitRoomName,
   getGroupDestinationRoute,
+  getKnownGroupRoute,
   getGroupRoute,
 } from '@/modules/groups/routing';
 import type { Group } from '@/modules/groups/store';
@@ -80,6 +81,11 @@ describe('group routing', () => {
 
   it('keeps the group root as a real fallback when no channels exist yet', () => {
     expect(getGroupRoute(groupWithChannels([]))).toBe('/groups/group-1');
+  });
+
+  it('uses the app groups route when canonical group truth is unavailable', () => {
+    expect(getKnownGroupRoute(null)).toBe('/groups');
+    expect(getKnownGroupRoute(undefined, '/groups/explore')).toBe('/groups/explore');
   });
 
   it('builds canonical channel destinations with message anchors', () => {

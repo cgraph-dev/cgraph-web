@@ -67,6 +67,16 @@ export function getGroupRoute(group: RoutableGroup): string {
 }
 
 /**
+ * Builds a group route only when canonical group truth is available.
+ */
+export function getKnownGroupRoute(
+  group: RoutableGroup | null | undefined,
+  fallback = '/groups'
+): string {
+  return group ? getGroupRoute(group) : fallback;
+}
+
+/**
  * Builds the mounted route for a specific group channel.
  */
 export function getGroupChannelRoute(

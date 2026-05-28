@@ -23,7 +23,7 @@ import { durations } from '@cgraph/animation-constants';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 import { captureError } from '@/lib/error-tracking';
 import { NodeGateModal } from '@/modules/groups/components/node-gate-modal';
-import { getGroupRoute } from '@/modules/groups/routing';
+import { getGroupRoute, getKnownGroupRoute } from '@/modules/groups/routing';
 
 const SORT_OPTIONS = [
   { value: 'popular', label: 'Popular' },
@@ -83,10 +83,10 @@ export default function ExploreGroups() {
 
   const handleNodeGateSuccess = () => {
     const groupId = nodeGateGroup?.id;
+    const route = getKnownGroupRoute(nodeGateGroup);
     setNodeGateGroup(null);
     if (groupId) {
-      const joinedGroup = groups.find((group) => group.id === groupId) ?? nodeGateGroup;
-      navigate(joinedGroup ? getGroupRoute(joinedGroup) : `/groups/${groupId}`);
+      navigate(getKnownGroupRoute(groups.find((group) => group.id === groupId), route));
     }
   };
 

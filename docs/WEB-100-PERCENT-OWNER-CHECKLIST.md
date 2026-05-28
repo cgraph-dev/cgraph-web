@@ -161,6 +161,13 @@ closes the checklist layer's local broad route/contract browser pass, while real
 delivery, paired QR/mobile approval, physical cross-device sync, hosted Stripe settlement/webhooks,
 and production-like two-client media negotiation remain strict-release sign-off work.
 
+2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
+component-level flows with missing canonical group truth return to `/groups` instead of inventing a
+bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
+`GroupSettingsPage` uses it when closing before group truth has hydrated. Focused route-helper proof,
+typecheck, lint, production build, and a 33 / 33 Chromium pass across group entry, invite landing,
+and group settings permissions verify the route contract.
+
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment

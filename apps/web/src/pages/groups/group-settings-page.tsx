@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { GroupSettings } from '@/modules/groups/components/group-settings';
 import { useGroupStore } from '@/modules/groups/store';
-import { getGroupRoute } from '@/modules/groups/routing';
+import { getKnownGroupRoute } from '@/modules/groups/routing';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('GroupSettingsPage');
@@ -31,7 +31,7 @@ export default function GroupSettingsPage() {
   return (
     <GroupSettings
       groupId={groupId}
-      onClose={() => navigate(group ? getGroupRoute(group) : `/groups/${groupId}`)}
+      onClose={() => navigate(getKnownGroupRoute(group))}
     />
   );
 }
