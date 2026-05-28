@@ -158,6 +158,11 @@ export class WebRTCManager {
 
   /** End the current call */
   async endCall(): Promise<void> {
+    await this.cleanupCall();
+    this.eventHandlers.onCallEnded?.('user_ended');
+  }
+
+  private async cleanupCall(): Promise<void> {
     this.localStream?.getTracks().forEach((track) => track.stop());
     this.peerConnections.forEach((pc) => pc.close());
     this.peerConnections.clear();
@@ -165,7 +170,6 @@ export class WebRTCManager {
     this.channel = null;
 
     this.state = { ...createDefaultCallState(), status: 'ended' };
-    this.eventHandlers.onCallEnded?.('user_ended');
   }
 
   /** Toggle mute state */
@@ -263,7 +267,7 @@ export class WebRTCManager {
       this.peerConnections,
       this.state,
       this.eventHandlers,
-      () => this.endCall(),
+      () => this.cleanupCall(),
       this.iceServers
     );
   }

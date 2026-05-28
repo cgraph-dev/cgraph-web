@@ -180,6 +180,12 @@ remote-stream, and connected-state handoff using the shared WebRTC signaling own
 call-media gap, while a real production-like two-browser media session across network conditions
 remains a strict-release proof item.
 
+2026-05-28 remote call-ended cleanup proof: production web also verifies that a remote
+`call:ended` channel cleanup stops local tracks and resets call state without emitting the local
+`user_ended` callback before the remote reason is handled. Focused proof lives in
+`apps/web/src/lib/webrtc/__tests__/webrtcService.test.ts`, and the run completed through the full
+397-file / 5,348-test web suite.
+
 2026-05-28 shared chat preference contract proof: production web moves the chat UI preference
 defaults out of the routed messages page and into
 `apps/web/src/modules/chat/components/message-bubble/preferences.ts`, with the old route export kept

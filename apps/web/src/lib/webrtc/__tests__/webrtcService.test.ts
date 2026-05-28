@@ -10,6 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WebRTCManager, getWebRTCManager, destroyWebRTCManager } from '../webrtcService';
+import { setupChannelHandlers } from '../peerConnection';
 import type { Socket, Channel } from 'phoenix';
 
 const mockAudioTrack = {
@@ -193,6 +194,25 @@ describe('WebRTCManager', () => {
       const state = manager.getState();
       expect(state.status).toBe('ended');
       expect(onEnded).toHaveBeenCalledWith('user_ended');
+    });
+
+    it('uses silent cleanup for remote call-ended channel events', async () => {
+      const onEnded = vi.fn();
+      manager.on({ onCallEnded: onEnded });
+
+      await manager.startCall('user-456');
+
+      const latestSetupCall = vi.mocked(setupChannelHandlers).mock.calls.at(-1);
+      expect(latestSetupCall).toBeDefined();
+      if (!latestSetupCall) throw new Error('Expected WebRTC channel handlers to be wired');
+
+      const cleanupFromChannel = latestSetupCall[5];
+      await cleanupFromChannel();
+
+      expect(mockAudioTrack.stop).toHaveBeenCalled();
+      expect(mockVideoTrack.stop).toHaveBeenCalled();
+      expect(manager.getState().status).toBe('ended');
+      expect(onEnded).not.toHaveBeenCalledWith('user_ended');
     });
   });
 
