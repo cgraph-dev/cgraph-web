@@ -136,6 +136,14 @@ Nodes browser routes still agree with their mocked backend contracts; external-p
 paired QR/mobile approval, physical cross-device sync, Stripe handoff success, and deeper two-client
 media negotiation remain strict-release gaps.
 
+2026-05-28 group/call replay proof: the rebuilt production web E2E bundle also passed 46 / 46
+focused Chromium group/forum tests across `apps/web/e2e/group-settings-permissions.spec.ts`,
+`apps/web/e2e/group-channel-scroll.spec.ts`, `apps/web/e2e/group-entry-routes.spec.ts`,
+`apps/web/e2e/group-invite-landing.spec.ts`, and `apps/web/e2e/groups-forums.spec.ts`. The same
+build passed `apps/web/e2e/web-owner-uat.spec.ts`, replaying the mounted owner route path for
+incoming-call accept/end, manual call route controls, call-history callback, group media/actions,
+voice room entry, and adjacent auth/social/settings/Nodes surfaces.
+
 2026-05-28 call-history contract proof: production backend now serializes server-owned
 `end_reason` / `missed_seen` fields on call history and scopes call detail lookup to the
 authenticated user's visible records. Production packages preserve that backend envelope in
@@ -619,7 +627,9 @@ Required implementation-time questions:
       and calls. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16, focused
       auth/account route proof in `apps/web/e2e/auth-account-routes.spec.ts` on 2026-05-23, and a
       2026-05-28 40-test Chromium slice covering auth/account, DM media/composer, social main pane,
-      settings preference sync, and Nodes wallet/shop routes.
+      settings preference sync, and Nodes wallet/shop routes. A follow-up 2026-05-28 replay passed
+      46 / 46 focused group/forum route tests plus the owner UAT route covering current call and
+      voice-room flows.
 - [x] Regression tests exist for the critical routed behaviors that were previously fake, partial,
       or misrouted. Current route-owned coverage includes `apps/web/e2e/dm-media-composer.spec.ts`,
       `apps/web/e2e/broadcasts.spec.ts`, `apps/web/e2e/spaces.spec.ts`,
