@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getDirectCallRoute } from '../call-routing';
+import { getDirectCallRoute } from '../direct-call-routing';
 
 describe('getDirectCallRoute', () => {
   it('builds the routed audio call destination for a direct recipient', () => {

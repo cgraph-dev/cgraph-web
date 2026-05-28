@@ -10,6 +10,7 @@
  */
 
 export * from './components';
+export * from './controllers/cloud-conversation';
 export * from './hooks';
 export * from './store';
 export * from './types';

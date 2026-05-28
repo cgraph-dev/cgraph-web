@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useEnhancedConversation } from './useEnhancedConversation';
+import { useCloudConversationController } from '@/modules/chat/controllers/cloud-conversation';
 import { ConversationHeader } from './conversation-header';
 import { MessageInputArea } from './message-input-area';
 import { LoadingSpinner } from './loading-spinner';
@@ -54,7 +54,7 @@ export default function EnhancedConversation() {
     handleMessageRequestAccepted,
     handleMessageRequestRejected,
     messageActions,
-  } = useEnhancedConversation();
+  } = useCloudConversationController();
 
   const pinnedMessages = conversationMessages.filter(
     (message) => message.isPinned && !message.deletedAt
