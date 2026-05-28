@@ -12,12 +12,11 @@ import { useEnhancedConversation } from './useEnhancedConversation';
 import { ConversationHeader } from './conversation-header';
 import { MessageInputArea } from './message-input-area';
 import { LoadingSpinner } from './loading-spinner';
-import { MessageList } from '@/modules/chat/components';
+import { MessageList, DEFAULT_UI_PREFERENCES } from '@/modules/chat/components';
 import { MessageRequestBanner } from '@/modules/chat/components/message-request-banner';
 import { ForwardMessageModal } from '@/modules/chat/components/forward-message-modal';
 import { NewMessagesBar } from '@/modules/chat/components/new-messages-bar';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
-import { DEFAULT_UI_PREFERENCES } from '@/pages/messages/conversation/types';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 

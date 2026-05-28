@@ -10,7 +10,12 @@
  */
 // Core Message Components
 // Message display
-export { MessageBubble, type MessageBubbleProps, type UIPreferences } from './message-bubble';
+export {
+  MessageBubble,
+  DEFAULT_UI_PREFERENCES,
+  type MessageBubbleProps,
+  type UIPreferences,
+} from './message-bubble';
 export { MessageList } from './message-list';
 export { MessageInputArea, type MessageInputAreaProps } from './message-input-area';
 export { MessageSearch } from './message-search';

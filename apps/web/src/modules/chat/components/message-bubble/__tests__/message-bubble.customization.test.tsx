@@ -7,8 +7,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MessageBubble } from '../message-bubble';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
-import type { UIPreferences } from '@/pages/messages/conversation/types';
-import { DEFAULT_UI_PREFERENCES } from '@/pages/messages/conversation/types';
+import type { UIPreferences } from '../preferences';
+import { DEFAULT_UI_PREFERENCES } from '../preferences';
 
 // Mock framer-motion to prevent layout animation infinite loops in jsdom
 // Proxy defined inline because vi.mock factories are hoisted above variable declarations

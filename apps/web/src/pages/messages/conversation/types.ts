@@ -5,34 +5,8 @@
 
 import type { Message } from '@/modules/chat/store/chatStore.impl';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
-
-/**
- * UI preferences for the conversation view
- */
-export interface UIPreferences {
-  glassEffect: 'default' | 'frosted' | 'crystal' | 'neon' | 'holographic' | 'aurora';
-  animationIntensity: 'low' | 'medium' | 'high';
-  showParticles: boolean;
-  enableGlow: boolean;
-  enable3D: boolean;
-  enableHaptic: boolean;
-  voiceVisualizerTheme: 'matrix-green' | 'cyber-blue' | 'neon-pink' | 'sunset-orange';
-  messageEntranceAnimation: 'slide' | 'fade' | 'scale' | 'bounce';
-}
-
-/**
- * Default UI preferences
- */
-export const DEFAULT_UI_PREFERENCES: UIPreferences = {
-  glassEffect: 'holographic',
-  animationIntensity: 'high',
-  showParticles: true,
-  enableGlow: true,
-  enable3D: true,
-  enableHaptic: true,
-  voiceVisualizerTheme: 'matrix-green',
-  messageEntranceAnimation: 'slide',
-};
+export type { UIPreferences } from '@/modules/chat/components/message-bubble';
+export { DEFAULT_UI_PREFERENCES } from '@/modules/chat/components/message-bubble';
 
 /**
  * Pending message for E2EE retry

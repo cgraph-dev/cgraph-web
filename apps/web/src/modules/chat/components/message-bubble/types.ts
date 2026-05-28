@@ -5,12 +5,12 @@
  */
 
 import type { Message } from '@/modules/chat/store/chatStore.impl';
-import type { UIPreferences } from '@/pages/messages/conversation/types';
+import type { UIPreferences } from './preferences';
 
 /**
  * Re-export UIPreferences for consumers
  */
-export type { UIPreferences } from '@/pages/messages/conversation/types';
+export type { UIPreferences } from './preferences';
 
 /**
  * Props for the MessageBubble component

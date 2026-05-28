@@ -180,6 +180,14 @@ remote-stream, and connected-state handoff using the shared WebRTC signaling own
 call-media gap, while a real production-like two-browser media session across network conditions
 remains a strict-release proof item.
 
+2026-05-28 shared chat preference contract proof: production web moves the chat UI preference
+defaults out of the routed messages page and into
+`apps/web/src/modules/chat/components/message-bubble/preferences.ts`, with the old route export kept
+as a compatibility alias. The focused proof in
+`apps/web/src/modules/chat/components/message-bubble/__tests__/preferences.test.ts` verifies the
+route alias points at the shared chat contract and that decorative particle overlays are disabled by
+default.
+
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and

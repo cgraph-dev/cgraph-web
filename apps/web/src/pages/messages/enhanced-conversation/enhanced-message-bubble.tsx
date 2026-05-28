@@ -3,8 +3,7 @@
  */
 
 import { AnimatedMessageWrapper } from '@/modules/chat/components/animated-message-wrapper';
-import { MessageBubble } from '@/modules/chat/components/message-bubble';
-import { DEFAULT_UI_PREFERENCES } from '@/pages/messages/conversation/types';
+import { MessageBubble, DEFAULT_UI_PREFERENCES } from '@/modules/chat/components/message-bubble';
 import type { EnhancedMessageBubbleProps } from './types';
 
 /**

@@ -1,4 +1,5 @@
 export { MessageBubble, default } from './message-bubble';
+export { DEFAULT_UI_PREFERENCES } from './preferences';
 export * from './types';
 export * from './utils';
 export * from './icons';
