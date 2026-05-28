@@ -5,9 +5,50 @@ import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 const NODE_MODULES_SEGMENT = '/node_modules/';
+const CSP_EXTRA_CONNECT_SOURCES_MARKER = '__CGRAPH_CSP_EXTRA_CONNECT_SOURCES__';
+const BASE_CONNECT_SOURCES = new Set([
+  'https://cgraph-backend-prod-v2.fly.dev',
+  'wss://cgraph-backend-prod-v2.fly.dev',
+]);
 
 function normalizeModuleId(id) {
   return id.replace(/\\/g, '/');
+}
+
+function getAbsoluteUrlOrigin(value) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
+function getCspExtraConnectSources() {
+  return [
+    process.env.VITE_API_URL,
+    process.env.VITE_SOCKET_URL,
+    process.env.VITE_WS_URL,
+    process.env.VITE_DEV_API_TARGET,
+    process.env.VITE_DEV_WS_TARGET,
+  ]
+    .map(getAbsoluteUrlOrigin)
+    .filter(Boolean)
+    .filter((origin) => !BASE_CONNECT_SOURCES.has(origin))
+    .filter((origin, index, origins) => origins.indexOf(origin) === index)
+    .join(' ');
+}
+
+function cspConnectSourcesPlugin() {
+  return {
+    name: 'cgraph-csp-connect-sources',
+    transformIndexHtml(html) {
+      return html.replace(CSP_EXTRA_CONNECT_SOURCES_MARKER, getCspExtraConnectSources());
+    },
+  };
 }
 
 function getPackageNameFromModuleId(id) {
@@ -36,6 +77,7 @@ const coverageMinimum = Number(process.env.WEB_COVERAGE_MIN ?? 65);
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    cspConnectSourcesPlugin(),
     react(),
     // Bundle analyzer - generates stats.html after build
     visualizer({

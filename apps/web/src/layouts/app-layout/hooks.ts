@@ -29,9 +29,6 @@ export function useAppLayout() {
 
     const initializeApp = async () => {
       try {
-        await socketManager.connect();
-        socketManager.joinUserChannel(user.id);
-
         await Promise.allSettled([fetchConversations(), fetchGroups(), fetchNotifications()]);
       } catch (err) {
         captureError(err instanceof Error ? err : new Error('initializeApp error'), {
@@ -41,10 +38,6 @@ export function useAppLayout() {
     };
 
     initializeApp();
-
-    return () => {
-      socketManager.leaveUserChannel(user.id);
-    };
   }, [fetchConversations, fetchGroups, fetchNotifications, user?.id]);
 
   const handleLogout = async () => {

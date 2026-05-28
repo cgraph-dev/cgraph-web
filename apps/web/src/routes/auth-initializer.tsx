@@ -17,11 +17,35 @@ import { themeEngine } from '@/lib/theme/theme-engine';
 import { STORAGE_KEY as THEME_PREFERENCES_KEY } from '@/lib/theme/preferences';
 import { useCustomizationApplication } from '@/modules/settings/hooks/useCustomizationApplication';
 import { authLogger, themeLogger } from '@/lib/logger';
+import { socketManager } from '@/lib/socket';
 
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 const E2E_ONBOARDING_COMPLETED_KEY = 'cgraph-e2e-onboarding-completed';
 const PUBLIC_AUTH_ROUTE_PATTERN =
   /^\/(login|qr-login|register|forgot-password|reset-password|verify-email)(\/|$)/;
+
+declare global {
+  interface Window {
+    __CGRAPH_E2E_AUTH_SNAPSHOT__?: Record<string, unknown>;
+    __CGRAPH_E2E_SOCKET_BOOTSTRAP__?: Record<string, unknown>;
+  }
+}
+
+function setE2EAuthSnapshot(snapshot: Record<string, unknown>): void {
+  if (!isE2EAuthBypass || typeof window === 'undefined') return;
+  window.__CGRAPH_E2E_AUTH_SNAPSHOT__ = {
+    ...snapshot,
+    at: Date.now(),
+  };
+}
+
+function setE2ESocketBootstrap(snapshot: Record<string, unknown>): void {
+  if (!isE2EAuthBypass || typeof window === 'undefined') return;
+  window.__CGRAPH_E2E_SOCKET_BOOTSTRAP__ = {
+    ...snapshot,
+    at: Date.now(),
+  };
+}
 
 const E2E_USER: User = {
   id: 'e2e-user',
@@ -80,6 +104,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const token = useAuthStore((state) => state.token);
   const userId = useAuthStore((state) => state.user?.id);
   const colorPreset = useThemeStore((state) => state.theme.colorPreset);
 
@@ -123,6 +148,64 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       });
     }
   }, [isAuthenticated, userId]);
+
+  useEffect(() => {
+    setE2EAuthSnapshot({
+      isAuthenticated,
+      userId: userId ?? null,
+      hasToken: Boolean(token),
+      pathname,
+    });
+  }, [isAuthenticated, pathname, token, userId]);
+
+  useEffect(() => {
+    setE2ESocketBootstrap({
+      phase: 'observed-auth-state',
+      isAuthenticated,
+      userId: userId ?? null,
+      hasToken: Boolean(token),
+    });
+
+    if (!isAuthenticated || !userId || !token) return;
+
+    let isCurrentSession = true;
+    setE2ESocketBootstrap({
+      phase: 'connecting',
+      isAuthenticated,
+      userId,
+      hasToken: true,
+    });
+
+    socketManager
+      .connect()
+      .then(() => {
+        if (isCurrentSession) {
+          socketManager.joinUserChannel(userId);
+          setE2ESocketBootstrap({
+            phase: 'join-called',
+            isAuthenticated,
+            userId,
+            hasToken: true,
+          });
+        }
+      })
+      .catch((error) => {
+        setE2ESocketBootstrap({
+          phase: 'connect-failed',
+          isAuthenticated,
+          userId,
+          hasToken: true,
+          message: error instanceof Error ? error.message : String(error),
+        });
+        authLogger.warn('Authenticated socket bootstrap failed:', error);
+      });
+
+    return () => {
+      isCurrentSession = false;
+      socketManager.leaveUserChannel(userId);
+    };
+  }, [isAuthenticated, token, userId]);
+
   useEffect(() => {
     const hasProfessionalThemePreferences = Boolean(localStorage.getItem(THEME_PREFERENCES_KEY));
     const appThemeId = hasProfessionalThemePreferences

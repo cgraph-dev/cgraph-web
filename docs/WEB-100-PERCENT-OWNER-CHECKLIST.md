@@ -65,6 +65,15 @@ the route/store contract can consume backend-shaped settings sync outside a same
 BroadcastChannel tab pair, while a real physical second-device socket delivery lab remains a
 strict-release proof item.
 
+2026-05-29 authenticated socket delivery proof: production web moves authenticated socket bootstrap
+to `AuthInitializer` so the user channel joins only after auth and token readiness, and the Vite HTML
+contract injects explicit build-time socket/API origins into the CSP meta tag. The rebuilt app passed
+`apps/web/e2e/settings-preference-sync.spec.ts` with `PLAYWRIGHT_SOCKET_SYNC_PROOF=true`: two
+isolated browser profiles mounted `/me/settings/privacy`, both joined `user:e2e-user` through a
+Phoenix-compatible local socket harness, and both updated from one `settings_synced` user-channel
+broadcast. Physical second-device lab validation remains strict-release evidence, not an owner
+implementation checkbox.
+
 2026-05-22 Nodes wallet/shop browser proof: `cgraph-web` commit
 `69ee0b4b4b8a88f898805577af2716f73a5b7ae2` adds `apps/web/e2e/nodes-wallet-shop.spec.ts` to verify
 routed wallet balance and transaction rendering, wallet failure without false zero-balance UI,
