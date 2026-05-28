@@ -85,8 +85,7 @@ describe('CosmeticCard', () => {
     const onSelect = vi.fn();
     render(<CosmeticCard item={item} owned={true} equipped={false} onSelect={onSelect} />);
 
-    // The card itself is a button
-    const button = screen.getByRole('button');
+    const button = screen.getByRole('button', { name: 'Select Cosmic Border' });
     fireEvent.click(button);
 
     expect(onSelect).toHaveBeenCalledWith(item);
@@ -173,8 +172,8 @@ describe('CosmeticCard', () => {
   it('applies equipped card classes when equipped', () => {
     const { container } = render(<CosmeticCard item={makeItem()} owned={true} equipped={true} />);
 
-    const button = container.querySelector('button');
-    expect(button?.className).toContain('border-cyan-500/60');
+    const card = container.querySelector('[data-testid="cosmetic-card"]');
+    expect(card?.className).toContain('border-cyan-500/60');
   });
 
   it('applies expired card classes with grayscale when expired', () => {
@@ -185,8 +184,8 @@ describe('CosmeticCard', () => {
       <CosmeticCard item={makeItem()} owned={true} equipped={false} entitlement={entitlement} />
     );
 
-    const button = container.querySelector('button');
-    expect(button?.className).toContain('grayscale');
+    const card = container.querySelector('[data-testid="cosmetic-card"]');
+    expect(card?.className).toContain('grayscale');
   });
 
   it('does not show purchase button when item is not purchasable', () => {
