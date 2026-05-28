@@ -175,6 +175,12 @@ for rule fields plus per-rule edit/delete/toggle actions. The rebuilt app passed
 create/update/toggle/delete contracts, 403 denial copy, and unchanged-row reconciliation after
 denied updates.
 
+2026-05-29 WebRTC browser negotiation proof: production web adds
+`apps/web/e2e/webrtc-negotiation.spec.ts`, which creates two real Chromium `RTCPeerConnection`
+peers, exchanges offer/answer/ICE locally, and verifies generated audio/video tracks arrive on both
+sides. This narrows the call-media gap, while production TURN/network two-client media validation
+remains a strict-release lab item.
+
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment
