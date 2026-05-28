@@ -89,6 +89,40 @@ describe('useCallHistory', () => {
     expect(result.current.sections).toEqual([]);
     expect(result.current.isEmpty).toBe(true);
   });
+
+  it('uses backend end_reason as the missed-call source of truth', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: 'call-3',
+            type: 'audio',
+            state: 'ended',
+            creator_id: 'user-other',
+            participant_ids: ['user-me', 'user-other'],
+            duration_seconds: 0,
+            end_reason: 'missed',
+            missed_seen: false,
+            started_at: '2026-04-30T12:00:00Z',
+            ended_at: '2026-04-30T12:00:10Z',
+            inserted_at: '2026-04-30T12:00:00Z',
+          },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() => useCallHistory(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.sections[0]?.calls[0]).toMatchObject({
+      id: 'call-3',
+      direction: 'missed',
+      duration: 0,
+    });
+  });
 });
 
 describe('normalizeCallHistory', () => {

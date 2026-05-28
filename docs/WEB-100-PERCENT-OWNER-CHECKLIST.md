@@ -126,6 +126,13 @@ Nodes wallet, call history callback, and voice-room entry. Vercel deployed the c
 `pnpm --filter @cgraph/web smoke:production` passed against `web.cgraph.org`. This moves final
 validation out of zero, but it is not the full strict per-suite release signoff.
 
+2026-05-28 call-history contract proof: production backend now serializes server-owned
+`end_reason` / `missed_seen` fields on call history and scopes call detail lookup to the
+authenticated user's visible records. Production packages preserve that backend envelope in
+`@cgraph/api-client`, and production web uses the same missed-call truth in the route normalizer.
+Focused backend, package, and web tests are green; deeper WebRTC media negotiation remains in the
+strict release-readiness document.
+
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and

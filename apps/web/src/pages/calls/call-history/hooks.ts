@@ -65,6 +65,8 @@ interface ApiCallRecord {
   started_at?: string | null;
   ended_at?: string | null;
   duration_seconds?: number | null;
+  end_reason?: string | null;
+  missed_seen?: boolean | null;
   inserted_at: string;
 }
 
@@ -94,8 +96,9 @@ export function normalizeCallHistory(
 ): CallRecord[] {
   return calls.map((call) => {
     const recipientId = getRecipientId(call, currentUserId);
+    const wasMissed = call.end_reason === 'missed' || call.state === 'missed';
     const direction =
-      call.state === 'missed'
+      wasMissed
         ? 'missed'
         : call.creator_id === currentUserId
           ? 'outgoing'
