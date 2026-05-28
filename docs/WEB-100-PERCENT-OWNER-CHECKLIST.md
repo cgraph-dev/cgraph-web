@@ -72,7 +72,9 @@ success/cancel routes instead of relying on the legacy `/nodes` redirect. Focuse
 lives in `apps/backend/test/cgraph_web/controllers/nodes_controller_test.exs` for success,
 Stripe-rejection, and unknown-bundle contracts. The routed web proof remains
 `apps/web/e2e/nodes-wallet-shop.spec.ts`, which verifies checkout failure copy on the mounted shop
-route.
+route and, as of 2026-05-28, verifies a successful checkout response hands the browser to the
+allowlisted `https://checkout.stripe.com/c/pay/cs_test_nodes` destination instead of rendering a
+fake local success state.
 
 2026-05-27 Nodes wallet/shop retry proof: the backend controller test now also proves authenticated
 wallet balance, filtered transaction history, and active shop bundle schema responses. The routed
@@ -133,8 +135,8 @@ tests across `apps/web/e2e/auth-account-routes.spec.ts`, `apps/web/e2e/dm-media-
 `apps/web/e2e/social-main-pane.spec.ts`, `apps/web/e2e/settings-preference-sync.spec.ts`, and
 `apps/web/e2e/nodes-wallet-shop.spec.ts`. This proves the local auth, DM, social, settings, and
 Nodes browser routes still agree with their mocked backend contracts; external-provider checks,
-paired QR/mobile approval, physical cross-device sync, Stripe handoff success, and deeper two-client
-media negotiation remain strict-release gaps.
+paired QR/mobile approval, physical cross-device sync, real Stripe hosted checkout completion and
+webhook settlement, and deeper two-client media negotiation remain strict-release gaps.
 
 2026-05-28 group/call replay proof: the rebuilt production web E2E bundle also passed 46 / 46
 focused Chromium group/forum tests across `apps/web/e2e/group-settings-permissions.spec.ts`,
@@ -149,6 +151,13 @@ route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-med
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment
 message is sent, and keeps the full DM media/composer suite green. This proves local route/API
 failure UX; provisioning a reachable production ClamAV scanner remains an external deployment task.
+
+2026-05-28 Stripe checkout handoff proof: production web extends
+`apps/web/e2e/nodes-wallet-shop.spec.ts` to cover the successful checkout path. The browser route
+posts to `/api/v1/nodes/checkout`, receives a backend-owned Stripe checkout URL, follows it through
+`safeRedirect(...)`, and lands on the mocked `checkout.stripe.com` page. This closes the local
+handoff-success proof while real hosted payment completion and webhook settlement remain external
+Stripe/Fly/Vercel proof items.
 
 2026-05-28 call-history contract proof: production backend now serializes server-owned
 `end_reason` / `missed_seen` fields on call history and scopes call detail lookup to the
@@ -304,8 +313,9 @@ already-unlocked, and rate-limit states; focused component tests cover tip, gift
 negative copy. Later 2026-05-27 production proof closes profile tip/gift and forum content-unlock
 retry UX, and 2026-05-28 production proof adds coded backend paid-file validation, not-found,
 insufficient-balance, success, and duplicate-unlock contracts plus routed failed-then-explicit-retry
-success. Stripe handoff success and final broad browser validation remain open in the stricter
-release-readiness documents.
+success. Later 2026-05-28 production proof closes local Stripe checkout handoff success on the
+mounted shop route; real hosted payment completion/webhook settlement and final broad browser
+validation remain open in the stricter release-readiness documents.
 
 Purpose: turn the current web audit set into an execution contract for an owner who wants the web
 workstream finished to an honest 100% industry-standard bar, with no fake completion and no silent

@@ -275,6 +275,31 @@ test.describe('Nodes wallet and shop routed browser behavior', () => {
     await expect(page.getByText('Checkout failed. Please try again.')).toBeVisible();
   });
 
+  test('hands successful bundle checkout off to Stripe without local fake success', async ({
+    page,
+  }) => {
+    const calls = await installNodesMocks(page);
+
+    await page.route('https://checkout.stripe.com/**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: '<!doctype html><title>Stripe Checkout</title><h1>Stripe Checkout</h1>',
+      });
+    });
+
+    await page.goto('/me/wallet/shop');
+
+    await expect(page.getByRole('heading', { name: 'Get Nodes' })).toBeVisible();
+    await expect(page.getByText('Starter Pack')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Purchase' }).click();
+
+    await expect.poll(() => calls.checkout).toBe(1);
+    await expect(page).toHaveURL(/https:\/\/checkout\.stripe\.com\/c\/pay\/cs_test_nodes/);
+    await expect(page.getByRole('heading', { name: 'Stripe Checkout' })).toBeVisible();
+  });
+
   test('does not render an empty shop as success when bundles fail to load', async ({ page }) => {
     await installNodesMocks(page, { bundlesMode: 'error' });
 
