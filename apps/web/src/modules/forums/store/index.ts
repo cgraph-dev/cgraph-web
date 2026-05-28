@@ -26,6 +26,10 @@ export {
   type ForumSearchFilters,
 } from './forumStore';
 
+export * from './use-forum-list-store';
+export * from './use-forum-detail-store';
+export * from './use-forum-moderation-store';
+
 // Forum hosting store
 export * from './forumHostingStore.impl';
 

@@ -287,9 +287,15 @@ on the routed DM surface.
   `apps/web/src/modules/chat/components/__tests__/conversation-item.test.tsx` and the full web
   Vitest suite on 2026-05-22.
 
-- **#19 Consolidate `forumStore` slice monolith** — Partial. `useForumListStore`,
-  `useForumDetailStore`, and `useForumModerationStore` exist, but they are still thin selector hooks
-  over the same canonical `useForumStore`; the underlying store split has not happened.
+- **#19 Consolidate `forumStore` slice monolith** — Closed for the transition-store split.
+  `useForumListStore`, `useForumDetailStore`, and `useForumModerationStore` now read from dedicated
+  synchronized Zustand slice stores instead of returning direct `useForumStore(...)` selectors. The
+  canonical store remains as the compatibility/action source for unmigrated forum call sites, but
+  the list/detail/moderation hooks now have independent store ownership, exported slice stores, and
+  a regression test that guards state sync, action wiring, and the no-monolith-selector rule.
+  Verified on 2026-05-28 by `apps/web/src/modules/forums/store/__tests__/forumStore.slices.test.ts`,
+  full Vitest (`397 / 397` files, `5,347 / 5,347` tests), `check:release-gates`, web typecheck,
+  and web lint.
 
 - **#20 Broadcasts publisher + subscriber UI** — Closed. The previous remaining-gap note was stale:
   production web already mounts `/broadcasts` and `/broadcasts/:broadcastId` through

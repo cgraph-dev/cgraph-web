@@ -645,6 +645,11 @@ of retry-looping. **Effort:** 4 h.
 
 ### 19. Consolidate `forumStore` slice monolith
 
+**Status:** closed for transition-store ownership on 2026-05-28. `useForumListStore`,
+`useForumDetailStore`, and `useForumModerationStore` now read from dedicated synchronized Zustand
+slice stores rather than direct `useForumStore(...)` selectors. The canonical full store remains as
+the compatibility/action source for legacy forum consumers.
+
 **Files:**
 `apps/web/src/modules/forums/store/forumStore.{core,features,userGroups,moderation,admin,permissions,forumCrud,utils}.ts`
 — 8 files, ~3,500 LOC, one store. **Fix:** Split into three independent stores —

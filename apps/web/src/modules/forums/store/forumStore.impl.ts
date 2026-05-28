@@ -14,6 +14,15 @@ import { createForumCrudActions } from './forumStore.forumCrud';
 import { createModerationActions } from './forumStore.moderation';
 import { createFeatureActions } from './forumStore.features';
 import { createAdminActions } from './forumStore.admin';
+import { bindForumSliceStore } from './forumStore.sliceSync';
+import {
+  selectForumDetailSlice,
+  selectForumListSlice,
+  selectForumModerationSlice,
+  type ForumDetailSliceState,
+  type ForumListSliceState,
+  type ForumModerationSliceState,
+} from './forumStore.slices';
 
 // Re-export all types for backward compatibility
 export type {
@@ -64,3 +73,33 @@ export const useForumStore = create<ForumState>((set, get) => ({
 
   reset: () => set({ ...forumInitialState }),
 }));
+
+export const useForumListSliceStore = create<ForumListSliceState>(() =>
+  selectForumListSlice(useForumStore.getState())
+);
+export const useForumDetailSliceStore = create<ForumDetailSliceState>(() =>
+  selectForumDetailSlice(useForumStore.getState())
+);
+export const useForumModerationSliceStore = create<ForumModerationSliceState>(() =>
+  selectForumModerationSlice(useForumStore.getState())
+);
+
+export const forumListSliceBinding = bindForumSliceStore(
+  useForumStore,
+  useForumListSliceStore,
+  selectForumListSlice
+);
+export const forumDetailSliceBinding = bindForumSliceStore(
+  useForumStore,
+  useForumDetailSliceStore,
+  selectForumDetailSlice
+);
+export const forumModerationSliceBinding = bindForumSliceStore(
+  useForumStore,
+  useForumModerationSliceStore,
+  selectForumModerationSlice
+);
+
+forumListSliceBinding.ensureStarted();
+forumDetailSliceBinding.ensureStarted();
+forumModerationSliceBinding.ensureStarted();
