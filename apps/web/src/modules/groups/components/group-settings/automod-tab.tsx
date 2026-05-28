@@ -17,6 +17,7 @@ import { entranceVariants } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { getGroupPermissionError } from '../../permission-errors';
 
 const logger = createLogger('AutomodTab');
 
@@ -81,6 +82,7 @@ const ACTION_META: Record<RuleAction, { label: string; color: string }> = {
 
 const RULE_TYPES: RuleType[] = ['word_filter', 'link_filter', 'spam_detection', 'caps_filter'];
 const RULE_ACTIONS: RuleAction[] = ['delete', 'warn', 'mute', 'flag_for_review'];
+const AUTOMOD_PERMISSION_COPY = 'You do not have permission to manage automod rules in this group.';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -100,20 +102,26 @@ function emptyForm(): RuleFormData {
   };
 }
 
+function getAutomodError(error: unknown, fallback: string): string {
+  return getGroupPermissionError(error, AUTOMOD_PERMISSION_COPY, fallback);
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: () => void;
   disabled?: boolean;
+  ariaLabel: string;
 }
 
-function ToggleSwitch({ checked, onChange, disabled = false }: ToggleSwitchProps) {
+function ToggleSwitch({ checked, onChange, disabled = false, ariaLabel }: ToggleSwitchProps) {
   return (
     <button
       type="button"
       onClick={onChange}
       disabled={disabled}
+      aria-label={ariaLabel}
       aria-pressed={checked}
       className={`relative h-6 w-11 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 ${
         checked ? 'bg-primary-600' : 'bg-[var(--token-card-bg)]'
@@ -161,6 +169,7 @@ function RuleForm({ initial, onSubmit, onCancel, submitLabel, loading }: RuleFor
       <div>
         <label className="mb-1 block text-xs font-medium text-gray-400">Rule name</label>
         <input
+          aria-label="Rule name"
           type="text"
           placeholder="e.g. Block slurs, No invite links"
           value={form.name}
@@ -208,6 +217,7 @@ function RuleForm({ initial, onSubmit, onCancel, submitLabel, loading }: RuleFor
           </span>
         </label>
         <input
+          aria-label="Pattern or config"
           type="text"
           placeholder={typeMeta.placeholder}
           value={form.pattern}
@@ -293,7 +303,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
       setRules(res.data.data ?? []);
     } catch (err) {
       logger.error('Failed to fetch automod rules', err);
-      setGlobalError('Failed to load automod rules. Please try again.');
+      setGlobalError(getAutomodError(err, 'Failed to load automod rules. Please try again.'));
       setRules([]);
     } finally {
       setLoading(false);
@@ -306,6 +316,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
 
   const handleCreate = async (form: RuleFormData) => {
     setSubmitting(true);
+    setGlobalError(null);
     try {
       const res = await http.post(`/api/v1/groups/${groupId}/automod/rules`, {
         name: form.name,
@@ -317,7 +328,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
       setShowCreate(false);
     } catch (err) {
       logger.error('Failed to create automod rule', err);
-      throw err;
+      setGlobalError(getAutomodError(err, 'Failed to create automod rule. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -326,6 +337,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
   const handleUpdate = async (form: RuleFormData) => {
     if (!editingRule) return;
     setSubmitting(true);
+    setGlobalError(null);
     try {
       const res = await http.put(`/api/v1/groups/${groupId}/automod/rules/${editingRule.id}`, {
         name: form.name,
@@ -337,7 +349,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
       setEditingRule(null);
     } catch (err) {
       logger.error('Failed to update automod rule', err);
-      throw err;
+      setGlobalError(getAutomodError(err, 'Failed to update automod rule. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -345,11 +357,13 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
 
   const handleToggle = async (rule: AutomodRule) => {
     setTogglingId(rule.id);
+    setGlobalError(null);
     try {
       const res = await http.patch(`/api/v1/groups/${groupId}/automod/rules/${rule.id}/toggle`);
       setRules((prev) => prev.map((r) => (r.id === rule.id ? res.data.data : r)));
     } catch (err) {
       logger.error('Failed to toggle automod rule', err);
+      setGlobalError(getAutomodError(err, 'Failed to toggle automod rule. Please try again.'));
     } finally {
       setTogglingId(null);
     }
@@ -357,11 +371,13 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
 
   const handleDelete = async (ruleId: string) => {
     setDeletingId(ruleId);
+    setGlobalError(null);
     try {
       await http.delete(`/api/v1/groups/${groupId}/automod/rules/${ruleId}`);
       setRules((prev) => prev.filter((r) => r.id !== ruleId));
     } catch (err) {
       logger.error('Failed to delete automod rule', err);
+      setGlobalError(getAutomodError(err, 'Failed to delete automod rule. Please try again.'));
     } finally {
       setDeletingId(null);
     }
@@ -538,7 +554,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
                               setShowCreate(false);
                             }}
                             className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white"
-                            aria-label="Edit rule"
+                            aria-label={`Edit ${rule.name}`}
                           >
                             <PencilIcon className="h-4 w-4" />
                           </button>
@@ -546,7 +562,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
                             onClick={() => handleDelete(rule.id)}
                             disabled={deletingId === rule.id}
                             className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
-                            aria-label="Delete rule"
+                            aria-label={`Delete ${rule.name}`}
                           >
                             {deletingId === rule.id ? (
                               <ArrowPathIcon className="h-4 w-4 animate-spin" />
@@ -558,6 +574,7 @@ export function AutomodTab({ groupId }: AutomodTabProps) {
                             checked={rule.enabled}
                             onChange={() => handleToggle(rule)}
                             disabled={togglingId === rule.id}
+                            ariaLabel={`${rule.enabled ? 'Disable' : 'Enable'} ${rule.name}`}
                           />
                         </div>
                       </div>

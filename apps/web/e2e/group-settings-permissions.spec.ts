@@ -183,6 +183,11 @@ async function installGroupPermissionMocks(
     denyMemberBan = false,
     denyMemberMute = false,
     denyMemberRoleUpdate = false,
+    denyAutomodList = false,
+    denyAutomodCreate = false,
+    denyAutomodUpdate = false,
+    denyAutomodToggle = false,
+    denyAutomodDelete = false,
     denyPinCreate = false,
     denyPinList = false,
     denyPinDelete = false,
@@ -208,6 +213,11 @@ async function installGroupPermissionMocks(
     readonly denyMemberBan?: boolean;
     readonly denyMemberMute?: boolean;
     readonly denyMemberRoleUpdate?: boolean;
+    readonly denyAutomodList?: boolean;
+    readonly denyAutomodCreate?: boolean;
+    readonly denyAutomodUpdate?: boolean;
+    readonly denyAutomodToggle?: boolean;
+    readonly denyAutomodDelete?: boolean;
     readonly denyPinCreate?: boolean;
     readonly denyPinList?: boolean;
     readonly denyPinDelete?: boolean;
@@ -227,6 +237,18 @@ async function installGroupPermissionMocks(
     is_muted: false,
     muted_until: null,
   };
+  let automodRules = [
+    {
+      id: 'automod-invite-blocker',
+      name: 'Invite Blocker',
+      rule_type: 'link_filter',
+      action: 'delete',
+      enabled: true,
+      pattern: 'discord.gg',
+      config: null,
+      inserted_at: '2026-01-01T00:00:00.000Z',
+    },
+  ];
   const requests = {
     groupPatches: [] as unknown[],
     pinCreates: [] as unknown[],
@@ -243,6 +265,11 @@ async function installGroupPermissionMocks(
     memberMutes: [] as string[],
     memberUnmutes: [] as string[],
     memberRoleUpdates: [] as Array<{ memberId: string; body: unknown }>,
+    automodLists: 0,
+    automodCreates: [] as unknown[],
+    automodUpdates: [] as Array<{ ruleId: string; body: unknown }>,
+    automodToggles: [] as string[],
+    automodDeletes: [] as string[],
     leaves: [] as string[],
     deletes: [] as string[],
     iconUploads: 0,
@@ -567,6 +594,104 @@ async function installGroupPermissionMocks(
       return;
     }
 
+    if (path === `/api/v1/groups/${GROUP_ID}/automod/rules`) {
+      if (method === 'GET') {
+        requests.automodLists += 1;
+        if (denyAutomodList) {
+          await fulfillJson(route, { message: 'Forbidden' }, 403);
+          return;
+        }
+
+        await fulfillJson(route, { data: automodRules });
+        return;
+      }
+
+      if (method === 'POST') {
+        const body = request.postDataJSON() as Record<string, unknown>;
+        requests.automodCreates.push(body);
+        if (denyAutomodCreate) {
+          await fulfillJson(route, { message: 'Forbidden' }, 403);
+          return;
+        }
+
+        const createdRule = {
+          id: 'automod-no-spam',
+          name: typeof body.name === 'string' ? body.name : 'No spam',
+          rule_type: typeof body.rule_type === 'string' ? body.rule_type : 'word_filter',
+          action: typeof body.action === 'string' ? body.action : 'delete',
+          enabled: true,
+          pattern: typeof body.pattern === 'string' ? body.pattern : null,
+          config: null,
+          inserted_at: '2026-01-01T00:00:00.000Z',
+        };
+        automodRules = [...automodRules, createdRule];
+        await fulfillJson(route, { data: createdRule }, 201);
+        return;
+      }
+    }
+
+    if (
+      path === `/api/v1/groups/${GROUP_ID}/automod/rules/automod-invite-blocker` &&
+      method === 'PUT'
+    ) {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      requests.automodUpdates.push({ ruleId: 'automod-invite-blocker', body });
+      if (denyAutomodUpdate) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      automodRules = automodRules.map((rule) =>
+        rule.id === 'automod-invite-blocker'
+          ? {
+              ...rule,
+              name: typeof body.name === 'string' ? body.name : rule.name,
+              rule_type: typeof body.rule_type === 'string' ? body.rule_type : rule.rule_type,
+              action: typeof body.action === 'string' ? body.action : rule.action,
+              pattern: typeof body.pattern === 'string' ? body.pattern : rule.pattern,
+            }
+          : rule
+      );
+      await fulfillJson(route, {
+        data: automodRules.find((rule) => rule.id === 'automod-invite-blocker'),
+      });
+      return;
+    }
+
+    if (
+      path === `/api/v1/groups/${GROUP_ID}/automod/rules/automod-invite-blocker/toggle` &&
+      method === 'PATCH'
+    ) {
+      requests.automodToggles.push('automod-invite-blocker');
+      if (denyAutomodToggle) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      automodRules = automodRules.map((rule) =>
+        rule.id === 'automod-invite-blocker' ? { ...rule, enabled: !rule.enabled } : rule
+      );
+      await fulfillJson(route, {
+        data: automodRules.find((rule) => rule.id === 'automod-invite-blocker'),
+      });
+      return;
+    }
+
+    if (
+      path === `/api/v1/groups/${GROUP_ID}/automod/rules/automod-invite-blocker` &&
+      method === 'DELETE'
+    ) {
+      requests.automodDeletes.push('automod-invite-blocker');
+      if (denyAutomodDelete) {
+        await fulfillJson(route, { message: 'Forbidden' }, 403);
+        return;
+      }
+
+      automodRules = automodRules.filter((rule) => rule.id !== 'automod-invite-blocker');
+      await route.fulfill({ status: 204, body: '' });
+      return;
+    }
+
     if (
       path === `/api/v1/groups/${GROUP_ID}/channels/permission-edge-general/messages` &&
       method === 'GET'
@@ -759,6 +884,101 @@ test.describe('Group settings permissions', () => {
     await expect
       .poll(() => requests.groupPatches, { message: 'banner URL patch reached backend' })
       .toContainEqual(expect.objectContaining({ banner_url: '/uploads/group-banner.png' }));
+  });
+
+  test('verifies automod rule create, update, toggle, and delete contracts', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^AutoMod$/ }).click();
+
+    await expect(page.getByText('Invite Blocker')).toBeVisible();
+    await page.getByRole('button', { name: /^Add Rule$/ }).click();
+    await page.getByLabel('Rule name').fill('No spam');
+    await page.getByLabel('Pattern or config').fill('spam, scam');
+    await page.getByRole('button', { name: /^Create Rule$/ }).click();
+
+    await expect(page.getByText('No spam')).toBeVisible();
+    expect(requests.automodCreates.at(-1)).toMatchObject({
+      name: 'No spam',
+      rule_type: 'word_filter',
+      action: 'delete',
+      pattern: 'spam, scam',
+    });
+
+    await page.getByRole('button', { name: /^Edit Invite Blocker$/ }).click();
+    await page.getByLabel('Rule name').fill('Invite Blocker Updated');
+    await page.getByLabel('Pattern or config').fill('discord.gg, t.me');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await expect(page.getByText('Invite Blocker Updated')).toBeVisible();
+    expect(requests.automodUpdates.at(-1)).toMatchObject({
+      ruleId: 'automod-invite-blocker',
+      body: {
+        name: 'Invite Blocker Updated',
+        rule_type: 'link_filter',
+        action: 'delete',
+        pattern: 'discord.gg, t.me',
+      },
+    });
+
+    await page.getByRole('button', { name: /^Disable Invite Blocker Updated$/ }).click();
+    await expect(page.getByRole('button', { name: /^Enable Invite Blocker Updated$/ })).toBeVisible();
+    expect(requests.automodToggles).toContain('automod-invite-blocker');
+
+    await page.getByRole('button', { name: /^Delete Invite Blocker Updated$/ }).click();
+    await expect(page.getByText('Invite Blocker Updated')).toHaveCount(0);
+    expect(requests.automodDeletes).toContain('automod-invite-blocker');
+  });
+
+  test('shows endpoint 403 copy when automod actions are denied', async ({ page }) => {
+    const requests = await installGroupPermissionMocks(page, {
+      groupFixture: ownerGroup,
+      denyAutomodCreate: true,
+      denyAutomodUpdate: true,
+      denyAutomodToggle: true,
+      denyAutomodDelete: true,
+    });
+
+    await page.goto(`/groups/${GROUP_ID}/settings`);
+    await page.getByRole('button', { name: /^AutoMod$/ }).click();
+
+    await page.getByRole('button', { name: /^Disable Invite Blocker$/ }).click();
+    await expect(
+      page.getByText('You do not have permission to manage automod rules in this group.')
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Disable Invite Blocker$/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /^Edit Invite Blocker$/ }).click();
+    await page.getByLabel('Rule name').fill('Denied rename');
+    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await expect(page.getByLabel('Rule name')).toHaveValue('Denied rename');
+    await expect(
+      page.getByText('You do not have permission to manage automod rules in this group.')
+    ).toBeVisible();
+    await page.getByRole('button', { name: /^Cancel$/ }).click();
+    await expect(page.getByText('Invite Blocker')).toBeVisible();
+
+    await page.getByRole('button', { name: /^Delete Invite Blocker$/ }).click();
+    await expect(page.getByText('Invite Blocker')).toBeVisible();
+    await expect(
+      page.getByText('You do not have permission to manage automod rules in this group.')
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: /^Add Rule$/ }).click();
+    await page.getByLabel('Rule name').fill('No spam');
+    await page.getByLabel('Pattern or config').fill('spam');
+    await page.getByRole('button', { name: /^Create Rule$/ }).click();
+    await expect(page.getByText('No spam')).toHaveCount(0);
+    await expect(
+      page.getByText('You do not have permission to manage automod rules in this group.')
+    ).toBeVisible();
+
+    expect(requests.automodToggles).toContain('automod-invite-blocker');
+    expect(requests.automodUpdates).toHaveLength(1);
+    expect(requests.automodDeletes).toContain('automod-invite-blocker');
+    expect(requests.automodCreates).toHaveLength(1);
   });
 
   test('limits settings tabs for non-admin members and avoids admin writes', async ({ page }) => {

@@ -168,6 +168,13 @@ bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated jo
 typecheck, lint, production build, and a 33 / 33 Chromium pass across group entry, invite landing,
 and group settings permissions verify the route contract.
 
+2026-05-29 AutoMod admin proof: production web now gives the routed AutoMod settings tab visible
+route-owned failure copy for denied list/create/update/toggle/delete actions and accessible controls
+for rule fields plus per-rule edit/delete/toggle actions. The rebuilt app passed
+`apps/web/e2e/group-settings-permissions.spec.ts` with 32 / 32 Chromium tests, including AutoMod
+create/update/toggle/delete contracts, 403 denial copy, and unchanged-row reconciliation after
+denied updates.
+
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment
@@ -587,11 +594,11 @@ Required implementation-time questions:
       save, invite creation, member role assignment, role-tab render, and settings-channel creation.
       `apps/web/e2e/group-settings-permissions.spec.ts` now also verifies endpoint-level 403 copy
       for denied overview save, role create/update/reorder/delete, invite list/create/delete, member
-      role assignment, and kick/ban/mute.
+      role assignment, AutoMod create/update/toggle/delete, and kick/ban/mute.
 - [x] Routed group scroll behavior is real. Verified by `apps/web/e2e/group-channel-scroll.spec.ts`
       on 2026-05-25 for routed `scrollTo` anchors, incoming-message stability below the reader, and
-      jump-to-latest behavior. Remaining group release-readiness work is richer admin edge-state
-      breadth, tracked in `docs/WEB-ULTIMATE-STRICT-PASS.md`.
+      jump-to-latest behavior. Remaining group release-readiness work is broader external/live
+      regression validation, tracked in `docs/WEB-ULTIMATE-STRICT-PASS.md`.
 
 ### C. Converge Identity, Settings, And Customization Ownership
 
