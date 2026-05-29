@@ -1017,11 +1017,11 @@ Done when:
       commit `eb7aeac` exposes non-secret WebRTC ICE readiness through `/ready`; follow-up backend
       commit `bdbe255` adds Cloudflare Realtime TURN support so authenticated clients receive
       short-lived backend-generated ICE servers instead of long-lived browser credentials. The live
-      route is deployed on Fly image `deployment-01KSRMM634B2WHZ011JEBACRAY` and still reports
-      `webrtc_ice:"turn_missing"` because Fly has no `CLOUDFLARE_TURN_KEY_ID` /
-      `CLOUDFLARE_TURN_API_TOKEN` or static `WEBRTC_TURN_*` secrets yet. The final proof needs those
-      Cloudflare secrets plus a production-like two-client TURN/network session before it can be
-      truthfully closed.
+      route is deployed on Fly image `deployment-01KSSK3AEJG12M9E1PBCG4FJFR`, reports
+      `webrtc_ice:"ok"`, and a redacted production-node RPC proves Cloudflare returns generated STUN
+      plus TURN/TURNS servers with username and credential fields present. The remaining proof is a
+      production-like two-client browser session that actually exercises the generated TURN network
+      path before this row can be truthfully closed.
 
 Done when:
 
