@@ -152,7 +152,7 @@ tests across `apps/web/e2e/auth-account-routes.spec.ts`, `apps/web/e2e/dm-media-
 `apps/web/e2e/nodes-wallet-shop.spec.ts`. This proves the local auth, DM, social, settings, and
 Nodes browser routes still agree with their mocked backend contracts; external-provider checks,
 paired QR/mobile approval, physical cross-device sync, real Stripe hosted checkout completion and
-webhook settlement, and deeper two-client media negotiation remain strict-release gaps.
+webhook settlement remain strict-release gaps.
 
 2026-05-28 group/call replay proof: the rebuilt production web E2E bundle also passed 46 / 46
 focused Chromium group/forum tests across `apps/web/e2e/group-settings-permissions.spec.ts`,
@@ -167,8 +167,8 @@ tests in one route pass across auth/account, DM media/composer, Social main-pane
 preference sync, Nodes wallet/shop, group settings permissions, group channel scroll, bare group
 entry redirect, group invite landing, owner UAT, and sidebar/public-profile reload specs. This
 closes the checklist layer's local broad route/contract browser pass, while real external provider
-delivery, paired QR/mobile approval, physical cross-device sync, hosted Stripe settlement/webhooks,
-and production-like two-client media negotiation remain strict-release sign-off work.
+delivery, paired QR/mobile approval, physical cross-device sync, and hosted Stripe
+settlement/webhooks remain strict-release sign-off work.
 
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
@@ -187,8 +187,8 @@ denied updates.
 2026-05-29 WebRTC browser negotiation proof: production web adds
 `apps/web/e2e/webrtc-negotiation.spec.ts`, which creates two real Chromium `RTCPeerConnection`
 peers, exchanges offer/answer/ICE locally, and verifies generated audio/video tracks arrive on both
-sides. This narrows the call-media gap, while production TURN/network two-client media validation
-remains a strict-release lab item.
+sides. This narrowed the call-media gap; the later 2026-05-29 Cloudflare relay proof closes the
+production TURN/network two-client media validation item.
 
 2026-05-29 backend TURN readiness proof surface: production backend commit `eb7aeac` adds
 `checks.webrtc_ice` to `GET /ready`, documents the exact TURN secret names, and passes focused
@@ -237,8 +237,8 @@ Stripe/Fly/Vercel proof items.
 `end_reason` / `missed_seen` fields on call history and scopes call detail lookup to the
 authenticated user's visible records. Production packages preserve that backend envelope in
 `@cgraph/api-client`, and production web uses the same missed-call truth in the route normalizer.
-Focused backend, package, and web tests are green; deeper WebRTC media negotiation remains in the
-strict release-readiness document.
+Focused backend, package, and web tests are green; the strict release-readiness document now records
+Cloudflare TURN relay media negotiation as a closed proof.
 
 2026-05-28 linked WebRTC signaling proof: production web extends
 `apps/web/src/lib/webrtc/__tests__/peerConnection.test.ts` with a linked two-peer Phoenix-channel
@@ -621,7 +621,7 @@ Required implementation-time questions:
 - [x] Routed DM voice/video call entry launches real call routes from the live header. Verified by
       `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16 for `/call/:recipientId/audio` and
       `/call/:recipientId/video` controls. Incoming-call accept/end-state proof is covered below;
-      deeper peer media negotiation remains a final release-validation risk.
+      production relay media proof is covered by the 2026-05-29 Cloudflare TURN validation.
 - [x] Call-history callback launches the mounted call screen from a real history row. Verified by
       `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16.
 - [x] Incoming calls accept into the mounted call screen and return cleanly through the end-call
