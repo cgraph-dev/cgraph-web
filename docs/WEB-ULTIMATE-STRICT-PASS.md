@@ -1013,9 +1013,11 @@ Done when:
       audio/video tracks on both sides. The 2026-05-29 call-hook race fix also makes `useCall` and
       `useWebRTC` wait for an authenticated socket before creating their WebRTC managers; focused
       hook tests plus the routed DM voice/video launch browser slice are green. This remains open
-      until a production-like two-client TURN/network session is exercised; the current Fly
-      production secrets list does not include `WEBRTC_TURN_URL`, so that final proof needs TURN
-      infrastructure before it can be truthfully closed.
+      until a production-like two-client TURN/network session is exercised. Production backend
+      commit `eb7aeac` now exposes non-secret WebRTC ICE readiness through `/ready`; the live route
+      reports `webrtc_ice:"turn_missing"`, and the Fly production secrets list still has no
+      `WEBRTC_TURN_URL`, `WEBRTC_TURN_USERNAME`, or `WEBRTC_TURN_CREDENTIAL`, so that final proof
+      needs TURN infrastructure before it can be truthfully closed.
 
 Done when:
 

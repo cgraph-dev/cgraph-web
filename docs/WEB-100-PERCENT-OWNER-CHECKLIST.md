@@ -190,6 +190,12 @@ peers, exchanges offer/answer/ICE locally, and verifies generated audio/video tr
 sides. This narrows the call-media gap, while production TURN/network two-client media validation
 remains a strict-release lab item.
 
+2026-05-29 backend TURN readiness proof surface: production backend commit `eb7aeac` adds
+`checks.webrtc_ice` to `GET /ready`, documents the exact TURN secret names, and passes focused
+health plus call-controller tests. The route/contract/check now agree that the live production
+backend is only at `webrtc_ice:"turn_missing"` until Fly has `WEBRTC_TURN_URL`,
+`WEBRTC_TURN_USERNAME`, and `WEBRTC_TURN_CREDENTIAL`.
+
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment
