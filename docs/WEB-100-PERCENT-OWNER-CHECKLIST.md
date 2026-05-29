@@ -196,6 +196,15 @@ health plus call-controller tests. The route/contract/check now agree that the l
 backend is only at `webrtc_ice:"turn_missing"` until Fly has `WEBRTC_TURN_URL`,
 `WEBRTC_TURN_USERNAME`, and `WEBRTC_TURN_CREDENTIAL`.
 
+2026-05-29 Cloudflare TURN owner proof: production backend commit `bdbe255` adds Cloudflare
+Realtime TURN as the production ICE credential owner. The backend keeps the long-lived Cloudflare
+TURN key server-side, generates short-lived ICE servers for authenticated clients, filters
+browser-problematic `:53` ICE URLs, and keeps static `WEBRTC_TURN_*` as a fallback. Focused
+Cloudflare TURN, signaling, `/ready`, and call-controller tests are green, and Fly deploy
+`deployment-01KSRMM634B2WHZ011JEBACRAY` is running with machine checks passing. The live route still
+reports `webrtc_ice:"turn_missing"` until `CLOUDFLARE_TURN_KEY_ID` and
+`CLOUDFLARE_TURN_API_TOKEN` are set in Fly.
+
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment

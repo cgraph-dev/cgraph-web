@@ -1014,10 +1014,14 @@ Done when:
       `useWebRTC` wait for an authenticated socket before creating their WebRTC managers; focused
       hook tests plus the routed DM voice/video launch browser slice are green. This remains open
       until a production-like two-client TURN/network session is exercised. Production backend
-      commit `eb7aeac` now exposes non-secret WebRTC ICE readiness through `/ready`; the live route
-      reports `webrtc_ice:"turn_missing"`, and the Fly production secrets list still has no
-      `WEBRTC_TURN_URL`, `WEBRTC_TURN_USERNAME`, or `WEBRTC_TURN_CREDENTIAL`, so that final proof
-      needs TURN infrastructure before it can be truthfully closed.
+      commit `eb7aeac` exposes non-secret WebRTC ICE readiness through `/ready`; follow-up backend
+      commit `bdbe255` adds Cloudflare Realtime TURN support so authenticated clients receive
+      short-lived backend-generated ICE servers instead of long-lived browser credentials. The live
+      route is deployed on Fly image `deployment-01KSRMM634B2WHZ011JEBACRAY` and still reports
+      `webrtc_ice:"turn_missing"` because Fly has no `CLOUDFLARE_TURN_KEY_ID` /
+      `CLOUDFLARE_TURN_API_TOKEN` or static `WEBRTC_TURN_*` secrets yet. The final proof needs those
+      Cloudflare secrets plus a production-like two-client TURN/network session before it can be
+      truthfully closed.
 
 Done when:
 
