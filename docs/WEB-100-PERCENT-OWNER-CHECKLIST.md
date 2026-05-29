@@ -213,6 +213,11 @@ and the live route reports `email_provider:"ok"`, `phone_sms:"ok"`, `phone_voice
 configuration proof; real delivery, paired-device, and Stripe settlement proof remain external
 release-validation work.
 
+2026-05-29 QR channel hygiene proof: production web adds
+`apps/web/src/pages/auth/login/__tests__/qr-login.test.tsx`, proving one generated QR login session
+creates exactly one Phoenix socket/channel join for `qr_auth:{sessionId}`. This prevents duplicate
+web listeners while keeping paired mobile approval as a separate real-device release proof item.
+
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment
