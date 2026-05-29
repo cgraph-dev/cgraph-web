@@ -150,8 +150,8 @@ After rebuilding the app with the same E2E env, the focused Chromium Playwright 
 tests across `apps/web/e2e/auth-account-routes.spec.ts`, `apps/web/e2e/dm-media-composer.spec.ts`,
 `apps/web/e2e/social-main-pane.spec.ts`, `apps/web/e2e/settings-preference-sync.spec.ts`, and
 `apps/web/e2e/nodes-wallet-shop.spec.ts`. This proves the local auth, DM, social, settings, and
-Nodes browser routes still agree with their mocked backend contracts; external-provider checks,
-paired QR/mobile approval, physical cross-device sync, real Stripe hosted checkout completion and
+Nodes browser routes still agree with their mocked backend contracts; real provider delivery,
+paired QR/mobile approval, physical cross-device sync, real Stripe hosted checkout completion, and
 webhook settlement remain strict-release gaps.
 
 2026-05-28 group/call replay proof: the rebuilt production web E2E bundle also passed 46 / 46
@@ -192,9 +192,8 @@ production TURN/network two-client media validation item.
 
 2026-05-29 backend TURN readiness proof surface: production backend commit `eb7aeac` adds
 `checks.webrtc_ice` to `GET /ready`, documents the exact TURN secret names, and passes focused
-health plus call-controller tests. The route/contract/check now agree that the live production
-backend is only at `webrtc_ice:"turn_missing"` until Fly has `WEBRTC_TURN_URL`,
-`WEBRTC_TURN_USERNAME`, and `WEBRTC_TURN_CREDENTIAL`.
+health plus call-controller tests. This original static-TURN readiness gap is superseded by the
+Cloudflare TURN owner proof below.
 
 2026-05-29 Cloudflare TURN owner proof: production backend commit `bdbe255` adds Cloudflare
 Realtime TURN as the production ICE credential owner. The backend keeps the long-lived Cloudflare
@@ -205,6 +204,14 @@ Cloudflare TURN, signaling, `/ready`, and call-controller tests are green. Follo
 deploy `deployment-01KSSK3AEJG12M9E1PBCG4FJFR` is running with machine checks passing. The live route
 now reports `webrtc_ice:"ok"`, and a redacted production-node RPC proves generated STUN plus
 TURN/TURNS servers are returned with generated username and credential fields present.
+
+2026-05-29 external provider readiness proof: production backend commit `8cde97f` adds non-secret
+provider readiness to `/ready` for email, phone SMS, phone voice, Turnstile, and Stripe. Focused
+health-controller tests are green, Fly deploy `deployment-01KSSMJQH0HWXFFDDZD6CR0V9Y` is running,
+and the live route reports `email_provider:"ok"`, `phone_sms:"ok"`, `phone_voice:"ok"`,
+`turnstile:"ok"`, and `stripe:"ok"` without exposing secret values. This closes provider
+configuration proof; real delivery, paired-device, and Stripe settlement proof remain external
+release-validation work.
 
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
