@@ -54,6 +54,7 @@ export type {
   EntitlementType,
   EquippedCosmetics,
   InventoryItem,
+  InventoryItemType,
   MarketplaceFilters,
   MarketplaceListing,
   ProfileThemeCategory,

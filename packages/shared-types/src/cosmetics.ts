@@ -24,15 +24,22 @@ export type CosmeticSurface =
 /** All cosmetic type slugs. */
 export type CosmeticType =
   | 'avatar_border'
+  | 'border'
+  | 'animated_border'
   | 'title'
   | 'badge'
   | 'nameplate'
   | 'chat_bubble'
+  | 'chat_effect'
   | 'theme'
   | 'profile_theme'
   | 'name_style'
   | 'profile_effect'
-  | 'profile_frame';
+  | 'profile_frame'
+  | 'avatar_frame';
+
+/** Inventory item types accepted by the backend during the legacy-to-unified migration. */
+export type InventoryItemType = CosmeticType;
 
 /** Animation playback mode. */
 export type AnimationType = 'none' | 'lottie' | 'css' | 'sprite' | 'video' | 'static';
@@ -393,9 +400,12 @@ export interface CatalogItemSummary {
 /** A single item in a user's cosmetic inventory. */
 export interface InventoryItem {
   readonly id: string;
-  readonly userId: string;
-  readonly itemType: CosmeticType;
+  /** Present on internal/backend records; omitted from public inventory API responses. */
+  readonly userId?: string;
+  readonly itemType: InventoryItemType;
   readonly itemId: string;
+  readonly itemSlug: string | null;
+  readonly itemKey: string;
   readonly equippedAt: string | null;
   readonly obtainedAt: string;
   readonly obtainedVia: string;

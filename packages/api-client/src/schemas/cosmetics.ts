@@ -8,12 +8,19 @@ import { z } from 'zod';
 
 export const CosmeticTypeSchema = z.enum([
   'avatar_border',
+  'border',
+  'animated_border',
   'title',
   'badge',
   'nameplate',
   'chat_bubble',
+  'chat_effect',
   'theme',
+  'profile_theme',
   'name_style',
+  'profile_effect',
+  'profile_frame',
+  'avatar_frame',
 ]);
 
 export type CosmeticType = z.infer<typeof CosmeticTypeSchema>;
@@ -30,7 +37,7 @@ export const RarityTierSchema = z.enum([
 
 export type RarityTier = z.infer<typeof RarityTierSchema>;
 
-export const AnimationTypeSchema = z.enum(['none', 'lottie', 'css', 'sprite', 'video']);
+export const AnimationTypeSchema = z.enum(['none', 'lottie', 'css', 'sprite', 'video', 'static']);
 
 export type AnimationType = z.infer<typeof AnimationTypeSchema>;
 
@@ -77,16 +84,46 @@ export type CosmeticItem = z.infer<typeof CosmeticItemSchema>;
  * A single row from a user's inventory as returned by GET /api/v1/cosmetics/inventory.
  * `.passthrough()` preserves any additional fields the backend may add.
  */
-export const InventoryItemSchema = z
+const BackendInventoryItemSchema = z
   .object({
     id: z.string(),
-    item_type: CosmeticTypeSchema,
-    item_id: z.string(),
-    equipped_at: z.string().nullable().optional(),
-    obtained_at: z.string().optional(),
-    obtained_via: z.string().optional(),
+    userId: z.string().optional(),
+    itemType: CosmeticTypeSchema,
+    itemId: z.string(),
+    itemSlug: z.string().nullable(),
+    itemKey: z.string(),
+    equippedAt: z.string().nullable(),
+    obtainedAt: z.string(),
+    obtainedVia: z.string(),
   })
   .passthrough();
+
+const LegacyInventoryItemSchema = z
+  .object({
+    id: z.string(),
+    user_id: z.string().optional(),
+    item_type: CosmeticTypeSchema,
+    item_id: z.string(),
+    item_slug: z.string().nullable().optional(),
+    item_key: z.string().optional(),
+    equipped_at: z.string().nullable().optional(),
+    obtained_at: z.string(),
+    obtained_via: z.string(),
+  })
+  .passthrough()
+  .transform((item) => ({
+    ...item,
+    userId: item.user_id,
+    itemType: item.item_type,
+    itemId: item.item_id,
+    itemSlug: item.item_slug ?? null,
+    itemKey: item.item_key ?? item.item_slug ?? item.item_id,
+    equippedAt: item.equipped_at ?? null,
+    obtainedAt: item.obtained_at,
+    obtainedVia: item.obtained_via,
+  }));
+
+export const InventoryItemSchema = z.union([BackendInventoryItemSchema, LegacyInventoryItemSchema]);
 
 export type InventoryItem = z.infer<typeof InventoryItemSchema>;
 
@@ -149,11 +186,51 @@ export const ShopResponseSchema = z.object({
 
 export type ShopResponse = z.infer<typeof ShopResponseSchema>;
 
-/** Response shape for equip / unequip operations. */
-export const EquipResponseSchema = z.object({
-  equipped: InventoryItemSchema.optional(),
-  unequipped: InventoryItemSchema.optional(),
+/** Summary item returned by GET /api/v1/cosmetics/equipped. */
+export const CatalogItemSummarySchema = z
+  .object({
+    id: z.string(),
+    name: z.string().nullable(),
+    slug: z.string().nullable(),
+    rarity: RarityTierSchema.nullable(),
+    description: z.string().nullable(),
+    animationType: AnimationTypeSchema,
+    lottieUrl: z.string().nullable(),
+    lottieConfig: z.record(z.unknown()),
+    iconUrl: z.string().nullable().optional(),
+    backgroundLottieUrl: z.string().nullable().optional(),
+    particleLottieUrl: z.string().nullable().optional(),
+    overlayLottieUrl: z.string().nullable().optional(),
+  })
+  .passthrough();
+
+export type CatalogItemSummary = z.infer<typeof CatalogItemSummarySchema>;
+
+/** Response shape for GET /api/v1/cosmetics/equipped. */
+export const EquippedCosmeticsSchema = z.object({
+  avatar_border: CatalogItemSummarySchema.nullable(),
+  nameplate: CatalogItemSummarySchema.nullable(),
+  title: CatalogItemSummarySchema.nullable(),
+  badges: z.array(CatalogItemSummarySchema),
+  profile_theme: CatalogItemSummarySchema.nullable(),
+  name_style: CatalogItemSummarySchema.nullable(),
+  profile_effect: CatalogItemSummarySchema.nullable(),
+  avatar_frame: CatalogItemSummarySchema.nullable(),
 });
+
+export type EquippedCosmetics = z.infer<typeof EquippedCosmeticsSchema>;
+
+/** Response shape for equip / unequip operations. */
+export const EquipResponseSchema = z
+  .object({
+    type: CosmeticTypeSchema.optional(),
+    item_id: z.string().optional(),
+    equipped_at: z.string().nullable().optional(),
+    equipped: InventoryItemSchema.optional(),
+    unequipped: z.union([InventoryItemSchema, z.boolean()]).optional(),
+    item: InventoryItemSchema.optional(),
+  })
+  .passthrough();
 
 export type EquipResponse = z.infer<typeof EquipResponseSchema>;
 

@@ -140,15 +140,19 @@ type SubRendererFn = (props: { item: CosmeticItem; size: number }) => React.JSX.
 
 const RENDERERS: Record<CosmeticType, SubRendererFn> = {
   avatar_border: BorderRenderer,
+  border: BorderRenderer,
+  animated_border: BorderRenderer,
   title: TitleRenderer,
   badge: BadgeRenderer,
   nameplate: NameplateRenderer,
   name_style: FallbackRenderer,
   chat_bubble: FallbackRenderer,
+  chat_effect: FallbackRenderer,
   theme: FallbackRenderer,
   profile_theme: FallbackRenderer,
   profile_effect: FallbackRenderer,
   profile_frame: FallbackRenderer,
+  avatar_frame: FallbackRenderer,
 };
 // Main component
 /**

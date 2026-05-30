@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { apiCall } from '../schemas/api-result';
 import {
   InventoryResponseSchema,
+  EquippedCosmeticsSchema,
   ShopResponseSchema,
   EquipResponseSchema,
   PurchaseResponseSchema,
@@ -26,6 +27,7 @@ import type {
   CosmeticType,
   InventoryItem,
   InventoryResponse,
+  EquippedCosmetics,
   ShopResponse,
   EquipResponse,
   PurchaseResponse,
@@ -49,6 +51,8 @@ export type {
   CosmeticItem,
   InventoryItem,
   InventoryResponse,
+  CatalogItemSummary,
+  EquippedCosmetics,
   ShopItem,
   ShopResponse,
   EquipResponse,
@@ -88,6 +92,11 @@ export function createCosmeticsEndpoints(http: AxiosInstance) {
         () => http.get('/api/v1/cosmetics/inventory', { params }),
         InventoryResponseSchema
       );
+    },
+
+    /** Get all currently equipped cosmetics for the current user. */
+    async getEquipped(): Promise<ApiResult<EquippedCosmetics>> {
+      return apiCall(() => http.get('/api/v1/cosmetics/equipped'), EquippedCosmeticsSchema);
     },
 
     /**

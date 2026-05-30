@@ -171,6 +171,8 @@ export type {
   AnimationType,
   UnlockType,
   CosmeticItem,
+  CatalogItemSummary,
+  EquippedCosmetics,
   InventoryItem,
   InventoryResponse,
   ShopItem,

@@ -6,6 +6,7 @@ import {
   isProfileThemeCategory,
   isProfileThemeId,
   isProfileThemeSurfacePattern,
+  type InventoryItem,
   type ProfileThemeConfig,
 } from './cosmetics';
 
@@ -44,5 +45,22 @@ describe('cosmetics shared contracts', () => {
     expect(isProfileThemeCategory('browser-only-card')).toBe(false);
     expect(isProfileThemeSurfacePattern('terminal-grid')).toBe(true);
     expect(isProfileThemeSurfacePattern('floating-particles')).toBe(false);
+  });
+
+  it('models public inventory rows without requiring internal user ownership fields', () => {
+    const item: InventoryItem = {
+      id: 'inventory-1',
+      itemType: 'border',
+      itemId: '11111111-1111-1111-1111-111111111111',
+      itemSlug: null,
+      itemKey: '11111111-1111-1111-1111-111111111111',
+      equippedAt: null,
+      obtainedAt: '2026-05-30T09:30:00Z',
+      obtainedVia: 'default',
+    };
+
+    expect(item.userId).toBeUndefined();
+    expect(item.itemType).toBe('border');
+    expect(item.itemKey).toBe(item.itemId);
   });
 });
