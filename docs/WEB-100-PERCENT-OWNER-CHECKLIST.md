@@ -180,6 +180,19 @@ proof after the reinstall/package-sync recovery. It does not close real
 provider delivery, paired QR/mobile approval, physical cross-device sync, or
 hosted Stripe settlement/webhooks.
 
+2026-05-31 package consumption proof: production web commit
+`cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from app-local
+`packages/*` mirrors to exact published npm dependencies
+`@cgraph-dev/*@1.0.1`, removes the mirror workspace and tsconfig path aliases,
+and replaces the mirror provenance gates with a published-package dependency
+guard. Verified with `pnpm check:packages`, `pnpm check:package-owner`,
+`pnpm --filter @cgraph/web typecheck`, `pnpm --filter @cgraph/web lint`,
+`pnpm --filter @cgraph/web check:release-gates` (400 Vitest files, 5,354
+tests), and `pnpm --filter @cgraph/web build:budget`. This closes the web side
+of the package phase-4 consumption move; it does not close real provider
+delivery, paired QR/mobile approval, physical cross-device sync, or hosted
+Stripe settlement/webhooks.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
@@ -605,12 +618,13 @@ Required implementation-time questions:
       It is not, by itself, proof that the split production repos have deployed.
 - [x] `/home/looter-admin/CGraphRepos/cgraph-backend` is the Fly.io backend production repo.
 - [x] `/home/looter-admin/CGraphRepos/cgraph-web` is the Vercel web production repo.
-- [x] `/home/looter-admin/CGraphRepos/cgraph-packages` is the canonical source owner for `@cgraph/*`
-      packages.
-- [x] App-local `packages/` folders are mirrors during the transition, not editable shared-package
-      owners.
-- [x] Shared-package changes start in `cgraph-packages`, then move to app repos through the
-      documented mirror or future versioned-package sync path.
+- [x] `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-packages` is the canonical source owner
+      for published `@cgraph-dev/*` packages.
+- [x] `cgraph-web` consumes exact published package versions; app-local
+      `packages/` folders are no longer allowed in the web production repo.
+- [x] Shared-package changes start in `cgraph-packages`, publish through the
+      package workflow, then move to app repos through the documented
+      versioned-package sync path.
 - [x] Production deployment only happens after the owning production repo receives the relevant
       committed change and its deploy platform is able to build it.
 - [x] Current package promotion order is the corrected order from

@@ -17,7 +17,7 @@ result.
 - [x] Web release gates pass for safe HTML, storage policy, import cycles,
       state-store caps, background polling, and auth-storage regressions.
 - [x] Web build and bundle budget pass.
-- [x] Package snapshot provenance is enforced by `pnpm check:packages`.
+- [x] Published package dependency provenance is enforced by `pnpm check:packages`.
 - [x] Full web Vitest suite is green and exits cleanly.
 - [x] Full web Vitest suite runs with one worker in release gates to avoid the
       Node/Vitest child-process teardown crash seen with parallel forks.
@@ -30,7 +30,8 @@ result.
 - [x] Backend Priority 0 and Priority 1 claims are tracked as external proof
       owned by `cgraph-backend`, not silently inferred from this web repository.
 - [x] Package release claims are tracked as external proof owned by
-      `cgraph-packages`; this repository enforces the pinned package snapshot.
+      `cgraph-packages`; this repository enforces pinned `@cgraph-dev/*`
+      package versions.
 
 ## Priority 0: Full Web Test Health
 
@@ -42,6 +43,35 @@ pnpm --filter @cgraph/web check:release-gates
 ```
 
 Latest proof:
+
+- Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
+- Verified commit:
+  `cd81332c14ecd5139b018399b8a170eaa4a8a90f`
+- Date: `2026-05-31T02:40:03+03:00`
+- Commands:
+  - `pnpm check:packages`
+  - `pnpm check:package-owner`
+  - `pnpm --filter @cgraph/web typecheck`
+  - `pnpm --filter @cgraph/web lint`
+  - `pnpm --filter @cgraph/web check:release-gates`
+  - `pnpm --filter @cgraph/web build:budget`
+- Result: web now consumes exact published npm dependencies
+  `@cgraph-dev/animation-constants@1.0.1`,
+  `@cgraph-dev/api-client@1.0.1`, `@cgraph-dev/design-tokens@1.0.1`,
+  `@cgraph-dev/shared-types@1.0.1`, and `@cgraph-dev/utils@1.0.1`.
+  Local app package mirrors and `packages/*` workspace membership are removed.
+  `check:packages` and `check:package-owner` now enforce exact package pins,
+  reject old `@cgraph/*` package dependencies, reject local package protocols,
+  reject local mirror path aliases, and reject a reintroduced `packages/`
+  mirror tree. Typecheck, lint, bundle budget, and release gates passed;
+  `check:release-gates` passed safe HTML, storage policy, import cycles,
+  state-store cap, background polling, auth-storage, and the serial unit suite
+  with 400 Vitest files and 5,354 tests.
+- Evidence class: local web proof for published package consumption. Production
+  smoke remains covered by the previous deployed baseline below until this
+  commit is deployed.
+
+Previous deployed-production baseline:
 
 - Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
 - Verified commit:
@@ -150,40 +180,52 @@ Required proof fields:
 
 ## Priority 2: Package Proof
 
-Shared package contracts belong to `cgraph-packages`. The web repository should
-consume a reviewed package snapshot and reject unproven snapshots. The local
-web gate enforces snapshot provenance; package build/type/test proof remains
-owned by `cgraph-packages`.
+Shared package contracts belong to `cgraph-packages`. The web repository now
+consumes reviewed public npm packages under `@cgraph-dev/*` and rejects local
+mirror or workspace-package consumption. Package build/type/test/publish proof
+remains owned by `cgraph-packages`.
 
-- [x] `packages/CGRAPH_PACKAGES_SNAPSHOT.json` records package provenance.
-- [x] `pnpm check:packages` rejects snapshots without canonical provenance.
-- [x] In `cgraph-packages`, record the current commit SHA.
-- [x] Run package platform, entrypoint, typecheck, and test gates.
+- [x] `apps/web/package.json` pins the reviewed `@cgraph-dev/*@1.0.1`
+      package set.
+- [x] `pnpm check:packages` rejects missing or non-exact package pins, old
+      `@cgraph/*` shared package dependencies, local package protocols,
+      reintroduced `packages/*` workspace membership, local mirror path aliases,
+      and a reintroduced `packages/` mirror tree.
+- [x] `pnpm check:package-owner` runs the same published-package dependency
+      guard in CI.
+- [x] App-local package mirrors are removed from `cgraph-web`.
+- [x] In `cgraph-packages`, record the publish commit SHA and npm workflow run.
+- [x] Run package platform, entrypoint, typecheck, test, dry-pack, and publish
+      gates.
 - [x] Confirm package entrypoints stay usable for web, mobile, and desktop.
 - [x] Record command output summary, date, and commit SHA.
-- [x] Confirm the web snapshot is pinned to the reviewed package commit.
+- [x] Confirm web is pinned to the reviewed published package versions.
 
 Required proof fields:
 
-- Repository: `/tmp/cgraph-packages-publish`
+- Repository: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-packages`
 - Owner repository: `cgraph-dev/cgraph-packages`
-- Commit: `bb0108396ca35b785be87823efed5705e56109ef`
-- Date: `2026-05-11T03:36:33+03:00`
+- Release-record commit: `702a97a75a791ad5e37c37746c1205d8b5a07299`
+- Published package workflow head:
+  `376cc4cd3a5e600b8298841ed1658352b912001b`
+- Web consumption commit: `cd81332c14ecd5139b018399b8a170eaa4a8a90f`
+- Date: `2026-05-31T02:40:03+03:00`
 - Commands:
+  - GitHub Actions run `26697544784` in `cgraph-dev/cgraph-packages`
   - `pnpm check:platform`
   - `pnpm build`
   - `pnpm typecheck`
   - `pnpm test`
-  - `pnpm pack:dry`
+  - `pnpm release:verify`
   - `pnpm check:packages` in `cgraph-web`
-- Result: platform boundary and public entrypoint gates pass; all packages build
-  and typecheck; package tests pass with 46 total tests across crypto, utils,
-  and api-client plus pass-with-no-tests packages; dry package packing succeeds
-  for every public package; `packages/CGRAPH_PACKAGES_SNAPSHOT.json` in
-  `cgraph-web` pins `cgraph-dev/cgraph-packages` at
-  `bb0108396ca35b785be87823efed5705e56109ef`.
-- Evidence class: refreshed external package proof plus local web snapshot
-  enforcement.
+- Result: public npm packages `@cgraph-dev/animation-constants`,
+  `@cgraph-dev/api-client`, `@cgraph-dev/design-tokens`,
+  `@cgraph-dev/shared-types`, and `@cgraph-dev/utils` are published and
+  verified at `1.0.1`; the web repo consumes those exact versions from npm,
+  removes local mirrors, and passes the published-package dependency guard plus
+  typecheck, lint, release gates, and bundle budget.
+- Evidence class: refreshed external package publish proof plus local web
+  published-package enforcement.
 
 ## Priority 3: HTML Safety
 
@@ -345,7 +387,7 @@ pnpm --filter @cgraph/web smoke:production
 The release gate covers safe HTML sinks, storage policy, import cycles,
 state-store caps, background polling, auth-storage regressions, and the full
 web unit suite. The broader verification set also covers bundle budget,
-package snapshot provenance, and the production smoke path.
+published package dependency provenance, and the production smoke path.
 
 ## Operating Rules
 

@@ -856,6 +856,22 @@ updates local/live release-hardening proof only; real provider delivery, paired
 QR/mobile approval, physical second-device validation, and hosted Stripe
 settlement remain open.
 
+2026-05-31 package consumption proof: production web commit
+`cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from local
+`packages/*` mirrors to exact published npm dependencies
+`@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.0.1`,
+`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.1`, and
+`@cgraph-dev/utils@1.0.1`. The commit removes the mirror workspace and path
+aliases, replaces the old snapshot/mirror gates with a published-package
+dependency guard, and was verified with `pnpm check:packages`,
+`pnpm check:package-owner`, `pnpm --filter @cgraph/web typecheck`,
+`pnpm --filter @cgraph/web lint`, `pnpm --filter @cgraph/web check:release-gates`
+with 400 Vitest files and 5,354 tests, and
+`pnpm --filter @cgraph/web build:budget`. This improves package ownership and
+sync trust but keeps the score unchanged because real provider delivery,
+paired QR/mobile approval, physical second-device validation, and hosted Stripe
+settlement remain open.
+
 Equal-weight release-readiness score: `84.1%`.
 
 Truthful rounded Goal 2 completion: `84%`.
