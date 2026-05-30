@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 
 /**
  * Main Social Hub Landing State

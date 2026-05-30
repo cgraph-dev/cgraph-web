@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRightIcon, ExclamationTriangleIcon, TicketIcon } from '@heroicons/react/24/outline';
-import type { GroupInvite } from '@cgraph/api-client';
+import type { GroupInvite } from '@cgraph-dev/api-client';
 import { apiClient } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { HapticFeedback } from '@/lib/animations/animation-engine';

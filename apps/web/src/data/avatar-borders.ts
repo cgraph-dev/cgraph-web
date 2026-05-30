@@ -1,7 +1,7 @@
 /**
  * Avatar Border Definitions — 11 Lottie Borders
  *
- * Re-exports canonical border data from @cgraph/animation-constants and
+ * Re-exports canonical border data from @cgraph-dev/animation-constants and
  * provides web-specific adapters (Tailwind CSS classes, legacy types)
  * for existing UI components.
  */
@@ -13,12 +13,12 @@ export {
   getAvatarBordersByRarity as getBordersByRarity,
   getFreeAvatarBorders as getFreeBorders,
   getPremiumAvatarBorders as getPremiumBorders,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 
 // Re-export types — BorderRarity comes from the shared package,
 // AvatarBorderConfig from the local types file for full compatibility
 // with consumers that mix both import sources.
-export type { BorderRarity } from '@cgraph/animation-constants';
+export type { BorderRarity } from '@cgraph-dev/animation-constants';
 export type { AvatarBorderConfig } from '@/types/avatar-borders';
 
 import {
@@ -26,7 +26,7 @@ import {
   type AvatarBorderConfig,
   type AvatarBorderTheme,
   type BorderRarity,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 
 // Re-export AvatarBorderTheme as BorderTheme for backward compatibility
 // with web consumers that import BorderTheme from this file.

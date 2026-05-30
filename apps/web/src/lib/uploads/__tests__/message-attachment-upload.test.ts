@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES } from '@cgraph/shared-types';
+import { MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES } from '@cgraph-dev/shared-types';
 import { apiClient, http } from '@/lib/api-client';
 import { uploadMessageAttachment } from '../message-attachment-upload';
 

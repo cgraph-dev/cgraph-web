@@ -1,7 +1,7 @@
 /** Message Bubble — memoized message display with media, reactions, and actions. */
 
 import { useState, memo } from 'react';
-import type { Achievement, AchievementRarity } from '@cgraph/shared-types';
+import type { Achievement, AchievementRarity } from '@cgraph-dev/shared-types';
 import { motion } from 'motion/react';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { Lock, ShieldAlert } from 'lucide-react';

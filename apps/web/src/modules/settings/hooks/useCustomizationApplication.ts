@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 import {
   normalizeChatBubbleStyleId,
   type ChatBubblePresetId,
-} from '@cgraph/design-tokens';
+} from '@cgraph-dev/design-tokens';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 
 /**

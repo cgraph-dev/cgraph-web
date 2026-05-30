@@ -2,7 +2,7 @@
  * Bundle card component — displays a node bundle for purchase.
  */
 import { cn } from '@/lib/utils';
-import type { Bundle } from '@cgraph/api-client';
+import type { Bundle } from '@cgraph-dev/api-client';
 
 interface BundleCardProps {
   bundle: Bundle;

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { RegisteredContact, ContactSyncStatus } from '@cgraph/shared-types';
+import type { RegisteredContact, ContactSyncStatus } from '@cgraph-dev/shared-types';
 
 interface ContactState {
   readonly contacts: readonly RegisteredContact[];

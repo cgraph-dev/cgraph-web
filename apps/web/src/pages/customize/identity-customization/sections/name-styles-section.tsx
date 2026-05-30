@@ -18,7 +18,7 @@ import {
   NAME_COLORS,
   type NameFont,
   type NameEffect,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 import { GlassCard } from '@/shared/components/ui';
 import { tweens } from '@/lib/animation-presets';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';

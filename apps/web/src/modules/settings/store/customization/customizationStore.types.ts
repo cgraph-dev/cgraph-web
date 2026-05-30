@@ -5,7 +5,7 @@
  * extracted from customizationStore.ts.
  *
  */
-import type { ChatBubblePresetId } from '@cgraph/design-tokens';
+import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
 
 // TYPES
 

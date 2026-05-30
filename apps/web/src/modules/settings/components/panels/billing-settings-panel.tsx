@@ -23,7 +23,7 @@ import { apiClient } from '@/lib/api-client';
 import { safeRedirect } from '@/lib/security';
 import { toast, GlassCard } from '@/shared/components/ui';
 import { tweens, springs, entranceVariants } from '@/lib/animation-presets';
-import type { InvoiceRecord } from '@cgraph/api-client';
+import type { InvoiceRecord } from '@cgraph-dev/api-client';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { createLogger } from '@/lib/logger';

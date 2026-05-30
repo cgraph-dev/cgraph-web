@@ -2,7 +2,7 @@
  * ProfileCard - Type Definitions
  */
 
-import type { Achievement } from '@cgraph/shared-types';
+import type { Achievement } from '@cgraph-dev/shared-types';
 
 import type {
   ProfileTheme,

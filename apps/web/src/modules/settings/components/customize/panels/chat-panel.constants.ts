@@ -1,7 +1,7 @@
 /**
  * Chat customization panel constants.
  */
-import { chatBubblePresets, type ChatBubblePresetId } from '@cgraph/design-tokens';
+import { chatBubblePresets, type ChatBubblePresetId } from '@cgraph-dev/design-tokens';
 import type { ChatBubbleStyle, BubbleAnimation } from '@/modules/settings/store/customization';
 
 const bubbleIcons = {

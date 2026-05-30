@@ -6,7 +6,7 @@
  * Mirrors Telegram's poll rendering with quiz mode support.
  */
 import { useState, type ReactNode } from 'react';
-import type { ChatPoll, VotePollParams } from '@cgraph/shared-types';
+import type { ChatPoll, VotePollParams } from '@cgraph-dev/shared-types';
 import { PollResultsBar } from './poll-results-bar';
 import { cn } from '@/lib/utils';
 

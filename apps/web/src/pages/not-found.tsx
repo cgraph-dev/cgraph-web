@@ -1,5 +1,5 @@
 /** NotFound — 404 page with animated illustration and navigation links. */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';

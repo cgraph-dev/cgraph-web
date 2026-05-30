@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { CheckIcon, PlusIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
-import type { BadgeConfig } from '@cgraph/shared-types';
+import type { BadgeConfig } from '@cgraph-dev/shared-types';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('BadgeManager');

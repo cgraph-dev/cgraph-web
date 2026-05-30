@@ -11,7 +11,7 @@ vi.mock('../../hooks/useNodes', () => ({
   useNodeWallet: mockUseNodeWallet,
 }));
 
-vi.mock('@cgraph/shared-types/nodes', () => ({
+vi.mock('@cgraph-dev/shared-types/nodes', () => ({
   MIN_TIP: 10,
 }));
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { EquipPanel } from '../equip-panel';
-import type { CosmeticItem, Entitlement, CosmeticSku } from '@cgraph/shared-types';
+import type { CosmeticItem, Entitlement, CosmeticSku } from '@cgraph-dev/shared-types';
 
 // Helpers
 

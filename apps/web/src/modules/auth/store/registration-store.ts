@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Country, Tokens } from '@cgraph/api-client';
+import type { Country, Tokens } from '@cgraph-dev/api-client';
 import {
   PHONE_REGISTRATION_CODE_EXPIRY_SECONDS,
   PHONE_REGISTRATION_OTP_LENGTH,
@@ -9,7 +9,7 @@ import {
   formatPhoneEntryValue,
   isPlausiblePhoneNumber,
   normalizePhoneNumber as normalizePhoneToE164,
-} from '@cgraph/utils';
+} from '@cgraph-dev/utils';
 import { apiClient, http } from '@/lib/api-client';
 import { useAuthStore } from './authStore.impl';
 import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';

@@ -3,7 +3,7 @@
  *
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 // SPRING CONFIGS
 export const SPRING_SCALE = { stiffness: 400, damping: 15 } as const;
 export const SPRING_ROTATE = { stiffness: 300, damping: 20 } as const;

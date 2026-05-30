@@ -3,16 +3,16 @@
  * Re-exports shared types and adds component-specific interfaces.
  */
 
-export type { BodyRange, BodyRangeStyle, DisplayNode, RangeNode } from '@cgraph/shared-types';
+export type { BodyRange, BodyRangeStyle, DisplayNode, RangeNode } from '@cgraph-dev/shared-types';
 
 export interface FormattedTextProps {
   readonly content: string;
-  readonly bodyRanges: ReadonlyArray<import('@cgraph/shared-types').BodyRange>;
+  readonly bodyRanges: ReadonlyArray<import('@cgraph-dev/shared-types').BodyRange>;
   readonly className?: string;
 }
 
 export interface SpoilerTextProps {
-  readonly nodes: ReadonlyArray<import('@cgraph/shared-types').DisplayNode>;
+  readonly nodes: ReadonlyArray<import('@cgraph-dev/shared-types').DisplayNode>;
   readonly spoilerId: number;
 }
 

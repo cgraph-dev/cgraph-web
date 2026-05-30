@@ -3,7 +3,7 @@
  * CSS border system has been removed; all borders use the Lottie system via ThemedAvatar.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion, AnimatePresence } from 'motion/react';
 
 import type { AnimatedAvatarProps } from './types';

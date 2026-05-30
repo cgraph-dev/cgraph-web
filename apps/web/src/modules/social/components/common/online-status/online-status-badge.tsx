@@ -1,7 +1,7 @@
 /**
  * Online status badge indicator.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 import { springs } from '@/lib/animation-presets';
 import { type OnlineStatus, statusConfig, glowColors, formatLastActiveLong } from './types';

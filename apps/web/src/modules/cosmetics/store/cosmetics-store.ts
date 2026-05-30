@@ -8,15 +8,15 @@
  */
 
 import { create } from 'zustand';
-import type { CosmeticItem, UserCosmeticInventory, Entitlement } from '@cgraph/shared-types';
+import type { CosmeticItem, UserCosmeticInventory, Entitlement } from '@cgraph-dev/shared-types';
 import type {
   MarketplaceListing,
   CosmeticBundle,
   InventoryItem,
   MarketplaceFilters,
-} from '@cgraph/shared-types';
-import type { UserProgression, UnlockEntry, UpcomingUnlock } from '@cgraph/shared-types';
-import type { ProfileEffect, AvatarFrame, AnimatedBorder } from '@cgraph/api-client';
+} from '@cgraph-dev/shared-types';
+import type { UserProgression, UnlockEntry, UpcomingUnlock } from '@cgraph-dev/shared-types';
+import type { ProfileEffect, AvatarFrame, AnimatedBorder } from '@cgraph-dev/api-client';
 import type { ProfileUpdatedEvent } from '@/lib/socket/cosmetic-events';
 import { apiClient, http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';

@@ -19,7 +19,7 @@ vi.mock('phoenix', () => {
   return { Socket: MockSocket, Channel: vi.fn(), Presence: vi.fn() };
 });
 
-vi.mock('@cgraph/utils', () => ({
+vi.mock('@cgraph-dev/utils', () => ({
   exponentialBackoffWithJitter: vi.fn(() => () => 1000),
 }));
 

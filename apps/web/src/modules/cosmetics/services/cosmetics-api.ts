@@ -15,7 +15,7 @@ import type {
   RarityTier,
   AnimationType,
   UnlockType,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 // API response types (match backend serializer output)
 interface ApiBorder {
   id: string;

@@ -7,7 +7,7 @@
  * - Custom color overrides
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { memo, useMemo, useRef, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';

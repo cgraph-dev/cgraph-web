@@ -13,7 +13,7 @@ import type {
   TranscriptionCompleteEvent,
   TranscriptionFailedEvent,
   TranscriptionProcessingEvent,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 import type { Channel } from 'phoenix';
 
 const logger = createLogger('Transcription');

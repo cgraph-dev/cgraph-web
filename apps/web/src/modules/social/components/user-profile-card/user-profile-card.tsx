@@ -9,7 +9,7 @@
  * continue to work without modification.
  */
 
-import type { Achievement } from '@cgraph/shared-types';
+import type { Achievement } from '@cgraph-dev/shared-types';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createPortal } from 'react-dom';

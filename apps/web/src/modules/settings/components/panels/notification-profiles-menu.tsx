@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { ClockIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { tweens } from '@/lib/animation-presets';
-import type { NotificationProfile } from '@cgraph/shared-types';
+import type { NotificationProfile } from '@cgraph-dev/shared-types';
 
 const DURATION_OPTIONS = [
   { label: 'Enable for 1 hour', minutes: 60 },

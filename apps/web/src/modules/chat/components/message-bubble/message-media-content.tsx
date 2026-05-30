@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { getNodesActionFeedback } from '@/modules/nodes/utils/nodes-error-feedback';
 
 import { ContactCardMessage } from '@/modules/chat/components/contact-card-message';
-import type { ContactCardData } from '@cgraph/shared-types';
+import type { ContactCardData } from '@cgraph-dev/shared-types';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
 import type { UIPreferences } from './types';
 

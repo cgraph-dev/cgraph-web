@@ -6,7 +6,7 @@
  *
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PhoneIcon, VideoCameraIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';

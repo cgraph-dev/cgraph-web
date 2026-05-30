@@ -16,7 +16,7 @@ import { AnimatedReactionBubble } from './animated-reaction-bubble';
 import { TypingIndicator } from './typing-indicator';
 import { MessageBubble, type UIPreferences } from './message-bubble';
 import { MediaAlbum } from './media-album';
-import type { MediaAlbumItem } from '@cgraph/shared-types';
+import type { MediaAlbumItem } from '@cgraph-dev/shared-types';
 /** Album group: consecutive messages sharing the same albumId. */
 interface AlbumGroup {
   readonly type: 'album';

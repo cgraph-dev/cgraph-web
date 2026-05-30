@@ -2,8 +2,8 @@
  * ProfileContent - Avatar, name, title, status, badges, and XP bar
  */
 
-import { durations, NAME_FONTS } from '@cgraph/animation-constants';
-import type { NameFont } from '@cgraph/animation-constants';
+import { durations, NAME_FONTS } from '@cgraph-dev/animation-constants';
+import type { NameFont } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 
 function isNameFont(value: string): value is NameFont {

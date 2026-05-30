@@ -8,7 +8,7 @@
  */
 import type { TargetAndTransition, Transition } from 'motion/react';
 import { useReducedMotion, useAnimationIntensity, getMotionTransition } from './useReducedMotion';
-import { springs as sharedSprings } from '@cgraph/animation-constants';
+import { springs as sharedSprings } from '@cgraph-dev/animation-constants';
 
 export interface MotionSafeResult {
   /** Whether animations should play at all */

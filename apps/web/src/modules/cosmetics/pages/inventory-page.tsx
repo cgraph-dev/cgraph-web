@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import type { Entitlement, EntitlementType } from '@cgraph/shared-types';
+import type { Entitlement, EntitlementType } from '@cgraph-dev/shared-types';
 import { useCosmeticsStore } from '../store/cosmetics-store';
 import { EntitlementBadge } from '../components/entitlement-badge';
 import { FADE_IN } from '@/lib/animations/transitions';

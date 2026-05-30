@@ -4,12 +4,12 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { EyeIcon } from '@heroicons/react/24/outline';
-import type { SelectivePrivacyMode, SelectivePrivacyRule } from '@cgraph/shared-types';
+import type { SelectivePrivacyMode, SelectivePrivacyRule } from '@cgraph-dev/shared-types';
 import {
   DEFAULT_SELECTIVE_PRIVACY_SETTINGS,
   normalizeSelectivePrivacyRule,
   normalizeSelectivePrivacySettings,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 import { useSettingsStore } from '@/modules/settings/store';
 import { toast } from '@/shared/components/ui';
 import { GlassCard } from '@/shared/components/ui';

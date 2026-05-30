@@ -9,7 +9,7 @@
  * (12 MP, ~8 MB) compress to ~500 KB WebP before leaving the device.
  */
 
-import type { CompressOptions, CompressedImage } from '@cgraph/shared-types';
+import type { CompressOptions, CompressedImage } from '@cgraph-dev/shared-types';
 import { logger } from '@/lib/logger';
 
 const DEFAULT_MAX_DIMENSION = 4096;

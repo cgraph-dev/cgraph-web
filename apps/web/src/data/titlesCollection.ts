@@ -3,15 +3,15 @@
  *
  * Older web surfaces import `titlesCollection` and expect Tailwind classes,
  * grouped categories, and a simplified `TitleDefinition` shape. The canonical
- * catalogue now lives in `@cgraph/animation-constants` so web, mobile, profile
+ * catalogue now lives in `@cgraph-dev/animation-constants` so web, mobile, profile
  * cards, and settings all render the same title IDs.
  */
 
 import {
   TITLES as SHARED_TITLES,
   TITLE_RARITY_COLORS as SHARED_TITLE_RARITY_COLORS,
-} from '@cgraph/animation-constants';
-import type { Title } from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
+import type { Title } from '@cgraph-dev/animation-constants';
 
 export type TitleRarity = (typeof SHARED_TITLES)[number]['rarity'];
 export type TitleAnimationType = (typeof SHARED_TITLES)[number]['animation']['type'];

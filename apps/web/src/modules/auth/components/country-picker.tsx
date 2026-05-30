@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import type { Country } from '@cgraph/api-client';
+import type { Country } from '@cgraph-dev/api-client';
 import { usePhoneRegistrationStore } from '@/modules/auth/store/registration-store';
 
 type CountrySection = {

@@ -286,7 +286,7 @@ export const useActiveForumTheme = () => {
 };
 // CUSTOMIZATION STATE (55 options, 8 categories)
 import { create } from 'zustand';
-import type { ForumCustomizationOptions, CustomizationCategory } from '@cgraph/shared-types';
+import type { ForumCustomizationOptions, CustomizationCategory } from '@cgraph-dev/shared-types';
 
 interface CustomizationState {
   options: ForumCustomizationOptions | null;

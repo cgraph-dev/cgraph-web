@@ -1,14 +1,14 @@
 /**
  * Profile showcase display components.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { SparklesIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { rarityColors, defaultRarityColor } from '@/types/profile.types';
-import type { Achievement } from '@cgraph/shared-types';
+import type { Achievement } from '@cgraph-dev/shared-types';
 
 interface EquippedBadgesShowcaseProps {
   equippedBadges: readonly string[];

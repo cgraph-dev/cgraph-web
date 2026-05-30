@@ -12,4 +12,4 @@ export {
   type TitleCategory,
   type TitleAnimation,
   type TitleAnimationType,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';

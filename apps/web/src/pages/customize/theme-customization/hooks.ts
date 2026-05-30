@@ -2,7 +2,7 @@
  * Custom hooks for ThemeCustomization
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';

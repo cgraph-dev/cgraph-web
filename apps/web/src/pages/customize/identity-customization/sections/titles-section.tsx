@@ -4,7 +4,7 @@
  * Displays the titles selection list with animations.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { EyeIcon, LockClosedIcon } from '@heroicons/react/24/outline';

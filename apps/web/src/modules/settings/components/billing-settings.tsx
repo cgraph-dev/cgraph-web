@@ -15,7 +15,7 @@ import { createLogger } from '@/lib/logger';
 const logger = createLogger('BillingSettings');
 import { apiClient } from '@/lib/api-client';
 import { safeRedirect } from '@/lib/security';
-import type { BillingStatus, InvoiceRecord } from '@cgraph/api-client';
+import type { BillingStatus, InvoiceRecord } from '@cgraph-dev/api-client';
 import { PLANS, type PlanId } from '@/lib/stripe';
 import { usePremiumStore } from '@/modules/premium/store';
 

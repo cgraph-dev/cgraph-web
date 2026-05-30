@@ -9,7 +9,7 @@
  * - Animated hover effects
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';

@@ -1,7 +1,7 @@
 /**
  * Premium hero-style banner component.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import React from 'react';
 import { motion } from 'motion/react';
 import { SparklesIcon, XMarkIcon, StarIcon } from '@heroicons/react/24/outline';

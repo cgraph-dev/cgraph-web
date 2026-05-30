@@ -1,7 +1,7 @@
 /**
  * User registration page.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { OAuthButtonGroup } from '@/modules/auth/components/o-auth-buttons';

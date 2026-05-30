@@ -22,14 +22,14 @@ import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { createLogger } from '@/lib/logger';
 import { useNotificationProfileStore } from '@/modules/settings/store/notification-profile-store';
-import type { DayOfWeek } from '@cgraph/shared-types';
+import type { DayOfWeek } from '@cgraph-dev/shared-types';
 import {
   ALL_DAYS,
   DAY_LETTERS,
   WEEKDAYS,
   hhmmToTimeInput,
   timeInputToHhmm,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 
 const logger = createLogger('NotificationProfileEditor');
 

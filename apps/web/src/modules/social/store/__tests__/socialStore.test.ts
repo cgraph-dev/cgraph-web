@@ -5,7 +5,7 @@ import { useNotificationStore } from '../notificationStore.impl';
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
 }));
-vi.mock('@cgraph/utils', () => ({ createIdempotencyKey: () => 'idem-1' }));
+vi.mock('@cgraph-dev/utils', () => ({ createIdempotencyKey: () => 'idem-1' }));
 vi.mock('@/lib/apiUtils', () => ({
   ensureArray: (_d: unknown, key: string) => {
     if (Array.isArray(_d)) return _d;

@@ -1,7 +1,7 @@
 /**
  * API client configuration and base utilities.
  */
-import { createHttpClient, extractApiError, CircuitBreaker, CircuitOpenError } from '@cgraph/utils';
+import { createHttpClient, extractApiError, CircuitBreaker, CircuitOpenError } from '@cgraph-dev/utils';
 import {
   getAccessToken,
   getRefreshToken,

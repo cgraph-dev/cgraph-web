@@ -1,7 +1,7 @@
 /**
  * Auth page floating icons animation.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { memo } from 'react';
 import { motion } from 'motion/react';
 import { prefersReducedMotion, DEFAULT_COLOR, SECURITY_ICONS } from './constants';

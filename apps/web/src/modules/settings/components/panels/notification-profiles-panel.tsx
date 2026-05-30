@@ -15,8 +15,8 @@ import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { useNotificationProfileStore } from '@/modules/settings/store/notification-profile-store';
 import { NotificationProfilesMenu } from './notification-profiles-menu';
-import type { NotificationProfile } from '@cgraph/shared-types';
-import { hhmmToDisplayString } from '@cgraph/shared-types';
+import type { NotificationProfile } from '@cgraph-dev/shared-types';
+import { hhmmToDisplayString } from '@cgraph-dev/shared-types';
 
 function getScheduleStatusLabel(profile: NotificationProfile, activeId: string | null): string {
   if (activeId === profile.id) {

@@ -68,8 +68,8 @@ function getPackageNameFromModuleId(id) {
   return segments[0] || null;
 }
 
-function isWorkspacePackageModule(id, packageName) {
-  return normalizeModuleId(id).includes(`/packages/${packageName}/`);
+function isPublishedCgraphPackageModule(id, packageName) {
+  return getPackageNameFromModuleId(id) === `@cgraph-dev/${packageName}`;
 }
 
 const coverageMinimum = Number(process.env.WEB_COVERAGE_MIN ?? 65);
@@ -158,11 +158,11 @@ export default defineConfig({
             return 'app-runtime';
           }
 
-          // Workspace packages that heavily contribute to common index chunks.
-          if (isWorkspacePackageModule(normalizedId, 'api-client')) {
+          // Published shared packages that heavily contribute to common index chunks.
+          if (isPublishedCgraphPackageModule(normalizedId, 'api-client')) {
             return 'api-client';
           }
-          if (isWorkspacePackageModule(normalizedId, 'animation-constants')) {
+          if (isPublishedCgraphPackageModule(normalizedId, 'animation-constants')) {
             return 'animation-constants';
           }
 

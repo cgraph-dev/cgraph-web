@@ -48,7 +48,7 @@ vi.mock('@/lib/lottie', () => ({
   AnimatedEmoji: ({ emoji }: { emoji: string }) => <span>{emoji}</span>,
 }));
 
-vi.mock('@cgraph/animation-constants', () => ({
+vi.mock('@cgraph-dev/animation-constants', () => ({
   durations: { loop: { ms: 2000 } },
 }));
 

@@ -2,7 +2,7 @@
  * Transaction row component — displays a single node transaction.
  */
 import { cn } from '@/lib/utils';
-import type { Transaction } from '@cgraph/api-client';
+import type { Transaction } from '@cgraph-dev/api-client';
 
 const typeConfig: Record<string, { label: string; icon: string; colorClass: string }> = {
   purchase: { label: 'Purchase', icon: '💎', colorClass: 'text-green-500' },
@@ -18,7 +18,7 @@ const typeConfig: Record<string, { label: string; icon: string; colorClass: stri
 const fallbackConfig = { label: 'Transaction', icon: '📝', colorClass: 'text-zinc-400' };
 
 interface TransactionRowProps {
-  /** Accepts Transaction from @cgraph/api-client; the type field may include
+  /** Accepts Transaction from @cgraph-dev/api-client; the type field may include
    *  values not yet in our local union so all transaction types are supported. */
   transaction: Transaction;
 }

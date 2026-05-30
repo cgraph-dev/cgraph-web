@@ -12,7 +12,7 @@ import type {
   CosmeticType,
   EntitlementType,
   EntitlementSource,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 // API response shapes (match backend serializer output)
 interface ApiCosmeticSku {
   readonly id: string;

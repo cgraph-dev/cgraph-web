@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { type TargetAndTransition, type Transition, motion } from 'motion/react';
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 
 import { cn } from '@/lib/utils';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';

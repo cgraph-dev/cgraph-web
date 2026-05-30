@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { FocusTrap } from '@/shared/components/accessibility';
 import { useSendGift, useNodeWallet } from '../hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
-import { MIN_TIP, PLATFORM_CUT_PERCENT } from '@cgraph/shared-types/nodes';
+import { MIN_TIP, PLATFORM_CUT_PERCENT } from '@cgraph-dev/shared-types/nodes';
 import toast from 'react-hot-toast';
 
 const MIN_GIFT = MIN_TIP;

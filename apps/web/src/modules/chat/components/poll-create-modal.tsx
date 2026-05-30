@@ -7,7 +7,7 @@
  */
 import { useState, type ReactNode } from 'react';
 import { motion } from 'motion/react';
-import type { CreatePollParams } from '@cgraph/shared-types';
+import type { CreatePollParams } from '@cgraph-dev/shared-types';
 import { cn } from '@/lib/utils';
 
 interface PollCreateModalProps {

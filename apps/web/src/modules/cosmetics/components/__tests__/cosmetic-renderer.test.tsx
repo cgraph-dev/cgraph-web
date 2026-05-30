@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CosmeticRenderer } from '../cosmetic-renderer';
-import type { CosmeticItem, CosmeticType } from '@cgraph/shared-types';
+import type { CosmeticItem, CosmeticType } from '@cgraph-dev/shared-types';
 
 // Helpers
 

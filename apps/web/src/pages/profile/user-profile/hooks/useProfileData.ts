@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
 import { identityFieldsFromApi } from '@/lib/identity';
-import type { Achievement } from '@cgraph/shared-types';
+import type { Achievement } from '@cgraph-dev/shared-types';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
 
 const logger = createLogger('useProfileData');

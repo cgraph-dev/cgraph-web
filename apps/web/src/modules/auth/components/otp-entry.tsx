@@ -16,7 +16,7 @@ import {
   applyOtpPaste,
   replaceOtpDigit,
   splitOtpCode,
-} from '@cgraph/utils';
+} from '@cgraph-dev/utils';
 import { usePhoneRegistrationStore } from '@/modules/auth/store/registration-store';
 import {
   TurnstileWidget,

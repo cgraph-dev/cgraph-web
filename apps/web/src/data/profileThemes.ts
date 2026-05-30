@@ -2,7 +2,7 @@
  * Canonical profile theme catalog.
  *
  * The seven themes below are the only selectable profile themes in web. They
- * share the runtime-neutral contract from @cgraph/shared-types and are rendered
+ * share the runtime-neutral contract from @cgraph-dev/shared-types and are rendered
  * differently by the full profile, hover card, and customization preview card.
  */
 
@@ -10,13 +10,13 @@ import {
   PROFILE_THEME_CATEGORIES as PROFILE_THEME_CATEGORY_IDS,
   PROFILE_THEME_IDS,
   isProfileThemeId,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 import type {
   ProfileThemeCategory,
   ProfileThemeConfig,
   ProfileThemeId,
   ProfileThemeTier,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 
 export { PROFILE_THEME_CATEGORY_IDS, PROFILE_THEME_IDS };
 export type { ProfileThemeCategory, ProfileThemeConfig, ProfileThemeId, ProfileThemeTier };

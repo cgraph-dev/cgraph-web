@@ -2,7 +2,7 @@
  * Animation keyframes and constants for avatar borders
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import type { BorderTheme } from '@/types/avatar-borders';
 import type { BorderColors } from './types';
 export const ANIMATION_KEYFRAMES = {

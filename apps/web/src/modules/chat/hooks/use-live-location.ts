@@ -15,7 +15,7 @@ import type {
   LiveLocationUpdate,
   ProximityAlert,
   StartLocationShareParams,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 
 import { logger } from '@/lib/logger';
 

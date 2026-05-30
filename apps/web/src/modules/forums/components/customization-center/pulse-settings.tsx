@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { CheckIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { isRecord, asString, asNumber } from '@/lib/api-utils';
-import type { RankThreshold } from '@cgraph/shared-types';
+import type { RankThreshold } from '@cgraph-dev/shared-types';
 
 interface PulseSettingsProps {
   options: Record<string, unknown>;

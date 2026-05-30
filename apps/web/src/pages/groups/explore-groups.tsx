@@ -19,7 +19,7 @@ import {
 import { useGroupStore } from '@/modules/groups/store';
 import type { Group } from '@/modules/groups/store';
 import { GlassCard } from '@/shared/components/ui';
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { tweens, loop, springs } from '@/lib/animation-presets';
 import { captureError } from '@/lib/error-tracking';
 import { NodeGateModal } from '@/modules/groups/components/node-gate-modal';

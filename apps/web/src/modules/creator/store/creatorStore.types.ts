@@ -27,7 +27,7 @@ import type {
   PayoutEstimate,
   ConnectOnboarding,
   RefundResult,
-} from '@cgraph/api-client';
+} from '@cgraph-dev/api-client';
 
 // Re-export schema types for convenience
 export type {

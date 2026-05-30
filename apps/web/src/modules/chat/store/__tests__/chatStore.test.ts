@@ -8,7 +8,7 @@ vi.mock('@/lib/api', () => ({
 vi.mock('@/modules/auth/store', () => ({
   useAuthStore: { getState: vi.fn(() => ({ user: { id: 'me' } })) },
 }));
-vi.mock('@cgraph/utils', () => ({ createIdempotencyKey: () => 'idem-key-1' }));
+vi.mock('@cgraph-dev/utils', () => ({ createIdempotencyKey: () => 'idem-key-1' }));
 vi.mock('@/lib/api-utils', () => ({
   ensureArray: (_d: unknown, key: string) => {
     if (Array.isArray(_d)) return _d;

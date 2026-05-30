@@ -28,7 +28,7 @@ export type {
   ContentAnalyticsEnhanced,
   RevenueBreakdownData,
   SubscriberGrowthData,
-} from '@cgraph/api-client';
+} from '@cgraph-dev/api-client';
 
 export interface TopContentEntry {
   readonly threadId: string;

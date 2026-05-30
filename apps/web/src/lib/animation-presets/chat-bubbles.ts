@@ -4,12 +4,12 @@
  * Chat bubble animation configurations for different bubble styles.
  */
 
-import { durations, springs as sharedSprings, stagger } from '@cgraph/animation-constants';
+import { durations, springs as sharedSprings, stagger } from '@cgraph-dev/animation-constants';
 import {
   normalizeChatBubbleAnimationId,
   type ChatBubbleAnimationId,
   type ChatBubbleLegacyStyleId,
-} from '@cgraph/design-tokens';
+} from '@cgraph-dev/design-tokens';
 import { type Transition, type TargetAndTransition } from 'motion/react';
 
 import { springs } from './presets';

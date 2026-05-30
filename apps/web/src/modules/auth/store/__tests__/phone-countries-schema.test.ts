@@ -5,7 +5,7 @@ import {
   PhoneVerifyResponseSchema,
   apiCall,
   registrationLockSuccessSchema,
-} from '@cgraph/api-client';
+} from '@cgraph-dev/api-client';
 import { z } from 'zod';
 
 const countries = [

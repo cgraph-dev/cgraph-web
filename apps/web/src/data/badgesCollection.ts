@@ -6,4 +6,4 @@ export {
   getUnlockedBadges,
   type BadgeDefinition,
   type BadgeRarity,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';

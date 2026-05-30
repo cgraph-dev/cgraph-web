@@ -6,8 +6,8 @@
  * - 4+ items: 2-column grid
  */
 import type { ReactNode } from 'react';
-import type { MediaAlbumItem } from '@cgraph/shared-types';
-import { computeAlbumLayout } from '@cgraph/shared-types';
+import type { MediaAlbumItem } from '@cgraph-dev/shared-types';
+import { computeAlbumLayout } from '@cgraph-dev/shared-types';
 
 interface MediaAlbumProps {
   readonly items: ReadonlyArray<MediaAlbumItem>;

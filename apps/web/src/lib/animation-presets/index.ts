@@ -21,7 +21,7 @@ export {
   typingIndicatorVariants,
 } from './chat-bubbles';
 export type { ChatBubbleStyleId } from './chat-bubbles';
-export type { ChatBubbleAnimationId } from '@cgraph/design-tokens';
+export type { ChatBubbleAnimationId } from '@cgraph-dev/design-tokens';
 export {
   hoverAnimations,
   createPulseAnimation,
@@ -35,7 +35,7 @@ export {
   getRarityGlow,
   getTierGlow,
 } from './effects';
-export { transitions, rnTransitions } from '@cgraph/animation-constants';
+export { transitions, rnTransitions } from '@cgraph-dev/animation-constants';
 
 // Default export
 export { springs as default } from './presets';

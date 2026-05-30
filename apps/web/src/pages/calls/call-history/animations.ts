@@ -1,7 +1,7 @@
 /**
  * Call history page animation definitions.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import type { Variants } from 'motion/react';
 
 export const containerVariants: Variants = {

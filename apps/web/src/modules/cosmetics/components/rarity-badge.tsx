@@ -7,7 +7,7 @@
  *
  */
 
-import type { RarityTier } from '@cgraph/shared-types';
+import type { RarityTier } from '@cgraph-dev/shared-types';
 // Color map (hex + tailwind bg for badge pill)
 const RARITY_BADGE_COLORS: Record<RarityTier, { bg: string; text: string; hex: string }> = {
   free: { bg: 'bg-gray-600/30', text: 'text-gray-400', hex: '#6B7280' },

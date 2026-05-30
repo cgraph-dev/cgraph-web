@@ -19,11 +19,11 @@
  * const res = await http.get('/api/v1/some-endpoint');
  * ```
  */
-import { createApiClient, type ApiClient } from '@cgraph/api-client';
+import { createApiClient, type ApiClient } from '@cgraph-dev/api-client';
 import { api } from './api'; // existing axios instance with auth + circuit breaker
 
 export const apiClient: ApiClient = createApiClient({ http: api });
-export type { ApiClient } from '@cgraph/api-client';
+export type { ApiClient } from '@cgraph-dev/api-client';
 
 /**
  * Raw Axios instance — use only when the structured `apiClient` does not yet

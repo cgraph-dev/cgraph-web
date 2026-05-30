@@ -8,7 +8,7 @@
  */
 
 import { motion } from 'motion/react';
-import { transitions } from '@cgraph/animation-constants';
+import { transitions } from '@cgraph-dev/animation-constants';
 interface ErrorFallbackProps {
   /** The error that was thrown */
   error: Error;

@@ -1,4 +1,4 @@
-import { formatRelativeTime } from '@cgraph/utils';
+import { formatRelativeTime } from '@cgraph-dev/utils';
 import type { Conversation } from '@/modules/chat/store/chatStore.impl';
 import { getAvatarBorderId } from '@/lib/utils';
 
@@ -48,7 +48,7 @@ export function getConversationOnlineStatus(
 
 /**
  * Format message timestamp using shared Signal-style relative formatting.
- * Delegates to @cgraph/utils for cross-platform parity with mobile.
+ * Delegates to @cgraph-dev/utils for cross-platform parity with mobile.
  */
 export function formatMessageTime(dateString: string): string {
   return formatRelativeTime(dateString);

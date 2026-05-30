@@ -11,8 +11,8 @@ import { useState, useCallback, useRef } from 'react';
 import { http } from '@/lib/api-client';
 import { logger } from '@/lib/logger';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
-import { deriveViewOnceState } from '@cgraph/shared-types';
-import type { ViewOnceState } from '@cgraph/shared-types';
+import { deriveViewOnceState } from '@cgraph-dev/shared-types';
+import type { ViewOnceState } from '@cgraph-dev/shared-types';
 
 interface UseViewOnceResult {
   readonly viewOnceState: ViewOnceState | null;

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { MessageRequestStatus } from '@cgraph/shared-types';
+import type { MessageRequestStatus } from '@cgraph-dev/shared-types';
 
 interface MessageRequestState {
   /** Map of conversation_id to request status. */

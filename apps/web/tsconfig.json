@@ -24,11 +24,7 @@
       "@stores/*": ["./src/stores/*"],
       "@lib/*": ["./src/lib/*"],
       "@pages/*": ["./src/pages/*"],
-      "@layouts/*": ["./src/layouts/*"],
-      "@cgraph/shared-types": ["../../packages/shared-types/src"],
-      "@cgraph/utils": ["../../packages/utils/src"],
-      "@cgraph/animation-constants": ["../../packages/animation-constants/src"],
-      "@cgraph/design-tokens": ["../../packages/design-tokens/src"]
+      "@layouts/*": ["./src/layouts/*"]
     }
   },
   "include": ["src"],

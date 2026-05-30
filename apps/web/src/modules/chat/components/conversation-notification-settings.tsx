@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
-import type { NotificationMode, NotificationPreference } from '@cgraph/shared-types';
+import type { NotificationMode, NotificationPreference } from '@cgraph-dev/shared-types';
 import { FADE_IN } from '@/lib/animations/transitions';
 
 const logger = createLogger('ConversationNotificationSettings');

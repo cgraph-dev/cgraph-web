@@ -4,7 +4,7 @@
  */
 import type { StoreApi } from 'zustand';
 import { apiClient, http } from '@/lib/api-client';
-import { createIdempotencyKey } from '@cgraph/utils';
+import { createIdempotencyKey } from '@cgraph-dev/utils';
 import { createLogger } from '@/lib/logger';
 import { identityFieldsFromApi } from '@/lib/identity';
 import { useAuthStore } from '@/modules/auth/store';

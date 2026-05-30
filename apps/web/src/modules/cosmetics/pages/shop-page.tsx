@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 
-import type { CosmeticItem, CosmeticType, Entitlement } from '@cgraph/shared-types';
+import type { CosmeticItem, CosmeticType, Entitlement } from '@cgraph-dev/shared-types';
 import { CosmeticCard } from '../components/cosmetic-card';
 import { EquipPanel } from '../components/equip-panel';
 import { useCosmeticsStore } from '../store/cosmetics-store';

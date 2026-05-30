@@ -21,7 +21,7 @@ import { socketManager } from '@/lib/socket';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
 import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
-import { buildMessageAttachmentSendPayload } from '@cgraph/shared-types';
+import { buildMessageAttachmentSendPayload } from '@cgraph-dev/shared-types';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
 

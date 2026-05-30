@@ -34,11 +34,11 @@
     "lighthouse": "pnpm build && lhci autorun --config=.lighthouserc.json"
   },
   "dependencies": {
-    "@cgraph/animation-constants": "workspace:^",
-    "@cgraph/api-client": "workspace:*",
-    "@cgraph/design-tokens": "workspace:*",
-    "@cgraph/shared-types": "workspace:*",
-    "@cgraph/utils": "workspace:*",
+    "@cgraph-dev/animation-constants": "1.0.1",
+    "@cgraph-dev/api-client": "1.0.1",
+    "@cgraph-dev/design-tokens": "1.0.1",
+    "@cgraph-dev/shared-types": "1.0.1",
+    "@cgraph-dev/utils": "1.0.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

@@ -22,8 +22,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpBackend from 'i18next-http-backend';
 import ICU from 'i18next-icu';
 import { logger } from '@/lib/logger';
-import { isRtlLocale } from '@cgraph/shared-types';
-import type { SupportedLocale } from '@cgraph/shared-types';
+import { isRtlLocale } from '@cgraph-dev/shared-types';
+import type { SupportedLocale } from '@cgraph-dev/shared-types';
 
 const SUPPORTED_LANGUAGES: readonly string[] = [
   'en', 'es', 'fr', 'de', 'ja', 'ko', 'zh', 'ar', 'pt', 'ru',

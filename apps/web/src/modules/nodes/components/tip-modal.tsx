@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useSendTip, useNodeWallet } from '../hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
-import { MIN_TIP } from '@cgraph/shared-types/nodes';
+import { MIN_TIP } from '@cgraph-dev/shared-types/nodes';
 import toast from 'react-hot-toast';
 
 interface TipModalProps {

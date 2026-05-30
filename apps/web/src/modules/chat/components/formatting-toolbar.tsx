@@ -12,7 +12,7 @@ import { motion } from 'motion/react';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { cn } from '@/lib/utils';
 import { springs } from '@/lib/animation-presets';
-import type { BodyRangeStyle } from '@cgraph/shared-types';
+import type { BodyRangeStyle } from '@cgraph-dev/shared-types';
 
 interface FormattingToolbarProps {
   readonly onFormat: (style: BodyRangeStyle) => void;

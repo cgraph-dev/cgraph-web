@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
 import { useWalletConnect } from '@/lib/wallet';
 import { createLogger } from '@/lib/logger';
-import type { WalletConnectorType } from '@cgraph/shared-types';
+import type { WalletConnectorType } from '@cgraph-dev/shared-types';
 
 const logger = createLogger('Login');
 

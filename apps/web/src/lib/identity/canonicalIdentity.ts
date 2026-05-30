@@ -1,5 +1,5 @@
 export {
   canonicalIdentityFromApi,
   identityFieldsFromApi,
-} from '@cgraph/shared-types';
-export type { CanonicalIdentityFields } from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
+export type { CanonicalIdentityFields } from '@cgraph-dev/shared-types';

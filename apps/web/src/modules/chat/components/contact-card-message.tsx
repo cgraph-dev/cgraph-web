@@ -4,7 +4,7 @@
  * and a "Send Message" button for registered users.
  */
 import type { ReactNode } from 'react';
-import type { ContactCardData } from '@cgraph/shared-types';
+import type { ContactCardData } from '@cgraph-dev/shared-types';
 import { useNavigate } from 'react-router-dom';
 
 interface ContactCardMessageProps {

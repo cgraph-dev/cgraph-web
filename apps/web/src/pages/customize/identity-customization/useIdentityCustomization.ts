@@ -5,7 +5,7 @@
  * IdentityCustomization page.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { http } from '@/lib/api-client';
@@ -20,7 +20,7 @@ import toast from 'react-hot-toast';
 import { ALL_BORDERS, type BorderDefinition, type BorderTheme } from '@/data/avatar-borders';
 import { ALL_TITLES, type TitleDefinition } from '@/data/titlesCollection';
 import { ALL_BADGES, type BadgeDefinition } from '@/data/badgesCollection';
-import { NAMEPLATE_REGISTRY } from '@cgraph/animation-constants';
+import { NAMEPLATE_REGISTRY } from '@cgraph-dev/animation-constants';
 
 import type { Rarity, Border, Title, Badge } from './types';
 import { getV2BorderType } from './constants';

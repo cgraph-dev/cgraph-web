@@ -7,7 +7,7 @@
  *
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import gsap from 'gsap';
 import { CustomEase } from 'gsap/CustomEase';
 

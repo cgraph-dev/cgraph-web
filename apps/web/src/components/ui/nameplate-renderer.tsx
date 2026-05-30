@@ -3,7 +3,7 @@ import type {
   NameplateEntry,
   NameplateTextEffect,
   NameplateBorderStyle,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
 type NameplateSize = 'xs' | 'sm' | 'md' | 'lg';

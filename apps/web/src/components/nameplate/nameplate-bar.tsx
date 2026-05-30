@@ -7,7 +7,7 @@
  *   3. Emblem icon
  *   4. Text effect overlay (holo, rainbow, glitch, glow, fire, ice, neon, metallic, etc.)
  *
- * Design tokens are sourced from `@cgraph/animation-constants` (shared with mobile).
+ * Design tokens are sourced from `@cgraph-dev/animation-constants` (shared with mobile).
  *
  */
 
@@ -19,7 +19,7 @@ import {
   type NameplateEntry,
   type NameplateBorderStyle,
   type NameplateTextEffect,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 import { getNameplateLottieSource } from '@/assets/lottie/nameplates/nameplateMap';
 import type { AnimationItem } from 'lottie-web';
 /** Default canvas dimensions matching the registry spec (300×48). */

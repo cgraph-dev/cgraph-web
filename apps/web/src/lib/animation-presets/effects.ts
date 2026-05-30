@@ -5,7 +5,7 @@
  * background animations, and utility helper functions.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { type Transition } from 'motion/react';
 
 import { springs, staggerConfigs } from './presets';

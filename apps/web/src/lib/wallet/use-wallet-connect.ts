@@ -9,7 +9,7 @@
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import { useAuthStore } from '@/modules/auth/store';
 import { createLogger } from '@/lib/logger';
-import type { WalletConnectorType } from '@cgraph/shared-types';
+import type { WalletConnectorType } from '@cgraph-dev/shared-types';
 
 const logger = createLogger('WalletConnect');
 

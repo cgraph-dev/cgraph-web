@@ -2,7 +2,7 @@
  * RoleBadge component
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { memo } from 'react';
 import { motion } from 'motion/react';
 import type { TargetAndTransition, Transition } from 'motion/react';

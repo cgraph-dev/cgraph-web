@@ -2,7 +2,7 @@
  * Type definitions for NotificationProvider
  */
 
-import type { Achievement } from '@cgraph/shared-types';
+import type { Achievement } from '@cgraph-dev/shared-types';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'achievement';
 

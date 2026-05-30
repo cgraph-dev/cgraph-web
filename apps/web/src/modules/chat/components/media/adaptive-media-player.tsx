@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode } from 'react';
 
-import type { ConnectionQuality, MediaVariant } from '@cgraph/shared-types';
+import type { ConnectionQuality, MediaVariant } from '@cgraph-dev/shared-types';
 
 // ---------------------------------------------------------------------------
 // Props

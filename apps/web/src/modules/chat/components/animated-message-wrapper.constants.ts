@@ -1,7 +1,7 @@
 /**
  * Animated message wrapper constants.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { springs, staggerConfigs } from '@/lib/animation-presets';
 
 export const messageVariants = {

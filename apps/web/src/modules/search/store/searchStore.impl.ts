@@ -10,7 +10,7 @@ import type {
   SearchForum,
   SearchPost,
   SearchMessage,
-} from '@cgraph/api-client';
+} from '@cgraph-dev/api-client';
 
 export type { SearchUser, SearchGroup, SearchForum, SearchPost, SearchMessage };
 

@@ -5,7 +5,7 @@
  * and manual activation/deactivation state.
  */
 import { create } from 'zustand';
-import type { NotificationProfile, NotificationProfileSchedule } from '@cgraph/shared-types';
+import type { NotificationProfile, NotificationProfileSchedule } from '@cgraph-dev/shared-types';
 import { api as httpClient } from '@/lib/api';
 import { createLogger } from '@/lib/logger';
 import { toast } from '@/shared/components/ui';

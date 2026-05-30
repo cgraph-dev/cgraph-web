@@ -6,7 +6,7 @@
  *
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -31,7 +31,7 @@ import { WidgetConfigurator } from './widget-configurator';
 import { CssEditor } from './css-editor';
 import { CustomFieldsEditor } from './custom-fields-editor';
 import { PulseSettings } from './pulse-settings';
-import type { ForumCustomizationOptions, CustomizationCategory } from '@cgraph/shared-types';
+import type { ForumCustomizationOptions, CustomizationCategory } from '@cgraph-dev/shared-types';
 // TYPES
 interface CustomizationCenterProps {
   forumId: string;

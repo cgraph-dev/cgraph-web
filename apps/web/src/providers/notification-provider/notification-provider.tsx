@@ -11,7 +11,7 @@ import { createContext, useState} from 'react';
 import { AnimatePresence } from 'motion/react';
 
 import { HapticFeedback } from '@/lib/animations/animation-engine';
-import type { Achievement } from '@cgraph/shared-types';
+import type { Achievement } from '@cgraph-dev/shared-types';
 
 /** @description Data for an achievement unlock notification. */
 interface AchievementNotificationData {

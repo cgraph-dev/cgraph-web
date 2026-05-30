@@ -1,7 +1,7 @@
 /**
  * Theme-aware avatar component.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 
 import { useThemeStore, THEME_COLORS } from '@/stores';

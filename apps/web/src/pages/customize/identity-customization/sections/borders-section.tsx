@@ -4,7 +4,7 @@
  * Displays the borders selection grid with theme filtering and animations.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';

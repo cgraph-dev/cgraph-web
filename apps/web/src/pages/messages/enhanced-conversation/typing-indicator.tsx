@@ -2,7 +2,7 @@
  * TypingIndicator - animated typing dots
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 
 interface TypingIndicatorProps {

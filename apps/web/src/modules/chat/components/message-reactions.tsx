@@ -1,7 +1,7 @@
 /**
  * Message reaction display and picker.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FaceSmileIcon, PlusIcon } from '@heroicons/react/24/outline';

@@ -7,7 +7,7 @@
  */
 
 import { Socket, Channel, Presence } from 'phoenix';
-import { exponentialBackoffWithJitter } from '@cgraph/utils';
+import { exponentialBackoffWithJitter } from '@cgraph-dev/utils';
 import { useAuthStore } from '@/modules/auth/store';
 import { socketLogger as logger } from '../logger';
 import { getSocketUrl } from '../backend-url';

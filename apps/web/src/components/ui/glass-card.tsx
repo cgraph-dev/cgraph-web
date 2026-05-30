@@ -1,4 +1,4 @@
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from 'motion/react';
 import { cn } from '@/lib/utils';

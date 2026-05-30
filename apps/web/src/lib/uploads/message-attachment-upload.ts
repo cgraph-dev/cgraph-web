@@ -7,7 +7,7 @@ import {
   type MultipartUploadCompletedPart,
   type MultipartUploadPart,
   type UploadedMessageAttachment,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 import { apiClient, http } from '@/lib/api-client';
 
 interface UploadMessageAttachmentOptions {

@@ -4,7 +4,7 @@
  * Empty state displays for the messages page.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { UserIcon, SparklesIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';

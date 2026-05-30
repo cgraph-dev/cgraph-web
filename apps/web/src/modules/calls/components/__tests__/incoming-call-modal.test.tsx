@@ -60,7 +60,7 @@ vi.mock('@/lib/animations/transitions', () => ({
   FADE_IN: { initial: { opacity: 0 }, animate: { opacity: 1 } },
 }));
 
-vi.mock('@cgraph/animation-constants', () => ({
+vi.mock('@cgraph-dev/animation-constants', () => ({
   durations: { loop: { ms: 2000 } },
 }));
 

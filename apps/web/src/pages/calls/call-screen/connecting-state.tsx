@@ -2,7 +2,7 @@
  * ConnectingState component - shown while call is connecting
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { CALL_STATES, pulseAnimation } from './constants';

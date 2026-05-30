@@ -1,7 +1,7 @@
 /**
  * Profile loading and error state components.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/ui/button';

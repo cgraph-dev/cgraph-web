@@ -2,7 +2,7 @@
  * NameplatesSection Component
  *
  * Advanced nameplate selection with category filtering and Lottie-backed previews.
- * Uses the shared NAMEPLATE_REGISTRY from @cgraph/animation-constants.
+ * Uses the shared NAMEPLATE_REGISTRY from @cgraph-dev/animation-constants.
  */
 
 import { useState, useMemo } from 'react';
@@ -14,7 +14,7 @@ import {
   type NameplateEntry,
   type NameplateRarity,
   type NameplateCategory,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 import { NameplateRenderer } from '@/components/ui/nameplate-renderer';
 
 export interface NameplatesSectionProps {

@@ -10,8 +10,8 @@
 import { type ReactNode, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CallQualityStars } from './call-quality-stars';
-import type { CallQualityRating, CallQualityIssue } from '@cgraph/shared-types';
-import { CALL_QUALITY_ISSUES, CALL_QUALITY_ISSUE_LABELS } from '@cgraph/shared-types';
+import type { CallQualityRating, CallQualityIssue } from '@cgraph-dev/shared-types';
+import { CALL_QUALITY_ISSUES, CALL_QUALITY_ISSUE_LABELS } from '@cgraph-dev/shared-types';
 
 const MAX_COMMENT_LENGTH = 500;
 

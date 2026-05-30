@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 import { TransactionRow } from '../transaction-row';
-import type { Transaction } from '@cgraph/api-client';
+import type { Transaction } from '@cgraph-dev/api-client';
 import type { NodeTransaction } from '../../types';
 
 const makeTransaction = (overrides?: Partial<Transaction>): Transaction => ({

@@ -9,7 +9,7 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 
-import type { CosmeticItem, Entitlement } from '@cgraph/shared-types';
+import type { CosmeticItem, Entitlement } from '@cgraph-dev/shared-types';
 import { RarityBadge } from './rarity-badge';
 import { EntitlementBadge } from './entitlement-badge';
 import { FADE_IN } from '@/lib/animations/transitions';

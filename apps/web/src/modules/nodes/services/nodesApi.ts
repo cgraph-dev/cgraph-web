@@ -9,8 +9,8 @@
 // DEPRECATED: Use apiClient.nodes from @/lib/api-client instead
 import { apiClient } from '@/lib/api-client';
 import { logger } from '@/lib/logger';
-import type { Wallet, Transaction, Bundle, CheckoutResponse, GiftResult } from '@cgraph/api-client';
-import type { ApiError, ApiResult } from '@cgraph/api-client';
+import type { Wallet, Transaction, Bundle, CheckoutResponse, GiftResult } from '@cgraph-dev/api-client';
+import type { ApiError, ApiResult } from '@cgraph-dev/api-client';
 
 export type { Wallet, Transaction, Bundle, CheckoutResponse, GiftResult };
 

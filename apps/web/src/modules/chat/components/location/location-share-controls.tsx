@@ -13,8 +13,8 @@ import {
   DURATION_LABELS,
   MIN_PROXIMITY_THRESHOLD,
   MAX_PROXIMITY_THRESHOLD,
-} from '@cgraph/shared-types';
-import type { StartLocationShareParams } from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
+import type { StartLocationShareParams } from '@cgraph-dev/shared-types';
 
 import { logger } from '@/lib/logger';
 

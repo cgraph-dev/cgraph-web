@@ -9,7 +9,7 @@ import { useRef } from 'react';
 import { motion } from 'motion/react';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { springs } from '@/lib/animation-presets';
-import { VANISH_TIMER_PRESETS } from '@cgraph/shared-types';
+import { VANISH_TIMER_PRESETS } from '@cgraph-dev/shared-types';
 
 interface VanishTimerPickerProps {
   /** Current timer value in seconds (0 or null = off). */

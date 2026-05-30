@@ -3,7 +3,7 @@
  *
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 
 export const containerVariants = {
   hidden: { opacity: 0, y: 20 },

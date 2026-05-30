@@ -11,7 +11,7 @@
  * - opening: spinner
  */
 import type { ReactNode } from 'react';
-import type { ViewOnceState } from '@cgraph/shared-types';
+import type { ViewOnceState } from '@cgraph-dev/shared-types';
 
 interface ViewOnceIndicatorProps {
   readonly state: ViewOnceState;

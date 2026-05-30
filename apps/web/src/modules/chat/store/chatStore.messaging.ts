@@ -10,7 +10,7 @@
  */
 
 import { http } from '@/lib/api-client';
-import { createIdempotencyKey } from '@cgraph/utils';
+import { createIdempotencyKey } from '@cgraph-dev/utils';
 import { ensureObject, normalizeMessage } from '@/lib/api-utils';
 import { useAuthStore } from '@/modules/auth/store';
 import { chatLogger as logger } from '@/lib/logger';

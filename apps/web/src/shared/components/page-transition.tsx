@@ -3,13 +3,13 @@
  *
  * Provides subtle fade + slide transitions on route changes.
  * Wraps page content with AnimatePresence-driven motion.
- * Uses shared animation tokens from @cgraph/animation-constants.
+ * Uses shared animation tokens from @cgraph-dev/animation-constants.
  *
  */
 
 import { motion, useReducedMotion } from 'motion/react';
 import { useLocation } from 'react-router-dom';
-import { transitions } from '@cgraph/animation-constants';
+import { transitions } from '@cgraph-dev/animation-constants';
 
 const PAGE_VARIANTS = {
   initial: transitions.pageEnter.initial,

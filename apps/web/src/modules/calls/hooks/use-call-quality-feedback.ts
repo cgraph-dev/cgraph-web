@@ -9,8 +9,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
-import type { CallQualityRating, CallQualityIssue } from '@cgraph/shared-types';
-import { MIN_CALL_DURATION_FOR_FEEDBACK, FEEDBACK_AUTO_DISMISS_MS } from '@cgraph/shared-types';
+import type { CallQualityRating, CallQualityIssue } from '@cgraph-dev/shared-types';
+import { MIN_CALL_DURATION_FOR_FEEDBACK, FEEDBACK_AUTO_DISMISS_MS } from '@cgraph-dev/shared-types';
 
 const logger = createLogger('CallQualityFeedback');
 

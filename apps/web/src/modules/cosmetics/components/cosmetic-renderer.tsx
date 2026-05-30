@@ -13,7 +13,7 @@
  *
  */
 
-import type { CosmeticItem, CosmeticType } from '@cgraph/shared-types';
+import type { CosmeticItem, CosmeticType } from '@cgraph-dev/shared-types';
 // Props
 interface CosmeticRendererProps {
   /** The cosmetic item to render. */

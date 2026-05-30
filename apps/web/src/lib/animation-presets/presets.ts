@@ -3,7 +3,7 @@
  *
  * Spring, tween, stagger, and entrance animation configurations.
  *
- * Numeric constants are sourced from @cgraph/animation-constants —
+ * Numeric constants are sourced from @cgraph-dev/animation-constants —
  * the canonical shared package for platform-agnostic values.
  * This file wraps them with Framer-Motion–specific fields (e.g. `type: 'spring'`).
  */
@@ -13,9 +13,9 @@ import {
   springs as sharedSprings,
   stagger as sharedStagger,
   durations as sharedDurations,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 
-// DURATION PRESETS IN SECONDS (sourced from @cgraph/animation-constants)
+// DURATION PRESETS IN SECONDS (sourced from @cgraph-dev/animation-constants)
 
 /**
  * Duration presets in seconds — for inline use where only a raw number is needed.
@@ -39,7 +39,7 @@ export const durationsSec = {
   verySlow: sharedDurations.verySlow.ms / 1000,
 } as const;
 
-// SPRING PRESETS (sourced from @cgraph/animation-constants + FM type tag)
+// SPRING PRESETS (sourced from @cgraph-dev/animation-constants + FM type tag)
 
 const toFMSpring = (s: { stiffness: number; damping: number; mass: number }) =>
   ({ type: 'spring' as const, stiffness: s.stiffness, damping: s.damping }) as const;
@@ -108,7 +108,7 @@ export const loopWithDelay = (base: Transition, repeatDelay: number): Transition
   repeatDelay,
 });
 
-// STAGGER CONFIGURATIONS (sourced from @cgraph/animation-constants)
+// STAGGER CONFIGURATIONS (sourced from @cgraph-dev/animation-constants)
 
 export const staggerConfigs = {
   fast: sharedStagger.fast,

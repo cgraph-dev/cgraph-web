@@ -16,7 +16,7 @@ import type {
   PrivacySettings,
   StickersEmojiSettings,
   UserSettings,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 
 export type {
   AppearanceSettings,
@@ -39,7 +39,7 @@ export type {
   TimeFormat,
   UserSettings,
   VideoResolution,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 
 export {
   DEFAULT_APPEARANCE_SETTINGS,
@@ -51,7 +51,7 @@ export {
   DEFAULT_PRIVACY_SETTINGS,
   DEFAULT_SETTINGS,
   DEFAULT_STICKERS_EMOJI_SETTINGS,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 
 // Store Interface
 

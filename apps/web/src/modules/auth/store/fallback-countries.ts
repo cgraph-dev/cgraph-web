@@ -1,4 +1,4 @@
-import type { Country } from '@cgraph/api-client';
+import type { Country } from '@cgraph-dev/api-client';
 
 export const FALLBACK_PHONE_COUNTRIES: Country[] = [
   { code: 'AR', name: 'Argentina', calling_code: '+54' },

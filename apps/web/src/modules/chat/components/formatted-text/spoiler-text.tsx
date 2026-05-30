@@ -9,7 +9,7 @@
 
 import { useState, memo, type ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { SPOILER_REPLACEMENT } from '@cgraph/shared-types';
+import { SPOILER_REPLACEMENT } from '@cgraph-dev/shared-types';
 import type { DisplayNode } from './types';
 import { springs } from '@/lib/animation-presets';
 

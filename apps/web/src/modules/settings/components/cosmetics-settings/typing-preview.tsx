@@ -4,7 +4,7 @@
  * Animated preview for typing indicator styles.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 import { tweens, loop } from '@/lib/animation-presets';
 

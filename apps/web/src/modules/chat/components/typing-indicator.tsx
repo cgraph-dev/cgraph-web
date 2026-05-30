@@ -5,7 +5,7 @@
  * Shows when other users are typing in a conversation.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { memo } from 'react';
 import { motion } from 'motion/react';
 import { GlassCard } from '@/shared/components/ui';

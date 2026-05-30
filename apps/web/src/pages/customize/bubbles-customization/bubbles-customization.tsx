@@ -8,7 +8,7 @@
  * of the chat surfaces). Without the second write, bubble style /
  * radius / colour selections never reached the actual chat UI.
  */
-import { normalizeChatBubbleStyleId } from '@cgraph/design-tokens';
+import { normalizeChatBubbleStyleId } from '@cgraph-dev/design-tokens';
 import { useThemeStore } from '@/stores/theme';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { HapticFeedback } from '@/lib/animations/animation-engine';

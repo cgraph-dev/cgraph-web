@@ -6,7 +6,7 @@
  *
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 import type { Variants } from 'motion/react';
 import { springs } from '@/lib/animation-presets';

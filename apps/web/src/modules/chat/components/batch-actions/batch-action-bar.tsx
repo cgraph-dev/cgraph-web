@@ -11,8 +11,8 @@
 import { type ReactNode, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-import type { BatchOperation } from '@cgraph/shared-types';
-import { MAX_BATCH_COPY, MAX_BATCH_FORWARD, MAX_BATCH_DELETE } from '@cgraph/shared-types';
+import type { BatchOperation } from '@cgraph-dev/shared-types';
+import { MAX_BATCH_COPY, MAX_BATCH_FORWARD, MAX_BATCH_DELETE } from '@cgraph-dev/shared-types';
 
 import { logger } from '@/lib/logger';
 

@@ -5,7 +5,7 @@
  * used as building blocks for all animations.
  */
 
-import { springs as sharedSprings } from '@cgraph/animation-constants';
+import { springs as sharedSprings } from '@cgraph-dev/animation-constants';
 export const easings = {
   // Standard easings
   easeInOut: [0.4, 0, 0.2, 1],

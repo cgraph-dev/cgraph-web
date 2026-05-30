@@ -4,7 +4,7 @@
  * Helper functions and constants for password validation.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import type { PasswordStrength, RequirementConfig } from './types';
 
 /**

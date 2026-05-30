@@ -12,7 +12,7 @@ import {
   type CustomField,
   type CustomFieldType,
   type CustomFieldTarget,
-} from '@cgraph/shared-types';
+} from '@cgraph-dev/shared-types';
 
 interface CustomFieldsEditorProps {
   forumId: string;

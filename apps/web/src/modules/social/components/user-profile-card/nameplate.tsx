@@ -8,7 +8,7 @@ import {
   NAME_EFFECT_KEYS,
   type NameEffect,
   type NameFont,
-} from '@cgraph/animation-constants';
+} from '@cgraph-dev/animation-constants';
 
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import { cn } from '@/lib/utils';

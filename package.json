@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "pnpm --filter @cgraph/web dev",
     "build": "pnpm --filter @cgraph/web build",
-    "check:packages": "node scripts/validate-package-snapshot.mjs",
-    "check:package-owner": "node scripts/validate-package-mirror-ownership.mjs",
+    "check:packages": "node scripts/validate-package-dependencies.mjs",
+    "check:package-owner": "node scripts/validate-package-dependencies.mjs",
     "check:web-release": "pnpm --filter @cgraph/web check:release-gates",
     "lint": "pnpm --filter @cgraph/web lint",
     "test": "pnpm --filter @cgraph/web test:run",

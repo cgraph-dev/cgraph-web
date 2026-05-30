@@ -8,8 +8,8 @@
  */
 import { useState, useCallback, useMemo } from 'react';
 
-import { MAX_BATCH_COPY, MAX_BATCH_DELETE, MAX_BATCH_FORWARD } from '@cgraph/shared-types';
-import type { BatchOperation } from '@cgraph/shared-types';
+import { MAX_BATCH_COPY, MAX_BATCH_DELETE, MAX_BATCH_FORWARD } from '@cgraph-dev/shared-types';
+import type { BatchOperation } from '@cgraph-dev/shared-types';
 
 // ---------------------------------------------------------------------------
 // Types

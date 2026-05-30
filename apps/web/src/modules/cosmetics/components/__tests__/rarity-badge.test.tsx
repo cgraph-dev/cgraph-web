@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { RarityBadge } from '../rarity-badge';
-import type { RarityTier } from '@cgraph/shared-types';
+import type { RarityTier } from '@cgraph-dev/shared-types';
 
 describe('RarityBadge', () => {
   it('renders the rarity tier text', () => {

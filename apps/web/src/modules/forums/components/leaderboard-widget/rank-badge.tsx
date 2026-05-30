@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import type { ForumRank } from '@cgraph/shared-types';
+import type { ForumRank } from '@cgraph-dev/shared-types';
 export interface RankBadgeProps {
   /** Rank name (e.g., "Veteran"). */
   rankName: string;

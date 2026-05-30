@@ -19,7 +19,7 @@ import { apiClient } from '@/lib/api-client';
 import { getErrorMessage } from '@/lib/api';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { toast } from '@/shared/components/ui';
-import { buildMessageAttachmentMetadata, messageContentTypeForMime } from '@cgraph/shared-types';
+import { buildMessageAttachmentMetadata, messageContentTypeForMime } from '@cgraph-dev/shared-types';
 import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
 import type { MessagePayload } from '@/modules/chat/components/message-input';
 import { getDirectCallRoute, type DirectCallType } from './direct-call-routing';

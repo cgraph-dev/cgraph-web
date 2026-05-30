@@ -4,7 +4,7 @@
  * Achievements are cosmetic rewards — no XP, nodes, or leveling.
  *
  */
-import type { Achievement, AchievementCategory, AchievementRarity } from '@cgraph/shared-types';
+import type { Achievement, AchievementCategory, AchievementRarity } from '@cgraph-dev/shared-types';
 
 /**
  * Achievement Definitions for CGraph

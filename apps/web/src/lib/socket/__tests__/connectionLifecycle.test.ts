@@ -13,7 +13,7 @@ vi.mock('phoenix', () => ({
   Presence: vi.fn(),
 }));
 
-vi.mock('@cgraph/utils', () => ({
+vi.mock('@cgraph-dev/utils', () => ({
   exponentialBackoffWithJitter: vi.fn(() => () => 1000),
 }));
 

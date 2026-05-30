@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactElement } from 'react';
-import { normalizeCallingCodeInput } from '@cgraph/utils';
+import { normalizeCallingCodeInput } from '@cgraph-dev/utils';
 import { usePhoneRegistrationStore } from '@/modules/auth/store/registration-store';
 import {
   TurnstileWidget,

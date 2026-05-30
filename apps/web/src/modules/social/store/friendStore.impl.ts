@@ -7,7 +7,7 @@
  */
 
 import { create } from 'zustand';
-import { createIdempotencyKey } from '@cgraph/utils';
+import { createIdempotencyKey } from '@cgraph-dev/utils';
 import { apiClient } from '@/lib/api-client';
 import { logger } from '@/lib/logger';
 

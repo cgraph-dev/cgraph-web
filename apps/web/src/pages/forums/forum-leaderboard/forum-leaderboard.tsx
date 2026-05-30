@@ -4,7 +4,7 @@
  * Competitive ranking of forums by upvotes.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForumStore, Forum } from '@/modules/forums/store';

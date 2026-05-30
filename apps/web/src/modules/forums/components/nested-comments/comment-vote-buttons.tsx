@@ -4,7 +4,7 @@
  * Handles upvote/downvote with visual feedback and animations.
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';

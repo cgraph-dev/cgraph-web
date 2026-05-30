@@ -22,7 +22,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 // Mock the idempotency key generator
-vi.mock('@cgraph/utils', () => ({
+vi.mock('@cgraph-dev/utils', () => ({
   createIdempotencyKey: () => 'test-idempotency-key-123',
 }));
 

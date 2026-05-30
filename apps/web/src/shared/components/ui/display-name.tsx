@@ -3,10 +3,10 @@
  *
  * CSS equivalent of the mobile DisplayName component.
  * Supports 5 effects (solid, gradient, neon, toon, pop) and 8 fonts
- * from the shared @cgraph/animation-constants package.
+ * from the shared @cgraph-dev/animation-constants package.
  */
 
-import { NAME_FONTS, type NameFont, type NameEffect } from '@cgraph/animation-constants';
+import { NAME_FONTS, type NameFont, type NameEffect } from '@cgraph-dev/animation-constants';
 
 interface DisplayNameProps {
   readonly name: string;

@@ -2,7 +2,7 @@
  * Constants for CallScreen module
  */
 
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import type { CallStatus } from './types';
 
 export const CALL_STATES: Record<CallStatus, string> = {

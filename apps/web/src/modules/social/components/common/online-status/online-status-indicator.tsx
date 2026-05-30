@@ -1,7 +1,7 @@
 /**
  * Online status colored indicator dot.
  */
-import { durations } from '@cgraph/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { springs } from '@/lib/animation-presets';
 import {
