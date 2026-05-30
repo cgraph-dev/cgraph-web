@@ -43,6 +43,32 @@ pnpm --filter @cgraph/web check:release-gates
 
 Latest proof:
 
+- Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
+- Verified commit:
+  `b7f39b5271a19b56677387d22eac3266cef7d732`
+- Date: `2026-05-30T17:20:49+03:00`
+- Commands:
+  - `pnpm --filter @cgraph/web check:release-gates`
+  - `pnpm --filter @cgraph/web lint`
+  - `pnpm --filter @cgraph/web typecheck`
+  - `pnpm --filter @cgraph/web build:budget`
+  - `pnpm check:packages`
+  - `pnpm --filter @cgraph/web smoke:production`
+- Result: the recovered machine refreshed the web release-hardening proof after
+  the package mirror sync. `check:release-gates` passed safe HTML, storage
+  policy, import cycles, state-store cap, background polling, auth-storage, and
+  the serial unit suite with 400 Vitest files and 5,354 tests. Lint, typecheck,
+  bundle budget, and package snapshot validation passed. Production smoke
+  passed against `https://web.cgraph.org` and
+  `https://cgraph-backend-prod-v2.fly.dev`, confirming login, phone login,
+  registration, country lookup, OAuth provider discovery, and Turnstile presence
+  with no bad responses, failed requests, or app console errors.
+- Known non-blocking test output: deliberate error-boundary throw output still
+  appears during the suite. It does not fail the release gate and remains test
+  hygiene, not a release blocker.
+
+Previous baseline proof:
+
 - Repository checked: `/tmp/cgraph-web-repo`
 - Verified working tree based on this repository commit, plus the checklist and
   focused-test changes included with this proof update:

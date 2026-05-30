@@ -170,6 +170,16 @@ closes the checklist layer's local broad route/contract browser pass, while real
 delivery, paired QR/mobile approval, physical cross-device sync, and hosted Stripe
 settlement/webhooks remain strict-release sign-off work.
 
+2026-05-30 release-hardening refresh after recovery: production web commit
+`b7f39b5271a19b56677387d22eac3266cef7d732` passed the full local release gate
+(`pnpm --filter @cgraph/web check:release-gates`) with 400 Vitest files and
+5,354 tests, plus lint, typecheck, build/bundle budget, package snapshot
+validation, and production smoke against `web.cgraph.org` /
+`cgraph-backend-prod-v2.fly.dev`. This refreshes the local release-hardening
+proof after the reinstall/package-sync recovery. It does not close real
+provider delivery, paired QR/mobile approval, physical cross-device sync, or
+hosted Stripe settlement/webhooks.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
