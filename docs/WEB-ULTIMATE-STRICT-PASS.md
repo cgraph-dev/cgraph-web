@@ -15,6 +15,18 @@ Rules used for this pass:
   behavior on the mounted routed web surface, or run the narrowest equivalent executable check when
   direct browser verification is unavailable.
 
+## Platform Boundary
+
+This strict pass grades the browser product, not native Secret Chat delivery. Web 100% means top-tier
+browser-safe Cloud Chat plus the server-readable forums, hubs, broadcasts, identity, settings,
+discovery, cosmetics, Nodes, and moderation surfaces. It does not mean libsignal or device-bound E2EE
+in the browser.
+
+Use the Signal and Telegram references below as ownership and product-quality baselines. They do not
+change ADR-022: web has no libsignal identity keys, prekeys, or session state. Secret Chat, Ghost
+Chat, group E2EE, file E2EE, and post-quantum voice/video remain native mobile/desktop follow-on work
+after web and Level 3 web hardening are complete.
+
 ## Verdict
 
 The web app is still not start-ready for the requested scope.

@@ -474,6 +474,23 @@ This checklist does not mean all platform UI becomes shared. The target is:
 - shared types, schemas, contracts, utilities, and design tokens in `packages/*`
 - platform-specific route owners, adapters, and runtime behavior in each app
 
+## Web, Mobile, And Desktop Boundary
+
+The owner decision for current and future work is web first, ecosystem-aware always.
+
+- Web owns the first complete browser product: Cloud Chat, server-readable routed products, settings,
+  identity, discovery, cosmetics, Nodes, moderation, browser media, and honest native-only fallbacks.
+- Web Cloud Chat is the universal DM tier over TLS with backend-owned storage/encryption-at-rest
+  behavior. It is not Secret Chat and must not be sold or labeled as Signal-style E2EE.
+- Web must not become a Signal-participant device. It must not own libsignal identity keys, prekeys,
+  sessions, or post-quantum ratchet state.
+- Backend and `packages/*` work done now must prepare native mobile and desktop by defining shared
+  contracts, schemas, semantic models, design tokens, and runtime-neutral rules instead of web-local
+  product truth.
+- Secret Chat, Ghost Chat, group E2EE, file E2EE, and post-quantum voice/video belong to capable
+  native mobile and desktop clients after the web and Level 3 web hardening work is complete, using
+  the shared contracts created now plus native libsignal-capable implementations.
+
 ## Source Of Truth Order
 
 Another agent must read and obey the web documents in this exact order:
@@ -509,6 +526,9 @@ The web workstream is only 100% complete when all of these are true:
   or critical unmounted routed features.
 - `docs/WEB-SUPPORT-MATRIX.md` reflects the final user-facing truth and no longer overclaims or
   understates what the routed web app can do.
+- Web truthfully presents Cloud Chat as browser-safe server-readable messaging and keeps Secret Chat,
+  Ghost Chat, group/file E2EE, post-quantum voice/video, and key verification as native
+  mobile/desktop follow-on surfaces.
 - The routed browser behavior has been verified for the final implementation state.
 
 ## Owner Decisions Required Up Front
@@ -608,9 +628,14 @@ Required implementation-time questions:
       new shared-boundary decision is blocking.
 - [x] Web-only route owners, browser storage, browser notifications, browser upload adapters, and
       browser call/media behavior stay in `apps/web`.
+- [x] Web remains a Cloud Chat/browser-safe client and does not own libsignal identity, prekey,
+      session, or post-quantum ratchet state.
 - [x] Mobile and desktop restart only after the convergence items below are complete and validated.
       Until then, mobile and desktop work is limited to truth cleanup, package resync, or explicit
       foundation-directed slices.
+- [x] Native mobile and desktop own the later Signal-family post-quantum tier: Secret Chat, Ghost
+      Chat, group E2EE, file E2EE, and post-quantum voice/video through native libsignal-capable
+      implementations that consume the shared contracts defined now.
 
 ### Repo, Package, And Sync-Strategy Decisions
 
