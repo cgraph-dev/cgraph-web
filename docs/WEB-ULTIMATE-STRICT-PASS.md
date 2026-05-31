@@ -51,8 +51,10 @@ The problem is that route-owned web behavior still drifts from the actual contra
   profile, and production web commit `dae3416c16b50ff4d8cfad4fc1e96bebbb0895c1` extends the same
   canonical cosmetic rendering to the full public profile header. The 2026-05-28 live sender slice
   also proves backend-shaped friend `equipped_badges` / `equipped_nameplate` patches flow through
-  the routed DM sender avatar into the full profile-card badge and nameplate render. Broader
-  multi-tab/device profile and cosmetic proof remains open
+  the routed DM sender avatar into the full profile-card badge and nameplate render. The 2026-05-31
+  Lottie delivery slice adds the missing public badge/title/name-effect/nameplate JSON assets and a
+  release-gate guard for the shared catalog paths. Broader multi-tab/device profile and cosmetic proof
+  remains open
 - settings hydration, privacy reload persistence, same-origin live sync, separate browser-profile
   server-event application, customization sync, app-shell theme sync, and Phoenix user-channel
   settings delivery now have routed browser proof; physical second-device lab validation and broader
@@ -913,6 +915,14 @@ guards, typecheck, lint, and the full Vitest suite with 402 files / 5,358 tests
 passed. This further narrows chat presentation semantics while keeping the
 strict score unchanged.
 
+2026-05-31 customization Lottie delivery proof: production web now includes the catalog-referenced
+public Lottie JSON files for badge, title, display-name effect, and nameplate customization paths.
+`apps/web/scripts/check-customization-lottie-assets.mjs` verifies the 51 required public assets are
+present and parseable, `check:release-gates` runs that guard first, and the nameplate preview now
+uses `LottieAssetRenderer` against the shared public catalog path instead of the old placeholder-only
+import map. Local package guards, typecheck, lint, release-gates with 402 files / 5,358 tests, and
+build budget passed. This narrows customization delivery truth but keeps the strict score unchanged.
+
 2026-05-31 CI runtime proof: production web commit
 `ab47c4b8a7989a19b28434698818111c1dfa8ec9` opts the `Web Release Gates`
 workflow into the Node 24 JavaScript action runtime with
@@ -1158,7 +1168,9 @@ Done when:
       live updates. `apps/web/e2e/web-owner-uat.spec.ts` dispatches a live friend identity patch and
       verifies the routed DM surface renders the updated avatar border plus `Founder` title, then
       opens the sender avatar profile card and verifies the live `plate_aurora` nameplate plus
-      `badge-founder` badge. Broader multi-tab/device settings proof remains outside this row.
+      `badge-founder` badge. The 2026-05-31 customization Lottie delivery guard now proves those
+      shared catalog Lottie paths have public JSON delivery files. Broader multi-tab/device settings
+      proof remains outside this row.
 
 Done when:
 

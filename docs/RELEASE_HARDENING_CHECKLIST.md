@@ -365,6 +365,11 @@ Latest proof:
   chat UI message entrance animation values flow from the shared package into
   the settings chat panel, routed bubble customization page, chat UI settings
   panel, and legacy theme type boundary.
+- 2026-05-31: production web now ships every Lottie JSON file referenced by
+  the shared customization catalog for badges, titles, display-name effects,
+  and nameplates. `check:release-gates` now starts with
+  `check:customization-lottie-assets`, which verifies the 51 required public
+  `/lottie/...` assets are present and parseable before the test suite runs.
 
 ## Production External Providers
 

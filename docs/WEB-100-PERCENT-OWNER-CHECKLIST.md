@@ -39,6 +39,14 @@ motion metadata, and production web commit `452bc9d7f25da7f4965339ceec1e05c9e0c5
 mirror. This strengthens the checklist rows below, but it does not close the final owner sign-off
 questions.
 
+2026-05-31 customization Lottie delivery proof: production web now ships the public delivery assets
+for every shared-catalog Lottie path used by badges, titles, display-name effects, and nameplates.
+`apps/web/scripts/check-customization-lottie-assets.mjs` verifies the 51 required `/lottie/...`
+assets exist and parse as Lottie JSON, and `check:release-gates` runs that guard before the unit
+suite. The nameplate preview now uses the same public `LottieAssetRenderer` path as profile/card
+surfaces instead of an import map that kept all entries on `placeholder.json`. Local proof passed
+package guards, typecheck, lint, release-gates with 402 files / 5,358 tests, and build budget.
+
 2026-05-21 app-shell/theme proof: `cgraph-backend` commit `133152be845465d4ca3a66ce8cfe2ecbc15c5cfb`
 changes the persisted app-theme default to Aurora and migrates non-explicit legacy app-theme rows to
 Aurora, while preserving users who explicitly chose a different app theme. `cgraph-web` commit
@@ -786,7 +794,9 @@ Required implementation-time questions:
       extends the same live routed path to backend-shaped `equipped_badges` and
       `equipped_nameplate` friend patches: `otherIdentitySync`, `presenceManager`, and `chatStore`
       preserve the fields, then `apps/web/e2e/web-owner-uat.spec.ts` opens the routed DM sender
-      profile card and verifies the live `plate_aurora` nameplate plus `badge-founder` badge.
+      profile card and verifies the live `plate_aurora` nameplate plus `badge-founder` badge. The
+      2026-05-31 Lottie delivery follow-up ships the missing public badge/title/name-effect/nameplate
+      JSON files and adds a release-gate asset guard so catalog paths cannot silently regress to 404s.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
@@ -840,7 +850,10 @@ Required implementation-time questions:
       selectable profile-theme set capped at seven shared IDs in
       `packages/shared-types/src/cosmetics.ts`, validates saved IDs in the backend, and renders the
       same static theme semantics across full profile, profile-card, mini/hover-card, and
-      customization preview surfaces.
+      customization preview surfaces. The 2026-05-31 Lottie delivery guard proves the
+      catalog-referenced badge, title, display-name effect, and nameplate animation paths have
+      corresponding public web delivery assets rather than relying on missing files plus fallback
+      placeholders.
 - [x] Shared runtime-neutral types and schemas are defined in `packages/*`, not duplicated ad hoc in
       web. The 2026-05-15 slice moves the runtime-neutral user settings contract and defaults into
       `packages/shared-types/src/settings.ts`, keeps web re-exporting the contract from the old

@@ -11,17 +11,16 @@
  *
  */
 
-import { useEffect, useRef, useState, memo } from 'react';
+import { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import {
   getNameplateById,
   type NameplateEntry,
   type NameplateBorderStyle,
   type NameplateTextEffect,
 } from '@cgraph-dev/animation-constants';
-import { getNameplateLottieSource } from '@/assets/lottie/nameplates/nameplateMap';
-import type { AnimationItem } from 'lottie-web';
 /** Default canvas dimensions matching the registry spec (300×48). */
 const BAR_WIDTH = 300;
 const BAR_HEIGHT = 48;
@@ -146,73 +145,6 @@ function resolveTextEffectStyle(
       return { color };
   }
 }
-interface LottieBackgroundProps {
-  /** Lottie JSON animation data from the asset map (always a plain object). */
-  animationData: Record<string, unknown> | undefined;
-  /** Whether to skip Lottie and show nothing. */
-  disabled: boolean;
-}
-
-function LottieBackground({ animationData, disabled }: LottieBackgroundProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animRef = useRef<AnimationItem | null>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (disabled || !animationData || !containerRef.current) return;
-    let cancelled = false;
-
-    async function init() {
-      try {
-        const lottie = (await import('lottie-web/build/player/lottie_light')).default;
-        if (cancelled || !containerRef.current) return;
-
-        const anim = lottie.loadAnimation({
-          container: containerRef.current,
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-
-          animationData,
-        });
-
-        anim.addEventListener('DOMLoaded', () => {
-          if (!cancelled) {
-            animRef.current = anim;
-            setLoaded(true);
-          }
-        });
-
-        anim.addEventListener('data_failed', () => {
-          if (!cancelled) setLoaded(false);
-        });
-      } catch {
-        /* Lottie load failure — gradient fallback takes over */
-      }
-    }
-
-    void init();
-    return () => {
-      cancelled = true;
-      if (animRef.current) {
-        animRef.current.destroy();
-        animRef.current = null;
-      }
-      setLoaded(false);
-    };
-  }, [animationData, disabled]);
-
-  if (disabled) return null;
-
-  return (
-    <div
-      ref={containerRef}
-      className="pointer-events-none absolute inset-0 overflow-hidden"
-      style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.3s ease' }}
-      aria-hidden="true"
-    />
-  );
-}
 function GradientBackground({ gradient }: { gradient: readonly [string, string] | null }) {
   if (!gradient) return null;
   return (
@@ -248,9 +180,7 @@ export const NameplateBar = memo(function NameplateBar({
   // Resolve entry from shared registry
   const entry: NameplateEntry | undefined = nameplateId ? getNameplateById(nameplateId) : undefined;
 
-  // Resolve Lottie animation data from asset map
-  const lottieData = nameplateId ? getNameplateLottieSource(nameplateId) : undefined;
-  const hasLottie = Boolean(lottieData && entry?.lottieFile);
+  const hasLottie = Boolean(entry?.lottieUrl);
 
   if (!entry || entry.id === 'plate_none') {
     return null;
@@ -301,10 +231,15 @@ export const NameplateBar = memo(function NameplateBar({
         <GradientBackground gradient={entry.barGradient} />
 
         {/* Layer 2: Lottie animated background */}
-        <LottieBackground
-          animationData={lottieData}
-          disabled={prefersReducedMotion || !hasLottie}
-        />
+        {hasLottie && !prefersReducedMotion && (
+          <LottieAssetRenderer
+            path={entry.lottieUrl}
+            fallbackPath="/lottie/nameplates/placeholder.json"
+            label={`${entry.name} nameplate animation`}
+            className="pointer-events-none absolute inset-0 z-[1] overflow-hidden opacity-80"
+            fallback={null}
+          />
+        )}
 
         {/* Layer 3: Content — emblem + username text effect */}
         <div
