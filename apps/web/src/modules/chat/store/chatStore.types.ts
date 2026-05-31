@@ -151,6 +151,9 @@ export interface Reaction {
     id: string;
     username: string;
   };
+  count?: number;
+  users?: Array<{ id: string; username: string }>;
+  hasReacted?: boolean;
 }
 
 export interface EditHistory {

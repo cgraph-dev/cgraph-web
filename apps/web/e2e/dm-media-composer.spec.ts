@@ -151,6 +151,7 @@ async function installMessagingApiMocks(
   forwardedMessages: Record<string, unknown>[];
   paidFileUnlocks: string[];
   pinnedMessages: string[];
+  reactionActions: Array<{ method: string; messageId: string; emoji: string }>;
   requestActions: string[];
   sentMessages: Record<string, unknown>[];
   spacePatches: Record<string, unknown>[];
@@ -163,6 +164,7 @@ async function installMessagingApiMocks(
   const forwardedMessages: Record<string, unknown>[] = [];
   const paidFileUnlocks: string[] = [];
   const pinnedMessages: string[] = [];
+  const reactionActions: Array<{ method: string; messageId: string; emoji: string }> = [];
   const requestActions: string[] = [];
   const sentMessages: Record<string, unknown>[] = [];
   const spacePatches: Record<string, unknown>[] = [];
@@ -509,6 +511,42 @@ async function installMessagingApiMocks(
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: {} }) });
   });
 
+  await page.route('**/api/v1/messages/*/reactions**', async (route, request) => {
+    const url = new URL(request.url());
+    const parts = url.pathname.split('/');
+    const messageId = parts[4] ?? '';
+
+    if (request.method() === 'POST') {
+      const body = request.postDataJSON() as { emoji?: unknown };
+      const emoji = typeof body.emoji === 'string' ? body.emoji : '';
+      reactionActions.push({ method: 'POST', messageId, emoji });
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: `reaction-${messageId}-${emoji}`,
+            emoji,
+            message_id: messageId,
+            user_id: CURRENT_USER_ID,
+            user: conversation.participants[0].user,
+            created_at: '2026-01-01T00:03:00.000Z',
+          },
+        }),
+      });
+      return;
+    }
+
+    if (request.method() === 'DELETE') {
+      const emoji = decodeURIComponent(parts.at(-1) ?? '');
+      reactionActions.push({ method: 'DELETE', messageId, emoji });
+      await route.fulfill({ status: 204, body: '' });
+      return;
+    }
+
+    await route.fallback();
+  });
+
   await page.route('**/api/v1/paid-dm/*/unlock', async (route, request) => {
     paidFileUnlocks.push(request.method());
 
@@ -582,6 +620,7 @@ async function installMessagingApiMocks(
     forwardedMessages,
     paidFileUnlocks,
     pinnedMessages,
+    reactionActions,
     requestActions,
     sentMessages,
     spacePatches,
@@ -967,6 +1006,53 @@ test.describe('DM media composer', () => {
         })
       );
     await expect(page.getByLabel(/sticker wave/i).first()).toBeVisible();
+  });
+
+  test('removes and re-adds routed cloud-DM reactions from backend summaries', async ({ page }) => {
+    const { reactionActions } = await installMessagingApiMocks(page, {
+      initialMessages: [
+        messageFixture({
+          id: 'msg-react',
+          content: 'reaction proof',
+          reactions: [
+            {
+              emoji: '👍',
+              count: 2,
+              users: [
+                { id: CURRENT_USER_ID, username: 'e2e-user' },
+                { id: FRIEND_USER_ID, username: 'friend' },
+              ],
+            },
+          ],
+        }),
+      ],
+    });
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    const reactionMessage = page.locator('#message-msg-react');
+    const removeReaction = reactionMessage.getByRole('button', {
+      name: /remove 👍 reaction, 2 total/i,
+    });
+    await expect(removeReaction).toBeVisible();
+    await removeReaction.click();
+
+    await expect
+      .poll(() => reactionActions, { message: 'reaction delete endpoint was called' })
+      .toContainEqual({ method: 'DELETE', messageId: 'msg-react', emoji: '👍' });
+
+    const addReaction = reactionMessage.getByRole('button', {
+      name: /add 👍 reaction, 1 total/i,
+    });
+    await expect(addReaction).toBeVisible();
+    await addReaction.click();
+
+    await expect
+      .poll(() => reactionActions, { message: 'reaction create endpoint was called' })
+      .toContainEqual({ method: 'POST', messageId: 'msg-react', emoji: '👍' });
+    await expect(
+      reactionMessage.getByRole('button', { name: /remove 👍 reaction, 2 total/i })
+    ).toBeVisible();
   });
 
   test('runs routed cloud-DM reply, search jump, edit, pin, forward, and delete actions', async ({

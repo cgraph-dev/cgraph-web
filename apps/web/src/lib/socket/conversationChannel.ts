@@ -10,6 +10,7 @@ import type { Socket, Channel } from 'phoenix';
 import { Presence } from 'phoenix';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
+import { normalizeMessageReactions } from '@/modules/chat/store/chatStore.normalizers';
 import { http } from '../api-client';
 import { socketLogger as logger } from '../logger';
 import { normalizeMessage } from '../api-utils';
@@ -168,7 +169,6 @@ export function _gapRepairInFlightHas(conversationId: string): boolean {
 function recordToMessage(record: Record<string, unknown>): Message {
   const sender = isRecord(record['sender']) ? record['sender'] : {};
   const identity = identityFieldsFromApi(sender);
-  const rawReactions = Array.isArray(record['reactions']) ? record['reactions'] : [];
 
   return {
     id: typeof record['id'] === 'string' ? record['id'] : '',
@@ -194,10 +194,7 @@ function recordToMessage(record: Record<string, unknown>): Message {
     metadata: isRecord(record['metadata'])
       ? (record['metadata'] satisfies Message['metadata'])
       : {},
-    reactions: rawReactions.filter(
-      (r): r is Message['reactions'][number] =>
-        isRecord(r) && typeof r['emoji'] === 'string' && typeof r['count'] === 'number'
-    ),
+    reactions: normalizeMessageReactions(record['reactions']),
     sender: {
       id: identity.id,
       username: identity.username,

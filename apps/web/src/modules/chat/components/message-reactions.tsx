@@ -123,6 +123,7 @@ export default function MessageReactions({
         {reactions.map((reaction) => (
           <motion.button
             key={reaction.emoji}
+            type="button"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
@@ -132,6 +133,8 @@ export default function MessageReactions({
             onMouseEnter={() => setShowTooltip(reaction.emoji)}
             onMouseLeave={() => setShowTooltip(null)}
             disabled={disabled}
+            aria-pressed={reaction.hasReacted}
+            aria-label={`${reaction.hasReacted ? 'Remove' : 'Add'} ${reaction.emoji} reaction, ${reaction.count} total`}
             className={`group relative inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-all duration-200 ${
               reaction.hasReacted
                 ? 'border border-primary-500/50 bg-gradient-to-r from-primary-500/30 to-purple-500/30'
@@ -210,6 +213,7 @@ export default function MessageReactions({
       {/* Add reaction button */}
       <div className="relative" ref={pickerRef}>
         <motion.button
+          type="button"
           whileHover={{ opacity: 0.9 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => {
@@ -243,9 +247,11 @@ export default function MessageReactions({
                   {QUICK_REACTIONS.map((emoji) => (
                     <motion.button
                       key={emoji}
+                      type="button"
                       whileHover={{ rotate: 5 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleReaction(emoji)}
+                      aria-label={`React with ${emoji}`}
                       className="rounded-lg p-2 transition-colors hover:bg-white/10"
                     >
                       <span className="text-2xl leading-none">
@@ -266,6 +272,7 @@ export default function MessageReactions({
                 ).map((category) => (
                   <button
                     key={category}
+                    type="button"
                     onClick={() => setActiveCategory(category)}
                     className={`rounded px-2 py-1 text-xs transition-colors ${
                       activeCategory === category
@@ -283,9 +290,11 @@ export default function MessageReactions({
                 {EMOJI_CATEGORIES[activeCategory].map((emoji) => (
                   <motion.button
                     key={emoji}
+                    type="button"
                     whileHover={{ rotate: 5 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleReaction(emoji)}
+                    aria-label={`React with ${emoji}`}
                     className="rounded p-2 transition-colors hover:bg-white/10"
                   >
                     <span className="text-xl leading-none">

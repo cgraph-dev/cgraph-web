@@ -11,6 +11,18 @@ import type { Message, MessageMetadata } from './chatStore.types';
 import { normalizeMessage } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
 
+function stringValue(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function booleanValue(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
 function rawSender(raw: Record<string, unknown>): Message['sender'] {
   const s = raw.sender instanceof Object ? Object.fromEntries(Object.entries(raw.sender)) : {};
   const identity = identityFieldsFromApi(s);
@@ -57,6 +69,59 @@ function rawMetadata(raw: Record<string, unknown>): MessageMetadata {
   return {};
 }
 
+function rawReactionUser(raw: unknown): Message['reactions'][number]['user'] | null {
+  if (!(raw instanceof Object)) return null;
+
+  const record = Object.fromEntries(Object.entries(raw));
+  const id = stringValue(record.id ?? record.userId ?? record.user_id);
+  if (!id) return null;
+
+  return {
+    id,
+    username:
+      stringValue(record.username ?? record.displayName ?? record.display_name) ?? 'Unknown User',
+  };
+}
+
+function rawReactionUsers(raw: unknown): Array<{ id: string; username: string }> {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map(rawReactionUser)
+    .filter((user): user is { id: string; username: string } => user !== null);
+}
+
+export function normalizeMessageReactions(raw: unknown): Message['reactions'] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw.flatMap((value, index): Message['reactions'] => {
+    if (!(value instanceof Object)) return [];
+
+    const record = Object.fromEntries(Object.entries(value));
+    const emoji = stringValue(record.emoji);
+    if (!emoji) return [];
+
+    const users = rawReactionUsers(record.users);
+    const user = rawReactionUser(record.user) ?? users[0] ?? null;
+    const userId = stringValue(record.userId ?? record.user_id) ?? user?.id ?? `reaction-${index}`;
+    const normalizedUser = user ?? { id: userId, username: 'Unknown User' };
+    const count = numberValue(record.count);
+    const hasReacted = booleanValue(record.hasReacted ?? record.has_reacted);
+
+    return [
+      {
+        id: stringValue(record.id) ?? `${emoji}-${userId}-${index}`,
+        emoji,
+        userId,
+        user: normalizedUser,
+        count,
+        users: users.length > 0 ? users : undefined,
+        hasReacted,
+      },
+    ];
+  });
+}
+
 /**
  * Convert a normalized message Record<string,unknown> to a typed Message.
  * Ensures required string fields never remain null/undefined.
@@ -76,7 +141,7 @@ export function toTypedMessage(raw: Record<string, unknown>): Message {
     isEdited: raw.isEdited === true,
     deletedAt: typeof raw.deletedAt === 'string' ? raw.deletedAt : null,
     metadata: rawMetadata(raw),
-    reactions: [],
+    reactions: normalizeMessageReactions(raw.reactions),
     sender: rawSender(raw),
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),

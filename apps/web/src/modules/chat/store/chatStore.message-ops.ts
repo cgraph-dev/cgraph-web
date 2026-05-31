@@ -52,6 +52,106 @@ function compareMessages(left: Message, right: Message): number {
   return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
 }
 
+function isReactionSummary(reaction: Reaction): boolean {
+  return (
+    typeof reaction.count === 'number' ||
+    Array.isArray(reaction.users) ||
+    typeof reaction.hasReacted === 'boolean'
+  );
+}
+
+function reactionUsers(reaction: Reaction): Array<{ id: string; username: string }> {
+  if (reaction.users && reaction.users.length > 0) return reaction.users;
+  if (reaction.user?.id) return [reaction.user];
+  return [];
+}
+
+function reactionIncludesUser(
+  reaction: Reaction,
+  userId: string,
+  options: { allowCurrentUserFlag?: boolean } = {}
+): boolean {
+  if (!userId) return false;
+  if (reaction.userId === userId) return true;
+  if (reactionUsers(reaction).some((user) => user.id === userId)) return true;
+  return options.allowCurrentUserFlag === true && reaction.hasReacted === true;
+}
+
+function addUserReaction(
+  reactions: Reaction[],
+  nextReaction: Reaction,
+  options: { allowCurrentUserFlag?: boolean } = {}
+): Reaction[] {
+  if (
+    reactions.some(
+      (reaction) =>
+        reaction.emoji === nextReaction.emoji &&
+        reactionIncludesUser(reaction, nextReaction.userId, options)
+    )
+  ) {
+    return reactions;
+  }
+
+  const summaryIndex = reactions.findIndex(
+    (reaction) => reaction.emoji === nextReaction.emoji && isReactionSummary(reaction)
+  );
+
+  if (summaryIndex === -1) return [...reactions, nextReaction];
+
+  return reactions.map((reaction, index) => {
+    if (index !== summaryIndex) return reaction;
+
+    const users = reactionUsers(reaction);
+    const nextUsers = users.some((user) => user.id === nextReaction.userId)
+      ? users
+      : [...users, nextReaction.user];
+    const currentCount = Math.max(reaction.count ?? users.length, users.length);
+
+    return {
+      ...reaction,
+      count: currentCount + 1,
+      users: nextUsers,
+      hasReacted: options.allowCurrentUserFlag === true ? true : reaction.hasReacted,
+    };
+  });
+}
+
+function removeUserReaction(
+  reactions: Reaction[],
+  emoji: string,
+  userId: string,
+  options: { allowCurrentUserFlag?: boolean } = {}
+): Reaction[] {
+  return reactions.flatMap((reaction): Reaction[] => {
+    if (reaction.emoji !== emoji) return [reaction];
+
+    if (!isReactionSummary(reaction)) {
+      return reaction.userId === userId ? [] : [reaction];
+    }
+
+    if (!reactionIncludesUser(reaction, userId, options)) return [reaction];
+
+    const users = reactionUsers(reaction);
+    const nextUsers = users.filter((user) => user.id !== userId);
+    const currentCount = Math.max(reaction.count ?? users.length, users.length);
+    const nextCount = Math.max(currentCount - 1, 0);
+    if (nextCount === 0) return [];
+
+    const nextUser = nextUsers[0] ?? { id: '', username: 'User' };
+
+    return [
+      {
+        ...reaction,
+        userId: nextUser.id,
+        user: nextUser,
+        count: nextCount,
+        users: nextUsers,
+        hasReacted: options.allowCurrentUserFlag === true ? false : reaction.hasReacted,
+      },
+    ];
+  });
+}
+
 /** Create message-related operations actions for the chat store. */
 export function createMessageOpsActions(set: Set, get: Get) {
   return {
@@ -130,15 +230,13 @@ export function createMessageOpsActions(set: Set, get: Get) {
 
       set((state) => {
         const updatedMessages = updateMessageReactions(state.messages, messageId, (reactions) => {
-          const alreadyExists = reactions.some((r) => r.emoji === emoji && r.userId === userId);
-          if (alreadyExists) return reactions;
           const newReaction: Reaction = {
             id: `${messageId}-${emoji}-${userId}`,
             emoji,
             userId,
             user: { id: userId, username },
           };
-          return [...reactions, newReaction];
+          return addUserReaction(reactions, newReaction, { allowCurrentUserFlag: true });
         });
         return { messages: { ...state.messages, ...updatedMessages } };
       });
@@ -166,7 +264,7 @@ export function createMessageOpsActions(set: Set, get: Get) {
 
       set((state) => {
         const updatedMessages = updateMessageReactions(state.messages, messageId, (reactions) =>
-          reactions.filter((r) => !(r.emoji === emoji && r.userId === userId))
+          removeUserReaction(reactions, emoji, userId, { allowCurrentUserFlag: true })
         );
         return { messages: { ...state.messages, ...updatedMessages } };
       });
@@ -337,17 +435,17 @@ export function createMessageOpsActions(set: Set, get: Get) {
     /** Add a reaction to a message (from socket event) */
     addReactionToMessage: (messageId: string, emoji: string, userId: string, username?: string) => {
       set((state) => {
+        const isCurrentUser = userId === useAuthStore.getState().user?.id;
         const updatedMessages = updateMessageReactions(state.messages, messageId, (reactions) => {
-          const alreadyExists = reactions.some((r) => r.emoji === emoji && r.userId === userId);
-          if (alreadyExists) return reactions;
-
           const newReaction: Reaction = {
             id: `${messageId}-${emoji}-${userId}`,
             emoji,
             userId,
             user: { id: userId, username: username || 'User' },
           };
-          return [...reactions, newReaction];
+          return addUserReaction(reactions, newReaction, {
+            allowCurrentUserFlag: isCurrentUser,
+          });
         });
         return { messages: { ...state.messages, ...updatedMessages } };
       });
@@ -356,8 +454,11 @@ export function createMessageOpsActions(set: Set, get: Get) {
     /** Remove a reaction from a message (from socket event) */
     removeReactionFromMessage: (messageId: string, emoji: string, userId: string) => {
       set((state) => {
+        const isCurrentUser = userId === useAuthStore.getState().user?.id;
         const updatedMessages = updateMessageReactions(state.messages, messageId, (reactions) =>
-          reactions.filter((r) => !(r.emoji === emoji && r.userId === userId))
+          removeUserReaction(reactions, emoji, userId, {
+            allowCurrentUserFlag: isCurrentUser,
+          })
         );
         return { messages: { ...state.messages, ...updatedMessages } };
       });

@@ -35,6 +35,25 @@ export async function handleAddReaction(
   }
 }
 
+type MessageReaction = MessageBubbleProps['message']['reactions'][number];
+
+function reactionSignature(reaction: MessageReaction): string {
+  const users = reaction.users?.map((user) => user.id).join(',') ?? reaction.userId;
+  return [
+    reaction.emoji,
+    reaction.count ?? '',
+    reaction.hasReacted === true ? '1' : '0',
+    users,
+  ].join(':');
+}
+
+function reactionsEqual(left: MessageReaction[], right: MessageReaction[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((reaction, index) => reactionSignature(reaction) === reactionSignature(right[index]!))
+  );
+}
+
 /**
  * Map UIPreferences voiceVisualizerTheme to AdvancedVoiceVisualizer theme
  * The visualizer expects 'amber' but UIPreferences uses 'sunset-orange'
@@ -60,7 +79,7 @@ export function areMessageBubblePropsEqual(
     prevProps.message.id === nextProps.message.id &&
     prevProps.message.content === nextProps.message.content &&
     prevProps.message.isEdited === nextProps.message.isEdited &&
-    prevProps.message.reactions.length === nextProps.message.reactions.length &&
+    reactionsEqual(prevProps.message.reactions, nextProps.message.reactions) &&
     prevProps.message.isPinned === nextProps.message.isPinned &&
     prevProps.isOwn === nextProps.isOwn &&
     prevProps.showAvatar === nextProps.showAvatar &&

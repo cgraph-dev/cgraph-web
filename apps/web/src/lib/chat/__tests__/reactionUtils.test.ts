@@ -113,6 +113,34 @@ describe('aggregateReactions', () => {
       { id: 'b', username: 'Bob' },
     ]);
   });
+
+  it('preserves backend reaction-summary counts and current-user state', () => {
+    const result = aggregateReactions(
+      [
+        {
+          emoji: '👍',
+          count: 4,
+          users: [
+            { id: 'currentUser', username: 'me' },
+            { id: 'friend', username: 'friend' },
+          ],
+        },
+      ],
+      'currentUser'
+    );
+
+    expect(result).toEqual([
+      {
+        emoji: '👍',
+        count: 4,
+        users: [
+          { id: 'currentUser', username: 'me' },
+          { id: 'friend', username: 'friend' },
+        ],
+        hasReacted: true,
+      },
+    ]);
+  });
 });
 
 // aggregateReactionsSimple
@@ -155,6 +183,15 @@ describe('aggregateReactionsSimple', () => {
     const reactions = [makeReaction('👍', 'u1'), makeReaction('❤️', 'u1')];
     const result = aggregateReactionsSimple(reactions, 'u1');
     expect(Object.keys(result)).toHaveLength(2);
+  });
+
+  it('counts backend reaction summaries without flattening away count', () => {
+    const result = aggregateReactionsSimple(
+      [{ emoji: '🔥', count: 5, users: [{ id: 'u2', username: 'friend' }] }],
+      'u1'
+    );
+
+    expect(result['🔥']).toEqual({ count: 5, hasReacted: false });
   });
 });
 

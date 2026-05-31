@@ -188,6 +188,38 @@ describe('createMessageOpsActions', () => {
       });
     });
 
+    it('increments backend summaries and marks the current user as reacted optimistically', async () => {
+      const msg = makeMsg({
+        reactions: [
+          {
+            id: 'summary-1',
+            emoji: '👍',
+            userId: 'user-2',
+            user: { id: 'user-2', username: 'bob' },
+            count: 1,
+            users: [{ id: 'user-2', username: 'bob' }],
+            hasReacted: false,
+          },
+        ],
+      });
+      const { set, get, state } = createMockSetGet({ 'conv-1': [msg] });
+      const actions = createMessageOpsActions(set as never, get as never);
+
+      mockApi.post.mockResolvedValueOnce({});
+
+      await actions.addReaction('msg-1', '👍');
+
+      const updatedMsg = state.messages?.['conv-1']?.find((m: Message) => m.id === 'msg-1');
+      expect(updatedMsg?.reactions[0]).toMatchObject({
+        count: 2,
+        hasReacted: true,
+        users: [
+          { id: 'user-2', username: 'bob' },
+          { id: 'current-user', username: 'me' },
+        ],
+      });
+    });
+
     it('does not rollback on 422 (already exists)', async () => {
       const msg = makeMsg({ reactions: [] });
       const { set, get } = createMockSetGet({ 'conv-1': [msg] });
@@ -222,6 +254,40 @@ describe('createMessageOpsActions', () => {
       await actions.removeReaction('msg-1', '👍');
 
       expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/messages/msg-1/reactions/👍');
+    });
+
+    it('decrements backend summaries and clears the current-user reaction optimistically', async () => {
+      const msg = makeMsg({
+        reactions: [
+          {
+            id: 'summary-1',
+            emoji: '👍',
+            userId: 'current-user',
+            user: { id: 'current-user', username: 'me' },
+            count: 2,
+            users: [
+              { id: 'current-user', username: 'me' },
+              { id: 'user-2', username: 'bob' },
+            ],
+            hasReacted: true,
+          },
+        ],
+      });
+      const { set, get, state } = createMockSetGet({ 'conv-1': [msg] });
+      const actions = createMessageOpsActions(set as never, get as never);
+
+      mockApi.delete.mockResolvedValueOnce({});
+
+      await actions.removeReaction('msg-1', '👍');
+
+      const updatedMsg = state.messages?.['conv-1']?.find((m: Message) => m.id === 'msg-1');
+      expect(updatedMsg?.reactions[0]).toMatchObject({
+        userId: 'user-2',
+        user: { id: 'user-2', username: 'bob' },
+        count: 1,
+        hasReacted: false,
+        users: [{ id: 'user-2', username: 'bob' }],
+      });
     });
 
     it('does not rollback on 404 (already removed)', async () => {
@@ -340,6 +406,70 @@ describe('createMessageOpsActions', () => {
         }
       }
     });
+
+    it('increments backend summaries for socket users without treating hasReacted as their membership', () => {
+      const msg = makeMsg({
+        reactions: [
+          {
+            id: 'summary-1',
+            emoji: '🎉',
+            userId: 'current-user',
+            user: { id: 'current-user', username: 'me' },
+            count: 1,
+            users: [{ id: 'current-user', username: 'me' }],
+            hasReacted: true,
+          },
+        ],
+      });
+      const { set, get, state } = createMockSetGet({ 'conv-1': [msg] });
+      const actions = createMessageOpsActions(set as never, get as never);
+
+      actions.addReactionToMessage('msg-1', '🎉', 'user-2', 'bob');
+
+      const updater = set.mock.calls[0]![0];
+      const result = typeof updater === 'function' ? updater(state) : updater;
+      const updatedMsg = result.messages['conv-1']?.find((m: Message) => m.id === 'msg-1');
+      expect(updatedMsg?.reactions[0]).toMatchObject({
+        count: 2,
+        hasReacted: true,
+        users: [
+          { id: 'current-user', username: 'me' },
+          { id: 'user-2', username: 'bob' },
+        ],
+      });
+    });
+
+    it('preserves current-user hasReacted false when another socket user reacts', () => {
+      const msg = makeMsg({
+        reactions: [
+          {
+            id: 'summary-1',
+            emoji: '🎉',
+            userId: 'user-3',
+            user: { id: 'user-3', username: 'chen' },
+            count: 1,
+            users: [{ id: 'user-3', username: 'chen' }],
+            hasReacted: false,
+          },
+        ],
+      });
+      const { set, get, state } = createMockSetGet({ 'conv-1': [msg] });
+      const actions = createMessageOpsActions(set as never, get as never);
+
+      actions.addReactionToMessage('msg-1', '🎉', 'user-2', 'bob');
+
+      const updater = set.mock.calls[0]![0];
+      const result = typeof updater === 'function' ? updater(state) : updater;
+      const updatedMsg = result.messages['conv-1']?.find((m: Message) => m.id === 'msg-1');
+      expect(updatedMsg?.reactions[0]).toMatchObject({
+        count: 2,
+        hasReacted: false,
+        users: [
+          { id: 'user-3', username: 'chen' },
+          { id: 'user-2', username: 'bob' },
+        ],
+      });
+    });
   });
 
   describe('removeReactionFromMessage (socket event)', () => {
@@ -363,6 +493,38 @@ describe('createMessageOpsActions', () => {
           expect(updatedMsg.reactions).toHaveLength(0);
         }
       }
+    });
+
+    it('decrements backend summaries for socket users without clearing current-user state', () => {
+      const msg = makeMsg({
+        reactions: [
+          {
+            id: 'summary-1',
+            emoji: '🎉',
+            userId: 'current-user',
+            user: { id: 'current-user', username: 'me' },
+            count: 2,
+            users: [
+              { id: 'current-user', username: 'me' },
+              { id: 'user-2', username: 'bob' },
+            ],
+            hasReacted: true,
+          },
+        ],
+      });
+      const { set, get, state } = createMockSetGet({ 'conv-1': [msg] });
+      const actions = createMessageOpsActions(set as never, get as never);
+
+      actions.removeReactionFromMessage('msg-1', '🎉', 'user-2');
+
+      const updater = set.mock.calls[0]![0];
+      const result = typeof updater === 'function' ? updater(state) : updater;
+      const updatedMsg = result.messages['conv-1']?.find((m: Message) => m.id === 'msg-1');
+      expect(updatedMsg?.reactions[0]).toMatchObject({
+        count: 1,
+        hasReacted: true,
+        users: [{ id: 'current-user', username: 'me' }],
+      });
     });
   });
 

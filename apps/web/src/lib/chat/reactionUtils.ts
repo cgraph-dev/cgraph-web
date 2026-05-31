@@ -30,13 +30,17 @@ export interface AggregatedReaction {
  * Includes individual user attribution for each reaction instance.
  */
 export interface RawReaction {
-  id: string;
+  id?: string;
   emoji: string;
-  userId: string;
-  user: {
+  userId?: string;
+  user?: {
     id: string;
     username: string;
   };
+  count?: number;
+  users?: Array<{ id: string; username?: string; displayName?: string | null }>;
+  hasReacted?: boolean;
+  has_reacted?: boolean;
 }
 
 // AGGREGATION UTILITIES
@@ -63,22 +67,23 @@ export function aggregateReactions(
     // Skip reactions with missing required data
     if (!reaction?.emoji) continue;
 
-    const reactionUserId = reaction.user?.id ?? reaction.userId ?? 'unknown';
-    const username = reaction.user?.username ?? 'Unknown User';
+    const users = reactionUsers(reaction);
+    const count = reactionCount(reaction, users);
+    const hasReacted = reactionHasReacted(reaction, userId, users);
     const existing = aggregationMap.get(reaction.emoji);
 
     if (existing) {
-      existing.count++;
-      existing.users.push({ id: reactionUserId, username });
-      if (reaction.userId === userId) {
+      existing.count += count;
+      existing.users.push(...users);
+      if (hasReacted) {
         existing.hasReacted = true;
       }
     } else {
       aggregationMap.set(reaction.emoji, {
         emoji: reaction.emoji,
-        count: 1,
-        users: [{ id: reactionUserId, username }],
-        hasReacted: reaction.userId === userId,
+        count,
+        users,
+        hasReacted,
       });
     }
   }
@@ -104,10 +109,46 @@ export function aggregateReactionsSimple(
 
   return reactions.reduce<Record<string, { count: number; hasReacted: boolean }>>((acc, r) => {
     const entry = (acc[r.emoji] ??= { count: 0, hasReacted: false });
-    entry.count++;
-    if (userId && r.userId === userId) entry.hasReacted = true;
+    const users = reactionUsers(r);
+    entry.count += reactionCount(r, users);
+    if (reactionHasReacted(r, userId, users)) entry.hasReacted = true;
     return acc;
   }, {});
+}
+
+function reactionUsers(reaction: RawReaction): AggregatedReaction['users'] {
+  if (Array.isArray(reaction.users) && reaction.users.length > 0) {
+    return reaction.users
+      .filter((user) => typeof user.id === 'string' && user.id.length > 0)
+      .map((user) => ({
+        id: user.id,
+        username: user.username ?? user.displayName ?? 'Unknown User',
+      }));
+  }
+
+  const id = reaction.user?.id ?? reaction.userId;
+  if (!id) return [];
+
+  return [{ id, username: reaction.user?.username ?? 'Unknown User' }];
+}
+
+function reactionCount(reaction: RawReaction, users: AggregatedReaction['users']): number {
+  if (typeof reaction.count === 'number' && Number.isFinite(reaction.count)) {
+    return Math.max(reaction.count, users.length, 0);
+  }
+
+  return Math.max(users.length, 1);
+}
+
+function reactionHasReacted(
+  reaction: RawReaction,
+  currentUserId: string | null | undefined,
+  users: AggregatedReaction['users']
+): boolean {
+  if (reaction.hasReacted === true || reaction.has_reacted === true) return true;
+  if (!currentUserId) return false;
+
+  return reaction.userId === currentUserId || users.some((user) => user.id === currentUserId);
 }
 
 // REACTION HANDLERS

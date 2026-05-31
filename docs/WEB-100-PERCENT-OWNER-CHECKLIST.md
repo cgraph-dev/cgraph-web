@@ -741,6 +741,11 @@ Required implementation-time questions:
       `apps/web/e2e/dm-media-composer.spec.ts`; the 2026-05-16 read-receipt slice also proves
       backend `metadata.readBy` serialization with
       `apps/backend/test/cgraph_web/controllers/api/v1/message_controller_test.exs`.
+- [x] Routed DM reaction remove/re-add parity is browser-verified from the mounted Cloud Chat route.
+      The 2026-05-31 follow-up preserves backend reaction-summary `count` / `users` payloads,
+      decrements same-length reaction summaries without stale memoized bubble rendering, and proves
+      DELETE plus POST against `/api/v1/messages/:id/reactions` in
+      `apps/web/e2e/dm-media-composer.spec.ts`.
 - [x] Routed DM typing start/stop emits from the live input path. Verified by
       `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16 with the E2E-only typing observer.
 - [x] Routed DM voice/video call entry launches real call routes from the live header. Verified by

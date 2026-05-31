@@ -239,11 +239,11 @@ correctness work below before feature expansion or scale items.
 3. Routed DM parity
 
 - Browser-verified now: routed file/photo send, voice-note send, reply, search jump,
-  edit/delete/forward, message-request accept/reject/block-report, pin, loaded pinned-message panel,
-  routed Seen/read-receipt rendering, guarded search-anchor/latest-jump scroll behavior, and typing
-  start/stop emit from the live input path, plus GIF/sticker send, voice/video call-entry launch
-  from the live DM header, call-history callback launch from a real history row, and incoming-call
-  accept/end-state route behavior.
+  reaction summary remove/re-add, edit/delete/forward, message-request accept/reject/block-report,
+  pin, loaded pinned-message panel, routed Seen/read-receipt rendering, guarded
+  search-anchor/latest-jump scroll behavior, and typing start/stop emit from the live input path,
+  plus GIF/sticker send, voice/video call-entry launch from the live DM header, call-history
+  callback launch from a real history row, and incoming-call accept/end-state route behavior.
 - Still open: canonical DM surface convergence and deeper peer media-negotiation verification.
 
 4. Routed group parity
