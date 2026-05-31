@@ -1,0 +1,19 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+      time: '04:00'
+      timezone: Europe/Bucharest
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-name: '@cgraph-dev/*'
+    groups:
+      cgraph-dev-packages:
+        patterns:
+          - '@cgraph-dev/*'
+    commit-message:
+      prefix: chore(packages)
+      include: scope

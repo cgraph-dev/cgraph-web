@@ -1,29 +1,27 @@
 # CGraph Web
 
 CGraph Web is the browser client workspace for the authenticated CGraph app.
-It contains the Vite application in `apps/web` and the shared TypeScript
-packages required by that app.
+It contains the Vite application in `apps/web` and consumes the published
+`@cgraph-dev/*` package set required by that app.
 
 ## Layout
 
 - `apps/web`: React 19, Vite, TypeScript, React Router, Zustand, TanStack Query,
   Phoenix socket client, and the web deployment configuration.
-- `packages/api-client`: typed HTTP contracts and API client surfaces.
-- `packages/shared-types`: cross-platform DTOs, event shapes, and domain types.
-- `packages/utils`: shared validation, formatting, resilience, and HTTP helpers.
-- `packages/animation-constants` and `packages/design-tokens`: cross-platform UI
-  constants used by web and native clients.
+- `apps/web/package.json`: exact published `@cgraph-dev/*` package pins.
+- `.github/dependabot.yml`: grouped `@cgraph-dev/*` package upgrade PRs.
+- `scripts/validate-package-dependencies.mjs`: package-consumption guard.
 
 ## Shared Package Ownership
 
-`cgraph-packages` is the canonical repository for every `@cgraph/*` package.
-The `packages/` directory in this repository is a deployment snapshot used while
-the app still builds through a Vercel workspace. Shared contract, crypto, token,
-or utility changes must land in `cgraph-packages` first, then be released or
-mirrored into this repo by an explicit package-sync change.
+`cgraph-packages` is the canonical repository for every `@cgraph-dev/*` package.
+This repository must consume exact published package versions; it must not carry
+an app-local `packages/` mirror. Shared contract, token, or utility changes must
+land in `cgraph-packages` first, then ship here through a package-version update.
 
-Do not make product changes directly inside `packages/` unless the matching
-`cgraph-packages` change is part of the same rollout.
+`pnpm check:packages` and `pnpm check:package-owner` reject local package
+protocols, old `@cgraph/*` dependencies, local mirror path aliases, and a
+reintroduced `packages/` tree.
 
 ## Commands
 
