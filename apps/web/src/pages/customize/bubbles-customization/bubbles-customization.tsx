@@ -9,12 +9,13 @@
  * radius / colour selections never reached the actual chat UI.
  */
 import { normalizeChatBubbleStyleId } from '@cgraph-dev/design-tokens';
+import { isChatUiMessageEntranceAnimation } from '@cgraph-dev/shared-types';
 import { useThemeStore } from '@/stores/theme';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { BubblesTab } from '@/components/theme/theme-customizer/bubbles-tab';
 import type { ChatBubbleStylePreset, ThemeColorPreset } from '@/stores';
-import type { BubbleAnimation, ThemePreset } from '@/modules/settings/store/customization/customizationStore.types';
+import type { ThemePreset } from '@/modules/settings/store/customization/customizationStore.types';
 
 const COLOR_MAP: Readonly<Record<ThemeColorPreset, ThemePreset>> = {
   emerald: 'emerald',
@@ -30,21 +31,6 @@ const COLOR_MAP: Readonly<Record<ThemeColorPreset, ThemePreset>> = {
   forest: 'emerald',
   ocean: 'cyan',
 };
-
-function isBubbleAnimation(value: unknown): value is BubbleAnimation {
-  if (typeof value !== 'string') return false;
-  switch (value) {
-    case 'none':
-    case 'slide':
-    case 'fade':
-    case 'scale':
-    case 'bounce':
-    case 'flip':
-      return true;
-    default:
-      return false;
-  }
-}
 
 /** Bubbles category — renders BubblesTab bound to both stores. */
 export default function BubblesCustomization() {
@@ -76,7 +62,7 @@ export default function BubblesCustomization() {
     const entrance = settings.bubbleEntranceAnimation;
     if (typeof radius === 'number') customizationSetRadius(radius);
     if (typeof shadow === 'number') customizationSetShadow(shadow);
-    if (isBubbleAnimation(entrance)) customizationSetAnimation(entrance);
+    if (isChatUiMessageEntranceAnimation(entrance)) customizationSetAnimation(entrance);
   }
 
   return (

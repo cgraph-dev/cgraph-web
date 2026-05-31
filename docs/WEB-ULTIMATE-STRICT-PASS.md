@@ -872,7 +872,7 @@ settlement remain open.
 `cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from local
 `packages/*` mirrors to exact published npm dependencies
 `@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.0.3`,
-`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.5`, and
+`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.6`, and
 `@cgraph-dev/utils@1.0.1`. The commit removes the mirror workspace and path
 aliases, replaces the old snapshot/mirror gates with a published-package
 dependency guard, and was verified with `pnpm check:packages`,
@@ -902,6 +902,16 @@ signoff remain open.
 compatibility adapter over package-owned chat presentation defaults and value
 guards. This narrows the chat bubble/message presentation foundation without
 claiming final messaging or release-score closure.
+
+2026-05-31 chat entrance-animation package proof: production web consumes
+`@cgraph-dev/shared-types@1.0.6`, making the package-owned
+`CHAT_UI_MESSAGE_ENTRANCE_ANIMATIONS` and `isChatUiMessageEntranceAnimation(...)`
+the source of truth for message entrance animation values across the settings
+chat panel, routed bubble customization page, chat UI settings panel,
+customization store type boundary, and legacy theme type boundary. Local package
+guards, typecheck, lint, and the full Vitest suite with 402 files / 5,358 tests
+passed. This further narrows chat presentation semantics while keeping the
+strict score unchanged.
 
 2026-05-31 CI runtime proof: production web commit
 `ab47c4b8a7989a19b28434698818111c1dfa8ec9` opts the `Web Release Gates`

@@ -6,6 +6,7 @@
  *
  */
 import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
+import type { ChatUiMessageEntranceAnimation } from '@cgraph-dev/shared-types';
 
 // TYPES
 
@@ -55,7 +56,7 @@ export type ProfileCardStyle =
   | 'full'
   | 'premium';
 
-export type BubbleAnimation = 'none' | 'slide' | 'fade' | 'scale' | 'bounce' | 'flip';
+export type BubbleAnimation = ChatUiMessageEntranceAnimation;
 
 export interface ThemeColors {
   primary: string;

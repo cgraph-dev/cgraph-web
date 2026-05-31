@@ -5,6 +5,8 @@
  *
  */
 
+import type { ChatUiMessageEntranceAnimation } from '@cgraph-dev/shared-types';
+
 // SHARED TYPES
 
 export type ColorPreset =
@@ -166,7 +168,7 @@ export interface LegacyTheme {
   bubbleGlassEffect: boolean;
   bubbleShowTail?: boolean;
   bubbleHoverEffect?: boolean;
-  bubbleEntranceAnimation?: 'none' | 'slide' | 'fade' | 'scale' | 'bounce' | 'flip';
+  bubbleEntranceAnimation?: ChatUiMessageEntranceAnimation;
   glowEnabled: boolean;
   blurEnabled?: boolean;
   particlesEnabled: boolean;

@@ -187,9 +187,11 @@ describe('UISettingsPanel', () => {
       />
     );
 
+    expect(screen.getByRole('option', { name: 'None' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Slide' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Scale' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Fade' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Bounce' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Flip' })).toBeInTheDocument();
   });
 });

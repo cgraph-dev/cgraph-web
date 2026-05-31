@@ -2,6 +2,7 @@
  * Chat UI settings panel component.
  */
 import { motion } from 'motion/react';
+import { CHAT_UI_MESSAGE_ENTRANCE_ANIMATIONS } from '@cgraph-dev/shared-types';
 import { GlassCard } from '@/shared/components/ui';
 import { SparklesIcon } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
@@ -33,12 +34,19 @@ const ANIMATION_INTENSITY_OPTIONS = [
   { value: 'high', label: 'High (Beautiful)' },
 ] satisfies ReadonlyArray<{ value: AnimationIntensity; label: string }>;
 
-const MESSAGE_ANIMATION_OPTIONS = [
-  { value: 'slide', label: 'Slide' },
-  { value: 'scale', label: 'Scale' },
-  { value: 'fade', label: 'Fade' },
-  { value: 'bounce', label: 'Bounce' },
-] satisfies ReadonlyArray<{ value: UIPreferences['messageEntranceAnimation']; label: string }>;
+const MESSAGE_ANIMATION_LABELS = {
+  none: 'None',
+  slide: 'Slide',
+  fade: 'Fade',
+  scale: 'Scale',
+  bounce: 'Bounce',
+  flip: 'Flip',
+} as const satisfies Record<UIPreferences['messageEntranceAnimation'], string>;
+
+const MESSAGE_ANIMATION_OPTIONS = CHAT_UI_MESSAGE_ENTRANCE_ANIMATIONS.map((value) => ({
+  value,
+  label: MESSAGE_ANIMATION_LABELS[value],
+})) satisfies ReadonlyArray<{ value: UIPreferences['messageEntranceAnimation']; label: string }>;
 
 const TOGGLE_OPTIONS = [
   { key: 'showParticles', label: 'Particles' },

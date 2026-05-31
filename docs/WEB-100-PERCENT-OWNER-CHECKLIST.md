@@ -192,18 +192,24 @@ published-package dependency guard. The 2026-05-31 follow-up web commit
 from the shared package instead of web-local data. The 2026-05-31 chat UI
 follow-up consumes `@cgraph-dev/shared-types@1.0.5` so
 `apps/web/src/modules/chat/components/message-bubble/preferences.ts` becomes a
-compatibility adapter over package-owned chat presentation defaults. Verified with
+compatibility adapter over package-owned chat presentation defaults. The
+2026-05-31 entrance-animation follow-up consumes
+`@cgraph-dev/shared-types@1.0.6` so the full `none`, `slide`, `fade`, `scale`,
+`bounce`, and `flip` message entrance animation set is shared by the settings
+chat panel, routed bubble customization page, chat UI settings panel, and legacy
+theme type boundary. Verified with
 `pnpm check:packages`, `pnpm check:package-owner`,
 `pnpm --filter @cgraph/web typecheck`, `pnpm --filter @cgraph/web lint`,
 `pnpm --filter @cgraph/web check:release-gates` (400 Vitest files, 5,354
 tests), `pnpm --filter @cgraph/web build:budget`, the 1.0.4 profile-theme
 follow-up Vitest suite with 401 files / 5,357 tests, and the 1.0.5 chat UI
-preference follow-up Vitest suite with 401 files / 5,357 tests. This closes the
-web side of the package phase-4 consumption move, the web-local static
-profile-theme catalog gap, and the web-local chat UI preference default gap; it
-does not close real provider delivery, future paired QR/mobile approval after
-native mobile exists, physical cross-device sync, or hosted Stripe
-settlement/webhooks.
+preference follow-up Vitest suite with 401 files / 5,357 tests, plus the 1.0.6
+entrance-animation follow-up Vitest suite with 402 files / 5,358 tests. This
+closes the web side of the package phase-4 consumption move, the web-local
+static profile-theme catalog gap, the web-local chat UI preference default gap,
+and the web-local entrance-animation value-set gap; it does not close real
+provider delivery, future paired QR/mobile approval after native mobile exists,
+physical cross-device sync, or hosted Stripe settlement/webhooks.
 
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
@@ -328,6 +334,15 @@ as a compatibility alias. The focused proof in
 `apps/web/src/modules/chat/components/message-bubble/__tests__/preferences.test.ts` verifies the
 route alias points at the shared chat contract and that decorative particle overlays are disabled by
 default.
+
+2026-05-31 chat entrance-animation package proof: production web consumes
+`@cgraph-dev/shared-types@1.0.6` so `CHAT_UI_MESSAGE_ENTRANCE_ANIMATIONS` and
+`isChatUiMessageEntranceAnimation(...)` own the message entrance animation value set used by the
+settings chat panel, routed bubble customization page, chat UI settings panel, customization store
+type boundary, and legacy theme type boundary. The focused constants proof in
+`apps/web/src/modules/settings/components/customize/panels/__tests__/chat-panel.constants.test.ts`
+verifies the customization panel follows the shared package array, and the UI settings panel test
+now covers the full selectable set.
 
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
