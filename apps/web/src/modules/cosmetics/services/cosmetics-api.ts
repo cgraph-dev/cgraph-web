@@ -53,27 +53,39 @@ interface ApiUserBorder {
 interface ApiProfileTheme {
   id: string;
   slug: string;
-  name: string;
-  description: string;
-  preset: string;
-  rarity: RarityTier;
-  colors: Record<string, unknown>;
-  backgroundType: string;
-  backgroundConfig: Record<string, unknown>;
-  layoutType: string;
-  hoverEffect: string;
-  glassmorphism: boolean;
-  borderRadius: string;
-  fontFamily: string;
-  isPurchasable: boolean;
-  nodeCost: number;
-  gemCost: number;
+  name: string | null;
+  description: string | null;
+  preset?: string;
+  rarity: RarityTier | null;
+  colors?: Record<string, unknown>;
+  backgroundType?: string;
+  backgroundConfig?: Record<string, unknown>;
+  layoutType?: string;
+  hoverEffect?: string;
+  glassmorphism?: boolean;
+  borderRadius?: string;
+  fontFamily?: string;
+  isPurchasable?: boolean;
+  is_purchasable?: boolean;
+  nodeCost?: number;
+  coinCost?: number;
+  coin_cost?: number;
+  gemCost?: number;
+  gem_cost?: number;
   previewUrl: string | null;
+  preview_url?: string | null;
   animationType?: string;
-  backgroundLottieUrl?: string;
-  particleLottieUrl?: string;
-  overlayLottieUrl?: string;
+  animation_type?: string;
+  lottieUrl?: string | null;
+  lottie_url?: string | null;
   lottieConfig?: Record<string, unknown>;
+  lottie_config?: Record<string, unknown>;
+  backgroundLottieUrl?: string;
+  background_lottie_url?: string;
+  particleLottieUrl?: string;
+  particle_lottie_url?: string;
+  overlayLottieUrl?: string;
+  overlay_lottie_url?: string;
 }
 
 interface ApiUserProfileTheme {
@@ -91,12 +103,44 @@ interface ApiUserProfileTheme {
 
 interface ApiInventoryItem {
   id: string;
-  itemType: CosmeticType;
-  itemId: string;
-  equippedAt: string | null;
-  obtainedAt: string;
-  obtainedVia: string;
+  itemType?: CosmeticType;
+  item_type?: CosmeticType;
+  itemId?: string;
+  item_id?: string;
+  itemSlug?: string | null;
+  item_slug?: string | null;
+  itemKey?: string;
+  item_key?: string;
+  equippedAt?: string | null;
+  equipped_at?: string | null;
+  obtainedAt?: string;
+  obtained_at?: string;
+  obtainedVia?: string;
+  obtained_via?: string;
 }
+
+type BorderInventoryEntry = ApiUserBorder | ApiInventoryItem;
+type ThemeInventoryEntry = ApiUserProfileTheme | ApiInventoryItem | ApiProfileTheme;
+
+const DEFAULT_ACQUIRED_AT = '';
+
+function firstDefined<T>(...values: readonly (T | null | undefined)[]): T | undefined {
+  return values.find((value): value is T => value !== undefined && value !== null);
+}
+
+function titleFromKey(value: string | null | undefined, fallback: string): string {
+  const key = value?.trim();
+  if (!key) {
+    return fallback;
+  }
+
+  return key
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 // Transformers — convert API responses to shared types
 function borderToCosmeticItem(b: ApiBorder): CosmeticItem {
   return {
@@ -119,19 +163,24 @@ function borderToCosmeticItem(b: ApiBorder): CosmeticItem {
 }
 
 function themeToCosmeticItem(t: ApiProfileTheme): CosmeticItem {
+  const nodeCost = firstDefined(t.nodeCost, t.coinCost, t.coin_cost) ?? 0;
+  const isPurchasable = firstDefined(t.isPurchasable, t.is_purchasable) ?? false;
+  const lottieFile =
+    firstDefined(t.backgroundLottieUrl, t.background_lottie_url, t.lottieUrl, t.lottie_url) ?? null;
+
   return {
     id: t.id,
-    slug: t.slug,
-    name: t.name,
-    description: t.description,
+    slug: t.slug ?? t.id,
+    name: t.name ?? titleFromKey(t.slug, 'Unknown Theme'),
+    description: t.description ?? '',
     surface: 'profile_theme',
     type: 'profile_theme',
-    rarity: t.rarity,
-    unlockType: t.isPurchasable ? 'purchase' : 'free',
-    unlockCondition: { type: t.isPurchasable ? 'purchase' : 'free', threshold: t.nodeCost },
+    rarity: validateRarityTier(t.rarity),
+    unlockType: isPurchasable ? 'purchase' : 'free',
+    unlockCondition: { type: isPurchasable ? 'purchase' : 'free', threshold: nodeCost },
     animationType: validateAnimationType(t.animationType),
-    lottieFile: t.backgroundLottieUrl ?? null,
-    previewUrl: t.previewUrl,
+    lottieFile,
+    previewUrl: firstDefined(t.previewUrl, t.preview_url) ?? null,
     colors: [],
     available: true,
     createdAt: '',
@@ -162,7 +211,7 @@ function userBorderToInventory(ub: ApiUserBorder): UserCosmeticInventory {
   return {
     cosmetic,
     equipped: ub.isEquipped,
-    acquiredAt: '',
+    acquiredAt: DEFAULT_ACQUIRED_AT,
     source: validateUnlockType(ub.unlockSource),
   };
 }
@@ -191,10 +240,174 @@ function userThemeToInventory(ut: ApiUserProfileTheme): UserCosmeticInventory {
   return {
     cosmetic,
     equipped: ut.isActive,
-    acquiredAt: '',
+    acquiredAt: DEFAULT_ACQUIRED_AT,
     source: validateUnlockType(ut.unlockSource),
   };
 }
+
+function inventoryItemType(item: ApiInventoryItem): CosmeticType {
+  return firstDefined(item.itemType, item.item_type) ?? 'avatar_border';
+}
+
+function inventoryItemId(item: ApiInventoryItem): string {
+  return firstDefined(item.itemId, item.item_id) ?? item.id;
+}
+
+function inventoryItemSlug(item: ApiInventoryItem): string {
+  return firstDefined(item.itemSlug, item.item_slug, item.itemKey, item.item_key) ?? '';
+}
+
+function inventoryItemEquippedAt(item: ApiInventoryItem): string | null {
+  return firstDefined(item.equippedAt, item.equipped_at) ?? null;
+}
+
+function inventoryItemObtainedAt(item: ApiInventoryItem): string {
+  return firstDefined(item.obtainedAt, item.obtained_at) ?? DEFAULT_ACQUIRED_AT;
+}
+
+function inventoryItemObtainedVia(item: ApiInventoryItem): string | undefined {
+  return firstDefined(item.obtainedVia, item.obtained_via);
+}
+
+function isUnifiedInventoryItem(entry: BorderInventoryEntry | ThemeInventoryEntry): entry is ApiInventoryItem {
+  return (
+    'itemType' in entry ||
+    'item_type' in entry ||
+    'itemId' in entry ||
+    'item_id' in entry ||
+    'obtainedVia' in entry ||
+    'obtained_via' in entry
+  );
+}
+
+function isLegacyUserProfileTheme(entry: ThemeInventoryEntry): entry is ApiUserProfileTheme {
+  return 'themeId' in entry && 'isActive' in entry && 'unlockSource' in entry;
+}
+
+function unlockConditionTypeForSource(
+  source: UnlockType
+): CosmeticItem['unlockCondition']['type'] {
+  switch (source) {
+    case 'purchase':
+      return 'purchase';
+    case 'gift':
+      return 'gift_received';
+    case 'admin':
+      return 'admin_grant';
+    case 'subscription':
+      return 'subscription_tier';
+    case 'achievement':
+    case 'level':
+    case 'event':
+      return 'achievement_earned';
+    case 'free':
+    default:
+      return 'free';
+  }
+}
+
+function summaryToCosmeticItem(
+  item: ApiProfileTheme,
+  type: Extract<CosmeticType, 'avatar_border' | 'profile_theme'>
+): CosmeticItem {
+  const id = item.id;
+  const slug = item.slug ?? id;
+  const nodeCost = firstDefined(item.nodeCost, item.coinCost, item.coin_cost) ?? null;
+  const isPurchasable = firstDefined(item.isPurchasable, item.is_purchasable) ?? false;
+  const lottieFile =
+    firstDefined(
+      item.backgroundLottieUrl,
+      item.background_lottie_url,
+      item.lottieUrl,
+      item.lottie_url
+    ) ?? null;
+
+  return {
+    id,
+    slug,
+    name:
+      item.name ??
+      titleFromKey(slug, type === 'profile_theme' ? 'Unknown Theme' : 'Unknown Border'),
+    description: item.description ?? '',
+    surface: type,
+    type,
+    rarity: validateRarityTier(item.rarity),
+    unlockType: isPurchasable ? 'purchase' : 'free',
+    unlockCondition: { type: isPurchasable ? 'purchase' : 'free', threshold: nodeCost },
+    animationType: validateAnimationType(firstDefined(item.animationType, item.animation_type)),
+    lottieFile,
+    previewUrl: firstDefined(item.previewUrl, item.preview_url) ?? null,
+    colors: [],
+    available: true,
+    createdAt: '',
+  };
+}
+
+function inventoryItemToCosmeticInventory(
+  item: ApiInventoryItem,
+  fallbackType: Extract<CosmeticType, 'avatar_border' | 'profile_theme'>
+): UserCosmeticInventory {
+  const rawType = inventoryItemType(item);
+  const type: Extract<CosmeticType, 'avatar_border' | 'profile_theme'> =
+    rawType === 'profile_theme' || rawType === 'theme' ? 'profile_theme' : fallbackType;
+  const itemId = inventoryItemId(item);
+  const slug = inventoryItemSlug(item);
+  const fallbackName = type === 'profile_theme' ? 'Unknown Theme' : 'Unknown Border';
+  const source = validateUnlockType(inventoryItemObtainedVia(item));
+
+  return {
+    cosmetic: {
+      id: itemId,
+      slug,
+      name: titleFromKey(slug || itemId, fallbackName),
+      description: '',
+      surface: type,
+      type,
+      rarity: 'common',
+      unlockType: source,
+      unlockCondition: {
+        type: unlockConditionTypeForSource(source),
+        threshold: null,
+      },
+      animationType: 'none',
+      lottieFile: null,
+      previewUrl: null,
+      colors: [],
+      available: true,
+      createdAt: '',
+    },
+    equipped: Boolean(inventoryItemEquippedAt(item)),
+    acquiredAt: inventoryItemObtainedAt(item),
+    source,
+  };
+}
+
+function borderEntryToInventory(entry: BorderInventoryEntry): UserCosmeticInventory {
+  return isUnifiedInventoryItem(entry)
+    ? inventoryItemToCosmeticInventory(entry, 'avatar_border')
+    : userBorderToInventory(entry);
+}
+
+function themeEntryToInventory(entry: ThemeInventoryEntry): UserCosmeticInventory {
+  if (isUnifiedInventoryItem(entry)) {
+    return {
+      ...inventoryItemToCosmeticInventory(entry, 'profile_theme'),
+      equipped: true,
+    };
+  }
+
+  if (isLegacyUserProfileTheme(entry)) {
+    return userThemeToInventory(entry);
+  }
+
+  return {
+    cosmetic: summaryToCosmeticItem(entry, 'profile_theme'),
+    equipped: true,
+    acquiredAt: DEFAULT_ACQUIRED_AT,
+    source: 'free',
+  };
+}
+
 // Type validators
 const VALID_ANIMATION_TYPES: readonly AnimationType[] = [
   'none',
@@ -211,7 +424,24 @@ const VALID_UNLOCK_TYPES: readonly UnlockType[] = [
   'subscription',
   'gift',
   'admin',
+  'level',
+  'event',
 ];
+const VALID_RARITY_TIERS: readonly RarityTier[] = [
+  'free',
+  'common',
+  'uncommon',
+  'rare',
+  'epic',
+  'legendary',
+  'mythic',
+];
+
+const UNLOCK_SOURCE_ALIASES: Record<string, UnlockType> = {
+  default: 'free',
+  unlock: 'achievement',
+  reward: 'achievement',
+};
 
 function validateAnimationType(value: string | undefined | null): AnimationType {
   const v = value ?? 'none';
@@ -220,10 +450,17 @@ function validateAnimationType(value: string | undefined | null): AnimationType 
 }
 
 function validateUnlockType(value: string | undefined | null): UnlockType {
-  const v = value ?? 'free';
+  const v = value ? (UNLOCK_SOURCE_ALIASES[value] ?? value) : 'free';
   const match = VALID_UNLOCK_TYPES.find((t) => t === v);
   return match ?? 'free';
 }
+
+function validateRarityTier(value: RarityTier | string | undefined | null): RarityTier {
+  const v = value ?? 'common';
+  const match = VALID_RARITY_TIERS.find((t) => t === v);
+  return match ?? 'common';
+}
+
 // API service
 export const cosmeticsApi = {
   async listBorders(params?: {
@@ -249,19 +486,22 @@ export const cosmeticsApi = {
     inventory: UserCosmeticInventory[];
     equippedId: string | null;
   }> {
-    // Unified inventory endpoint scoped to avatar_border type.
+    // Unified inventory stores the avatar-border surface under the legacy `border`
+    // inventory type while the UI/shared surface remains `avatar_border`.
     const { data } = await http.get('/api/v1/cosmetics/inventory', {
-      params: { type: 'avatar_border' },
+      params: { item_type: 'border' },
     });
+    const entries: BorderInventoryEntry[] = data.items ?? data.unlocked ?? [];
+    const inventory = entries.map(borderEntryToInventory);
     return {
-      inventory: (data.items ?? data.unlocked ?? []).map(userBorderToInventory),
-      equippedId: data.equipped_id ?? null,
+      inventory,
+      equippedId: data.equipped_id ?? inventory.find((item) => item.equipped)?.cosmetic.id ?? null,
     };
   },
 
   async equipBorder(borderId: string): Promise<UserCosmeticInventory> {
     const response = await http.post('/api/v1/cosmetics/borders/equip', { id: borderId });
-    return userBorderToInventory(response.data.equipped ?? response.data);
+    return borderEntryToInventory(response.data.equipped ?? response.data);
   },
 
   async purchaseBorder(borderId: string): Promise<UserCosmeticInventory> {
@@ -270,7 +510,7 @@ export const cosmeticsApi = {
       listing_id: borderId,
       type: 'avatar_border',
     });
-    return userBorderToInventory(response.data.unlocked ?? response.data);
+    return borderEntryToInventory(response.data.unlocked ?? response.data.item ?? response.data);
   },
   async listProfileThemes(params?: { preset?: string; rarity?: RarityTier }): Promise<{
     themes: CosmeticItem[];
@@ -300,7 +540,7 @@ export const cosmeticsApi = {
     // Active profile-theme is part of the equipped cosmetics bundle.
     const { data } = await http.get('/api/v1/cosmetics/equipped');
     const theme = data.profile_theme ?? data.theme ?? null;
-    return theme ? userThemeToInventory(theme) : null;
+    return theme ? themeEntryToInventory(theme) : null;
   },
 
   async activateTheme(themeId: string): Promise<UserCosmeticInventory> {
@@ -309,7 +549,7 @@ export const cosmeticsApi = {
       item_type: 'profile_theme',
       item_id: themeId,
     });
-    return userThemeToInventory(response.data.equipped ?? response.data);
+    return themeEntryToInventory(response.data.equipped ?? response.data);
   },
   async getEquipped(): Promise<EquippedCosmetics> {
     const { data } = await http.get('/api/v1/cosmetics/equipped');
@@ -350,7 +590,7 @@ export const cosmeticsApi = {
     const response = await http.delete('/api/v1/cosmetics/unequip', {
       data: { item_type: itemType, item_id: itemId },
     });
-    return response.data.unequipped;
+    return response.data.item ?? response.data.unequipped;
   },
   async uploadBanner(file: File): Promise<{ bannerHash: string }> {
     const formData = new FormData();

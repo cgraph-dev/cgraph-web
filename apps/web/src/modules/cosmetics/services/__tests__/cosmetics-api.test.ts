@@ -70,36 +70,19 @@ describe('cosmeticsApi', () => {
     });
   });
 
-  it('maps unlocked borders and falls back when embedded border data is missing', async () => {
+  it('maps unified border inventory and legacy border fallbacks', async () => {
     mockApi.get.mockResolvedValue({
       data: {
-        unlocked: [
+        items: [
           {
             id: 'inventory-1',
-            borderId: 'border-1',
-            isEquipped: true,
-            unlockSource: 'achievement',
-            expiresAt: null,
-            customColors: null,
-            border: {
-              id: 'border-1',
-              slug: 'nova',
-              name: 'Nova Border',
-              description: 'Animated border',
-              theme: 'cosmic',
-              rarity: 'epic',
-              borderStyle: 'glow',
-              animationType: 'lottie',
-              animationSpeed: 1,
-              animationIntensity: 2,
-              colors: ['#fff'],
-              particleConfig: null,
-              glowConfig: null,
-              isPurchasable: false,
-              nodeCost: 0,
-              gemCost: 0,
-              previewUrl: null,
-            },
+            itemType: 'border',
+            itemId: 'border-1',
+            itemSlug: 'nova',
+            itemKey: 'nova',
+            equippedAt: '2026-05-31T10:00:00Z',
+            obtainedAt: '2026-05-30T09:00:00Z',
+            obtainedVia: 'default',
           },
           {
             id: 'inventory-2',
@@ -118,18 +101,21 @@ describe('cosmeticsApi', () => {
     const result = await cosmeticsApi.getUnlockedBorders();
 
     expect(mockApi.get).toHaveBeenCalledWith('/api/v1/cosmetics/inventory', {
-      params: { type: 'avatar_border' },
+      params: { item_type: 'border' },
     });
     expect(result.equippedId).toBe('border-1');
     expect(result.inventory).toEqual([
       expect.objectContaining({
         equipped: true,
-        source: 'achievement',
+        source: 'free',
+        acquiredAt: '2026-05-30T09:00:00Z',
         cosmetic: expect.objectContaining({
           id: 'border-1',
+          slug: 'nova',
+          name: 'Nova',
           type: 'avatar_border',
           unlockType: 'free',
-          animationType: 'lottie',
+          animationType: 'none',
         }),
       }),
       expect.objectContaining({
@@ -177,40 +163,20 @@ describe('cosmeticsApi', () => {
       })
       .mockResolvedValueOnce({
         data: {
-          theme: {
-            id: 'owned-theme-1',
-            themeId: 'theme-1',
-            isActive: true,
-            unlockSource: 'purchase',
-            expiresAt: null,
-            customColors: null,
-            customBackground: null,
-            customLayout: null,
-            customEffects: null,
-            theme: {
-              id: 'theme-1',
-              slug: 'midnight',
-              name: 'Midnight',
-              description: 'Dark preset',
-              preset: 'midnight',
-              rarity: 'rare',
-              colors: {},
-              backgroundType: 'gradient',
-              backgroundConfig: {},
-              layoutType: 'default',
-              hoverEffect: 'lift',
-              glassmorphism: true,
-              borderRadius: 'xl',
-              fontFamily: 'Space Grotesk',
-              isPurchasable: true,
-              nodeCost: 120,
-              gemCost: 0,
-              previewUrl: 'https://example.com/theme.png',
-            },
+          profile_theme: {
+            id: 'theme-1',
+            slug: 'midnight',
+            name: 'Midnight',
+            description: 'Dark preset',
+            rarity: 'rare',
+            animationType: 'static',
+            lottieUrl: null,
+            lottieConfig: {},
+            backgroundLottieUrl: 'https://example.com/theme-bg.json',
           },
         },
       })
-      .mockResolvedValueOnce({ data: { theme: null } });
+      .mockResolvedValueOnce({ data: { profile_theme: null } });
 
     const listed = await cosmeticsApi.listProfileThemes({ preset: 'midnight' });
     const active = await cosmeticsApi.getActiveTheme();
@@ -235,31 +201,31 @@ describe('cosmeticsApi', () => {
     expect(active).toEqual(
       expect.objectContaining({
         equipped: true,
-        source: 'purchase',
+        source: 'free',
         cosmetic: expect.objectContaining({
           id: 'theme-1',
           type: 'profile_theme',
-          unlockCondition: { type: 'purchase', threshold: 120 },
+          animationType: 'static',
+          lottieFile: 'https://example.com/theme-bg.json',
+          unlockCondition: { type: 'free', threshold: null },
         }),
       })
     );
     expect(inactive).toBeNull();
   });
 
-  it('uses theme fallback data when activating a theme with missing embedded theme details', async () => {
+  it('maps unified inventory data when activating a theme', async () => {
     mockApi.put.mockResolvedValue({
       data: {
         equipped: {
-          id: 'owned-theme-2',
-          themeId: 'theme-2',
-          isActive: true,
-          unlockSource: 'unknown-source',
-          expiresAt: null,
-          customColors: null,
-          customBackground: null,
-          customLayout: null,
-          customEffects: null,
-          theme: null,
+          id: 'inventory-theme-2',
+          itemType: 'profile_theme',
+          itemId: 'theme-2',
+          itemSlug: 'aurora-glass',
+          itemKey: 'aurora-glass',
+          equippedAt: '2026-05-31T10:05:00Z',
+          obtainedAt: '2026-05-30T10:00:00Z',
+          obtainedVia: 'purchase',
         },
       },
     });
@@ -273,10 +239,12 @@ describe('cosmeticsApi', () => {
     expect(result).toEqual(
       expect.objectContaining({
         equipped: true,
-        source: 'free',
+        source: 'purchase',
+        acquiredAt: '2026-05-30T10:00:00Z',
         cosmetic: expect.objectContaining({
           id: 'theme-2',
-          name: 'Unknown Theme',
+          slug: 'aurora-glass',
+          name: 'Aurora Glass',
           type: 'profile_theme',
         }),
       })
@@ -288,7 +256,7 @@ describe('cosmeticsApi', () => {
       .mockResolvedValueOnce({ data: { items: [{ id: 'inventory-1' }], total: 1 } })
       .mockResolvedValueOnce({ data: { items: [], total: 0 } });
     mockApi.put.mockResolvedValue({ data: { equipped: { id: 'inventory-1' } } });
-    mockApi.delete.mockResolvedValue({ data: { unequipped: { id: 'inventory-1' } } });
+    mockApi.delete.mockResolvedValue({ data: { unequipped: true, item: { id: 'inventory-1' } } });
 
     const allItems = await cosmeticsApi.getInventory();
     const borderItems = await cosmeticsApi.getInventory('avatar_border');
@@ -317,14 +285,15 @@ describe('cosmeticsApi', () => {
   it('handles border purchase and profile customization endpoints', async () => {
     mockApi.post.mockResolvedValue({
       data: {
-        unlocked: {
+        item: {
           id: 'purchase-1',
-          borderId: 'border-9',
-          isEquipped: false,
-          unlockSource: 'purchase',
-          expiresAt: null,
-          customColors: null,
-          border: null,
+          itemType: 'border',
+          itemId: 'border-9',
+          itemSlug: 'aurora-ring',
+          itemKey: 'aurora-ring',
+          equippedAt: null,
+          obtainedAt: '2026-05-30T11:00:00Z',
+          obtainedVia: 'purchase',
         },
       },
     });
@@ -347,7 +316,8 @@ describe('cosmeticsApi', () => {
     expect(purchase).toEqual(
       expect.objectContaining({
         source: 'purchase',
-        cosmetic: expect.objectContaining({ id: 'border-9', name: 'Unknown Border' }),
+        acquiredAt: '2026-05-30T11:00:00Z',
+        cosmetic: expect.objectContaining({ id: 'border-9', name: 'Aurora Ring' }),
       })
     );
     expect(uploadCall![0]).toBe('/api/v1/me/banner');
