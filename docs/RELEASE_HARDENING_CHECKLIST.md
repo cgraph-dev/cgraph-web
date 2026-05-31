@@ -326,7 +326,10 @@ Latest proof:
 - [x] Update GitHub Actions to versions that run on the current hosted action
       runtime.
 - [x] Keep the web application build on the same Node major used locally.
-- [x] Remove the previous Node 20 action-runtime warning path.
+- [x] Opt the web CI workflow into the Node 24 JavaScript action runtime before
+      GitHub makes it the default. GitHub still annotates `actions/checkout@v4`,
+      `actions/setup-node@v4`, and `pnpm/action-setup@v4` as Node 20-targeted
+      actions, but the current workflow forces them to execute on Node 24.
 - [x] Invoke `pnpm --filter @cgraph/web check:release-gates` from CI so the
       full unit suite and state-store cap are enforced by GitHub Actions, not
       only by local verification.
@@ -339,6 +342,15 @@ Verification:
 ```sh
 pnpm --filter @cgraph/web check:release-gates
 ```
+
+Latest proof:
+
+- 2026-05-31: production web commit `ab47c4b8a7989a19b28434698818111c1dfa8ec9`
+  adds `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` to `Web Release Gates`.
+  Local `pnpm check:packages` and `pnpm --filter @cgraph/web typecheck` passed.
+  GitHub Actions run `26710812966` passed the full install, package guards,
+  lint, typecheck, release-gates, and bundle-budget pipeline in 9m57s while
+  forcing the Node 20-targeted actions onto Node 24.
 
 ## Production External Providers
 

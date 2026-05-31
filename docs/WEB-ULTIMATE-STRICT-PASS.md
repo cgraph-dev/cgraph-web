@@ -867,10 +867,22 @@ dependency guard, and was verified with `pnpm check:packages`,
 `pnpm check:package-owner`, `pnpm --filter @cgraph/web typecheck`,
 `pnpm --filter @cgraph/web lint`, `pnpm --filter @cgraph/web check:release-gates`
 with 400 Vitest files and 5,354 tests, and
-`pnpm --filter @cgraph/web build:budget`. This improves package ownership and
+ `pnpm --filter @cgraph/web build:budget`. This improves package ownership and
 sync trust but keeps the score unchanged because real provider delivery,
 paired QR/mobile approval, physical second-device validation, and hosted Stripe
 settlement remain open.
+
+2026-05-31 CI runtime proof: production web commit
+`ab47c4b8a7989a19b28434698818111c1dfa8ec9` opts the `Web Release Gates`
+workflow into the Node 24 JavaScript action runtime with
+`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`. Local package validation and
+typecheck passed, and GitHub Actions `Web Release Gates` run `26710812966`
+passed install, package guards, lint, typecheck, release gates, and bundle
+budget in 9m57s. GitHub still emits an annotation because the upstream
+`actions/checkout@v4`, `actions/setup-node@v4`, and `pnpm/action-setup@v4`
+actions target Node 20, but the run proves they execute successfully when
+forced onto Node 24. This is CI runtime compatibility proof, not closure of the
+remaining external release blockers.
 
 Equal-weight release-readiness score: `84.1%`.
 
