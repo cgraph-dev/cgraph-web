@@ -119,7 +119,7 @@ explicit unlock action succeeds. This closes the strict forum content-unlock ret
 
 2026-05-23 auth/account browser proof: `apps/web/e2e/auth-account-routes.spec.ts` now verifies
 routed email login with 2FA, registration, forgot-password, reset-password, verify-email token and
-resend states, QR login session creation, and existing-user phone login OTP completion against
+resend states, the default gated QR route state, and existing-user phone login OTP completion against
 mocked backend contracts. This closes the strict broad auth route browser-proof item, while real
 mail-provider delivery and the remaining phone registration-lock, call-fallback, and new-user
 completion branches stayed open until the later phone-flow proof below.
@@ -130,12 +130,13 @@ missing-param validation. Production web `auth-account-routes.spec.ts` browser-v
 reset-password success plus invalid, expired, and reused-token recovery. This closes the strict
 password-reset confirm contract while real mail-provider delivery remains tracked separately.
 
-2026-05-28 QR-login proof: production backend `qr_auth_controller_test.exs` now proves QR session
-creation, coded stale-session, missing-parameter, and invalid-signature failures, valid approval
-broadcast, and one-time session consumption. Production web `auth-account-routes.spec.ts`
-browser-verifies mounted `/qr-login` session creation, stale-code expiry, and explicit Generate New
-Code retry. This closes the stale QR cleanup route/contract gap; paired approval from a real second
-client remains an external/mobile-lab proof item, not a local route checkbox.
+2026-05-28 QR-login proof, updated by the 2026-05-31 no-overclaim pass: production backend
+`qr_auth_controller_test.exs` proves QR session creation, coded stale-session, missing-parameter, and
+invalid-signature failures, valid approval broadcast, and one-time session consumption. Because native
+mobile is not shipped yet, production web now gates `/qr-login` by default, renders a
+mobile-app-required state, and does not create a backend QR session unless `VITE_ENABLE_QR_LOGIN=true`.
+The enabled protocol path remains unit-covered, while paired approval from a real second client
+remains future native-mobile proof, not a local route checkbox.
 
 2026-05-28 initial final-validation proof: production web commit `01f55bf` passed a rebuilt
 `web-owner-uat.spec.ts` browser pass covering auth entry, routed DM send, incoming-call accept/end,
@@ -150,8 +151,8 @@ After rebuilding the app with the same E2E env, the focused Chromium Playwright 
 tests across `apps/web/e2e/auth-account-routes.spec.ts`, `apps/web/e2e/dm-media-composer.spec.ts`,
 `apps/web/e2e/social-main-pane.spec.ts`, `apps/web/e2e/settings-preference-sync.spec.ts`, and
 `apps/web/e2e/nodes-wallet-shop.spec.ts`. This proves the local auth, DM, social, settings, and
-Nodes browser routes still agree with their mocked backend contracts; real provider delivery,
-paired QR/mobile approval, physical cross-device sync, real Stripe hosted checkout completion, and
+Nodes browser routes still agree with their mocked backend contracts; real provider delivery, future
+paired QR/mobile approval after native mobile exists, physical cross-device sync, real Stripe hosted checkout completion, and
 webhook settlement remain strict-release gaps.
 
 2026-05-28 group/call replay proof: the rebuilt production web E2E bundle also passed 46 / 46
@@ -167,7 +168,7 @@ tests in one route pass across auth/account, DM media/composer, Social main-pane
 preference sync, Nodes wallet/shop, group settings permissions, group channel scroll, bare group
 entry redirect, group invite landing, owner UAT, and sidebar/public-profile reload specs. This
 closes the checklist layer's local broad route/contract browser pass, while real external provider
-delivery, paired QR/mobile approval, physical cross-device sync, and hosted Stripe
+delivery, future paired QR/mobile approval after native mobile exists, physical cross-device sync, and hosted Stripe
 settlement/webhooks remain strict-release sign-off work.
 
 2026-05-30 release-hardening refresh after recovery: production web commit
@@ -177,7 +178,7 @@ settlement/webhooks remain strict-release sign-off work.
 validation, and production smoke against `web.cgraph.org` /
 `cgraph-backend-prod-v2.fly.dev`. This refreshes the local release-hardening
 proof after the reinstall/package-sync recovery. It does not close real
-provider delivery, paired QR/mobile approval, physical cross-device sync, or
+provider delivery, future paired QR/mobile approval after native mobile exists, physical cross-device sync, or
 hosted Stripe settlement/webhooks.
 
 2026-05-31 package consumption proof: production web commit
@@ -190,7 +191,7 @@ guard. Verified with `pnpm check:packages`, `pnpm check:package-owner`,
 `pnpm --filter @cgraph/web check:release-gates` (400 Vitest files, 5,354
 tests), and `pnpm --filter @cgraph/web build:budget`. This closes the web side
 of the package phase-4 consumption move; it does not close real provider
-delivery, paired QR/mobile approval, physical cross-device sync, or hosted
+delivery, future paired QR/mobile approval after native mobile exists, physical cross-device sync, or hosted
 Stripe settlement/webhooks.
 
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
@@ -236,10 +237,22 @@ and the live route reports `email_provider:"ok"`, `phone_sms:"ok"`, `phone_voice
 configuration proof; real delivery, paired-device, and Stripe settlement proof remain external
 release-validation work.
 
-2026-05-29 QR channel hygiene proof: production web adds
-`apps/web/src/pages/auth/login/__tests__/qr-login.test.tsx`, proving one generated QR login session
-creates exactly one Phoenix socket/channel join for `qr_auth:{sessionId}`. This prevents duplicate
-web listeners while keeping paired mobile approval as a separate real-device release proof item.
+2026-05-29 QR channel hygiene proof, updated by the 2026-05-31 no-overclaim pass: production web keeps
+`apps/web/src/pages/auth/login/__tests__/qr-login.test.tsx` for the enabled protocol path, proving one
+generated QR login session creates exactly one Phoenix socket/channel join for
+`qr_auth:{sessionId}`. The default routed browser behavior stays gated until native mobile approval
+exists, preventing the web product from advertising a mobile-assisted login path that users cannot
+complete yet.
+
+2026-05-31 QR no-overclaim proof: `/qr-login` now renders a mobile-app-required state by default,
+offers normal browser login paths, and does not create `/api/v1/auth/qr-session` before native mobile
+approval exists. The enabled protocol path remains unit-covered for exactly one `qr_auth:{sessionId}`
+socket/channel join. Verified with `pnpm --filter @cgraph/web test --
+src/pages/auth/login/__tests__/qr-login.test.tsx` (expanded to 400 Vitest files / 5,355 tests),
+`pnpm --filter @cgraph/web typecheck`, `pnpm --filter @cgraph/web lint`,
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome pnpm --filter @cgraph/web exec playwright test
+e2e/auth-account-routes.spec.ts --project=chromium --no-deps` (10 / 10 passed), and
+`pnpm --filter @cgraph/web build:budget`.
 
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
@@ -301,7 +314,7 @@ default.
 permissions, OTP resend, voice-call fallback, registration-lock PIN completion, and
 native-device-required recovery. `AuthFormInput` now associates visible labels with inputs so the
 phone profile step is accessible by label. The stricter release-readiness documents still keep real
-provider delivery, paired QR approval, and external/lab validation open.
+provider delivery, future paired QR approval after native mobile exists, and external/lab validation open.
 
 2026-05-23 account-deletion lifecycle proof: production web commit `93febe9` extends
 `apps/web/e2e/settings-preference-sync.spec.ts` to browser-verify the mounted
@@ -309,7 +322,7 @@ provider delivery, paired QR approval, and external/lab validation open.
 `DELETE /api/v1/me/delete-account`, schedules deletion through password-confirmed
 `POST /api/v1/me/delete-account`, asserts the password payload, and verifies the follow-up auth
 logout side effect. The stricter release-readiness documents still keep real provider delivery,
-paired QR approval, and external/lab validation open.
+future paired QR approval after native mobile exists, and external/lab validation open.
 
 2026-05-23 group-settings permission proof: production web commit `5351b03` gates group settings
 management tabs by owner/admin/member permissions and adds
@@ -317,7 +330,7 @@ management tabs by owner/admin/member permissions and adds
 Overview/Roles/Members/Invites/Channels/Audit Log/AutoMod and can save overview changes, while
 ordinary members only see personal Notifications/Danger actions and do not issue admin
 `PATCH /api/v1/groups/:groupId` requests. The stricter release-readiness documents still keep
-paired QR approval, provider delivery, and external/lab validation open.
+future paired QR approval after native mobile exists, provider delivery, and external/lab validation open.
 
 2026-05-25 group-settings permission-edge proof: production web now surfaces route-specific 403 copy
 for denied overview saves, role create/update/reorder/delete, invite list/create/delete, member role

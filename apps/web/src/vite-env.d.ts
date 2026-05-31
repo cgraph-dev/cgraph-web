@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_SOCKET_URL: string;
   readonly VITE_APP_VERSION?: string;
   readonly VITE_ENABLE_LOGGING?: string;
+  readonly VITE_ENABLE_QR_LOGIN?: string;
   readonly VITE_LIVEKIT_URL?: string;
   readonly VITE_MAPBOX_ACCESS_TOKEN?: string;
   readonly VITE_OTEL_TRACE_ENDPOINT?: string;

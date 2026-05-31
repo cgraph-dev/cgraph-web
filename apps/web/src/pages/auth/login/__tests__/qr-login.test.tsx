@@ -71,10 +71,25 @@ describe('QrLogin', () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
+  it('shows an honest mobile-app-required state when QR login is not enabled', async () => {
+    render(
+      <MemoryRouter>
+        <QrLogin />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(/qr login requires the cgraph mobile app/i)).toBeInTheDocument();
+    expect(apiClient.auth.createQrSession).not.toHaveBeenCalled();
+    expect(qrSocketMock.instances).toHaveLength(0);
+  });
+
   it('joins one QR auth channel for one generated session', async () => {
+    vi.stubEnv('VITE_ENABLE_QR_LOGIN', 'true');
+
     render(
       <MemoryRouter>
         <QrLogin />

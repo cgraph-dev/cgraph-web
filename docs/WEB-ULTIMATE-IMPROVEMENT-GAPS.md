@@ -37,10 +37,11 @@ verify-email before onboarding before the app route, `ProtectedRoute` and `Publi
 that owner, `/verify-email` can render a no-token pending/resend state, and backend auth JSON now
 returns `onboarding_completed` so register/login responses can be gated immediately.
 `apps/web/e2e/auth-account-routes.spec.ts` now browser-verifies login with 2FA, registration,
-forgot-password, reset-password, verify-email, QR login, existing-user phone OTP completion,
-new-user phone registration through profile and permissions, OTP resend, voice-call fallback,
-registration-lock PIN completion, and native-device-required recovery. Remaining auth risk is real
-provider delivery, paired QR approval, and final broad browser validation.
+forgot-password, reset-password, verify-email, the default gated QR-login state, existing-user phone
+OTP completion, new-user phone registration through profile and permissions, OTP resend,
+voice-call fallback, registration-lock PIN completion, and native-device-required recovery. Remaining
+auth risk is real provider delivery, future paired QR approval after native mobile exists, and final
+broad browser validation.
 
 2026-05-16 update: routed DM read-receipt UI is no longer listed as missing. Backend message JSON
 now preloads `read_receipts`, exposes them as `metadata.readBy`, and the routed enhanced DM bubble

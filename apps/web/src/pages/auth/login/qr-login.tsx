@@ -1,5 +1,6 @@
 /**
- * QR Code Login page — scan from mobile to authenticate web sessions.
+ * QR Code Login page — mobile-assisted auth handoff for web sessions.
+ * Defaults to an unavailable state until the native mobile approval client exists.
  *
  * Protocol flow:
  * 1. Request QR session from backend
@@ -14,7 +15,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Socket } from 'phoenix';
 import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '@/lib/api-client';
 import { getSocketUrl } from '@/lib/backend-url';
@@ -40,6 +41,10 @@ interface QrSession {
 const QR_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 const QR_SIZE = 256;
 
+export function isQrLoginEnabled(): boolean {
+  return import.meta.env.VITE_ENABLE_QR_LOGIN === 'true';
+}
+
 function getExpiryMs(expiresInSeconds: number): number {
   return Number.isFinite(expiresInSeconds) && expiresInSeconds > 0
     ? expiresInSeconds * 1000
@@ -55,6 +60,48 @@ function isExpiredJoinResponse(response: unknown): boolean {
 
 /** QR code login tab/section for the login page. */
 export function QrLogin() {
+  if (!isQrLoginEnabled()) {
+    return <QrLoginUnavailable />;
+  }
+
+  return <QrLoginFlow />;
+}
+
+function QrLoginUnavailable() {
+  const { t } = useTranslation('auth');
+
+  return (
+    <div className="flex min-h-[320px] w-full flex-col items-center justify-center gap-5 text-center">
+      <div className="max-w-[320px] space-y-3">
+        <h1 className="text-xl font-semibold text-foreground">
+          {t('login.qr_mobile_required_title', 'QR login requires the CGraph mobile app')}
+        </h1>
+        <p className="text-sm leading-6 text-foreground-muted">
+          {t(
+            'login.qr_mobile_required_body',
+            'Use email or phone login on this browser. Mobile-assisted QR approval will be enabled when the native app is ready.'
+          )}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link
+          to="/login"
+          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+        >
+          {t('login.back_to_login', 'Back to login')}
+        </Link>
+        <Link
+          to="/login/phone"
+          className="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/10"
+        >
+          {t('login.use_phone_login', 'Use phone login')}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function QrLoginFlow() {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
 

@@ -494,12 +494,16 @@ test.describe('auth and account lifecycle routes', () => {
     ]);
   });
 
-  test('renders QR login and verifies phone login entry plus OTP completion', async ({ page }) => {
+  test('keeps QR login honest while mobile approval is unavailable and verifies phone login', async ({
+    page,
+  }) => {
     const requests = await installAuthRouteMocks(page);
 
     await page.goto('/qr-login');
-    await expect(page.getByText(/open cgraph on your phone/i)).toBeVisible();
-    await expect(page.getByText(/waiting for scan/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /qr login requires the cgraph mobile app/i }))
+      .toBeVisible();
+    await expect(page.getByText(/use email or phone login on this browser/i)).toBeVisible();
+    expect(requests.qrSession).toEqual([]);
 
     await page.goto('/login/phone');
     await expect(page.getByText('Phone login')).toBeVisible();
@@ -519,30 +523,14 @@ test.describe('auth and account lifecycle routes', () => {
     });
   });
 
-  test('expires stale QR login sessions and requests a fresh code on retry', async ({ page }) => {
-    const requests = await installAuthRouteMocks(page, {
-      qrSessionResponses: [
-        mockResponse({
-          session_id: 'qr-session-expiring-uat',
-          qr_payload: 'cgraph://qr-login/qr-session-expiring-uat',
-          expires_in: 1,
-        }),
-        mockResponse({
-          session_id: 'qr-session-fresh-uat',
-          qr_payload: 'cgraph://qr-login/qr-session-fresh-uat',
-          expires_in: 300,
-        }),
-      ],
-    });
+  test('does not create QR sessions when the mobile-assisted route is gated off', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page);
 
     await page.goto('/qr-login');
-    await expect(page.getByText(/waiting for scan/i)).toBeVisible();
-    await expect(page.getByText(/qr code expired/i)).toBeVisible({ timeout: 5_000 });
-
-    await page.getByRole('button', { name: /generate new code/i }).click();
-
-    await expect(page.getByText(/waiting for scan/i)).toBeVisible();
-    await expect.poll(() => requests.qrSession.length).toBe(2);
+    await expect(page.getByRole('heading', { name: /qr login requires the cgraph mobile app/i }))
+      .toBeVisible();
+    await page.waitForTimeout(250);
+    expect(requests.qrSession).toEqual([]);
   });
 
   test('completes new-user phone registration through profile and permissions', async ({ page }) => {
