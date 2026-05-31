@@ -57,8 +57,8 @@ Latest proof:
   - `pnpm --filter @cgraph/web build:budget`
 - Result: web now consumes exact published npm dependencies
   `@cgraph-dev/animation-constants@1.0.1`,
-  `@cgraph-dev/api-client@1.0.1`, `@cgraph-dev/design-tokens@1.0.1`,
-  `@cgraph-dev/shared-types@1.0.1`, and `@cgraph-dev/utils@1.0.1`.
+  `@cgraph-dev/api-client@1.0.3`, `@cgraph-dev/design-tokens@1.0.1`,
+  `@cgraph-dev/shared-types@1.0.4`, and `@cgraph-dev/utils@1.0.1`.
   Local app package mirrors and `packages/*` workspace membership are removed.
   `check:packages` and `check:package-owner` now enforce exact package pins,
   reject old `@cgraph/*` package dependencies, reject local package protocols,
@@ -185,8 +185,9 @@ consumes reviewed public npm packages under `@cgraph-dev/*` and rejects local
 mirror or workspace-package consumption. Package build/type/test/publish proof
 remains owned by `cgraph-packages`.
 
-- [x] `apps/web/package.json` pins the reviewed `@cgraph-dev/*@1.0.1`
-      package set.
+- [x] `apps/web/package.json` pins the reviewed published `@cgraph-dev/*`
+      package set, including `@cgraph-dev/api-client@1.0.3` and
+      `@cgraph-dev/shared-types@1.0.4`.
 - [x] `pnpm check:packages` rejects missing or non-exact package pins, old
       `@cgraph/*` shared package dependencies, local package protocols,
       reintroduced `packages/*` workspace membership, local mirror path aliases,
@@ -351,6 +352,11 @@ Latest proof:
   GitHub Actions run `26710812966` passed the full install, package guards,
   lint, typecheck, release-gates, and bundle-budget pipeline in 9m57s while
   forcing the Node 20-targeted actions onto Node 24.
+- 2026-05-31: production web commit `3bb8aa624b34c06dfe0f55d321f77d92ac20ce36`
+  consumes `@cgraph-dev/shared-types@1.0.4`, turning `apps/web/src/data/profileThemes.ts`
+  into a thin renderer adapter for the package-owned static profile-theme
+  catalog. Local package guards, typecheck, lint, and the Vitest suite with
+  401 files / 5,357 tests passed.
 
 ## Production External Providers
 

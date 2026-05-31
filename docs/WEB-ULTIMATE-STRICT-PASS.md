@@ -871,8 +871,8 @@ settlement remain open.
 2026-05-31 package consumption proof: production web commit
 `cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from local
 `packages/*` mirrors to exact published npm dependencies
-`@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.0.1`,
-`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.1`, and
+`@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.0.3`,
+`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.4`, and
 `@cgraph-dev/utils@1.0.1`. The commit removes the mirror workspace and path
 aliases, replaces the old snapshot/mirror gates with a published-package
 dependency guard, and was verified with `pnpm check:packages`,
@@ -883,6 +883,18 @@ with 400 Vitest files and 5,354 tests, and
 sync trust but keeps the score unchanged because real provider delivery,
 future paired QR/mobile approval after native mobile exists, physical second-device validation, and hosted Stripe
 settlement remain open.
+
+2026-05-31 static profile-theme package proof: production web commit
+`3bb8aa624b34c06dfe0f55d321f77d92ac20ce36` consumes
+`@cgraph-dev/shared-types@1.0.4`, turns `apps/web/src/data/profileThemes.ts`
+into a thin renderer adapter for the package-owned static profile-theme
+catalog, updates the package guard, and adds an adapter test proving the shared
+package remains source of truth. Local package guards, typecheck, lint, and the
+full Vitest suite with 401 files / 5,357 tests passed. This improves
+shared-foundation truth but keeps the strict score unchanged because external
+provider delivery, future paired QR/mobile approval after native mobile exists,
+physical second-device validation, hosted Stripe settlement, and final broad
+signoff remain open.
 
 2026-05-31 CI runtime proof: production web commit
 `ab47c4b8a7989a19b28434698818111c1dfa8ec9` opts the `Web Release Gates`

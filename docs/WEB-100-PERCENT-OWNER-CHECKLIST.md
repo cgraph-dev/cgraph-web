@@ -184,15 +184,21 @@ hosted Stripe settlement/webhooks.
 2026-05-31 package consumption proof: production web commit
 `cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from app-local
 `packages/*` mirrors to exact published npm dependencies
-`@cgraph-dev/*@1.0.1`, removes the mirror workspace and tsconfig path aliases,
-and replaces the mirror provenance gates with a published-package dependency
-guard. Verified with `pnpm check:packages`, `pnpm check:package-owner`,
+under the reviewed `@cgraph-dev/*` scope, removes the mirror workspace and
+tsconfig path aliases, and replaces the mirror provenance gates with a
+published-package dependency guard. The 2026-05-31 follow-up web commit
+`3bb8aa624b34c06dfe0f55d321f77d92ac20ce36` consumes
+`@cgraph-dev/shared-types@1.0.4` so the static profile-theme catalog rows come
+from the shared package instead of web-local data. Verified with
+`pnpm check:packages`, `pnpm check:package-owner`,
 `pnpm --filter @cgraph/web typecheck`, `pnpm --filter @cgraph/web lint`,
 `pnpm --filter @cgraph/web check:release-gates` (400 Vitest files, 5,354
-tests), and `pnpm --filter @cgraph/web build:budget`. This closes the web side
-of the package phase-4 consumption move; it does not close real provider
-delivery, future paired QR/mobile approval after native mobile exists, physical cross-device sync, or hosted
-Stripe settlement/webhooks.
+tests), `pnpm --filter @cgraph/web build:budget`, and the 1.0.4 follow-up
+Vitest suite with 401 files / 5,357 tests. This closes the web side of the
+package phase-4 consumption move and the web-local static profile-theme catalog
+gap; it does not close real provider delivery, future paired QR/mobile approval
+after native mobile exists, physical cross-device sync, or hosted Stripe
+settlement/webhooks.
 
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
