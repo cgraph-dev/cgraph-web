@@ -486,10 +486,10 @@ export const cosmeticsApi = {
     inventory: UserCosmeticInventory[];
     equippedId: string | null;
   }> {
-    // Unified inventory stores the avatar-border surface under the legacy `border`
-    // inventory type while the UI/shared surface remains `avatar_border`.
+    // Public API callers use the semantic avatar-border type; the backend
+    // normalizes it to the legacy storage type during the migration.
     const { data } = await http.get('/api/v1/cosmetics/inventory', {
-      params: { item_type: 'border' },
+      params: { item_type: 'avatar_border' },
     });
     const entries: BorderInventoryEntry[] = data.items ?? data.unlocked ?? [];
     const inventory = entries.map(borderEntryToInventory);

@@ -101,7 +101,7 @@ describe('cosmeticsApi', () => {
     const result = await cosmeticsApi.getUnlockedBorders();
 
     expect(mockApi.get).toHaveBeenCalledWith('/api/v1/cosmetics/inventory', {
-      params: { item_type: 'border' },
+      params: { item_type: 'avatar_border' },
     });
     expect(result.equippedId).toBe('border-1');
     expect(result.inventory).toEqual([
