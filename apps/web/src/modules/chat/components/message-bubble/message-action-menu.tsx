@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import type { MessageActionMenuProps } from './types';
-import { ReplyIcon, EditIcon, PinIcon, ForwardIcon, DeleteIcon } from './icons';
+import { ReplyIcon, EditIcon, PinIcon, ForwardIcon, DeleteIcon, SelectIcon } from './icons';
 
 const MENU_WIDTH = 128;
 const MENU_GAP = 4;
@@ -29,6 +29,7 @@ export function MessageActionMenu({
   onForward,
   onDelete,
   onTip,
+  onSelect,
   isMenuOpen,
   onToggleMenu,
   isOwn,
@@ -78,6 +79,16 @@ export function MessageActionMenu({
             className="fixed z-[1000] w-32 rounded-lg bg-[var(--token-card-bg)] py-1 shadow-lg ring-1 ring-white/10"
             style={{ top: menuPosition.top, left: menuPosition.left }}
           >
+            {onSelect && (
+              <button
+                role="menuitem"
+                onClick={onSelect}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+              >
+                <SelectIcon />
+                Select
+              </button>
+            )}
             {isOwn && onEdit && (
               <button
                 role="menuitem"

@@ -746,6 +746,11 @@ Required implementation-time questions:
       decrements same-length reaction summaries without stale memoized bubble rendering, and proves
       DELETE plus POST against `/api/v1/messages/:id/reactions` in
       `apps/web/e2e/dm-media-composer.spec.ts`.
+- [x] Routed DM multi-select copy/delete is browser-verified from the mounted Cloud Chat route. The
+      2026-05-31 follow-up mounts message select mode from the message action menu and long-press
+      path, renders selected-message controls, copies selected loaded message text in conversation
+      order, and deletes both selected messages through the conversation message endpoint in
+      `apps/web/e2e/dm-media-composer.spec.ts`. Batch forward remains a separate product decision.
 - [x] Routed DM typing start/stop emits from the live input path. Verified by
       `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-16 with the E2E-only typing observer.
 - [x] Routed DM voice/video call entry launches real call routes from the live header. Verified by

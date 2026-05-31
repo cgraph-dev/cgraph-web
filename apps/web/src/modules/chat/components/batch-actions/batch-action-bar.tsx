@@ -28,7 +28,7 @@ interface BatchActionBarProps {
   /** Check if a specific operation is allowed. */
   readonly isOperationAllowed: (op: BatchOperation) => boolean;
   /** Handler for forward action. */
-  readonly onForward: () => void;
+  readonly onForward?: () => void;
   /** Handler for delete action. */
   readonly onDelete: () => void;
   /** Handler for copy action. */
@@ -76,7 +76,9 @@ function ActionButton(props: ActionButtonProps): ReactNode {
       className={`${baseClass} ${disabled ? disabledClass : enabledClass}`}
       title={maxCount ? `Max ${maxCount} (${currentCount} selected)` : undefined}
     >
-      <span className="text-base">{icon}</span>
+      <span className="text-base" aria-hidden="true">
+        {icon}
+      </span>
       <span>{label}</span>
     </button>
   );
@@ -106,6 +108,8 @@ function BatchActionBar(props: BatchActionBarProps): ReactNode {
       {isSelecting && (
         <motion.div
           key="batch-action-bar"
+          role="toolbar"
+          aria-label={`${selectedCount} selected message${selectedCount === 1 ? '' : 's'}`}
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
@@ -121,14 +125,16 @@ function BatchActionBar(props: BatchActionBarProps): ReactNode {
           </div>
 
           {/* Action buttons */}
-          <ActionButton
-            label="Forward"
-            icon="↗"
-            disabled={!isOperationAllowed('forward')}
-            onClick={onForward}
-            maxCount={MAX_BATCH_FORWARD}
-            currentCount={selectedCount}
-          />
+          {onForward ? (
+            <ActionButton
+              label="Forward"
+              icon="↗"
+              disabled={!isOperationAllowed('forward')}
+              onClick={onForward}
+              maxCount={MAX_BATCH_FORWARD}
+              currentCount={selectedCount}
+            />
+          ) : null}
           <ActionButton
             label="Copy"
             icon="📋"

@@ -166,6 +166,7 @@ export const MessageBubble = memo(function MessageBubble({
   onForward,
   isMenuOpen,
   onToggleMenu,
+  onSelect,
   isEditing,
   editContent,
   onEditContentChange,
@@ -196,7 +197,9 @@ export const MessageBubble = memo(function MessageBubble({
 
   const bubbleCssClass = getMessageBubbleClass(bubbleStyle);
   const effectCssClass = getMessageEffectClass(messageEffect ?? 'none');
-  const canShowActionMenu = Boolean(onToggleMenu && (onEdit || onPin || onForward || onDelete));
+  const canShowActionMenu = Boolean(
+    onToggleMenu && (onSelect || onEdit || onPin || onForward || onDelete)
+  );
 
   const bubbleInlineStyle: React.CSSProperties = {};
   if (bubbleColor) bubbleInlineStyle.backgroundColor = bubbleColor;
@@ -304,6 +307,7 @@ export const MessageBubble = memo(function MessageBubble({
               onPin={onPin}
               onForward={onForward}
               onDelete={onDelete}
+              onSelect={onSelect}
               isMenuOpen={isMenuOpen}
               onToggleMenu={onToggleMenu}
               isOwn={true}
@@ -458,6 +462,7 @@ export const MessageBubble = memo(function MessageBubble({
                   onPin={onPin}
                   onForward={onForward}
                   onDelete={onDelete}
+                  onSelect={onSelect}
                   isMenuOpen={isMenuOpen}
                   onToggleMenu={onToggleMenu}
                   isOwn={false}

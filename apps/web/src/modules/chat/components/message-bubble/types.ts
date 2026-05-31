@@ -28,6 +28,7 @@ export interface MessageBubbleProps {
   onForward?: () => void;
   isMenuOpen?: boolean;
   onToggleMenu?: () => void;
+  onSelect?: () => void;
   isEditing?: boolean;
   editContent?: string;
   onEditContentChange?: (content: string) => void;
@@ -66,6 +67,7 @@ export interface MessageActionMenuProps {
   onForward?: () => void;
   onDelete?: () => void;
   onTip?: () => void;
+  onSelect?: () => void;
   isMenuOpen?: boolean;
   onToggleMenu?: () => void;
   isOwn: boolean;

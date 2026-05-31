@@ -115,6 +115,10 @@ interface MessageListProps {
   /** Changes when the route wants to repeat a scroll to the same message id. */
   scrollToMessageRequestKey?: string | number | null;
   onScrollToMessageComplete?: (messageId: string) => void;
+  isSelecting?: boolean;
+  selectedMessageIds?: ReadonlySet<string>;
+  onToggleSelect?: (messageId: string) => void;
+  onEnterSelectMode?: (messageId: string) => void;
 }
 
 // Flat row type for virtualizer
@@ -122,6 +126,9 @@ type VirtualRow =
   | { type: 'date-header'; date: Date; key: string }
   | { type: 'message'; message: Message; groupMessages: Message[]; msgIndex: number; key: string }
   | { type: 'album'; album: AlbumGroup; key: string };
+
+const EMPTY_SELECTION = new Set<string>();
+
 // MessageList Component
 /**
  * Message List component.
@@ -148,6 +155,10 @@ export function MessageList({
   scrollToMessageId,
   scrollToMessageRequestKey,
   onScrollToMessageComplete,
+  isSelecting = false,
+  selectedMessageIds = EMPTY_SELECTION,
+  onToggleSelect,
+  onEnterSelectMode,
 }: MessageListProps) {
   const navigate = useNavigate();
   const fallbackRef = useRef<HTMLDivElement>(null);
@@ -325,6 +336,11 @@ export function MessageList({
     const prevMessage = groupMessages[msgIndex - 1];
     const prevSenderId = prevMessage ? getMessageSenderId(prevMessage) || '' : '';
     const showAvatar = !isOwn && (msgIndex === 0 || prevSenderId !== messageSenderId);
+    const canSelectMessage = !message.deletedAt;
+    const canEnterSelectMode = canSelectMessage && Boolean(onEnterSelectMode);
+    const canToggleSelectedMessage = isSelecting && canSelectMessage && Boolean(onToggleSelect);
+    const isSelected = selectedMessageIds.has(message.id);
+    const selectPadding = isSelecting ? (isOwn ? 'pr-10' : 'pl-10') : '';
 
     return (
       <AnimatedMessageWrapper
@@ -333,49 +349,77 @@ export function MessageList({
         messageId={message.id}
         isEditing={editingMessageId === message.id}
         onSwipeReply={() => onReply(message)}
-        enableGestures={true}
+        onLongPress={canEnterSelectMode ? () => onEnterSelectMode?.(message.id) : undefined}
+        enableGestures={!isSelecting}
       >
-        <MessageBubble
-          message={message}
-          isOwn={isOwn}
-          showAvatar={showAvatar}
-          onReply={() => onReply(message)}
-          uiPreferences={uiPreferences}
-          onAvatarClick={(avatarUserId) => navigate(`/user/${avatarUserId}`)}
-          onEdit={() => onEdit(message)}
-          onDelete={() => onDelete(message.id)}
-          onPin={() => onPin(message.id)}
-          onForward={() => onForward(message)}
-          isMenuOpen={activeMessageMenu === message.id}
-          onToggleMenu={() => onToggleMenu(message.id)}
-          isEditing={editingMessageId === message.id}
-          editContent={editContent}
-          onEditContentChange={onEditContentChange}
-          onSaveEdit={onSaveEdit}
-          onCancelEdit={onCancelEdit}
-        />
-        {message.reactions && message.reactions.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {Object.entries(
-              message.reactions.reduce<Record<string, { count: number; hasReacted: boolean }>>(
-                (acc, r) => {
-                  const entry = (acc[r.emoji] ??= { count: 0, hasReacted: false });
-                  entry.count++;
-                  if (userId && r.userId === userId) entry.hasReacted = true;
-                  return acc;
-                },
-                {}
-              )
-            ).map(([emoji, { count, hasReacted }]) => (
-              <AnimatedReactionBubble
-                key={emoji}
-                reaction={{ emoji, count, hasReacted }}
-                isOwnMessage={isOwn}
-                onPress={() => handleAddReaction(message.id, emoji)}
-              />
-            ))}
+        <div
+          className={`relative rounded-xl py-1 transition-colors ${
+            isSelected ? 'bg-primary-500/10 ring-1 ring-primary-400/40' : ''
+          }`}
+          data-selected={isSelected ? 'true' : undefined}
+        >
+          {canToggleSelectedMessage && (
+            <button
+              type="button"
+              aria-pressed={isSelected}
+              aria-label={`${isSelected ? 'Deselect' : 'Select'} message ${message.id}`}
+              onClick={() => onToggleSelect?.(message.id)}
+              className={`absolute top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
+                isOwn ? 'right-2' : 'left-2'
+              } ${
+                isSelected
+                  ? 'border-primary-300 bg-primary-500 text-white'
+                  : 'border-white/20 bg-dark-900/90 text-white/70 hover:border-primary-300 hover:text-white'
+              }`}
+            >
+              {isSelected ? '✓' : ''}
+            </button>
+          )}
+          <div className={selectPadding}>
+            <MessageBubble
+              message={message}
+              isOwn={isOwn}
+              showAvatar={showAvatar}
+              onReply={() => onReply(message)}
+              uiPreferences={uiPreferences}
+              onAvatarClick={(avatarUserId) => navigate(`/user/${avatarUserId}`)}
+              onEdit={() => onEdit(message)}
+              onDelete={() => onDelete(message.id)}
+              onPin={() => onPin(message.id)}
+              onForward={() => onForward(message)}
+              onSelect={canEnterSelectMode ? () => onEnterSelectMode?.(message.id) : undefined}
+              isMenuOpen={activeMessageMenu === message.id}
+              onToggleMenu={() => onToggleMenu(message.id)}
+              isEditing={editingMessageId === message.id}
+              editContent={editContent}
+              onEditContentChange={onEditContentChange}
+              onSaveEdit={onSaveEdit}
+              onCancelEdit={onCancelEdit}
+            />
+            {message.reactions && message.reactions.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Object.entries(
+                  message.reactions.reduce<Record<string, { count: number; hasReacted: boolean }>>(
+                    (acc, r) => {
+                      const entry = (acc[r.emoji] ??= { count: 0, hasReacted: false });
+                      entry.count++;
+                      if (userId && r.userId === userId) entry.hasReacted = true;
+                      return acc;
+                    },
+                    {}
+                  )
+                ).map(([emoji, { count, hasReacted }]) => (
+                  <AnimatedReactionBubble
+                    key={emoji}
+                    reaction={{ emoji, count, hasReacted }}
+                    isOwnMessage={isOwn}
+                    onPress={() => handleAddReaction(message.id, emoji)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </AnimatedMessageWrapper>
     );
   };

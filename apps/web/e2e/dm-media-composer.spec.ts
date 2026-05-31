@@ -365,6 +365,15 @@ async function installMessagingApiMocks(
         return;
       }
 
+      const messagePathMatch = url.pathname.match(
+        new RegExp(`^/api/v1/conversations/${CONVERSATION_ID}/messages/([^/]+)$`)
+      );
+      if (request.method() === 'DELETE' && messagePathMatch) {
+        deletedMessages.push(request.method());
+        await route.fulfill({ status: 204, body: '' });
+        return;
+      }
+
       if (url.pathname === `/api/v1/conversations/${CONVERSATION_ID}/messages/msg-own`) {
         if (request.method() === 'PATCH') {
           const body = request.postDataJSON() as Record<string, unknown>;
@@ -384,11 +393,6 @@ async function installMessagingApiMocks(
           return;
         }
 
-        if (request.method() === 'DELETE') {
-          deletedMessages.push(request.method());
-          await route.fulfill({ status: 204, body: '' });
-          return;
-        }
       }
 
       if (request.method() !== 'GET') {
@@ -1053,6 +1057,68 @@ test.describe('DM media composer', () => {
     await expect(
       reactionMessage.getByRole('button', { name: /remove 👍 reaction, 2 total/i })
     ).toBeVisible();
+  });
+
+  test('selects multiple routed cloud-DM messages for batch copy and delete', async ({ page }) => {
+    const { deletedMessages } = await installMessagingApiMocks(page, {
+      initialMessages: [
+        messageFixture({
+          id: 'msg-batch-1',
+          content: 'first batch copy',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        }),
+        messageFixture({
+          id: 'msg-batch-2',
+          senderId: CURRENT_USER_ID,
+          sender: conversation.participants[0].user,
+          content: 'second batch copy',
+          createdAt: '2026-01-01T00:01:00.000Z',
+          updatedAt: '2026-01-01T00:01:00.000Z',
+        }),
+      ],
+    });
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    const firstMessage = page.locator('#message-msg-batch-1');
+    const secondMessage = page.locator('#message-msg-batch-2');
+    await expect(firstMessage).toBeVisible();
+    await expect(secondMessage).toBeVisible();
+
+    await firstMessage.hover();
+    await firstMessage.getByRole('button', { name: /more message actions/i }).click();
+    await page.getByRole('menuitem', { name: /^select$/i }).click();
+    await expect(page.getByRole('toolbar', { name: /1 selected message/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /select message msg-batch-2/i }).click();
+    await expect(page.getByRole('toolbar', { name: /2 selected messages/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /^copy$/i }).click();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = window as Window & { __cgraphBatchCopiedText?: string };
+            return target.__cgraphBatchCopiedText ?? '';
+          }),
+        { message: 'selected messages were copied in conversation order' }
+      )
+      .toBe('Friend: first batch copy\nE2E User: second batch copy');
+    await expect(page.getByRole('toolbar', { name: /2 selected messages/i })).toBeHidden();
+
+    await firstMessage.hover();
+    await firstMessage.getByRole('button', { name: /more message actions/i }).click();
+    await page.getByRole('menuitem', { name: /^select$/i }).click();
+    await page.getByRole('button', { name: /select message msg-batch-2/i }).click();
+    await expect(page.getByRole('toolbar', { name: /2 selected messages/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /^delete$/i }).click();
+    await expect
+      .poll(() => deletedMessages.length, { message: 'batch delete called both endpoints' })
+      .toBe(2);
+    await expect(firstMessage).toContainText(/message deleted/i);
+    await expect(secondMessage).toContainText(/message deleted/i);
   });
 
   test('runs routed cloud-DM reply, search jump, edit, pin, forward, and delete actions', async ({
