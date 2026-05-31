@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 const expectedPackages = new Map([
   ['@cgraph-dev/animation-constants', '1.0.1'],
-  ['@cgraph-dev/api-client', '1.0.1'],
+  ['@cgraph-dev/api-client', '1.0.2'],
   ['@cgraph-dev/design-tokens', '1.0.1'],
   ['@cgraph-dev/shared-types', '1.0.1'],
   ['@cgraph-dev/utils', '1.0.1'],
@@ -88,4 +88,4 @@ if (findings.length > 0) {
   process.exit(1);
 }
 
-console.log('Package dependency validation passed (@cgraph-dev packages pinned to 1.0.1).');
+console.log('Package dependency validation passed (@cgraph-dev packages pinned to reviewed versions).');
