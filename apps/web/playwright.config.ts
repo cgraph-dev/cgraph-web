@@ -1,7 +1,17 @@
+import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
 
 const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === 'true';
 const retries = Number(process.env.PLAYWRIGHT_RETRIES ?? (process.env.CI ? 2 : 0));
+const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
+
+if (chromiumExecutable && !existsSync(chromiumExecutable)) {
+  throw new Error(`PLAYWRIGHT_CHROMIUM_EXECUTABLE does not exist: ${chromiumExecutable}`);
+}
+
+const chromiumRuntimeUse = chromiumExecutable
+  ? { launchOptions: { executablePath: chromiumExecutable } }
+  : {};
 
 /**
  * Playwright E2E Test Configuration for CGraph Web
@@ -39,12 +49,13 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     // Setup project for authentication
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    { name: 'setup', testMatch: /.*\.setup\.ts/, use: chromiumRuntimeUse },
 
     {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+        ...chromiumRuntimeUse,
         // Use prepared auth state
         storageState: 'playwright/.auth/user.json',
       },
@@ -74,6 +85,7 @@ export default defineConfig({
       name: 'Mobile Chrome',
       use: {
         ...devices['Pixel 5'],
+        ...chromiumRuntimeUse,
         storageState: 'playwright/.auth/user.json',
       },
       dependencies: ['setup'],
@@ -93,6 +105,7 @@ export default defineConfig({
       testMatch: /visual-regression\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
+        ...chromiumRuntimeUse,
         storageState: 'playwright/.auth/user.json',
       },
       dependencies: ['setup'],
@@ -104,6 +117,7 @@ export default defineConfig({
       testMatch: /network-conditions\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
+        ...chromiumRuntimeUse,
         storageState: 'playwright/.auth/user.json',
       },
       dependencies: ['setup'],
