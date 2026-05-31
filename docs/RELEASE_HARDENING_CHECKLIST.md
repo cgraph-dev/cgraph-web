@@ -58,7 +58,7 @@ Latest proof:
 - Result: web now consumes exact published npm dependencies
   `@cgraph-dev/animation-constants@1.0.1`,
   `@cgraph-dev/api-client@1.0.3`, `@cgraph-dev/design-tokens@1.0.1`,
-  `@cgraph-dev/shared-types@1.0.4`, and `@cgraph-dev/utils@1.0.1`.
+  `@cgraph-dev/shared-types@1.0.5`, and `@cgraph-dev/utils@1.0.1`.
   Local app package mirrors and `packages/*` workspace membership are removed.
   `check:packages` and `check:package-owner` now enforce exact package pins,
   reject old `@cgraph/*` package dependencies, reject local package protocols,
@@ -187,7 +187,7 @@ remains owned by `cgraph-packages`.
 
 - [x] `apps/web/package.json` pins the reviewed published `@cgraph-dev/*`
       package set, including `@cgraph-dev/api-client@1.0.3` and
-      `@cgraph-dev/shared-types@1.0.4`.
+      `@cgraph-dev/shared-types@1.0.5`.
 - [x] `pnpm check:packages` rejects missing or non-exact package pins, old
       `@cgraph/*` shared package dependencies, local package protocols,
       reintroduced `packages/*` workspace membership, local mirror path aliases,
@@ -357,6 +357,10 @@ Latest proof:
   into a thin renderer adapter for the package-owned static profile-theme
   catalog. Local package guards, typecheck, lint, and the Vitest suite with
   401 files / 5,357 tests passed.
+- 2026-05-31: production web consumes `@cgraph-dev/shared-types@1.0.5`, keeping
+  `apps/web/src/modules/chat/components/message-bubble/preferences.ts` as a
+  compatibility adapter over package-owned chat UI preference defaults and
+  value guards.
 
 ## Production External Providers
 

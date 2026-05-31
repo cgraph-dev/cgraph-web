@@ -1,28 +1,13 @@
 /**
- * Shared chat UI preference contract.
+ * Chat UI preference adapter.
  *
- * This lives with the chat rendering components so routed pages, Vault, and
- * future desktop/mobile adapters consume the same bubble/media defaults.
+ * Runtime-neutral values and defaults live in @cgraph-dev/shared-types. Web
+ * keeps this compatibility export for routed chat components.
  */
 
-export interface UIPreferences {
-  glassEffect: 'default' | 'frosted' | 'crystal' | 'neon' | 'holographic' | 'aurora';
-  animationIntensity: 'low' | 'medium' | 'high';
-  showParticles: boolean;
-  enableGlow: boolean;
-  enable3D: boolean;
-  enableHaptic: boolean;
-  voiceVisualizerTheme: 'matrix-green' | 'cyber-blue' | 'neon-pink' | 'sunset-orange';
-  messageEntranceAnimation: 'slide' | 'fade' | 'scale' | 'bounce';
-}
+import { DEFAULT_CHAT_UI_PREFERENCES } from '@cgraph-dev/shared-types';
+import type { ChatUiPreferences } from '@cgraph-dev/shared-types';
 
-export const DEFAULT_UI_PREFERENCES: UIPreferences = {
-  glassEffect: 'holographic',
-  animationIntensity: 'high',
-  showParticles: false,
-  enableGlow: true,
-  enable3D: true,
-  enableHaptic: true,
-  voiceVisualizerTheme: 'matrix-green',
-  messageEntranceAnimation: 'slide',
-};
+export type UIPreferences = ChatUiPreferences;
+
+export const DEFAULT_UI_PREFERENCES: UIPreferences = DEFAULT_CHAT_UI_PREFERENCES;

@@ -189,15 +189,20 @@ tsconfig path aliases, and replaces the mirror provenance gates with a
 published-package dependency guard. The 2026-05-31 follow-up web commit
 `3bb8aa624b34c06dfe0f55d321f77d92ac20ce36` consumes
 `@cgraph-dev/shared-types@1.0.4` so the static profile-theme catalog rows come
-from the shared package instead of web-local data. Verified with
+from the shared package instead of web-local data. The 2026-05-31 chat UI
+follow-up consumes `@cgraph-dev/shared-types@1.0.5` so
+`apps/web/src/modules/chat/components/message-bubble/preferences.ts` becomes a
+compatibility adapter over package-owned chat presentation defaults. Verified with
 `pnpm check:packages`, `pnpm check:package-owner`,
 `pnpm --filter @cgraph/web typecheck`, `pnpm --filter @cgraph/web lint`,
 `pnpm --filter @cgraph/web check:release-gates` (400 Vitest files, 5,354
-tests), `pnpm --filter @cgraph/web build:budget`, and the 1.0.4 follow-up
-Vitest suite with 401 files / 5,357 tests. This closes the web side of the
-package phase-4 consumption move and the web-local static profile-theme catalog
-gap; it does not close real provider delivery, future paired QR/mobile approval
-after native mobile exists, physical cross-device sync, or hosted Stripe
+tests), `pnpm --filter @cgraph/web build:budget`, the 1.0.4 profile-theme
+follow-up Vitest suite with 401 files / 5,357 tests, and the 1.0.5 chat UI
+preference follow-up Vitest suite with 401 files / 5,357 tests. This closes the
+web side of the package phase-4 consumption move, the web-local static
+profile-theme catalog gap, and the web-local chat UI preference default gap; it
+does not close real provider delivery, future paired QR/mobile approval after
+native mobile exists, physical cross-device sync, or hosted Stripe
 settlement/webhooks.
 
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so

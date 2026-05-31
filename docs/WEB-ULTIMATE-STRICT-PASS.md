@@ -872,7 +872,7 @@ settlement remain open.
 `cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from local
 `packages/*` mirrors to exact published npm dependencies
 `@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.0.3`,
-`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.4`, and
+`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.5`, and
 `@cgraph-dev/utils@1.0.1`. The commit removes the mirror workspace and path
 aliases, replaces the old snapshot/mirror gates with a published-package
 dependency guard, and was verified with `pnpm check:packages`,
@@ -895,6 +895,13 @@ shared-foundation truth but keeps the strict score unchanged because external
 provider delivery, future paired QR/mobile approval after native mobile exists,
 physical second-device validation, hosted Stripe settlement, and final broad
 signoff remain open.
+
+2026-05-31 chat UI preference package proof: production web consumes
+`@cgraph-dev/shared-types@1.0.5`, keeping
+`apps/web/src/modules/chat/components/message-bubble/preferences.ts` as a thin
+compatibility adapter over package-owned chat presentation defaults and value
+guards. This narrows the chat bubble/message presentation foundation without
+claiming final messaging or release-score closure.
 
 2026-05-31 CI runtime proof: production web commit
 `ab47c4b8a7989a19b28434698818111c1dfa8ec9` opts the `Web Release Gates`
