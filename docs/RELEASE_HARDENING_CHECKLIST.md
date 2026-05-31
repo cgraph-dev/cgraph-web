@@ -370,6 +370,12 @@ Latest proof:
   and nameplates. `check:release-gates` now starts with
   `check:customization-lottie-assets`, which verifies the 51 required public
   `/lottie/...` assets are present and parseable before the test suite runs.
+- 2026-05-31: production web now browser-verifies invalid credential, invalid
+  2FA, and duplicate-registration recovery on the mounted auth routes. The 2FA
+  step owns one scoped visible alert, shared auth errors use `role="alert"` /
+  `aria-live="assertive"`, and the focused Chromium auth/account route suite
+  passed 12 / 12. The full local web release gate passed afterward with 402
+  files / 5,358 tests.
 
 ## Production External Providers
 

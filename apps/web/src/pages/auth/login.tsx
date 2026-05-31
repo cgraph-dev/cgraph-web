@@ -113,8 +113,8 @@ export default function Login() {
         <p className="mt-2 text-gray-400">{t('login.subtitle')}</p>
       </motion.div>
 
-      {/* Error Alert — reused from register */}
-      <AuthErrorAlert error={error} />
+      {/* Credential-step error alert; 2FA renders its scoped error inside the code form. */}
+      {loginStep === 'credentials' ? <AuthErrorAlert error={error} /> : null}
 
       {loginStep === '2fa' && twoFactorToken ? (
         /* Two-Factor Verification Form */

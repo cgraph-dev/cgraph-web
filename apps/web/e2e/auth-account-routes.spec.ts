@@ -39,13 +39,16 @@ interface MockJsonResponse {
 }
 
 interface AuthRouteMockOptions {
+  readonly loginResponses?: readonly MockJsonResponse[];
   readonly phoneRequestResponses?: readonly MockJsonResponse[];
   readonly phoneVerifyResponses?: readonly MockJsonResponse[];
   readonly phoneCallFallbackResponses?: readonly MockJsonResponse[];
   readonly registrationLockResponses?: readonly MockJsonResponse[];
   readonly profileUpdateResponses?: readonly MockJsonResponse[];
   readonly qrSessionResponses?: readonly MockJsonResponse[];
+  readonly registerResponses?: readonly MockJsonResponse[];
   readonly resetPasswordResponses?: readonly MockJsonResponse[];
+  readonly twoFactorResponses?: readonly MockJsonResponse[];
 }
 
 function mockResponse(body: unknown, status = 200): MockJsonResponse {
@@ -122,34 +125,58 @@ async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions =
 
     if (path === '/api/v1/auth/login') {
       const body = readJsonRequest(route);
+      const attempt = requests.login.length;
       requests.login.push(body);
 
-      await fulfillJson(route, {
-        status: '2fa_required',
-        two_factor_token: 'uat-two-factor-token',
-      });
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.loginResponses,
+          attempt,
+          mockResponse({
+            status: '2fa_required',
+            two_factor_token: 'uat-two-factor-token',
+          })
+        )
+      );
       return;
     }
 
     if (path === '/api/v1/auth/login/2fa') {
       const body = readJsonRequest(route);
+      const attempt = requests.twoFactor.length;
       requests.twoFactor.push(body);
 
-      await fulfillJson(route, {
-        user: authUser({ email: 'twofa@cgraph.dev', username: 'twofa_owner' }),
-        tokens,
-      });
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.twoFactorResponses,
+          attempt,
+          mockResponse({
+            user: authUser({ email: 'twofa@cgraph.dev', username: 'twofa_owner' }),
+            tokens,
+          })
+        )
+      );
       return;
     }
 
     if (path === '/api/v1/auth/register') {
       const body = readJsonRequest(route);
+      const attempt = requests.register.length;
       requests.register.push(body);
 
-      await fulfillJson(route, {
-        user: authUser({ email: 'new-owner@cgraph.dev', username: 'new_owner' }),
-        tokens,
-      });
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.registerResponses,
+          attempt,
+          mockResponse({
+            user: authUser({ email: 'new-owner@cgraph.dev', username: 'new_owner' }),
+            tokens,
+          })
+        )
+      );
       return;
     }
 
@@ -394,6 +421,60 @@ test.describe('auth and account lifecycle routes', () => {
     });
   });
 
+  test('keeps credential and 2FA failures visible on the login route', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page, {
+      loginResponses: [
+        mockResponse(
+          {
+            error: {
+              code: 'invalid_credentials',
+              message: 'Invalid email or password',
+            },
+          },
+          401
+        ),
+        mockResponse({
+          status: '2fa_required',
+          two_factor_token: 'uat-two-factor-token',
+        }),
+      ],
+      twoFactorResponses: [
+        mockResponse(
+          {
+            error: {
+              code: 'two_factor_invalid',
+              message: 'Invalid verification code',
+            },
+          },
+          401
+        ),
+      ],
+    });
+
+    await page.goto('/login');
+    await page.getByLabel(/email or username/i).fill('twofa@cgraph.dev');
+    await page.locator('#password').fill('wrong-password');
+    await page.getByRole('button', { name: /^sign in/i }).click();
+
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByText('Invalid email or password')).toBeVisible();
+    expect(requests.twoFactor).toEqual([]);
+
+    await page.locator('#password').fill(strongPassword);
+    await page.getByRole('button', { name: /^sign in/i }).click();
+    await expect(page.getByRole('heading', { name: /two-factor authentication/i })).toBeVisible();
+
+    await page.locator('#two-factor-code').fill('654321');
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByText('Invalid verification code')).toBeVisible();
+    await expect.poll(() => requests.login.length).toBe(2);
+    await expect.poll(() => requests.twoFactor.length).toBe(1);
+    expect(requests.twoFactor[0]).toMatchObject({
+      two_factor_token: 'uat-two-factor-token',
+      code: '654321',
+    });
+  });
+
   test('submits registration through the routed account creation page', async ({ page }) => {
     const requests = await installAuthRouteMocks(page);
 
@@ -406,6 +487,42 @@ test.describe('auth and account lifecycle routes', () => {
     await page.getByRole('button', { name: /create account/i }).click();
 
     await expect(page).toHaveURL(/\/messages$/);
+    await expect.poll(() => requests.register.length).toBe(1);
+    expect(requests.register[0]).toMatchObject({
+      user: {
+        email: 'new-owner@cgraph.dev',
+        username: 'new_owner',
+        password: strongPassword,
+        password_confirmation: strongPassword,
+      },
+    });
+  });
+
+  test('keeps duplicate registration failures on the account creation route', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page, {
+      registerResponses: [
+        mockResponse(
+          {
+            error: {
+              code: 'email_taken',
+              message: 'Email is already registered',
+            },
+          },
+          422
+        ),
+      ],
+    });
+
+    await page.goto('/register');
+    await page.locator('#email').fill('new-owner@cgraph.dev');
+    await page.locator('#username').fill('new_owner');
+    await page.locator('#password').fill(strongPassword);
+    await page.locator('#confirmPassword').fill(strongPassword);
+    await page.getByLabel(/agree to the terms/i).check();
+    await page.getByRole('button', { name: /create account/i }).click();
+
+    await expect(page).toHaveURL(/\/register$/);
+    await expect(page.getByText('Email is already registered')).toBeVisible();
     await expect.poll(() => requests.register.length).toBe(1);
     expect(requests.register[0]).toMatchObject({
       user: {

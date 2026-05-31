@@ -132,6 +132,14 @@ mocked backend contracts. This closes the strict broad auth route browser-proof 
 mail-provider delivery and the remaining phone registration-lock, call-fallback, and new-user
 completion branches stayed open until the later phone-flow proof below.
 
+2026-05-31 auth failure recovery proof: `apps/web/e2e/auth-account-routes.spec.ts` now also
+browser-verifies invalid credential, invalid 2FA, and duplicate-registration backend responses. The
+login route stays on `/login`, the 2FA step renders one scoped visible alert instead of duplicate
+errors, registration stays on `/register`, and the shared auth error alert exposes `role="alert"` /
+`aria-live="assertive"`. Focused Chromium proof passed 12 / 12, and the full local web release gate
+passed afterward with 402 files / 5,358 tests. This improves local route-owned auth failure recovery
+without closing real mail/SMS/voice provider delivery or future paired QR approval.
+
 2026-05-28 reset-token proof: production backend `auth_controller_test.exs` now proves valid
 password reset, login with the new password, replay rejection, invalid token, expired token, and
 missing-param validation. Production web `auth-account-routes.spec.ts` browser-verifies mounted
