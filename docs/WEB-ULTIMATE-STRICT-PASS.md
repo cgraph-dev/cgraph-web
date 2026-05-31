@@ -907,6 +907,13 @@ full 400-file / 5,355-test Vitest pass, `pnpm --filter @cgraph/web typecheck`,
 e2e/auth-account-routes.spec.ts --project=chromium --no-deps` passed 10 / 10, and
 `pnpm --filter @cgraph/web build:budget` passed.
 
+2026-05-31 native-runtime boundary guard proof: production web now makes the package guard enforce
+the platform trust boundary. `scripts/validate-package-dependencies.mjs` rejects browser app
+dependencies and source imports for `@cgraph-dev/crypto`, legacy `@cgraph/crypto`, and
+`@signalapp/libsignal-client`, and the stale root `pnpm.onlyBuiltDependencies` allowlist entry for
+`@signalapp/libsignal-client` was removed. Verification: `pnpm check:packages` and
+`pnpm check:package-owner` passed.
+
 Equal-weight release-readiness score: `84.1%`.
 
 Truthful rounded Goal 2 completion: `84%`.

@@ -254,6 +254,15 @@ src/pages/auth/login/__tests__/qr-login.test.tsx` (expanded to 400 Vitest files 
 e2e/auth-account-routes.spec.ts --project=chromium --no-deps` (10 / 10 passed), and
 `pnpm --filter @cgraph/web build:budget`.
 
+2026-05-31 web native-runtime boundary guard proof: production web extends
+`scripts/validate-package-dependencies.mjs` so `pnpm check:packages` and
+`pnpm check:package-owner` now fail if the browser app adds native-trust-boundary dependencies or
+source imports for `@cgraph-dev/crypto`, legacy `@cgraph/crypto`, or
+`@signalapp/libsignal-client`. The stale root build allowlist entry for
+`@signalapp/libsignal-client` was removed. This keeps web as a Cloud Chat/browser-safe client while
+preserving the native libsignal-capable path for later mobile and desktop work. Verified with
+`pnpm check:packages` and `pnpm check:package-owner`.
+
 2026-05-28 upload failure UX proof: production web surfaces upload API failures through the
 route-owned DM composer toast instead of only logging them. `apps/web/e2e/dm-media-composer.spec.ts`
 now browser-verifies a scanner-unavailable `/api/v1/uploads` response, proves no fake attachment

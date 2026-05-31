@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { extname, join } from 'node:path';
 
 const expectedPackages = new Map([
   ['@cgraph-dev/animation-constants', '1.0.1'],
@@ -12,6 +12,12 @@ const expectedPackages = new Map([
 ]);
 
 const forbiddenLocalProtocols = ['workspace:', 'file:', 'link:', 'portal:'];
+const forbiddenWebRuntimePackages = new Set([
+  '@cgraph-dev/crypto',
+  '@cgraph/crypto',
+  '@signalapp/libsignal-client',
+]);
+const sourceExtensions = new Set(['.cjs', '.js', '.jsx', '.mjs', '.ts', '.tsx']);
 const findings = [];
 
 function readJson(path) {
@@ -23,7 +29,34 @@ function readJson(path) {
   }
 }
 
+function walkSourceFiles(dir) {
+  const files = [];
+  if (!existsSync(dir)) {
+    return files;
+  }
+
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkSourceFiles(path));
+      continue;
+    }
+
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    if (sourceExtensions.has(extname(entry.name))) {
+      files.push(path);
+    }
+  }
+
+  return files;
+}
+
 const rootDir = process.cwd();
+const rootPackagePath = join(rootDir, 'package.json');
+const rootPackage = readJson(rootPackagePath);
 const webPackagePath = join(rootDir, 'apps/web/package.json');
 const webPackage = readJson(webPackagePath);
 const dependencies = webPackage.dependencies ?? {};
@@ -50,6 +83,12 @@ for (const [packageName, expectedVersion] of expectedPackages.entries()) {
 
 for (const section of allDependencySections) {
   for (const [packageName, version] of Object.entries(section)) {
+    if (forbiddenWebRuntimePackages.has(packageName)) {
+      findings.push(
+        `apps/web/package.json: ${packageName} is native-trust-boundary code and must not be a web dependency.`
+      );
+    }
+
     if (packageName.startsWith('@cgraph/') && packageName !== '@cgraph/web') {
       findings.push(`apps/web/package.json: remove old package scope ${packageName}.`);
     }
@@ -61,6 +100,15 @@ for (const section of allDependencySections) {
     ) {
       findings.push(`apps/web/package.json: ${packageName} must not use ${version}.`);
     }
+  }
+}
+
+const onlyBuiltDependencies = rootPackage.pnpm?.onlyBuiltDependencies ?? [];
+for (const packageName of onlyBuiltDependencies) {
+  if (forbiddenWebRuntimePackages.has(packageName)) {
+    findings.push(
+      `package.json: pnpm.onlyBuiltDependencies must not allow native-trust-boundary package ${packageName} in the web repo.`
+    );
   }
 }
 
@@ -78,6 +126,17 @@ const tsconfigPath = join(rootDir, 'apps/web/tsconfig.json');
 const tsconfigText = readFileSync(tsconfigPath, 'utf8');
 if (tsconfigText.includes('../../packages/')) {
   findings.push('apps/web/tsconfig.json: remove local package mirror path aliases.');
+}
+
+for (const file of walkSourceFiles(join(rootDir, 'apps/web/src'))) {
+  const source = readFileSync(file, 'utf8');
+  for (const packageName of forbiddenWebRuntimePackages) {
+    if (source.includes(`'${packageName}'`) || source.includes(`"${packageName}"`)) {
+      findings.push(
+        `${file}: web source must not import native-trust-boundary package ${packageName}.`
+      );
+    }
+  }
 }
 
 if (findings.length > 0) {
