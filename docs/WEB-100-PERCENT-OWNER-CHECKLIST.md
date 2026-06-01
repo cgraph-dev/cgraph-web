@@ -149,6 +149,18 @@ proof passed 19 / 19; typecheck, lint, release gates with 403 files / 5,368 test
 and build budget passed. This closes local routed DM video-note send proof without claiming canonical
 DM convergence, final live/provider regression breadth, or native mobile/desktop secret-chat work.
 
+2026-06-01 routed DM inbox-owner convergence proof: production web now imports the live inbox
+sidebar, loaded-list filtering, and Space membership helpers from
+`apps/web/src/modules/chat/components/conversation-list/*`. The old
+`apps/web/src/pages/messages/messages/conversation-sidebar.tsx`,
+`conversation-item.tsx`, `conversation-spaces.ts`, `types.ts`, and `utils.ts` files are thin
+compatibility re-exports, so the complete routed inbox action surface lives under the shared
+conversation-list owner. Focused ownership/helper/component proof passed 24 / 24; focused Chromium
+proof passed the routed conversation-list actions and Space membership test; the full routed DM
+media/composer Chromium spec passed 17 / 17 serially; typecheck and lint passed. This closes the
+local inbox owner/filter/start-new-DM convergence gap without claiming final live/provider
+regression breadth.
+
 2026-05-28 reset-token proof: production backend `auth_controller_test.exs` now proves valid
 password reset, login with the new password, replay rejection, invalid token, expired token, and
 missing-param validation. Production web `auth-account-routes.spec.ts` browser-verifies mounted
@@ -495,6 +507,13 @@ slots. The Cloud Chat route still owns backend data/actions and slot composition
 but does not fully close the strict page-shell convergence row. Focused proof lives in
 `apps/web/src/modules/chat/components/__tests__/conversation-surface.test.tsx`, plus the existing
 conversation route and composer adapter tests.
+
+2026-06-01 Cloud Chat inbox-owner convergence proof: production web now routes the live
+conversation-list sidebar, action menu, loaded-list filtering, and Space membership helpers through
+`modules/chat/components/conversation-list`. The page-level messages files are compatibility
+re-exports, so the remaining route shell fetches and passes data/actions while the shared chat module
+owns the list UI contract. The strict-pass row remains open only for broader live/provider release
+validation, not a second page-local inbox owner.
 
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,

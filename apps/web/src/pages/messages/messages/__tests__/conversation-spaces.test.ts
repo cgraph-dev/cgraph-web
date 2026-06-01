@@ -5,7 +5,7 @@ import {
   readConversationSpace,
   spaceConversationPatch,
   type ConversationSpace,
-} from '../conversation-spaces';
+} from '@/modules/chat/components/conversation-list';
 
 const baseSpace: ConversationSpace = {
   id: 'space-1',

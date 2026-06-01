@@ -8,7 +8,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
-import { NewChatModal } from '@/modules/chat/components/conversation-list';
+import {
+  applySpaceConversationPatch,
+  ConversationSidebar,
+  filterConversations,
+  NewChatModal,
+  readConversationSpace,
+  spaceConversationPatch,
+  type ConversationSpace,
+} from '@/modules/chat/components/conversation-list';
 import { socketManager } from '@/lib/socket';
 import { http } from '@/lib/api-client';
 import { ensureArray } from '@/lib/api-utils';
@@ -16,15 +24,7 @@ import { createLogger } from '@/lib/logger';
 import { toast } from '@/shared/components/ui';
 import { MessageSearch } from '@/modules/chat/components/message-search';
 
-import { ConversationSidebar } from './conversation-sidebar';
 import { NoConversationSelected } from './empty-states';
-import {
-  applySpaceConversationPatch,
-  readConversationSpace,
-  spaceConversationPatch,
-  type ConversationSpace,
-} from './conversation-spaces';
-import { filterConversations } from './utils';
 import type { OnlineStatusMap } from './types';
 
 const logger = createLogger('Messages');

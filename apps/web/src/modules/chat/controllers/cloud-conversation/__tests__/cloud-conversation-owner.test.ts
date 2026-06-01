@@ -56,4 +56,55 @@ describe('Cloud conversation ownership', () => {
     expect(controller).toContain('markAsRead(conversationId)');
     expect(voiceUpload).toContain("http.post('/api/v1/voice-messages'");
   });
+
+  it('keeps the routed inbox and chat-list actions on the shared conversation-list owner', () => {
+    const route = source('src/pages/messages/messages/messages.tsx');
+    const sidebarCompatibilityExport = source(
+      'src/pages/messages/messages/conversation-sidebar.tsx'
+    );
+    const itemCompatibilityExport = source('src/pages/messages/messages/conversation-item.tsx');
+    const spacesCompatibilityExport = source(
+      'src/pages/messages/messages/conversation-spaces.ts'
+    );
+    const sidebar = source(
+      'src/modules/chat/components/conversation-list/conversation-sidebar.tsx'
+    );
+    const item = source(
+      'src/modules/chat/components/conversation-list/routed-conversation-item.tsx'
+    );
+
+    expect(route).toContain("from '@/modules/chat/components/conversation-list'");
+    expect(route).not.toContain("from './conversation-sidebar'");
+    expect(route).not.toContain("from './conversation-spaces'");
+    expect(route).not.toContain("from './utils'");
+
+    expect(sidebarCompatibilityExport.trim()).toBe(
+      "export { ConversationSidebar } from '@/modules/chat/components/conversation-list';"
+    );
+    expect(itemCompatibilityExport.trim()).toBe(
+      "export { RoutedConversationItem as ConversationItem } from '@/modules/chat/components/conversation-list';"
+    );
+    expect(spacesCompatibilityExport.trim()).toBe(
+      "export * from '@/modules/chat/components/conversation-list/conversation-spaces';"
+    );
+
+    for (const action of [
+      'onMarkAsRead',
+      'onMarkAsUnread',
+      'onArchive',
+      'onUnarchive',
+      'onPin',
+      'onMute',
+      'onToggleSpace',
+      'onShowArchivedChange',
+    ]) {
+      expect(sidebar).toContain(action);
+    }
+
+    expect(item).toContain('conversationMatchesSpace');
+    expect(item).toContain('handleMarkAsRead');
+    expect(item).toContain('handlePinToggle');
+    expect(item).toContain('handleMuteToggle');
+    expect(item).toContain('handleSpaceToggle');
+  });
 });

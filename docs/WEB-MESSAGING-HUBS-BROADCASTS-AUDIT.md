@@ -152,10 +152,10 @@ Upstream references for this section:
 
 | Action                                 | Status  | Source-backed note                                                                                                                                                                                                                                                                                                              | Exact web work                                                                 |
 | -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Open inbox and unread list             | Partial | `pages/messages/messages/messages.tsx` fetches and renders conversations, but the live route uses `pages/messages/messages/*` instead of the richer `modules/chat/components/conversation-list/*` stack.                                                                                                                        | Converge on one canonical inbox owner.                                         |
-| Filter current conversation list       | Partial | `conversation-sidebar.tsx` only filters the already-loaded list locally.                                                                                                                                                                                                                                                        | Keep local filtering, but move it into the canonical inbox surface.            |
+| Open inbox and unread list             | Ready   | The live `/messages` route still fetches conversations, but the rendered inbox, action sidebar, list filtering helpers, and Space membership helpers now live under `modules/chat/components/conversation-list/*`; the old page-local files are compatibility re-exports. Browser proof lives in `apps/web/e2e/dm-media-composer.spec.ts`. | Keep the shared owner proof green while broad live regression continues.       |
+| Filter current conversation list       | Ready   | The current loaded-list filter now comes from `modules/chat/components/conversation-list/utils.ts`, and the live route imports it from the shared conversation-list owner. It remains intentionally local to loaded conversations.                                                                                               | Keep local filtering in the canonical inbox owner.                             |
 | Global search and jump to message      | Ready   | `messages.tsx` opens `MessageSearch` and navigates with `?scrollTo=...`; `useEnhancedConversation.ts` consumes that query param, preserves the target anchor instead of forcing bottom scroll, and exposes a latest/new-messages jump. Browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                            | Keep the jump and guarded-scroll proof green while converging inbox ownership. |
-| Start a new DM from the inbox          | Partial | The route can open `NewChatModal`, but the inbox still lacks the surrounding chat-list parity actions.                                                                                                                                                                                                                          | Keep the modal, but mount it under the canonical inbox owner.                  |
+| Start a new DM from the inbox          | Ready   | The routed inbox opens the shared `NewChatModal` from `modules/chat/components/conversation-list`, and the surrounding inbox action surface now lives beside it in the same shared conversation-list owner.                                                                                                                       | Keep the modal and shared inbox actions together.                              |
 | Pin or unpin a chat                    | Ready   | The routed inbox sidebar menu now pins and unpins through `/api/v1/conversations/:id/pin`, updates the live list state, and is browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                                    | Keep the live menu proof green while converging inbox ownership.               |
 | Mute or unmute a chat                  | Ready   | The routed inbox sidebar menu now mutes and unmutes through `/api/v1/conversations/:id/mute`, updates the live list state, and is browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                                 | Keep the live menu proof green while converging inbox ownership.               |
 | Archive or unarchive a chat            | Ready   | The routed sidebar can archive from the inbox, open the archived list, and unarchive from the recovery surface. Browser-verified by `apps/web/e2e/dm-media-composer.spec.ts`.                                                                                                                                                   | Keep archived-list recovery proof green while converging inbox ownership.      |
@@ -295,9 +295,9 @@ Important distinction:
 
 1. Keep Secret Chats out of scope on web. Do not spend web time trying to make the browser a
    Signal-participant device.
-2. Replace the page-local messages shell with one canonical inbox and one canonical cloud-DM owner.
-   The routed surface should own the list, composer, message actions, search jump, receipts,
-   autoscroll, and pins.
+2. Keep the shared inbox owner green and continue converging the cloud-DM route shell. The routed
+   surface should keep owning the list, composer, message actions, search jump, receipts, autoscroll,
+   and pins through `modules/chat` owners.
 3. Keep the browser-verified live inbox actions green: pin, mute, archive/recover, mark unread/read,
    and per-chat Space moves. Spaces are first-class at `/spaces`; Vault is first-class at `/vault`.
 4. Split hub channel types into real routed products: text, forum/topic, voice, video, and
@@ -322,9 +322,8 @@ Important distinction:
 The live web app already has the beginnings of a real cloud-DM and hub experience, but it is still
 missing the product shape that Signal and Telegram actually ship:
 
-- one canonical inbox and conversation owner
-- one canonical inbox and conversation owner, even though first-class chat-list actions and folders
-  are now mounted and browser-verified
+- one canonical inbox owner is now local to `modules/chat/components/conversation-list`
+- broader cloud-DM page/shell convergence still needs final release breadth
 - channel-type-specific routed surfaces
 - mounted hub admin screens
 - first-class Broadcast routes

@@ -19,12 +19,12 @@ import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { SpaceFilterEditor } from '@/modules/chat/components/spaces/space-filter-editor';
-import { getConversationName } from '@/pages/messages/messages/utils';
 import {
   conversationMatchesSpace,
+  getConversationName,
   readConversationSpace,
   type ConversationSpace as Space,
-} from '@/pages/messages/messages/conversation-spaces';
+} from '@/modules/chat/components/conversation-list';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN, FADE_UP } from '@/lib/animations/transitions';
 
