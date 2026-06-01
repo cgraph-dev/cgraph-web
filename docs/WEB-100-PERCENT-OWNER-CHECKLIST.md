@@ -308,6 +308,20 @@ release gates with 406 files / 5,380 tests, and build budget. This narrows the
 Phase 5 web-adapter cleanup work without claiming final provider, future native
 QR, or physical cross-device closure.
 
+2026-06-01 customization selector facade cleanup proof: production web removes
+the unused deprecated whole-store selector facade from
+`apps/web/src/modules/settings/store/customization/customizationStore.selectors.ts`
+and stops re-exporting `useChatSettings` / `useThemeSettings` /
+`useAvatarSettings` / `useProfileSettings` / `useSyncState` from the
+customization barrel. It also removes the unused `getThemeColors(...)` /
+`useAvatarThemeColors(...)` helper surface and deletes the self-referential
+test that only exercised that dead helper. Source search found no consumers
+outside that deleted test. Verified with focused settings/customization tests
+covering 126 tests across 4 files, package guards, typecheck, lint, release
+gates with 405 files / 5,377 tests, and build budget. This narrows the Phase 5
+web-adapter cleanup work without claiming final provider, future native QR, or
+physical cross-device closure.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and

@@ -60,14 +60,5 @@ export {
   useSyncError,
 } from './customizationStore.selectors';
 
-// Composite selectors
-export {
-  useChatSettings,
-  useThemeSettings,
-  useAvatarSettings,
-  useProfileSettings,
-  useSyncState,
-} from './customizationStore.selectors';
-
 // Mappings
 export * from './mappings';

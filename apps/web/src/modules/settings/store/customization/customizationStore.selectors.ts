@@ -9,11 +9,6 @@
  */
 
 import { useCustomizationStore } from './customizationStore';
-import { THEME_COLORS } from './customizationStore.types';
-import type { ThemePreset } from './customizationStore.types';
-import { createLogger } from '@/lib/logger';
-
-const logger = createLogger('customizationStore');
 
 // INDIVIDUAL SELECTORS
 
@@ -46,63 +41,3 @@ export const useIsLoading = () => useCustomizationStore((s) => s.isLoading);
 export const useIsSaving = () => useCustomizationStore((s) => s.isSaving);
 export const useIsDirty = () => useCustomizationStore((s) => s.isDirty);
 export const useSyncError = () => useCustomizationStore((s) => s.error);
-
-// HELPER / COMPOSITE SELECTORS
-
-// Helper to get theme colors for a preset
-/**
- */
-/**
- * Retrieves theme colors.
- *
- * @param preset - The preset.
- * @returns The theme colors.
- */
-export function getThemeColors(preset: ThemePreset): typeof THEME_COLORS.emerald {
-  return THEME_COLORS[preset];
-}
-
-// Convenience hooks that combine a selector with getThemeColors
-// Usage: const colors = useChatThemeColors();
-/**
- */
-/**
- * Hook for managing chat theme colors.
- * @returns The result.
- */
-// useChatThemeColors hook archived
-
-/**
- */
-/**
- * Hook for managing avatar theme colors.
- * @returns The result.
- */
-export function useAvatarThemeColors(): typeof THEME_COLORS.emerald {
-  const color = useAvatarBorderColor();
-  return THEME_COLORS[color];
-}
-
-// DEPRECATED SELECTORS
-
-/**
- * @deprecated Use individual selectors instead. Object selectors cause infinite render loops.
- * Example: useCustomizationStore(s => s.chatBubbleStyle) instead of useChatSettings()
- */
-export const useChatSettings = () => {
-  if (process.env.NODE_ENV === 'development') {
-    logger.warn(
-      '[useChatSettings] Deprecated: Use individual selectors like useChatBubbleStyle() instead. ' +
-        'Object selectors cause infinite render loops.'
-    );
-  }
-  return useCustomizationStore.getState();
-};
-
-/**
- * @deprecated Use individual selectors instead. Object selectors cause infinite render loops.
- */
-export const useThemeSettings = useChatSettings;
-export const useAvatarSettings = useChatSettings;
-export const useProfileSettings = useChatSettings;
-export const useSyncState = useChatSettings;

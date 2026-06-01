@@ -1012,6 +1012,17 @@ package-owner guard, typecheck, lint, release gates with 406 files / 5,380
 tests, and bundle budgets all passed. This narrows the web-adapter cleanup layer
 while keeping the strict score unchanged.
 
+2026-06-01 customization selector facade cleanup proof: production web removes
+the unused deprecated whole-store selector facade from the customization store
+barrel and keeps `customizationStore.selectors.ts` to primitive Zustand
+selectors only. The deleted exports were `useChatSettings`, `useThemeSettings`,
+`useAvatarSettings`, `useProfileSettings`, `useSyncState`, `getThemeColors`, and
+`useAvatarThemeColors`; source search found no consumers outside the deleted
+self-referential selector test. Focused settings/customization tests passed 4
+files / 126 tests; package guards, package-owner guard, typecheck, lint,
+release gates with 405 files / 5,377 tests, and bundle budgets all passed. This
+narrows the web-adapter cleanup layer while keeping the strict score unchanged.
+
 2026-05-31 customization Lottie delivery proof: production web now includes the catalog-referenced
 public Lottie JSON files for badge, title, display-name effect, and nameplate customization paths.
 `apps/web/scripts/check-customization-lottie-assets.mjs` verifies the 51 required public assets are
