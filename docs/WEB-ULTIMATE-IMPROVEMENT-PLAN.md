@@ -247,8 +247,7 @@ correctness work below before feature expansion or scale items.
   start/stop emit from the live input path, plus GIF/sticker send, voice/video call-entry launch from
   the live DM header, call-history callback launch from a real history row, and incoming-call
   accept/end-state route behavior.
-- Still open: deeper peer media-negotiation verification and broader live/provider regression
-  breadth.
+- Still open: broader live/provider regression breadth.
 
 4. Routed group parity
 
@@ -335,7 +334,7 @@ Checklist:
 - [x] Ship guarded autoscroll/latest-jump behavior on the routed DM surface.
 - [x] Ship browser-verified call launch on the routed DM surface.
 - [x] Ship GIF/sticker send on the routed DM surface.
-- [ ] Ship deeper peer media-negotiation proof on the routed DM surface.
+- [x] Ship deeper peer media-negotiation proof on the routed DM surface.
 
 #### Web groups owner
 
@@ -876,12 +875,13 @@ Unify the attachment/send contract across DMs and groups, eliminate the remainin
 
 ### Wave 2 — Routed DM parity (weeks 2–3)
 
-Ship the remaining deeper peer media-negotiation proof on the live DM route. File/photo, voice-note,
-video-note, GIF/sticker send, DM call-entry launch, call-history callback, incoming-call
-accept/end-state, reply, search jump, guarded latest-jump scroll behavior, typing start/stop emit,
-edit/delete/forward, request actions, pin, loaded pinned-panel behavior, read-receipt rendering,
-module-owned inbox actions/filtering, core conversation-list participant actions, and per-chat Space
-move controls are already covered by focused tests and browser proof.
+Keep the routed DM WebRTC proof green on the live DM route. File/photo, voice-note, video-note,
+GIF/sticker send, DM call-entry launch, routed media acquisition/signaling/offer/answer/ICE/connected
+state, call-history callback, incoming-call accept/end-state, reply, search jump, guarded latest-jump
+scroll behavior, typing start/stop emit, edit/delete/forward, request actions, pin, loaded
+pinned-panel behavior, read-receipt rendering, module-owned inbox actions/filtering, core
+conversation-list participant actions, and per-chat Space move controls are already covered by
+focused tests and browser proof.
 
 ### Wave 3 — Routed group parity and admin surfaces (weeks 3–4)
 

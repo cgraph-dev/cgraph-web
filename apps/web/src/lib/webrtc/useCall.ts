@@ -45,6 +45,8 @@ import {
 } from './webrtcService';
 
 export interface UseCallReturn {
+  /** Whether the WebRTC manager is ready to start or answer calls */
+  isReady: boolean;
   /** Current call state */
   callState: CallState;
   /** Local media stream */
@@ -231,6 +233,7 @@ export function useCall(): UseCallReturn {
   }
 
   return {
+    isReady: Boolean(manager),
     callState,
     localStream: callState.localStream,
     remoteStreams: callState.remoteStreams,

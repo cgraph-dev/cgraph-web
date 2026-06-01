@@ -29,6 +29,7 @@ export function useCallScreen() {
 
   const { user } = useAuthStore();
   const {
+    isReady: isCallReady,
     callState,
     localStream,
     remoteStreams,
@@ -76,6 +77,7 @@ export function useCallScreen() {
   useEffect(() => {
     async function initCall() {
       if (!recipientId) return;
+      if (!isCallReady) return;
       if (callInitKeyRef.current === callInitKey) return;
       callInitKeyRef.current = callInitKey;
 
@@ -92,7 +94,7 @@ export function useCallScreen() {
     }
 
     initCall();
-  }, [answerCall, callInitKey, callType, isIncoming, recipientId, roomId, startCall]);
+  }, [answerCall, callInitKey, callType, isCallReady, isIncoming, recipientId, roomId, startCall]);
 
   // Track call duration
   useEffect(() => {

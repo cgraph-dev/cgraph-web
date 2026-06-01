@@ -522,8 +522,17 @@ chat module, while the old `apps/web/src/pages/messages/enhanced-conversation/*`
 compatibility re-exports. Focused owner/composer proof passed 10 / 10; typecheck, lint, package
 guards, release gates with 403 files / 5,369 tests, and build budget passed; and the full routed DM
 media/composer Chromium spec passed 17 / 17 serially after the move. This closes the local
-page-owned opened-DM surface gap without claiming final live/provider regression breadth or deeper
-peer media-negotiation proof.
+page-owned opened-DM surface gap without claiming final live/provider regression breadth.
+
+2026-06-01 routed DM WebRTC route proof: production web now waits for the socket-backed WebRTC
+manager before starting or answering the mounted call route. The focused routed-DM browser harness in
+`apps/web/e2e/routed-dm-webrtc.spec.ts` starts a local Phoenix-compatible socket, launches the video
+call from `/messages/:conversationId`, and verifies media acquisition, backend-shaped ICE servers,
+`webrtc:lobby` room creation, `call:{roomId}` join, outbound offer, ICE candidate push, remote
+answer handling, remote audio/video tracks, and connected state. Focused WebRTC unit proof passed 21
+/ 21, typecheck and lint passed, the routed WebRTC Chromium proof passed, and the full routed DM
+media/composer Chromium spec passed 18 / 18. This closes the local routed-DM peer negotiation proof
+gap without claiming broad live/provider regression or physical cross-device validation.
 
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,
@@ -803,8 +812,9 @@ Required implementation-time questions:
 - [x] Incoming calls accept into the mounted call screen and return cleanly through the end-call
       control. Verified by `apps/web/e2e/web-owner-uat.spec.ts` on 2026-05-16 through the
       root-mounted `IncomingCallHandler`, `/call/:recipientId/video?incoming=true&roomId=...`,
-      visible video controls, and end-call navigation back to the DM route. Deeper peer media
-      negotiation remains tracked as final release validation risk.
+      visible video controls, and end-call navigation back to the DM route. Routed DM peer
+      negotiation is covered by `apps/web/e2e/routed-dm-webrtc.spec.ts`; broad live/provider
+      regression remains tracked as final release validation risk.
 - [x] Routed group search and notification or mute behavior are real.
 - [x] Routed group message context actions are real.
 - [x] Routed group GIF, sticker, and voice-note sends are real. Verified by

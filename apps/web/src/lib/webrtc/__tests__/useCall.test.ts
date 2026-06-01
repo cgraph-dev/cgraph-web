@@ -67,11 +67,12 @@ describe('useCall', () => {
   });
 
   it('uses an existing socket without reconnecting', async () => {
-    renderHook(() => useCall());
+    const { result } = renderHook(() => useCall());
 
     await waitFor(() =>
       expect(mocks.mockGetWebRTCManager).toHaveBeenCalledWith(mocks.mockSocket)
     );
+    await waitFor(() => expect(result.current.isReady).toBe(true));
     expect(mocks.mockConnect).not.toHaveBeenCalled();
   });
 
@@ -79,11 +80,21 @@ describe('useCall', () => {
     useAuthStore.setState({ token: 'auth-token' });
     mocks.mockGetSocket.mockReturnValueOnce(null).mockReturnValue(mocks.mockConnectedSocket);
 
-    renderHook(() => useCall());
+    const { result } = renderHook(() => useCall());
 
     await waitFor(() => expect(mocks.mockConnect).toHaveBeenCalledTimes(1));
     await waitFor(() =>
       expect(mocks.mockGetWebRTCManager).toHaveBeenCalledWith(mocks.mockConnectedSocket)
     );
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+  });
+
+  it('reports not ready before a socket-backed manager exists', async () => {
+    mocks.mockGetSocket.mockReturnValue(null);
+
+    const { result } = renderHook(() => useCall());
+
+    expect(result.current.isReady).toBe(false);
+    expect(mocks.mockGetWebRTCManager).not.toHaveBeenCalled();
   });
 });
