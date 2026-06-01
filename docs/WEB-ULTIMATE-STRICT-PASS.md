@@ -1033,6 +1033,16 @@ chat/settings tests passed 5 files / 90 tests; package guards, typecheck, lint,
 release gates with 405 files / 5,359 tests, and bundle budgets all passed. This
 narrows the web-adapter cleanup layer while keeping the strict score unchanged.
 
+2026-06-02 chat reaction adapter ownership proof: production web moves
+`getReactionStyleClass(...)` from the settings application hook to
+`modules/chat/components/animatedReactionBubble/preferences.ts`, so animated
+reaction rendering owns its web CSS adapter beside the chat reaction component.
+`useCustomizationApplication` no longer exports chat reaction-style helpers.
+Focused chat/settings tests passed 3 files / 52 tests; package guards,
+package-owner guard, typecheck, lint, release gates with 406 files / 5,351
+tests, and bundle budgets all passed. This narrows the web-adapter cleanup layer
+while keeping the strict score unchanged.
+
 2026-05-31 customization Lottie delivery proof: production web now includes the catalog-referenced
 public Lottie JSON files for badge, title, display-name effect, and nameplate customization paths.
 `apps/web/scripts/check-customization-lottie-assets.mjs` verifies the 51 required public assets are

@@ -13,8 +13,8 @@ import { cn } from '@/lib/utils';
 import { LottieRenderer } from '@/lib/lottie';
 import { getReactionAnimation } from '@/lib/chat/reactionUtils';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import { getReactionStyleClass } from '@/modules/settings/hooks/useCustomizationApplication';
 import { ReactionParticle } from '@/modules/chat/components/animatedReactionBubble/reaction-particle';
+import { getReactionStyleClass } from '@/modules/chat/components/animatedReactionBubble/preferences';
 import {
   SPRING_SCALE,
   SPRING_ROTATE,

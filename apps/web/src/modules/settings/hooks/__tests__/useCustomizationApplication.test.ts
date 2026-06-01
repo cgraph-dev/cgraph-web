@@ -19,7 +19,6 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
 import {
   useCustomizationApplication,
   getAvatarBorderStyle,
-  getReactionStyleClass,
 } from '../useCustomizationApplication';
 
 // getAvatarBorderStyle — pure function
@@ -79,38 +78,6 @@ describe('getAvatarBorderStyle', () => {
 
   it('returns empty className for empty string', () => {
     expect(getAvatarBorderStyle('').className).toBe('');
-  });
-});
-
-// getReactionStyleClass
-
-describe('getReactionStyleClass', () => {
-  it('returns reaction-bounce for "bounce"', () => {
-    expect(getReactionStyleClass('bounce')).toBe('reaction-bounce');
-  });
-
-  it('returns reaction-pop for "pop"', () => {
-    expect(getReactionStyleClass('pop')).toBe('reaction-pop');
-  });
-
-  it('returns reaction-float for "float"', () => {
-    expect(getReactionStyleClass('float')).toBe('reaction-float');
-  });
-
-  it('returns reaction-spin for "spin"', () => {
-    expect(getReactionStyleClass('spin')).toBe('reaction-spin');
-  });
-
-  it('returns reaction-shake for "shake"', () => {
-    expect(getReactionStyleClass('shake')).toBe('reaction-shake');
-  });
-
-  it('returns reaction-zoom for "zoom"', () => {
-    expect(getReactionStyleClass('zoom')).toBe('reaction-zoom');
-  });
-
-  it('returns reaction-bounce as default for unknown style', () => {
-    expect(getReactionStyleClass('unknown')).toBe('reaction-bounce');
   });
 });
 

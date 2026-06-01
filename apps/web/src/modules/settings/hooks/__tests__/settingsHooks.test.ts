@@ -34,7 +34,6 @@ vi.mock('@/lib/api-client', () => ({
 import {
   useCustomizationApplication,
   getAvatarBorderStyle,
-  getReactionStyleClass,
 } from '../useCustomizationApplication';
 import { useUsernameChange } from '../useUsernameChange';
 describe('useCustomizationApplication', () => {
@@ -150,19 +149,6 @@ describe('getAvatarBorderStyle', () => {
   });
 });
 
-describe('getReactionStyleClass', () => {
-  it('returns "reaction-bounce" as default for unknown style', () => {
-    expect(getReactionStyleClass('unknown')).toBe('reaction-bounce');
-  });
-
-  it('returns correct class for "pop"', () => {
-    expect(getReactionStyleClass('pop')).toBe('reaction-pop');
-  });
-
-  it('returns correct class for "spin"', () => {
-    expect(getReactionStyleClass('spin')).toBe('reaction-spin');
-  });
-});
 describe('useUsernameChange', () => {
   const baseOptions = {
     currentUsername: 'olduser',

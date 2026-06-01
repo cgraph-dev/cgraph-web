@@ -10,14 +10,12 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { GlassCard, Avatar } from '@/shared/components/ui';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import {
-  getAvatarBorderStyle,
-  getReactionStyleClass,
-} from '@/modules/settings/hooks/useCustomizationApplication';
+import { getAvatarBorderStyle } from '@/modules/settings/hooks/useCustomizationApplication';
 import {
   getMessageBubbleClass,
   getMessageEffectClass,
 } from '@/modules/chat/components/message-bubble/preferences';
+import { getReactionStyleClass } from '@/modules/chat/components/animatedReactionBubble/preferences';
 import { PROFILE_THEME_IDS } from '@/data/profileThemes';
 
 // Reserved for advanced border styling

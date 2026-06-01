@@ -335,6 +335,20 @@ typecheck, lint, release gates with 405 files / 5,359 tests, and build budget.
 This narrows the Phase 5 web-adapter cleanup work without claiming final
 provider, future native QR, or physical cross-device closure.
 
+2026-06-02 chat reaction adapter ownership proof: production web moves
+`getReactionStyleClass(...)` out of the settings customization application hook
+and into the chat-owned
+`apps/web/src/modules/chat/components/animatedReactionBubble/preferences.ts`
+adapter. `AnimatedReactionBubble` and the dev theme preview now consume that
+chat adapter directly, while `useCustomizationApplication` keeps only
+settings/theme DOM application plus avatar-border CSS mapping. Source search
+found no remaining reaction-style helper imports from the settings hook.
+Verified with focused chat/settings tests covering 52 tests across 3 files,
+package guards, package-owner guard, typecheck, lint, release gates with 406
+files / 5,351 tests, and build budget. This narrows the Phase 5 web-adapter
+cleanup work without claiming final provider, future native QR, or physical
+cross-device closure.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
