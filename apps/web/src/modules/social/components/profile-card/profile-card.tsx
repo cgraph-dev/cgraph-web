@@ -14,9 +14,6 @@ import { SIZE_CONFIG, getHoverVariants, RADIUS_MAP } from './constants';
 import { MinimalLayout } from './minimal-layout';
 import { CompactLayout } from './compact-layout';
 import { DetailedLayout } from './detailed-layout';
-import { GamingLayout } from './gaming-layout';
-import { SocialLayout } from './social-layout';
-import { CreatorLayout } from './creator-layout';
 import type { ProfileCardProps } from './types';
 import { springs } from '@/lib/animation-presets';
 
@@ -24,7 +21,7 @@ import { springs } from '@/lib/animation-presets';
  * ProfileCard Component
  *
  * Renders user profile cards with:
- * - 7 different layout styles
+ * - Shared profile-card layout styles
  * - Customizable hover effects
  * - Animated badges and titles
  * - Theme-aware styling
@@ -45,6 +42,8 @@ export const ProfileCard = memo(function ProfileCard({
   const theme = propTheme ?? storeTheme;
   const config = propConfig ?? storeConfig;
   const sizeConfig = SIZE_CONFIG[size];
+  const shouldRenderDetailedLayout =
+    config.layout !== 'minimal' && config.layout !== 'compact';
 
   const cardStyle: React.CSSProperties = (() => {
     if (!theme) return {};
@@ -92,19 +91,7 @@ export const ProfileCard = memo(function ProfileCard({
       {config.layout === 'compact' && (
         <CompactLayout user={user} config={config} sizeConfig={sizeConfig} theme={theme} />
       )}
-      {config.layout === 'detailed' && (
-        <DetailedLayout user={user} config={config} sizeConfig={sizeConfig} theme={theme} />
-      )}
-      {config.layout === 'gaming' && (
-        <GamingLayout user={user} config={config} sizeConfig={sizeConfig} theme={theme} />
-      )}
-      {config.layout === 'social' && (
-        <SocialLayout user={user} config={config} sizeConfig={sizeConfig} theme={theme} />
-      )}
-      {config.layout === 'creator' && (
-        <CreatorLayout user={user} config={config} sizeConfig={sizeConfig} theme={theme} />
-      )}
-      {config.layout === 'custom' && (
+      {shouldRenderDetailedLayout && (
         <DetailedLayout user={user} config={config} sizeConfig={sizeConfig} theme={theme} />
       )}
 

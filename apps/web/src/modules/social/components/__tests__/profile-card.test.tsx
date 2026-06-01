@@ -79,24 +79,6 @@ vi.mock('../profile-card/detailed-layout', () => ({
   ),
 }));
 
-vi.mock('../profile-card/gaming-layout', () => ({
-  GamingLayout: ({ user }: { user: ProfileCardUser }) => (
-    <div data-testid="gaming-layout">{user.displayName}</div>
-  ),
-}));
-
-vi.mock('../profile-card/social-layout', () => ({
-  SocialLayout: ({ user }: { user: ProfileCardUser }) => (
-    <div data-testid="social-layout">{user.displayName}</div>
-  ),
-}));
-
-vi.mock('../profile-card/creator-layout', () => ({
-  CreatorLayout: ({ user }: { user: ProfileCardUser }) => (
-    <div data-testid="creator-layout">{user.displayName}</div>
-  ),
-}));
-
 const makeUser = (overrides?: Partial<ProfileCardUser>): ProfileCardUser => ({
   id: 'user-1',
   username: 'testuser',
@@ -126,35 +108,14 @@ describe('ProfileCard', () => {
     expect(screen.getByTestId('compact-layout')).toBeInTheDocument();
   });
 
-  it('renders detailed layout from config', () => {
-    const config = { ...mockConfig, layout: 'detailed' as const };
-    render(<ProfileCard user={makeUser()} cardConfig={config} />);
-    expect(screen.getByTestId('detailed-layout')).toBeInTheDocument();
-  });
-
-  it('renders gaming layout from config', () => {
-    const config = { ...mockConfig, layout: 'gaming' as const };
-    render(<ProfileCard user={makeUser()} cardConfig={config} />);
-    expect(screen.getByTestId('gaming-layout')).toBeInTheDocument();
-  });
-
-  it('renders social layout from config', () => {
-    const config = { ...mockConfig, layout: 'social' as const };
-    render(<ProfileCard user={makeUser()} cardConfig={config} />);
-    expect(screen.getByTestId('social-layout')).toBeInTheDocument();
-  });
-
-  it('renders creator layout from config', () => {
-    const config = { ...mockConfig, layout: 'creator' as const };
-    render(<ProfileCard user={makeUser()} cardConfig={config} />);
-    expect(screen.getByTestId('creator-layout')).toBeInTheDocument();
-  });
-
-  it('falls back to detailed layout for custom layout', () => {
-    const config = { ...mockConfig, layout: 'custom' as const };
-    render(<ProfileCard user={makeUser()} cardConfig={config} />);
-    expect(screen.getByTestId('detailed-layout')).toBeInTheDocument();
-  });
+  it.each(['default', 'card', 'full', 'premium'] as const)(
+    'renders %s layout with the detailed renderer',
+    (layout) => {
+      const config = { ...mockConfig, layout };
+      render(<ProfileCard user={makeUser()} cardConfig={config} />);
+      expect(screen.getByTestId('detailed-layout')).toBeInTheDocument();
+    }
+  );
 
   it('shows online indicator when user is online', () => {
     render(<ProfileCard user={makeUser({ isOnline: true })} />);

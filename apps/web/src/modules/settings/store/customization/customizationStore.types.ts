@@ -6,7 +6,10 @@
  *
  */
 import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
-import type { ChatUiMessageEntranceAnimation } from '@cgraph-dev/shared-types';
+import type {
+  ChatUiMessageEntranceAnimation,
+  ProfileCardLayoutId,
+} from '@cgraph-dev/shared-types';
 
 // TYPES
 
@@ -45,16 +48,7 @@ export type AvatarBorderType =
 
 export type ChatBubbleStyle = ChatBubblePresetId;
 
-export type ProfileCardStyle =
-  | 'default'
-  | 'minimal'
-  | 'detailed'
-  | 'compact'
-  | 'expanded'
-  | 'gaming'
-  | 'card'
-  | 'full'
-  | 'premium';
+export type ProfileCardStyle = ProfileCardLayoutId;
 
 export type BubbleAnimation = ChatUiMessageEntranceAnimation;
 

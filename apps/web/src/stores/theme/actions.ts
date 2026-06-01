@@ -11,6 +11,8 @@
  */
 
 import type { StateCreator } from 'zustand';
+import { DEFAULT_PROFILE_CARD_LAYOUT_ID, isProfileCardLayoutId } from '@cgraph-dev/shared-types';
+import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { themeEngine, THEME_REGISTRY } from '@/lib/theme/theme-engine';
@@ -26,11 +28,11 @@ import type {
 } from './types';
 import {
   COLORS,
-  PROFILE_CARD_CONFIGS,
   THEME_PRESETS,
   CHAT_BUBBLE_PRESETS,
   DEFAULT_CHAT_BUBBLE,
   DEFAULT_THEME_STATE,
+  getProfileCardConfigForLayout,
 } from './presets';
 
 const logger = createLogger('ThemeStore');
@@ -127,6 +129,10 @@ function isAppThemeId(value: string | null): value is keyof typeof THEME_REGISTR
   return Boolean(value && APP_THEME_IDS.has(value));
 }
 
+function normalizeProfileCardLayout(value: string | null): ProfileCardLayoutId {
+  return isProfileCardLayoutId(value) ? value : DEFAULT_PROFILE_CARD_LAYOUT_ID;
+}
+
 function applyServerAppShellTheme(rawTheme: Record<string, unknown>): void {
   const mode = getStringField(rawTheme, ['mode', 'appTheme', 'app_theme']);
   const modeExplicit =
@@ -166,7 +172,7 @@ function normalizeServerTheme(
   if (profileThemeId) next.profileThemeId = profileThemeId;
 
   const profileCardLayout = getStringField(rawTheme, ['profileCardLayout', 'profile_card_layout']);
-  if (profileCardLayout) next.profileCardLayout = profileCardLayout;
+  if (profileCardLayout) next.profileCardLayout = normalizeProfileCardLayout(profileCardLayout);
 
   const avatarBorder = getStringField(rawTheme, ['avatarBorder', 'avatar_border']);
   if (isAvatarBorder(avatarBorder)) next.avatarBorder = avatarBorder;
@@ -295,8 +301,7 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
   setProfileTheme: (themeId) => set({ profileThemeId: themeId }),
   setProfileCardLayout: (layout) => set({ profileCardLayout: layout }),
   getProfileCardConfig: () => {
-    const config = PROFILE_CARD_CONFIGS[get().profileCardLayout];
-    return config ?? PROFILE_CARD_CONFIGS.minimal!;
+    return getProfileCardConfigForLayout(get().profileCardLayout);
   },
 
   // === Chat Bubble ===

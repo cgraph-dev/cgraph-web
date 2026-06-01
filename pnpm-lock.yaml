@@ -43,8 +43,8 @@ importers:
         specifier: 1.0.1
         version: 1.0.1
       '@cgraph-dev/shared-types':
-        specifier: 1.0.6
-        version: 1.0.6
+        specifier: 1.1.0
+        version: 1.1.0
       '@cgraph-dev/utils':
         specifier: 1.0.1
         version: 1.0.1
@@ -476,8 +476,8 @@ packages:
   '@cgraph-dev/design-tokens@1.0.1':
     resolution: {integrity: sha512-Q8Atk/whDQM7XJ5GziC3ekNk41oFIRA5zy9mSUHbdy2g/Gvh3qLHleExxM9KK77Cn5uEFpMlmkKkIHTv7bmY9A==}
 
-  '@cgraph-dev/shared-types@1.0.6':
-    resolution: {integrity: sha512-Bq72u1uvdehUA3bqNgmOLfNTMWvkuifGoa1BkCVRN564V6CfMwqmb1Y78VPc+hUxTUxo4W6QveOyr9q69qKoyw==}
+  '@cgraph-dev/shared-types@1.1.0':
+    resolution: {integrity: sha512-/wOwAQBW5s8UM3X8FNuWpcI2o4YRyUvD3jW82H0R17Mo1ZT5/BMzREJaeqNLPLFUj8rfiiOk07/tbaVQlskG0w==}
 
   '@cgraph-dev/utils@1.0.1':
     resolution: {integrity: sha512-fJrbHAqKFD36zuv6tma/iVjoKLkh07zyramrMXd7oNKNzSCyLVkHlt9mrZLoxScMzpOYPGG3DlN6yWV0ORbm0w==}
@@ -2310,6 +2310,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@use-gesture/core@10.3.1':
     resolution: {integrity: sha512-WcINiDt8WjqBdUXye25anHiNxPc0VOrlT8F6LLkU6cycrOGUDyY/yyFmsg3k8i5OLvv25llc0QC45GhR/C8llw==}
@@ -6132,13 +6133,13 @@ snapshots:
 
   '@cgraph-dev/api-client@1.0.3(axios@1.16.1)':
     dependencies:
-      '@cgraph-dev/shared-types': 1.0.6
+      '@cgraph-dev/shared-types': 1.1.0
       axios: 1.16.1
       zod: 3.25.76
 
   '@cgraph-dev/design-tokens@1.0.1': {}
 
-  '@cgraph-dev/shared-types@1.0.6': {}
+  '@cgraph-dev/shared-types@1.1.0': {}
 
   '@cgraph-dev/utils@1.0.1':
     dependencies:

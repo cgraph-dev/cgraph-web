@@ -14,6 +14,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { DEFAULT_PROFILE_CARD_LAYOUT_ID, isProfileCardLayoutId } from '@cgraph-dev/shared-types';
 import { http } from '@/lib/api-client';
 import { safeLocalStorage } from '@/lib/safeStorage';
 import { type ZustandSet } from '@/lib/store-helpers';
@@ -47,6 +48,7 @@ import type {
   CustomizationServerPatch,
   CustomizationState,
   CustomizationStore,
+  ProfileCardStyle,
   ThemePreset,
 } from './customizationStore.types';
 import { THEME_COLORS, DEFAULT_STATE } from './customizationStore.types';
@@ -58,15 +60,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function normalizeProfileCardStyle(value: unknown): ProfileCardStyle {
+  return isProfileCardLayoutId(value) ? value : DEFAULT_PROFILE_CARD_LAYOUT_ID;
+}
+
 function withCanonicalAliases(state: CustomizationState): CustomizationState {
+  const profileCardStyle = normalizeProfileCardStyle(state.profileCardStyle);
+
   return {
     ...state,
+    profileCardStyle,
     chatTheme: state.chatBubbleColor,
     bubbleStyle: state.chatBubbleStyle,
     messageEffect: state.bubbleEntranceAnimation,
     avatarBorder: state.avatarBorderType,
     title: state.equippedTitle,
-    profileLayout: state.profileCardStyle,
+    profileLayout: profileCardStyle,
     profileTheme: state.selectedProfileThemeId,
     appTheme: state.themePreset,
   };
@@ -89,8 +98,10 @@ function withServerPatchAliases(updates: CustomizationServerPatch): Customizatio
   if ('selectedProfileThemeId' in next && !('profileTheme' in next)) {
     next.profileTheme = next.selectedProfileThemeId;
   }
-  if ('profileCardStyle' in next && !('profileLayout' in next)) {
-    next.profileLayout = next.profileCardStyle;
+  if ('profileCardStyle' in next || 'profileLayout' in next) {
+    const profileCardStyle = normalizeProfileCardStyle(next.profileCardStyle ?? next.profileLayout);
+    next.profileCardStyle = profileCardStyle;
+    next.profileLayout = profileCardStyle;
   }
   if ('themePreset' in next && !('appTheme' in next)) next.appTheme = next.themePreset;
 
@@ -139,6 +150,17 @@ function mapServerCustomizationPatch(
   if (profileTheme) {
     next.selectedProfileThemeId = profileTheme;
     next.profileTheme = profileTheme;
+  }
+
+  const profileCardStyle = getStringPatchValue(updates, [
+    'profile_layout',
+    'profileLayout',
+    'profileCardStyle',
+  ]);
+  if (profileCardStyle !== null) {
+    const normalizedStyle = normalizeProfileCardStyle(profileCardStyle);
+    next.profileCardStyle = normalizedStyle;
+    next.profileLayout = normalizedStyle;
   }
 
   return withServerPatchAliases(next);

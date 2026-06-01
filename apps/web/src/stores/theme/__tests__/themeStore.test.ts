@@ -54,7 +54,7 @@ describe('themeStore initial state', () => {
   it('has correct default profile theme and layout', () => {
     const state = useThemeStore.getState();
     expect(state.profileThemeId).toBe('minimalist-dark');
-    expect(state.profileCardLayout).toBe('detailed');
+    expect(state.profileCardLayout).toBe('default');
   });
 
   it('has correct default effects', () => {
@@ -239,8 +239,8 @@ describe('THEME_PRESETS & getThemePreset', () => {
 // PROFILE CARD CONFIGS
 
 describe('PROFILE_CARD_CONFIGS & getProfileCardConfigForLayout', () => {
-  it('has minimal, compact, detailed, gaming, social, creator, custom layouts', () => {
-    for (const key of ['minimal', 'compact', 'detailed', 'gaming', 'social', 'creator', 'custom']) {
+  it('has the shared profile-card layout set', () => {
+    for (const key of ['default', 'minimal', 'card', 'full', 'compact', 'premium']) {
       expect(PROFILE_CARD_CONFIGS).toHaveProperty(key);
     }
   });
@@ -252,9 +252,9 @@ describe('PROFILE_CARD_CONFIGS & getProfileCardConfigForLayout', () => {
     expect(minimal.maxBadges).toBe(0);
   });
 
-  it('getProfileCardConfigForLayout falls back to minimal for unknown layout', () => {
+  it('getProfileCardConfigForLayout falls back to default for unknown layout', () => {
     const config = getProfileCardConfigForLayout('nonexistent');
-    expect(config).toEqual(PROFILE_CARD_CONFIGS.minimal);
+    expect(config).toEqual(PROFILE_CARD_CONFIGS.default);
   });
 });
 
@@ -355,9 +355,9 @@ describe('store actions', () => {
 
   it('setProfileTheme and setProfileCardLayout update state', () => {
     act(() => useThemeStore.getState().setProfileTheme('cyberpunk-neon'));
-    act(() => useThemeStore.getState().setProfileCardLayout('gaming'));
+    act(() => useThemeStore.getState().setProfileCardLayout('premium'));
     expect(useThemeStore.getState().profileThemeId).toBe('cyberpunk-neon');
-    expect(useThemeStore.getState().profileCardLayout).toBe('gaming');
+    expect(useThemeStore.getState().profileCardLayout).toBe('premium');
   });
 
   it('resetTheme restores all defaults', () => {
@@ -423,7 +423,7 @@ describe('selector hooks', () => {
 
   it('useProfileCardLayout returns current layout', () => {
     const { result } = renderHook(() => useProfileCardLayout());
-    expect(result.current).toBe('detailed');
+    expect(result.current).toBe('default');
   });
 
   it('useEffectPresetValue returns effect preset', () => {

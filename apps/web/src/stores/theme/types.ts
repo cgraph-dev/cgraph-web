@@ -5,7 +5,10 @@
  *
  */
 
-import type { ChatUiMessageEntranceAnimation } from '@cgraph-dev/shared-types';
+import type {
+  ChatUiMessageEntranceAnimation,
+  ProfileCardLayoutId,
+} from '@cgraph-dev/shared-types';
 
 // SHARED TYPES
 
@@ -38,7 +41,7 @@ export interface ColorDefinition {
 // PROFILE CARD CONFIG
 
 export interface ProfileCardConfig {
-  layout: string;
+  layout: ProfileCardLayoutId;
   showLevel: boolean;
   showXp: boolean;
   showPulse: boolean;
@@ -187,7 +190,7 @@ export interface ThemeState {
 
   // Profile theme
   profileThemeId: string;
-  profileCardLayout: string;
+  profileCardLayout: ProfileCardLayoutId;
 
   // Chat bubble
   chatBubble: ChatBubbleConfig;
@@ -225,7 +228,7 @@ export interface ThemeActions {
 
   // Profile theme
   setProfileTheme: (themeId: string) => void;
-  setProfileCardLayout: (layout: string) => void;
+  setProfileCardLayout: (layout: ProfileCardLayoutId) => void;
   getProfileCardConfig: () => ProfileCardConfig;
 
   // Chat bubble

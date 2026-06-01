@@ -158,9 +158,9 @@ describe('chat actions', () => {
 
 describe('profile actions', () => {
   it('setProfileCardStyle sets both style and alias', () => {
-    useCustomizationStore.getState().setProfileCardStyle('gaming');
-    expect(useCustomizationStore.getState().profileCardStyle).toBe('gaming');
-    expect(useCustomizationStore.getState().profileLayout).toBe('gaming');
+    useCustomizationStore.getState().setProfileCardStyle('compact');
+    expect(useCustomizationStore.getState().profileCardStyle).toBe('compact');
+    expect(useCustomizationStore.getState().profileLayout).toBe('compact');
   });
 
   it('setEquippedTitle sets both title and alias', () => {
@@ -212,6 +212,17 @@ describe('batch and legacy actions', () => {
       isDirty: false,
     });
     expect(useCustomizationStore.getState().lastSyncedAt).toEqual(expect.any(Number));
+  });
+
+  it('applyServerSettings rejects stale profile-card layout IDs', () => {
+    useCustomizationStore.setState({ ...DEFAULT_STATE, profileCardStyle: 'compact' });
+
+    useCustomizationStore.getState().applyServerSettings({
+      profile_layout: 'gaming',
+    });
+
+    expect(useCustomizationStore.getState().profileCardStyle).toBe('default');
+    expect(useCustomizationStore.getState().profileLayout).toBe('default');
   });
 
   it('updateChatStyle sets a key', () => {

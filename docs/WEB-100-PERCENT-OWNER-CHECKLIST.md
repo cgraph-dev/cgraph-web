@@ -248,6 +248,23 @@ and the web-local entrance-animation value-set gap; it does not close real
 provider delivery, future paired QR/mobile approval after native mobile exists,
 physical cross-device sync, or hosted Stripe settlement/webhooks.
 
+2026-06-01 profile-card layout package proof: production web consumes
+`@cgraph-dev/shared-types@1.1.0` so `PROFILE_CARD_LAYOUT_IDS`,
+`PROFILE_CARD_LAYOUTS`, `DEFAULT_PROFILE_CARD_LAYOUT_ID`, and
+`isProfileCardLayoutId(...)` own the runtime-neutral profile-card layout set
+used by the settings customization store, the older theme-store facade, the
+settings profile panel, and the social profile-card renderer. Stale web-only
+layout IDs such as `detailed`, `gaming`, `social`, `creator`, and `custom` are
+no longer accepted by the store boundary; server patches fall back to the
+shared default layout. Verified with `pnpm check:packages`,
+`pnpm check:package-owner`, `pnpm --filter @cgraph/web typecheck`,
+`pnpm --filter @cgraph/web lint`, focused Vitest coverage across four files
+and 115 tests, `pnpm --filter @cgraph/web check:release-gates` with 406 files
+and 5,376 tests, and `pnpm --filter @cgraph/web build:budget`. This closes the
+web-local profile-card layout value-set gap; it does not close real provider
+delivery, future paired QR/mobile approval after native mobile exists, physical
+cross-device sync, or hosted Stripe settlement/webhooks.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
@@ -380,6 +397,17 @@ type boundary, and legacy theme type boundary. The focused constants proof in
 `apps/web/src/modules/settings/components/customize/panels/__tests__/chat-panel.constants.test.ts`
 verifies the customization panel follows the shared package array, and the UI settings panel test
 now covers the full selectable set.
+
+2026-06-01 profile-card layout package proof: production web consumes
+`@cgraph-dev/shared-types@1.1.0` so profile-card layout semantics now come from
+the shared `PROFILE_CARD_LAYOUTS` contract rather than web-only unions and
+component-local constants. The settings customization store and theme-store
+facade normalize stale layout IDs to the shared default, the profile panel
+derives its selectable cards from the package catalog, and the social
+profile-card renderer handles the shared default/card/full/premium shapes via
+the detailed renderer while keeping minimal/compact as their own renderers.
+Local proof passed package guards, typecheck, lint, focused 115-test coverage,
+the full 406-file / 5,376-test release gate, and bundle budgets.
 
 2026-05-23 phone-flow browser proof: production web commit `5f86bb9` extends
 `apps/web/e2e/auth-account-routes.spec.ts` to verify new-user phone registration through profile and
@@ -926,7 +954,10 @@ Required implementation-time questions:
       selectable profile-theme set capped at seven shared IDs in
       `packages/shared-types/src/cosmetics.ts`, validates saved IDs in the backend, and renders the
       same static theme semantics across full profile, profile-card, mini/hover-card, and
-      customization preview surfaces. The 2026-05-31 Lottie delivery guard proves the
+      customization preview surfaces. The 2026-06-01 profile-card layout slice moves the
+      runtime-neutral layout ID set into `@cgraph-dev/shared-types@1.1.0`, makes web derive the
+      settings panel and profile-card renderer from that contract, and normalizes stale layout IDs
+      such as `gaming` to the shared default. The 2026-05-31 Lottie delivery guard proves the
       catalog-referenced badge, title, display-name effect, and nameplate animation paths have
       corresponding public web delivery assets rather than relying on missing files plus fallback
       placeholders.

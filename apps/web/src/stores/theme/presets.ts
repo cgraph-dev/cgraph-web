@@ -1,4 +1,9 @@
-import { createConfigPresets, classifyByRules } from '@/lib/store-helpers';
+import {
+  DEFAULT_PROFILE_CARD_LAYOUT_ID,
+  isProfileCardLayoutId,
+} from '@cgraph-dev/shared-types';
+import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
+import { classifyByRules } from '@/lib/store-helpers';
 import type {
   ColorPreset,
   ColorDefinition,
@@ -95,7 +100,7 @@ export const COLORS: Record<ColorPreset, ColorDefinition> = {
 };
 
 const BASE_CARD_CONFIG: ProfileCardConfig = {
-  layout: 'detailed',
+  layout: DEFAULT_PROFILE_CARD_LAYOUT_ID,
   showLevel: true,
   showXp: true,
   showPulse: true,
@@ -112,8 +117,13 @@ const BASE_CARD_CONFIG: ProfileCardConfig = {
   showSocialLinks: true,
 };
 
-export const PROFILE_CARD_CONFIGS = createConfigPresets(BASE_CARD_CONFIG, {
-  minimal: {
+function createProfileCardConfig(overrides: Partial<ProfileCardConfig>): ProfileCardConfig {
+  return { ...BASE_CARD_CONFIG, ...overrides };
+}
+
+export const PROFILE_CARD_CONFIGS: Record<ProfileCardLayoutId, ProfileCardConfig> = {
+  default: createProfileCardConfig({ layout: 'default' }),
+  minimal: createProfileCardConfig({
     layout: 'minimal',
     showLevel: false,
     showXp: false,
@@ -128,8 +138,16 @@ export const PROFILE_CARD_CONFIGS = createConfigPresets(BASE_CARD_CONFIG, {
     showForumsInCommon: false,
     showAchievements: false,
     showSocialLinks: false,
-  },
-  compact: {
+  }),
+  card: createProfileCardConfig({
+    layout: 'card',
+    showRecentActivity: false,
+  }),
+  full: createProfileCardConfig({
+    layout: 'full',
+    maxBadges: 8,
+  }),
+  compact: createProfileCardConfig({
     layout: 'compact',
     showXp: false,
     showPulse: false,
@@ -142,34 +160,15 @@ export const PROFILE_CARD_CONFIGS = createConfigPresets(BASE_CARD_CONFIG, {
     showForumsInCommon: false,
     showAchievements: false,
     showSocialLinks: false,
-  },
-  detailed: { layout: 'detailed', showMutualFriends: false, showForumsInCommon: false },
-  gaming: {
-    layout: 'gaming',
-    showPulse: false,
-    showBio: false,
-    showRecentActivity: false,
-    showMutualFriends: false,
-    showForumsInCommon: false,
-    showSocialLinks: false,
-  },
-  social: {
-    layout: 'social',
-    showLevel: false,
-    showXp: false,
-    maxBadges: 3,
-    showStats: false,
-    showAchievements: false,
-  },
-  creator: {
-    layout: 'creator',
-    showXp: false,
-    showStreak: false,
-    showMutualFriends: false,
-    showForumsInCommon: false,
-  },
-  custom: { layout: 'custom' },
-});
+  }),
+  premium: createProfileCardConfig({
+    layout: 'premium',
+    maxBadges: 8,
+    showRecentActivity: true,
+    showMutualFriends: true,
+    showForumsInCommon: true,
+  }),
+};
 
 export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
   'minimalist-dark': {
@@ -370,7 +369,7 @@ export { type ThemeState } from './types';
 export const DEFAULT_THEME_STATE = {
   colorPreset: 'purple' as const,
   profileThemeId: 'minimalist-dark',
-  profileCardLayout: 'detailed',
+  profileCardLayout: DEFAULT_PROFILE_CARD_LAYOUT_ID,
   chatBubble: DEFAULT_CHAT_BUBBLE,
   chatBubbleStyle: 'default' as const,
   chatBubbleColor: 'purple' as const,
@@ -396,10 +395,10 @@ export function getColorsForPreset(preset: ColorPreset): ColorDefinition {
 
 /** Get Profile Card Config For Layout. */
 export function getProfileCardConfigForLayout(
-  layout: keyof typeof PROFILE_CARD_CONFIGS
+  layout: string | null | undefined
 ): ProfileCardConfig {
-  const config = PROFILE_CARD_CONFIGS[layout];
-  return config ?? PROFILE_CARD_CONFIGS.minimal!;
+  const profileCardLayout = isProfileCardLayoutId(layout) ? layout : DEFAULT_PROFILE_CARD_LAYOUT_ID;
+  return PROFILE_CARD_CONFIGS[profileCardLayout] ?? PROFILE_CARD_CONFIGS[DEFAULT_PROFILE_CARD_LAYOUT_ID]!;
 }
 
 /** Get Theme Preset. */
