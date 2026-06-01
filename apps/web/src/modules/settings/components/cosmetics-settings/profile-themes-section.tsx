@@ -21,7 +21,7 @@ import { THEME_PRESETS_ARRAY } from './constants';
 export function ProfileThemesSection({ filters, setFilters, viewMode: _viewMode }: SectionProps) {
   void _viewMode; // Reserved for future view mode toggle
   const profileThemeId = useThemeStore((s) => s.profileThemeId);
-  const setProfileTheme = useThemeStore((s) => s.setProfileTheme);
+  const applyPreset = useThemeStore((s) => s.applyPreset);
 
   const filteredPresets = useMemo(() => {
     let result = THEME_PRESETS_ARRAY;
@@ -70,7 +70,7 @@ export function ProfileThemesSection({ filters, setFilters, viewMode: _viewMode 
                     ? preset.backgroundConfig.value
                     : preset.colors?.background || '#1a1a1a',
               }}
-              onClick={() => setProfileTheme(preset.id)}
+              onClick={() => applyPreset(preset.id)}
             >
               {/* Preview Content */}
               <div className="min-h-[200px] p-6">

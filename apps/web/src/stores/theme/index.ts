@@ -10,6 +10,7 @@ export { useThemeStore } from './themeStore';
 // Import for local use
 import type { ColorPreset as ColorPresetType } from './themeStore';
 import { useProfileTheme } from './themeStore';
+import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
 
 // Types
 export type {
@@ -140,7 +141,7 @@ export interface ProfileTheme {
   preset: ProfileThemePreset;
   colors: ProfileThemeColors;
   background: ProfileBackground;
-  cardLayout: string;
+  cardLayout: ProfileCardLayoutId;
   hoverEffect: ProfileHoverEffect;
   fontFamily: string;
   glassmorphism: boolean;

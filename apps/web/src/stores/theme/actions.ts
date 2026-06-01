@@ -442,7 +442,7 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
   applyPreset: (preset: string) => {
     const themePreset = THEME_PRESETS[preset];
     if (themePreset) {
-      set({ profileThemeId: preset });
+      set({ profileThemeId: preset, profileCardLayout: themePreset.cardLayout });
     }
   },
 

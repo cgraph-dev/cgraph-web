@@ -5,7 +5,7 @@
  * @see ./profile-card/index.ts for the full implementation
  *
  * Features:
- * - 7 different layout styles (minimal, compact, detailed, gaming, social, creator, custom)
+ * - Shared profile-card layout styles
  * - Customizable hover effects
  * - Animated badges and titles
  * - Theme-aware styling

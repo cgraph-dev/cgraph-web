@@ -265,6 +265,21 @@ web-local profile-card layout value-set gap; it does not close real provider
 delivery, future paired QR/mobile approval after native mobile exists, physical
 cross-device sync, or hosted Stripe settlement/webhooks.
 
+2026-06-01 profile-card layout adapter cleanup proof: production web removes the
+last dead `GamingLayout`, `SocialLayout`, and `CreatorLayout` exports from the
+legacy profile-card module, changes legacy theme preset `cardLayout` metadata to
+the shared `ProfileCardLayoutId` type, maps old preset-only `gaming` /
+`detailed` layout labels to shared `premium` / `full`, and makes
+`applyPreset(...)` update the advertised shared profile-card layout instead of
+only changing the preset id. The cosmetics settings theme picker now calls that
+same preset action, so the UI no longer displays or applies stale web-only
+profile-card layout names. Verified with focused profile-card/theme-store tests
+covering 2 files / 76 tests, package guards, package-owner guard, typecheck,
+lint, `pnpm --filter @cgraph/web check:release-gates` with 406 files / 5,376
+tests, and `pnpm --filter @cgraph/web build:budget`. This narrows the Phase 5
+web-adapter cleanup work without claiming final provider, future native QR, or
+physical cross-device closure.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
@@ -957,7 +972,9 @@ Required implementation-time questions:
       customization preview surfaces. The 2026-06-01 profile-card layout slice moves the
       runtime-neutral layout ID set into `@cgraph-dev/shared-types@1.1.0`, makes web derive the
       settings panel and profile-card renderer from that contract, and normalizes stale layout IDs
-      such as `gaming` to the shared default. The 2026-05-31 Lottie delivery guard proves the
+      such as `gaming` to the shared default. The later 2026-06-01 adapter cleanup removes the dead
+      legacy `GamingLayout` / `SocialLayout` / `CreatorLayout` exports and makes legacy theme preset
+      `cardLayout` metadata use shared layout ids only. The 2026-05-31 Lottie delivery guard proves the
       catalog-referenced badge, title, display-name effect, and nameplate animation paths have
       corresponding public web delivery assets rather than relying on missing files plus fallback
       placeholders.

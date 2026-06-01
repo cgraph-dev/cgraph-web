@@ -77,7 +77,7 @@ export interface ThemePresetConfig {
     overlay?: boolean;
     overlayOpacity?: number;
   };
-  cardLayout: string;
+  cardLayout: ProfileCardLayoutId;
   hoverEffect: 'none' | 'scale' | 'tilt' | 'glow' | 'particles';
   fontFamily: string;
   glassmorphism: boolean;

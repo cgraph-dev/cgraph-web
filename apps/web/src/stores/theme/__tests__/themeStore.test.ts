@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { PROFILE_CARD_LAYOUT_IDS } from '@cgraph-dev/shared-types';
 
 vi.mock('@/lib/api-client', () => ({
   http: {
@@ -231,6 +232,7 @@ describe('THEME_PRESETS & getThemePreset', () => {
       expect(preset).toHaveProperty('colors');
       expect(preset).toHaveProperty('background');
       expect(preset).toHaveProperty('cardLayout');
+      expect(PROFILE_CARD_LAYOUT_IDS).toContain(preset.cardLayout);
       expect(preset.colors).toHaveProperty('primary');
     }
   });
@@ -376,6 +378,7 @@ describe('store actions', () => {
   it('applyPreset sets profileThemeId for valid preset', () => {
     act(() => useThemeStore.getState().applyPreset('gaming-rgb'));
     expect(useThemeStore.getState().profileThemeId).toBe('gaming-rgb');
+    expect(useThemeStore.getState().profileCardLayout).toBe('premium');
   });
 
   it('applyPreset does nothing for invalid preset', () => {
