@@ -349,14 +349,14 @@ Checklist:
       canonical mounted destination.
 - [x] Split channel-list navigation into typed mounted routes for text, voice, video, announcement,
       and forum channels.
-- [ ] Pick one canonical groups shell and retire or merge the other one.
+- [x] Pick one canonical groups shell and retire or merge the other one.
 - [x] Bring real group settings, invites, roles, members, and create-channel surfaces into that
       canonical shell.
 - [x] Make group-header search and notification behavior real.
 - [x] Make routed group message edit, delete, report, copy-link, and pin-entry actions real.
 - [x] Ship voice, stickers, GIFs, and browser-verified pin/action happy paths on the routed group
       surface.
-- [ ] Ship group permission-edge proof, stronger group scroll behavior, older-search, deeper role
+- [x] Ship group permission-edge proof, stronger group scroll behavior, older-search, deeper role
       CRUD/reorder, and channel-level notification semantics.
 
 #### Web auth and onboarding owner
@@ -368,7 +368,7 @@ Supporting owners: backend auth/account owner, shared schema owner
 
 Checklist:
 
-- [ ] Browser-verify login, registration, forgot-password, reset-password, verify-email, the gated QR
+- [x] Browser-verify login, registration, forgot-password, reset-password, verify-email, the gated QR
       route, and phone entry routes.
 - [x] Let expired verify-email links request a new verification email while logged out.
 - [x] Resolve the `device_attestation` dead checkpoint before users can enter it on web.
@@ -385,12 +385,12 @@ Supporting owners: backend auth/account owner, shared schema owner
 
 Checklist:
 
-- [ ] Replace the placeholder Social Hub pane with real selected-entity content.
+- [x] Replace the placeholder Social Hub pane with real selected-entity content.
 - [x] Preserve destination metadata through notification-store mapping.
 - [x] Make notification clicks open the relevant routed message, forum, group, or profile target.
 - [x] Fix discover result routing so forum and group destinations are canonical and mounted.
 - [x] Make Social discover group joins call the real public-group join action.
-- [ ] Re-verify friend-request and friendship actions after identity fixes land.
+- [x] Re-verify friend-request and friendship actions after identity fixes land.
 
 #### Web identity, settings, and customization owner
 
@@ -423,10 +423,10 @@ Supporting owners: backend economy/calls owner, shared schema owner
 
 Checklist:
 
-- [ ] Make Nodes API/schema failure paths throw instead of returning false-success state.
-- [ ] Align wallet, shop, tip, gift, and unlock UI with real success and failure payloads.
-- [ ] Remove demo call-history fallback data.
-- [ ] Remove local-only destructive behavior if the server does not persist it.
+- [x] Make Nodes API/schema failure paths throw instead of returning false-success state.
+- [x] Align wallet, shop, tip, gift, and unlock UI with real success and failure payloads.
+- [x] Remove demo call-history fallback data.
+- [x] Remove local-only destructive behavior if the server does not persist it.
 
 #### Backend messaging contract owner
 
@@ -438,8 +438,8 @@ Supporting owners: shared schema owner
 Checklist:
 
 - [x] Decide and enforce the one true DM/group attachment contract.
-- [ ] Keep routed DM/group actions aligned with the web surface that becomes canonical.
-- [ ] Expose any missing group-admin or message-request endpoints required by the routed UI.
+- [x] Keep routed DM/group actions aligned with the web surface that becomes canonical.
+- [x] Expose any missing group-admin or message-request endpoints required by the routed UI.
 
 #### Backend auth, account, settings, privacy, economy, and calls owner
 
@@ -455,7 +455,7 @@ Checklist:
 - [x] Align cancel-deletion behavior with the route-owned web UX.
 - [x] Expand/prove `settings_json.ex` so persisted notification settings round-trip through reload.
 - [x] Align privacy payloads with the chosen web model.
-- [ ] Align Nodes, wallet, tip, gift, unlock, and call-history payloads with the shared schema.
+- [x] Align Nodes, wallet, tip, gift, unlock, and call-history payloads with the shared schema.
 
 #### Shared schema owner
 
@@ -465,10 +465,18 @@ Supporting owners: all backend and web owners above
 
 Checklist:
 
-- [ ] Keep messaging, settings, auth/account, Nodes, and calls schemas aligned with live backend
+- [x] Keep messaging, settings, auth/account, Nodes, and calls schemas aligned with live backend
       responses.
-- [ ] Remove false-success tolerances that let broken payloads look successful on web.
-- [ ] Revalidate schema consumers after each backend contract change.
+- [x] Remove false-success tolerances that let broken payloads look successful on web.
+- [x] Revalidate schema consumers after each backend contract change.
+
+2026-06-01 checklist truth reconciliation: the remaining open boxes above were reconciled against
+`docs/WEB-ULTIMATE-STRICT-PASS.md` after the routed DM WebRTC proof. The strict pass now records
+route/browser/backend proof for the canonical groups shell, group permission and scroll behavior,
+auth route coverage, Social selected-entity and friend actions, Nodes negative paths, call-history
+trustworthiness, and shared schema false-success cleanup. This does not close external provider
+delivery, future native-mobile QR approval, physical cross-device validation, hosted Stripe
+settlement, or broad live/provider regression breadth.
 
 ### Backlog interpretation rule
 
