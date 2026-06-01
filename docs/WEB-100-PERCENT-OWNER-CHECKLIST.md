@@ -322,6 +322,19 @@ gates with 405 files / 5,377 tests, and build budget. This narrows the Phase 5
 web-adapter cleanup work without claiming final provider, future native QR, or
 physical cross-device closure.
 
+2026-06-02 chat bubble adapter ownership proof: production web moves
+`getMessageBubbleClass(...)` and `getMessageEffectClass(...)` out of the
+settings customization application hook and into the chat-owned
+`apps/web/src/modules/chat/components/message-bubble/preferences.ts` adapter.
+`MessageBubble` and the dev theme preview now consume that chat adapter
+directly, while `useCustomizationApplication` keeps only settings/theme DOM
+application plus avatar/reaction helpers. Source search found no remaining
+message bubble/effect helper imports from the settings hook. Verified with
+focused chat/settings tests covering 90 tests across 5 files, package guards,
+typecheck, lint, release gates with 405 files / 5,359 tests, and build budget.
+This narrows the Phase 5 web-adapter cleanup work without claiming final
+provider, future native QR, or physical cross-device closure.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and

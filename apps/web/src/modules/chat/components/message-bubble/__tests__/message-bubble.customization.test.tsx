@@ -61,10 +61,6 @@ vi.mock('@/modules/social/components/user-profile-card', () => ({
 vi.mock('@/components/theme/themed-avatar', () => ({
   ThemedAvatar: ({ username }: { username: string }) => <div data-testid="avatar">{username}</div>,
 }));
-vi.mock('@/modules/settings/hooks/useCustomizationApplication', () => ({
-  getMessageBubbleClass: () => 'mock-bubble-class',
-  getMessageEffectClass: () => '',
-}));
 vi.mock('@/modules/chat/components/markdown-content', () => ({
   MarkdownContent: ({ content }: { content: string }) => <span>{content}</span>,
 }));

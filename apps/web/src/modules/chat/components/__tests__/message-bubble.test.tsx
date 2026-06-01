@@ -42,11 +42,6 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   ),
 }));
 
-vi.mock('@/modules/settings/hooks/useCustomizationApplication', () => ({
-  getMessageBubbleClass: () => '',
-  getMessageEffectClass: () => '',
-}));
-
 vi.mock('@/modules/social/components/user-profile-card', () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="profile-card">{children}</div>

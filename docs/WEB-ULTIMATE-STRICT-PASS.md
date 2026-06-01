@@ -1023,6 +1023,16 @@ files / 126 tests; package guards, package-owner guard, typecheck, lint,
 release gates with 405 files / 5,377 tests, and bundle budgets all passed. This
 narrows the web-adapter cleanup layer while keeping the strict score unchanged.
 
+2026-06-02 chat bubble adapter ownership proof: production web moves
+`getMessageBubbleClass(...)` and `getMessageEffectClass(...)` from the settings
+application hook to `modules/chat/components/message-bubble/preferences.ts`, so
+the routed message renderer owns its web CSS adapter beside the shared chat UI
+preference defaults. `useCustomizationApplication` no longer imports chat bubble
+design-token normalizers or exports chat message-effect helpers. Focused
+chat/settings tests passed 5 files / 90 tests; package guards, typecheck, lint,
+release gates with 405 files / 5,359 tests, and bundle budgets all passed. This
+narrows the web-adapter cleanup layer while keeping the strict score unchanged.
+
 2026-05-31 customization Lottie delivery proof: production web now includes the catalog-referenced
 public Lottie JSON files for badge, title, display-name effect, and nameplate customization paths.
 `apps/web/scripts/check-customization-lottie-assets.mjs` verifies the 51 required public assets are

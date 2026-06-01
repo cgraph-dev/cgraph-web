@@ -8,10 +8,6 @@
  */
 
 import { useEffect } from 'react';
-import {
-  normalizeChatBubbleStyleId,
-  type ChatBubblePresetId,
-} from '@cgraph-dev/design-tokens';
 import { getProfileThemeOrDefault, isProfileThemeId } from '@/data/profileThemes';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 
@@ -127,47 +123,6 @@ export function getAvatarBorderStyle(borderId: string | null): {
   return {
     className: borderClassMap[borderId] || '',
   };
-}
-
-/**
- * Get message bubble CSS class based on bubble style
- */
-export function getMessageBubbleClass(bubbleStyle: string): string {
-  const bubbleClassMap: Record<ChatBubblePresetId, string> = {
-    default: 'bubble-default',
-    rounded: 'bubble-rounded',
-    sharp: 'bubble-sharp',
-    cloud: 'bubble-cloud',
-    modern: 'bubble-modern',
-    minimal: 'bubble-minimal',
-    glass: 'bubble-glass',
-    neon: 'bubble-neon',
-    retro: 'bubble-retro',
-    'three-d': 'bubble-3d',
-    outline: 'bubble-outline',
-  };
-
-  return bubbleClassMap[normalizeChatBubbleStyleId(bubbleStyle)];
-}
-
-/**
- * Get message effect class
- */
-export function getMessageEffectClass(messageEffect: string): string {
-  if (!messageEffect || messageEffect === 'none') return '';
-
-  const effectClassMap: Record<string, string> = {
-    slide: 'message-effect-slide',
-    fade: 'message-effect-fade',
-    bounce: 'message-effect-bounce',
-    typewriter: 'message-effect-typewriter',
-    glitch: 'message-effect-glitch',
-    sparkle: 'message-effect-sparkle',
-    confetti: 'message-effect-confetti',
-    ripple: 'message-effect-ripple',
-  };
-
-  return effectClassMap[messageEffect] || '';
 }
 
 /**

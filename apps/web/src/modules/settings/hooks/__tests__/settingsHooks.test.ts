@@ -34,8 +34,6 @@ vi.mock('@/lib/api-client', () => ({
 import {
   useCustomizationApplication,
   getAvatarBorderStyle,
-  getMessageBubbleClass,
-  getMessageEffectClass,
   getReactionStyleClass,
 } from '../useCustomizationApplication';
 import { useUsernameChange } from '../useUsernameChange';
@@ -149,38 +147,6 @@ describe('getAvatarBorderStyle', () => {
 
   it('returns empty className for unknown borderId', () => {
     expect(getAvatarBorderStyle('unknown-border')).toEqual({ className: '' });
-  });
-});
-
-describe('getMessageBubbleClass', () => {
-  it('returns "bubble-default" for default style', () => {
-    expect(getMessageBubbleClass('default')).toBe('bubble-default');
-  });
-
-  it('returns "bubble-glass" for glass style', () => {
-    expect(getMessageBubbleClass('glass')).toBe('bubble-glass');
-  });
-
-  it('returns "bubble-default" for unknown style', () => {
-    expect(getMessageBubbleClass('unknown')).toBe('bubble-default');
-  });
-});
-
-describe('getMessageEffectClass', () => {
-  it('returns empty string for "none"', () => {
-    expect(getMessageEffectClass('none')).toBe('');
-  });
-
-  it('returns empty string for falsy value', () => {
-    expect(getMessageEffectClass('')).toBe('');
-  });
-
-  it('returns correct class for "bounce"', () => {
-    expect(getMessageEffectClass('bounce')).toBe('message-effect-bounce');
-  });
-
-  it('returns empty string for unknown effect', () => {
-    expect(getMessageEffectClass('unknown')).toBe('');
   });
 });
 

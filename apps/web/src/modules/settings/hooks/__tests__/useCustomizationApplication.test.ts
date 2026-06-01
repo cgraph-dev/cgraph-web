@@ -19,8 +19,6 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
 import {
   useCustomizationApplication,
   getAvatarBorderStyle,
-  getMessageBubbleClass,
-  getMessageEffectClass,
   getReactionStyleClass,
 } from '../useCustomizationApplication';
 
@@ -81,74 +79,6 @@ describe('getAvatarBorderStyle', () => {
 
   it('returns empty className for empty string', () => {
     expect(getAvatarBorderStyle('').className).toBe('');
-  });
-});
-
-// getMessageBubbleClass
-
-describe('getMessageBubbleClass', () => {
-  it('returns bubble-default for "default"', () => {
-    expect(getMessageBubbleClass('default')).toBe('bubble-default');
-  });
-
-  it('returns bubble-rounded for "rounded"', () => {
-    expect(getMessageBubbleClass('rounded')).toBe('bubble-rounded');
-  });
-
-  it('returns bubble-glass for "glass"', () => {
-    expect(getMessageBubbleClass('glass')).toBe('bubble-glass');
-  });
-
-  it('returns bubble-neon for "neon"', () => {
-    expect(getMessageBubbleClass('neon')).toBe('bubble-neon');
-  });
-
-  it('returns bubble-3d for "3d"', () => {
-    expect(getMessageBubbleClass('3d')).toBe('bubble-3d');
-  });
-
-  it('returns bubble-default for unknown style', () => {
-    expect(getMessageBubbleClass('unknown')).toBe('bubble-default');
-  });
-
-  it('returns bubble-default for empty string', () => {
-    expect(getMessageBubbleClass('')).toBe('bubble-default');
-  });
-});
-
-// getMessageEffectClass
-
-describe('getMessageEffectClass', () => {
-  it('returns empty string for "none"', () => {
-    expect(getMessageEffectClass('none')).toBe('');
-  });
-
-  it('returns empty string for empty string', () => {
-    expect(getMessageEffectClass('')).toBe('');
-  });
-
-  it('returns message-effect-slide for "slide"', () => {
-    expect(getMessageEffectClass('slide')).toBe('message-effect-slide');
-  });
-
-  it('returns message-effect-fade for "fade"', () => {
-    expect(getMessageEffectClass('fade')).toBe('message-effect-fade');
-  });
-
-  it('returns message-effect-bounce for "bounce"', () => {
-    expect(getMessageEffectClass('bounce')).toBe('message-effect-bounce');
-  });
-
-  it('returns message-effect-glitch for "glitch"', () => {
-    expect(getMessageEffectClass('glitch')).toBe('message-effect-glitch');
-  });
-
-  it('returns message-effect-confetti for "confetti"', () => {
-    expect(getMessageEffectClass('confetti')).toBe('message-effect-confetti');
-  });
-
-  it('returns empty string for unknown effect', () => {
-    expect(getMessageEffectClass('unknown')).toBe('');
   });
 });
 

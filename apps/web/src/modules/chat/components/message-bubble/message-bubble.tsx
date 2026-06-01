@@ -7,10 +7,6 @@ import { ClockIcon } from '@heroicons/react/24/outline';
 import { Lock, ShieldAlert } from 'lucide-react';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import {
-  getMessageBubbleClass,
-  getMessageEffectClass,
-} from '@/modules/settings/hooks/useCustomizationApplication';
 import MessageReactions from '@/modules/chat/components/message-reactions';
 import RichMediaEmbed from '@/modules/chat/components/rich-media-embed';
 import { MarkdownContent } from '@/modules/chat/components/markdown-content';
@@ -40,6 +36,7 @@ import { MessageMediaContent } from './message-media-content';
 import { ThreadReplyBadge } from './thread-reply-badge';
 import { ReplyPreview } from './reply-preview';
 import { ForwardedBadge } from './forwarded-badge';
+import { getMessageBubbleClass, getMessageEffectClass } from './preferences';
 import { InlineTitle, DisplayName } from '@/shared/components/ui';
 import { springs, tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
