@@ -357,6 +357,12 @@ Latest proof:
   into a thin renderer adapter for the package-owned static profile-theme
   catalog. Local package guards, typecheck, lint, and the Vitest suite with
   401 files / 5,357 tests passed.
+- 2026-06-01: production web removes the parallel hardcoded profile-card
+  accent theme table. `UserProfileCard` now derives its accent/banner/surface
+  tokens from the shared static profile-theme catalog, and the new profile-card
+  theme semantics test proves the renderer keys stay aligned with shared
+  `PROFILE_THEME_IDS`. Local package guards, typecheck, lint, release gates
+  with 404 files / 5,372 tests, and bundle budget passed.
 - 2026-05-31: production web consumes `@cgraph-dev/shared-types@1.0.5`, keeping
   `apps/web/src/modules/chat/components/message-bubble/preferences.ts` as a
   compatibility adapter over package-owned chat UI preference defaults and

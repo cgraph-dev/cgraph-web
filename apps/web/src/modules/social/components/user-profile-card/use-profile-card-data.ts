@@ -2,12 +2,17 @@ import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { getBadgeById } from '@/data/badgesCollection';
-import { DEFAULT_PROFILE_THEME_ID, PROFILE_THEME_IDS } from '@/data/profileThemes';
+import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
 import { getTitleById } from '@/data/titlesCollection';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 
-import { getPulseFilled, getPulseTier, mapRarityToDisplayTier } from './constants';
+import {
+  getPulseFilled,
+  getPulseTier,
+  mapRarityToDisplayTier,
+  normalizeAccentThemeId,
+} from './constants';
 import type {
   AccentThemeId,
   BadgeDisplayTier,
@@ -31,10 +36,8 @@ const RARITY_RANK: Record<BadgeDisplayTier, number> = {
   legendary: 3,
 };
 
-const ACCENT_THEME_IDS: readonly AccentThemeId[] = PROFILE_THEME_IDS;
-function toAccentThemeId(value: string): AccentThemeId {
-  const found = ACCENT_THEME_IDS.find((id) => id === value);
-  return found ?? DEFAULT_PROFILE_THEME_ID;
+function toAccentThemeId(value: string | null | undefined): AccentThemeId {
+  return normalizeAccentThemeId(value) ?? DEFAULT_PROFILE_THEME_ID;
 }
 
 /** Map badge IDs from store → ProfileBadge[] for the card display */

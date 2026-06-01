@@ -6,6 +6,11 @@
  * badge rarity configs, and pulse tier mappings.
  */
 
+import {
+  getThemeById,
+  isProfileThemeId,
+  type ProfileThemeConfig,
+} from '@/data/profileThemes';
 import type { AccentThemeId, BadgeDisplayTier, NameplateVariant, PulseTier } from './types';
 
 // LEGACY CONSTANTS (preserved)
@@ -42,93 +47,71 @@ interface AccentTheme {
   rgb: string;
 }
 
-export const ACCENT_THEMES: Record<AccentThemeId, AccentTheme> = {
-  'signal-noir': {
-    accent: '#38bdf8',
-    dim: 'rgba(56,189,248,0.10)',
-    glow: 'rgba(56,189,248,0.18)',
-    surface: 'rgba(56,189,248,0.026)',
-    body: 'linear-gradient(180deg, rgba(56,189,248,0.055) 0%, rgba(8,9,15,0.98) 48%, #08090f 100%)',
-    banner: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #111827 100%)',
-    border: 'rgba(56,189,248,0.12)',
-    rgb: '56,189,248',
-  },
-  'aurora-glass': {
-    accent: '#7dd3fc',
-    dim: 'rgba(125,211,252,0.10)',
-    glow: 'rgba(125,211,252,0.18)',
-    surface: 'rgba(125,211,252,0.028)',
-    body: 'linear-gradient(160deg, rgba(45,212,191,0.07) 0%, rgba(59,130,246,0.045) 42%, rgba(139,92,246,0.06) 100%), #071016',
-    banner: 'linear-gradient(135deg, #031b1d 0%, #0f766e 42%, #8b5cf6 100%)',
-    border: 'rgba(125,211,252,0.14)',
-    rgb: '125,211,252',
-  },
-  'retro-terminal': {
-    accent: '#86efac',
-    dim: 'rgba(134,239,172,0.10)',
-    glow: 'rgba(134,239,172,0.18)',
-    surface: 'rgba(34,197,94,0.026)',
-    body: 'linear-gradient(180deg, rgba(34,197,94,0.055) 0%, rgba(4,15,9,0.98) 55%, #050805 100%)',
-    banner: 'linear-gradient(135deg, #020403 0%, #052e16 50%, #064e3b 100%)',
-    border: 'rgba(134,239,172,0.14)',
-    rgb: '134,239,172',
-  },
-  'solarpunk-canopy': {
-    accent: '#facc15',
-    dim: 'rgba(250,204,21,0.10)',
-    glow: 'rgba(250,204,21,0.18)',
-    surface: 'rgba(132,204,22,0.028)',
-    body: 'linear-gradient(155deg, rgba(74,222,128,0.055) 0%, rgba(250,204,21,0.05) 52%, rgba(10,18,8,0.98) 100%), #0b1208',
-    banner: 'linear-gradient(135deg, #10200f 0%, #166534 48%, #facc15 100%)',
-    border: 'rgba(250,204,21,0.16)',
-    rgb: '250,204,21',
-  },
-  'deep-space': {
-    accent: '#a78bfa',
-    dim: 'rgba(167,139,250,0.10)',
-    glow: 'rgba(167,139,250,0.20)',
-    surface: 'rgba(167,139,250,0.03)',
-    body: 'radial-gradient(circle at 20% 0%, rgba(103,232,249,0.07), transparent 34%), linear-gradient(180deg, rgba(167,139,250,0.06) 0%, #070617 72%)',
-    banner: 'linear-gradient(135deg, #030014 0%, #11103a 48%, #312e81 100%)',
-    border: 'rgba(167,139,250,0.15)',
-    rgb: '167,139,250',
-  },
-  'sakura-dream': {
-    accent: '#fb7185',
-    dim: 'rgba(251,113,133,0.10)',
-    glow: 'rgba(251,113,133,0.18)',
-    surface: 'rgba(251,113,133,0.026)',
-    body: 'linear-gradient(160deg, rgba(251,113,133,0.06) 0%, rgba(249,168,212,0.045) 50%, rgba(30,8,14,0.98) 100%), #12070c',
-    banner: 'linear-gradient(135deg, #3b0715 0%, #9f1239 46%, #f9a8d4 100%)',
-    border: 'rgba(251,113,133,0.13)',
-    rgb: '251,113,133',
-  },
-  'ember-forge': {
-    accent: '#fb923c',
-    dim: 'rgba(251,146,60,0.10)',
-    glow: 'rgba(251,146,60,0.20)',
-    surface: 'rgba(251,146,60,0.028)',
-    body: 'linear-gradient(160deg, rgba(251,146,60,0.07) 0%, rgba(154,52,18,0.055) 48%, rgba(18,8,6,0.98) 100%), #130806',
-    banner: 'linear-gradient(135deg, #120806 0%, #451a03 48%, #fb923c 100%)',
-    border: 'rgba(251,146,60,0.15)',
-    rgb: '251,146,60',
-  },
-};
+function hexToRgbTuple(hex: string): string {
+  const normalized = hex.replace('#', '');
+  if (!/^[a-fA-F0-9]{6}$/.test(normalized)) return '255,255,255';
+
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+  return `${red},${green},${blue}`;
+}
+
+function alpha(hex: string, opacity: number): string {
+  return `rgba(${hexToRgbTuple(hex)},${opacity.toFixed(3).replace(/0+$/, '').replace(/[.]$/, '')})`;
+}
+
+function gradientStops(theme: ProfileThemeConfig): string {
+  const lastIndex = Math.max(theme.backgroundGradient.length - 1, 1);
+
+  return theme.backgroundGradient
+    .map((color, index) => `${color} ${Math.round((index / lastIndex) * 100)}%`)
+    .join(', ');
+}
+
+function createAccentTheme(theme: ProfileThemeConfig): AccentTheme {
+  const primary = theme.backgroundGradient[0] ?? '#08090f';
+  const accent = theme.accentPrimary;
+  const secondary = theme.accentSecondary;
+  const glowOpacity = Math.min(Math.max((theme.glowIntensity ?? 0.7) * 0.25, 0.14), 0.22);
+
+  return {
+    accent,
+    dim: alpha(accent, 0.1),
+    glow: alpha(accent, glowOpacity),
+    surface: alpha(accent, 0.028),
+    body: `linear-gradient(160deg, ${alpha(accent, 0.065)} 0%, ${alpha(
+      secondary,
+      0.05
+    )} 48%, ${alpha(primary, 0.98)} 100%), #08090f`,
+    banner: `linear-gradient(135deg, ${gradientStops(theme)})`,
+    border: alpha(accent, 0.14),
+    rgb: hexToRgbTuple(accent),
+  };
+}
+
+function profileThemeConfig(id: AccentThemeId): ProfileThemeConfig {
+  const theme = getThemeById(id);
+  if (!theme) {
+    throw new Error(`Missing shared profile theme: ${id}`);
+  }
+  return theme;
+}
+
+export const ACCENT_THEMES = {
+  'signal-noir': createAccentTheme(profileThemeConfig('signal-noir')),
+  'aurora-glass': createAccentTheme(profileThemeConfig('aurora-glass')),
+  'retro-terminal': createAccentTheme(profileThemeConfig('retro-terminal')),
+  'solarpunk-canopy': createAccentTheme(profileThemeConfig('solarpunk-canopy')),
+  'deep-space': createAccentTheme(profileThemeConfig('deep-space')),
+  'sakura-dream': createAccentTheme(profileThemeConfig('sakura-dream')),
+  'ember-forge': createAccentTheme(profileThemeConfig('ember-forge')),
+} satisfies Record<AccentThemeId, AccentTheme>;
 
 /** Return a known profile-card accent theme id, or undefined for stale/custom values. */
 export function normalizeAccentThemeId(value: string | null | undefined): AccentThemeId | undefined {
-  switch (value) {
-    case 'signal-noir':
-    case 'aurora-glass':
-    case 'retro-terminal':
-    case 'solarpunk-canopy':
-    case 'deep-space':
-    case 'sakura-dream':
-    case 'ember-forge':
-      return value;
-    default:
-      return undefined;
-  }
+  return isProfileThemeId(value) ? value : undefined;
 }
 
 // V2 NAMEPLATE STYLES

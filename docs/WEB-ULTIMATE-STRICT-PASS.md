@@ -904,6 +904,26 @@ provider delivery, future paired QR/mobile approval after native mobile exists,
 physical second-device validation, hosted Stripe settlement, and final broad
 signoff remain open.
 
+2026-06-01 profile-card theme adapter proof: production web removes the parallel
+hardcoded seven-theme `ACCENT_THEMES` palette from the profile-card renderer.
+`apps/web/src/modules/social/components/user-profile-card/constants.ts` now
+derives profile-card accent, glow, surface, border, banner, and body tokens from
+the shared static profile-theme catalog through the web adapter, and
+`use-profile-card-data.ts` uses the same shared theme-id guard instead of a
+second local ID list. The new
+`apps/web/src/modules/social/components/user-profile-card/__tests__/profile-card-theme-semantics.test.ts`
+proves every profile-card theme key matches `PROFILE_THEME_IDS`, every card
+accent comes from the shared theme row, and stale legacy profile-theme ids are
+rejected. Verification passed: `pnpm check:packages`,
+`pnpm check:package-owner`, `pnpm --filter @cgraph/web typecheck`,
+`pnpm --filter @cgraph/web lint`, `pnpm --filter @cgraph/web check:release-gates`
+with 404 Vitest files and 5,372 tests, and
+`pnpm --filter @cgraph/web build:budget`. This narrows profile-card preview
+semantics and future-client drift, while keeping the strict score unchanged
+because external provider delivery, future paired QR/mobile approval after
+native mobile exists, physical second-device validation, hosted Stripe
+settlement, and final broad signoff remain open.
+
 2026-05-31 chat UI preference package proof: production web consumes
 `@cgraph-dev/shared-types@1.0.5`, keeping
 `apps/web/src/modules/chat/components/message-bubble/preferences.ts` as a thin
