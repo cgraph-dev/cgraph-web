@@ -510,8 +510,13 @@ async function installMessagingApiMocks(
     });
   });
 
-  await page.route('**/api/v1/messages/msg-own/forward', async (route, request) => {
-    forwardedMessages.push(request.postDataJSON() as Record<string, unknown>);
+  await page.route('**/api/v1/messages/*/forward', async (route, request) => {
+    const url = new URL(request.url());
+    const messageId = url.pathname.split('/').at(-2) ?? '';
+    forwardedMessages.push({
+      message_id: messageId,
+      ...(request.postDataJSON() as Record<string, unknown>),
+    });
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: {} }) });
   });
 
@@ -1059,8 +1064,10 @@ test.describe('DM media composer', () => {
     ).toBeVisible();
   });
 
-  test('selects multiple routed cloud-DM messages for batch copy and delete', async ({ page }) => {
-    const { deletedMessages } = await installMessagingApiMocks(page, {
+  test('selects multiple routed cloud-DM messages for batch copy, forward, and delete', async ({
+    page,
+  }) => {
+    const { deletedMessages, forwardedMessages } = await installMessagingApiMocks(page, {
       initialMessages: [
         messageFixture({
           id: 'msg-batch-1',
@@ -1091,6 +1098,35 @@ test.describe('DM media composer', () => {
     await page.getByRole('menuitem', { name: /^select$/i }).click();
     await expect(page.getByRole('toolbar', { name: /1 selected message/i })).toBeVisible();
 
+    await page.getByRole('button', { name: /select message msg-batch-2/i }).click();
+    await expect(page.getByRole('toolbar', { name: /2 selected messages/i })).toBeVisible();
+
+    await page.getByRole('button', { name: /^forward$/i }).click();
+    const forwardDialog = page.getByRole('dialog', { name: /forward messages/i });
+    await expect(forwardDialog).toBeVisible();
+    await expect(forwardDialog.getByText(/friend: first batch copy/i)).toBeVisible();
+    await expect(forwardDialog.getByText(/e2e user: second batch copy/i)).toBeVisible();
+    await forwardDialog.getByRole('button', { name: /archive chat direct message/i }).click();
+    await forwardDialog.getByRole('button', { name: /forward \(1\)/i }).click();
+    await expect
+      .poll(() => forwardedMessages, { message: 'batch forward called both source messages' })
+      .toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message_id: 'msg-batch-1',
+            conversation_ids: [FORWARD_CONVERSATION_ID],
+          }),
+          expect.objectContaining({
+            message_id: 'msg-batch-2',
+            conversation_ids: [FORWARD_CONVERSATION_ID],
+          }),
+        ])
+      );
+    await expect(page.getByRole('toolbar', { name: /2 selected messages/i })).toBeHidden();
+
+    await firstMessage.hover();
+    await firstMessage.getByRole('button', { name: /more message actions/i }).click();
+    await page.getByRole('menuitem', { name: /^select$/i }).click();
     await page.getByRole('button', { name: /select message msg-batch-2/i }).click();
     await expect(page.getByRole('toolbar', { name: /2 selected messages/i })).toBeVisible();
 

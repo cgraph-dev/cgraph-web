@@ -137,6 +137,29 @@ describe('ForwardMessageModal', () => {
     expect(screen.getByText('Hello world')).toBeInTheDocument();
   });
 
+  it('shows batch message previews when multiple messages are forwarded', () => {
+    render(
+      <ForwardMessageModal
+        {...defaultProps}
+        messages={[
+          baseMessage,
+          {
+            ...baseMessage,
+            id: 'msg-2',
+            content: 'Second message',
+            sender: { ...baseMessage.sender, displayName: 'Friend' },
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByText('Forward Messages')).toBeInTheDocument();
+    expect(screen.getByText(/2 messages/i)).toBeInTheDocument();
+    expect(screen.getByText(/User One:/)).toBeInTheDocument();
+    expect(screen.getByText(/Friend:/)).toBeInTheDocument();
+    expect(screen.getByText('Second message')).toBeInTheDocument();
+  });
+
   it('renders conversation list', () => {
     render(<ForwardMessageModal {...defaultProps} />);
     expect(screen.getByText('Alice')).toBeInTheDocument();

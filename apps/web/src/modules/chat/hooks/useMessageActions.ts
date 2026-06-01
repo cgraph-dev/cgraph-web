@@ -16,6 +16,11 @@ export interface ForwardMessageHandlers {
   handleOpenForward: (message: Message, enableHaptic?: boolean) => void;
   handleCloseForward: () => void;
   handleForwardMessage: (conversationIds: string[], enableHaptic?: boolean) => Promise<void>;
+  handleForwardMessages: (
+    messages: readonly Message[],
+    conversationIds: string[],
+    enableHaptic?: boolean
+  ) => Promise<void>;
 }
 
 export interface UseForwardMessageReturn extends ForwardMessageState, ForwardMessageHandlers {}
@@ -59,12 +64,41 @@ export function useForwardMessage(closeMenu: () => void): UseForwardMessageRetur
     }
   };
 
+  const handleForwardMessages = async (
+    messages: readonly Message[],
+    conversationIds: string[],
+    enableHaptic = false
+  ) => {
+    if (messages.length === 0 || conversationIds.length === 0) return;
+
+    try {
+      for (const message of messages) {
+        await http.post(`/api/v1/messages/${message.id}/forward`, {
+          conversation_ids: conversationIds,
+        });
+      }
+
+      const messageCount = messages.length;
+      const targetCount = conversationIds.length;
+      toast.success(
+        `${messageCount} messages forwarded to ${targetCount} conversation${targetCount > 1 ? 's' : ''}`
+      );
+      if (enableHaptic) HapticFeedback.success();
+    } catch (error) {
+      logger.warn('Failed to forward messages:', error);
+      toast.error('Failed to forward messages');
+      if (enableHaptic) HapticFeedback.error();
+      throw error;
+    }
+  };
+
   return {
     messageToForward,
     showForwardModal,
     handleOpenForward,
     handleCloseForward,
     handleForwardMessage,
+    handleForwardMessages,
   };
 }
 
@@ -88,6 +122,11 @@ export interface MessageActionsHandlers {
   handleOpenForward: (message: Message, enableHaptic?: boolean) => void;
   handleCloseForward: () => void;
   handleForwardMessage: (conversationIds: string[], enableHaptic?: boolean) => Promise<void>;
+  handleForwardMessages: (
+    messages: readonly Message[],
+    conversationIds: string[],
+    enableHaptic?: boolean
+  ) => Promise<void>;
 }
 
 export interface UseMessageActionsReturn extends MessageActionsState, MessageActionsHandlers {}
@@ -182,5 +221,6 @@ export function useMessageActions(): UseMessageActionsReturn {
     handleOpenForward: forward.handleOpenForward,
     handleCloseForward: forward.handleCloseForward,
     handleForwardMessage: forward.handleForwardMessage,
+    handleForwardMessages: forward.handleForwardMessages,
   };
 }

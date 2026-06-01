@@ -64,6 +64,7 @@ function selectedMessageClipboardText(messages: readonly Message[]): string {
 export default function EnhancedConversation() {
   const batchSelect = useBatchSelect();
   const [showPinnedMessages, setShowPinnedMessages] = useState(false);
+  const [batchForwardMessages, setBatchForwardMessages] = useState<Message[]>([]);
   const [manualScrollTarget, setManualScrollTarget] = useState<{
     messageId: string;
     requestKey: number;
@@ -108,6 +109,7 @@ export default function EnhancedConversation() {
       ),
     [batchSelect.selectedMessageIds, conversationMessages]
   );
+  const batchForwardPreviewMessage = batchForwardMessages[0] ?? null;
   const routeScrollTargetKey = scrollToMessageId ? `${conversationId}:${scrollToMessageId}` : null;
 
   const scrollToMessage = (messageId: string) => {
@@ -178,6 +180,27 @@ export default function EnhancedConversation() {
       batchSelect.exitSelectMode();
     } catch {
       toast.error('Could not copy selected messages');
+    }
+  };
+
+  const handleBatchForward = () => {
+    if (selectedMessages.length === 0 || !batchSelect.isOperationAllowed('forward')) return;
+    setBatchForwardMessages([...selectedMessages]);
+  };
+
+  const handleCloseBatchForward = () => {
+    setBatchForwardMessages([]);
+  };
+
+  const handleForwardSelectedMessages = async (conversationIds: string[]) => {
+    if (batchForwardMessages.length === 0) return;
+
+    try {
+      await messageActions.handleForwardMessages(batchForwardMessages, conversationIds, true);
+      setBatchForwardMessages([]);
+      batchSelect.exitSelectMode();
+    } catch {
+      throw new Error('Batch forward failed');
     }
   };
 
@@ -307,6 +330,7 @@ export default function EnhancedConversation() {
             isSelecting={batchSelect.isSelecting}
             selectedCount={batchSelect.selectedCount}
             isOperationAllowed={batchSelect.isOperationAllowed}
+            onForward={handleBatchForward}
             onCopy={handleBatchCopy}
             onDelete={handleBatchDelete}
             onCancel={batchSelect.exitSelectMode}
@@ -334,7 +358,15 @@ export default function EnhancedConversation() {
         />
       }
       modalLayer={
-        messageActions.showForwardModal && messageActions.messageToForward ? (
+        batchForwardPreviewMessage ? (
+          <ForwardMessageModal
+            isOpen={true}
+            message={batchForwardPreviewMessage}
+            messages={batchForwardMessages}
+            onClose={handleCloseBatchForward}
+            onForward={handleForwardSelectedMessages}
+          />
+        ) : messageActions.showForwardModal && messageActions.messageToForward ? (
           <ForwardMessageModal
             isOpen={messageActions.showForwardModal}
             message={messageActions.messageToForward}

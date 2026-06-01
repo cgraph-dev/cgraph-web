@@ -25,6 +25,7 @@ interface ForwardMessageModalProps {
   onClose: () => void;
   onForward: (conversationIds: string[]) => Promise<void>;
   message: Message;
+  messages?: readonly Message[];
 }
 
 function isRecord(value: unknown): value is { [key: string]: unknown } {
@@ -57,12 +58,15 @@ export function ForwardMessageModal({
   onClose,
   onForward,
   message,
+  messages,
 }: ForwardMessageModalProps) {
   const [selectedConversations, setSelectedConversations] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [isForwarding, setIsForwarding] = useState(false);
 
   const conversations = useChatStore((state) => state.conversations);
+  const messagesToForward = messages && messages.length > 0 ? messages : [message];
+  const isBatchForward = messagesToForward.length > 1;
 
   // Filter conversations by search query
   const filteredConversations = conversations.filter((conv) => {
@@ -106,19 +110,23 @@ export function ForwardMessageModal({
   };
 
   // Get message preview text
-  const getMessagePreview = () => {
-    if (message.messageType === 'text') {
-      return message.content;
-    } else if (message.messageType === 'gif') {
+  const getMessagePreview = (previewMessage: Message) => {
+    if (previewMessage.messageType === 'text') {
+      return previewMessage.content;
+    } else if (previewMessage.messageType === 'gif') {
       return '🎬 GIF';
-    } else if (message.messageType === 'file') {
-      return `📎 ${message.metadata?.fileName || 'File'}`;
-    } else if (message.messageType === 'voice' || message.messageType === 'audio') {
+    } else if (previewMessage.messageType === 'file') {
+      return `📎 ${previewMessage.metadata?.fileName || previewMessage.metadata?.filename || 'File'}`;
+    } else if (previewMessage.messageType === 'voice' || previewMessage.messageType === 'audio') {
       return '🎤 Voice message';
-    } else if (message.messageType === 'sticker') {
+    } else if (previewMessage.messageType === 'sticker') {
       return '🎨 Sticker';
     }
-    return message.content;
+    return previewMessage.content;
+  };
+
+  const getMessageAuthor = (previewMessage: Message) => {
+    return previewMessage.sender.displayName || previewMessage.sender.username || 'Unknown';
   };
 
   return (
@@ -130,7 +138,7 @@ export function ForwardMessageModal({
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          aria-label="Forward Message"
+          aria-label={isBatchForward ? 'Forward Messages' : 'Forward Message'}
           onClick={handleClose}
         >
           <motion.div
@@ -164,18 +172,41 @@ export function ForwardMessageModal({
                     <PaperAirplaneIcon className="h-8 w-8 text-primary-400" />
                   </motion.div>
 
-                  <h2 className="mb-2 text-2xl font-bold text-white">Forward Message</h2>
+                  <h2 className="mb-2 text-2xl font-bold text-white">
+                    {isBatchForward ? 'Forward Messages' : 'Forward Message'}
+                  </h2>
                   <p className="text-sm text-gray-400">
-                    Select up to {MAX_FORWARD_TARGETS} conversations to forward this message
+                    Select up to {MAX_FORWARD_TARGETS} conversations to forward{' '}
+                    {isBatchForward ? `${messagesToForward.length} messages` : 'this message'}
                   </p>
                 </div>
 
                 {/* Message Preview */}
                 <div className="border-primary-500/30 bg-primary-500/10 mb-4 rounded-lg border p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary-400">
-                    Message Preview
+                    {isBatchForward ? 'Messages Preview' : 'Message Preview'}
                   </p>
-                  <p className="mt-1 line-clamp-3 text-sm text-gray-300">{getMessagePreview()}</p>
+                  {isBatchForward ? (
+                    <div className="mt-2 space-y-1">
+                      {messagesToForward.slice(0, 3).map((previewMessage) => (
+                        <p key={previewMessage.id} className="line-clamp-1 text-sm text-gray-300">
+                          <span className="font-medium text-gray-200">
+                            {getMessageAuthor(previewMessage)}:
+                          </span>{' '}
+                          {getMessagePreview(previewMessage)}
+                        </p>
+                      ))}
+                      {messagesToForward.length > 3 ? (
+                        <p className="text-xs text-gray-400">
+                          +{messagesToForward.length - 3} more
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="mt-1 line-clamp-3 text-sm text-gray-300">
+                      {getMessagePreview(message)}
+                    </p>
+                  )}
                 </div>
 
                 {/* Search */}
