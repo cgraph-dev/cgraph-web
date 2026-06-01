@@ -9,6 +9,7 @@ import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
 import type {
   ChatUiMessageEntranceAnimation,
   ProfileCardLayoutId,
+  ProfileThemeId,
 } from '@cgraph-dev/shared-types';
 
 // TYPES
@@ -93,7 +94,7 @@ export interface CustomizationState {
 
   // === Profile Settings ===
   readonly profileCardStyle: ProfileCardStyle;
-  readonly selectedProfileThemeId: string | null;
+  readonly selectedProfileThemeId: ProfileThemeId | null;
   readonly showBadges: boolean;
   readonly showBio: boolean;
   readonly showStatus: boolean;
@@ -125,7 +126,7 @@ export interface CustomizationState {
   readonly avatarBorder: AvatarBorderType; // alias for avatarBorderType
   readonly title: string | null; // alias for equippedTitle
   readonly profileLayout: ProfileCardStyle; // alias for profileCardStyle
-  readonly profileTheme: string | null; // alias for selectedProfileThemeId
+  readonly profileTheme: ProfileThemeId | null; // alias for selectedProfileThemeId
   readonly particleEffect: string | null; // particle effect type
   readonly backgroundEffect: string | null; // background effect type
   readonly reactionStyle: string; // reaction animation style
@@ -184,7 +185,7 @@ export interface CustomizationActions {
 
   // Profile actions
   setProfileCardStyle: (style: ProfileCardStyle) => void;
-  setProfileTheme: (themeId: string | null) => void;
+  setProfileTheme: (themeId: ProfileThemeId | null) => void;
   toggleBadges: () => void;
   toggleBio: () => void;
   toggleStatus: () => void;

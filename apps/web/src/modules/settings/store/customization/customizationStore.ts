@@ -15,6 +15,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { DEFAULT_PROFILE_CARD_LAYOUT_ID, isProfileCardLayoutId } from '@cgraph-dev/shared-types';
+import { isProfileThemeId, type ProfileThemeId } from '@/data/profileThemes';
 import { http } from '@/lib/api-client';
 import { safeLocalStorage } from '@/lib/safeStorage';
 import { type ZustandSet } from '@/lib/store-helpers';
@@ -64,25 +65,34 @@ function normalizeProfileCardStyle(value: unknown): ProfileCardStyle {
   return isProfileCardLayoutId(value) ? value : DEFAULT_PROFILE_CARD_LAYOUT_ID;
 }
 
+function normalizeProfileThemeId(value: unknown): ProfileThemeId | null {
+  return isProfileThemeId(value) ? value : null;
+}
+
 function withCanonicalAliases(state: CustomizationState): CustomizationState {
   const profileCardStyle = normalizeProfileCardStyle(state.profileCardStyle);
+  const selectedProfileThemeId = normalizeProfileThemeId(state.selectedProfileThemeId);
 
   return {
     ...state,
     profileCardStyle,
+    selectedProfileThemeId,
     chatTheme: state.chatBubbleColor,
     bubbleStyle: state.chatBubbleStyle,
     messageEffect: state.bubbleEntranceAnimation,
     avatarBorder: state.avatarBorderType,
     title: state.equippedTitle,
     profileLayout: profileCardStyle,
-    profileTheme: state.selectedProfileThemeId,
+    profileTheme: selectedProfileThemeId,
     appTheme: state.themePreset,
   };
 }
 
-function withServerPatchAliases(updates: CustomizationServerPatch): CustomizationServerPatch {
-  const next: CustomizationServerPatch = { ...updates };
+function withServerPatchAliases(
+  updates: CustomizationServerPatch | Record<string, unknown>
+): CustomizationServerPatch {
+  const next: CustomizationServerPatch = {};
+  Object.assign(next, updates);
 
   if ('chatBubbleColor' in next && !('chatTheme' in next)) next.chatTheme = next.chatBubbleColor;
   if ('chatTheme' in next && !('chatBubbleColor' in next)) next.chatBubbleColor = next.chatTheme;
@@ -95,8 +105,10 @@ function withServerPatchAliases(updates: CustomizationServerPatch): Customizatio
     next.avatarBorder = next.avatarBorderType;
   }
   if ('equippedTitle' in next && !('title' in next)) next.title = next.equippedTitle;
-  if ('selectedProfileThemeId' in next && !('profileTheme' in next)) {
-    next.profileTheme = next.selectedProfileThemeId;
+  if ('selectedProfileThemeId' in next || 'profileTheme' in next) {
+    const profileTheme = normalizeProfileThemeId(next.selectedProfileThemeId ?? next.profileTheme);
+    next.selectedProfileThemeId = profileTheme;
+    next.profileTheme = profileTheme;
   }
   if ('profileCardStyle' in next || 'profileLayout' in next) {
     const profileCardStyle = normalizeProfileCardStyle(next.profileCardStyle ?? next.profileLayout);
@@ -147,9 +159,10 @@ function mapServerCustomizationPatch(
     'profileTheme',
     'selectedProfileThemeId',
   ]);
-  if (profileTheme) {
-    next.selectedProfileThemeId = profileTheme;
-    next.profileTheme = profileTheme;
+  if (profileTheme !== null) {
+    const normalizedTheme = normalizeProfileThemeId(profileTheme);
+    next.selectedProfileThemeId = normalizedTheme;
+    next.profileTheme = normalizedTheme;
   }
 
   const profileCardStyle = getStringPatchValue(updates, [
@@ -176,8 +189,9 @@ export const useCustomizationStore = create<CustomizationStore>()(
       // `replace` is typed as `false | undefined`. This wrapper bridges the gap.
       const _set: ZustandSet<CustomizationStore> = (partial) => set(partial);
 
-      const setAndSave = (updates: Partial<CustomizationStore>) => {
-        set({ ...updates, isDirty: true });
+      const setAndSave = (updates: CustomizationServerPatch | Record<string, unknown>) => {
+        const normalizedUpdates = withServerPatchAliases(updates);
+        set({ ...normalizedUpdates, isDirty: true });
         debouncedSave(get(), _set);
       };
 
@@ -235,8 +249,10 @@ export const useCustomizationStore = create<CustomizationStore>()(
         // === Profile Actions ===
         setProfileCardStyle: (style) =>
           setAndSave({ profileCardStyle: style, profileLayout: style }),
-        setProfileTheme: (themeId) =>
-          setAndSave({ selectedProfileThemeId: themeId, profileTheme: themeId }),
+        setProfileTheme: (themeId) => {
+          const profileTheme = normalizeProfileThemeId(themeId);
+          setAndSave({ selectedProfileThemeId: profileTheme, profileTheme });
+        },
         toggleBadges: createAutoSaveToggle('showBadges'),
         toggleBio: createAutoSaveToggle('showBio'),
         toggleStatus: createAutoSaveToggle('showStatus'),
@@ -306,6 +322,15 @@ export const useCustomizationStore = create<CustomizationStore>()(
     {
       name: 'cgraph-customization',
       storage: createJSONStorage(() => safeLocalStorage),
+      merge: (persistedState, currentState) => {
+        if (!isRecord(persistedState)) return currentState;
+
+        const merged: CustomizationStore = { ...currentState, ...persistedState };
+        return {
+          ...merged,
+          ...withCanonicalAliases(merged),
+        };
+      },
       partialize: PERSIST_PARTIALIZE,
     }
   )

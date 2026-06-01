@@ -280,6 +280,19 @@ tests, and `pnpm --filter @cgraph/web build:budget`. This narrows the Phase 5
 web-adapter cleanup work without claiming final provider, future native QR, or
 physical cross-device closure.
 
+2026-06-01 profile-theme store-boundary proof: production web now types
+customization `selectedProfileThemeId` / `profileTheme` as the shared
+`ProfileThemeId | null` contract and normalizes profile-theme ids through the
+customization setter, generic legacy update path, server patch mapper, persisted
+state merge, and own-identity socket sync. Valid shared ids such as
+`aurora-glass` are accepted, while stale web-only ids such as `classic-purple`
+clear to `null` before they can become customization store state or persisted
+aliases. Verified with focused settings/customization/identity tests covering
+128 tests across 5 files, package guards, typecheck, lint, release gates with
+406 files / 5,380 tests, and build budget. This narrows the Phase 5 web-adapter
+cleanup work without claiming final provider, future native QR, or physical
+cross-device closure.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
@@ -915,7 +928,10 @@ Required implementation-time questions:
       `PROFILE_THEME_IDS`. The 2026-06-01 settings theme-application follow-up removes legacy
       web-only profile-theme CSS aliases from the settings application hook and live preview,
       derives the remaining profile-theme color/preset mapping from shared `ALL_PROFILE_THEMES`, and
-      proves stale `classic-purple` / `profile-default` ids no longer define product semantics.
+      proves stale `classic-purple` / `profile-default` ids no longer define product semantics. The
+      2026-06-01 profile-theme store-boundary follow-up types customization profile-theme state as
+      shared `ProfileThemeId | null` and rejects stale profile-theme ids in setters, server patches,
+      persisted state, legacy identity updates, and own-identity socket sync.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
@@ -974,7 +990,10 @@ Required implementation-time questions:
       settings panel and profile-card renderer from that contract, and normalizes stale layout IDs
       such as `gaming` to the shared default. The later 2026-06-01 adapter cleanup removes the dead
       legacy `GamingLayout` / `SocialLayout` / `CreatorLayout` exports and makes legacy theme preset
-      `cardLayout` metadata use shared layout ids only. The 2026-05-31 Lottie delivery guard proves the
+      `cardLayout` metadata use shared layout ids only. The 2026-06-01 profile-theme store-boundary
+      cleanup makes customization profile-theme state use shared `ProfileThemeId | null` and clears
+      stale web-only ids before they persist or flow through server/socket patch aliases. The
+      2026-05-31 Lottie delivery guard proves the
       catalog-referenced badge, title, display-name effect, and nameplate animation paths have
       corresponding public web delivery assets rather than relying on missing files plus fallback
       placeholders.

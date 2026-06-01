@@ -6,6 +6,7 @@ import {
   type CustomizationServerPatch,
   type ThemePreset,
 } from '@/modules/settings/store/customization/customizationStore';
+import { isProfileThemeId } from '@/data/profileThemes';
 import { identityFieldsFromApi } from './canonicalIdentity';
 
 export interface OwnIdentityPatch {
@@ -96,7 +97,9 @@ export function applyOwnIdentityPatch(patch: OwnIdentityPatch): void {
     customizationUpdates.equippedNameplate = patch.equippedNameplateId;
   }
   if (patch.profileTheme !== undefined) {
-    customizationUpdates.selectedProfileThemeId = patch.profileTheme;
+    customizationUpdates.selectedProfileThemeId = isProfileThemeId(patch.profileTheme)
+      ? patch.profileTheme
+      : null;
   }
   if (patch.chatTheme !== undefined) {
     customizationUpdates.chatTheme = isThemePreset(patch.chatTheme)

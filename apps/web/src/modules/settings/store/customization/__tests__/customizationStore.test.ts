@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
 import {
   useCustomizationStore,
   DEFAULT_STATE,
@@ -163,6 +164,14 @@ describe('profile actions', () => {
     expect(useCustomizationStore.getState().profileLayout).toBe('compact');
   });
 
+  it('setProfileTheme sets both selected profile theme and alias', () => {
+    useCustomizationStore.getState().setProfileTheme(DEFAULT_PROFILE_THEME_ID);
+    expect(useCustomizationStore.getState().selectedProfileThemeId).toBe(
+      DEFAULT_PROFILE_THEME_ID
+    );
+    expect(useCustomizationStore.getState().profileTheme).toBe(DEFAULT_PROFILE_THEME_ID);
+  });
+
   it('setEquippedTitle sets both title and alias', () => {
     useCustomizationStore.getState().setEquippedTitle('king');
     expect(useCustomizationStore.getState().equippedTitle).toBe('king');
@@ -225,9 +234,44 @@ describe('batch and legacy actions', () => {
     expect(useCustomizationStore.getState().profileLayout).toBe('default');
   });
 
+  it('applyServerSettings accepts shared profile theme IDs', () => {
+    useCustomizationStore.getState().applyServerSettings({
+      profile_theme: DEFAULT_PROFILE_THEME_ID,
+    });
+
+    expect(useCustomizationStore.getState().selectedProfileThemeId).toBe(
+      DEFAULT_PROFILE_THEME_ID
+    );
+    expect(useCustomizationStore.getState().profileTheme).toBe(DEFAULT_PROFILE_THEME_ID);
+  });
+
+  it('applyServerSettings clears stale profile theme IDs', () => {
+    useCustomizationStore.setState({
+      ...DEFAULT_STATE,
+      selectedProfileThemeId: DEFAULT_PROFILE_THEME_ID,
+      profileTheme: DEFAULT_PROFILE_THEME_ID,
+    });
+
+    useCustomizationStore.getState().applyServerSettings({
+      profile_theme: 'classic-purple',
+    });
+
+    expect(useCustomizationStore.getState().selectedProfileThemeId).toBeNull();
+    expect(useCustomizationStore.getState().profileTheme).toBeNull();
+  });
+
   it('updateChatStyle sets a key', () => {
     useCustomizationStore.getState().updateChatStyle('chatBubbleStyle', 'cloud');
     expect(useCustomizationStore.getState().chatBubbleStyle).toBe('cloud');
+  });
+
+  it('legacy identity updates reject stale profile theme IDs', () => {
+    useCustomizationStore
+      .getState()
+      .updateIdentity('selectedProfileThemeId', 'classic-purple');
+
+    expect(useCustomizationStore.getState().selectedProfileThemeId).toBeNull();
+    expect(useCustomizationStore.getState().profileTheme).toBeNull();
   });
 
   it('resetToDefaults restores defaults and marks dirty', () => {
