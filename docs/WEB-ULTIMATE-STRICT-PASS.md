@@ -924,6 +924,29 @@ because external provider delivery, future paired QR/mobile approval after
 native mobile exists, physical second-device validation, hosted Stripe
 settlement, and final broad signoff remain open.
 
+2026-06-01 settings profile-theme application proof: production web removes the
+legacy web-only `classic-purple` / `neon-blue` / `cyberpunk` profile-theme CSS
+variable map from `apps/web/src/modules/settings/hooks/useCustomizationApplication.ts`.
+The settings application hook now resolves `--profile-*` CSS variables from the
+shared static profile-theme catalog via the web adapter and rejects stale legacy
+profile-theme ids instead of letting them define product semantics. The
+customization mapping layer now derives `PROFILE_THEME_TO_COLOR` and
+`THEME_ID_TO_PRESET` profile entries from `ALL_PROFILE_THEMES`, the live preview
+header displays shared theme names/accent colors directly, and the dev theme
+test page iterates shared `PROFILE_THEME_IDS` instead of old local aliases. New
+tests prove the settings hook applies shared catalog colors, `profileTheme`
+still overrides `selectedProfileThemeId`, stale legacy ids do not apply CSS
+variables, and the mapping keys match `PROFILE_THEME_IDS`. Verification passed:
+focused settings/profile-theme tests with 4 files and 86 tests,
+`pnpm check:packages`, `pnpm check:package-owner`,
+`pnpm --filter @cgraph/web typecheck`, `pnpm --filter @cgraph/web lint`,
+`pnpm --filter @cgraph/web check:release-gates` with 405 Vitest files and
+5,375 tests, and `pnpm --filter @cgraph/web build:budget`. This narrows
+settings/customization theme semantics and future-client drift, while keeping
+the strict score unchanged because external provider delivery, future paired
+QR/mobile approval after native mobile exists, physical second-device
+validation, hosted Stripe settlement, and final broad signoff remain open.
+
 2026-05-31 chat UI preference package proof: production web consumes
 `@cgraph-dev/shared-types@1.0.5`, keeping
 `apps/web/src/modules/chat/components/message-bubble/preferences.ts` as a thin

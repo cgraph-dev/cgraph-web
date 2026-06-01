@@ -11,8 +11,8 @@ import { useShallow } from 'zustand/react/shallow';
 import {
   useCustomizationStore,
   THEME_COLORS as themeColors,
-  PROFILE_THEME_TO_COLOR,
 } from '@/modules/settings/store/customization';
+import { getThemeById } from '@/data/profileThemes';
 import { ProfileCardPreview } from './profile-card-preview';
 import { tweens, loop } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
@@ -30,11 +30,11 @@ export const LivePreviewPanel = memo(function LivePreviewPanel() {
 
   const { isSaving, isDirty } = settings;
 
-  // Determine effective color from profile theme
-  const effectiveColorPreset =
-    (settings.profileTheme && PROFILE_THEME_TO_COLOR[settings.profileTheme]) ||
-    settings.themePreset;
-  const colors = themeColors[effectiveColorPreset];
+  const appThemeColors = themeColors[settings.themePreset];
+  const profileTheme = getThemeById(settings.profileTheme);
+  const activeThemeName = profileTheme?.name ?? appThemeColors.name;
+  const activeThemeColor = profileTheme?.accentPrimary ?? appThemeColors.primary;
+  const activeThemeGlow = profileTheme?.glowColor ?? appThemeColors.glow;
 
   return (
     <div className="flex h-full flex-col">
@@ -98,9 +98,9 @@ export const LivePreviewPanel = memo(function LivePreviewPanel() {
           <span className="text-white/40">Active Theme</span>
           <span
             className="rounded bg-[var(--token-bg-secondary)] px-2 py-0.5"
-            style={{ color: colors.primary, textShadow: `0 0 10px ${colors.glow}` }}
+            style={{ color: activeThemeColor, textShadow: `0 0 10px ${activeThemeGlow}` }}
           >
-            {colors.name}
+            {activeThemeName}
           </span>
         </div>
       </div>

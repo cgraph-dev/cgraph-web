@@ -16,6 +16,7 @@ import {
   getMessageEffectClass,
   getReactionStyleClass,
 } from '@/modules/settings/hooks/useCustomizationApplication';
+import { PROFILE_THEME_IDS } from '@/data/profileThemes';
 
 // Reserved for advanced border styling
 void getAvatarBorderStyle;
@@ -60,14 +61,7 @@ export default function ThemeApplicationTest() {
     'cosmic-drift',
   ];
 
-  const testThemes = [
-    'classic-purple',
-    'neon-blue',
-    'cyberpunk',
-    'forest-green',
-    'sunset-orange',
-    'royal-gold',
-  ];
+  const testThemes = [...PROFILE_THEME_IDS];
 
   const testBubbles = [
     'default',

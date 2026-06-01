@@ -869,7 +869,10 @@ Required implementation-time questions:
       The 2026-06-01 profile-card theme-adapter follow-up removes the parallel hardcoded
       profile-card accent theme table, derives the card accent/banner/surface tokens from the shared
       static profile-theme catalog, and proves the profile-card keys stay aligned with shared
-      `PROFILE_THEME_IDS`.
+      `PROFILE_THEME_IDS`. The 2026-06-01 settings theme-application follow-up removes legacy
+      web-only profile-theme CSS aliases from the settings application hook and live preview,
+      derives the remaining profile-theme color/preset mapping from shared `ALL_PROFILE_THEMES`, and
+      proves stale `classic-purple` / `profile-default` ids no longer define product semantics.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across

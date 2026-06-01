@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { getProfileThemeOrDefault } from '@/data/profileThemes';
 const { mockCustomizationState, mockHttpGet, mockHttpPost } = vi.hoisted(() => ({
   mockCustomizationState: {
     profileTheme: null as string | null,
-    selectedProfileThemeId: 'classic-purple',
+    selectedProfileThemeId: 'signal-noir',
     chatTheme: 'default',
     particleEffect: 'none',
     backgroundEffect: 'solid',
@@ -46,28 +47,30 @@ describe('useCustomizationApplication', () => {
     document.body.className = '';
     // Reset customization state
     mockCustomizationState.profileTheme = null;
-    mockCustomizationState.selectedProfileThemeId = 'classic-purple';
+    mockCustomizationState.selectedProfileThemeId = 'signal-noir';
     mockCustomizationState.chatTheme = 'default';
     mockCustomizationState.particleEffect = 'none';
     mockCustomizationState.backgroundEffect = 'solid';
     mockCustomizationState.animationSpeed = 'normal';
   });
 
-  it('applies profile theme CSS variables for classic-purple', () => {
+  it('applies shared profile theme CSS variables', () => {
+    const theme = getProfileThemeOrDefault('signal-noir');
     renderHook(() => useCustomizationApplication());
 
     const root = document.documentElement;
-    expect(root.style.getPropertyValue('--profile-primary')).toBe('#9333ea');
-    expect(root.style.getPropertyValue('--profile-secondary')).toBe('#a855f7');
+    expect(root.style.getPropertyValue('--profile-primary')).toBe(theme.accentPrimary);
+    expect(root.style.getPropertyValue('--profile-secondary')).toBe(theme.accentSecondary);
   });
 
-  it('applies neon-blue theme CSS variables', () => {
-    mockCustomizationState.selectedProfileThemeId = 'neon-blue';
+  it('applies aurora-glass theme CSS variables from the shared catalog', () => {
+    const theme = getProfileThemeOrDefault('aurora-glass');
+    mockCustomizationState.selectedProfileThemeId = theme.id;
 
     renderHook(() => useCustomizationApplication());
 
     const root = document.documentElement;
-    expect(root.style.getPropertyValue('--profile-primary')).toBe('#0ea5e9');
+    expect(root.style.getPropertyValue('--profile-primary')).toBe(theme.accentPrimary);
   });
 
   it('applies animation speed CSS variable for normal speed', () => {
@@ -108,12 +111,23 @@ describe('useCustomizationApplication', () => {
   });
 
   it('prefers profileTheme over selectedProfileThemeId', () => {
-    mockCustomizationState.profileTheme = 'cyberpunk';
-    mockCustomizationState.selectedProfileThemeId = 'neon-blue';
+    const theme = getProfileThemeOrDefault('ember-forge');
+    mockCustomizationState.profileTheme = theme.id;
+    mockCustomizationState.selectedProfileThemeId = 'signal-noir';
 
     renderHook(() => useCustomizationApplication());
 
-    expect(document.documentElement.style.getPropertyValue('--profile-primary')).toBe('#ec4899');
+    expect(document.documentElement.style.getPropertyValue('--profile-primary')).toBe(
+      theme.accentPrimary
+    );
+  });
+
+  it('does not apply stale legacy profile theme IDs', () => {
+    mockCustomizationState.selectedProfileThemeId = 'classic-purple';
+
+    renderHook(() => useCustomizationApplication());
+
+    expect(document.documentElement.style.getPropertyValue('--profile-primary')).toBe('');
   });
 });
 describe('getAvatarBorderStyle', () => {

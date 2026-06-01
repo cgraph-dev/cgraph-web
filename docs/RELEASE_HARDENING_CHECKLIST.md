@@ -363,6 +363,13 @@ Latest proof:
   theme semantics test proves the renderer keys stay aligned with shared
   `PROFILE_THEME_IDS`. Local package guards, typecheck, lint, release gates
   with 404 files / 5,372 tests, and bundle budget passed.
+- 2026-06-01: production web removes legacy web-only profile-theme aliases from
+  settings theme application and live preview. `useCustomizationApplication`
+  now applies profile CSS variables from the shared static profile-theme
+  catalog, the customization mapping layer derives profile color/preset entries
+  from shared `ALL_PROFILE_THEMES`, and stale legacy ids no longer define
+  product semantics. Local package guards, typecheck, lint, release gates with
+  405 files / 5,375 tests, and bundle budget passed.
 - 2026-05-31: production web consumes `@cgraph-dev/shared-types@1.0.5`, keeping
   `apps/web/src/modules/chat/components/message-bubble/preferences.ts` as a
   compatibility adapter over package-owned chat UI preference defaults and

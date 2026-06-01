@@ -12,65 +12,29 @@ import {
   normalizeChatBubbleStyleId,
   type ChatBubblePresetId,
 } from '@cgraph-dev/design-tokens';
+import { getProfileThemeOrDefault, isProfileThemeId } from '@/data/profileThemes';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 
-/**
- * Profile Theme Color Mappings
- * Maps theme IDs to CSS variable color schemes
- */
-const PROFILE_THEME_COLORS: Record<
-  string,
-  {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    text: string;
+function resolveProfileThemeCssVariables(themeId: string | null): {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  text: string;
+} | null {
+  if (!isProfileThemeId(themeId)) {
+    return null;
   }
-> = {
-  'classic-purple': {
-    primary: '#9333ea',
-    secondary: '#a855f7',
-    accent: '#c084fc',
-    background: '#1e1b2e',
-    text: '#ffffff',
-  },
-  'neon-blue': {
-    primary: '#0ea5e9',
-    secondary: '#38bdf8',
-    accent: '#7dd3fc',
-    background: '#0c1429',
-    text: '#e0f2fe',
-  },
-  cyberpunk: {
-    primary: '#ec4899',
-    secondary: '#f43f5e',
-    accent: '#fbbf24',
-    background: '#18181b',
-    text: '#fef3c7',
-  },
-  'forest-green': {
-    primary: '#10b981',
-    secondary: '#34d399',
-    accent: '#6ee7b7',
-    background: '#064e3b',
-    text: '#d1fae5',
-  },
-  'sunset-orange': {
-    primary: '#f97316',
-    secondary: '#fb923c',
-    accent: '#fdba74',
-    background: '#431407',
-    text: '#ffedd5',
-  },
-  'royal-gold': {
-    primary: '#eab308',
-    secondary: '#fbbf24',
-    accent: '#fcd34d',
-    background: '#422006',
-    text: '#fef3c7',
-  },
-};
+
+  const theme = getProfileThemeOrDefault(themeId);
+  return {
+    primary: theme.accentPrimary,
+    secondary: theme.accentSecondary,
+    accent: theme.glowColor ?? theme.accentSecondary,
+    background: theme.backgroundGradient[0] ?? theme.accentPrimary,
+    text: theme.textColor,
+  };
+}
 
 /**
  * Animation Speed Mappings
@@ -112,7 +76,7 @@ export function useCustomizationApplication(): void {
     const root = document.documentElement;
 
     // Apply profile theme CSS variables
-    const colors = effectiveProfileTheme ? PROFILE_THEME_COLORS[effectiveProfileTheme] : null;
+    const colors = resolveProfileThemeCssVariables(effectiveProfileTheme);
     if (colors) {
       root.style.setProperty('--profile-primary', colors.primary);
       root.style.setProperty('--profile-secondary', colors.secondary);

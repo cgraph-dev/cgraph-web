@@ -187,9 +187,11 @@ inspection on `feat/cloud-chat-tier`.
    - **Status:** The routed identity-customization page now uses backend inventory for unlocked and
      equipped truth, keeps local cosmetic lists as presentation metadata only, and the backend
      rejects unowned border/title/badge/nameplate customization saves. The profile-card renderer now
-     derives its accent/banner/surface tokens from the shared static profile-theme catalog instead
-     of a parallel local theme table. Remaining cosmetic work is final cross-surface browser proof
-     and broader live/provider release validation.
+     derives its accent/banner/surface tokens from the shared static profile-theme catalog, and the
+     settings application/live-preview path now derives profile-theme CSS variables and color/preset
+     mappings from the same shared catalog instead of legacy web-only theme aliases. Remaining
+     cosmetic work is final cross-surface browser proof and broader live/provider release
+     validation.
 
 Owner direction recorded on 2026-05-15: customization inventory and equipped state must be fully
 server-owned. Local cosmetic definitions may remain only as presentation/catalog metadata; owned,

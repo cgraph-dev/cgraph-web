@@ -8,6 +8,7 @@
  */
 
 // Import types directly from types file to avoid circular dep through barrel
+import { ALL_PROFILE_THEMES, type ProfileThemeCategory } from '@/data/profileThemes';
 import type { AvatarBorderType, ThemePreset } from './customizationStore.types';
 
 // AVATAR BORDER MAPPINGS
@@ -39,47 +40,29 @@ export const BORDER_ID_TO_TYPE: Record<string, AvatarBorderType> = {
 
 // THEME MAPPINGS
 
-/**
- * Maps profile theme IDs to color presets.
- * Used for determining avatar border colors and profile backgrounds.
- */
-export const PROFILE_THEME_TO_COLOR: Record<string, ThemePreset> = {
-  'signal-noir': 'cyan',
-  'aurora-glass': 'cyan',
-  'retro-terminal': 'emerald',
-  'solarpunk-canopy': 'gold',
-  'deep-space': 'purple',
-  'sakura-dream': 'pink',
-  'ember-forge': 'orange',
-  'profile-default': 'purple',
-  'classic-purple': 'purple',
-  'profile-ocean': 'cyan',
-  'profile-forest': 'emerald',
-  'profile-sunset': 'orange',
-  'profile-midnight': 'purple',
-  'profile-cherry': 'pink',
+const PROFILE_THEME_CATEGORY_TO_PRESET: Record<ProfileThemeCategory, ThemePreset> = {
+  signal: 'cyan',
+  aurora: 'cyan',
+  retro: 'emerald',
+  solarpunk: 'gold',
+  cosmic: 'purple',
+  sakura: 'pink',
+  ember: 'orange',
 };
+
+export const PROFILE_THEME_TO_COLOR: Record<string, ThemePreset> = Object.fromEntries(
+  ALL_PROFILE_THEMES.map((theme) => [
+    theme.id,
+    PROFILE_THEME_CATEGORY_TO_PRESET[theme.category],
+  ])
+);
 
 /**
  * Maps theme IDs to ThemePreset for global theming.
  * Includes mappings for profile, chat, and app themes.
  */
 export const THEME_ID_TO_PRESET: Record<string, ThemePreset> = {
-  // Profile themes
-  'signal-noir': 'cyan',
-  'aurora-glass': 'cyan',
-  'retro-terminal': 'emerald',
-  'solarpunk-canopy': 'gold',
-  'deep-space': 'purple',
-  'sakura-dream': 'pink',
-  'ember-forge': 'orange',
-  'profile-default': 'purple',
-  'classic-purple': 'purple',
-  'profile-ocean': 'cyan',
-  'profile-forest': 'emerald',
-  'profile-sunset': 'orange',
-  'profile-midnight': 'purple',
-  'profile-cherry': 'pink',
+  ...PROFILE_THEME_TO_COLOR,
   // App themes
   'app-default': 'emerald',
   'app-dark': 'purple',
