@@ -238,15 +238,17 @@ correctness work below before feature expansion or scale items.
 
 3. Routed DM parity
 
-- Browser-verified now: routed inbox/sidebar ownership under `modules/chat/components/conversation-list`,
-  routed file/photo send, voice-note send, video-note send, reply, search jump, reaction summary
-  remove/re-add, multi-select copy/forward/delete, edit/delete/forward, message-request
-  accept/reject/block-report, pin, loaded pinned-message panel, routed Seen/read-receipt rendering,
-  guarded search-anchor/latest-jump scroll behavior, and typing start/stop emit from the live input
-  path, plus GIF/sticker send, voice/video call-entry launch from the live DM header, call-history
-  callback launch from a real history row, and incoming-call accept/end-state route behavior.
-- Still open: broader canonical DM surface convergence and deeper peer media-negotiation
-  verification.
+- Browser-verified now: routed Cloud Chat surface ownership under
+  `modules/chat/components/cloud-conversation`, routed inbox/sidebar ownership under
+  `modules/chat/components/conversation-list`, routed file/photo send, voice-note send, video-note
+  send, reply, search jump, reaction summary remove/re-add, multi-select copy/forward/delete,
+  edit/delete/forward, message-request accept/reject/block-report, pin, loaded pinned-message panel,
+  routed Seen/read-receipt rendering, guarded search-anchor/latest-jump scroll behavior, and typing
+  start/stop emit from the live input path, plus GIF/sticker send, voice/video call-entry launch from
+  the live DM header, call-history callback launch from a real history row, and incoming-call
+  accept/end-state route behavior.
+- Still open: deeper peer media-negotiation verification and broader live/provider regression
+  breadth.
 
 4. Routed group parity
 
@@ -316,7 +318,7 @@ Supporting owners: backend messaging contract owner, shared schema owner
 Checklist:
 
 - [x] Converge the web attachment/send contract with the backend-owned messaging contract.
-- [ ] Make one routed cloud-DM surface canonical.
+- [x] Make one routed cloud-DM surface canonical.
 - [x] Ship browser-verified routed DM reply, search jump, edit/delete/forward, message-request, pin,
       and loaded pinned-panel behavior on the live DM route.
 - [x] Browser-verify typing emit on the live DM route.

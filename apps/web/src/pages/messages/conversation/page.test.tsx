@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
-vi.mock('@/pages/messages/enhanced-conversation/enhanced-conversation', () => ({
-  default: () => <div data-testid="cloud-conversation">cloud-ui</div>,
+vi.mock('@/modules/chat/components/cloud-conversation', () => ({
+  CloudConversation: () => <div data-testid="cloud-conversation">cloud-ui</div>,
 }));
 
 vi.mock('@/components/mobile-only-feature', () => ({

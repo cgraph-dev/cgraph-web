@@ -13,8 +13,10 @@ import { ensureObject } from '@/lib/api-utils';
 import { normalizeConversation } from '@/lib/api-utils/normalizers';
 import { createLogger } from '@/lib/logger';
 import { MobileOnlyFeature } from '@/components/mobile-only-feature';
-import EnhancedConversation from '@/pages/messages/enhanced-conversation/enhanced-conversation';
-import { LoadingSpinner } from '@/pages/messages/enhanced-conversation/loading-spinner';
+import {
+  CloudConversation,
+  LoadingSpinner,
+} from '@/modules/chat/components/cloud-conversation';
 import {
   toConversation,
   useChatStore,
@@ -133,7 +135,7 @@ export default function VaultPage() {
 
   return (
     <main className="flex h-full max-h-screen min-h-0 flex-1 flex-col" aria-label="Vault messages">
-      <EnhancedConversation />
+      <CloudConversation />
     </main>
   );
 }

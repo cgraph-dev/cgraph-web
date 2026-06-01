@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { MobileOnlyFeature } from '@/components/mobile-only-feature';
+import { CloudConversation } from '@/modules/chat/components/cloud-conversation';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
-import EnhancedConversation from '@/pages/messages/enhanced-conversation/enhanced-conversation';
 
 /**
  * Direct-message conversation route.
@@ -20,7 +20,7 @@ export default function Conversation(): ReactNode {
   );
 
   if (conversation?.conversationType === 'cloud') {
-    return <EnhancedConversation />;
+    return <CloudConversation />;
   }
 
   const isSecret = conversation?.conversationType === 'secret';

@@ -515,6 +515,16 @@ re-exports, so the remaining route shell fetches and passes data/actions while t
 owns the list UI contract. The strict-pass row remains open only for broader live/provider release
 validation, not a second page-local inbox owner.
 
+2026-06-01 Cloud Chat surface-owner convergence proof: production web now routes the opened Cloud
+Chat conversation surface through `apps/web/src/modules/chat/components/cloud-conversation/*`. The
+`/messages/:conversationId` route and Vault route both render `CloudConversation` from the shared
+chat module, while the old `apps/web/src/pages/messages/enhanced-conversation/*` files are thin
+compatibility re-exports. Focused owner/composer proof passed 10 / 10; typecheck, lint, package
+guards, release gates with 403 files / 5,369 tests, and build budget passed; and the full routed DM
+media/composer Chromium spec passed 17 / 17 serially after the move. This closes the local
+page-owned opened-DM surface gap without claiming final live/provider regression breadth or deeper
+peer media-negotiation proof.
+
 2026-05-23 connected-account provider proof: production web commit `f7142b6` moves OAuth provider
 discovery into shared OAuth helpers, mounts Connected Accounts at `/me/settings/connected-accounts`,
 and uses `/api/v1/auth/oauth/providers` to decide which account-linking actions render. The focused

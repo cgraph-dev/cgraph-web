@@ -58,7 +58,7 @@ function makeProps(overrides: Partial<MessageInputAreaProps> = {}): MessageInput
   };
 }
 
-describe('EnhancedConversation MessageInputArea', () => {
+describe('CloudConversation MessageInputArea', () => {
   beforeEach(() => {
     sharedInputMock.props = null;
   });

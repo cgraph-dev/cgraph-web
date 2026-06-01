@@ -7,18 +7,47 @@ function source(relativePath: string): string {
 }
 
 describe('Cloud conversation ownership', () => {
-  it('keeps the messages route on the shared modules/chat controller', () => {
-    const route = source('src/pages/messages/enhanced-conversation/enhanced-conversation.tsx');
-    const compatibilityExport = source(
+  it('keeps the opened Cloud Chat surface on the shared modules/chat owner', () => {
+    const route = source('src/pages/messages/conversation/page.tsx');
+    const vaultRoute = source('src/pages/vault/vault-page.tsx');
+    const cloudSurface = source(
+      'src/modules/chat/components/cloud-conversation/cloud-conversation.tsx'
+    );
+    const routeCompatibilityExport = source(
+      'src/pages/messages/enhanced-conversation/enhanced-conversation.tsx'
+    );
+    const hookCompatibilityExport = source(
       'src/pages/messages/enhanced-conversation/useEnhancedConversation.ts'
     );
+    const inputCompatibilityExport = source(
+      'src/pages/messages/enhanced-conversation/message-input-area.tsx'
+    );
 
-    expect(route).toContain("from '@/modules/chat/controllers/cloud-conversation'");
-    expect(route).toContain('useCloudConversationController');
-    expect(route).not.toContain("from './useEnhancedConversation'");
+    expect(route).toContain("from '@/modules/chat/components/cloud-conversation'");
+    expect(route).toContain('<CloudConversation />');
+    expect(route).not.toContain('@/pages/messages/enhanced-conversation');
+    expect(vaultRoute).toContain("from '@/modules/chat/components/cloud-conversation'");
+    expect(vaultRoute).toContain('<CloudConversation />');
+    expect(vaultRoute).not.toContain('@/pages/messages/enhanced-conversation');
 
-    expect(compatibilityExport).toContain(
-      'useCloudConversationController as useEnhancedConversation'
+    expect(cloudSurface).toContain("from '@/modules/chat/controllers/cloud-conversation'");
+    expect(cloudSurface).toContain('useCloudConversationController');
+    expect(cloudSurface).not.toContain("from './useEnhancedConversation'");
+
+    expect(routeCompatibilityExport.trim()).toBe(
+      [
+        'export {',
+        '  default,',
+        '  CloudConversation,',
+        '  EnhancedConversation,',
+        "} from '@/modules/chat/components/cloud-conversation';",
+      ].join('\n')
+    );
+    expect(hookCompatibilityExport.trim()).toBe(
+      "export { useEnhancedConversation } from '@/modules/chat/components/cloud-conversation';"
+    );
+    expect(inputCompatibilityExport.trim()).toBe(
+      "export { MessageInputArea } from '@/modules/chat/components/cloud-conversation';"
     );
 
     const routeOwnedApiPatterns = [
@@ -34,7 +63,9 @@ describe('Cloud conversation ownership', () => {
 
     for (const pattern of routeOwnedApiPatterns) {
       expect(route).not.toContain(pattern);
-      expect(compatibilityExport).not.toContain(pattern);
+      expect(cloudSurface).not.toContain(pattern);
+      expect(routeCompatibilityExport).not.toContain(pattern);
+      expect(hookCompatibilityExport).not.toContain(pattern);
     }
   });
 

@@ -1,12 +1,13 @@
 /**
  * Enhanced Conversation Component
  *
- * Re-exports from modular enhanced-conversation directory.
- * @see ./enhanced-conversation for implementation
+ * Compatibility exports for the canonical Cloud Chat module owner.
+ * @see ../../modules/chat/components/cloud-conversation for implementation
  */
 
 export {
   default,
+  CloudConversation,
   EnhancedConversation,
   EnhancedMessageBubble,
   ConversationHeader,
@@ -14,6 +15,6 @@ export {
   TypingIndicator,
   LoadingSpinner,
   useEnhancedConversation,
-} from './enhanced-conversation/index';
+} from '@/modules/chat/components/cloud-conversation';
 
-export type * from './enhanced-conversation/index';
+export type * from '@/modules/chat/components/cloud-conversation';

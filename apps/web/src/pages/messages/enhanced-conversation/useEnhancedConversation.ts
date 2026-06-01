@@ -1,3 +1,1 @@
-export {
-  useCloudConversationController as useEnhancedConversation,
-} from '@/modules/chat/controllers/cloud-conversation';
+export { useEnhancedConversation } from '@/modules/chat/components/cloud-conversation';
