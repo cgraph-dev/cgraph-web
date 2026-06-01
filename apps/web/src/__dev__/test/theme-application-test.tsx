@@ -35,7 +35,7 @@ export default function ThemeApplicationTest() {
     backgroundEffect,
     animationSpeed,
     updateIdentity,
-    updateTheme,
+    setProfileTheme,
     updateChatStyle,
     updateEffects,
   } = useCustomizationStore();
@@ -163,7 +163,7 @@ export default function ThemeApplicationTest() {
             {testThemes.map((theme) => (
               <button
                 key={theme}
-                onClick={() => updateTheme('profileTheme', theme)}
+                onClick={() => setProfileTheme(theme)}
                 className={`rounded-lg p-3 text-sm transition-all ${
                   profileTheme === theme
                     ? 'bg-primary-600 text-white'

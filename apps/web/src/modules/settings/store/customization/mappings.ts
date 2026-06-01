@@ -8,8 +8,7 @@
  */
 
 // Import types directly from types file to avoid circular dep through barrel
-import { ALL_PROFILE_THEMES, type ProfileThemeCategory } from '@/data/profileThemes';
-import type { AvatarBorderType, ThemePreset } from './customizationStore.types';
+import type { AvatarBorderType } from './customizationStore.types';
 
 // AVATAR BORDER MAPPINGS
 
@@ -37,39 +36,6 @@ export const BORDER_ID_TO_TYPE: Record<string, AvatarBorderType> = {
   b17: 'mythic',
   b18: 'legendary',
 };
-
-// THEME MAPPINGS
-
-const PROFILE_THEME_CATEGORY_TO_PRESET: Record<ProfileThemeCategory, ThemePreset> = {
-  signal: 'cyan',
-  aurora: 'cyan',
-  retro: 'emerald',
-  solarpunk: 'gold',
-  cosmic: 'purple',
-  sakura: 'pink',
-  ember: 'orange',
-};
-
-export const PROFILE_THEME_TO_COLOR: Record<string, ThemePreset> = Object.fromEntries(
-  ALL_PROFILE_THEMES.map((theme) => [
-    theme.id,
-    PROFILE_THEME_CATEGORY_TO_PRESET[theme.category],
-  ])
-);
-
-/**
- * Maps theme IDs to ThemePreset for global theming.
- * Includes mappings for profile, chat, and app themes.
- */
-export const THEME_ID_TO_PRESET: Record<string, ThemePreset> = {
-  ...PROFILE_THEME_TO_COLOR,
-  // App themes
-  'app-default': 'emerald',
-  'app-dark': 'purple',
-  'app-light': 'cyan',
-};
-
-// CHAT_THEME_TO_COLOR archived
 
 // CHAT BUBBLE MAPPINGS
 
@@ -122,22 +88,6 @@ export const RARE_TITLE_IDS = [...LEGENDARY_TITLE_IDS] as const;
  */
 export function getBorderType(borderId: string | null): AvatarBorderType {
   return borderId ? (BORDER_ID_TO_TYPE[borderId] ?? 'none') : 'none';
-}
-
-/**
- * Gets the theme color preset for a given theme ID.
- * Returns 'emerald' as the default if not found.
- */
-export function getThemeColor(themeId: string | null): ThemePreset {
-  return themeId ? (PROFILE_THEME_TO_COLOR[themeId] ?? 'emerald') : 'emerald';
-}
-
-/**
- * Gets the theme preset for any theme ID (profile, chat, or app).
- * Returns 'emerald' as the default if not found.
- */
-export function getThemePreset(themeId: string | null): ThemePreset {
-  return themeId ? (THEME_ID_TO_PRESET[themeId] ?? 'emerald') : 'emerald';
 }
 
 // getBubbleStyle, getBubbleAnimation, getChatThemeColor archived

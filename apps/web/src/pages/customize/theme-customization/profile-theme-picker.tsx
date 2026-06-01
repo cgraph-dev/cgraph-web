@@ -3,16 +3,24 @@
  */
 
 import { motion } from 'motion/react';
-import { ALL_PROFILE_THEMES, PROFILE_THEME_CATEGORIES, type ProfileThemeConfig, type ProfileThemeCategory } from '@/data/profileThemes';
-import ProfileThemeCard, { ProfileThemeGrid } from '@/modules/settings/components/customize/profile-theme-card';
+import {
+  ALL_PROFILE_THEMES,
+  PROFILE_THEME_CATEGORIES,
+  type ProfileThemeConfig,
+  type ProfileThemeCategory,
+  type ProfileThemeId,
+} from '@/data/profileThemes';
+import ProfileThemeCard, {
+  ProfileThemeGrid,
+} from '@/modules/settings/components/customize/profile-theme-card';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
 interface ProfileThemePickerProps {
   profileThemeCategory: ProfileThemeCategory | 'all';
   onCategoryChange: (category: ProfileThemeCategory | 'all') => void;
-  filteredThemes: ProfileThemeConfig[];
-  selectedProfileThemeId: string;
+  filteredThemes: readonly ProfileThemeConfig[];
+  selectedProfileThemeId: ProfileThemeId;
   onApplyTheme: (theme: ProfileThemeConfig) => void;
 }
 

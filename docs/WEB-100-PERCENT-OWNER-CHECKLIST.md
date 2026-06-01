@@ -293,6 +293,21 @@ aliases. Verified with focused settings/customization/identity tests covering
 cleanup work without claiming final provider, future native QR, or physical
 cross-device closure.
 
+2026-06-01 routed profile-theme customization cleanup proof: production web
+removes the unused customization `PROFILE_THEME_TO_COLOR` /
+`THEME_ID_TO_PRESET` semantic mapping and deletes its stale-alias test because
+profile-theme product truth now comes from the shared catalog plus the
+customization store boundary. The routed `/customize/theme` hook now applies
+unlocked profile themes through `setProfileTheme(...)` only instead of double
+writing through the generic legacy `updateTheme('profileTheme', ...)` path, and
+locked future premium theme previews no longer call the saving setter before the
+user owns the item. The dev theme test page now uses the same typed
+`setProfileTheme(...)` action. Verified with focused settings/customization
+tests covering 129 tests across 5 files, package guards, typecheck, lint,
+release gates with 406 files / 5,380 tests, and build budget. This narrows the
+Phase 5 web-adapter cleanup work without claiming final provider, future native
+QR, or physical cross-device closure.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
@@ -931,7 +946,10 @@ Required implementation-time questions:
       proves stale `classic-purple` / `profile-default` ids no longer define product semantics. The
       2026-06-01 profile-theme store-boundary follow-up types customization profile-theme state as
       shared `ProfileThemeId | null` and rejects stale profile-theme ids in setters, server patches,
-      persisted state, legacy identity updates, and own-identity socket sync.
+      persisted state, legacy identity updates, and own-identity socket sync. The later 2026-06-01
+      routed profile-theme cleanup removes the now-unused local profile-theme-to-app-color semantic
+      map and routes `/customize/theme` plus the dev test page through the typed `setProfileTheme`
+      action, with locked premium previews kept out of the saving path.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across
@@ -992,7 +1010,9 @@ Required implementation-time questions:
       legacy `GamingLayout` / `SocialLayout` / `CreatorLayout` exports and makes legacy theme preset
       `cardLayout` metadata use shared layout ids only. The 2026-06-01 profile-theme store-boundary
       cleanup makes customization profile-theme state use shared `ProfileThemeId | null` and clears
-      stale web-only ids before they persist or flow through server/socket patch aliases. The
+      stale web-only ids before they persist or flow through server/socket patch aliases. The later
+      2026-06-01 routed profile-theme cleanup removes the unused local profile-theme color mapping
+      and makes routed profile-theme selection use the typed profile-theme action only. The
       2026-05-31 Lottie delivery guard proves the
       catalog-referenced badge, title, display-name effect, and nameplate animation paths have
       corresponding public web delivery assets rather than relying on missing files plus fallback

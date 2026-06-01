@@ -10,10 +10,12 @@ import { useCustomizationStore } from '@/modules/settings/store/customization/cu
 import toast from 'react-hot-toast';
 import {
   ALL_PROFILE_THEMES,
+  DEFAULT_PROFILE_THEME_ID,
   PROFILE_THEME_CATEGORY_IDS,
   getThemesByCategory,
   type ProfileThemeConfig,
   type ProfileThemeCategory,
+  type ProfileThemeId,
 } from '@/data/profileThemes';
 
 import type { ThemeCategory } from './types';
@@ -49,7 +51,6 @@ export function useThemeCustomization() {
     error,
     fetchCustomizations,
     saveCustomizations,
-    updateTheme,
   } = store;
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -85,7 +86,7 @@ export function useThemeCustomization() {
   }
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [previewingTheme, setPreviewingTheme] = useState<string | null>(null);
+  const [previewingTheme, setPreviewingTheme] = useState<ProfileThemeId | null>(null);
 
   // Get profile themes from new data file
   const newProfileThemes = useMemo(() => {
@@ -104,8 +105,8 @@ export function useThemeCustomization() {
   }, [user?.id, fetchCustomizations]);
 
   // Create selectedThemes object from store state
-  const selectedThemes: Record<ThemeCategory, string> = {
-    profile: profileTheme ?? 'signal-noir',
+  const selectedThemes: Record<ThemeCategory, string> & { profile: ProfileThemeId } = {
+    profile: previewingTheme ?? profileTheme ?? DEFAULT_PROFILE_THEME_ID,
     chat: chatTheme,
     forum: forumTheme ?? 'forum-default',
     app: appTheme,
@@ -142,11 +143,11 @@ export function useThemeCustomization() {
     }
   }
 
-  function isThemeActive(themeId: string) {
+  function isThemeActive(themeId: ProfileThemeId) {
     return selectedThemes.profile === themeId;
   }
 
-  function isThemePreviewing(themeId: string) {
+  function isThemePreviewing(themeId: ProfileThemeId) {
     return previewingTheme === themeId;
   }
 
@@ -155,7 +156,6 @@ export function useThemeCustomization() {
 
     if (isLocked) {
       setPreviewingTheme(theme.id);
-      store.setProfileTheme(theme.id);
       toast('Previewing theme — Unlock to save', {
         duration: durations.cinematic.ms,
       });
@@ -163,7 +163,6 @@ export function useThemeCustomization() {
     }
 
     setPreviewingTheme(null);
-    updateTheme('profileTheme', theme.id);
     store.setProfileTheme(theme.id);
     toast.success(`Applied "${theme.name}" theme!`);
   }
