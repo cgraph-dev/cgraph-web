@@ -45,12 +45,12 @@ export interface MessagePayload {
   content: string;
   attachments?: File[];
   replyToId?: string;
-  type?: 'text' | 'voice' | 'sticker' | 'gif';
+  type?: 'text' | 'voice' | 'video' | 'sticker' | 'gif';
   metadata?: Record<string, unknown>;
   isViewOnce?: boolean;
 }
 
-export type AttachmentMode = 'none' | 'file' | 'emoji' | 'sticker' | 'gif' | 'voice';
+export type AttachmentMode = 'none' | 'file' | 'emoji' | 'sticker' | 'gif' | 'voice' | 'video';
 
 export interface MentionUser {
   id: string;
@@ -65,4 +65,9 @@ export interface VoiceMessageData {
   blob: Blob;
   duration: number;
   waveform: number[];
+}
+
+export interface VideoMessageData {
+  blob: Blob;
+  duration: number;
 }

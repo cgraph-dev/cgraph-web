@@ -238,7 +238,7 @@ correctness work below before feature expansion or scale items.
 
 3. Routed DM parity
 
-- Browser-verified now: routed file/photo send, voice-note send, reply, search jump,
+- Browser-verified now: routed file/photo send, voice-note send, video-note send, reply, search jump,
   reaction summary remove/re-add, multi-select copy/forward/delete, edit/delete/forward, message-request
   accept/reject/block-report, pin, loaded pinned-message panel, routed Seen/read-receipt rendering,
   guarded search-anchor/latest-jump scroll behavior, and typing start/stop emit from the live input

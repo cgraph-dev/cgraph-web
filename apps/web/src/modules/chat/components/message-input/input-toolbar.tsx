@@ -8,12 +8,14 @@ import {
   FaceSmileIcon,
   MicrophoneIcon,
   GifIcon,
+  VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 import type { AttachmentMode } from './types';
 
 interface InputToolbarProps {
   attachmentMode: AttachmentMode;
   isRecording: boolean;
+  isVideoRecording: boolean;
   canSend: boolean;
   disabled?: boolean;
   primaryColor: string;
@@ -21,6 +23,7 @@ interface InputToolbarProps {
   hasAttachments: boolean;
   onToggleMode: (mode: AttachmentMode) => void;
   onToggleRecording: () => void;
+  onToggleVideoRecording: () => void;
   onToggleViewOnce: () => void;
   onSend: () => void;
 }
@@ -29,6 +32,7 @@ interface InputToolbarProps {
 export function InputToolbar({
   attachmentMode: _attachmentMode,
   isRecording,
+  isVideoRecording,
   canSend,
   disabled = false,
   primaryColor,
@@ -36,6 +40,7 @@ export function InputToolbar({
   hasAttachments,
   onToggleMode,
   onToggleRecording,
+  onToggleVideoRecording,
   onToggleViewOnce,
   onSend,
 }: InputToolbarProps) {
@@ -122,6 +127,22 @@ export function InputToolbar({
         title={isRecording ? 'Voice recorder active' : 'Record voice message'}
       >
         <MicrophoneIcon className="h-6 w-6" />
+      </motion.button>
+
+      {/* Video Note Button */}
+      <motion.button
+        whileHover={{ opacity: 0.9 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={onToggleVideoRecording}
+        className={`rounded-lg p-2 transition-colors ${
+          isVideoRecording
+            ? 'bg-red-500 text-white'
+            : 'text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white'
+        }`}
+        aria-label={isVideoRecording ? 'Video note recorder active' : 'Record video note'}
+        title={isVideoRecording ? 'Video note recorder active' : 'Record video note'}
+      >
+        <VideoCameraIcon className="h-6 w-6" />
       </motion.button>
 
       {/* Send Button */}

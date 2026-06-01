@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useThemeStore, THEME_COLORS } from '@/stores/theme';
 import { GlassCard } from '@/shared/components/ui';
 import { VoiceMessageRecorder } from '@/components/media/voice-message-recorder';
+import { VideoMessageRecorder } from '@/components/media/video-message-recorder';
 
 const GifPicker = lazy(() =>
   import('@/modules/chat/components/gif-picker').then((m) => ({ default: m.GifPicker }))
@@ -73,6 +74,7 @@ export function MessageInput({
     attachments,
     attachmentMode,
     isRecording,
+    isVideoRecording,
     showMentions,
     mentionQuery,
     slowMode,
@@ -85,11 +87,13 @@ export function MessageInput({
     handleDrop,
     removeAttachment,
     handleVoiceMessage,
+    handleVideoMessage,
     handleStickerSelect,
     handleGifSelect,
     handleMentionSelect,
     toggleAttachmentMode,
     setIsRecording,
+    setIsVideoRecording,
     setAttachmentMode,
     setShowMentions,
     isViewOnce,
@@ -139,7 +143,7 @@ export function MessageInput({
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              disabled={disabled || isRecording}
+              disabled={disabled || isRecording || isVideoRecording}
               rows={1}
               className="focus:border-primary-500/50 w-full resize-none rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white placeholder-white/30 focus:outline-none"
               style={{ maxHeight: '150px' }}
@@ -159,13 +163,21 @@ export function MessageInput({
           <InputToolbar
             attachmentMode={attachmentMode}
             isRecording={isRecording}
+            isVideoRecording={isVideoRecording}
             canSend={canSend}
             disabled={disabled}
             primaryColor={colors.primary}
             isViewOnce={isViewOnce}
             hasAttachments={attachments.length > 0}
             onToggleMode={toggleAttachmentMode}
-            onToggleRecording={() => setIsRecording(!isRecording)}
+            onToggleRecording={() => {
+              setIsVideoRecording(false);
+              setIsRecording(!isRecording);
+            }}
+            onToggleVideoRecording={() => {
+              setIsRecording(false);
+              setIsVideoRecording(!isVideoRecording);
+            }}
             onToggleViewOnce={() => setIsViewOnce(!isViewOnce)}
             onSend={handleSend}
           />
@@ -183,6 +195,22 @@ export function MessageInput({
             <VoiceMessageRecorder
               onComplete={handleVoiceMessage}
               onCancel={() => setIsRecording(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video Note Recording UI */}
+      <AnimatePresence>
+        {isVideoRecording && (
+          <motion.div
+            {...FADE_UP}
+            exit={{ opacity: 0, y: 20 }}
+            className="bg-[var(--token-card-bg)]/90 absolute inset-0 z-10 flex min-h-[24rem] items-center justify-center rounded-xl p-3 backdrop-blur-sm"
+          >
+            <VideoMessageRecorder
+              onComplete={handleVideoMessage}
+              onCancel={() => setIsVideoRecording(false)}
             />
           </motion.div>
         )}

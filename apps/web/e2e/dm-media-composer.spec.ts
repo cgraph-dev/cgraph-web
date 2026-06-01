@@ -108,6 +108,11 @@ async function installMediaRecorderMock(page: Page): Promise<void> {
       state: RecordingState = 'inactive';
       ondataavailable: ((event: BlobEvent) => void) | null = null;
       onstop: (() => void) | null = null;
+      private readonly mimeType: string;
+
+      constructor(_stream: MediaStream, options?: MediaRecorderOptions) {
+        this.mimeType = options?.mimeType ?? 'audio/webm';
+      }
 
       start() {
         this.state = 'recording';
@@ -115,7 +120,7 @@ async function installMediaRecorderMock(page: Page): Promise<void> {
 
       stop() {
         this.state = 'inactive';
-        const blob = new Blob(['browser-voice'], { type: 'audio/webm' });
+        const blob = new Blob(['browser-recording'], { type: this.mimeType });
         this.ondataavailable?.({ data: blob } as BlobEvent);
         this.onstop?.();
       }
@@ -452,6 +457,9 @@ async function installMessagingApiMocks(
 
   await page.route('**/api/v1/uploads', async (route) => {
     attachmentUploads.push(route.request().method());
+    const uploadBody = route.request().postData() ?? '';
+    const isVideoNoteUpload =
+      uploadBody.includes('video-note.webm') || uploadBody.includes('video/webm');
 
     if (options.uploadMode === 'scanner-unavailable') {
       await route.fulfill({
@@ -472,11 +480,15 @@ async function installMessagingApiMocks(
       contentType: 'application/json',
       body: JSON.stringify({
         data: {
-          url: '/uploads/messages/proof.png',
-          original_filename: 'proof.png',
-          content_type: 'image/png',
-          size: 12,
-          thumbnail_url: '/uploads/messages/proof-thumb.png',
+          url: isVideoNoteUpload
+            ? '/uploads/messages/video-note.webm'
+            : '/uploads/messages/proof.png',
+          original_filename: isVideoNoteUpload ? 'video-note.webm' : 'proof.png',
+          content_type: isVideoNoteUpload ? 'video/webm' : 'image/png',
+          size: isVideoNoteUpload ? 17 : 12,
+          thumbnail_url: isVideoNoteUpload
+            ? '/uploads/messages/video-note-poster.jpg'
+            : '/uploads/messages/proof-thumb.png',
         },
       }),
     });
@@ -829,6 +841,44 @@ test.describe('DM media composer', () => {
     await expect
       .poll(() => voiceUploads, { message: 'voice upload endpoint was called' })
       .toContain('POST');
+  });
+
+  test('records and sends a routed cloud-DM video note in the browser', async ({ page }) => {
+    await installMediaRecorderMock(page);
+    const { attachmentUploads, sentMessages } = await installMessagingApiMocks(page);
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    await expect(page.getByPlaceholder(/type a message/i)).toBeVisible();
+    await page.getByRole('button', { name: /record video note/i }).click();
+    await page.getByRole('button', { name: /start video note/i }).click();
+    await expect(page.getByText(/recording:/i)).toBeVisible();
+    await page.getByRole('button', { name: /stop video note/i }).click();
+    await page.getByRole('button', { name: /send video note/i }).click();
+
+    await expect
+      .poll(() => attachmentUploads, { message: 'video-note upload endpoint was called' })
+      .toContain('POST');
+    await expect
+      .poll(() => sentMessages, { message: 'video-note message payload was sent' })
+      .toContainEqual(
+        expect.objectContaining({
+          content: 'video-note.webm',
+          content_type: 'video',
+          file_url: '/uploads/messages/video-note.webm',
+          file_name: 'video-note.webm',
+          file_size: 17,
+          file_mime_type: 'video/webm',
+          metadata: expect.objectContaining({
+            fileUrl: '/uploads/messages/video-note.webm',
+            fileName: 'video-note.webm',
+            fileSize: 17,
+            fileMimeType: 'video/webm',
+            thumbnailUrl: '/uploads/messages/video-note-poster.jpg',
+            isVideoNote: true,
+          }),
+        })
+      );
   });
 
   test('emits routed cloud-DM typing start and stop from the live input', async ({ page }) => {

@@ -140,6 +140,15 @@ errors, registration stays on `/register`, and the shared auth error alert expos
 passed afterward with 402 files / 5,358 tests. This improves local route-owned auth failure recovery
 without closing real mail/SMS/voice provider delivery or future paired QR approval.
 
+2026-06-01 routed DM video-note proof: production web mounts camera-backed video-note recording
+beside the existing voice recorder, uploads the recorded clip through the shared message attachment
+contract, and sends it as a routed Cloud Chat `video` message with `isVideoNote` metadata. Focused
+Chromium proof passed the new routed video-note test in `apps/web/e2e/dm-media-composer.spec.ts`;
+the full routed DM media/composer Chromium spec passed 17 / 17 serially; focused unit/controller
+proof passed 19 / 19; typecheck, lint, release gates with 403 files / 5,368 tests, package guards,
+and build budget passed. This closes local routed DM video-note send proof without claiming canonical
+DM convergence, final live/provider regression breadth, or native mobile/desktop secret-chat work.
+
 2026-05-28 reset-token proof: production backend `auth_controller_test.exs` now proves valid
 password reset, login with the new password, replay rejection, invalid token, expired token, and
 missing-param validation. Production web `auth-account-routes.spec.ts` browser-verifies mounted
@@ -734,8 +743,10 @@ Required implementation-time questions:
 
 - [x] Routed DM attachments are real and browser-verified. Verified by
       `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-14.
-- [x] Routed DM voice-note send is real and browser-verified. Verified by
-      `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-14.
+- [x] Routed DM voice-note and video-note send are real and browser-verified. Voice-note send is
+      verified by `apps/web/e2e/dm-media-composer.spec.ts` on 2026-05-14; the 2026-06-01 follow-up
+      mounts camera-backed video-note recording and verifies upload plus `video` message send in the
+      same routed browser spec.
 - [x] Routed DM reply, edit, delete, forward, request, pin, search-jump, guarded scroll, and
       read-receipt rendering behavior are complete. Verified by
       `apps/web/e2e/dm-media-composer.spec.ts`; the 2026-05-16 read-receipt slice also proves

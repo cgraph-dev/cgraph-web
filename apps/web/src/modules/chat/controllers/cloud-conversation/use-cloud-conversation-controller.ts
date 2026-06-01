@@ -91,6 +91,16 @@ function sendConversationTyping(topic: string, isTyping: boolean): void {
   );
 }
 
+function videoNoteMimeType(blob: Blob): string {
+  if (blob.type.startsWith('video/webm')) return blob.type;
+  return blob.type || 'video/webm';
+}
+
+function videoNoteFilename(mimeType: string): string {
+  if (mimeType === 'video/mp4') return 'video-note.mp4';
+  return 'video-note.webm';
+}
+
 /**
  * Hook for managing the routed Cloud Chat conversation owner.
  */
@@ -477,6 +487,77 @@ export function useCloudConversationController() {
           ? payloadMetadata.waveform.filter((value): value is number => typeof value === 'number')
           : [],
       });
+      return;
+    }
+
+    if (payload.type === 'video') {
+      const video = payloadMetadata.video;
+      if (!(video instanceof Blob)) {
+        logger.error('Video-note composer payload did not include a video blob');
+        HapticFeedback.error();
+        return;
+      }
+
+      HapticFeedback.medium();
+      setIsSending(true);
+
+      try {
+        const mimeType = videoNoteMimeType(video);
+        const videoFile = new File([video], videoNoteFilename(mimeType), { type: mimeType });
+        const uploaded = await uploadMessageAttachment(videoFile, { context: 'message' });
+        const metadata = {
+          ...buildMessageAttachmentMetadata(uploaded),
+          duration: typeof payloadMetadata.duration === 'number' ? payloadMetadata.duration : 0,
+          isVideoNote: true,
+        };
+        const content = uploaded.filename;
+
+        addOptimisticMessage({
+          id: `optimistic-video-note-${Date.now()}`,
+          conversationId,
+          senderId: user?.id ?? '',
+          content,
+          encryptedContent: null,
+          isEncrypted: false,
+          messageType: 'video',
+          replyToId: payload.replyToId ?? replyTo?.id ?? null,
+          replyTo: null,
+          isPinned: false,
+          isEdited: false,
+          deletedAt: null,
+          metadata: metadata satisfies Message['metadata'],
+          reactions: [],
+          sender: {
+            id: user?.id ?? '',
+            username: user?.username ?? '',
+            displayName: user?.displayName ?? null,
+            avatarUrl: user?.avatarUrl ?? null,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } satisfies Message);
+        window.requestAnimationFrame(() => scrollToLatestMessages('auto'));
+
+        await sendMessage(conversationId, content, payload.replyToId ?? replyTo?.id, {
+          type: 'video',
+          metadata,
+        });
+        window.requestAnimationFrame(() => scrollToLatestMessages('smooth'));
+
+        setReplyTo(null);
+        setAttachmentNodePrice(null);
+
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+        sendConversationTyping(`conversation:${conversationId}`, false);
+      } catch (error) {
+        logger.error('Failed to send video note:', error);
+        HapticFeedback.error();
+        toast.error('Video note not sent', getErrorMessage(error));
+      } finally {
+        setIsSending(false);
+      }
       return;
     }
 

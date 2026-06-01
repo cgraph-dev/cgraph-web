@@ -6,7 +6,13 @@ import { useState, useRef, useEffect } from 'react';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
 import { useDraft } from '@/modules/chat/hooks/useDraft';
-import type { MessagePayload, AttachmentMode, VoiceMessageData, ReplyInfo } from './types';
+import type {
+  MessagePayload,
+  AttachmentMode,
+  VoiceMessageData,
+  VideoMessageData,
+  ReplyInfo,
+} from './types';
 import { useSlowModeCountdown } from './useSlowModeCountdown';
 
 interface UseMessageInputOptions {
@@ -49,6 +55,7 @@ export function useMessageInput({
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentMode, setAttachmentMode] = useState<AttachmentMode>('none');
   const [isRecording, setIsRecording] = useState(false);
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [isViewOnce, setIsViewOnce] = useState(false);
@@ -178,6 +185,22 @@ export function useMessageInput({
     HapticFeedback.success();
   };
 
+  // Handle video note
+  const handleVideoMessage = (data: VideoMessageData) => {
+    onSend({
+      content: '',
+      type: 'video',
+      replyToId: replyTo?.id,
+      metadata: {
+        video: data.blob,
+        duration: data.duration,
+        isVideoNote: true,
+      },
+    });
+    setIsVideoRecording(false);
+    HapticFeedback.success();
+  };
+
   // Handle GIF select
   const handleGifSelect = (gif: GifResult) => {
     onSend({
@@ -233,6 +256,7 @@ export function useMessageInput({
     attachments,
     attachmentMode,
     isRecording,
+    isVideoRecording,
     showMentions,
     mentionQuery,
     isViewOnce,
@@ -248,11 +272,13 @@ export function useMessageInput({
     handleDrop,
     removeAttachment,
     handleVoiceMessage,
+    handleVideoMessage,
     handleStickerSelect,
     handleGifSelect,
     handleMentionSelect,
     toggleAttachmentMode,
     setIsRecording,
+    setIsVideoRecording,
     setAttachmentMode,
     setShowMentions,
     setIsViewOnce,
