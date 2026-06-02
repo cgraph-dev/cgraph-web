@@ -9,6 +9,7 @@ import type {
   ChatUiMessageEntranceAnimation,
   ProfileCardLayoutId,
 } from '@cgraph-dev/shared-types';
+import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
 
 // SHARED TYPES
 
@@ -139,15 +140,7 @@ export type AvatarBorderType =
   | 'legendary'
   | 'mythic';
 
-export type ChatBubbleStylePreset =
-  | 'default'
-  | 'rounded'
-  | 'sharp'
-  | 'cloud'
-  | 'modern'
-  | 'retro'
-  | 'bubble'
-  | 'glassmorphism';
+export type ChatBubbleStylePreset = ChatBubblePresetId;
 
 export type EffectPreset =
   | 'glassmorphism'

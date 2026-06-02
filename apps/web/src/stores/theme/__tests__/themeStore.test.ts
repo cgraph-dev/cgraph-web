@@ -88,6 +88,7 @@ describe('backend sync', () => {
         visualEffect: 'minimal',
         animationSpeed: 'fast',
         glowEnabled: true,
+        chatBubbleStyle: 'glass',
         chatBubbleRadius: 24,
         chatBubbleTail: false,
       })
@@ -98,10 +99,31 @@ describe('backend sync', () => {
     expect(state.effectPreset).toBe('minimal');
     expect(state.animationSpeed).toBe('fast');
     expect(state.glowEnabled).toBe(true);
+    expect(state.chatBubbleStyle).toBe('glass');
     expect(state.chatBubble.borderRadius).toBe(24);
     expect(state.chatBubble.showTail).toBe(false);
     expect(state.lastSyncedAt).toEqual(expect.any(Number));
     expect(http.put).not.toHaveBeenCalled();
+  });
+
+  it('applyServerTheme normalizes legacy chat bubble style aliases through shared tokens', () => {
+    act(() =>
+      useThemeStore.getState().applyServerTheme({
+        bubble_style: 'glassmorphism',
+      })
+    );
+
+    expect(useThemeStore.getState().chatBubbleStyle).toBe('glass');
+  });
+
+  it('applyServerTheme accepts newer shared chat bubble preset ids', () => {
+    act(() =>
+      useThemeStore.getState().applyServerTheme({
+        chat_bubble_style: 'three-d',
+      })
+    );
+
+    expect(useThemeStore.getState().chatBubbleStyle).toBe('three-d');
   });
 
   it('syncWithBackend accepts the render_data theme envelope', async () => {
@@ -504,8 +526,8 @@ describe('legacy compatibility', () => {
   });
 
   it('setChatBubbleStyle updates bubble style', () => {
-    act(() => useThemeStore.getState().setChatBubbleStyle('glassmorphism'));
-    expect(useThemeStore.getState().chatBubbleStyle).toBe('glassmorphism');
+    act(() => useThemeStore.getState().setChatBubbleStyle('glass'));
+    expect(useThemeStore.getState().chatBubbleStyle).toBe('glass');
   });
 
   it('setEffect updates effectPreset', () => {

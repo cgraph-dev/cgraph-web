@@ -45,8 +45,8 @@ export const BUBBLE_STYLE_OPTIONS: BubbleStyleOption[] = [
   { value: 'cloud', label: 'Cloud', tier: 'premium' },
   { value: 'modern', label: 'Modern', tier: 'premium' },
   { value: 'retro', label: 'Retro', tier: 'premium' },
-  { value: 'bubble', label: 'Bubble', tier: 'premium' },
-  { value: 'glassmorphism', label: 'Glass', tier: 'enterprise' },
+  { value: 'neon', label: 'Neon', tier: 'premium' },
+  { value: 'glass', label: 'Glass', tier: 'enterprise' },
 ];
 
 // QUICK PRESETS

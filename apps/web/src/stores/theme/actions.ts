@@ -13,6 +13,7 @@
 import type { StateCreator } from 'zustand';
 import { DEFAULT_PROFILE_CARD_LAYOUT_ID, isProfileCardLayoutId } from '@cgraph-dev/shared-types';
 import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
+import { normalizeChatBubbleStyleId } from '@cgraph-dev/design-tokens';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { themeEngine, THEME_REGISTRY } from '@/lib/theme/theme-engine';
@@ -42,16 +43,6 @@ const ANIMATION_SPEEDS: Readonly<Record<AnimationSpeed, true>> = {
   slow: true,
   normal: true,
   fast: true,
-};
-const CHAT_BUBBLE_STYLES: Readonly<Record<ChatBubbleStylePreset, true>> = {
-  default: true,
-  rounded: true,
-  sharp: true,
-  cloud: true,
-  modern: true,
-  retro: true,
-  bubble: true,
-  glassmorphism: true,
 };
 const EFFECT_PRESETS: Readonly<Record<EffectPreset, true>> = {
   glassmorphism: true,
@@ -111,10 +102,6 @@ function isColorPreset(value: string | null): value is ColorPreset {
 
 function isAvatarBorder(value: string | null): value is AvatarBorderType {
   return hasKnownKey(AVATAR_BORDERS, value);
-}
-
-function isChatBubbleStyle(value: string | null): value is ChatBubbleStylePreset {
-  return hasKnownKey(CHAT_BUBBLE_STYLES, value);
 }
 
 function isEffectPreset(value: string | null): value is EffectPreset {
@@ -186,7 +173,7 @@ function normalizeServerTheme(
     'bubbleStyle',
     'bubble_style',
   ]);
-  if (isChatBubbleStyle(chatBubbleStyle)) next.chatBubbleStyle = chatBubbleStyle;
+  if (chatBubbleStyle !== null) next.chatBubbleStyle = normalizeChatBubbleStyleId(chatBubbleStyle);
 
   const chatBubbleColor = getStringField(rawTheme, [
     'chatBubbleColor',
