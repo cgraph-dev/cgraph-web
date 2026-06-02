@@ -1,8 +1,16 @@
 version: 2
 
+registries:
+  cgraph-dev-npm:
+    type: npm-registry
+    url: https://registry.npmjs.org
+    token: ${{ secrets.NPM_TOKEN }}
+
 updates:
   - package-ecosystem: npm
     directory: /
+    registries:
+      - cgraph-dev-npm
     schedule:
       interval: daily
       time: '04:00'

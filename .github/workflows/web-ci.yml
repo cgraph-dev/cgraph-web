@@ -23,7 +23,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          registry-url: https://registry.npmjs.org/
+          scope: '@cgraph-dev'
       - run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm check:packages
       - run: pnpm check:package-owner
       - run: pnpm --filter @cgraph/web lint
