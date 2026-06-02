@@ -59,6 +59,3 @@ export {
   useIsDirty,
   useSyncError,
 } from './customizationStore.selectors';
-
-// Mappings
-export * from './mappings';

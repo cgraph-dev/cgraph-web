@@ -363,6 +363,22 @@ chunk. This narrows the Phase 5 web-adapter cleanup work without claiming final
 provider, future native QR, physical cross-device closure, or hosted Stripe
 settlement/webhooks.
 
+2026-06-02 badge/title display adapter ownership proof: production web moves
+badge and title display-data resolution out of the settings customization store
+mapping barrel and into the shared UI adapter at
+`apps/web/src/shared/components/ui/cosmetic-display.ts`. `InlineTitle`,
+`InlineBadges`, profile-card badge rendering, and the settings live-preview
+profile content now consume that UI-owned adapter directly, while the
+customization store no longer re-exports display mapping helpers. Source search
+found no remaining imports from
+`modules/settings/store/customization/mappings`, and the dead mapping file was
+deleted. Verified with focused shared-UI/profile-card tests covering 12 tests
+across 3 files, package guards, package-owner guard, typecheck, lint, release
+gates with 408 files / 5,338 tests, and build budget at 484.19 kB / 500 kB for
+the largest JS chunk. This narrows the Phase 5 web-adapter cleanup work without
+claiming final provider, future native QR, physical cross-device closure, or
+hosted Stripe settlement/webhooks.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
@@ -1006,7 +1022,9 @@ Required implementation-time questions:
       map and routes `/customize/theme` plus the dev test page through the typed `setProfileTheme`
       action, with locked premium previews kept out of the saving path. The 2026-06-02
       avatar-border adapter cleanup moves legacy avatar-border CSS mapping out of the settings hook
-      and into the shared avatar UI adapter consumed by `Avatar`.
+      and into the shared avatar UI adapter consumed by `Avatar`. The later 2026-06-02 badge/title
+      display adapter cleanup moves badge/title display-data helpers out of the customization store
+      barrel and into the shared UI adapter consumed by inline/profile-card/preview renderers.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across

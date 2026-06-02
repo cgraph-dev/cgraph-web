@@ -1053,6 +1053,17 @@ gates with 407 files / 5,335 tests, and bundle budgets at 484.25 kB / 500 kB
 all passed. This narrows the web-adapter cleanup layer while keeping the strict
 score unchanged.
 
+2026-06-02 badge/title display adapter ownership proof: production web moves
+badge/title display-data resolution from the settings customization store
+mapping barrel to `shared/components/ui/cosmetic-display.ts`, so inline title,
+inline badge, profile-card badge, and settings live-preview renderers consume a
+shared UI adapter instead of store-owned display mappings. The customization
+store no longer re-exports the mapping barrel, and the dead mapping file was
+deleted. Focused shared-UI/profile-card tests passed 3 files / 12 tests;
+package guards, package-owner guard, typecheck, lint, release gates with 408
+files / 5,338 tests, and bundle budgets at 484.19 kB / 500 kB all passed. This
+narrows the web-adapter cleanup layer while keeping the strict score unchanged.
+
 2026-05-31 customization Lottie delivery proof: production web now includes the catalog-referenced
 public Lottie JSON files for badge, title, display-name effect, and nameplate customization paths.
 `apps/web/scripts/check-customization-lottie-assets.mjs` verifies the 51 required public assets are

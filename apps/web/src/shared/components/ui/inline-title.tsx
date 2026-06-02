@@ -1,14 +1,14 @@
 /**
  * InlineTitle — renders a user's equipped title with rarity-based styling.
  *
- * Resolves a title ID to its display name and gradient via the mappings layer.
+ * Resolves a title ID to its display name and gradient via the shared UI adapter.
  * Supports inline (next to username) and standalone rendering.
  */
 
 import { memo } from 'react';
-import { getTitleDisplay, isRareTitle } from '@/modules/settings/store/customization/mappings';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import { cn } from '@/lib/utils';
+import { getTitleDisplay, isRareTitle } from './cosmetic-display';
 
 interface InlineTitleProps {
   titleId: string | null | undefined;

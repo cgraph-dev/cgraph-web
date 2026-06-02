@@ -8,9 +8,9 @@ import { memo } from 'react';
 import { useAuthStore } from '@/modules/auth/store';
 import { getBorderById } from '@/data/avatar-borders';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
-import { BADGE_DISPLAY_MAP } from '@/modules/settings/store/customization/mappings';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
+import { BADGE_DISPLAY_MAP } from '@/shared/components/ui/cosmetic-display';
 import type { MiniProfileCardProps } from './types';
 
 export const MiniProfileCard = memo(function MiniProfileCard({

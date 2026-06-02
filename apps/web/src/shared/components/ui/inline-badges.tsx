@@ -1,12 +1,12 @@
 /**
  * InlineBadges — renders a compact row of equipped badge icons.
  *
- * Resolves badge IDs to their display data (icon, color, name) via mappings.
+ * Resolves badge IDs to their display data via the shared UI adapter.
  */
 
 import { memo } from 'react';
-import { resolveEquippedBadges } from '@/modules/settings/store/customization/mappings';
 import { cn } from '@/lib/utils';
+import { resolveEquippedBadges } from './cosmetic-display';
 
 interface InlineBadgesProps {
   badgeIds: string[] | null | undefined;

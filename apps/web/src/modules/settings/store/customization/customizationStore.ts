@@ -341,7 +341,4 @@ export const useCustomizationStore = create<CustomizationStore>()(
 /** @deprecated Use THEME_COLORS directly */
 export const themeColors = THEME_COLORS;
 
-// Re-export all mappings for centralized access
-export * from './mappings';
-
 export default useCustomizationStore;

@@ -10,12 +10,12 @@ function isNameFont(value: string): value is NameFont {
   return value in NAME_FONTS;
 }
 import { AnimatedAvatar } from '../animated-avatar';
-import type { ThemePreset, TitleDisplay } from '@/modules/settings/store/customization';
+import type { ThemePreset } from '@/modules/settings/store/customization';
 import { springs, tweens, loop } from '@/lib/animation-presets';
 import { GlowText, FireText } from '@/shared/components/ui';
 import { PREVIEW_BADGES } from './constants';
-import { resolveEquippedBadges } from '@/modules/settings/store/customization/mappings';
-import type { BadgeDisplay } from '@/modules/settings/store/customization/mappings';
+import type { BadgeDisplay, TitleDisplay } from '@/shared/components/ui/cosmetic-display';
+import { resolveEquippedBadges } from '@/shared/components/ui/cosmetic-display';
 import type { ThemeColors, PreviewBadge } from './types';
 import { NameplateBar } from '@/components/nameplate';
 

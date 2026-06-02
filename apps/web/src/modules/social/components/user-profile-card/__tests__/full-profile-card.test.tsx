@@ -66,7 +66,7 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   },
 }));
 
-vi.mock('@/modules/settings/store/customization/mappings', () => ({
+vi.mock('@/shared/components/ui/cosmetic-display', () => ({
   BADGE_DISPLAY_MAP: {},
 }));
 

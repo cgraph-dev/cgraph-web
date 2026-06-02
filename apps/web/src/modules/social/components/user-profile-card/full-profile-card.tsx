@@ -18,7 +18,7 @@ import { getBorderById } from '@/data/avatar-borders';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { InlineTitle } from '@/shared/components/ui';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
-import { BADGE_DISPLAY_MAP } from '@/modules/settings/store/customization/mappings';
+import { BADGE_DISPLAY_MAP } from '@/shared/components/ui/cosmetic-display';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import {
   MAX_MUTUAL_FRIENDS_DISPLAY,

@@ -98,3 +98,11 @@ export { GlassCardNeon } from '@/components/ui/glass-card-variants';
 export { InlineTitle } from './inline-title';
 export { InlineBadges } from './inline-badges';
 export { DisplayName } from './display-name';
+export {
+  BADGE_DISPLAY_MAP,
+  BADGE_RARITY_HEX,
+  getTitleDisplay,
+  isRareTitle,
+  resolveEquippedBadges,
+} from './cosmetic-display';
+export type { BadgeDisplay, TitleDisplay } from './cosmetic-display';
