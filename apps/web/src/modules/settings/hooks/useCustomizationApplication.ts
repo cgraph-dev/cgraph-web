@@ -91,36 +91,3 @@ export function useCustomizationApplication(): void {
     updateBodyClass('chat-theme-', chatTheme);
   }, [effectiveProfileTheme, chatTheme, animationSpeed]);
 }
-
-/**
- * Get avatar border CSS class and styles
- */
-export function getAvatarBorderStyle(borderId: string | null): {
-  className: string;
-  style?: React.CSSProperties;
-} {
-  if (!borderId || borderId === 'none') {
-    return { className: '' };
-  }
-
-  // Map border IDs to CSS classes
-  const borderClassMap: Record<string, string> = {
-    static: 'avatar-border-static',
-    'simple-glow': 'avatar-border-glow',
-    'gentle-pulse': 'avatar-border-pulse',
-    'rotating-ring': 'avatar-border-rotating',
-    'dual-ring': 'avatar-border-dual-ring',
-    'rainbow-spin': 'avatar-border-rainbow',
-    'electric-arc': 'avatar-border-electric',
-    'flame-ring': 'avatar-border-flame',
-    'ice-crystal': 'avatar-border-ice',
-    'toxic-glow': 'avatar-border-toxic',
-    'holy-light': 'avatar-border-holy',
-    'shadow-wisp': 'avatar-border-shadow',
-    'cosmic-drift': 'avatar-border-cosmic',
-  };
-
-  return {
-    className: borderClassMap[borderId] || '',
-  };
-}

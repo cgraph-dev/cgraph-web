@@ -16,70 +16,7 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   useCustomizationStore: vi.fn((selector: (s: typeof mockState) => unknown) => selector(mockState)),
 }));
 
-import {
-  useCustomizationApplication,
-  getAvatarBorderStyle,
-} from '../useCustomizationApplication';
-
-// getAvatarBorderStyle — pure function
-
-describe('getAvatarBorderStyle', () => {
-  it('returns empty className for null', () => {
-    expect(getAvatarBorderStyle(null)).toEqual({ className: '' });
-  });
-
-  it('returns empty className for "none"', () => {
-    expect(getAvatarBorderStyle('none')).toEqual({ className: '' });
-  });
-
-  it('returns correct class for static border', () => {
-    expect(getAvatarBorderStyle('static').className).toBe('avatar-border-static');
-  });
-
-  it('returns correct class for simple-glow', () => {
-    expect(getAvatarBorderStyle('simple-glow').className).toBe('avatar-border-glow');
-  });
-
-  it('returns correct class for gentle-pulse', () => {
-    expect(getAvatarBorderStyle('gentle-pulse').className).toBe('avatar-border-pulse');
-  });
-
-  it('returns correct class for rotating-ring', () => {
-    expect(getAvatarBorderStyle('rotating-ring').className).toBe('avatar-border-rotating');
-  });
-
-  it('returns correct class for dual-ring', () => {
-    expect(getAvatarBorderStyle('dual-ring').className).toBe('avatar-border-dual-ring');
-  });
-
-  it('returns correct class for rainbow-spin', () => {
-    expect(getAvatarBorderStyle('rainbow-spin').className).toBe('avatar-border-rainbow');
-  });
-
-  it('does not map particle-orbit to a legacy CSS particle border', () => {
-    expect(getAvatarBorderStyle('particle-orbit').className).toBe('');
-  });
-
-  it('returns correct class for electric-arc', () => {
-    expect(getAvatarBorderStyle('electric-arc').className).toBe('avatar-border-electric');
-  });
-
-  it('returns correct class for flame-ring', () => {
-    expect(getAvatarBorderStyle('flame-ring').className).toBe('avatar-border-flame');
-  });
-
-  it('returns correct class for cosmic-drift', () => {
-    expect(getAvatarBorderStyle('cosmic-drift').className).toBe('avatar-border-cosmic');
-  });
-
-  it('returns empty className for unknown border id', () => {
-    expect(getAvatarBorderStyle('unknown-border').className).toBe('');
-  });
-
-  it('returns empty className for empty string', () => {
-    expect(getAvatarBorderStyle('').className).toBe('');
-  });
-});
+import { useCustomizationApplication } from '../useCustomizationApplication';
 
 // useCustomizationApplication hook — CSS variable injection
 

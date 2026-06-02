@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { GlassCard, Avatar } from '@/shared/components/ui';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import { getAvatarBorderStyle } from '@/modules/settings/hooks/useCustomizationApplication';
+import { getAvatarBorderStyle } from '@/components/ui/avatar-border-style';
 import {
   getMessageBubbleClass,
   getMessageEffectClass,

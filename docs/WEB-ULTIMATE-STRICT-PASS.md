@@ -1043,6 +1043,16 @@ package-owner guard, typecheck, lint, release gates with 406 files / 5,351
 tests, and bundle budgets all passed. This narrows the web-adapter cleanup layer
 while keeping the strict score unchanged.
 
+2026-06-02 avatar-border adapter ownership proof: production web moves
+`getAvatarBorderStyle(...)` from the settings application hook to
+`components/ui/avatar-border-style.ts`, so the shared avatar UI owns its
+legacy CSS border adapter beside `Avatar`. `useCustomizationApplication` no
+longer exports avatar rendering helpers. Focused avatar/settings tests passed 3
+files / 34 tests; package guards, package-owner guard, typecheck, lint, release
+gates with 407 files / 5,335 tests, and bundle budgets at 484.25 kB / 500 kB
+all passed. This narrows the web-adapter cleanup layer while keeping the strict
+score unchanged.
+
 2026-05-31 customization Lottie delivery proof: production web now includes the catalog-referenced
 public Lottie JSON files for badge, title, display-name effect, and nameplate customization paths.
 `apps/web/scripts/check-customization-lottie-assets.mjs` verifies the 51 required public assets are

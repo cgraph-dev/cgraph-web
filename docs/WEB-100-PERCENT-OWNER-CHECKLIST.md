@@ -349,6 +349,20 @@ files / 5,351 tests, and build budget. This narrows the Phase 5 web-adapter
 cleanup work without claiming final provider, future native QR, or physical
 cross-device closure.
 
+2026-06-02 avatar-border adapter ownership proof: production web moves
+`getAvatarBorderStyle(...)` out of the settings customization application hook
+and into the shared avatar UI adapter at
+`apps/web/src/components/ui/avatar-border-style.ts`. `Avatar` and the dev theme
+preview now consume that UI-owned adapter directly, while
+`useCustomizationApplication` keeps only settings/theme DOM application. Source
+search found no remaining avatar-border helper imports from the settings hook.
+Verified with focused avatar/settings tests covering 34 tests across 3 files,
+package guards, package-owner guard, typecheck, lint, release gates with 407
+files / 5,335 tests, and build budget at 484.25 kB / 500 kB for the largest JS
+chunk. This narrows the Phase 5 web-adapter cleanup work without claiming final
+provider, future native QR, physical cross-device closure, or hosted Stripe
+settlement/webhooks.
+
 2026-05-29 group route-fallback proof: production web adds `getKnownGroupRoute(...)` so
 component-level flows with missing canonical group truth return to `/groups` instead of inventing a
 bare `/groups/:groupId` destination. `ExploreGroups` uses it after node-gated joins, and
@@ -990,7 +1004,9 @@ Required implementation-time questions:
       persisted state, legacy identity updates, and own-identity socket sync. The later 2026-06-01
       routed profile-theme cleanup removes the now-unused local profile-theme-to-app-color semantic
       map and routes `/customize/theme` plus the dev test page through the typed `setProfileTheme`
-      action, with locked premium previews kept out of the saving path.
+      action, with locked premium previews kept out of the saving path. The 2026-06-02
+      avatar-border adapter cleanup moves legacy avatar-border CSS mapping out of the settings hook
+      and into the shared avatar UI adapter consumed by `Avatar`.
 - [x] Settings, theme, and customization ownership converge on one explicit orchestration model. The
       2026-05-15 slice adds `apps/web/src/modules/settings/store/preferenceOrchestrator.ts`, routes
       auth bootstrap and the settings page through it, folds facade loading/saving state across

@@ -31,10 +31,7 @@ vi.mock('@/lib/api-client', () => ({
   },
 }));
 
-import {
-  useCustomizationApplication,
-  getAvatarBorderStyle,
-} from '../useCustomizationApplication';
+import { useCustomizationApplication } from '../useCustomizationApplication';
 import { useUsernameChange } from '../useUsernameChange';
 describe('useCustomizationApplication', () => {
   beforeEach(() => {
@@ -127,28 +124,6 @@ describe('useCustomizationApplication', () => {
     expect(document.documentElement.style.getPropertyValue('--profile-primary')).toBe('');
   });
 });
-describe('getAvatarBorderStyle', () => {
-  it('returns empty className for null borderId', () => {
-    expect(getAvatarBorderStyle(null)).toEqual({ className: '' });
-  });
-
-  it('returns empty className for "none" borderId', () => {
-    expect(getAvatarBorderStyle('none')).toEqual({ className: '' });
-  });
-
-  it('returns the correct class for "simple-glow"', () => {
-    expect(getAvatarBorderStyle('simple-glow')).toEqual({ className: 'avatar-border-glow' });
-  });
-
-  it('returns the correct class for "rainbow-spin"', () => {
-    expect(getAvatarBorderStyle('rainbow-spin')).toEqual({ className: 'avatar-border-rainbow' });
-  });
-
-  it('returns empty className for unknown borderId', () => {
-    expect(getAvatarBorderStyle('unknown-border')).toEqual({ className: '' });
-  });
-});
-
 describe('useUsernameChange', () => {
   const baseOptions = {
     currentUsername: 'olduser',

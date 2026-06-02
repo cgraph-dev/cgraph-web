@@ -3,8 +3,8 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { LottieBorderRenderer } from '@/lib/lottie/lottie-border-renderer';
 import { LottieRenderer } from '@/lib/lottie/lottie-renderer';
-import { getAvatarBorderStyle } from '@/modules/settings/hooks/useCustomizationApplication';
 import { getBorderById } from '@/data/avatar-borders';
+import { getAvatarBorderStyle } from './avatar-border-style';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 type AvatarStatus = 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
