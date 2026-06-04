@@ -10,6 +10,7 @@ import type {
   ProfileCardLayoutId,
 } from '@cgraph-dev/shared-types';
 import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
+import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/animation-constants';
 
 // SHARED TYPES
 
@@ -128,17 +129,7 @@ export interface ChatBubbleConfig {
 
 // ADDITIONAL UNION TYPES
 
-export type AvatarBorderType =
-  | 'none'
-  | 'static'
-  | 'glow'
-  | 'pulse'
-  | 'rotate'
-  | 'fire'
-  | 'ice'
-  | 'electric'
-  | 'legendary'
-  | 'mythic';
+export type AvatarBorderType = SharedAvatarBorderType;
 
 export type ChatBubbleStylePreset = ChatBubblePresetId;
 

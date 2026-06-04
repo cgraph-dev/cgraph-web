@@ -17,13 +17,13 @@ import { normalizeChatBubbleStyleId } from '@cgraph-dev/design-tokens';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { themeEngine, THEME_REGISTRY } from '@/lib/theme/theme-engine';
+import { isAvatarBorderDisplayType } from '@/data/avatar-borders';
 
 import type {
   AnimationSpeed,
   ColorPreset,
   LegacyTheme,
   ThemeStore,
-  AvatarBorderType,
   ChatBubbleStylePreset,
   EffectPreset,
 } from './types';
@@ -52,19 +52,6 @@ const EFFECT_PRESETS: Readonly<Record<EffectPreset, true>> = {
   aurora: true,
   cyberpunk: true,
 };
-const AVATAR_BORDERS: Readonly<Record<AvatarBorderType, true>> = {
-  none: true,
-  static: true,
-  glow: true,
-  pulse: true,
-  rotate: true,
-  fire: true,
-  ice: true,
-  electric: true,
-  legendary: true,
-  mythic: true,
-};
-
 function getStringField(record: Record<string, unknown>, keys: readonly string[]): string | null {
   for (const key of keys) {
     const value = record[key];
@@ -98,10 +85,6 @@ function hasKnownKey<T extends string>(
 
 function isColorPreset(value: string | null): value is ColorPreset {
   return hasKnownKey(COLORS, value);
-}
-
-function isAvatarBorder(value: string | null): value is AvatarBorderType {
-  return hasKnownKey(AVATAR_BORDERS, value);
 }
 
 function isEffectPreset(value: string | null): value is EffectPreset {
@@ -162,7 +145,7 @@ function normalizeServerTheme(
   if (profileCardLayout) next.profileCardLayout = normalizeProfileCardLayout(profileCardLayout);
 
   const avatarBorder = getStringField(rawTheme, ['avatarBorder', 'avatar_border']);
-  if (isAvatarBorder(avatarBorder)) next.avatarBorder = avatarBorder;
+  if (isAvatarBorderDisplayType(avatarBorder)) next.avatarBorder = avatarBorder;
 
   const avatarBorderColor = getStringField(rawTheme, ['avatarBorderColor', 'avatar_border_color']);
   if (isColorPreset(avatarBorderColor)) next.avatarBorderColor = avatarBorderColor;
@@ -420,7 +403,7 @@ export const createThemeActions: StateCreator<ThemeStore, [], [], ThemeStore> = 
       },
     }));
   },
-  setAvatarBorder: (border: AvatarBorderType) => set({ avatarBorder: border }),
+  setAvatarBorder: (border) => set({ avatarBorder: border }),
   setChatBubbleStyle: (style: ChatBubbleStylePreset) => set({ chatBubbleStyle: style }),
   setEffect: (effect: EffectPreset) => set({ effectPreset: effect }),
   resetTheme: () => set({ ...DEFAULT_THEME_STATE }),

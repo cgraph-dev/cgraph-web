@@ -126,6 +126,16 @@ describe('backend sync', () => {
     expect(useThemeStore.getState().chatBubbleStyle).toBe('three-d');
   });
 
+  it('applyServerTheme accepts shared Lottie avatar border display type', () => {
+    act(() =>
+      useThemeStore.getState().applyServerTheme({
+        avatar_border: 'lottie',
+      })
+    );
+
+    expect(useThemeStore.getState().avatarBorder).toBe('lottie');
+  });
+
   it('syncWithBackend accepts the render_data theme envelope', async () => {
     vi.mocked(http.get).mockResolvedValueOnce({
       data: { data: { theme: { colorPreset: 'gold', animationSpeed: 'slow' } } },
@@ -523,6 +533,11 @@ describe('legacy compatibility', () => {
   it('setAvatarBorder updates avatar border', () => {
     act(() => useThemeStore.getState().setAvatarBorder('fire'));
     expect(useThemeStore.getState().avatarBorder).toBe('fire');
+  });
+
+  it('setAvatarBorder accepts shared Lottie display type', () => {
+    act(() => useThemeStore.getState().setAvatarBorder('lottie'));
+    expect(useThemeStore.getState().avatarBorder).toBe('lottie');
   });
 
   it('setChatBubbleStyle updates bubble style', () => {

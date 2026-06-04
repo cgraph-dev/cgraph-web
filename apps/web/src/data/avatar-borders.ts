@@ -41,6 +41,40 @@ export function getAvatarBorderDisplayTypeById(
   return getAvatarBorderById(borderId)?.type ?? 'none';
 }
 
+const LEGACY_AVATAR_BORDER_DISPLAY_TYPES = [
+  'none',
+  'static',
+  'simple-glow',
+  'gentle-pulse',
+  'rotating-ring',
+  'dual-ring',
+  'gradient-wave',
+  'spark-trail',
+  'prismatic',
+  'neon-outline',
+  'ripple',
+  'heartbeat',
+  'fire',
+  'ice',
+  'electric',
+  'glow',
+  'pulse',
+  'rotate',
+  'legendary',
+  'mythic',
+] as const satisfies readonly AvatarBorderType[];
+
+const AVATAR_BORDER_DISPLAY_TYPES: ReadonlySet<string> = new Set([
+  ...LEGACY_AVATAR_BORDER_DISPLAY_TYPES,
+  ...AVATAR_BORDERS.map((border) => border.type),
+]);
+
+export function isAvatarBorderDisplayType(
+  value: string | null | undefined
+): value is AvatarBorderType {
+  return typeof value === 'string' && AVATAR_BORDER_DISPLAY_TYPES.has(value);
+}
+
 /** Get borders by theme */
 export function getBordersByTheme(theme: BorderTheme): AvatarBorderConfig[] {
   return AVATAR_BORDERS.filter((border) => border.theme === theme);
