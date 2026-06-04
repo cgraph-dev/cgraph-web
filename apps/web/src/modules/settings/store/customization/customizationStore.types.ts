@@ -12,18 +12,23 @@ import type {
   ProfileThemeId,
 } from '@cgraph-dev/shared-types';
 import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/animation-constants';
+import { COLORS as THEME_COLOR_CATALOG } from '@/stores/theme/presets';
+import type { ColorDefinition } from '@/stores/theme/types';
 
 // TYPES
 
-export type ThemePreset =
-  | 'emerald'
-  | 'purple'
-  | 'cyan'
-  | 'orange'
-  | 'pink'
-  | 'gold'
-  | 'crimson'
-  | 'arctic';
+export const CUSTOMIZATION_THEME_PRESETS = [
+  'emerald',
+  'purple',
+  'cyan',
+  'orange',
+  'pink',
+  'gold',
+  'crimson',
+  'arctic',
+] as const satisfies readonly (keyof typeof THEME_COLOR_CATALOG)[];
+
+export type ThemePreset = (typeof CUSTOMIZATION_THEME_PRESETS)[number];
 
 export type EffectPreset =
   | 'glassmorphism'
@@ -43,12 +48,7 @@ export type ProfileCardStyle = ProfileCardLayoutId;
 
 export type BubbleAnimation = ChatUiMessageEntranceAnimation;
 
-export interface ThemeColors {
-  primary: string;
-  secondary: string;
-  glow: string;
-  name: string;
-}
+export type ThemeColors = Pick<ColorDefinition, 'primary' | 'secondary' | 'glow' | 'name'>;
 
 // STATE INTERFACE
 
@@ -215,57 +215,16 @@ export interface CustomizationActions {
 
 export type CustomizationStore = CustomizationState & CustomizationActions;
 
-// THEME COLORS
-
+// Legacy compatibility export. Theme color metadata is owned by the theme store catalog.
 export const THEME_COLORS: Record<ThemePreset, ThemeColors> = {
-  emerald: {
-    primary: '#10b981',
-    secondary: '#34d399',
-    glow: 'rgba(16, 185, 129, 0.5)',
-    name: 'Emerald',
-  },
-  purple: {
-    primary: '#8b5cf6',
-    secondary: '#a78bfa',
-    glow: 'rgba(139, 92, 246, 0.5)',
-    name: 'Purple',
-  },
-  cyan: {
-    primary: '#06b6d4',
-    secondary: '#22d3ee',
-    glow: 'rgba(6, 182, 212, 0.5)',
-    name: 'Cyan',
-  },
-  orange: {
-    primary: '#f97316',
-    secondary: '#fb923c',
-    glow: 'rgba(249, 115, 22, 0.5)',
-    name: 'Orange',
-  },
-  pink: {
-    primary: '#ec4899',
-    secondary: '#f472b6',
-    glow: 'rgba(236, 72, 153, 0.5)',
-    name: 'Pink',
-  },
-  gold: {
-    primary: '#eab308',
-    secondary: '#facc15',
-    glow: 'rgba(234, 179, 8, 0.5)',
-    name: 'Gold',
-  },
-  crimson: {
-    primary: '#dc2626',
-    secondary: '#f87171',
-    glow: 'rgba(220, 38, 38, 0.5)',
-    name: 'Crimson',
-  },
-  arctic: {
-    primary: '#38bdf8',
-    secondary: '#7dd3fc',
-    glow: 'rgba(56, 189, 248, 0.5)',
-    name: 'Arctic',
-  },
+  emerald: THEME_COLOR_CATALOG.emerald,
+  purple: THEME_COLOR_CATALOG.purple,
+  cyan: THEME_COLOR_CATALOG.cyan,
+  orange: THEME_COLOR_CATALOG.orange,
+  pink: THEME_COLOR_CATALOG.pink,
+  gold: THEME_COLOR_CATALOG.gold,
+  crimson: THEME_COLOR_CATALOG.crimson,
+  arctic: THEME_COLOR_CATALOG.arctic,
 };
 
 export const RARITY_COLORS: Record<string, string> = {

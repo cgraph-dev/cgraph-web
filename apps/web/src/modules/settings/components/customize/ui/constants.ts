@@ -3,23 +3,17 @@
  */
 
 import { springs } from '@/lib/animation-presets';
-import type { ThemePreset } from '@/modules/settings/store/customization';
+import {
+  CUSTOMIZATION_THEME_PRESETS,
+  type ThemePreset,
+} from '@/modules/settings/store/customization';
 
 export const uiSprings = {
   snappy: springs.snappy,
   smooth: springs.default,
   bouncy: springs.bouncy,
 };
-export const allThemes: ThemePreset[] = [
-  'emerald',
-  'purple',
-  'cyan',
-  'orange',
-  'pink',
-  'gold',
-  'crimson',
-  'arctic',
-];
+export const allThemes: readonly ThemePreset[] = CUSTOMIZATION_THEME_PRESETS;
 
 export const toggleSizeConfig = {
   sm: { track: 'h-4 w-7', dot: 'h-3 w-3' },

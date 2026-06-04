@@ -36,6 +36,7 @@ export type {
   CustomizationStore,
 } from './customizationStore.types';
 export {
+  CUSTOMIZATION_THEME_PRESETS,
   THEME_COLORS,
   RARITY_COLORS,
   DEFAULT_STATE,
@@ -51,10 +52,15 @@ import type {
   ProfileCardStyle,
   ThemePreset,
 } from './customizationStore.types';
-import { THEME_COLORS, DEFAULT_STATE } from './customizationStore.types';
+import {
+  CUSTOMIZATION_THEME_PRESETS,
+  THEME_COLORS,
+  DEFAULT_STATE,
+} from './customizationStore.types';
 import { apiSchemaMapper, debouncedSave, PERSIST_PARTIALIZE } from './customizationStore.schema';
 
 const logger = createLogger('customizationStore');
+const CUSTOMIZATION_THEME_PRESET_SET = new Set<string>(CUSTOMIZATION_THEME_PRESETS);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -131,7 +137,7 @@ function getStringPatchValue(
 }
 
 function isThemePreset(value: string | null): value is ThemePreset {
-  return Boolean(value && value in THEME_COLORS);
+  return Boolean(value && CUSTOMIZATION_THEME_PRESET_SET.has(value));
 }
 
 function mapServerCustomizationPatch(
