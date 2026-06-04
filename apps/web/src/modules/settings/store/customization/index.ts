@@ -22,7 +22,7 @@ export type {
 } from './customizationStore.types';
 
 // Constants — import from types file directly
-export { THEME_COLORS, AVATAR_BORDERS, RARITY_COLORS } from './customizationStore.types';
+export { THEME_COLORS, RARITY_COLORS } from './customizationStore.types';
 
 // Theme selectors — imported directly from selectors to avoid circular dep
 export {

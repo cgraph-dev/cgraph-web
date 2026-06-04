@@ -11,6 +11,7 @@ import type {
   ProfileCardLayoutId,
   ProfileThemeId,
 } from '@cgraph-dev/shared-types';
+import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/animation-constants';
 
 // TYPES
 
@@ -34,18 +35,7 @@ export type EffectPreset =
 
 export type AnimationSpeed = 'slow' | 'normal' | 'fast';
 
-export type AvatarBorderType =
-  | 'none'
-  | 'static'
-  | 'glow'
-  | 'pulse'
-  | 'rotate'
-  | 'fire'
-  | 'ice'
-  | 'electric'
-  | 'legendary'
-  | 'mythic'
-  | 'lottie';
+export type AvatarBorderType = SharedAvatarBorderType;
 
 export type ChatBubbleStyle = ChatBubblePresetId;
 
@@ -275,45 +265,6 @@ export const THEME_COLORS: Record<ThemePreset, ThemeColors> = {
     secondary: '#7dd3fc',
     glow: 'rgba(56, 189, 248, 0.5)',
     name: 'Arctic',
-  },
-};
-
-// AVATAR BORDER DEFINITIONS
-
-export const AVATAR_BORDERS: Record<
-  AvatarBorderType,
-  { name: string; description: string; premium: boolean; rarity?: string }
-> = {
-  none: { name: 'None', description: 'No border', premium: false },
-  static: { name: 'Static', description: 'Simple colored border', premium: false },
-  glow: { name: 'Glow', description: 'Soft glowing effect', premium: false },
-  pulse: { name: 'Pulse', description: 'Rhythmic pulsing glow', premium: false },
-  rotate: { name: 'Orbit', description: 'Rotating gradient ring', premium: true, rarity: 'Rare' },
-  fire: { name: 'Inferno', description: 'Animated flame effect', premium: true, rarity: 'Epic' },
-  ice: { name: 'Frost', description: 'Crystalline ice particles', premium: true, rarity: 'Epic' },
-  electric: {
-    name: 'Storm',
-    description: 'Electric sparks and arcs',
-    premium: true,
-    rarity: 'Epic',
-  },
-  legendary: {
-    name: 'Legendary',
-    description: 'Multi-layered animated aura',
-    premium: true,
-    rarity: 'Legendary',
-  },
-  mythic: {
-    name: 'Mythic',
-    description: 'Reality-bending void effect',
-    premium: true,
-    rarity: 'Mythic',
-  },
-  lottie: {
-    name: 'Animated Frame',
-    description: 'Custom Lottie animated border frame',
-    premium: true,
-    rarity: 'Legendary',
   },
 };
 

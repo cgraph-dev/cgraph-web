@@ -4,7 +4,6 @@ import {
   useCustomizationStore,
   DEFAULT_STATE,
   THEME_COLORS,
-  AVATAR_BORDERS,
 } from '../customizationStore';
 
 vi.mock('@/lib/api', () => ({
@@ -101,6 +100,12 @@ describe('avatar actions', () => {
     useCustomizationStore.getState().setAvatarBorder('fire');
     expect(useCustomizationStore.getState().avatarBorderType).toBe('fire');
     expect(useCustomizationStore.getState().avatarBorder).toBe('fire');
+  });
+
+  it('setAvatarBorder accepts shared Lottie border display type', () => {
+    useCustomizationStore.getState().setAvatarBorder('lottie');
+    expect(useCustomizationStore.getState().avatarBorderType).toBe('lottie');
+    expect(useCustomizationStore.getState().avatarBorder).toBe('lottie');
   });
 
   it('setAvatarBorderColor', () => {
@@ -316,9 +321,4 @@ describe('constants', () => {
     expect(THEME_COLORS.emerald.primary).toBe('#10b981');
   });
 
-  it('AVATAR_BORDERS has expected types', () => {
-    expect(AVATAR_BORDERS.none).toBeDefined();
-    expect(AVATAR_BORDERS.fire.premium).toBe(true);
-    expect(AVATAR_BORDERS.legendary.rarity).toBe('Legendary');
-  });
 });

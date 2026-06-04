@@ -37,7 +37,6 @@ export type {
 } from './customizationStore.types';
 export {
   THEME_COLORS,
-  AVATAR_BORDERS,
   RARITY_COLORS,
   DEFAULT_STATE,
 } from './customizationStore.types';

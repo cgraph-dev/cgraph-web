@@ -6,7 +6,6 @@
  */
 
 import type { RarityOption, Rarity } from './types';
-import type { AvatarBorderType } from '@/modules/settings/store/customization/customizationStore.types';
 
 export const RARITIES: RarityOption[] = [
   { value: 'free', label: 'Free', color: 'text-gray-500' },
@@ -32,39 +31,4 @@ export function getRarityColor(rarity: Rarity): string {
     mythic: 'text-pink-400',
   };
   return colors[rarity] || 'text-gray-400';
-}
-
-/**
- * Map legacy border animation types to store AvatarBorderType
- */
-export function getV2BorderType(animation: string): AvatarBorderType {
-  const animationToV2: Record<string, AvatarBorderType> = {
-    none: 'none',
-    pulse: 'pulse',
-    rotate: 'rotate',
-    glow: 'glow',
-    spark: 'electric',
-    'gradient-rotate': 'rotate',
-    flame: 'fire',
-    fire: 'fire',
-    shimmer: 'glow',
-    drip: 'ice',
-    ice: 'ice',
-    particles: 'legendary',
-    aurora: 'legendary',
-    void: 'mythic',
-    electric: 'electric',
-    holographic: 'rotate',
-    galaxy: 'legendary',
-    'pixel-pulse': 'pulse',
-    'scan-line': 'rotate',
-    glitch: 'electric',
-    'sakura-fall': 'legendary',
-    wave: 'pulse',
-    'energy-surge': 'electric',
-    smoke: 'glow',
-    'neon-flicker': 'electric',
-    rainbow: 'rotate',
-  };
-  return animationToV2[animation] || 'none';
 }

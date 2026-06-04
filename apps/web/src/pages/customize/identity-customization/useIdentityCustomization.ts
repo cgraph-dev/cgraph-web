@@ -17,13 +17,17 @@ import {
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import toast from 'react-hot-toast';
-import { ALL_BORDERS, type BorderDefinition, type BorderTheme } from '@/data/avatar-borders';
+import {
+  ALL_BORDERS,
+  getAvatarBorderDisplayTypeById,
+  type BorderDefinition,
+  type BorderTheme,
+} from '@/data/avatar-borders';
 import { ALL_TITLES, type TitleDefinition } from '@/data/titlesCollection';
 import { ALL_BADGES, type BadgeDefinition } from '@/data/badgesCollection';
 import { NAMEPLATE_REGISTRY } from '@cgraph-dev/animation-constants';
 
 import type { Rarity, Border, Title, Badge } from './types';
-import { getV2BorderType } from './constants';
 
 export type SectionId = 'borders' | 'titles' | 'badges' | 'name-styles' | 'nameplates';
 
@@ -331,13 +335,8 @@ function buildInventoryOwnership(items: readonly InventoryItemPayload[]): Invent
   };
 }
 
-function getBorderTypeForId(borderId: string | null) {
-  const border = borderId ? ALL_BORDERS.find((b) => b.id === borderId) : null;
-  return border ? getV2BorderType(border.animationType) : 'none';
-}
-
 function hydrateEquippedCosmetics(ownership: InventoryOwnership) {
-  const avatarBorderType = getBorderTypeForId(ownership.equipped.avatarBorder);
+  const avatarBorderType = getAvatarBorderDisplayTypeById(ownership.equipped.avatarBorder);
 
   useCustomizationStore.setState({
     selectedBorderId: ownership.equipped.avatarBorder,
@@ -567,10 +566,7 @@ export function useIdentityCustomization() {
   // --- Border / Title store helpers ---
 
   function applyBorderToStore(borderId: string) {
-    const border = ALL_BORDERS.find((b) => b.id === borderId);
-    if (border) {
-      setAvatarBorder(getV2BorderType(border.animationType));
-    }
+    setAvatarBorder(getAvatarBorderDisplayTypeById(borderId));
     selectBorderId(borderId);
   }
 

@@ -23,14 +23,23 @@ export type { AvatarBorderConfig } from '@/types/avatar-borders';
 
 import {
   AVATAR_BORDERS,
+  getAvatarBorderById,
   type AvatarBorderConfig,
   type AvatarBorderTheme,
+  type AvatarBorderType,
   type BorderRarity,
 } from '@cgraph-dev/animation-constants';
 
 // Re-export AvatarBorderTheme as BorderTheme for backward compatibility
 // with web consumers that import BorderTheme from this file.
 export type BorderTheme = AvatarBorderTheme;
+
+export function getAvatarBorderDisplayTypeById(
+  borderId: string | null | undefined
+): AvatarBorderType {
+  if (!borderId) return 'none';
+  return getAvatarBorderById(borderId)?.type ?? 'none';
+}
 
 /** Get borders by theme */
 export function getBordersByTheme(theme: BorderTheme): AvatarBorderConfig[] {

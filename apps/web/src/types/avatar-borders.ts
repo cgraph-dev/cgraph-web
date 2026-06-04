@@ -1,3 +1,5 @@
+import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/animation-constants';
+
 /**
  * Avatar Border Type Definitions
  *
@@ -32,36 +34,7 @@ export type BorderTheme =
   | 'gaming' // Gaming themed
   | 'seasonal' // Seasonal events
   | 'achievement'; // Achievement rewards
-/**
- * All avatar borders are now Lottie-based.
- * Legacy CSS animation types kept for backwards compatibility with
- * the customization store (avatar-panel.tsx).
- */
-export type AvatarBorderType =
-  // Legacy CSS types (customization store compatibility)
-  | 'none'
-  | 'static'
-  | 'simple-glow'
-  | 'gentle-pulse'
-  | 'rotating-ring'
-  | 'dual-ring'
-  | 'gradient-wave'
-  | 'spark-trail'
-  | 'prismatic'
-  | 'neon-outline'
-  | 'ripple'
-  | 'heartbeat'
-  | 'fire'
-  | 'ice'
-  | 'electric'
-  | 'glow'
-  | 'pulse'
-  | 'rotate'
-  | 'legendary'
-  | 'mythic'
-
-  // Lottie (animated JSON borders)
-  | 'lottie';
+export type AvatarBorderType = SharedAvatarBorderType;
 export type BorderRarity = 'free' | 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 
 export type BorderUnlockType =
