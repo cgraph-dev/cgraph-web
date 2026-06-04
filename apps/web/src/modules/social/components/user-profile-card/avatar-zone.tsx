@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 
 import { cn } from '@/lib/utils';
-import { AVATAR_BORDERS } from '@/data/avatar-borders';
+import { getBorderById } from '@/data/avatar-borders';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
 
 import type { AvatarZoneProps, BadgeDisplayTier } from './types';
@@ -86,7 +86,7 @@ export const AvatarZone = memo(function AvatarZone({
   avatarBorderId,
 }: AvatarZoneProps) {
   const borderConfig = useMemo(
-    () => (avatarBorderId ? AVATAR_BORDERS.find((b) => b.id === avatarBorderId) : undefined),
+    () => (avatarBorderId ? getBorderById(avatarBorderId) : undefined),
     [avatarBorderId]
   );
 

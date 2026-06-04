@@ -12,7 +12,7 @@ import type { AvatarBorderConfig } from '@/types/avatar-borders';
 import type { SectionProps, FilterState } from './types';
 import { RARITY_COLORS } from './constants';
 import { GridIcon, ListIcon } from './icons';
-import { AVATAR_BORDERS } from '@/data/avatar-borders';
+import { AVATAR_BORDERS, getBorderById } from '@/data/avatar-borders';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 
 /** Type guard: trust `<select>` option values for theme filter */
@@ -54,6 +54,10 @@ export function AvatarBordersSection({ filters, setFilters, viewMode, setViewMod
 
     return result;
   }, [filters]);
+  const equippedBorder = useMemo(
+    () => (equippedBorderId ? getBorderById(equippedBorderId) : undefined),
+    [equippedBorderId]
+  );
 
   function handleEquip(borderId: string) {
     selectBorderId(equippedBorderId === borderId ? null : borderId);
@@ -144,18 +148,14 @@ export function AvatarBordersSection({ filters, setFilters, viewMode, setViewMod
           <div className="flex items-center gap-6">
             <div className="relative h-24 w-24">
               <AvatarBorderRenderer
-                border={AVATAR_BORDERS.find((b) => b.id === equippedBorderId)}
+                border={equippedBorder}
                 size={96}
                 src="/default-avatar.png"
               />
             </div>
             <div>
-              <p className="font-medium">
-                {AVATAR_BORDERS.find((b) => b.id === equippedBorderId)?.name}
-              </p>
-              <p className="text-sm text-white/40">
-                {AVATAR_BORDERS.find((b) => b.id === equippedBorderId)?.description}
-              </p>
+              <p className="font-medium">{equippedBorder?.name}</p>
+              <p className="text-sm text-white/40">{equippedBorder?.description}</p>
             </div>
           </div>
         </div>
