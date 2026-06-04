@@ -8,10 +8,8 @@
 import { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useShallow } from 'zustand/react/shallow';
-import {
-  useCustomizationStore,
-  THEME_COLORS as themeColors,
-} from '@/modules/settings/store/customization';
+import { useCustomizationStore } from '@/modules/settings/store/customization';
+import { THEME_COLORS as themeColors } from '@/stores/theme';
 import { getThemeById } from '@/data/profileThemes';
 import { ProfileCardPreview } from './profile-card-preview';
 import { tweens, loop } from '@/lib/animation-presets';

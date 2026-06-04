@@ -5,7 +5,7 @@
 import { memo } from 'react';
 import { motion } from 'motion/react';
 
-import { THEME_COLORS as themeColors } from '@/modules/settings/store/customization';
+import { THEME_COLORS as themeColors } from '@/stores/theme';
 
 import { allThemes, colorPickerSizeConfig } from './constants';
 import type { ColorPickerGridProps } from './types';

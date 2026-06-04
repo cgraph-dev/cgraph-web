@@ -5,7 +5,7 @@
 import { memo } from 'react';
 import { motion } from 'motion/react';
 
-import { THEME_COLORS as themeColors } from '@/modules/settings/store/customization';
+import { THEME_COLORS as themeColors } from '@/stores/theme';
 
 import { speedOptions, sizeOptions } from './constants';
 import type { SpeedSelectorProps, SizeSelectorProps } from './types';

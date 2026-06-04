@@ -6,10 +6,8 @@
 
 import { memo } from 'react';
 import { ToggleRow, SectionHeader, OptionButton, PremiumBadge } from '../customization-ui';
-import {
-  useCustomizationStore,
-  THEME_COLORS as themeColors,
-} from '@/modules/settings/store/customization';
+import { useCustomizationStore } from '@/modules/settings/store/customization';
+import { THEME_COLORS as themeColors } from '@/stores/theme';
 import { profileStyles } from './profile-panel.constants';
 import { ProfileCardPreviewLarge } from './profile-card-preview';
 

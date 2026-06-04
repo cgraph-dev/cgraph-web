@@ -6,8 +6,8 @@ import { motion } from 'motion/react';
 import { springs } from '@/lib/animation-presets';
 import {
   useCustomizationStore,
-  THEME_COLORS as themeColors,
 } from '@/modules/settings/store/customization';
+import { THEME_COLORS as themeColors } from '@/stores/theme';
 
 interface ChatBubbleDemoProps {
   isOwn: boolean;

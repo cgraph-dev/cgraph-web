@@ -6,10 +6,8 @@
 
 import { memo } from 'react';
 import { ColorPickerGrid, SectionHeader } from '../customization-ui';
-import {
-  useCustomizationStore,
-  THEME_COLORS as themeColors,
-} from '@/modules/settings/store/customization';
+import { useCustomizationStore } from '@/modules/settings/store/customization';
+import { THEME_COLORS as themeColors } from '@/stores/theme';
 
 // THEME PANEL COMPONENT
 
