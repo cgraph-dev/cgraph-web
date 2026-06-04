@@ -227,15 +227,6 @@ export const THEME_COLORS: Record<ThemePreset, ThemeColors> = {
   arctic: THEME_COLOR_CATALOG.arctic,
 };
 
-export const RARITY_COLORS: Record<string, string> = {
-  Free: '#6b7280',
-  Common: '#9ca3af',
-  Rare: '#3b82f6',
-  Epic: '#8b5cf6',
-  Legendary: '#f97316',
-  Mythic: '#ec4899',
-};
-
 // DEFAULT STATE
 
 export const DEFAULT_STATE: CustomizationState = {

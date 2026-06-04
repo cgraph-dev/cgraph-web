@@ -38,7 +38,6 @@ export type {
 export {
   CUSTOMIZATION_THEME_PRESETS,
   THEME_COLORS,
-  RARITY_COLORS,
   DEFAULT_STATE,
 } from './customizationStore.types';
 
