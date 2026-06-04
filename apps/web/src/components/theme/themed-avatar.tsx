@@ -9,8 +9,9 @@ import { useThemeStore, THEME_COLORS } from '@/stores';
 import type { AvatarBorderType, EffectPreset, ThemeColorPreset, UserTheme } from '@/stores';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
 import type { AvatarBorderConfig } from '@/types/avatar-borders';
-import { AVATAR_BORDERS } from '@/data/avatar-borders';
+import { getBorderById } from '@/data/avatar-borders';
 import { tweens, loop } from '@/lib/animation-presets';
+import { getLegacyAvatarBorderAnimation } from './avatar-border-motion';
 
 interface ThemedAvatarProps {
   src?: string | null;
@@ -108,9 +109,9 @@ export function ThemedAvatar({
   // Prefer advanced avatar borders when provided (discord-style compatibility)
   const resolvedBorder: AvatarBorderConfig | undefined =
     avatarBorderConfig ||
-    (avatarBorderId ? AVATAR_BORDERS.find((border) => border.id === avatarBorderId) : undefined) ||
+    (avatarBorderId ? getBorderById(avatarBorderId) : undefined) ||
     (equippedBorder && typeof equippedBorder.id === 'string'
-      ? AVATAR_BORDERS.find((border) => border.id === equippedBorder.id)
+      ? getBorderById(equippedBorder.id)
       : undefined);
 
   if (resolvedBorder) {
@@ -129,85 +130,11 @@ export function ThemedAvatar({
     );
   }
 
-  // Determine border animation based on avatarBorder type
-  const getBorderAnimation = () => {
-    switch (theme.avatarBorder) {
-      case 'none':
-        return {};
-      case 'static':
-        return {
-          boxShadow: theme.glowEnabled ? `0 0 20px ${colors.glow}` : 'none',
-        };
-      case 'glow':
-        return {
-          boxShadow: [
-            `0 0 10px ${colors.glow}`,
-            `0 0 25px ${colors.glow}`,
-            `0 0 10px ${colors.glow}`,
-          ],
-        };
-      case 'pulse':
-        return {
-          boxShadow: [
-            `0 0 10px ${colors.glow}`,
-            `0 0 30px ${colors.glow}`,
-            `0 0 10px ${colors.glow}`,
-          ],
-          scale: [1, 1.05, 1],
-        };
-      case 'rotate':
-        return {
-          rotate: [0, 360],
-        };
-      case 'fire':
-        return {
-          boxShadow: [
-            `0 0 15px rgba(249, 115, 22, 0.6)`,
-            `0 0 30px rgba(249, 115, 22, 0.8)`,
-            `0 0 15px rgba(249, 115, 22, 0.6)`,
-          ],
-        };
-      case 'ice':
-        return {
-          boxShadow: [
-            `0 0 15px rgba(56, 189, 248, 0.6)`,
-            `0 0 30px rgba(56, 189, 248, 0.8)`,
-            `0 0 15px rgba(56, 189, 248, 0.6)`,
-          ],
-        };
-      case 'electric':
-        return {
-          boxShadow: [
-            `0 0 15px rgba(234, 179, 8, 0.6)`,
-            `0 0 35px rgba(234, 179, 8, 0.9)`,
-            `0 0 15px rgba(234, 179, 8, 0.6)`,
-          ],
-        };
-      case 'legendary':
-        return {
-          boxShadow: [
-            `0 0 20px ${colors.primary}, 0 0 40px ${colors.secondary}`,
-            `0 0 30px ${colors.primary}, 0 0 60px ${colors.secondary}`,
-            `0 0 20px ${colors.primary}, 0 0 40px ${colors.secondary}`,
-          ],
-          rotate: [0, 5, -5, 0],
-        };
-      case 'mythic':
-        return {
-          boxShadow: [
-            `0 0 25px ${colors.primary}, 0 0 50px ${colors.secondary}, inset 0 0 20px ${colors.glow}`,
-            `0 0 40px ${colors.primary}, 0 0 80px ${colors.secondary}, inset 0 0 30px ${colors.glow}`,
-            `0 0 25px ${colors.primary}, 0 0 50px ${colors.secondary}, inset 0 0 20px ${colors.glow}`,
-          ],
-          scale: [1, 1.08, 1],
-          rotate: [0, 360],
-        };
-      default:
-        return {};
-    }
-  };
-
-  const animation = getBorderAnimation();
+  const animation = getLegacyAvatarBorderAnimation({
+    border: theme.avatarBorder,
+    colors,
+    glowEnabled: theme.glowEnabled,
+  });
   const hasAnimation = Object.keys(animation).length > 0;
 
   return (
