@@ -509,6 +509,21 @@ budget with the largest JS chunk at 487.02 kB / 500 kB. This closes the consumer
 the inventory item package bump without closing final provider, future-client, physical cross-device,
 hosted Stripe, or Level 3 hardening work.
 
+2026-06-06 invite-join live route proof: production web commit
+`152d045c0188f0640f04b38f32ca4b8d8620b1e2` fixes the stale-membership-list race found by rerunning
+the broad Chromium route proof on the current `1.1.1` package build. When an invite join redirects
+to `/groups/:groupId/channels/:channelId`, `fetchGroups()` now preserves the active routed group
+already loaded from invite/detail state if a stale list response does not include it yet; the direct
+`fetchGroup(groupId)` call remains the canonical detail refresh. The new store regression test proves
+the active routed group is not dropped, focused invite browser proof passed 2 / 2, the rebuilt broad
+Chromium route proof passed 84 / 85 with 1 socket-harness-gated skip across auth/account, DM
+media/composer, Social main pane, settings sync, Nodes wallet/shop, group settings/scroll/entry/
+invites, owner UAT, and sidebar profile specs, and local proof also passed package guards, typecheck,
+lint, release gates with 409 files / 5,346 tests, and build budget with the largest JS chunk at
+487.19 kB / 500 kB. This closes the current local live-routed behavior sign-off without claiming real
+provider delivery, future native QR/mobile approval, physical cross-device lab validation, hosted
+Stripe settlement, or Level 3 hardening.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
 route/contract surface before any Level 3 work. The slice fixes the stale
@@ -1071,8 +1086,9 @@ Required implementation-time questions:
       `docs/SHARED-PACKAGES-AUDIT-AND-PROMOTION-PLAN.md`: phase 2, mobile re-sync from phase 5,
       phase 3, phase 4, remaining phase 5, then phase 6. Release PR #1 and PR #7 prove release-PR
       creation and publish for the `@cgraph-dev/api-client@1.0.2` and `@cgraph-dev/api-client@1.1.1`
-      plus `@cgraph-dev/shared-types@1.1.1` releases. Consumer adoption proof for the `1.1.1` bump
-      remains pending until valid private-scope npm read auth or a grouped consumer PR updates web.
+      plus `@cgraph-dev/shared-types@1.1.1` releases. Production web now proves valid private-scope
+      npm consumer adoption for the `1.1.1` bump; grouped consumer PR proof remains future automation
+      evidence for a later package bump.
 
 ## Execution Checklist
 
@@ -1357,6 +1373,12 @@ alone.
       the same proof standard.
 - [ ] Would a desktop or mobile team inherit a cleaner shared contract foundation after this work,
       rather than a web-specific mess?
-- [ ] Has the final state been verified in live routed behavior, not just code reads?
+- [x] Has the final state been verified in live routed behavior, not just code reads? Closed for the
+      current local Level 2 routed web surface by production web commit
+      `152d045c0188f0640f04b38f32ca4b8d8620b1e2`: focused invite proof passed 2 / 2 after fixing the
+      stale-membership-list race, the rebuilt broad Chromium route proof passed 84 / 85 with 1
+      socket-harness-gated skip, release gates passed 409 files / 5,346 tests, and build budget
+      passed. External/provider, physical cross-device, hosted Stripe, future native QR/mobile, and
+      Level 3 proof remain separate blockers.
 
 If any answer is "no", the web workstream is not 100% complete.

@@ -1117,6 +1117,20 @@ budget with the largest JS chunk at 487.02 kB / 500 kB. This keeps the strict sc
 it closes the consumer-adoption proof for this package bump, not final provider, future native/desktop,
 hosted payment, or Level 3 closure.
 
+2026-06-06 invite-join live route proof: production web commit
+`152d045c0188f0640f04b38f32ca4b8d8620b1e2` fixes a stale-membership-list race found by rerunning the
+current broad Chromium route proof after the private package adoption. After invite redemption
+redirects to `/groups/:groupId/channels/:channelId`, the group store now preserves the active routed
+group from invite/detail state if `/api/v1/groups` returns a stale list that does not include the
+joined group yet; the direct `fetchGroup(groupId)` request remains the canonical detail refresh.
+Focused invite proof passed 2 / 2, the rebuilt broad Chromium route proof passed 84 / 85 with 1
+socket-harness-gated skip across auth/account, DM media/composer, Social main pane, settings sync,
+Nodes wallet/shop, group settings/scroll/entry/invites, owner UAT, and sidebar profile specs, release
+gates passed with 409 files / 5,346 tests, and build budget passed with the largest JS chunk at
+487.19 kB / 500 kB. This closes the current local live-routed behavior sign-off, but keeps the strict
+score unchanged because real provider delivery, future native QR/mobile approval, physical
+cross-device validation, hosted Stripe settlement, and Level 3 hardening remain open.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
 truthful without starting Level 3. The live appearance preview now passes

@@ -46,31 +46,35 @@ Latest proof:
 
 - Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
 - Verified code commit:
-  `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c`
-- Date: `2026-06-05T04:23:57+03:00`
+  `152d045c0188f0640f04b38f32ca4b8d8620b1e2`
+- Date: `2026-06-06T01:44:06+03:00`
 - Commands:
+  - `pnpm check:packages`
   - `pnpm check:package-owner`
   - `pnpm --filter @cgraph/web typecheck`
   - `pnpm --filter @cgraph/web lint`
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web build:budget`
+  - focused Chromium route proof for `apps/web/e2e/group-invite-landing.spec.ts`
   - rebuilt Chromium route proof across auth/account, DM media/composer,
     Social main pane, settings sync, Nodes wallet/shop, group
     settings/scroll/entry/invites, owner UAT, and sidebar profile specs
-- Result: package-owner validation passed with exact published `@cgraph-dev/*`
+- Result: package and package-owner validation passed with exact published `@cgraph-dev/*`
   dependency pins; TypeScript typecheck and ESLint passed; `check:release-gates`
   passed customization Lottie asset validation for 51 assets, safe HTML,
   storage policy, import cycles, state-store cap at 40 / 40 create sites,
   background polling, auth-storage with 4 files / 87 tests, and the serial unit
-  suite with 409 files / 5,345 tests. `build:budget` passed after production
-  build; the largest JS chunk was `app-runtime-B5_S0Z3q.js` at 487.14 kB
+  suite with 409 files / 5,346 tests. `build:budget` passed after production
+  build; the largest JS chunk was `app-runtime-CDc9TujC.js` at 487.19 kB
   against the 500.00 kB cap, the charts chunk stayed at 471.17 kB against the
-  475.00 kB cap, and all required route lazy chunks were found. The rebuilt
-  Chromium route proof passed 85 / 86 tests with 1 socket-harness-gated skip.
-- Evidence class: current local web proof after the Level 2 route-stability
-  pass and Phase 5 avatar/customization adapter cleanup slice. This does not
-  close real provider delivery, physical cross-device validation, hosted Stripe
-  settlement, or Level 3 hardening.
+  475.00 kB cap, and all required route lazy chunks were found. The stale
+  invite-join membership-list race is fixed and covered by a store regression
+  test; focused invite browser proof passed 2 / 2, and the rebuilt Chromium
+  route proof passed 84 / 85 tests with 1 socket-harness-gated skip.
+- Evidence class: current local web proof after the private package adoption
+  and invite-join route-state fix. This does not close real provider delivery,
+  physical cross-device validation, hosted Stripe settlement, future native
+  QR/mobile approval, or Level 3 hardening.
 - Known non-blocking test output: deliberate error-boundary throw output still
   appears during the suite. It does not fail the release gate and remains test
   hygiene, not a release blocker.
@@ -417,6 +421,14 @@ Latest proof:
   npm read access, `pnpm install --frozen-lockfile`, package guards, typecheck,
   lint, release gates with 409 files / 5,345 tests, and build budget with the
   largest JS chunk at 487.02 kB / 500 kB.
+- 2026-06-06: production web commit
+  `152d045c0188f0640f04b38f32ca4b8d8620b1e2` preserves the active routed group
+  through stale `/api/v1/groups` list refreshes after invite joins, keeping the
+  redirected `/groups/:groupId/channels/:channelId` surface mounted while the
+  direct group-detail fetch remains canonical. Focused invite browser proof
+  passed 2 / 2, the broad Chromium route proof passed 84 / 85 with 1
+  socket-harness-gated skip, release gates passed 409 files / 5,346 tests, and
+  build budget passed with the largest JS chunk at 487.19 kB / 500 kB.
 - 2026-05-31: production web now ships every Lottie JSON file referenced by
   the shared customization catalog for badges, titles, display-name effects,
   and nameplates. `check:release-gates` now starts with
