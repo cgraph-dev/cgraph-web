@@ -45,6 +45,34 @@ pnpm --filter @cgraph/web check:release-gates
 Latest proof:
 
 - Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
+- Verified code commit:
+  `0cb0df14fbc062380e20a80605f7478bdcd083cc`
+- Date: `2026-06-05T03:38:18+03:00`
+- Commands:
+  - `pnpm check:package-owner`
+  - `pnpm --filter @cgraph/web typecheck`
+  - `pnpm --filter @cgraph/web lint`
+  - `pnpm --filter @cgraph/web check:release-gates`
+  - `pnpm --filter @cgraph/web build:budget`
+- Result: package-owner validation passed with exact published `@cgraph-dev/*`
+  dependency pins; TypeScript typecheck and ESLint passed; `check:release-gates`
+  passed customization Lottie asset validation for 51 assets, safe HTML,
+  storage policy, import cycles, state-store cap at 40 / 40 create sites,
+  background polling, auth-storage with 4 files / 87 tests, and the serial unit
+  suite with 409 files / 5,345 tests. `build:budget` passed after production
+  build; the largest JS chunk was `app-runtime-B5_S0Z3q.js` at 487.14 kB
+  against the 500.00 kB cap, the charts chunk stayed at 471.17 kB against the
+  475.00 kB cap, and all required route lazy chunks were found.
+- Evidence class: current local web proof after the Phase 5 avatar/customization
+  adapter cleanup slice. This does not close real provider delivery, physical
+  cross-device validation, hosted Stripe settlement, or Level 3 hardening.
+- Known non-blocking test output: deliberate error-boundary throw output still
+  appears during the suite. It does not fail the release gate and remains test
+  hygiene, not a release blocker.
+
+Previous published-package baseline:
+
+- Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
 - Verified commit:
   `cd81332c14ecd5139b018399b8a170eaa4a8a90f`
 - Date: `2026-05-31T02:40:03+03:00`

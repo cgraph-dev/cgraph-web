@@ -1053,6 +1053,28 @@ gates with 407 files / 5,335 tests, and bundle budgets at 484.25 kB / 500 kB
 all passed. This narrows the web-adapter cleanup layer while keeping the strict
 score unchanged.
 
+2026-06-05 avatar/customization adapter proof refresh: production web commits
+`8656b37eecde107eb5cdf2ad416aa49c0e12fa29`,
+`3d1d5cca789a8f98e0e0ef36424f01a61325ef61`,
+`1877b4cda253c3a3239f64eadbe5ea5bdb0a6e11`,
+`a8cd8290dfa8d3238679459be04f482c35b7d7f5`,
+`2e6346eb2551d85d38c15f48a6ce7e54509def81`,
+`0ed5ce93bb43f8fb00146507cef1e057eda88bb1`, and
+`0cb0df14fbc062380e20a80605f7478bdcd083cc` finish the current Phase 5
+avatar/customization adapter cleanup slice without starting Level 3. Avatar-border display
+semantics now flow through `@cgraph-dev/animation-constants` and
+`apps/web/src/data/avatar-borders.ts`; theme-store avatar-border validation uses the web
+avatar-border adapter; legacy avatar-border Motion mapping sits in
+`apps/web/src/components/theme/avatar-border-motion.ts`; remaining equipped-border single-item
+lookups use `getBorderById(...)`; customization-panel color display reads use
+`apps/web/src/stores/theme.THEME_COLORS`; the customization store derives its legacy `THEME_COLORS`
+compatibility export from `stores/theme/presets.COLORS`; and the unused customization-store
+`RARITY_COLORS` compatibility export is removed. Local proof for the final slice passed focused
+customization store tests with 1 file / 42 tests, package-owner guard, typecheck, lint, and release
+gates with 409 files / 5,345 tests. This keeps the strict score unchanged because final owner
+signoff, real provider delivery, physical cross-device validation, hosted Stripe settlement, and
+future-client runtime proof remain open.
+
 2026-06-02 badge/title display adapter ownership proof: production web moves
 badge/title display-data resolution from the settings customization store
 mapping barrel to `shared/components/ui/cosmetic-display.ts`, so inline title,

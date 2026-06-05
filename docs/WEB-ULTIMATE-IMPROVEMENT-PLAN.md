@@ -170,8 +170,10 @@ inspection on `feat/cloud-chat-tier`.
      `packages/shared-types/src/settings.ts` now owns runtime-neutral user setting types and
      defaults. The settings route now gates section panels until bootstrap readiness is fulfilled,
      Calls/Stickers reset now saves through `/api/v1/settings` with rollback proof, and
-     customization/theme server patches now sync through backend user-channel events. Remaining work
-     is routed multi-tab/device browser proof.
+     customization/theme server patches now sync through backend user-channel events. Theme/color
+     display metadata now flows through theme/catalog adapters instead of settings-local
+     customization tables. Remaining work is physical multi-device proof and broader final browser
+     coverage.
 
 6. **Make customization inventory server-owned end-to-end**
    - **What:** Keep static metadata only for presentation, while ownership and equipped state come
@@ -189,8 +191,10 @@ inspection on `feat/cloud-chat-tier`.
      rejects unowned border/title/badge/nameplate customization saves. The profile-card renderer now
      derives its accent/banner/surface tokens from the shared static profile-theme catalog, and the
      settings application/live-preview path now derives profile-theme CSS variables and color/preset
-     mappings from the same shared catalog instead of legacy web-only theme aliases. Remaining
-     cosmetic work is final cross-surface browser proof and broader live/provider release
+     mappings from the same shared catalog instead of legacy web-only theme aliases. Avatar-border
+     display semantics, validation, motion, and equipped-border lookups now route through shared
+     catalog/web adapter helpers, and stale customization-store rarity metadata exports are removed.
+     Remaining cosmetic work is final cross-surface browser proof and broader live/provider release
      validation.
 
 Owner direction recorded on 2026-05-15: customization inventory and equipped state must be fully

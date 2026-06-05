@@ -363,6 +363,91 @@ chunk. This narrows the Phase 5 web-adapter cleanup work without claiming final
 provider, future native QR, physical cross-device closure, or hosted Stripe
 settlement/webhooks.
 
+2026-06-04 avatar-border display semantics ownership proof: production web commit
+`8656b37eecde107eb5cdf2ad416aa49c0e12fa29` makes web avatar-border compatibility types alias
+`@cgraph-dev/animation-constants` `AvatarBorderType`, deletes the settings-store local
+`AVATAR_BORDERS` metadata table, and moves identity customization equip/hydrate from a hand-written
+legacy animation-to-border map to `apps/web/src/data/avatar-borders.ts` via
+`getAvatarBorderDisplayTypeById(...)`. Routed identity customization now keeps the catalog border ID
+as the selected/equipped truth and records `lottie` as the shared display family for current Lottie
+borders instead of translating catalog borders through CSS-style names. Verified with focused
+avatar/settings tests covering 45 tests across 2 files, package-owner guard, typecheck, lint, and
+release gates with 408 files / 5,340 tests. This narrows the Phase 5 web-adapter cleanup work
+without claiming final store migration, final provider, future native QR, physical cross-device
+closure, or hosted Stripe settlement.
+
+2026-06-04 avatar-border theme-store validation proof: production web commit
+`3d1d5cca789a8f98e0e0ef36424f01a61325ef61` makes the legacy theme store `AvatarBorderType` alias the
+shared `@cgraph-dev/animation-constants` type, removes its local avatar-border allowlist, and routes
+server-theme avatar-border validation through `apps/web/src/data/avatar-borders.ts` via
+`isAvatarBorderDisplayType(...)`. This keeps legacy CSS display values compatible while allowing the
+shared `lottie` display family from the avatar-border catalog through both server hydration and
+legacy setter paths. Verified with focused theme/customization/avatar tests covering 113 tests
+across 3 files, package-owner guard, typecheck, lint, and release gates with 408 files / 5,342
+tests. This narrows the Phase 5 web-adapter cleanup work without claiming final store migration,
+final provider, future native QR, physical cross-device closure, or hosted Stripe settlement.
+
+2026-06-04 avatar-border motion adapter proof: production web commit
+`1877b4cda253c3a3239f64eadbe5ea5bdb0a6e11` moves the legacy avatar-border Motion animation switch
+out of `apps/web/src/components/theme/themed-avatar.tsx` and into
+`apps/web/src/components/theme/avatar-border-motion.ts`, adds focused adapter tests, and makes
+`ThemedAvatar` resolve shared avatar-border catalog entries through
+`apps/web/src/data/avatar-borders.ts` `getBorderById(...)` instead of local array searches. This
+keeps browser-only legacy motion behavior isolated in a renderer adapter while the component
+consumes the same catalog helper used by other profile/avatar surfaces. Verified with focused
+theme/customization/avatar tests covering 113 tests across 3 files, package-owner guard, typecheck,
+lint, and release gates with 409 files / 5,345 tests. This narrows the Phase 5 web-adapter cleanup
+work without claiming final store migration, final provider, future native QR, physical cross-device
+closure, or hosted Stripe settlement.
+
+2026-06-04 avatar-border catalog lookup proof: production web commit
+`a8cd8290dfa8d3238679459be04f482c35b7d7f5` moves the remaining equipped-border profile/settings
+single-item catalog lookups from direct `AVATAR_BORDERS.find(...)` calls to
+`apps/web/src/data/avatar-borders.ts` `getBorderById(...)`. The settings avatar-border section still
+uses `AVATAR_BORDERS` for the full filterable catalog list, but equipped preview and profile-card
+avatar rendering now resolve catalog entries through the shared web adapter helper. Source search
+found no remaining `AVATAR_BORDERS.find(...)` or `ALL_BORDERS.find(...)` calls under `apps/web/src`.
+Verified with focused profile-card tests covering 2 tests across 1 file, package-owner guard,
+typecheck, lint, and release gates with 409 files / 5,345 tests. This narrows the Phase 5
+web-adapter cleanup work without claiming final store migration, final provider, future native QR,
+physical cross-device closure, or hosted Stripe settlement.
+
+2026-06-04 customization UI color-catalog proof: production web commit
+`2e6346eb2551d85d38c15f48a6ce7e54509def81` routes customization-panel color display metadata through
+`apps/web/src/stores/theme` `THEME_COLORS` instead of the customization store barrel. This covers
+the live preview, theme/profile panels, chat bubble demo, color picker, sliders, tabs, size/speed
+selectors, and option buttons while leaving selected `themePreset` orchestration in the
+customization store. Source search found no remaining `THEME_COLORS as themeColors`
+customization-panel imports from `modules/settings/store/customization`. Verified with focused
+customization store tests covering 42 tests across 1 file, package-owner guard, typecheck, lint, and
+release gates with 409 files / 5,345 tests. This narrows the Phase 5 web-adapter cleanup work
+without claiming final store migration, final provider, future native QR, physical cross-device
+closure, or hosted Stripe settlement.
+
+2026-06-04 customization theme-color catalog proof: production web commit
+`0ed5ce93bb43f8fb00146507cef1e057eda88bb1` removes the duplicated hard-coded customization-store
+theme color values and derives the legacy `THEME_COLORS` export from
+`apps/web/src/stores/theme/presets.ts` `COLORS`. The customization store now owns only the explicit
+`CUSTOMIZATION_THEME_PRESETS` allowed state set for app/chat/avatar color selections, and
+customization UI iteration consumes that same list instead of a second hard-coded array. Source
+search found no remaining hard-coded emerald color values in the customization store path. Verified
+with focused profile-card mock regression tests covering 12 tests across 1 file, focused
+customization store tests covering 42 tests across 1 file, package-owner guard, typecheck, lint, and
+release gates with 409 files / 5,345 tests. This narrows the Phase 5 web-adapter cleanup work
+without claiming final store migration, final provider, future native QR, physical cross-device
+closure, or hosted Stripe settlement.
+
+2026-06-05 customization rarity export cleanup proof: production web commit
+`0cb0df14fbc062380e20a80605f7478bdcd083cc` removes the unused `RARITY_COLORS` compatibility export
+from `apps/web/src/modules/settings/store/customization/customizationStore.types.ts` and the
+customization store barrels. Source search found no customization-store rarity color consumers;
+remaining rarity color maps stay in renderer/data-specific adapters such as avatar-border, title,
+nameplate, and cosmetics-settings surfaces. Verified with focused customization store tests covering
+42 tests across 1 file, package-owner guard, typecheck, lint, and release gates with 409 files /
+5,345 tests. This narrows the Phase 5 web-adapter cleanup work without claiming final store
+migration, final provider, future native QR, physical cross-device closure, or hosted Stripe
+settlement.
+
 2026-06-02 badge/title display adapter ownership proof: production web moves
 badge and title display-data resolution out of the settings customization store
 mapping barrel and into the shared UI adapter at

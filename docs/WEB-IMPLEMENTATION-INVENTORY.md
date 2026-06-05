@@ -46,6 +46,11 @@ missing:
 - Routed identity/cosmetic live updates are browser-proven in `apps/web/e2e/web-owner-uat.spec.ts`:
   `friend_customization_changed` now reaches one selective friend/chat identity owner, and the
   routed DM surface renders the updated avatar border plus title without reload.
+- Avatar/customization adapter ownership is source- and gate-proven for the current Phase 5 slice:
+  avatar-border display semantics, theme-store avatar-border validation, legacy avatar-border Motion
+  mapping, equipped-border catalog lookups, customization color display reads, customization
+  theme-color compatibility, and stale customization-store rarity exports now sit in renderer,
+  theme, or catalog adapters instead of settings-local metadata tables.
 - Routed group GIF, sticker, and voice-note sends are browser-proven in
   `apps/web/e2e/web-owner-uat.spec.ts`: the live group composer sends structured rich-message
   payloads through the channel message endpoint and uploads channel voice notes through

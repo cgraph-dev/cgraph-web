@@ -112,6 +112,14 @@ backend inventory response exposes catalog keys, and customization saves reject 
 title, badge, and nameplate values. Remaining cosmetic risk is broader settings/theme/customization
 multi-tab/device validation plus badge/nameplate proof beyond the routed DM owner UAT.
 
+2026-06-05 update: the current avatar/customization adapter cleanup slice removes additional
+settings-local drift without claiming Level 3. Avatar-border display semantics and validation now
+flow through the shared animation catalog and the web avatar-border adapter, legacy avatar-border
+Motion behavior sits in `apps/web/src/components/theme/avatar-border-motion.ts`, equipped-border
+single-item reads use `getBorderById(...)`, customization-panel color display reads use the theme
+store catalog, the customization store derives its legacy theme-color compatibility export from
+`stores/theme/presets.COLORS`, and the stale customization-store `RARITY_COLORS` export is gone.
+
 2026-05-15 update: `UserProfileCard` no longer renders the default placeholder user when callers
 only pass `userId`. The card fetches `/api/v1/users/:id`, maps the response through canonical
 identity fields, and focused component tests cover both backend hydration and provided-user paths.
@@ -236,7 +244,9 @@ on the routed DM surface.
 6. **Make customization inventory server-owned end-to-end** — Closed for the routed identity
    customization surface. Static `ALL_BORDERS`, `ALL_TITLES`, and `ALL_BADGES` remain presentation
    metadata only; unlock/equipped truth now comes from backend inventory and the backend rejects
-   unowned saves. Broader settings/theme/customization orchestration remains separate.
+   unowned saves. The current adapter cleanup keeps rarity, color, avatar-border display, motion,
+   and catalog lookup concerns in renderer/theme/catalog adapters rather than the customization
+   store. Broader settings/theme/customization orchestration remains separate.
 
 7. **Lock in behavior with focused web UAT and regression tests** — Partial. A focused owner UAT
    browser smoke now covers auth, DMs, group text send, Social discover, settings, Nodes wallet,
