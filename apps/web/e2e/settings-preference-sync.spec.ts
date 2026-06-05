@@ -479,6 +479,16 @@ async function readRuntimeDebug(page: Page): Promise<Record<string, unknown>> {
   });
 }
 
+async function waitForPreferenceSyncReady(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    return (
+      window as Window & {
+        __CGRAPH_E2E_PREFERENCE_SYNC_READY__?: boolean;
+      }
+    ).__CGRAPH_E2E_PREFERENCE_SYNC_READY__;
+  });
+}
+
 test.describe('Settings preference sync', () => {
   test.describe.configure({ mode: 'serial' });
 
@@ -516,6 +526,8 @@ test.describe('Settings preference sync', () => {
     await expect(messageRequests).toHaveValue('contacts');
     await expect(onlineStatus).toHaveValue('nobody');
     await expect(groupInvites).toHaveValue('friends');
+
+    await waitForPreferenceSyncReady(page);
 
     await page.evaluate(() => {
       window.dispatchEvent(
@@ -566,6 +578,8 @@ test.describe('Settings preference sync', () => {
     await expect(page.locator('html')).toHaveClass(/theme-aurora/);
     await expect(page.locator('[data-profile-theme-id="signal-noir"]').first()).toBeVisible();
 
+    await waitForPreferenceSyncReady(page);
+
     await page.evaluate(() => {
       window.dispatchEvent(
         new CustomEvent('cgraph:e2e-preference-sync', {
@@ -586,6 +600,8 @@ test.describe('Settings preference sync', () => {
     await expect(page.locator('[data-profile-theme-id="aurora-glass"]').first()).toBeVisible();
     await expect(page.locator('[data-nameplate-id="plate_aurora"]').first()).toBeVisible();
     await expect(page.locator('[data-display-name-effect="neon"]').first()).toBeVisible();
+
+    await waitForPreferenceSyncReady(page);
 
     await page.evaluate(() => {
       window.dispatchEvent(
@@ -835,6 +851,7 @@ Diagnostics: ${JSON.stringify(diagnostics)}`);
       };
 
       for (const targetPage of [page, secondProfile]) {
+        await waitForPreferenceSyncReady(targetPage);
         await targetPage.evaluate((detail) => {
           window.dispatchEvent(new CustomEvent('cgraph:e2e-preference-sync', { detail }));
         }, syncPayload);

@@ -73,7 +73,7 @@ async function installInviteMocks(page: Page) {
           creator_username: 'owner',
           uses: 4,
           max_uses: 5,
-          expires_at: '2026-06-01T00:00:00.000Z',
+          expires_at: '2026-12-01T00:00:00.000Z',
           group,
         },
       });

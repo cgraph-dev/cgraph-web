@@ -1637,7 +1637,7 @@ test.describe('Group settings permissions', () => {
     await expect
       .poll(() => requests.memberMutes, { message: 'member mute reached backend' })
       .toContain('member-friend');
-    await expect(page.getByText('muted')).toBeVisible();
+    await expect(page.getByText('muted', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
     await page.getByRole('button', { name: /^Unmute$/ }).click();
@@ -1645,7 +1645,7 @@ test.describe('Group settings permissions', () => {
     await expect
       .poll(() => requests.memberUnmutes, { message: 'member unmute reached backend' })
       .toContain('member-friend');
-    await expect(page.getByText('muted')).toHaveCount(0);
+    await expect(page.getByText('muted', { exact: true })).toHaveCount(0);
   });
 
   test('reconciles successful member kick on the routed members tab', async ({ page }) => {

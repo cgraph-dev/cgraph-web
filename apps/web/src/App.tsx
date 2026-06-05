@@ -56,6 +56,12 @@ const PushNotificationPrompt = lazy(() =>
 
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 
+declare global {
+  interface Window {
+    __CGRAPH_E2E_PREFERENCE_SYNC_READY__?: boolean;
+  }
+}
+
 // Initialize error tracking on module load
 initErrorTracking();
 reportWebVitals();
@@ -159,6 +165,8 @@ export default function App() {
   useEffect(() => {
     if (!isE2EAuthBypass) return undefined;
 
+    window.__CGRAPH_E2E_PREFERENCE_SYNC_READY__ = false;
+
     const handlePreferenceSync = (event: Event) => {
       if (!(event instanceof CustomEvent) || !isRecord(event.detail)) return;
 
@@ -201,7 +209,13 @@ export default function App() {
     };
 
     window.addEventListener('cgraph:e2e-preference-sync', handlePreferenceSync);
-    return () => window.removeEventListener('cgraph:e2e-preference-sync', handlePreferenceSync);
+    window.__CGRAPH_E2E_PREFERENCE_SYNC_READY__ = true;
+    window.dispatchEvent(new Event('cgraph:e2e-preference-sync-ready'));
+
+    return () => {
+      window.removeEventListener('cgraph:e2e-preference-sync', handlePreferenceSync);
+      window.__CGRAPH_E2E_PREFERENCE_SYNC_READY__ = false;
+    };
   }, []);
 
   return (

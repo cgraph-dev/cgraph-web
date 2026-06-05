@@ -16,7 +16,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import {
+  NAME_FONTS,
   getNameplateById,
+  type NameFont,
   type NameplateEntry,
   type NameplateBorderStyle,
   type NameplateTextEffect,
@@ -35,7 +37,96 @@ export interface NameplateBarProps {
   height?: number;
   /** Actual username to display inside the nameplate. */
   username?: string;
+  /** Optional user-selected display name font override. */
+  displayNameFont?: string;
+  /** Optional user-selected display name effect override. */
+  displayNameEffect?: string;
+  /** Optional user-selected display name color override. */
+  displayNameColor?: string;
+  /** Optional user-selected secondary display name color override. */
+  displayNameSecondaryColor?: string | null;
 }
+
+const textEffectReset: React.CSSProperties = {
+  animation: undefined,
+  background: undefined,
+  backgroundClip: undefined,
+  backgroundSize: undefined,
+  filter: undefined,
+  textShadow: undefined,
+  WebkitBackgroundClip: undefined,
+  WebkitTextFillColor: undefined,
+};
+
+function isNameFont(value: string | undefined): value is NameFont {
+  return Boolean(value && value in NAME_FONTS);
+}
+
+function getDisplayNameOverrideStyles({
+  font,
+  effect,
+  color,
+  secondaryColor,
+}: {
+  font?: string;
+  effect?: string;
+  color?: string;
+  secondaryColor?: string | null;
+}): React.CSSProperties | null {
+  const hasFontOverride = isNameFont(font) && font !== 'default';
+  const hasEffectOverride = Boolean(effect && effect !== 'solid');
+  const hasColorOverride = Boolean(color);
+
+  if (!hasFontOverride && !hasEffectOverride && !hasColorOverride) {
+    return null;
+  }
+
+  const primary = color ?? '#ffffff';
+  const secondary = secondaryColor ?? primary;
+  const style: React.CSSProperties = { ...textEffectReset };
+
+  if (hasFontOverride) {
+    const fontConfig = NAME_FONTS[font];
+    style.fontFamily = fontConfig.fontFamily;
+    style.fontWeight = fontConfig.fontWeight;
+    style.fontStyle = fontConfig.fontStyle;
+    style.letterSpacing =
+      fontConfig.letterSpacing != null ? `${fontConfig.letterSpacing}px` : undefined;
+  }
+
+  switch (effect) {
+    case 'gradient':
+      return {
+        ...style,
+        background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+      };
+    case 'neon':
+      return {
+        ...style,
+        color: primary,
+        textShadow: `0 0 7px ${primary}, 0 0 10px ${primary}, 0 0 21px ${primary}, 0 0 42px ${secondary}`,
+      };
+    case 'toon':
+      return {
+        ...style,
+        color: primary,
+        WebkitTextStroke: '1px rgba(0,0,0,0.6)',
+        textShadow: '2px 2px 0 rgba(0,0,0,0.3)',
+      };
+    case 'pop':
+      return {
+        ...style,
+        color: primary,
+        textShadow: `3px 3px 0 ${secondary}, -1px -1px 0 rgba(0,0,0,0.2)`,
+      };
+    default:
+      return hasColorOverride ? { ...style, color: primary } : style;
+  }
+}
+
 /** Resolve border CSS for the given border style. */
 function resolveBorderStyle(
   style: NameplateBorderStyle,
@@ -174,6 +265,10 @@ export const NameplateBar = memo(function NameplateBar({
   width = BAR_WIDTH,
   height = BAR_HEIGHT,
   username,
+  displayNameFont,
+  displayNameEffect,
+  displayNameColor,
+  displayNameSecondaryColor,
 }: NameplateBarProps) {
   const prefersReducedMotion = useReducedMotion();
 
@@ -187,11 +282,13 @@ export const NameplateBar = memo(function NameplateBar({
   }
 
   const borderStyles = resolveBorderStyle(entry.borderStyle, entry.borderColor);
-  const textStyles = resolveTextEffectStyle(
-    entry.textEffect,
-    entry.textColor,
-    entry.textColorSecondary
-  );
+  const textStyles =
+    getDisplayNameOverrideStyles({
+      font: displayNameFont,
+      effect: displayNameEffect,
+      color: displayNameColor,
+      secondaryColor: displayNameSecondaryColor,
+    }) ?? resolveTextEffectStyle(entry.textEffect, entry.textColor, entry.textColorSecondary);
 
   // Animated border rotation for 'animated' border style
   const animatedBorderProps =
@@ -225,6 +322,8 @@ export const NameplateBar = memo(function NameplateBar({
         transition={{ duration: 0.35, ease: 'easeOut' }}
         role="img"
         aria-label={`${entry.name} nameplate`}
+        data-nameplate-id={entry.id}
+        data-display-name-effect={displayNameEffect ?? undefined}
         {...animatedBorderProps}
       >
         {/* Layer 1: CSS gradient background (always renders as fallback) */}

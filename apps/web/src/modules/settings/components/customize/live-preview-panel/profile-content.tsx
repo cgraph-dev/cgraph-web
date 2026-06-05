@@ -193,6 +193,10 @@ export function ProfileContent({
             <NameplateBar
               nameplateId={settings.equippedNameplate}
               username={displayName}
+              displayNameFont={settings.displayNameFont}
+              displayNameEffect={settings.displayNameEffect}
+              displayNameColor={settings.displayNameColor}
+              displayNameSecondaryColor={settings.displayNameSecondaryColor}
               width={240}
               height={36}
             />
