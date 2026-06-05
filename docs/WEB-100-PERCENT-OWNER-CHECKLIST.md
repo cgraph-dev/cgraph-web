@@ -458,6 +458,16 @@ nameplate, and cosmetics-settings surfaces. Verified with focused customization 
 migration, final provider, future native QR, physical cross-device closure, or hosted Stripe
 settlement.
 
+2026-06-05 identity-customization shared rarity proof: production web commit
+`b155f93dac4294300c2f0533f2327afe31d0b587` makes the identity-customization `Rarity`
+type alias the package-owned `@cgraph-dev/shared-types` `RarityTier`, derives the routed
+customization rarity filter labels and color classes from `@cgraph-dev/shared-types/rarity`, and
+makes the cosmetics API adapter validate backend rarity values against shared `RARITY_TIERS` instead
+of a web-local list. Verified with package-owner guard, typecheck, lint, and focused cosmetics API
+plus rarity-badge tests covering 18 tests across 2 files. This narrows the Phase 1 shared-contract
+owner follow-up without closing the broader backend/package final-behavior, future-client runtime,
+provider, physical cross-device, or hosted Stripe settlement proof.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
 route/contract surface before any Level 3 work. The slice fixes the stale

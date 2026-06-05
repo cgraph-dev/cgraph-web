@@ -1075,6 +1075,14 @@ gates with 409 files / 5,345 tests. This keeps the strict score unchanged becaus
 signoff, real provider delivery, physical cross-device validation, hosted Stripe settlement, and
 future-client runtime proof remain open.
 
+2026-06-05 shared rarity contract follow-up: production web commit
+`b155f93dac4294300c2f0533f2327afe31d0b587` removes the identity-customization route's local rarity
+union/list/color owner by aliasing `Rarity` to package `RarityTier`, deriving the routed rarity
+filter from `@cgraph-dev/shared-types/rarity`, and making `cosmetics-api.ts` validate against shared
+`RARITY_TIERS`. Package-owner guard, typecheck, lint, and focused cosmetics API plus rarity-badge
+tests passed with 2 files / 18 tests. This keeps the strict score unchanged; it is a truthful
+Phase 1 shared-contract cleanup, not Level 3 hardening or final future-client proof.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
 truthful without starting Level 3. The live appearance preview now passes
