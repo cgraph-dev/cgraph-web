@@ -1270,14 +1270,23 @@ After every implementation slice, update docs in this exact order:
 
 ## Final Owner Sign-Off Questions
 
-Current sign-off state: 0 / 6 final questions closed. Do not call the workstream complete until the
+Current sign-off state: 3 / 6 final questions closed. Do not call the workstream complete until the
 owner can answer "yes" to every question below, and do not check these boxes from source inspection
 alone.
 
-- [ ] Can a user navigate every in-scope routed messaging, hub, and social surface without landing
-      on a blank, partial, or semantically wrong destination?
-- [ ] Are all in-scope routed controls real?
-- [ ] Does the web app use one truthful identity, settings, and customization model?
+- [x] Can a user navigate every in-scope routed messaging, hub, and social surface without landing
+      on a blank, partial, or semantically wrong destination? Closed for the current web scope by
+      the 2026-06-05 rebuilt Chromium Level 2 route proof, previous broadcasts/spaces/vault browser
+      proofs, route-inventory guard, and support-matrix no-overclaim pass. Mobile/desktop-only
+      surfaces remain explicitly out of current web scope.
+- [x] Are all in-scope routed controls real? Closed for current web-routed controls by focused
+      browser proof for the previously fake/partial DM, group, social, settings, Nodes, calls,
+      broadcasts, spaces, and vault controls. External provider actions stay hidden or gated until
+      their backend/provider owners are ready.
+- [x] Does the web app use one truthful identity, settings, and customization model? Closed for the
+      audited web surfaces by the shared identity/settings/customization owner work, backend-shaped
+      socket/store proofs, sidebar/public-profile proof, and the 2026-06-05 live appearance
+      preference-sync proof.
 - [ ] Are the backend contracts and shared package contracts aligned with the final web behavior?
 - [ ] Would a desktop or mobile team inherit a cleaner shared contract foundation after this work,
       rather than a web-specific mess?
