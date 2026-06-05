@@ -46,14 +46,17 @@ Latest proof:
 
 - Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
 - Verified code commit:
-  `0cb0df14fbc062380e20a80605f7478bdcd083cc`
-- Date: `2026-06-05T03:38:18+03:00`
+  `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c`
+- Date: `2026-06-05T04:23:57+03:00`
 - Commands:
   - `pnpm check:package-owner`
   - `pnpm --filter @cgraph/web typecheck`
   - `pnpm --filter @cgraph/web lint`
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web build:budget`
+  - rebuilt Chromium route proof across auth/account, DM media/composer,
+    Social main pane, settings sync, Nodes wallet/shop, group
+    settings/scroll/entry/invites, owner UAT, and sidebar profile specs
 - Result: package-owner validation passed with exact published `@cgraph-dev/*`
   dependency pins; TypeScript typecheck and ESLint passed; `check:release-gates`
   passed customization Lottie asset validation for 51 assets, safe HTML,
@@ -62,10 +65,12 @@ Latest proof:
   suite with 409 files / 5,345 tests. `build:budget` passed after production
   build; the largest JS chunk was `app-runtime-B5_S0Z3q.js` at 487.14 kB
   against the 500.00 kB cap, the charts chunk stayed at 471.17 kB against the
-  475.00 kB cap, and all required route lazy chunks were found.
-- Evidence class: current local web proof after the Phase 5 avatar/customization
-  adapter cleanup slice. This does not close real provider delivery, physical
-  cross-device validation, hosted Stripe settlement, or Level 3 hardening.
+  475.00 kB cap, and all required route lazy chunks were found. The rebuilt
+  Chromium route proof passed 85 / 86 tests with 1 socket-harness-gated skip.
+- Evidence class: current local web proof after the Level 2 route-stability
+  pass and Phase 5 avatar/customization adapter cleanup slice. This does not
+  close real provider delivery, physical cross-device validation, hosted Stripe
+  settlement, or Level 3 hardening.
 - Known non-blocking test output: deliberate error-boundary throw output still
   appears during the suite. It does not fail the release gate and remains test
   hygiene, not a release blocker.

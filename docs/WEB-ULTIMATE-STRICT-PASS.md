@@ -1075,6 +1075,26 @@ gates with 409 files / 5,345 tests. This keeps the strict score unchanged becaus
 signoff, real provider delivery, physical cross-device validation, hosted Stripe settlement, and
 future-client runtime proof remain open.
 
+2026-06-05 Level 2 route-stability proof: production web commit
+`97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
+truthful without starting Level 3. The live appearance preview now passes
+profile nameplate, display-name font/effect/color, and `data-nameplate-id` /
+`data-display-name-effect` semantics through `NameplateBar`; the E2E
+preference-sync hook exposes an auth-bypass-only readiness flag before tests
+dispatch server-shaped sync events; the group invite fixture uses a future valid
+expiry; and the member mute/unmute proof targets the exact muted badge instead
+of matching dialog helper copy. Focused proof passed the settings sync spec
+with 7 / 8 passed and 1 socket-harness-gated skip, the focused member
+mute/unmute proof passed 2 / 2, and the rebuilt Chromium Level 2 route proof
+passed 85 / 86 with 1 socket-harness-gated skip across auth/account, DM
+media/composer, Social main pane, settings sync, Nodes wallet/shop, group
+settings/scroll/entry/invites, owner UAT, and sidebar profile specs.
+Package-owner guard, typecheck, lint, release gates with 409 files / 5,345
+tests, and bundle budget all passed. This refreshes the Level 2 closure filter
+only; real provider delivery, future native QR/mobile approval, physical
+cross-device lab validation, hosted Stripe settlement, and Level 3 hardening
+remain open.
+
 2026-06-02 badge/title display adapter ownership proof: production web moves
 badge/title display-data resolution from the settings customization store
 mapping barrel to `shared/components/ui/cosmetic-display.ts`, so inline title,

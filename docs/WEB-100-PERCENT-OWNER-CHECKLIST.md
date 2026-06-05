@@ -208,6 +208,16 @@ closes the checklist layer's local broad route/contract browser pass, while real
 delivery, future paired QR/mobile approval after native mobile exists, physical cross-device sync, and hosted Stripe
 settlement/webhooks remain strict-release sign-off work.
 
+2026-06-05 combined Level 2 route-stability proof: production web commit
+`97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` passed the rebuilt Chromium route
+proof at 85 / 86 with 1 socket-harness-gated skip across the same broad route
+surface plus the newer sidebar profile and settings sync coverage. This keeps
+the checklist layer current after the Phase 5 avatar/customization adapter
+cleanup and route-proof stabilization, while real external provider delivery,
+future paired QR/mobile approval after native mobile exists, physical
+cross-device sync, hosted Stripe settlement/webhooks, and Level 3 hardening
+remain strict-release sign-off work.
+
 2026-05-30 release-hardening refresh after recovery: production web commit
 `b7f39b5271a19b56677387d22eac3266cef7d732` passed the full local release gate
 (`pnpm --filter @cgraph/web check:release-gates`) with 400 Vitest files and
@@ -447,6 +457,22 @@ nameplate, and cosmetics-settings surfaces. Verified with focused customization 
 5,345 tests. This narrows the Phase 5 web-adapter cleanup work without claiming final store
 migration, final provider, future native QR, physical cross-device closure, or hosted Stripe
 settlement.
+
+2026-06-05 Level 2 route-stability proof: production web commit
+`97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
+route/contract surface before any Level 3 work. The slice fixes the stale
+valid-invite fixture, gives the E2E preference-sync listener an auth-bypass-only
+readiness flag, carries live appearance nameplate/display-name semantics through
+`NameplateBar`, and makes the member mute/unmute proof target the exact muted
+badge. Focused settings sync passed 7 / 8 with 1 socket-harness-gated skip,
+focused member mute/unmute passed 2 / 2, and the rebuilt Chromium route pass
+across auth/account, DM media/composer, Social main pane, settings sync, Nodes
+wallet/shop, group settings/scroll/entry/invites, owner UAT, and sidebar
+profile specs passed 85 / 86 with 1 socket-harness-gated skip. Package-owner
+guard, typecheck, lint, release gates with 409 files / 5,345 tests, and bundle
+budget all passed. This is a Level 2 closure-filter refresh only; it does not
+claim real provider delivery, future native QR/mobile approval, physical
+cross-device lab validation, hosted Stripe settlement, or Level 3 hardening.
 
 2026-06-02 badge/title display adapter ownership proof: production web moves
 badge and title display-data resolution out of the settings customization store
