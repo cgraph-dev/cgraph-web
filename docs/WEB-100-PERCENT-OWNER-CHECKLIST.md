@@ -1087,8 +1087,8 @@ Required implementation-time questions:
       phase 3, phase 4, remaining phase 5, then phase 6. Release PR #1 and PR #7 prove release-PR
       creation and publish for the `@cgraph-dev/api-client@1.0.2` and `@cgraph-dev/api-client@1.1.1`
       plus `@cgraph-dev/shared-types@1.1.1` releases. Production web now proves valid private-scope
-      npm consumer adoption for the `1.1.1` bump; grouped consumer PR proof remains future automation
-      evidence for a later package bump.
+      npm consumer adoption for the `1.1.1` bump; grouped consumer PR proof is paused until the
+      owner explicitly re-enables that automation path.
 
 ## Execution Checklist
 

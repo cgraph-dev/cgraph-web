@@ -9,7 +9,8 @@ It contains the Vite application in `apps/web` and consumes the published
 - `apps/web`: React 19, Vite, TypeScript, React Router, Zustand, TanStack Query,
   Phoenix socket client, and the web deployment configuration.
 - `apps/web/package.json`: exact published `@cgraph-dev/*` package pins.
-- `.github/dependabot.yml`: grouped `@cgraph-dev/*` package upgrade PRs.
+- `.github/workflows/web-ci.yml`: package guards, typecheck, lint, release gates,
+  and build-budget proof for pushed web changes.
 - `scripts/validate-package-dependencies.mjs`: package-consumption guard.
 
 ## Shared Package Ownership
@@ -22,6 +23,11 @@ land in `cgraph-packages` first, then ship here through a package-version update
 `pnpm check:packages` and `pnpm check:package-owner` reject local package
 protocols, old `@cgraph/*` dependencies, local mirror path aliases, and a
 reintroduced `packages/` tree.
+
+Package upgrades are currently applied by direct solo-owner version commits after
+local package gates and Web Release Gates pass. Grouped Dependabot upgrade PRs
+were intentionally disabled in `e9c8f24` and should stay disabled unless the
+owner explicitly re-enables that CI-budget path.
 
 ## Commands
 
