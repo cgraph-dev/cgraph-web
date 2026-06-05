@@ -1091,6 +1091,15 @@ and focused cosmetics plus entitlements API tests passed with 2 files / 10 tests
 strict score unchanged; it removes another web-local package-contract list but does not start Level
 3 or prove future native/desktop clients.
 
+2026-06-05 backend avatar-frame alias proof: production backend commit
+`13e6221205e0f3135f5c7e33f80e40e9af64f31b` accepts the package/web public `avatar_frame` item type
+at the unified cosmetics inventory/equip/unequip boundary and normalizes it to the backend's stored
+`profile_frame` inventory rows. Focused backend proof passed 4 / 4 tests in
+`test/cgraph_web/controllers/cosmetics_unified_inventory_controller_test.exs`, and `mix compile
+--warnings-as-errors` passed. This keeps the strict score unchanged; it proves one backend/package
+identity-customization alias slice before Level 3, not final provider, future native/desktop, or
+hosted payment closure.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
 truthful without starting Level 3. The live appearance preview now passes

@@ -479,6 +479,19 @@ tests across 2 files. This narrows the Phase 1 package-contract cleanup without 
 backend/package alignment, future-client runtime proof, provider delivery, physical cross-device
 validation, or hosted Stripe settlement.
 
+2026-06-05 backend avatar-frame alias proof: production backend commit
+`13e6221205e0f3135f5c7e33f80e40e9af64f31b` makes the unified cosmetics inventory, equip, and
+unequip endpoints accept the package/web public `avatar_frame` item type while normalizing it to the
+backend's stored `profile_frame` inventory rows. `Inventory.public_item_types()` now exposes public
+aliases to the controller boundary, and the cosmetics context keeps storage normalization in one
+place. Verified on the fresh Ubuntu setup with PostgreSQL server installed, `mix compile
+--warnings-as-errors`, and focused backend proof
+`test/cgraph_web/controllers/cosmetics_unified_inventory_controller_test.exs` passing 4 / 4 tests.
+The repo path still contains spaces, so native dependency compilation used `/tmp` build/deps paths for
+this proof. This narrows final backend/package alignment for the avatar-frame inventory slice without
+closing the broader contract, future-client runtime, provider delivery, physical cross-device, hosted
+Stripe, or Level 3 hardening work.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
 route/contract surface before any Level 3 work. The slice fixes the stale
@@ -1175,7 +1188,11 @@ Required implementation-time questions:
       plus web typecheck. The 2026-05-21 follow-up maps backend inventory item IDs/slugs to the web
       catalog before equip/unequip, persists equips through `/api/v1/cosmetics/equip`, rolls back on
       failure, and immediately patches the own identity/profile preview owner so selections no
-      longer appear dead.
+      longer appear dead. The 2026-05-31 follow-up locks the public `avatar_border` alias at the
+      backend boundary, consumes unified inventory/equipped/purchase/unequip shapes in web, and
+      proves the path with focused backend/web tests plus full web and backend release gates. The
+      2026-06-05 follow-up proves public `avatar_frame` on the same unified inventory/equip/unequip
+      boundary and normalizes it to stored `profile_frame` inventory rows.
 
 ### D. Finish Missing First-Class Routed Products
 
@@ -1309,6 +1326,10 @@ alone.
       socket/store proofs, sidebar/public-profile proof, and the 2026-06-05 live appearance
       preference-sync proof.
 - [ ] Are the backend contracts and shared package contracts aligned with the final web behavior?
+      2026-06-05 update: the `avatar_frame` / `profile_frame` unified cosmetics alias is now
+      backend-proven by production backend commit `13e6221205e0f3135f5c7e33f80e40e9af64f31b`, but
+      this final sign-off remains open until the remaining package/backend contracts are checked with
+      the same proof standard.
 - [ ] Would a desktop or mobile team inherit a cleaner shared contract foundation after this work,
       rather than a web-specific mess?
 - [ ] Has the final state been verified in live routed behavior, not just code reads?
