@@ -468,6 +468,17 @@ plus rarity-badge tests covering 18 tests across 2 files. This narrows the Phase
 owner follow-up without closing the broader backend/package final-behavior, future-client runtime,
 provider, physical cross-device, or hosted Stripe settlement proof.
 
+2026-06-05 cosmetic item-type guard proof: production web commit
+`d616de17a1eb7be56908bfb826de1ad96c582d6e` removes the entitlements service's web-local
+`VALID_COSMETIC_TYPES` allowlist in favor of the package-owned `@cgraph-dev/api-client`
+`CosmeticTypeSchema`, and makes the identity-customization inventory subtype derive from
+`@cgraph-dev/shared-types` `InventoryItemType` instead of a raw string union. Equip targets now keep
+the backend `border` alias only through typed shared inventory semantics. Verified with
+package-owner guard, typecheck, lint, and focused cosmetics plus entitlements API tests covering 10
+tests across 2 files. This narrows the Phase 1 package-contract cleanup without closing final
+backend/package alignment, future-client runtime proof, provider delivery, physical cross-device
+validation, or hosted Stripe settlement.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
 route/contract surface before any Level 3 work. The slice fixes the stale

@@ -1083,6 +1083,14 @@ filter from `@cgraph-dev/shared-types/rarity`, and making `cosmetics-api.ts` val
 tests passed with 2 files / 18 tests. This keeps the strict score unchanged; it is a truthful
 Phase 1 shared-contract cleanup, not Level 3 hardening or final future-client proof.
 
+2026-06-05 cosmetic item-type guard follow-up: production web commit
+`d616de17a1eb7be56908bfb826de1ad96c582d6e` routes entitlements SKU type validation through
+`@cgraph-dev/api-client` `CosmeticTypeSchema` and derives the identity-customization inventory
+subset from `@cgraph-dev/shared-types` `InventoryItemType`. Package-owner guard, typecheck, lint,
+and focused cosmetics plus entitlements API tests passed with 2 files / 10 tests. This keeps the
+strict score unchanged; it removes another web-local package-contract list but does not start Level
+3 or prove future native/desktop clients.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
 truthful without starting Level 3. The live appearance preview now passes
