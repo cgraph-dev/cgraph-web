@@ -492,6 +492,16 @@ this proof. This narrows final backend/package alignment for the avatar-frame in
 closing the broader contract, future-client runtime, provider delivery, physical cross-device, hosted
 Stripe, or Level 3 hardening work.
 
+2026-06-05 inventory item package-contract proof: production package commit
+`3cbf843a13933637eb0355a4a18948cc993645a2` makes `@cgraph-dev/shared-types` own
+`INVENTORY_ITEM_TYPES`, makes `@cgraph-dev/api-client` parse inventory/equip/unequip payloads with
+`InventoryItemTypeSchema`, and keeps catalog-only cosmetic values out of unified inventory rows. Local
+package proof passed `pnpm release:verify`; Changesets PR `cgraph-dev/cgraph-packages#7` merged at
+`98e12ea4c9ba8be2a1c9b8a19a1dca7470af8da4`, and Release Packages run `27019843801` published
+`@cgraph-dev/api-client@1.1.1` plus `@cgraph-dev/shared-types@1.1.1`. This narrows shared package
+alignment but does not close the final backend/package sign-off because web has not truthfully consumed
+the private `1.1.1` packages yet on the fresh Ubuntu npm auth.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
 route/contract surface before any Level 3 work. The slice fixes the stale
@@ -1052,7 +1062,10 @@ Required implementation-time questions:
       committed change and its deploy platform is able to build it.
 - [x] Current package promotion order is the corrected order from
       `docs/SHARED-PACKAGES-AUDIT-AND-PROMOTION-PLAN.md`: phase 2, mobile re-sync from phase 5,
-      phase 3, phase 4, remaining phase 5, then phase 6.
+      phase 3, phase 4, remaining phase 5, then phase 6. Release PR #1 and PR #7 prove release-PR
+      creation and publish for the `@cgraph-dev/api-client@1.0.2` and `@cgraph-dev/api-client@1.1.1`
+      plus `@cgraph-dev/shared-types@1.1.1` releases. Consumer adoption proof for the `1.1.1` bump
+      remains pending until valid private-scope npm read auth or a grouped consumer PR updates web.
 
 ## Execution Checklist
 
@@ -1329,7 +1342,10 @@ alone.
       2026-06-05 update: the `avatar_frame` / `profile_frame` unified cosmetics alias is now
       backend-proven by production backend commit `13e6221205e0f3135f5c7e33f80e40e9af64f31b`, but
       this final sign-off remains open until the remaining package/backend contracts are checked with
-      the same proof standard.
+      the same proof standard. Follow-up package commit
+      `3cbf843a13933637eb0355a4a18948cc993645a2` published the narrowed inventory item contract as
+      `@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1`, but web adoption remains
+      unproven until valid private-scope npm read auth or a grouped consumer PR updates the web pins.
 - [ ] Would a desktop or mobile team inherit a cleaner shared contract foundation after this work,
       rather than a web-specific mess?
 - [ ] Has the final state been verified in live routed behavior, not just code reads?

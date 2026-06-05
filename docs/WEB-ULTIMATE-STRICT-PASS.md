@@ -1100,6 +1100,15 @@ at the unified cosmetics inventory/equip/unequip boundary and normalizes it to t
 identity-customization alias slice before Level 3, not final provider, future native/desktop, or
 hosted payment closure.
 
+2026-06-05 inventory item package-contract proof: production package commit
+`3cbf843a13933637eb0355a4a18948cc993645a2` makes `@cgraph-dev/shared-types` own
+`INVENTORY_ITEM_TYPES` and makes `@cgraph-dev/api-client` validate unified inventory/equip/unequip
+payloads with `InventoryItemTypeSchema` instead of the broader cosmetic catalog type. Local package
+proof passed `pnpm release:verify`; Changesets PR `cgraph-dev/cgraph-packages#7` merged at
+`98e12ea4c9ba8be2a1c9b8a19a1dca7470af8da4`, and Release Packages run `27019843801` published
+`@cgraph-dev/api-client@1.1.1` plus `@cgraph-dev/shared-types@1.1.1`. This keeps the strict score
+unchanged because web has not yet consumed the private `1.1.1` packages on this fresh Ubuntu npm auth.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
 truthful without starting Level 3. The live appearance preview now passes
