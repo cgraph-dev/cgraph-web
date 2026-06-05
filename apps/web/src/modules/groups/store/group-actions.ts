@@ -248,6 +248,16 @@ function normalizeGroups(rawList: unknown): Group[] {
   return ensureArray<Record<string, unknown>>(rawList).map(normalizeGroup);
 }
 
+function preserveActiveGroupInList(fetchedGroups: Group[], state: GroupState): Group[] {
+  const activeGroupId = state.activeGroupId;
+  if (!activeGroupId || fetchedGroups.some((group) => group.id === activeGroupId)) {
+    return fetchedGroups;
+  }
+
+  const activeGroup = state.groups.find((group) => group.id === activeGroupId);
+  return activeGroup ? [...fetchedGroups, activeGroup].slice(-200) : fetchedGroups;
+}
+
 type SetState = StoreApi<GroupState>['setState'];
 type GetState = StoreApi<GroupState>['getState'];
 
@@ -289,10 +299,11 @@ export function createGroupActions(
         if (!result.ok) {
           throw new Error(result.error.message);
         }
-        set({
-          groups: normalizeGroups(result.data),
+        const fetchedGroups = normalizeGroups(result.data);
+        set((state) => ({
+          groups: preserveActiveGroupInList(fetchedGroups, state),
           isLoadingGroups: false,
-        });
+        }));
       } catch (error) {
         set({ isLoadingGroups: false });
         throw error;

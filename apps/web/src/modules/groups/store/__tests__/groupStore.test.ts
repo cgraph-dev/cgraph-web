@@ -310,6 +310,16 @@ describe('groupStore (modules)', () => {
       expect(groups[1]!.id).toBe('group-2');
     });
 
+    it('preserves the active routed group when the group list response is stale', async () => {
+      useGroupStore.setState({ groups: [mockGroup], activeGroupId: mockGroup.id });
+      mockedApi.get.mockResolvedValue({ data: { groups: [mockGroup2] } });
+
+      await useGroupStore.getState().fetchGroups();
+
+      const { groups } = useGroupStore.getState();
+      expect(groups.map((group) => group.id)).toEqual([mockGroup2.id, mockGroup.id]);
+    });
+
     it('should call the correct API endpoint', async () => {
       mockedApi.get.mockResolvedValue({ data: { groups: [] } });
 
