@@ -876,12 +876,12 @@ updates local/live release-hardening proof only; real provider delivery, future 
 QR/mobile approval after native mobile exists, physical second-device validation, and hosted Stripe
 settlement remain open.
 
-2026-05-31 package consumption proof: production web commit
+2026-05-31 package consumption proof, updated by the 2026-06-06 private package adoption: production web commit
 `cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from local
-`packages/*` mirrors to exact published npm dependencies
-`@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.0.3`,
-`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.0.6`, and
-`@cgraph-dev/utils@1.0.1`. The commit removes the mirror workspace and path
+`packages/*` mirrors to exact published npm dependencies. The current reviewed package pins are
+`@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.1.1`,
+`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.1.1`, and
+`@cgraph-dev/utils@1.0.1`. The original commit removes the mirror workspace and path
 aliases, replaces the old snapshot/mirror gates with a published-package
 dependency guard, and was verified with `pnpm check:packages`,
 `pnpm check:package-owner`, `pnpm --filter @cgraph/web typecheck`,
@@ -1106,8 +1106,16 @@ hosted payment closure.
 payloads with `InventoryItemTypeSchema` instead of the broader cosmetic catalog type. Local package
 proof passed `pnpm release:verify`; Changesets PR `cgraph-dev/cgraph-packages#7` merged at
 `98e12ea4c9ba8be2a1c9b8a19a1dca7470af8da4`, and Release Packages run `27019843801` published
-`@cgraph-dev/api-client@1.1.1` plus `@cgraph-dev/shared-types@1.1.1`. This keeps the strict score
-unchanged because web has not yet consumed the private `1.1.1` packages on this fresh Ubuntu npm auth.
+`@cgraph-dev/api-client@1.1.1` plus `@cgraph-dev/shared-types@1.1.1`.
+
+2026-06-06 private package consumer proof: production web now consumes
+`@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1` from the private npm
+`@cgraph-dev` scope. The web package guard now enforces those exact pins, `pnpm install
+--frozen-lockfile` reads them from the registry, and local proof passed `pnpm check:packages`,
+`pnpm check:package-owner`, typecheck, lint, release gates with 409 files / 5,345 tests, and build
+budget with the largest JS chunk at 487.02 kB / 500 kB. This keeps the strict score unchanged because
+it closes the consumer-adoption proof for this package bump, not final provider, future native/desktop,
+hosted payment, or Level 3 closure.
 
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof

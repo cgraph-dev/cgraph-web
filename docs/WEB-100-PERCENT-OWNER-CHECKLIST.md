@@ -498,9 +498,16 @@ Stripe, or Level 3 hardening work.
 `InventoryItemTypeSchema`, and keeps catalog-only cosmetic values out of unified inventory rows. Local
 package proof passed `pnpm release:verify`; Changesets PR `cgraph-dev/cgraph-packages#7` merged at
 `98e12ea4c9ba8be2a1c9b8a19a1dca7470af8da4`, and Release Packages run `27019843801` published
-`@cgraph-dev/api-client@1.1.1` plus `@cgraph-dev/shared-types@1.1.1`. This narrows shared package
-alignment but does not close the final backend/package sign-off because web has not truthfully consumed
-the private `1.1.1` packages yet on the fresh Ubuntu npm auth.
+`@cgraph-dev/api-client@1.1.1` plus `@cgraph-dev/shared-types@1.1.1`.
+
+2026-06-06 private package consumer proof: production web now consumes
+`@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1` from the private npm
+`@cgraph-dev` scope. The package dependency guard now enforces those exact reviewed pins, and local
+proof passed npm read access, `pnpm install --frozen-lockfile`, `pnpm check:packages`,
+`pnpm check:package-owner`, typecheck, lint, release gates with 409 files / 5,345 tests, and build
+budget with the largest JS chunk at 487.02 kB / 500 kB. This closes the consumer-adoption proof for
+the inventory item package bump without closing final provider, future-client, physical cross-device,
+hosted Stripe, or Level 3 hardening work.
 
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
@@ -1344,8 +1351,10 @@ alone.
       this final sign-off remains open until the remaining package/backend contracts are checked with
       the same proof standard. Follow-up package commit
       `3cbf843a13933637eb0355a4a18948cc993645a2` published the narrowed inventory item contract as
-      `@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1`, but web adoption remains
-      unproven until valid private-scope npm read auth or a grouped consumer PR updates the web pins.
+      `@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1`, and the 2026-06-06 web
+      consumer proof now installs and validates those private package pins. The sign-off still remains
+      open until the remaining package/backend contracts and future-client inheritance are checked with
+      the same proof standard.
 - [ ] Would a desktop or mobile team inherit a cleaner shared contract foundation after this work,
       rather than a web-specific mess?
 - [ ] Has the final state been verified in live routed behavior, not just code reads?

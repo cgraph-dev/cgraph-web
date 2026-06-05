@@ -37,14 +37,14 @@ importers:
         specifier: 1.0.1
         version: 1.0.1
       '@cgraph-dev/api-client':
-        specifier: 1.0.3
-        version: 1.0.3(axios@1.16.1)
+        specifier: 1.1.1
+        version: 1.1.1(axios@1.16.1)
       '@cgraph-dev/design-tokens':
         specifier: 1.0.1
         version: 1.0.1
       '@cgraph-dev/shared-types':
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 1.1.1
+        version: 1.1.1
       '@cgraph-dev/utils':
         specifier: 1.0.1
         version: 1.0.1
@@ -468,16 +468,16 @@ packages:
   '@cgraph-dev/animation-constants@1.0.1':
     resolution: {integrity: sha512-o4WWZbW3p6fVbpytLXiTARHnbr6XDdLuv7736VXdVpHYewV3x6bZlRYbMOjgd2OdeixMrtNxw7KdMdd6Hpj1oA==}
 
-  '@cgraph-dev/api-client@1.0.3':
-    resolution: {integrity: sha512-ZxnIT+jJ+xyG+Grkq9frLHqQ9jdcEJ46PaDWYA7Q097eCENNPE10Q9CnDt23dMvWYMBQ+1J9utk7lBTMXQBeIQ==}
+  '@cgraph-dev/api-client@1.1.1':
+    resolution: {integrity: sha512-HFeejHhwlF5j9/vtcP/8yjfdYOlepty7B+MF4+LvsUeNZedLvoe9EPefT44IK+OEzlDM+m96w3FtE4ugVdbgQg==}
     peerDependencies:
       axios: 1.16.1
 
   '@cgraph-dev/design-tokens@1.0.1':
     resolution: {integrity: sha512-Q8Atk/whDQM7XJ5GziC3ekNk41oFIRA5zy9mSUHbdy2g/Gvh3qLHleExxM9KK77Cn5uEFpMlmkKkIHTv7bmY9A==}
 
-  '@cgraph-dev/shared-types@1.1.0':
-    resolution: {integrity: sha512-/wOwAQBW5s8UM3X8FNuWpcI2o4YRyUvD3jW82H0R17Mo1ZT5/BMzREJaeqNLPLFUj8rfiiOk07/tbaVQlskG0w==}
+  '@cgraph-dev/shared-types@1.1.1':
+    resolution: {integrity: sha512-/Hfb4fWLgjfs1/HORxK9iUA1ETwGP4cdTyNXvFKOj/UTwEYd62vufTiCB61AuD/auCcnvjR+F5O4kOSuyK7ZvQ==}
 
   '@cgraph-dev/utils@1.0.1':
     resolution: {integrity: sha512-fJrbHAqKFD36zuv6tma/iVjoKLkh07zyramrMXd7oNKNzSCyLVkHlt9mrZLoxScMzpOYPGG3DlN6yWV0ORbm0w==}
@@ -6131,15 +6131,15 @@ snapshots:
 
   '@cgraph-dev/animation-constants@1.0.1': {}
 
-  '@cgraph-dev/api-client@1.0.3(axios@1.16.1)':
+  '@cgraph-dev/api-client@1.1.1(axios@1.16.1)':
     dependencies:
-      '@cgraph-dev/shared-types': 1.1.0
+      '@cgraph-dev/shared-types': 1.1.1
       axios: 1.16.1
       zod: 3.25.76
 
   '@cgraph-dev/design-tokens@1.0.1': {}
 
-  '@cgraph-dev/shared-types@1.1.0': {}
+  '@cgraph-dev/shared-types@1.1.1': {}
 
   '@cgraph-dev/utils@1.0.1':
     dependencies:

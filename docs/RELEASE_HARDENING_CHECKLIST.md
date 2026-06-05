@@ -90,8 +90,8 @@ Previous published-package baseline:
   - `pnpm --filter @cgraph/web build:budget`
 - Result: web now consumes exact published npm dependencies
   `@cgraph-dev/animation-constants@1.0.1`,
-  `@cgraph-dev/api-client@1.0.3`, `@cgraph-dev/design-tokens@1.0.1`,
-  `@cgraph-dev/shared-types@1.0.6`, and `@cgraph-dev/utils@1.0.1`.
+  `@cgraph-dev/api-client@1.1.1`, `@cgraph-dev/design-tokens@1.0.1`,
+  `@cgraph-dev/shared-types@1.1.1`, and `@cgraph-dev/utils@1.0.1`.
   Local app package mirrors and `packages/*` workspace membership are removed.
   `check:packages` and `check:package-owner` now enforce exact package pins,
   reject old `@cgraph/*` package dependencies, reject local package protocols,
@@ -219,8 +219,8 @@ mirror or workspace-package consumption. Package build/type/test/publish proof
 remains owned by `cgraph-packages`.
 
 - [x] `apps/web/package.json` pins the reviewed published `@cgraph-dev/*`
-      package set, including `@cgraph-dev/api-client@1.0.3` and
-      `@cgraph-dev/shared-types@1.0.6`.
+      package set, including `@cgraph-dev/api-client@1.1.1` and
+      `@cgraph-dev/shared-types@1.1.1`.
 - [x] `pnpm check:packages` rejects missing or non-exact package pins, old
       `@cgraph/*` shared package dependencies, local package protocols,
       reintroduced `packages/*` workspace membership, local mirror path aliases,
@@ -411,6 +411,12 @@ Latest proof:
   chat UI message entrance animation values flow from the shared package into
   the settings chat panel, routed bubble customization page, chat UI settings
   panel, and legacy theme type boundary.
+- 2026-06-06: production web consumes private `@cgraph-dev/api-client@1.1.1`
+  and `@cgraph-dev/shared-types@1.1.1`, making the package-owned inventory item
+  contract available to the app without local package mirrors. Local proof passed
+  npm read access, `pnpm install --frozen-lockfile`, package guards, typecheck,
+  lint, release gates with 409 files / 5,345 tests, and build budget with the
+  largest JS chunk at 487.02 kB / 500 kB.
 - 2026-05-31: production web now ships every Lottie JSON file referenced by
   the shared customization catalog for badges, titles, display-name effects,
   and nameplates. `check:release-gates` now starts with
