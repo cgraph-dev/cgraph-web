@@ -3,8 +3,9 @@
  */
 
 import type { TitleAnimationType } from '@/data/titlesCollection';
+import type { RarityTier } from '@cgraph-dev/shared-types';
 
-export type Rarity = 'free' | 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
+export type Rarity = RarityTier;
 
 export interface Border {
   id: string;

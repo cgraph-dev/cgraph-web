@@ -7,6 +7,7 @@
  */
 
 import { http } from '@/lib/api-client';
+import { RARITY_TIERS } from '@cgraph-dev/shared-types';
 import type {
   CosmeticItem,
   CosmeticType,
@@ -427,15 +428,6 @@ const VALID_UNLOCK_TYPES: readonly UnlockType[] = [
   'level',
   'event',
 ];
-const VALID_RARITY_TIERS: readonly RarityTier[] = [
-  'free',
-  'common',
-  'uncommon',
-  'rare',
-  'epic',
-  'legendary',
-  'mythic',
-];
 
 const UNLOCK_SOURCE_ALIASES: Record<string, UnlockType> = {
   default: 'free',
@@ -457,7 +449,7 @@ function validateUnlockType(value: string | undefined | null): UnlockType {
 
 function validateRarityTier(value: RarityTier | string | undefined | null): RarityTier {
   const v = value ?? 'common';
-  const match = VALID_RARITY_TIERS.find((t) => t === v);
+  const match = RARITY_TIERS.find((t) => t === v);
   return match ?? 'common';
 }
 
