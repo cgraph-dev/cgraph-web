@@ -26,17 +26,18 @@ import {
 import { ALL_TITLES, type TitleDefinition } from '@/data/titlesCollection';
 import { ALL_BADGES, type BadgeDefinition } from '@/data/badgesCollection';
 import { NAMEPLATE_REGISTRY } from '@cgraph-dev/animation-constants';
+import type { InventoryItemType } from '@cgraph-dev/shared-types';
 
 import type { Rarity, Border, Title, Badge } from './types';
 
 export type SectionId = 'borders' | 'titles' | 'badges' | 'name-styles' | 'nameplates';
 
-type InventoryType = 'avatar_border' | 'title' | 'badge' | 'nameplate';
+type InventoryType = Extract<InventoryItemType, 'avatar_border' | 'title' | 'badge' | 'nameplate'>;
 
 const GENERIC_BADGE_LOTTIE_URL = '/lottie/effects/placeholder.json';
 
 interface InventoryEquipTarget {
-  readonly itemType: string;
+  readonly itemType: InventoryItemType;
   readonly itemId: string;
 }
 
@@ -107,6 +108,11 @@ function normalizeInventoryType(value: unknown): InventoryType | null {
   if (value === 'badge') return 'badge';
   if (value === 'nameplate') return 'nameplate';
   return null;
+}
+
+function normalizeEquipItemType(value: unknown, fallback: InventoryType): InventoryItemType {
+  if (value === 'border') return 'border';
+  return normalizeInventoryType(value) ?? fallback;
 }
 
 function readString(value: unknown): string | null {
@@ -310,7 +316,7 @@ function buildInventoryOwnership(items: readonly InventoryItemPayload[]): Invent
     owned[type].add(itemId);
     itemKeys.forEach((itemKey) => owned[type].add(itemKey));
     if (serverItemId) {
-      const target = { itemType: rawType ?? type, itemId: serverItemId };
+      const target = { itemType: normalizeEquipItemType(rawType, type), itemId: serverItemId };
       equipTargets[type].set(itemId, target);
       itemKeys.forEach((itemKey) => equipTargets[type].set(itemKey, target));
     }

@@ -6,6 +6,7 @@
  */
 
 import { http } from '@/lib/api-client';
+import { CosmeticTypeSchema } from '@cgraph-dev/api-client';
 import type {
   Entitlement,
   CosmeticSku,
@@ -72,19 +73,9 @@ function validateEntitlementSource(value: string): EntitlementSource {
   return match ?? 'shop_purchase';
 }
 
-const VALID_COSMETIC_TYPES: readonly CosmeticType[] = [
-  'avatar_border',
-  'title',
-  'badge',
-  'nameplate',
-  'chat_bubble',
-  'theme',
-  'name_style',
-];
-
 function validateCosmeticType(value: string): CosmeticType {
-  const match = VALID_COSMETIC_TYPES.find((t) => t === value);
-  return match ?? 'badge';
+  const parsed = CosmeticTypeSchema.safeParse(value);
+  return parsed.success ? parsed.data : 'badge';
 }
 
 function toSku(raw: ApiCosmeticSku): CosmeticSku {
