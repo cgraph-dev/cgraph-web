@@ -1655,14 +1655,20 @@ Done when:
 
 ## Bottom line
 
-The web app is partially connected, not fully disconnected.
+The web app is no longer in the early "partially connected" state described by the original pass,
+but it is still not fully release-signed.
 
 That matters because it changes the fix strategy:
 
 - do not rebuild settings or Nodes from scratch
 - do not count shared code as shipped just because it exists
-- fix the route-owned contract drift first
+- keep closing only proof-backed route, backend, and package drift
+- do not start Level 3 hardening until the Level 2 external proof set is honestly handled
 
-The main blockers are now clearly identified in one place: thin routed DM surfaces, split identity
-ownership, incomplete settings hydration/round-trip behavior, incomplete group/admin parity, and the
-remaining browser-validation gaps around Nodes, calls, auth, and social/group destinations.
+The old local blockers around thin routed DM surfaces, split identity ownership, settings
+hydration/round-trip behavior, group/admin parity, Nodes/calls false-success handling, and broad
+local browser route validation now have source and executable proof in the sections above. The
+remaining blockers before any Level 3 start are real external/provider delivery, hosted Stripe
+completion and webhook settlement, physical cross-device lab validation, future native mobile QR
+approval, broader live/provider regression breadth, and final future-client/runtime inheritance
+proof for the shared package contracts.
