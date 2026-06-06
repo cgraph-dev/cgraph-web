@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "umask 077 && printf '%s\\n' '@cgraph-dev:registry=https://registry.npmjs.org/' \"//registry.npmjs.org/:_authToken=${NPM_TOKEN}\" 'always-auth=true' > /tmp/cgraph-npmrc && NPM_CONFIG_USERCONFIG=/tmp/cgraph-npmrc pnpm install --frozen-lockfile",
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
   "redirects": [
