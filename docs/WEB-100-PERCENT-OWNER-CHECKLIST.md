@@ -509,6 +509,16 @@ budget with the largest JS chunk at 487.02 kB / 500 kB. This closes the consumer
 the inventory item package bump without closing final provider, future-client, physical cross-device,
 hosted Stripe, or Level 3 hardening work.
 
+2026-06-06 mobile private package consumer proof: production mobile commit
+`3879296294f07b9e881433e9afa3558aa6186246` moves mobile to
+`@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1` without restarting mobile feature
+work. The mobile package dependency guard now enforces those exact reviewed pins, local proof passed
+`CI=true pnpm install --frozen-lockfile`, `pnpm check:packages`, and
+`pnpm check:package-owner`, and GitHub Actions `Mobile Package Gates` run `27049580585` passed. This
+narrows future-client package inheritance without claiming native mobile runtime build proof, desktop
+or professional adoption, external provider delivery, physical cross-device validation, hosted Stripe,
+or Level 3 hardening.
+
 2026-06-06 invite-join live route proof: production web commit
 `152d045c0188f0640f04b38f32ca4b8d8620b1e2` fixes the stale-membership-list race found by rerunning
 the broad Chromium route proof on the current `1.1.1` package build. When an invite join redirects
@@ -1089,8 +1099,8 @@ Required implementation-time questions:
 - [x] `/home/looter-admin/CGraphRepos/cgraph-web` is the Vercel web production repo.
 - [x] `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-packages` is the canonical source owner
       for published `@cgraph-dev/*` packages.
-- [x] `cgraph-web` consumes exact published package versions; app-local
-      `packages/` folders are no longer allowed in the web production repo.
+- [x] `cgraph-web` and `cgraph-mobile` consume exact published package versions; app-local
+      `packages/` folders are no longer allowed in the web or mobile production repos.
 - [x] Shared-package changes start in `cgraph-packages`, publish through the
       package workflow, then move to app repos through the documented
       versioned-package sync path.
@@ -1101,8 +1111,10 @@ Required implementation-time questions:
       phase 3, phase 4, remaining phase 5, then phase 6. Release PR #1 and PR #7 prove release-PR
       creation and publish for the `@cgraph-dev/api-client@1.0.2` and `@cgraph-dev/api-client@1.1.1`
       plus `@cgraph-dev/shared-types@1.1.1` releases. Production web now proves valid private-scope
-      npm consumer adoption for the `1.1.1` bump; grouped consumer PR proof is paused until the
-      owner explicitly re-enables that automation path.
+      npm consumer adoption for the `1.1.1` bump, and production mobile commit
+      `3879296294f07b9e881433e9afa3558aa6186246` proves the package-only mobile adoption path for the
+      same bump; grouped consumer PR proof is paused until the owner explicitly re-enables that
+      automation path.
 
 ## Execution Checklist
 
@@ -1358,7 +1370,7 @@ After every implementation slice, update docs in this exact order:
 
 ## Final Owner Sign-Off Questions
 
-Current sign-off state: 3 / 6 final questions closed. Do not call the workstream complete until the
+Current sign-off state: 4 / 6 final questions closed. Do not call the workstream complete until the
 owner can answer "yes" to every question below, and do not check these boxes from source inspection
 alone.
 
@@ -1382,11 +1394,13 @@ alone.
       the same proof standard. Follow-up package commit
       `3cbf843a13933637eb0355a4a18948cc993645a2` published the narrowed inventory item contract as
       `@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1`, and the 2026-06-06 web
-      consumer proof now installs and validates those private package pins. The sign-off still remains
-      open until the remaining package/backend contracts and future-client inheritance are checked with
-      the same proof standard.
+      consumer proof now installs and validates those private package pins. The 2026-06-06 mobile
+      package-only proof validates the same pins through the mobile package gates. The sign-off still
+      remains open until the remaining package/backend contracts and future-client inheritance are
+      checked with the same proof standard.
 - [ ] Would a desktop or mobile team inherit a cleaner shared contract foundation after this work,
-      rather than a web-specific mess?
+      rather than a web-specific mess? The 2026-06-06 mobile private-package adoption proof narrows
+      this gap, but it does not close desktop/professional adoption or native mobile runtime proof.
 - [x] Has the final state been verified in live routed behavior, not just code reads? Closed for the
       current local Level 2 routed web surface by production web commit
       `152d045c0188f0640f04b38f32ca4b8d8620b1e2`: focused invite proof passed 2 / 2 after fixing the
