@@ -44,6 +44,37 @@ pnpm --filter @cgraph/web check:release-gates
 
 Latest proof:
 
+- Latest deployed proof after private-package Vercel auth:
+  - Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
+  - Verified code commit:
+    `4662c4252fed6cade329384578fb0b11cec95e0b`
+  - Date: `2026-06-06T04:06:41+03:00`
+  - Commands and remote checks:
+    - `npm whoami --registry=https://registry.npmjs.org/`
+    - `npm view @cgraph-dev/api-client@1.1.1 version --registry=https://registry.npmjs.org/`
+    - `npm view @cgraph-dev/shared-types@1.1.1 version --registry=https://registry.npmjs.org/`
+    - `pnpm install --frozen-lockfile`
+    - `pnpm check:packages`
+    - `pnpm check:package-owner`
+    - `pnpm --filter @cgraph/web check:bundle-budgets`
+    - `npx vercel build --prod`
+    - `pnpm --filter @cgraph/web smoke:production`
+    - GitHub Actions `Web Release Gates` run `27047841854`
+    - Vercel deployment `3AWWy96EvcQcp8ubNxwymCNtndsg`
+  - Result: local npm auth is restored as `cgraphdev`; private package reads
+    return `1.1.1`; Vercel Production now has encrypted `NPM_TOKEN`; the Vercel
+    install command writes a temporary `/tmp/cgraph-npmrc` using `NPM_TOKEN`
+    and no longer mutates the developer's home npm config; local Vercel
+    production build completed successfully; GitHub `Web Release Gates`
+    completed successfully; Vercel deployment completed successfully; production
+    smoke passed against `https://web.cgraph.org` and
+    `https://cgraph-backend-prod-v2.fly.dev` with no bad responses, failed
+    requests, or app console errors.
+  - Evidence class: current deployed web proof for private-package install auth
+    and production smoke. This does not close real provider delivery, physical
+    cross-device validation, hosted Stripe settlement, future native QR/mobile
+    approval, or Level 3 hardening.
+
 - Repository checked: `/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web`
 - Verified code commit:
   `152d045c0188f0640f04b38f32ca4b8d8620b1e2`

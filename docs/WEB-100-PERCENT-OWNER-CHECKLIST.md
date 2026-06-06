@@ -524,6 +524,20 @@ lint, release gates with 409 files / 5,346 tests, and build budget with the larg
 provider delivery, future native QR/mobile approval, physical cross-device lab validation, hosted
 Stripe settlement, or Level 3 hardening.
 
+2026-06-06 Vercel private-package install-auth proof: production web commit
+`4662c4252fed6cade329384578fb0b11cec95e0b` fixes the Vercel deployment failure caused by missing
+npm auth for private `@cgraph-dev/*` package tarballs. Vercel Production now has encrypted
+`NPM_TOKEN`, and `apps/web/vercel.json` writes a temporary `/tmp/cgraph-npmrc` during install so
+Vercel can read `@cgraph-dev/api-client@1.1.1` and `@cgraph-dev/shared-types@1.1.1` without
+committing a token or mutating local home npm config. Local proof passed npm auth/package reads,
+frozen install, package guards, bundle-budget checks, and `npx vercel build --prod`; GitHub Actions
+`Web Release Gates` run `27047841854` passed; Vercel deployment
+`3AWWy96EvcQcp8ubNxwymCNtndsg` completed successfully; and production smoke passed against
+`https://web.cgraph.org` with no bad responses, failed requests, or app console errors. This closes
+the current deployed private-package install proof without claiming real provider delivery, future
+native QR/mobile approval, physical cross-device lab validation, hosted Stripe settlement, or Level
+3 hardening.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
 route/contract surface before any Level 3 work. The slice fixes the stale
