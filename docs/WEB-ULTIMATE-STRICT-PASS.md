@@ -879,8 +879,8 @@ settlement remain open.
 2026-05-31 package consumption proof, updated by the 2026-06-06 private package adoption: production web commit
 `cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from local
 `packages/*` mirrors to exact published npm dependencies. The current reviewed package pins are
-`@cgraph-dev/animation-constants@1.0.1`, `@cgraph-dev/api-client@1.1.1`,
-`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.1.1`, and
+`@cgraph-dev/animation-constants@1.1.4`, `@cgraph-dev/api-client@1.1.1`,
+`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.1.3`, and
 `@cgraph-dev/utils@1.0.1`. The original commit removes the mirror workspace and path
 aliases, replaces the old snapshot/mirror gates with a published-package
 dependency guard, and was verified with `pnpm check:packages`,
@@ -1159,9 +1159,22 @@ base64 job payloads, and signed URLs. Local proof passed focused cosmetic tests,
 package-owner guard, production build, and `pnpm check:web-release` with 411 files / 5,353 tests.
 Vercel deployed the commit to `https://web.cgraph.org`, production smoke passed, and sampled new
 PixelLab asset URLs returned `200 image/png`. This improves release presentation and production
-asset delivery; it does not close backend catalog ownership, shared package promotion for the new
-catalog rows, future native/desktop rendering proof, real provider delivery, physical cross-device
-validation, hosted Stripe settlement, or Level 3 hardening.
+asset delivery; by itself it does not close backend catalog ownership, profile-theme background
+package ownership beyond web renderer enrichment, future native/desktop rendering proof, real
+provider delivery, physical cross-device validation, hosted Stripe settlement, or Level 3 hardening.
+
+2026-06-07 shared PixelLab cosmetic registry promotion proof: `cgraph-packages` commit
+`4ef32f19dcfa8cfd3fc80dbbb050827e476c35c1` publishes
+`@cgraph-dev/animation-constants@1.1.4` with the five game-style PixelLab nameplates and four
+avatar borders now owned by the shared registry. Web now consumes that exact npm package version,
+deletes the local `pixellab-game-cosmetics` overlay, keeps `apps/web/src/data/avatar-borders.ts` as
+a renderer/legacy adapter over the shared catalog, and updates the package-owner guard to enforce
+`1.1.4`. Proof passed 8 focused web tests, package-owner guard, web typecheck, web lint, full
+`pnpm check:web-release` with 411 files / 5,353 tests, production build, and bundle budget with the
+largest JS chunk at 493.32 kB / 500 kB. This closes shared-package ownership for those new nameplate/avatar-border
+rows only; backend catalog/equipped-state rows, hosted payment settlement, real provider delivery,
+physical cross-device validation, future native/desktop runtime proof, and Level 3 hardening remain
+open.
 
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof

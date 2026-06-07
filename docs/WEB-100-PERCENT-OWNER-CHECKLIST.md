@@ -58,8 +58,22 @@ npm/Vercel token, raw base64 job payload, or signed URL in the public asset tree
 typecheck, lint, package-owner guard, build, and `pnpm check:web-release` with 411 files / 5,353
 tests. Vercel deployed the commit to `https://web.cgraph.org`, production smoke passed, and sampled
 PixelLab asset URLs returned `200 image/png`. This is production delivery and renderer proof, not a
-claim that backend catalog ownership, shared-package cosmetic catalogs, future native runtime
-rendering, or Level 3 hardening are closed.
+claim that backend catalog ownership, profile-theme background package ownership beyond web renderer
+enrichment, future native runtime rendering, or Level 3 hardening are closed.
+
+2026-06-07 shared PixelLab cosmetic registry promotion proof: `cgraph-packages` commit
+`4ef32f19dcfa8cfd3fc80dbbb050827e476c35c1` publishes
+`@cgraph-dev/animation-constants@1.1.4` with the five game-style PixelLab nameplates and four
+avatar borders now owned by the shared registry instead of a web-local overlay. Web consumes that
+exact package version, deletes `apps/web/src/data/pixellab-game-cosmetics.ts`, keeps
+`apps/web/src/data/avatar-borders.ts` as a renderer/legacy adapter over the package catalog, and
+updates the package-owner guard to enforce `1.1.4`. Proof passed 8 focused web tests,
+package-owner guard, web typecheck, web lint, full `pnpm check:web-release` with 411 files / 5,353
+tests, production build, and bundle budget with the largest JS chunk at 493.32 kB / 500 kB. This closes shared-package ownership
+for the new nameplate/avatar-border rows; backend catalog/equipped-state rows, profile-theme
+background ownership beyond web renderer enrichment, future native runtime proof, real provider
+delivery, physical cross-device validation, hosted Stripe settlement, and Level 3 hardening remain
+open.
 
 2026-05-21 app-shell/theme proof: `cgraph-backend` commit `133152be845465d4ca3a66ce8cfe2ecbc15c5cfb`
 changes the persisted app-theme default to Aurora and migrates non-explicit legacy app-theme rows to

@@ -2,7 +2,7 @@
  * NameplatesSection Component
  *
  * Advanced nameplate selection with category filtering and Lottie-backed previews.
- * Uses the shared registry plus the PixelLab release-art overlay.
+ * Uses the shared package registry, including PixelLab release-art rows.
  */
 
 import { useState, useMemo } from 'react';
@@ -11,11 +11,9 @@ import { Button } from '@/components/ui/button';
 import {
   NAMEPLATE_CATEGORIES,
   NAMEPLATE_REGISTRY,
-} from '@/data/pixellab-game-cosmetics';
-import type {
-  NameplateCategory,
-  NameplateEntry,
-  NameplateRarity,
+  type NameplateCategory,
+  type NameplateEntry,
+  type NameplateRarity,
 } from '@cgraph-dev/animation-constants';
 import { NameplateRenderer } from '@/components/ui/nameplate-renderer';
 

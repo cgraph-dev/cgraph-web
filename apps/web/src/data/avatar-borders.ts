@@ -1,5 +1,5 @@
 /**
- * Avatar Border Definitions — 11 Lottie Borders
+ * Avatar Border Definitions
  *
  * Re-exports canonical border data from @cgraph-dev/animation-constants and
  * provides web-specific adapters (Tailwind CSS classes, legacy types)
@@ -24,116 +24,7 @@ import {
 // with web consumers that import BorderTheme from this file.
 export type BorderTheme = AvatarBorderTheme;
 
-const borderPath = (id: string, frame = 0): string =>
-  `/cosmetics/pixellab/avatar-border/${id}/${id}_${frame}.png`;
-
-const PIXELLAB_GAME_AVATAR_BORDERS: readonly AvatarBorderConfig[] = [
-  {
-    id: 'border_ranked_ascendant_01',
-    type: 'mythic',
-    name: 'Ranked Ascendant',
-    description: 'A sapphire-and-gold rank crest frame for top-tier profile identity.',
-    theme: 'gaming',
-    rarity: 'mythic',
-    unlockType: 'leaderboard',
-    unlockRequirement: {
-      type: 'leaderboard',
-      value: 'top-100',
-      description: 'Reach Ascendant leaderboard tier.',
-    },
-    primaryColor: '#2563eb',
-    secondaryColor: '#fbbf24',
-    accentColor: '#eff6ff',
-    particleCount: 18,
-    animationSpeed: 'normal',
-    animationDuration: 4.8,
-    isPremium: true,
-    nodeCost: 3246,
-    imageUrl: borderPath('border_ranked_ascendant_01'),
-    previewUrl: borderPath('border_ranked_ascendant_01'),
-    tags: ['ranked', 'leaderboard', 'sapphire', 'gold', 'pixellab'],
-  },
-  {
-    id: 'border_ember_colossus_01',
-    type: 'fire',
-    name: 'Ember Colossus',
-    description: 'A forged obsidian frame with molten channels and ember particles.',
-    theme: 'elemental',
-    rarity: 'legendary',
-    unlockType: 'event',
-    unlockRequirement: {
-      type: 'event',
-      value: 'ember-colossus',
-      description: 'Unlock during the Ember Colossus event.',
-    },
-    primaryColor: '#fb923c',
-    secondaryColor: '#7c2d12',
-    accentColor: '#f97316',
-    particleCount: 14,
-    animationSpeed: 'slow',
-    animationDuration: 5.4,
-    isPremium: true,
-    nodeCost: 1850,
-    imageUrl: borderPath('border_ember_colossus_01'),
-    previewUrl: borderPath('border_ember_colossus_01'),
-    tags: ['ember', 'forge', 'event', 'fire', 'pixellab'],
-  },
-  {
-    id: 'border_void_relay_01',
-    type: 'mythic',
-    name: 'Void Relay',
-    description: 'A black-glass cosmic ring with violet gravity arcs.',
-    theme: 'cosmic',
-    rarity: 'mythic',
-    unlockType: 'purchase',
-    unlockRequirement: {
-      type: 'nodes',
-      value: 2800,
-      description: 'Purchase from the premium profile shop.',
-    },
-    primaryColor: '#a855f7',
-    secondaryColor: '#111827',
-    accentColor: '#22d3ee',
-    particleCount: 20,
-    animationSpeed: 'normal',
-    animationDuration: 5,
-    isPremium: true,
-    nodeCost: 2800,
-    imageUrl: borderPath('border_void_relay_01'),
-    previewUrl: borderPath('border_void_relay_01'),
-    tags: ['void', 'cosmic', 'sci-fi', 'premium', 'pixellab'],
-  },
-  {
-    id: 'border_solar_grove_01',
-    type: 'glow',
-    name: 'Solar Grove',
-    description: 'An emerald filigree frame with sun-gold progression nodes.',
-    theme: 'nature',
-    rarity: 'epic',
-    unlockType: 'achievement',
-    unlockRequirement: {
-      type: 'achievement',
-      value: 'community-growth',
-      description: 'Earned from community-growth achievements.',
-    },
-    primaryColor: '#16a34a',
-    secondaryColor: '#facc15',
-    accentColor: '#bbf7d0',
-    particleCount: 12,
-    animationSpeed: 'slow',
-    animationDuration: 6,
-    isPremium: true,
-    nodeCost: 1450,
-    imageUrl: borderPath('border_solar_grove_01'),
-    previewUrl: borderPath('border_solar_grove_01'),
-    tags: ['solarpunk', 'nature', 'achievement', 'gold', 'pixellab'],
-  },
-];
-
-export const AVATAR_BORDERS: readonly AvatarBorderConfig[] = [
-  ...SHARED_AVATAR_BORDERS,
-  ...PIXELLAB_GAME_AVATAR_BORDERS,
-];
+export const AVATAR_BORDERS: readonly AvatarBorderConfig[] = SHARED_AVATAR_BORDERS;
 
 export function getBorderById(id: string | null | undefined): AvatarBorderConfig | undefined {
   if (!id) return undefined;

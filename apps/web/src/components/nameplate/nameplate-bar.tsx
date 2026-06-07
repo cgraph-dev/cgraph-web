@@ -21,8 +21,8 @@ import {
   type NameplateEntry,
   type NameplateBorderStyle,
   type NameplateTextEffect,
+  getNameplateById,
 } from '@cgraph-dev/animation-constants';
-import { getNameplateById } from '@/data/pixellab-game-cosmetics';
 /** Default canvas dimensions matching the registry spec (300×48). */
 const BAR_WIDTH = 300;
 const BAR_HEIGHT = 48;

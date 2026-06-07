@@ -5,11 +5,11 @@ import {
   NAME_FONT_KEYS,
   NAME_EFFECTS,
   NAME_EFFECT_KEYS,
+  getNameplateById,
   type NameEffect,
   type NameFont,
 } from '@cgraph-dev/animation-constants';
 
-import { getNameplateById } from '@/data/pixellab-game-cosmetics';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import { cn } from '@/lib/utils';
 import type { NameplateProps } from './types';

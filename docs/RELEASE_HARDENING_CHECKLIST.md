@@ -124,9 +124,9 @@ Previous published-package baseline:
   - `pnpm --filter @cgraph/web check:release-gates`
   - `pnpm --filter @cgraph/web build:budget`
 - Result: web now consumes exact published npm dependencies
-  `@cgraph-dev/animation-constants@1.0.1`,
+  `@cgraph-dev/animation-constants@1.1.4`,
   `@cgraph-dev/api-client@1.1.1`, `@cgraph-dev/design-tokens@1.0.1`,
-  `@cgraph-dev/shared-types@1.1.1`, and `@cgraph-dev/utils@1.0.1`.
+  `@cgraph-dev/shared-types@1.1.3`, and `@cgraph-dev/utils@1.0.1`.
   Local app package mirrors and `packages/*` workspace membership are removed.
   `check:packages` and `check:package-owner` now enforce exact package pins,
   reject old `@cgraph/*` package dependencies, reject local package protocols,
@@ -452,6 +452,15 @@ Latest proof:
   npm read access, `pnpm install --frozen-lockfile`, package guards, typecheck,
   lint, release gates with 409 files / 5,345 tests, and build budget with the
   largest JS chunk at 487.02 kB / 500 kB.
+- 2026-06-07: production package commit
+  `4ef32f19dcfa8cfd3fc80dbbb050827e476c35c1` publishes
+  `@cgraph-dev/animation-constants@1.1.4`, making the new PixelLab game
+  nameplates and avatar borders package-owned. Web consumes that exact package
+  version, deletes the local nameplate overlay, and keeps the avatar-border file
+  as a renderer/legacy adapter over the shared catalog. Proof passed 8 focused
+  web tests, package-owner guard, typecheck, lint, `pnpm check:web-release` with
+  411 files / 5,353 tests, production build, and bundle budget with the largest
+  JS chunk at 493.32 kB / 500 kB.
 - 2026-06-06: production web commit
   `152d045c0188f0640f04b38f32ca4b8d8620b1e2` preserves the active routed group
   through stale `/api/v1/groups` list refreshes after invite joins, keeping the
