@@ -48,6 +48,51 @@ const assetPlan = [
       'transparent pixel art username nameplate background strip, aurora glass ribbon, teal purple edge lighting, subtle star particles, centered empty area for app-rendered username, no text',
   },
   {
+    id: 'plate_ranked_ascendant_01',
+    kind: 'nameplate',
+    endpoint: 'generate-ui-v2',
+    size: { width: 300, height: 48 },
+    colorPalette: 'royal sapphire, mythic gold, white crystal, dark navy enamel',
+    prompt:
+      'transparent pixel art game rank username nameplate, mythic ascendant tier, ornate sapphire and gold frame, sharp crystalline corner wings, glowing ranked crest accents, empty center for app-rendered username, no letters, no words, no logo, premium MOBA profile cosmetic',
+  },
+  {
+    id: 'plate_ember_colossus_01',
+    kind: 'nameplate',
+    endpoint: 'generate-ui-v2',
+    size: { width: 300, height: 48 },
+    colorPalette: 'molten orange, hammered bronze, obsidian black, ember red',
+    prompt:
+      'transparent pixel art heroic fantasy username nameplate, forged bronze and obsidian bar, molten ember channels, heavy battle pass cosmetic look, dramatic but readable empty center for app-rendered username, no text, no logo',
+  },
+  {
+    id: 'plate_void_relay_01',
+    kind: 'nameplate',
+    endpoint: 'generate-ui-v2',
+    size: { width: 300, height: 48 },
+    colorPalette: 'void purple, black glass, electric violet, cold cyan stars',
+    prompt:
+      'transparent pixel art cosmic void username nameplate, black glass strip, violet gravity arcs, tiny star particles, symmetrical rare game cosmetic, empty center for app-rendered username, no text, no logo',
+  },
+  {
+    id: 'plate_solar_grove_01',
+    kind: 'nameplate',
+    endpoint: 'generate-ui-v2',
+    size: { width: 300, height: 48 },
+    colorPalette: 'emerald leaf green, sun gold, teal glass, warm white',
+    prompt:
+      'transparent pixel art solarpunk username nameplate, emerald vines and sun-gold energy rails, polished fantasy game UI collectible, clear empty center for app-rendered username, no letters, no logo',
+  },
+  {
+    id: 'plate_sakura_vanguard_01',
+    kind: 'nameplate',
+    endpoint: 'generate-ui-v2',
+    size: { width: 300, height: 48 },
+    colorPalette: 'deep rose, sakura pink, pearl white, muted violet',
+    prompt:
+      'transparent pixel art sakura vanguard username nameplate, elegant rose metal bar, animated-petal style accents, premium event collectible, centered empty area for app-rendered username, no text, no logo',
+  },
+  {
     id: 'badge_verified_builder',
     kind: 'badge',
     endpoint: 'generate-ui-v2',
@@ -64,6 +109,42 @@ const assetPlan = [
     colorPalette: 'graphite, cyan, violet, dark navy',
     prompt:
       'transparent pixel art badge icon for privacy guardian, lock and orbiting signal waves, graphite cyan violet palette, premium messenger collectible badge, no text',
+  },
+  {
+    id: 'border_ranked_ascendant_01',
+    kind: 'avatar-border',
+    endpoint: 'generate-ui-v2',
+    size: { width: 192, height: 192 },
+    colorPalette: 'royal sapphire, mythic gold, white crystal, dark navy',
+    prompt:
+      'transparent pixel art single centered circular avatar frame for top ranked players, mythic ascendant tier, fully closed sapphire crystal ring, integrated gold crown crest attached to top of ring, angular MOBA profile border, no extra detached objects, no second frame, transparent outside and inside circle, no face, no text, no background',
+  },
+  {
+    id: 'border_ember_colossus_01',
+    kind: 'avatar-border',
+    endpoint: 'generate-ui-v2',
+    size: { width: 192, height: 192 },
+    colorPalette: 'obsidian, molten orange, bronze, ember red',
+    prompt:
+      'transparent pixel art single centered circular avatar frame only, heroic myth battle pass cosmetic, fully closed obsidian metal ring, molten lava channels built into the ring, bronze spikes attached to the frame, ember particles close to the ring, one object only, no planet, no moon, no sun, no separate orb, no extra detached objects, no second frame, transparent outside and inside circle, no face, no text, no background',
+  },
+  {
+    id: 'border_void_relay_01',
+    kind: 'avatar-border',
+    endpoint: 'generate-ui-v2',
+    size: { width: 192, height: 192 },
+    colorPalette: 'black glass, void purple, electric violet, cold cyan',
+    prompt:
+      'transparent pixel art single centered circular avatar frame, cosmic void relay theme, fully closed black glass ring with violet gravity arcs and tiny star shards attached to the frame, premium profile cosmetic, no multiple frames, no extra sample circles, transparent outside and inside circle, no face, no text, no background',
+  },
+  {
+    id: 'border_solar_grove_01',
+    kind: 'avatar-border',
+    endpoint: 'generate-ui-v2',
+    size: { width: 192, height: 192 },
+    colorPalette: 'emerald, sun gold, teal, warm white',
+    prompt:
+      'transparent pixel art circular avatar frame, solarpunk grove rank frame, emerald leaf filigree, sun-gold power nodes, polished game collectible, no face, no text, no background',
   },
   {
     id: 'title_founder_spark',
@@ -84,6 +165,33 @@ const assetPlan = [
       'pixel art profile card background texture for secure messenger app, signal noir theme, graphite black surface, subtle cyan grid, soft glass highlights, no text, no people, usable as UI preview background',
   },
   {
+    id: 'theme_ranked_ascendant_preview',
+    kind: 'profile-theme-preview',
+    endpoint: 'generate-image-v2',
+    size: { width: 320, height: 180 },
+    colorPalette: 'deep navy, sapphire, mythic gold, white crystal',
+    prompt:
+      'pixel art profile theme preview background, ranked ascendant game profile bundle, sapphire crystal arena UI, gold crest lighting, dramatic but clean space for app-rendered profile card, no text, no people, no logo',
+  },
+  {
+    id: 'theme_ember_colossus_preview',
+    kind: 'profile-theme-preview',
+    endpoint: 'generate-image-v2',
+    size: { width: 320, height: 180 },
+    colorPalette: 'obsidian black, bronze, molten orange, ember red',
+    prompt:
+      'pixel art profile theme preview background, ember colossus heroic fantasy UI, obsidian forge plates, molten orange channels, premium game profile decoration, no text, no people, no logo',
+  },
+  {
+    id: 'theme_void_relay_preview',
+    kind: 'profile-theme-preview',
+    endpoint: 'generate-image-v2',
+    size: { width: 320, height: 180 },
+    colorPalette: 'black, deep indigo, violet, cyan star light',
+    prompt:
+      'pixel art profile theme preview background, cosmic void relay, black glass command deck, violet star arcs, subtle constellation grid, premium sci-fi game profile UI, no text, no people, no logo',
+  },
+  {
     id: 'profile_signal_noir_founder',
     kind: 'profile-background',
     endpoint: 'generate-image-v2',
@@ -101,6 +209,60 @@ const assetPlan = [
     prompt:
       'compact pixel art mini-profile hover card background for premium secure social app, Signal Noir Founder theme, dark graphite panel with cyan signal grid, subtle node wallet glyph shapes, pulse glow accents, clear empty middle for app-rendered avatar and text, no people, no text, no logo, professional all-ages UI decoration',
   },
+  {
+    id: 'profile_ranked_ascendant',
+    kind: 'profile-background',
+    endpoint: 'generate-image-v2',
+    size: { width: 640, height: 360 },
+    colorPalette: 'deep navy, sapphire crystal, mythic gold, white highlights',
+    prompt:
+      'wide pixel art full profile background for premium game social app, Ranked Ascendant theme, sapphire crystal arena frame, gold crest rails, layered rank podium geometry, empty center for app-rendered profile content, no text, no logo, no people',
+  },
+  {
+    id: 'mini_ranked_ascendant',
+    kind: 'mini-profile-background',
+    endpoint: 'generate-image-v2',
+    size: { width: 320, height: 285 },
+    colorPalette: 'deep navy, sapphire crystal, mythic gold, white highlights',
+    prompt:
+      'compact pixel art mini-profile hover card background, Ranked Ascendant theme, sapphire and gold rank frame accents, clean empty middle for app-rendered avatar and username, no text, no logo, no people',
+  },
+  {
+    id: 'profile_ember_colossus',
+    kind: 'profile-background',
+    endpoint: 'generate-image-v2',
+    size: { width: 640, height: 360 },
+    colorPalette: 'obsidian, bronze, molten orange, ember red, smoke gray',
+    prompt:
+      'wide pixel art full profile background for premium game social app, Ember Colossus theme, obsidian forge wall, molten bronze channels, heroic battle pass frame language, empty center for app-rendered profile content, no text, no logo, no people',
+  },
+  {
+    id: 'mini_ember_colossus',
+    kind: 'mini-profile-background',
+    endpoint: 'generate-image-v2',
+    size: { width: 320, height: 285 },
+    colorPalette: 'obsidian, bronze, molten orange, ember red',
+    prompt:
+      'compact pixel art mini-profile hover card background, Ember Colossus theme, forged bronze edges, molten ember glow, clear empty middle for app-rendered avatar and text, no text, no logo, no people',
+  },
+  {
+    id: 'profile_void_relay',
+    kind: 'profile-background',
+    endpoint: 'generate-image-v2',
+    size: { width: 640, height: 360 },
+    colorPalette: 'black glass, deep indigo, void purple, electric violet, cyan starlight',
+    prompt:
+      'wide pixel art full profile background for premium game social app, Void Relay theme, black glass sci-fi deck, violet gravity arcs, constellation node network, empty center for app-rendered profile content, no text, no logo, no people',
+  },
+  {
+    id: 'mini_void_relay',
+    kind: 'mini-profile-background',
+    endpoint: 'generate-image-v2',
+    size: { width: 320, height: 285 },
+    colorPalette: 'black glass, deep indigo, void purple, cyan starlight',
+    prompt:
+      'compact pixel art mini-profile hover card background, Void Relay theme, violet cosmic arcs, black glass panel, clear empty middle for app-rendered avatar and text, no text, no logo, no people',
+  },
 ];
 
 function parseArgs() {
@@ -110,6 +272,7 @@ function parseArgs() {
     wait: true,
     limit: assetPlan.length,
     kind: null,
+    ids: null,
     outputDir: defaultOutputDir,
     force: false,
   };
@@ -123,6 +286,10 @@ function parseArgs() {
     else if (arg === '--force') options.force = true;
     else if (arg === '--limit') options.limit = Number(args[++i] ?? assetPlan.length);
     else if (arg === '--kind') options.kind = args[++i] ?? null;
+    else if (arg === '--id') {
+      const value = args[++i] ?? '';
+      options.ids = new Set(value.split(',').map((id) => id.trim()).filter(Boolean));
+    }
     else if (arg === '--out-dir') options.outputDir = args[++i] ?? defaultOutputDir;
     else if (arg === '--help' || arg === '-h') {
       printHelp();
@@ -145,6 +312,7 @@ Options:
   --execute       Actually call PixelLab and spend generations/credits.
   --dry-run       Print the asset plan only. Default.
   --kind <kind>   Filter by avatar-border, nameplate, badge, title-accent, profile-theme-preview, profile-background, mini-profile-background.
+  --id <ids>      Comma-separated asset IDs to generate.
   --limit <n>     Limit number of queued assets.
   --no-wait       Queue jobs and save job metadata without polling for completion.
   --out-dir <dir> Output directory. Default: apps/web/public/cosmetics/pixellab
@@ -276,14 +444,16 @@ async function saveAssetResult(asset, outputDir, queued, finalJob = null) {
   const assetDir = join(outputDir, asset.kind, asset.id);
   await mkdir(assetDir, { recursive: true });
 
+  const jobId = queued?.background_job_id ?? queued?.job_id ?? finalJob?.id ?? null;
+  const status = finalJob?.status ?? queued?.status ?? null;
   const metadata = {
     asset,
-    queued,
-    finalJob,
+    jobId,
+    status,
+    imageCount: 0,
     generatedAt: new Date().toISOString(),
     source: 'pixellab',
   };
-  await writeFile(join(assetDir, 'metadata.json'), `${JSON.stringify(metadata, null, 2)}\n`);
 
   const images = collectBase64Images(finalJob ?? queued);
   const imageUrls = [...new Set(collectImageUrls(finalJob ?? queued))];
@@ -296,12 +466,15 @@ async function saveAssetResult(asset, outputDir, queued, finalJob = null) {
     imageUrls.map((url, index) => saveImageUrl(url, join(assetDir, `${asset.id}_url_${index}.png`)))
   );
 
+  metadata.imageCount = images.length + imageUrls.length;
+  await writeFile(join(assetDir, 'metadata.json'), `${JSON.stringify(metadata, null, 2)}\n`);
+
   return {
     id: asset.id,
     kind: asset.kind,
     path: assetDir,
-    imageCount: images.length + imageUrls.length,
-    jobId: queued.background_job_id ?? queued.job_id ?? null,
+    imageCount: metadata.imageCount,
+    jobId,
   };
 }
 
@@ -309,6 +482,7 @@ async function main() {
   const options = parseArgs();
   const selected = assetPlan
     .filter((asset) => !options.kind || asset.kind === options.kind)
+    .filter((asset) => !options.ids || options.ids.has(asset.id))
     .slice(0, options.limit);
 
   if (selected.length === 0) {

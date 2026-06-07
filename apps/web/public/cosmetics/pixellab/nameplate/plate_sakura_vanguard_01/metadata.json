@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "plate_sakura_vanguard_01",
+    "kind": "nameplate",
+    "endpoint": "generate-ui-v2",
+    "size": {
+      "width": 300,
+      "height": 48
+    },
+    "colorPalette": "deep rose, sakura pink, pearl white, muted violet",
+    "prompt": "transparent pixel art sakura vanguard username nameplate, elegant rose metal bar, animated-petal style accents, premium event collectible, centered empty area for app-rendered username, no text, no logo"
+  },
+  "jobId": "cb50711a-bcc9-4c06-b4cf-9807d81cf653",
+  "status": "completed",
+  "imageCount": 2,
+  "generatedAt": "2026-06-07T01:40:58.321Z",
+  "source": "pixellab"
+}

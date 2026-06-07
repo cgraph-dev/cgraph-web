@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "mini_ember_colossus",
+    "kind": "mini-profile-background",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 320,
+      "height": 285
+    },
+    "colorPalette": "obsidian, bronze, molten orange, ember red",
+    "prompt": "compact pixel art mini-profile hover card background, Ember Colossus theme, forged bronze edges, molten ember glow, clear empty middle for app-rendered avatar and text, no text, no logo, no people"
+  },
+  "jobId": "49a0056e-67b3-404c-9dae-58cdb49e1170",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:56:32.522Z",
+  "source": "pixellab"
+}

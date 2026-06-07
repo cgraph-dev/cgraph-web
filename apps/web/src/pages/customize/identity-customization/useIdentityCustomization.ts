@@ -25,7 +25,7 @@ import {
 } from '@/data/avatar-borders';
 import { ALL_TITLES, type TitleDefinition } from '@/data/titlesCollection';
 import { ALL_BADGES, type BadgeDefinition } from '@/data/badgesCollection';
-import { NAMEPLATE_REGISTRY } from '@cgraph-dev/animation-constants';
+import { NAMEPLATE_REGISTRY } from '@/data/pixellab-game-cosmetics';
 import type { InventoryItemType } from '@cgraph-dev/shared-types';
 
 import type { Rarity, Border, Title, Badge } from './types';

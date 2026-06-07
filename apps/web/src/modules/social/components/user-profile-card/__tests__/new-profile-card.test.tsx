@@ -47,4 +47,19 @@ describe('NewProfileCard', () => {
     expect(screen.getByText('Posts')).toBeInTheDocument();
     expect(screen.getByText('Network')).toBeInTheDocument();
   });
+
+  it('renders enriched game theme backgrounds for non-default profile themes', () => {
+    const { container } = render(
+      <NewProfileCard
+        user={{ ...user, accentTheme: 'deep-space', profile_theme: 'deep-space' }}
+        mode="preview"
+        variant="mini"
+      />
+    );
+
+    const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
+
+    expect(themedBody?.dataset.profileBackgroundImage).toContain('mini_void_relay');
+    expect(themedBody).toHaveClass('cgraph-game-profile-surface');
+  });
 });

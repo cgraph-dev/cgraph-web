@@ -6,15 +6,6 @@
  * for existing UI components.
  */
 
-// Re-export canonical data and functions from shared package
-export {
-  AVATAR_BORDERS,
-  getAvatarBorderById as getBorderById,
-  getAvatarBordersByRarity as getBordersByRarity,
-  getFreeAvatarBorders as getFreeBorders,
-  getPremiumAvatarBorders as getPremiumBorders,
-} from '@cgraph-dev/animation-constants';
-
 // Re-export types — BorderRarity comes from the shared package,
 // AvatarBorderConfig from the local types file for full compatibility
 // with consumers that mix both import sources.
@@ -22,8 +13,7 @@ export type { BorderRarity } from '@cgraph-dev/animation-constants';
 export type { AvatarBorderConfig } from '@/types/avatar-borders';
 
 import {
-  AVATAR_BORDERS,
-  getAvatarBorderById,
+  AVATAR_BORDERS as SHARED_AVATAR_BORDERS,
   type AvatarBorderConfig,
   type AvatarBorderTheme,
   type AvatarBorderType,
@@ -34,11 +24,139 @@ import {
 // with web consumers that import BorderTheme from this file.
 export type BorderTheme = AvatarBorderTheme;
 
+const borderPath = (id: string, frame = 0): string =>
+  `/cosmetics/pixellab/avatar-border/${id}/${id}_${frame}.png`;
+
+const PIXELLAB_GAME_AVATAR_BORDERS: readonly AvatarBorderConfig[] = [
+  {
+    id: 'border_ranked_ascendant_01',
+    type: 'mythic',
+    name: 'Ranked Ascendant',
+    description: 'A sapphire-and-gold rank crest frame for top-tier profile identity.',
+    theme: 'gaming',
+    rarity: 'mythic',
+    unlockType: 'leaderboard',
+    unlockRequirement: {
+      type: 'leaderboard',
+      value: 'top-100',
+      description: 'Reach Ascendant leaderboard tier.',
+    },
+    primaryColor: '#2563eb',
+    secondaryColor: '#fbbf24',
+    accentColor: '#eff6ff',
+    particleCount: 18,
+    animationSpeed: 'normal',
+    animationDuration: 4.8,
+    isPremium: true,
+    nodeCost: 3246,
+    imageUrl: borderPath('border_ranked_ascendant_01'),
+    previewUrl: borderPath('border_ranked_ascendant_01'),
+    tags: ['ranked', 'leaderboard', 'sapphire', 'gold', 'pixellab'],
+  },
+  {
+    id: 'border_ember_colossus_01',
+    type: 'fire',
+    name: 'Ember Colossus',
+    description: 'A forged obsidian frame with molten channels and ember particles.',
+    theme: 'elemental',
+    rarity: 'legendary',
+    unlockType: 'event',
+    unlockRequirement: {
+      type: 'event',
+      value: 'ember-colossus',
+      description: 'Unlock during the Ember Colossus event.',
+    },
+    primaryColor: '#fb923c',
+    secondaryColor: '#7c2d12',
+    accentColor: '#f97316',
+    particleCount: 14,
+    animationSpeed: 'slow',
+    animationDuration: 5.4,
+    isPremium: true,
+    nodeCost: 1850,
+    imageUrl: borderPath('border_ember_colossus_01'),
+    previewUrl: borderPath('border_ember_colossus_01'),
+    tags: ['ember', 'forge', 'event', 'fire', 'pixellab'],
+  },
+  {
+    id: 'border_void_relay_01',
+    type: 'mythic',
+    name: 'Void Relay',
+    description: 'A black-glass cosmic ring with violet gravity arcs.',
+    theme: 'cosmic',
+    rarity: 'mythic',
+    unlockType: 'purchase',
+    unlockRequirement: {
+      type: 'nodes',
+      value: 2800,
+      description: 'Purchase from the premium profile shop.',
+    },
+    primaryColor: '#a855f7',
+    secondaryColor: '#111827',
+    accentColor: '#22d3ee',
+    particleCount: 20,
+    animationSpeed: 'normal',
+    animationDuration: 5,
+    isPremium: true,
+    nodeCost: 2800,
+    imageUrl: borderPath('border_void_relay_01'),
+    previewUrl: borderPath('border_void_relay_01'),
+    tags: ['void', 'cosmic', 'sci-fi', 'premium', 'pixellab'],
+  },
+  {
+    id: 'border_solar_grove_01',
+    type: 'glow',
+    name: 'Solar Grove',
+    description: 'An emerald filigree frame with sun-gold progression nodes.',
+    theme: 'nature',
+    rarity: 'epic',
+    unlockType: 'achievement',
+    unlockRequirement: {
+      type: 'achievement',
+      value: 'community-growth',
+      description: 'Earned from community-growth achievements.',
+    },
+    primaryColor: '#16a34a',
+    secondaryColor: '#facc15',
+    accentColor: '#bbf7d0',
+    particleCount: 12,
+    animationSpeed: 'slow',
+    animationDuration: 6,
+    isPremium: true,
+    nodeCost: 1450,
+    imageUrl: borderPath('border_solar_grove_01'),
+    previewUrl: borderPath('border_solar_grove_01'),
+    tags: ['solarpunk', 'nature', 'achievement', 'gold', 'pixellab'],
+  },
+];
+
+export const AVATAR_BORDERS: readonly AvatarBorderConfig[] = [
+  ...SHARED_AVATAR_BORDERS,
+  ...PIXELLAB_GAME_AVATAR_BORDERS,
+];
+
+export function getBorderById(id: string | null | undefined): AvatarBorderConfig | undefined {
+  if (!id) return undefined;
+  return AVATAR_BORDERS.find((border) => border.id === id);
+}
+
+export function getBordersByRarity(rarity: BorderRarity): AvatarBorderConfig[] {
+  return AVATAR_BORDERS.filter((border) => border.rarity === rarity);
+}
+
+export function getFreeBorders(): AvatarBorderConfig[] {
+  return AVATAR_BORDERS.filter((border) => border.unlockType === 'default' || !border.isPremium);
+}
+
+export function getPremiumBorders(): AvatarBorderConfig[] {
+  return AVATAR_BORDERS.filter((border) => border.isPremium);
+}
+
 export function getAvatarBorderDisplayTypeById(
   borderId: string | null | undefined
 ): AvatarBorderType {
   if (!borderId) return 'none';
-  return getAvatarBorderById(borderId)?.type ?? 'none';
+  return getBorderById(borderId)?.type ?? 'none';
 }
 
 const LEGACY_AVATAR_BORDER_DISPLAY_TYPES = [
@@ -271,6 +389,24 @@ const themeConfig: Partial<
     icon: '\u2727',
     accentColor: '#9b30ff',
     description: 'Stellar phenomena',
+  },
+  gaming: {
+    name: 'Ranked',
+    icon: '\u25C8',
+    accentColor: '#fbbf24',
+    description: 'Competitive rank frames',
+  },
+  elemental: {
+    name: 'Elemental',
+    icon: '\u25C7',
+    accentColor: '#fb923c',
+    description: 'Fire, ice, storm, and forge effects',
+  },
+  nature: {
+    name: 'Nature',
+    icon: '\u2739',
+    accentColor: '#22c55e',
+    description: 'Organic growth and solarpunk energy',
   },
 };
 

@@ -9,11 +9,15 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import {
-  NAMEPLATE_REGISTRY,
+} from '@cgraph-dev/animation-constants';
+import {
   NAMEPLATE_CATEGORIES,
-  type NameplateEntry,
-  type NameplateRarity,
-  type NameplateCategory,
+  NAMEPLATE_REGISTRY,
+} from '@/data/pixellab-game-cosmetics';
+import type {
+  NameplateCategory,
+  NameplateEntry,
+  NameplateRarity,
 } from '@cgraph-dev/animation-constants';
 import { NameplateRenderer } from '@/components/ui/nameplate-renderer';
 

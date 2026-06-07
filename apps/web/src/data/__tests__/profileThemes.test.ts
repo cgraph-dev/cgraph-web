@@ -5,7 +5,6 @@ import {
   PROFILE_THEME_BUNDLE_IDS as SHARED_PROFILE_THEME_BUNDLE_IDS,
   PROFILE_THEME_BUNDLES as SHARED_PROFILE_THEME_BUNDLES,
   PROFILE_THEME_CATEGORY_INFO as SHARED_PROFILE_THEME_CATEGORIES,
-  getProfileThemeOrDefault as getSharedProfileThemeOrDefault,
   getProfileThemeBundleById as getSharedProfileThemeBundleById,
   getThemesByCategory as getSharedThemesByCategory,
 } from '@cgraph-dev/shared-types';
@@ -23,12 +22,12 @@ import {
 } from '../profileThemes';
 
 describe('profile theme catalog adapter', () => {
-  it('uses the shared package catalog as the source of truth', () => {
-    expect(ALL_PROFILE_THEMES).toEqual(SHARED_PROFILE_THEMES);
-    expect(DEFAULT_PROFILE_THEME).toEqual(SHARED_DEFAULT_PROFILE_THEME);
-    expect(getProfileThemeOrDefault(DEFAULT_PROFILE_THEME_ID)).toEqual(
-      getSharedProfileThemeOrDefault(DEFAULT_PROFILE_THEME_ID)
+  it('uses the shared package catalog ids as the source of truth', () => {
+    expect(ALL_PROFILE_THEMES.map((theme) => theme.id)).toEqual(
+      SHARED_PROFILE_THEMES.map((theme) => theme.id)
     );
+    expect(DEFAULT_PROFILE_THEME.id).toBe(SHARED_DEFAULT_PROFILE_THEME.id);
+    expect(getProfileThemeOrDefault(DEFAULT_PROFILE_THEME_ID).id).toBe(DEFAULT_PROFILE_THEME_ID);
     expect(PROFILE_THEME_BUNDLE_IDS).toEqual(SHARED_PROFILE_THEME_BUNDLE_IDS);
     expect(PROFILE_THEME_BUNDLES).toEqual(SHARED_PROFILE_THEME_BUNDLES);
     expect(getProfileThemeBundleById('signal-noir-founder')).toEqual(
@@ -45,6 +44,18 @@ describe('profile theme catalog adapter', () => {
 
     expect(signalThemes).toEqual(getSharedThemesByCategory('signal'));
     expect(signalThemes).not.toBe(getSharedThemesByCategory('signal'));
+  });
+
+  it('adds web renderer assets without inventing new profile theme ids', () => {
+    const aurora = getProfileThemeOrDefault('aurora-glass');
+    const ember = getProfileThemeOrDefault('ember-forge');
+    const deepSpace = getProfileThemeOrDefault('deep-space');
+
+    expect(aurora.profileBackgroundImage).toContain('profile_ranked_ascendant');
+    expect(aurora.miniProfileBackgroundImage).toContain('mini_ranked_ascendant');
+    expect(ember.profileBackgroundImage).toContain('profile_ember_colossus');
+    expect(deepSpace.profileBackgroundImage).toContain('profile_void_relay');
+    expect(ALL_PROFILE_THEMES).toHaveLength(SHARED_PROFILE_THEMES.length);
   });
 
   it('exposes profile and mini-profile background assets for themed bundles', () => {

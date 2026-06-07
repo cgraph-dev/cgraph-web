@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "mini_ranked_ascendant",
+    "kind": "mini-profile-background",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 320,
+      "height": 285
+    },
+    "colorPalette": "deep navy, sapphire crystal, mythic gold, white highlights",
+    "prompt": "compact pixel art mini-profile hover card background, Ranked Ascendant theme, sapphire and gold rank frame accents, clean empty middle for app-rendered avatar and username, no text, no logo, no people"
+  },
+  "jobId": "af0d2fa7-1c5d-43e2-bdc0-ee7f7d453ddb",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:53:25.051Z",
+  "source": "pixellab"
+}

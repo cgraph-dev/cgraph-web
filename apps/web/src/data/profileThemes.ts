@@ -14,11 +14,8 @@ import {
   PROFILE_THEME_CATEGORIES as PROFILE_THEME_CATEGORY_IDS,
   PROFILE_THEME_CATEGORY_INFO as SHARED_PROFILE_THEME_CATEGORIES,
   PROFILE_THEME_IDS,
-  getProfileThemeOrDefault as getSharedProfileThemeOrDefault,
   getProfileThemeBundleById as getSharedProfileThemeBundleById,
   getProfileThemeBundlesByTheme as getSharedProfileThemeBundlesByTheme,
-  getThemeById as getSharedThemeById,
-  getThemesByCategory as getSharedThemesByCategory,
   isProfileThemeId,
   isProfileThemeBundleId,
 } from '@cgraph-dev/shared-types';
@@ -42,23 +39,63 @@ export {
   isProfileThemeId,
 };
 
-export const ALL_PROFILE_THEMES: ProfileThemeConfig[] = [...SHARED_PROFILE_THEMES];
-export const DEFAULT_PROFILE_THEME: ProfileThemeConfig = SHARED_DEFAULT_PROFILE_THEME;
+type ProfileThemeAssetOverride = Pick<
+  ProfileThemeConfig,
+  'previewImage' | 'profileBackgroundImage' | 'miniProfileBackgroundImage'
+>;
+
+const PROFILE_THEME_ASSET_OVERRIDES: Partial<Record<ProfileThemeId, ProfileThemeAssetOverride>> =
+  {
+    'aurora-glass': {
+      previewImage:
+        '/cosmetics/pixellab/profile-theme-preview/theme_ranked_ascendant_preview/theme_ranked_ascendant_preview_0.png',
+      profileBackgroundImage:
+        '/cosmetics/pixellab/profile-background/profile_ranked_ascendant/profile_ranked_ascendant_0.png',
+      miniProfileBackgroundImage:
+        '/cosmetics/pixellab/mini-profile-background/mini_ranked_ascendant/mini_ranked_ascendant_0.png',
+    },
+    'deep-space': {
+      previewImage:
+        '/cosmetics/pixellab/profile-theme-preview/theme_void_relay_preview/theme_void_relay_preview_0.png',
+      profileBackgroundImage:
+        '/cosmetics/pixellab/profile-background/profile_void_relay/profile_void_relay_0.png',
+      miniProfileBackgroundImage:
+        '/cosmetics/pixellab/mini-profile-background/mini_void_relay/mini_void_relay_0.png',
+    },
+    'ember-forge': {
+      previewImage:
+        '/cosmetics/pixellab/profile-theme-preview/theme_ember_colossus_preview/theme_ember_colossus_preview_0.png',
+      profileBackgroundImage:
+        '/cosmetics/pixellab/profile-background/profile_ember_colossus/profile_ember_colossus_0.png',
+      miniProfileBackgroundImage:
+        '/cosmetics/pixellab/mini-profile-background/mini_ember_colossus/mini_ember_colossus_0.png',
+    },
+  };
+
+export const ALL_PROFILE_THEMES: ProfileThemeConfig[] = SHARED_PROFILE_THEMES.map((theme) => ({
+  ...theme,
+  ...PROFILE_THEME_ASSET_OVERRIDES[theme.id],
+}));
+
+export const DEFAULT_PROFILE_THEME: ProfileThemeConfig =
+  ALL_PROFILE_THEMES.find((theme) => theme.id === SHARED_DEFAULT_PROFILE_THEME.id) ??
+  SHARED_DEFAULT_PROFILE_THEME;
 export const PROFILE_THEME_CATEGORY_INFO: ProfileThemeCategoryInfo[] = [
   ...SHARED_PROFILE_THEME_CATEGORIES,
 ];
 export const PROFILE_THEME_CATEGORIES = PROFILE_THEME_CATEGORY_INFO;
 
 export function getThemesByCategory(category: ProfileThemeCategory): ProfileThemeConfig[] {
-  return [...getSharedThemesByCategory(category)];
+  return ALL_PROFILE_THEMES.filter((theme) => theme.category === category);
 }
 
 export function getThemeById(id: string | null | undefined): ProfileThemeConfig | undefined {
-  return getSharedThemeById(id);
+  if (!isProfileThemeId(id)) return undefined;
+  return ALL_PROFILE_THEMES.find((theme) => theme.id === id);
 }
 
 export function getProfileThemeOrDefault(id: string | null | undefined): ProfileThemeConfig {
-  return getSharedProfileThemeOrDefault(id);
+  return getThemeById(id) ?? DEFAULT_PROFILE_THEME;
 }
 
 export function getProfileThemeBundleById(

@@ -17,12 +17,12 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import {
   NAME_FONTS,
-  getNameplateById,
   type NameFont,
   type NameplateEntry,
   type NameplateBorderStyle,
   type NameplateTextEffect,
 } from '@cgraph-dev/animation-constants';
+import { getNameplateById } from '@/data/pixellab-game-cosmetics';
 /** Default canvas dimensions matching the registry spec (300×48). */
 const BAR_WIDTH = 300;
 const BAR_HEIGHT = 48;
@@ -310,7 +310,7 @@ export const NameplateBar = memo(function NameplateBar({
     <AnimatePresence mode="wait">
       <motion.div
         key={entry.id}
-        className={`relative overflow-hidden ${className}`}
+        className={`cgraph-game-nameplate-frame relative overflow-hidden ${className}`}
         style={{
           width,
           height,
@@ -347,6 +347,9 @@ export const NameplateBar = memo(function NameplateBar({
             fallback={null}
           />
         ) : null}
+
+        <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[2] rounded-[inherit]" />
+        <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[3] w-1/2" />
 
         {/* Layer 3: Content — emblem + username text effect */}
         <div

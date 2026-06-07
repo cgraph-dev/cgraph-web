@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "mini_void_relay",
+    "kind": "mini-profile-background",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 320,
+      "height": 285
+    },
+    "colorPalette": "black glass, deep indigo, void purple, cyan starlight",
+    "prompt": "compact pixel art mini-profile hover card background, Void Relay theme, violet cosmic arcs, black glass panel, clear empty middle for app-rendered avatar and text, no text, no logo, no people"
+  },
+  "jobId": "1e99d23b-16f5-4c70-aa4b-0c82f7a9b0c6",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:59:49.653Z",
+  "source": "pixellab"
+}

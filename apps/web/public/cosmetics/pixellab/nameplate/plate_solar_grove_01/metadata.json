@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "plate_solar_grove_01",
+    "kind": "nameplate",
+    "endpoint": "generate-ui-v2",
+    "size": {
+      "width": 300,
+      "height": 48
+    },
+    "colorPalette": "emerald leaf green, sun gold, teal glass, warm white",
+    "prompt": "transparent pixel art solarpunk username nameplate, emerald vines and sun-gold energy rails, polished fantasy game UI collectible, clear empty center for app-rendered username, no letters, no logo"
+  },
+  "jobId": "36ab713f-d545-42d1-ad72-4167def26cb6",
+  "status": "completed",
+  "imageCount": 2,
+  "generatedAt": "2026-06-07T01:40:00.753Z",
+  "source": "pixellab"
+}

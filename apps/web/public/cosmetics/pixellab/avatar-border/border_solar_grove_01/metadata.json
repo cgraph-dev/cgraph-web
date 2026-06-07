@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "border_solar_grove_01",
+    "kind": "avatar-border",
+    "endpoint": "generate-ui-v2",
+    "size": {
+      "width": 192,
+      "height": 192
+    },
+    "colorPalette": "emerald, sun gold, teal, warm white",
+    "prompt": "transparent pixel art circular avatar frame, solarpunk grove rank frame, emerald leaf filigree, sun-gold power nodes, polished game collectible, no face, no text, no background"
+  },
+  "jobId": "ec8a96da-2a06-463a-9e88-598c95500188",
+  "status": "completed",
+  "imageCount": 2,
+  "generatedAt": "2026-06-07T01:46:30.299Z",
+  "source": "pixellab"
+}

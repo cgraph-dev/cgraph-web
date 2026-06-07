@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "theme_ember_colossus_preview",
+    "kind": "profile-theme-preview",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 320,
+      "height": 180
+    },
+    "colorPalette": "obsidian black, bronze, molten orange, ember red",
+    "prompt": "pixel art profile theme preview background, ember colossus heroic fantasy UI, obsidian forge plates, molten orange channels, premium game profile decoration, no text, no people, no logo"
+  },
+  "jobId": "46e3d235-c786-4bc4-acad-4d7df093fb66",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:48:24.842Z",
+  "source": "pixellab"
+}

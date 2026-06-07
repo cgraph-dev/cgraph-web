@@ -111,7 +111,10 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
     return (
       <motion.div
         ref={containerRef}
-        className={cn('relative flex cursor-pointer items-center justify-center', className)}
+        className={cn(
+          'cgraph-game-avatar-frame relative flex cursor-pointer items-center justify-center',
+          className
+        )}
         style={{ width: size, height: size }}
         onClick={onClick}
         whileHover={interactive && !reducedMotion ? { scale: 1.05 } : undefined}
@@ -123,6 +126,7 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
           className="pointer-events-none absolute inset-0 h-full w-full object-contain"
           loading="lazy"
         />
+        <span className="cgraph-game-avatar-frame-glow pointer-events-none absolute inset-0" />
         <div
           className="relative z-10 overflow-hidden rounded-full bg-[var(--token-card-bg)]"
           style={{ width: avatarSize, height: avatarSize }}

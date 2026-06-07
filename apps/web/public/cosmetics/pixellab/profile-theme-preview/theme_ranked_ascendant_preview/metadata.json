@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "theme_ranked_ascendant_preview",
+    "kind": "profile-theme-preview",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 320,
+      "height": 180
+    },
+    "colorPalette": "deep navy, sapphire, mythic gold, white crystal",
+    "prompt": "pixel art profile theme preview background, ranked ascendant game profile bundle, sapphire crystal arena UI, gold crest lighting, dramatic but clean space for app-rendered profile card, no text, no people, no logo"
+  },
+  "jobId": "12ce3bc8-5e48-427b-920a-0cb0bd695d0c",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:47:22.270Z",
+  "source": "pixellab"
+}

@@ -247,7 +247,7 @@ export default function Avatar({
     const frameSize = cfg.px + frameBorderWidth * 2;
     return (
       <span
-        className="relative inline-flex items-center justify-center"
+        className="cgraph-game-avatar-frame relative inline-flex items-center justify-center"
         style={{ width: frameSize, height: frameSize }}
       >
         <img
@@ -256,6 +256,7 @@ export default function Avatar({
           className="pointer-events-none absolute inset-0 h-full w-full object-contain"
           loading="lazy"
         />
+        <span className="cgraph-game-avatar-frame-glow pointer-events-none absolute inset-0" />
         <span className="relative z-10 inline-flex items-center justify-center">
           {avatarContent}
         </span>

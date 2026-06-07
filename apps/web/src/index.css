@@ -573,6 +573,112 @@
     96% { text-shadow: -1px 0 #ff0000, 1px 0 #00ff00; transform: translateX(0); }
   }
 
+  @keyframes cgraph-cosmetic-sheen {
+    0%, 38% { transform: translateX(-135%) skewX(-18deg); opacity: 0; }
+    48% { opacity: 0.72; }
+    70% { transform: translateX(145%) skewX(-18deg); opacity: 0; }
+    100% { transform: translateX(145%) skewX(-18deg); opacity: 0; }
+  }
+
+  @keyframes cgraph-cosmetic-glow-breathe {
+    0%, 100% {
+      opacity: 0.55;
+      filter: brightness(1) saturate(1.04);
+    }
+    50% {
+      opacity: 0.95;
+      filter: brightness(1.16) saturate(1.18);
+    }
+  }
+
+  @keyframes cgraph-cosmetic-profile-ambience {
+    0%, 100% {
+      opacity: 0.32;
+      transform: translate3d(-2%, -1%, 0) scale(1);
+    }
+    50% {
+      opacity: 0.58;
+      transform: translate3d(2%, 1%, 0) scale(1.03);
+    }
+  }
+
+  @keyframes cgraph-cosmetic-frame-turn {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .cgraph-game-nameplate-frame {
+    isolation: isolate;
+  }
+
+  .cgraph-game-nameplate-sheen {
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.02) 34%,
+      rgba(255, 255, 255, 0.58) 49%,
+      rgba(255, 255, 255, 0.08) 62%,
+      transparent 100%
+    );
+    mix-blend-mode: screen;
+    animation: cgraph-cosmetic-sheen 4.8s ease-in-out infinite;
+  }
+
+  .cgraph-game-nameplate-glow {
+    box-shadow:
+      inset 0 0 18px rgba(255, 255, 255, 0.08),
+      0 0 18px color-mix(in srgb, currentColor 28%, transparent);
+    animation: cgraph-cosmetic-glow-breathe 3.8s ease-in-out infinite;
+  }
+
+  .cgraph-game-avatar-frame {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.14));
+    animation: cgraph-cosmetic-glow-breathe 4.6s ease-in-out infinite;
+  }
+
+  .cgraph-game-avatar-frame-glow {
+    border-radius: 9999px;
+    background:
+      conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.45), transparent 28%),
+      radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 62%);
+    mix-blend-mode: screen;
+    opacity: 0.36;
+    animation: cgraph-cosmetic-frame-turn 7.5s linear infinite;
+  }
+
+  .cgraph-game-profile-surface {
+    isolation: isolate;
+  }
+
+  .cgraph-game-profile-surface::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.12), transparent 28%),
+      radial-gradient(circle at 82% 10%, rgba(125, 211, 252, 0.12), transparent 30%),
+      linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.08) 48%, transparent 62%);
+    mix-blend-mode: screen;
+    animation: cgraph-cosmetic-profile-ambience 8s ease-in-out infinite;
+  }
+
+  .cgraph-game-profile-surface > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cgraph-game-nameplate-sheen,
+    .cgraph-game-nameplate-glow,
+    .cgraph-game-avatar-frame,
+    .cgraph-game-avatar-frame-glow,
+    .cgraph-game-profile-surface::before {
+      animation: none;
+    }
+  }
+
   /* Shimmer loading effect */
   .animate-shimmer {
     background: linear-gradient(

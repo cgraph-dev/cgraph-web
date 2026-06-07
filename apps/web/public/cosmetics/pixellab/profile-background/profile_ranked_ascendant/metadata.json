@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "profile_ranked_ascendant",
+    "kind": "profile-background",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 640,
+      "height": 360
+    },
+    "colorPalette": "deep navy, sapphire crystal, mythic gold, white highlights",
+    "prompt": "wide pixel art full profile background for premium game social app, Ranked Ascendant theme, sapphire crystal arena frame, gold crest rails, layered rank podium geometry, empty center for app-rendered profile content, no text, no logo, no people"
+  },
+  "jobId": "0e22f17c-4f8a-493d-889b-726f55b616b0",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:52:34.692Z",
+  "source": "pixellab"
+}

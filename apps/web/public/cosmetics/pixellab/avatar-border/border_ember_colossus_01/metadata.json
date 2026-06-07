@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "border_ember_colossus_01",
+    "kind": "avatar-border",
+    "endpoint": "generate-ui-v2",
+    "size": {
+      "width": 192,
+      "height": 192
+    },
+    "colorPalette": "obsidian, molten orange, bronze, ember red",
+    "prompt": "transparent pixel art single centered circular avatar frame only, heroic myth battle pass cosmetic, fully closed obsidian metal ring, molten lava channels built into the ring, bronze spikes attached to the frame, ember particles close to the ring, one object only, no planet, no moon, no sun, no separate orb, no extra detached objects, no second frame, transparent outside and inside circle, no face, no text, no background"
+  },
+  "jobId": "b17a702f-adff-4802-a78a-c4c34d988a76",
+  "status": "completed",
+  "imageCount": 2,
+  "generatedAt": "2026-06-07T02:09:41.727Z",
+  "source": "pixellab"
+}

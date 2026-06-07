@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "border_ranked_ascendant_01",
+    "kind": "avatar-border",
+    "endpoint": "generate-ui-v2",
+    "size": {
+      "width": 192,
+      "height": 192
+    },
+    "colorPalette": "royal sapphire, mythic gold, white crystal, dark navy",
+    "prompt": "transparent pixel art single centered circular avatar frame for top ranked players, mythic ascendant tier, fully closed sapphire crystal ring, integrated gold crown crest attached to top of ring, angular MOBA profile border, no extra detached objects, no second frame, transparent outside and inside circle, no face, no text, no background"
+  },
+  "jobId": "29acd142-fad2-4ecd-a183-a5acc332d03c",
+  "status": "completed",
+  "imageCount": 2,
+  "generatedAt": "2026-06-07T02:03:02.380Z",
+  "source": "pixellab"
+}

@@ -192,7 +192,7 @@ export const NameplateRenderer = memo(function NameplateRenderer({
 
   return (
     <div
-      className={`relative inline-flex items-center gap-1.5 font-bold ${sizeConfig.height} ${sizeConfig.px} ${sizeConfig.rounded} ${className}`}
+      className={`cgraph-game-nameplate-frame relative inline-flex items-center gap-1.5 overflow-hidden font-bold ${sizeConfig.height} ${sizeConfig.px} ${sizeConfig.rounded} ${className}`}
       style={{
         background: barBackground,
         ...borderStyles,
@@ -215,6 +215,8 @@ export const NameplateRenderer = memo(function NameplateRenderer({
           fallback={null}
         />
       ) : null}
+      <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[1] rounded-[inherit]" />
+      <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/2" />
       {/* Emblem */}
       {showEmblem && nameplate.emblem && (
         <span className={`relative z-10 ${sizeConfig.emblemSize}`}>{nameplate.emblem}</span>

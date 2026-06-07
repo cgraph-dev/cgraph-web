@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "profile_void_relay",
+    "kind": "profile-background",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 640,
+      "height": 360
+    },
+    "colorPalette": "black glass, deep indigo, void purple, electric violet, cyan starlight",
+    "prompt": "wide pixel art full profile background for premium game social app, Void Relay theme, black glass sci-fi deck, violet gravity arcs, constellation node network, empty center for app-rendered profile content, no text, no logo, no people"
+  },
+  "jobId": "3b83b6d5-f7fc-4d16-96f2-671789b23674",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:58:43.729Z",
+  "source": "pixellab"
+}

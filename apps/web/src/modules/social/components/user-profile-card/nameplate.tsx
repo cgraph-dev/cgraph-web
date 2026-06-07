@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
 import {
-  getNameplateById,
   NAME_FONTS,
   NAME_FONT_KEYS,
   NAME_EFFECTS,
@@ -10,6 +9,7 @@ import {
   type NameFont,
 } from '@cgraph-dev/animation-constants';
 
+import { getNameplateById } from '@/data/pixellab-game-cosmetics';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import { cn } from '@/lib/utils';
 import type { NameplateProps } from './types';
@@ -166,7 +166,7 @@ export const Nameplate = memo(function Nameplate({
       data-display-name-effect={displayNameEffect ?? undefined}
     >
       <div
-        className="relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-xl px-[26px] pb-[10px] pt-2 backdrop-blur-[20px] backdrop-saturate-[1.6]"
+        className="cgraph-game-nameplate-frame relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-xl px-[26px] pb-[10px] pt-2 backdrop-blur-[20px] backdrop-saturate-[1.6]"
         style={{
           background: barBg,
           border: barBorder,
@@ -189,6 +189,12 @@ export const Nameplate = memo(function Nameplate({
             fallback={null}
           />
         ) : null}
+        {hasEntry && (
+          <>
+            <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[1] rounded-[inherit]" />
+            <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/2" />
+          </>
+        )}
 
         {/* Emblem from nameplate entry */}
         {hasEntry && entry.emblem && <span className="relative z-[1] text-sm">{entry.emblem}</span>}

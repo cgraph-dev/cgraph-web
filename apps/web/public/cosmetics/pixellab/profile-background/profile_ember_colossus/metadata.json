@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "profile_ember_colossus",
+    "kind": "profile-background",
+    "endpoint": "generate-image-v2",
+    "size": {
+      "width": 640,
+      "height": 360
+    },
+    "colorPalette": "obsidian, bronze, molten orange, ember red, smoke gray",
+    "prompt": "wide pixel art full profile background for premium game social app, Ember Colossus theme, obsidian forge wall, molten bronze channels, heroic battle pass frame language, empty center for app-rendered profile content, no text, no logo, no people"
+  },
+  "jobId": "ddabfcb2-33af-40e0-8f33-052569367e17",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T01:55:54.670Z",
+  "source": "pixellab"
+}

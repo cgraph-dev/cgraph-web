@@ -80,6 +80,7 @@ export const NewProfileCard = memo(function NewProfileCard({
 
       {/* Card body with theme surface tint */}
       <div
+        className="cgraph-game-profile-surface relative overflow-hidden"
         data-profile-background-image={cardBackgroundImage ?? undefined}
         style={{
           background: cardBackgroundImage

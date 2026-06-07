@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "plate_ember_colossus_01",
+    "kind": "nameplate",
+    "endpoint": "generate-ui-v2",
+    "size": {
+      "width": 300,
+      "height": 48
+    },
+    "colorPalette": "molten orange, hammered bronze, obsidian black, ember red",
+    "prompt": "transparent pixel art heroic fantasy username nameplate, forged bronze and obsidian bar, molten ember channels, heavy battle pass cosmetic look, dramatic but readable empty center for app-rendered username, no text, no logo"
+  },
+  "jobId": "5395737b-52c6-42fe-913e-ec0910122fc3",
+  "status": "completed",
+  "imageCount": 2,
+  "generatedAt": "2026-06-07T01:38:12.639Z",
+  "source": "pixellab"
+}
