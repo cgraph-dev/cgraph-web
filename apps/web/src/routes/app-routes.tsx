@@ -74,7 +74,12 @@ function SettingsSectionRedirect(): React.ReactNode {
  */
 function CustomizeCategoryRedirect(): React.ReactNode {
   const { category } = useParams<{ category: string }>();
-  return <Navigate to={`/me/appearance/${category ?? 'identity'}`} replace />;
+  const legacyCategoryMap: Record<string, string> = {
+    chat: 'bubbles',
+    effects: 'themes',
+  };
+  const targetCategory = category ? (legacyCategoryMap[category] ?? category) : 'identity';
+  return <Navigate to={`/me/appearance/${targetCategory}`} replace />;
 }
 
 /**

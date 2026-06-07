@@ -5,6 +5,7 @@ export interface TitleDisplay {
   name: string;
   gradient: string;
   lottieUrl: string;
+  imageUrl?: string;
 }
 
 const TITLE_DISPLAY_NAMES: Record<string, TitleDisplay> = Object.fromEntries(
@@ -14,6 +15,7 @@ const TITLE_DISPLAY_NAMES: Record<string, TitleDisplay> = Object.fromEntries(
       name: title.displayName,
       gradient: title.gradient,
       lottieUrl: title.lottieUrl ?? '/lottie/effects/placeholder.json',
+      imageUrl: title.imageUrl ?? title.previewUrl,
     },
   ])
 );
@@ -44,21 +46,23 @@ export interface BadgeDisplay {
   name: string;
   rarity: BadgeRarity;
   lottieUrl: string;
+  imageUrl?: string;
   animationType: 'lottie';
 }
 
 export const BADGE_DISPLAY_MAP: Record<string, BadgeDisplay> = Object.fromEntries(
   ALL_BADGES.map((badge) => [
-    badge.id,
-    {
-      icon: badge.icon,
-      color: BADGE_RARITY_HEX[badge.rarity],
-      name: badge.name,
-      rarity: badge.rarity,
-      lottieUrl: badge.lottieUrl ?? '/lottie/effects/placeholder.json',
-      animationType: 'lottie',
-    },
-  ])
+      badge.id,
+      {
+        icon: badge.icon,
+        color: BADGE_RARITY_HEX[badge.rarity],
+        name: badge.name,
+        rarity: badge.rarity,
+        lottieUrl: badge.lottieUrl ?? '/lottie/effects/placeholder.json',
+        imageUrl: badge.imageUrl ?? badge.previewUrl,
+        animationType: 'lottie',
+      },
+    ])
 );
 
 export function resolveEquippedBadges(badgeIds: string[]): BadgeDisplay[] {

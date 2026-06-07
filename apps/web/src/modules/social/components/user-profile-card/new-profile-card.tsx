@@ -11,6 +11,7 @@ import { IdentitySection } from './identity-section';
 import { Nameplate } from './nameplate';
 import { CardShell } from './profile-card-shell';
 import { PulseDots } from './pulse-dots';
+import { ProfileSignalsStrip } from './profile-signals-strip';
 import type { NewProfileCardProps } from './types';
 
 import './profile-card.css';
@@ -39,6 +40,12 @@ export const NewProfileCard = memo(function NewProfileCard({
   const displayNameColor = user.displayNameColor ?? user.display_name_color;
   const displayNameSecondaryColor =
     user.displayNameSecondaryColor ?? user.display_name_secondary_color;
+  const bannerBackgroundImage = isMini
+    ? (theme.miniProfileBackgroundImage ?? theme.previewImage)
+    : (theme.profileBackgroundImage ?? theme.previewImage);
+  const cardBackgroundImage = isMini
+    ? theme.miniProfileBackgroundImage
+    : theme.profileBackgroundImage;
 
   const initials = user.displayName
     .split(' ')
@@ -68,12 +75,16 @@ export const NewProfileCard = memo(function NewProfileCard({
         bannerType={user.bannerType ?? 'static'}
         accentColor={accentColor}
         bannerBackground={theme.banner}
+        backgroundImage={bannerBackgroundImage}
       />
 
       {/* Card body with theme surface tint */}
       <div
+        data-profile-background-image={cardBackgroundImage ?? undefined}
         style={{
-          background: `linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), #08090f`,
+          background: cardBackgroundImage
+            ? `linear-gradient(180deg, rgba(8,9,15,0.58) 0%, rgba(8,9,15,0.9) 52%, #08090f 100%), linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), url("${cardBackgroundImage}") center top / cover no-repeat, #08090f`
+            : `linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), #08090f`,
         }}
       >
         {/* Accent line */}
@@ -112,8 +123,18 @@ export const NewProfileCard = memo(function NewProfileCard({
           titleAnimationType={user.equippedTitle?.animation?.type}
           titleGradient={user.equippedTitle?.gradient}
           titleLottieUrl={user.equippedTitle?.lottieUrl}
+          titleImageUrl={user.equippedTitle?.imageUrl}
           bio={user.bio ?? null}
           badges={user.profileBadges ?? []}
+          accentColor={accentColor}
+          compact={isMini}
+        />
+
+        <ProfileSignalsStrip
+          pulse={user.pulse ?? 0}
+          streak={user.streak ?? 0}
+          postCount={user.postCount ?? 0}
+          friendCount={user.friendCount ?? 0}
           accentColor={accentColor}
           compact={isMini}
         />

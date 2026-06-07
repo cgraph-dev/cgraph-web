@@ -29,11 +29,13 @@ function AnimatedTitleText({
   animationType,
   gradient,
   lottieUrl,
+  imageUrl,
 }: {
   name: string;
   animationType: TitleAnimationType;
   gradient: string;
   lottieUrl: string;
+  imageUrl?: string;
 }) {
   // Base text styling
   const baseClass = `text-lg font-bold ${gradient}`;
@@ -158,13 +160,22 @@ function AnimatedTitleText({
 
   return (
     <motion.h4 className={`${baseClass} relative inline-flex overflow-hidden rounded-md px-1`} {...animProps}>
-      <LottieAssetRenderer
-        path={lottieUrl}
-        fallbackPath="/lottie/effects/placeholder.json"
-        label={`${name} title animation`}
-        className="pointer-events-none absolute inset-[-65%] opacity-45"
-        fallback={null}
-      />
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          className="pointer-events-none absolute inset-x-[-18%] bottom-[-38%] h-[150%] w-[136%] object-contain opacity-70"
+          loading="lazy"
+        />
+      ) : (
+        <LottieAssetRenderer
+          path={lottieUrl}
+          fallbackPath="/lottie/effects/placeholder.json"
+          label={`${name} title animation`}
+          className="pointer-events-none absolute inset-[-65%] opacity-45"
+          fallback={null}
+        />
+      )}
       <span className="relative z-10">{name}</span>
     </motion.h4>
   );
@@ -240,6 +251,7 @@ export function TitlesSection({
                         animationType={title.animationType}
                         gradient={title.gradient}
                         lottieUrl={title.lottieUrl}
+                        imageUrl={title.imageUrl ?? title.previewUrl}
                       />
                     ) : (
                       <h4 className={`text-xl font-bold ${title.gradient}`}>{title.name}</h4>

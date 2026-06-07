@@ -106,6 +106,7 @@ function TitlePill({
   titleAnimationType,
   titleGradient,
   titleLottieUrl,
+  titleImageUrl,
 }: {
   title: string | null;
   accentColor: string;
@@ -113,6 +114,7 @@ function TitlePill({
   titleAnimationType?: string;
   titleGradient?: string;
   titleLottieUrl?: string;
+  titleImageUrl?: string;
 }): React.ReactElement {
   const hasTitle = title !== null;
   const pillColor = hasTitle ? (titleColor ?? accentColor) : accentColor;
@@ -147,7 +149,15 @@ function TitlePill({
           : undefined
       }
     >
-      {hasTitle && (
+      {hasTitle && titleImageUrl ? (
+        <img
+          src={titleImageUrl}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-[-40%] h-[180%] w-[180%] object-contain opacity-55"
+          loading="lazy"
+        />
+      ) : hasTitle ? (
         <LottieAssetRenderer
           path={titleLottieUrl ?? '/lottie/effects/placeholder.json'}
           fallbackPath="/lottie/effects/placeholder.json"
@@ -155,7 +165,7 @@ function TitlePill({
           className="pointer-events-none absolute inset-[-65%] opacity-45"
           fallback={null}
         />
-      )}
+      ) : null}
       <motion.span
         className={cn(
           'relative z-10 text-[10px] font-bold uppercase tracking-[0.05em]',
@@ -180,6 +190,7 @@ export const IdentitySection = memo(function IdentitySection({
   titleAnimationType,
   titleGradient,
   titleLottieUrl,
+  titleImageUrl,
   bio,
   badges,
   accentColor,
@@ -194,28 +205,27 @@ export const IdentitySection = memo(function IdentitySection({
         titleAnimationType={titleAnimationType}
         titleGradient={titleGradient}
         titleLottieUrl={titleLottieUrl}
+        titleImageUrl={titleImageUrl}
       />
 
       {!compact && (
-        <>
-          <p
-            className={cn(
-              'mb-[13px] px-1 text-[0.78rem] font-normal leading-[1.7]',
-              bio ? 'text-[#8896b0]' : 'italic text-[#3d4d62]'
-            )}
-            style={{ fontFamily: "'Inter', system-ui" }}
-          >
-            {bio || 'Add a bio.'}
-          </p>
-
-          {badges.length > 0 && (
-            <div className="mb-1 flex items-center justify-center gap-2.5">
-              {badges.map((badge) => (
-                <BadgeGem key={badge.id} badge={badge} />
-              ))}
-            </div>
+        <p
+          className={cn(
+            'mb-[13px] px-1 text-[0.78rem] font-normal leading-[1.7]',
+            bio ? 'text-[#8896b0]' : 'italic text-[#3d4d62]'
           )}
-        </>
+          style={{ fontFamily: "'Inter', system-ui" }}
+        >
+          {bio || 'Add a bio.'}
+        </p>
+      )}
+
+      {badges.length > 0 && (
+        <div className={cn('mb-1 flex items-center justify-center', compact ? 'gap-1.5' : 'gap-2.5')}>
+          {badges.slice(0, compact ? 3 : badges.length).map((badge) => (
+            <BadgeGem key={badge.id} badge={badge} prefersReducedMotion={compact} />
+          ))}
+        </div>
       )}
     </div>
   );

@@ -50,7 +50,11 @@ export const InlineBadges = memo(function InlineBadges({
           }}
           title={badge.name}
         >
-          <span className="text-[11px]">{badge.icon}</span>
+          {badge.imageUrl ? (
+            <img src={badge.imageUrl} alt="" className="h-4 w-4 object-contain" loading="lazy" />
+          ) : (
+            <span className="text-[11px]">{badge.icon}</span>
+          )}
           {resolved.length <= 3 && <span>{badge.name}</span>}
         </span>
       ))}

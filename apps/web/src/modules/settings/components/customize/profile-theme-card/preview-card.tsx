@@ -11,6 +11,14 @@ export default function PreviewCard({ theme }: PreviewCardProps) {
     <>
       <div className="flex flex-1 items-center justify-center">
         <div className="border-white/12 relative h-20 w-full max-w-[9rem] overflow-hidden rounded-xl border bg-black/30 p-2 shadow-[0_12px_34px_rgba(0,0,0,0.28)]">
+          {theme.previewImage && (
+            <img
+              src={theme.previewImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-80"
+              loading="lazy"
+            />
+          )}
           <div
             className="absolute inset-x-0 top-0 h-6"
             style={{

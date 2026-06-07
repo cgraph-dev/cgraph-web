@@ -274,6 +274,7 @@ export const NameplateBar = memo(function NameplateBar({
 
   // Resolve entry from shared registry
   const entry: NameplateEntry | undefined = nameplateId ? getNameplateById(nameplateId) : undefined;
+  const imageUrl = entry?.imageUrl ?? entry?.previewUrl;
 
   const hasLottie = Boolean(entry?.lottieUrl);
 
@@ -329,8 +330,15 @@ export const NameplateBar = memo(function NameplateBar({
         {/* Layer 1: CSS gradient background (always renders as fallback) */}
         <GradientBackground gradient={entry.barGradient} />
 
-        {/* Layer 2: Lottie animated background */}
-        {hasLottie && !prefersReducedMotion && (
+        {/* Layer 2: static release asset or Lottie animated background */}
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt=""
+            className="pointer-events-none absolute inset-0 z-[1] h-full w-full object-fill opacity-95"
+            loading="lazy"
+          />
+        ) : hasLottie && !prefersReducedMotion ? (
           <LottieAssetRenderer
             path={entry.lottieUrl}
             fallbackPath="/lottie/nameplates/placeholder.json"
@@ -338,7 +346,7 @@ export const NameplateBar = memo(function NameplateBar({
             className="pointer-events-none absolute inset-0 z-[1] overflow-hidden opacity-80"
             fallback={null}
           />
-        )}
+        ) : null}
 
         {/* Layer 3: Content — emblem + username text effect */}
         <div

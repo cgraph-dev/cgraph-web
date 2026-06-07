@@ -95,10 +95,43 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
     if ('lottie_url' in border && typeof border.lottie_url === 'string') return border.lottie_url;
     return undefined;
   })();
+  const imageUrl: string | undefined = (() => {
+    if ('imageUrl' in border && typeof border.imageUrl === 'string') return border.imageUrl;
+    if ('previewUrl' in border && typeof border.previewUrl === 'string') return border.previewUrl;
+    if ('image_url' in border && typeof border.image_url === 'string') return border.image_url;
+    if ('preview_url' in border && typeof border.preview_url === 'string') return border.preview_url;
+    return undefined;
+  })();
   const isLottieType =
     border.type?.includes('lottie') ||
     ('animationType' in border && border.animationType === 'lottie') ||
     ('animation_type' in border && border.animation_type === 'lottie');
+  if (imageUrl) {
+    const avatarSize = Math.round(size * 0.66);
+    return (
+      <motion.div
+        ref={containerRef}
+        className={cn('relative flex cursor-pointer items-center justify-center', className)}
+        style={{ width: size, height: size }}
+        onClick={onClick}
+        whileHover={interactive && !reducedMotion ? { scale: 1.05 } : undefined}
+        whileTap={interactive && !reducedMotion ? { scale: 0.98 } : undefined}
+      >
+        <img
+          src={imageUrl}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          loading="lazy"
+        />
+        <div
+          className="relative z-10 overflow-hidden rounded-full bg-[var(--token-card-bg)]"
+          style={{ width: avatarSize, height: avatarSize }}
+        >
+          {avatarContent}
+        </div>
+      </motion.div>
+    );
+  }
   if (isLottieType && lottieUrl) {
     const rawConfig =
       ('lottieConfig' in border ? border.lottieConfig : undefined) ??

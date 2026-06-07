@@ -33,6 +33,20 @@ export function BadgesSection({
   const isMaxEquipped = equippedBadges.length >= 5;
 
   function renderBadgeIcon(badge: Badge, className: string) {
+    const imageUrl = badge.imageUrl ?? badge.previewUrl;
+    if (imageUrl) {
+      return (
+        <span className={className}>
+          <img
+            src={imageUrl}
+            alt={badge.name}
+            className="h-full w-full object-contain drop-shadow-lg"
+            loading="lazy"
+          />
+        </span>
+      );
+    }
+
     if (badge.animationType === 'lottie' && badge.lottieUrl) {
       return (
         <span className={className}>

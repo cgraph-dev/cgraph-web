@@ -36,6 +36,7 @@ export interface ProfileCardUser {
     color: string;
     gradient?: string;
     lottieUrl?: string;
+    imageUrl?: string;
   };
   equippedBadges?: Achievement[];
   // Stats

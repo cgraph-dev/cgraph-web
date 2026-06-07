@@ -58,7 +58,7 @@ test.describe('Authenticated Navigation', () => {
     await page.goto('/settings');
 
     await expect(page).toHaveURL(/\/settings/);
-    await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Settings$/ })).toBeVisible();
   });
 
   test('should navigate to profile', async ({ page }) => {

@@ -104,8 +104,15 @@ export const BadgeGem = memo(function BadgeGem({
           />
         )}
 
-        {/* Badge animation and icon */}
-        {badge.animationType === 'lottie' && badge.lottieUrl && (
+        {/* Badge art, animation, and fallback icon */}
+        {badge.imageUrl ? (
+          <img
+            src={badge.imageUrl}
+            alt=""
+            className="relative z-[3] h-[34px] w-[34px] object-contain drop-shadow-lg"
+            loading="lazy"
+          />
+        ) : badge.animationType === 'lottie' && badge.lottieUrl ? (
           <LottieAssetRenderer
             path={badge.lottieUrl}
             fallbackPath="/lottie/effects/placeholder.json"
@@ -113,10 +120,10 @@ export const BadgeGem = memo(function BadgeGem({
             className="pointer-events-none absolute inset-[-28%] z-[2] opacity-75"
             fallback={null}
           />
+        ) : null}
+        {!badge.imageUrl && (
+          <span className="relative z-[3] select-none text-[18px] leading-none">{badge.icon}</span>
         )}
-        <span className="relative z-[3] select-none text-[18px] leading-none">
-          {badge.icon}
-        </span>
       </div>
 
       {/* Legendary orbiting particle */}

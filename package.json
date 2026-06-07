@@ -12,6 +12,7 @@
     "check:package-owner": "node scripts/validate-package-dependencies.mjs",
     "check:web-release": "pnpm --filter @cgraph/web check:release-gates",
     "lint": "pnpm --filter @cgraph/web lint",
+    "pixellab:assets": "node scripts/pixellab-generate-cgraph-assets.mjs",
     "test": "pnpm --filter @cgraph/web test:run",
     "typecheck": "pnpm --filter @cgraph/web typecheck"
   },

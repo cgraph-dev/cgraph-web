@@ -27,6 +27,8 @@ export interface TitleDefinition {
   gradient: string;
   colors: string[];
   lottieUrl?: string;
+  imageUrl?: string;
+  previewUrl?: string;
   isPremium: boolean;
   unlocked: boolean;
   unlockRequirement?: string;
@@ -131,6 +133,8 @@ function toTitleDefinition(title: Title): TitleDefinition {
     gradient: gradientClassForTitle(title),
     colors: colorsForTitle(title),
     lottieUrl: title.lottieUrl ?? 'effects/placeholder.json',
+    imageUrl: title.imageUrl,
+    previewUrl: title.previewUrl,
     isPremium: Boolean(title.nodePrice && title.nodePrice > 0),
     unlocked: isStarterTitle(title),
     unlockRequirement: title.unlockRequirement,

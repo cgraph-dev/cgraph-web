@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
 
+const protectedRoutePaths = ['/login', '/auth'];
+
+function isProtectedRoute(url: string): boolean {
+  return protectedRoutePaths.some((path) => url.includes(path));
+}
+
 /**
  * Phase 27 Verification: Visual testing for "Fix What Remains" changes.
  *
@@ -27,10 +33,10 @@ test.describe('Phase 27: Theme Customization', () => {
     const isValidRoute =
       url.includes('/customize/themes') ||
       url.includes('/me/appearance/themes') ||
-      url.includes('/auth');
+      isProtectedRoute(url);
     expect(isValidRoute, 'Route /customize/themes should exist').toBe(true);
 
-    if (url.includes('/auth')) {
+    if (isProtectedRoute(url)) {
       // Auth guard active — route exists but needs login for visual check
       return;
     }
@@ -53,10 +59,13 @@ test.describe('Phase 27: Effects Customization', () => {
     const isValidRoute =
       url.includes('/customize/effects') ||
       url.includes('/me/appearance/effects') ||
-      url.includes('/auth');
-    expect(isValidRoute, 'Route /customize/effects should exist').toBe(true);
+      url.includes('/me/appearance/themes') ||
+      isProtectedRoute(url);
+    expect(isValidRoute, 'Archived /customize/effects should redirect to an appearance route').toBe(
+      true
+    );
 
-    if (url.includes('/auth')) return;
+    if (isProtectedRoute(url)) return;
 
     // If past auth, verify no 10-option picker
     const hasTenOptions = await page.locator('[data-testid="background-effect-option"]').count();
@@ -74,10 +83,10 @@ test.describe('Phase 27: Chat Customization', () => {
       url.includes('/customize/chat') ||
       url.includes('/me/appearance/chat') ||
       url.includes('/me/appearance/bubbles') ||
-      url.includes('/auth');
+      isProtectedRoute(url);
     expect(isValidRoute, 'Route /customize/chat should exist').toBe(true);
 
-    if (url.includes('/auth')) return;
+    if (isProtectedRoute(url)) return;
 
     // If past auth, verify no Reaction Styles
     const hasReactionStylesHeading = await page.locator('text=Reaction Styles').count();
@@ -99,10 +108,10 @@ test.describe('Phase 27: Identity Customization', () => {
     const isValidRoute =
       url.includes('/customize/identity') ||
       url.includes('/me/appearance/identity') ||
-      url.includes('/auth');
+      isProtectedRoute(url);
     expect(isValidRoute, 'Route /customize/identity should exist').toBe(true);
 
-    if (url.includes('/auth')) return;
+    if (isProtectedRoute(url)) return;
 
     const pageContent = await page.textContent('body');
     expect(pageContent).toBeTruthy();

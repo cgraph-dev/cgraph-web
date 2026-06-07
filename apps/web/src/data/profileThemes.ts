@@ -9,15 +9,22 @@ import {
   ALL_PROFILE_THEMES as SHARED_PROFILE_THEMES,
   DEFAULT_PROFILE_THEME as SHARED_DEFAULT_PROFILE_THEME,
   DEFAULT_PROFILE_THEME_ID,
+  PROFILE_THEME_BUNDLE_IDS,
+  PROFILE_THEME_BUNDLES,
   PROFILE_THEME_CATEGORIES as PROFILE_THEME_CATEGORY_IDS,
   PROFILE_THEME_CATEGORY_INFO as SHARED_PROFILE_THEME_CATEGORIES,
   PROFILE_THEME_IDS,
   getProfileThemeOrDefault as getSharedProfileThemeOrDefault,
+  getProfileThemeBundleById as getSharedProfileThemeBundleById,
+  getProfileThemeBundlesByTheme as getSharedProfileThemeBundlesByTheme,
   getThemeById as getSharedThemeById,
   getThemesByCategory as getSharedThemesByCategory,
   isProfileThemeId,
+  isProfileThemeBundleId,
 } from '@cgraph-dev/shared-types';
 import type {
+  ProfileThemeBundleConfig,
+  ProfileThemeBundleId,
   ProfileThemeCategory,
   ProfileThemeCategoryInfo,
   ProfileThemeConfig,
@@ -27,8 +34,11 @@ import type {
 
 export {
   DEFAULT_PROFILE_THEME_ID,
+  PROFILE_THEME_BUNDLE_IDS,
+  PROFILE_THEME_BUNDLES,
   PROFILE_THEME_CATEGORY_IDS,
   PROFILE_THEME_IDS,
+  isProfileThemeBundleId,
   isProfileThemeId,
 };
 
@@ -51,7 +61,21 @@ export function getProfileThemeOrDefault(id: string | null | undefined): Profile
   return getSharedProfileThemeOrDefault(id);
 }
 
+export function getProfileThemeBundleById(
+  id: string | null | undefined
+): ProfileThemeBundleConfig | undefined {
+  return getSharedProfileThemeBundleById(id);
+}
+
+export function getProfileThemeBundlesByTheme(
+  themeId: ProfileThemeId
+): readonly ProfileThemeBundleConfig[] {
+  return getSharedProfileThemeBundlesByTheme(themeId);
+}
+
 export type {
+  ProfileThemeBundleConfig,
+  ProfileThemeBundleId,
   ProfileThemeCategory,
   ProfileThemeCategoryInfo,
   ProfileThemeConfig,

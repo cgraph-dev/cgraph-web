@@ -116,6 +116,7 @@ export const Nameplate = memo(function Nameplate({
   headingLevel,
 }: NameplateProps) {
   const entry = nameplateId ? getNameplateById(nameplateId) : undefined;
+  const imageUrl = entry?.imageUrl ?? entry?.previewUrl;
   const DisplayNameTag = getDisplayNameTag(headingLevel);
 
   const hasEntry = entry != null && entry.id !== 'plate_none';
@@ -172,7 +173,14 @@ export const Nameplate = memo(function Nameplate({
           boxShadow: barShadow,
         }}
       >
-        {hasEntry && entry.lottieUrl && (
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt=""
+            className="pointer-events-none absolute inset-0 z-0 h-full w-full object-fill opacity-95"
+            loading="lazy"
+          />
+        ) : hasEntry && entry.lottieUrl ? (
           <LottieAssetRenderer
             path={entry.lottieUrl}
             fallbackPath="/lottie/nameplates/placeholder.json"
@@ -180,7 +188,7 @@ export const Nameplate = memo(function Nameplate({
             className="pointer-events-none absolute inset-0 z-0 opacity-80"
             fallback={null}
           />
-        )}
+        ) : null}
 
         {/* Emblem from nameplate entry */}
         {hasEntry && entry.emblem && <span className="relative z-[1] text-sm">{entry.emblem}</span>}

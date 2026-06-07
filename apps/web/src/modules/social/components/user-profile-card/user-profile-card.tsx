@@ -108,6 +108,7 @@ function titleFromApi(
       color: asString(titleRecord.color, '#ffffff'),
       gradient: asString(titleRecord.gradient),
       lottieUrl: asString(titleRecord.lottie_url, '/lottie/effects/placeholder.json'),
+      imageUrl: asString(titleRecord.image_url) || asString(titleRecord.preview_url) || undefined,
     };
   }
 
@@ -133,6 +134,7 @@ function titleFromApi(
     color: title.colors[0] ?? '#ffffff',
     gradient: title.gradient,
     lottieUrl: title.lottieUrl ?? '/lottie/effects/placeholder.json',
+    imageUrl: title.imageUrl ?? title.previewUrl,
   };
 }
 

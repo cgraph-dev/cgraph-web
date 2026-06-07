@@ -81,13 +81,22 @@ export default function ProfileThemeCard({
       }}
     >
       {/* Static themed surface */}
-      <div
-        className="absolute inset-0"
-        style={{
-          ...getStaticPatternStyle(theme),
-          backgroundColor: theme.backgroundGradient[0],
-        }}
-      />
+      {theme.previewImage ? (
+        <img
+          src={theme.previewImage}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{
+            ...getStaticPatternStyle(theme),
+            backgroundColor: theme.backgroundGradient[0],
+          }}
+        />
+      )}
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.06] via-transparent to-black/35" />
       <div

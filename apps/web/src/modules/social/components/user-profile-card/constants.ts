@@ -45,7 +45,21 @@ interface AccentTheme {
   banner: string;
   border: string;
   rgb: string;
+  previewImage?: string;
+  profileBackgroundImage?: string;
+  miniProfileBackgroundImage?: string;
+  bundleId?: string;
 }
+
+const SIGNAL_NOIR_BUNDLE_IMAGES = {
+  previewImage:
+    '/cosmetics/pixellab/profile-theme-preview/theme_signal_noir_preview/theme_signal_noir_preview_0.png',
+  profileBackgroundImage:
+    '/cosmetics/pixellab/profile-background/profile_signal_noir_founder/profile_signal_noir_founder_0.png',
+  miniProfileBackgroundImage:
+    '/cosmetics/pixellab/mini-profile-background/mini_signal_noir_founder/mini_signal_noir_founder_0.png',
+  bundleId: 'signal-noir-founder',
+} as const;
 
 function hexToRgbTuple(hex: string): string {
   const normalized = hex.replace('#', '');
@@ -71,6 +85,7 @@ function gradientStops(theme: ProfileThemeConfig): string {
 }
 
 function createAccentTheme(theme: ProfileThemeConfig): AccentTheme {
+  const imageFallback = theme.id === 'signal-noir' ? SIGNAL_NOIR_BUNDLE_IMAGES : null;
   const primary = theme.backgroundGradient[0] ?? '#08090f';
   const accent = theme.accentPrimary;
   const secondary = theme.accentSecondary;
@@ -88,6 +103,11 @@ function createAccentTheme(theme: ProfileThemeConfig): AccentTheme {
     banner: `linear-gradient(135deg, ${gradientStops(theme)})`,
     border: alpha(accent, 0.14),
     rgb: hexToRgbTuple(accent),
+    previewImage: theme.previewImage ?? imageFallback?.previewImage,
+    profileBackgroundImage: theme.profileBackgroundImage ?? imageFallback?.profileBackgroundImage,
+    miniProfileBackgroundImage:
+      theme.miniProfileBackgroundImage ?? imageFallback?.miniProfileBackgroundImage,
+    bundleId: theme.bundleId ?? imageFallback?.bundleId,
   };
 }
 

@@ -34,8 +34,8 @@ importers:
   apps/web:
     dependencies:
       '@cgraph-dev/animation-constants':
-        specifier: 1.0.1
-        version: 1.0.1
+        specifier: 1.1.2
+        version: 1.1.2
       '@cgraph-dev/api-client':
         specifier: 1.1.1
         version: 1.1.1(axios@1.16.1)
@@ -43,8 +43,8 @@ importers:
         specifier: 1.0.1
         version: 1.0.1
       '@cgraph-dev/shared-types':
-        specifier: 1.1.1
-        version: 1.1.1
+        specifier: 1.1.3
+        version: 1.1.3
       '@cgraph-dev/utils':
         specifier: 1.0.1
         version: 1.0.1
@@ -465,8 +465,8 @@ packages:
   '@bufbuild/protobuf@1.10.1':
     resolution: {integrity: sha512-wJ8ReQbHxsAfXhrf9ixl0aYbZorRuOWpBNzm8pL8ftmSxQx/wnJD5Eg861NwJU/czy2VXFIebCeZnZrI9rktIQ==}
 
-  '@cgraph-dev/animation-constants@1.0.1':
-    resolution: {integrity: sha512-o4WWZbW3p6fVbpytLXiTARHnbr6XDdLuv7736VXdVpHYewV3x6bZlRYbMOjgd2OdeixMrtNxw7KdMdd6Hpj1oA==}
+  '@cgraph-dev/animation-constants@1.1.2':
+    resolution: {integrity: sha512-YWb3NAtxVuee38F0UMNjl2Ra8jw0zT4c7uDH3pMAIn20Y/Hxlj6wNa2ozxoHHWyrnrrV/xrojtl4ve3PnSOI7w==}
 
   '@cgraph-dev/api-client@1.1.1':
     resolution: {integrity: sha512-HFeejHhwlF5j9/vtcP/8yjfdYOlepty7B+MF4+LvsUeNZedLvoe9EPefT44IK+OEzlDM+m96w3FtE4ugVdbgQg==}
@@ -478,6 +478,9 @@ packages:
 
   '@cgraph-dev/shared-types@1.1.1':
     resolution: {integrity: sha512-/Hfb4fWLgjfs1/HORxK9iUA1ETwGP4cdTyNXvFKOj/UTwEYd62vufTiCB61AuD/auCcnvjR+F5O4kOSuyK7ZvQ==}
+
+  '@cgraph-dev/shared-types@1.1.3':
+    resolution: {integrity: sha512-BdbAOCjnaJJpIkOIwf4VTTTOkwW6970/k4Xx+dNelKkOvmCUAWZBtb1z0Wxcvr0nV2GynQ3Yv2ub5PpEXkInqA==}
 
   '@cgraph-dev/utils@1.0.1':
     resolution: {integrity: sha512-fJrbHAqKFD36zuv6tma/iVjoKLkh07zyramrMXd7oNKNzSCyLVkHlt9mrZLoxScMzpOYPGG3DlN6yWV0ORbm0w==}
@@ -6129,7 +6132,7 @@ snapshots:
 
   '@bufbuild/protobuf@1.10.1': {}
 
-  '@cgraph-dev/animation-constants@1.0.1': {}
+  '@cgraph-dev/animation-constants@1.1.2': {}
 
   '@cgraph-dev/api-client@1.1.1(axios@1.16.1)':
     dependencies:
@@ -6140,6 +6143,8 @@ snapshots:
   '@cgraph-dev/design-tokens@1.0.1': {}
 
   '@cgraph-dev/shared-types@1.1.1': {}
+
+  '@cgraph-dev/shared-types@1.1.3': {}
 
   '@cgraph-dev/utils@1.0.1':
     dependencies:

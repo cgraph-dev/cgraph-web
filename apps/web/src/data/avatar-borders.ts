@@ -163,6 +163,8 @@ export interface BorderDefinition {
   rarity: BorderRarity;
   animationType: BorderAnimationType;
   colors: string[];
+  imageUrl?: string;
+  previewUrl?: string;
   isPremium: boolean;
   unlocked: boolean;
   unlockRequirement?: string;
@@ -226,6 +228,8 @@ function toBorderDefinition(b: AvatarBorderConfig): BorderDefinition {
     rarity: b.rarity,
     animationType: isBorderAnimationType(b.type) ? b.type : 'none',
     colors,
+    imageUrl: b.imageUrl,
+    previewUrl: b.previewUrl,
     isPremium: b.isPremium,
     unlocked: isUnlocked,
     unlockRequirement: b.unlockRequirement?.description,

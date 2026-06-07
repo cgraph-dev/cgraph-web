@@ -313,7 +313,11 @@ export default function Settings() {
       </nav>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 overflow-y-auto bg-transparent p-8">
+      <div
+        className="relative z-10 flex-1 overflow-y-auto bg-transparent p-8"
+        tabIndex={0}
+        aria-label="Settings content"
+      >
         <motion.div
           className="mx-auto max-w-2xl"
           {...FADE_UP}

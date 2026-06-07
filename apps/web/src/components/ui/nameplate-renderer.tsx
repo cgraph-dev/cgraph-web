@@ -173,6 +173,7 @@ export const NameplateRenderer = memo(function NameplateRenderer({
   );
 
   const borderStyles = getBorderStyles(nameplate.borderStyle, nameplate.borderColor);
+  const imageUrl = nameplate.imageUrl ?? nameplate.previewUrl;
   const lottiePath =
     nameplate.lottieUrl ??
     (nameplate.lottieFile ? `/lottie/nameplates/${nameplate.lottieFile}` : null);
@@ -198,7 +199,14 @@ export const NameplateRenderer = memo(function NameplateRenderer({
         width: width ?? undefined,
       }}
     >
-      {lottiePath && (
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full rounded-[inherit] object-fill"
+          loading="lazy"
+        />
+      ) : lottiePath ? (
         <LottieAssetRenderer
           path={lottiePath}
           fallbackPath="/lottie/nameplates/placeholder.json"
@@ -206,7 +214,7 @@ export const NameplateRenderer = memo(function NameplateRenderer({
           className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]"
           fallback={null}
         />
-      )}
+      ) : null}
       {/* Emblem */}
       {showEmblem && nameplate.emblem && (
         <span className={`relative z-10 ${sizeConfig.emblemSize}`}>{nameplate.emblem}</span>

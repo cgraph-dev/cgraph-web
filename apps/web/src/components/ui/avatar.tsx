@@ -146,7 +146,9 @@ export default function Avatar({
   const rounding = shape === 'square' ? 'rounded-2xl' : 'rounded-full';
   const gradient = getGradient(name);
   const borderStyle = borderId ? getAvatarBorderStyle(borderId) : { className: '' };
-  const borderLottieUrl = borderId ? (getBorderById(borderId)?.lottieUrl ?? undefined) : undefined;
+  const border = borderId ? getBorderById(borderId) : undefined;
+  const borderImageUrl = border?.imageUrl ?? border?.previewUrl;
+  const borderLottieUrl = border?.lottieUrl ?? undefined;
 
   const avatarContent = (
     <div className={cn('relative inline-flex shrink-0', className)}>
@@ -169,9 +171,9 @@ export default function Avatar({
           storyRing && 'ring-2 ring-[rgb(15,15,20)]',
           !src && `bg-gradient-to-br ${gradient}`,
           src && 'bg-[var(--token-card-bg)]',
-          !borderLottieUrl && borderStyle.className
+          !borderLottieUrl && !borderImageUrl && borderStyle.className
         )}
-        style={!borderLottieUrl ? borderStyle.style : undefined}
+        style={!borderLottieUrl && !borderImageUrl ? borderStyle.style : undefined}
       >
         {lottieUrl ? (
           <LottieRenderer codepoint={lottieUrl} emoji={name || alt} size={cfg.px} autoplay loop />
@@ -237,6 +239,27 @@ export default function Avatar({
       >
         {avatarContent}
       </LottieBorderRenderer>
+    );
+  }
+
+  if (borderImageUrl) {
+    const frameBorderWidth = Math.max(6, Math.round(cfg.px * 0.22));
+    const frameSize = cfg.px + frameBorderWidth * 2;
+    return (
+      <span
+        className="relative inline-flex items-center justify-center"
+        style={{ width: frameSize, height: frameSize }}
+      >
+        <img
+          src={borderImageUrl}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          loading="lazy"
+        />
+        <span className="relative z-10 inline-flex items-center justify-center">
+          {avatarContent}
+        </span>
+      </span>
     );
   }
 

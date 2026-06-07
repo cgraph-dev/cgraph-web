@@ -47,13 +47,22 @@ export const InlineTitle = memo(function InlineTitle({
         className
       )}
     >
-      <LottieAssetRenderer
-        path={display.lottieUrl}
-        fallbackPath="/lottie/effects/placeholder.json"
-        label={`${display.name} title animation`}
-        className="pointer-events-none absolute inset-[-65%] opacity-45"
-        fallback={null}
-      />
+      {display.imageUrl ? (
+        <img
+          src={display.imageUrl}
+          alt=""
+          className="pointer-events-none absolute inset-x-[-20%] bottom-[-55%] h-[150%] w-[140%] object-contain opacity-65"
+          loading="lazy"
+        />
+      ) : (
+        <LottieAssetRenderer
+          path={display.lottieUrl}
+          fallbackPath="/lottie/effects/placeholder.json"
+          label={`${display.name} title animation`}
+          className="pointer-events-none absolute inset-[-65%] opacity-45"
+          fallback={null}
+        />
+      )}
       {isSpecial && <span className="relative z-10 mr-0.5 text-[10px]">✦</span>}
       <span className="relative z-10">{display.name}</span>
     </span>

@@ -31,4 +31,12 @@ describe('profile card theme semantics', () => {
     expect(normalizeAccentThemeId('profile-default')).toBeUndefined();
     expect(normalizeAccentThemeId(null)).toBeUndefined();
   });
+
+  it('exposes full and mini profile backgrounds for themed profile bundles', () => {
+    const signalNoir = ACCENT_THEMES[DEFAULT_PROFILE_THEME_ID];
+
+    expect(signalNoir.bundleId).toBe('signal-noir-founder');
+    expect(signalNoir.profileBackgroundImage).toContain('/profile-background/');
+    expect(signalNoir.miniProfileBackgroundImage).toContain('/mini-profile-background/');
+  });
 });

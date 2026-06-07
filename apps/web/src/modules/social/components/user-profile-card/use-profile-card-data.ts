@@ -50,8 +50,10 @@ function resolveBadgesFromIds(badgeIds: readonly string[]): ProfileBadge[] {
           name: def.name,
           icon: def.icon,
           rarity: mapRarityToDisplayTier(def.rarity),
-          lottieUrl: def.lottieUrl ?? GENERIC_BADGE_LOTTIE_URL,
-          animationType: 'lottie',
+          imageUrl: def.imageUrl ?? def.previewUrl,
+          lottieUrl:
+            def.animationType === 'static' ? undefined : def.lottieUrl ?? GENERIC_BADGE_LOTTIE_URL,
+          animationType: def.animationType ?? 'lottie',
         }
       : { id, name: id, icon: '◇', rarity: 'dim' satisfies BadgeDisplayTier }; // fallback badge tier
   });
@@ -77,8 +79,10 @@ function resolveBadgesFromUser(user: ProfileCardUser): ProfileBadge[] {
       name: a.title,
       icon: a.icon,
       rarity: mapRarityToDisplayTier(a.rarity),
-      lottieUrl: def?.lottieUrl ?? GENERIC_BADGE_LOTTIE_URL,
-      animationType: 'lottie',
+      imageUrl: def?.imageUrl ?? def?.previewUrl,
+      lottieUrl:
+        def?.animationType === 'static' ? undefined : def?.lottieUrl ?? GENERIC_BADGE_LOTTIE_URL,
+      animationType: def?.animationType ?? 'lottie',
     };
   });
 
@@ -117,6 +121,7 @@ function resolveTitle(titleId: string | null): ProfileCardUser['equippedTitle'] 
     color: def.colors[0] ?? '#ffffff',
     gradient: def.gradient,
     lottieUrl: def.lottieUrl ?? '/lottie/effects/placeholder.json',
+    imageUrl: def.imageUrl ?? def.previewUrl,
   };
 }
 /**

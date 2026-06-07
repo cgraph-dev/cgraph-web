@@ -79,6 +79,7 @@ export interface ProfileBadge {
   icon: string;
   rarity: BadgeDisplayTier;
   tooltipLabel?: string;
+  imageUrl?: string;
   lottieUrl?: string;
   animationType?: string;
 }
@@ -117,6 +118,7 @@ export interface BannerProps {
   bannerType: 'animated' | 'static' | 'none';
   accentColor: string;
   bannerBackground: string;
+  backgroundImage?: string;
 }
 
 export interface AvatarZoneProps {
@@ -147,6 +149,7 @@ export interface IdentityProps {
   titleAnimationType?: string;
   titleGradient?: string;
   titleLottieUrl?: string;
+  titleImageUrl?: string;
   bio: string | null;
   badges: ProfileBadge[];
   accentColor: string;
