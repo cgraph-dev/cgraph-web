@@ -51,6 +51,11 @@ missing:
   mapping, equipped-border catalog lookups, customization color display reads, customization
   theme-color compatibility, and stale customization-store rarity exports now sit in renderer,
   theme, or catalog adapters instead of settings-local metadata tables.
+- PixelLab release-art delivery is production-proven for the current web renderer layer: production
+  web commit `ca62a3cdf5b0b3d84531636cc527f9ae5549330c` ships public PNG nameplates, avatar borders,
+  profile previews, full backgrounds, and mini-profile backgrounds, with sanitized PixelLab
+  metadata and sampled `web.cgraph.org` asset URLs returning `200 image/png`. This is delivery proof,
+  not a replacement for backend/shared-package catalog ownership.
 - Routed group GIF, sticker, and voice-note sends are browser-proven in
   `apps/web/e2e/web-owner-uat.spec.ts`: the live group composer sends structured rich-message
   payloads through the channel message endpoint and uploads channel voice notes through

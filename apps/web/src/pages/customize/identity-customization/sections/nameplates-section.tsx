@@ -2,14 +2,12 @@
  * NameplatesSection Component
  *
  * Advanced nameplate selection with category filtering and Lottie-backed previews.
- * Uses the shared NAMEPLATE_REGISTRY from @cgraph-dev/animation-constants.
+ * Uses the shared registry plus the PixelLab release-art overlay.
  */
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import {
-} from '@cgraph-dev/animation-constants';
 import {
   NAMEPLATE_CATEGORIES,
   NAMEPLATE_REGISTRY,

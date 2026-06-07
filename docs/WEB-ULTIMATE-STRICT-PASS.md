@@ -1146,6 +1146,23 @@ responses, failed requests, or app console errors. This refreshes deployed relea
 does not close real provider delivery, future native QR/mobile approval, physical cross-device
 validation, hosted Stripe settlement, or Level 3 hardening.
 
+2026-06-07 PixelLab profile-cosmetic delivery proof: production web commit
+`ca62a3cdf5b0b3d84531636cc527f9ae5549330c` ships a game-style PixelLab release-art layer for profile
+identity without starting Level 3. The slice adds five nameplates, four avatar borders, three
+profile-theme previews, three full profile backgrounds, and three mini-profile backgrounds as public
+PNG assets; wires the new nameplate and avatar-border metadata into the existing renderer adapters;
+uses PixelLab backgrounds as web renderer enrichments for the shared `aurora-glass`, `deep-space`,
+and `ember-forge` profile-theme IDs; and adds reduced-motion-aware CSS animation classes for
+nameplates, avatar frames, and profile-card ambience. The PixelLab generator now writes sanitized
+job metadata only, and the committed asset tree was scanned for API keys, npm/Vercel tokens, raw
+base64 job payloads, and signed URLs. Local proof passed focused cosmetic tests, typecheck, lint,
+package-owner guard, production build, and `pnpm check:web-release` with 411 files / 5,353 tests.
+Vercel deployed the commit to `https://web.cgraph.org`, production smoke passed, and sampled new
+PixelLab asset URLs returned `200 image/png`. This improves release presentation and production
+asset delivery; it does not close backend catalog ownership, shared package promotion for the new
+catalog rows, future native/desktop rendering proof, real provider delivery, physical cross-device
+validation, hosted Stripe settlement, or Level 3 hardening.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
 truthful without starting Level 3. The live appearance preview now passes

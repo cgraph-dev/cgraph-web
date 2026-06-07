@@ -47,6 +47,20 @@ suite. The nameplate preview now uses the same public `LottieAssetRenderer` path
 surfaces instead of an import map that kept all entries on `placeholder.json`. Local proof passed
 package guards, typecheck, lint, release-gates with 402 files / 5,358 tests, and build budget.
 
+2026-06-07 PixelLab release-art delivery proof: production web commit
+`ca62a3cdf5b0b3d84531636cc527f9ae5549330c` adds game-style PixelLab PNG delivery assets for five
+nameplates, four avatar borders, three profile-theme preview images, three full profile
+backgrounds, and three mini-profile backgrounds. Web renders those assets through the existing
+customization/profile/nameplate/avatar adapters with a reduced-motion-aware CSS motion layer, while
+profile-theme enrichment keeps the shared package theme IDs as the saved semantic contract. The
+PixelLab generator now stores sanitized metadata only, and scans found no committed API token,
+npm/Vercel token, raw base64 job payload, or signed URL in the public asset tree. Local proof passed
+typecheck, lint, package-owner guard, build, and `pnpm check:web-release` with 411 files / 5,353
+tests. Vercel deployed the commit to `https://web.cgraph.org`, production smoke passed, and sampled
+PixelLab asset URLs returned `200 image/png`. This is production delivery and renderer proof, not a
+claim that backend catalog ownership, shared-package cosmetic catalogs, future native runtime
+rendering, or Level 3 hardening are closed.
+
 2026-05-21 app-shell/theme proof: `cgraph-backend` commit `133152be845465d4ca3a66ce8cfe2ecbc15c5cfb`
 changes the persisted app-theme default to Aurora and migrates non-explicit legacy app-theme rows to
 Aurora, while preserving users who explicitly chose a different app theme. `cgraph-web` commit
