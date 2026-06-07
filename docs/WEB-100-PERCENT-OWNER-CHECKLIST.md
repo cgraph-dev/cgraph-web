@@ -69,11 +69,23 @@ exact package version, deletes `apps/web/src/data/pixellab-game-cosmetics.ts`, k
 `apps/web/src/data/avatar-borders.ts` as a renderer/legacy adapter over the package catalog, and
 updates the package-owner guard to enforce `1.1.4`. Proof passed 8 focused web tests,
 package-owner guard, web typecheck, web lint, full `pnpm check:web-release` with 411 files / 5,353
-tests, production build, and bundle budget with the largest JS chunk at 493.32 kB / 500 kB. This closes shared-package ownership
-for the new nameplate/avatar-border rows; backend catalog/equipped-state rows, profile-theme
-background ownership beyond web renderer enrichment, future native runtime proof, real provider
-delivery, physical cross-device validation, hosted Stripe settlement, and Level 3 hardening remain
-open.
+tests, production build, and bundle budget with the largest JS chunk at 493.32 kB / 500 kB. This
+closes shared-package ownership for the new nameplate/avatar-border rows; profile-theme background
+ownership beyond web renderer enrichment, future native runtime proof, real provider delivery,
+physical cross-device validation, hosted Stripe settlement, and Level 3 hardening remain open.
+
+2026-06-07 backend PixelLab cosmetic ownership proof: `cgraph-backend` commit
+`fdc6ea91696f1107cb9bac8f33649da5b62144a2` makes PixelLab avatar-border/nameplate catalog and
+equipped-state truth backend-owned for the promoted package rows. The migration seeds seven package
+nameplates and six avatar borders by package slug, adds the missing nameplate animation columns,
+creates `user_active_cosmetics`, points the border compatibility schema at `avatar_borders`, syncs
+unified equip/unequip into active cosmetics only for real catalog rows, and serializes item slugs on
+single-item equip responses. Proof passed backend compile with warnings as errors plus focused
+unified-inventory/equipped and customization-controller tests (6 / 6 and 17 / 17). This closes the
+backend catalog/equipped-state row for the promoted PixelLab nameplates/avatar borders only; profile
+theme background package ownership beyond web renderer enrichment, future native runtime proof, real
+provider delivery, physical cross-device validation, hosted Stripe settlement, and Level 3 hardening
+remain open.
 
 2026-05-21 app-shell/theme proof: `cgraph-backend` commit `133152be845465d4ca3a66ce8cfe2ecbc15c5cfb`
 changes the persisted app-theme default to Aurora and migrates non-explicit legacy app-theme rows to

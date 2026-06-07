@@ -461,6 +461,14 @@ Latest proof:
   web tests, package-owner guard, typecheck, lint, `pnpm check:web-release` with
   411 files / 5,353 tests, production build, and bundle budget with the largest
   JS chunk at 493.32 kB / 500 kB.
+- 2026-06-07: production backend commit
+  `fdc6ea91696f1107cb9bac8f33649da5b62144a2` makes the promoted PixelLab
+  nameplate/avatar-border rows backend-catalog and equipped-state owned. It
+  seeds seven package nameplates and six avatar borders by package slug, creates
+  `user_active_cosmetics`, aligns the border schema to `avatar_borders`, syncs
+  unified equip/unequip into active cosmetics for real catalog rows, and proves
+  the inventory/equipped/customization contracts with focused backend tests
+  (6 / 6 and 17 / 17) plus compile with warnings as errors.
 - 2026-06-06: production web commit
   `152d045c0188f0640f04b38f32ca4b8d8620b1e2` preserves the active routed group
   through stale `/api/v1/groups` list refreshes after invite joins, keeping the

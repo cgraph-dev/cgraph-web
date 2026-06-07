@@ -1171,10 +1171,24 @@ deletes the local `pixellab-game-cosmetics` overlay, keeps `apps/web/src/data/av
 a renderer/legacy adapter over the shared catalog, and updates the package-owner guard to enforce
 `1.1.4`. Proof passed 8 focused web tests, package-owner guard, web typecheck, web lint, full
 `pnpm check:web-release` with 411 files / 5,353 tests, production build, and bundle budget with the
-largest JS chunk at 493.32 kB / 500 kB. This closes shared-package ownership for those new nameplate/avatar-border
-rows only; backend catalog/equipped-state rows, hosted payment settlement, real provider delivery,
-physical cross-device validation, future native/desktop runtime proof, and Level 3 hardening remain
-open.
+largest JS chunk at 493.32 kB / 500 kB. This closes shared-package ownership for those new
+nameplate/avatar-border rows only; hosted payment settlement, real provider delivery, physical
+cross-device validation, future native/desktop runtime proof, and Level 3 hardening remain open.
+
+2026-06-07 backend PixelLab cosmetic ownership proof: `cgraph-backend` commit
+`fdc6ea91696f1107cb9bac8f33649da5b62144a2` makes the promoted PixelLab avatar-border/nameplate
+catalog rows backend-owned and keeps unified inventory/equipped-state truth connected. The backend
+migration adds missing nameplate animation columns, creates the `user_active_cosmetics` read model,
+seeds seven PixelLab package nameplates plus six PixelLab avatar borders by package slug, points the
+animated-border compatibility schema at the real `avatar_borders` table, syncs unified equip/unequip
+into active cosmetics only when a real catalog row exists, and serializes package slugs on single-item
+equip responses. Proof passed `mix compile --warnings-as-errors`,
+`mix test test/cgraph_web/controllers/cosmetics_unified_inventory_controller_test.exs` with 6 / 6,
+and `mix test test/cgraph_web/controllers/api/v1/customization_controller_test.exs` with 17 / 17
+using the no-space `/tmp` Mix build path. This closes backend catalog/equipped-state ownership for
+the promoted PixelLab nameplate/avatar-border rows only; profile-theme background package ownership
+beyond web renderer enrichment, hosted payment settlement, real provider delivery, physical
+cross-device validation, future native/desktop runtime proof, and Level 3 hardening remain open.
 
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
