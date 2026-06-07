@@ -29,6 +29,9 @@ describe('PixelLab game cosmetics package consumption', () => {
 
     expect(stone?.rarity).toBe('epic');
     expect(stone?.textEffect).toBe('metallic');
+    expect(stone?.emblem).toBeNull();
+    expect(stone?.borderStyle).toBe('none');
+    expect(stone?.borderColor).toBeNull();
     expect(stone?.imageUrl).toContain('/cosmetics/pixellab/nameplate/plate_stone_sentinel_01/');
   });
 

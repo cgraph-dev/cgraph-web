@@ -16,6 +16,7 @@ import {
   type NameplateRarity,
 } from '@cgraph-dev/animation-constants';
 import { NameplateRenderer } from '@/components/ui/nameplate-renderer';
+import { useAuthStore } from '@/modules/auth/store';
 
 export interface NameplatesSectionProps {
   selectedNameplate: string | null;
@@ -64,12 +65,14 @@ function NameplateRow({
   plate,
   isSelected,
   isOwned,
+  previewName,
   onSelect,
   onPreview,
 }: {
   plate: NameplateEntry;
   isSelected: boolean;
   isOwned: boolean;
+  previewName: string;
   onSelect: () => void;
   onPreview: () => void;
 }) {
@@ -87,7 +90,7 @@ function NameplateRow({
         <div className="flex w-48 shrink-0 items-center justify-center">
           <NameplateRenderer
             nameplate={plate}
-            username="CryptoNinja"
+            username={previewName}
             size="md"
           />
         </div>
@@ -163,6 +166,9 @@ export function NameplatesSection({
   ownedNameplateIds,
 }: NameplatesSectionProps) {
   const [activeCategory, setActiveCategory] = useState<NameplateCategory>('all');
+  const previewName = useAuthStore(
+    (state) => state.user?.displayName || state.user?.username || 'Your name'
+  );
   const ownedNameplates = useMemo(() => new Set(ownedNameplateIds), [ownedNameplateIds]);
 
   const filteredPlates = useMemo(() => {
@@ -233,6 +239,7 @@ export function NameplatesSection({
                   plate={plate}
                   isOwned={isOwned}
                   isSelected={selectedNameplate === plate.id || (!selectedNameplate && isNonePlate)}
+                  previewName={previewName}
                   onSelect={() => onEquip(isNonePlate ? null : plate.id)}
                   onPreview={() => onEquip(plate.id)}
                 />
