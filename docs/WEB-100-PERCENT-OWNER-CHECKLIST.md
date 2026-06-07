@@ -82,10 +82,24 @@ creates `user_active_cosmetics`, points the border compatibility schema at `avat
 unified equip/unequip into active cosmetics only for real catalog rows, and serializes item slugs on
 single-item equip responses. Proof passed backend compile with warnings as errors plus focused
 unified-inventory/equipped and customization-controller tests (6 / 6 and 17 / 17). This closes the
-backend catalog/equipped-state row for the promoted PixelLab nameplates/avatar borders only; profile
-theme background package ownership beyond web renderer enrichment, future native runtime proof, real
-provider delivery, physical cross-device validation, hosted Stripe settlement, and Level 3 hardening
-remain open.
+backend catalog/equipped-state row for the promoted PixelLab nameplates/avatar borders only. At that
+point profile-theme background package ownership beyond web renderer enrichment, future native
+runtime proof, real provider delivery, physical cross-device validation, hosted Stripe settlement,
+and Level 3 hardening still remained open.
+
+2026-06-07 profile-theme background package ownership proof: `cgraph-packages` commit
+`ffa56629e11eba949f7d23c36f8ed85689ad0b93` publishes `@cgraph-dev/shared-types@1.1.4` with the
+PixelLab profile-theme preview, full-background, and mini-profile background asset metadata for
+`signal-noir`, `aurora-glass`, `deep-space`, and `ember-forge`. Web consumes that exact package
+version, removes the local `PROFILE_THEME_ASSET_OVERRIDES` table from
+`apps/web/src/data/profileThemes.ts`, and keeps the file as a renderer adapter over the shared
+catalog. Proof passed package release verification, npm publish/version lookup, 7 focused web
+profile-theme/profile-card tests, package-owner guard, web typecheck, web lint, full
+`pnpm check:web-release` with 411 files / 5,353 tests, production build, bundle budget with the
+largest JS chunk at 493.32 kB / 500 kB, and sampled production PixelLab profile-theme/background URLs
+returning HTTP 200. This closes profile-theme background package ownership for those PixelLab static
+asset rows only; future native runtime rendering, real provider delivery, physical cross-device
+validation, hosted Stripe settlement, and Level 3 hardening remain open.
 
 2026-05-21 app-shell/theme proof: `cgraph-backend` commit `133152be845465d4ca3a66ce8cfe2ecbc15c5cfb`
 changes the persisted app-theme default to Aurora and migrates non-explicit legacy app-theme rows to

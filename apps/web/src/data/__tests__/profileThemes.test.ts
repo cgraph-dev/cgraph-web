@@ -46,7 +46,7 @@ describe('profile theme catalog adapter', () => {
     expect(signalThemes).not.toBe(getSharedThemesByCategory('signal'));
   });
 
-  it('adds web renderer assets without inventing new profile theme ids', () => {
+  it('exposes package-owned renderer assets without inventing new profile theme ids', () => {
     const aurora = getProfileThemeOrDefault('aurora-glass');
     const ember = getProfileThemeOrDefault('ember-forge');
     const deepSpace = getProfileThemeOrDefault('deep-space');

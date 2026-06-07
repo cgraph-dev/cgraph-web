@@ -39,43 +39,7 @@ export {
   isProfileThemeId,
 };
 
-type ProfileThemeAssetOverride = Pick<
-  ProfileThemeConfig,
-  'previewImage' | 'profileBackgroundImage' | 'miniProfileBackgroundImage'
->;
-
-const PROFILE_THEME_ASSET_OVERRIDES: Partial<Record<ProfileThemeId, ProfileThemeAssetOverride>> =
-  {
-    'aurora-glass': {
-      previewImage:
-        '/cosmetics/pixellab/profile-theme-preview/theme_ranked_ascendant_preview/theme_ranked_ascendant_preview_0.png',
-      profileBackgroundImage:
-        '/cosmetics/pixellab/profile-background/profile_ranked_ascendant/profile_ranked_ascendant_0.png',
-      miniProfileBackgroundImage:
-        '/cosmetics/pixellab/mini-profile-background/mini_ranked_ascendant/mini_ranked_ascendant_0.png',
-    },
-    'deep-space': {
-      previewImage:
-        '/cosmetics/pixellab/profile-theme-preview/theme_void_relay_preview/theme_void_relay_preview_0.png',
-      profileBackgroundImage:
-        '/cosmetics/pixellab/profile-background/profile_void_relay/profile_void_relay_0.png',
-      miniProfileBackgroundImage:
-        '/cosmetics/pixellab/mini-profile-background/mini_void_relay/mini_void_relay_0.png',
-    },
-    'ember-forge': {
-      previewImage:
-        '/cosmetics/pixellab/profile-theme-preview/theme_ember_colossus_preview/theme_ember_colossus_preview_0.png',
-      profileBackgroundImage:
-        '/cosmetics/pixellab/profile-background/profile_ember_colossus/profile_ember_colossus_0.png',
-      miniProfileBackgroundImage:
-        '/cosmetics/pixellab/mini-profile-background/mini_ember_colossus/mini_ember_colossus_0.png',
-    },
-  };
-
-export const ALL_PROFILE_THEMES: ProfileThemeConfig[] = SHARED_PROFILE_THEMES.map((theme) => ({
-  ...theme,
-  ...PROFILE_THEME_ASSET_OVERRIDES[theme.id],
-}));
+export const ALL_PROFILE_THEMES: ProfileThemeConfig[] = [...SHARED_PROFILE_THEMES];
 
 export const DEFAULT_PROFILE_THEME: ProfileThemeConfig =
   ALL_PROFILE_THEMES.find((theme) => theme.id === SHARED_DEFAULT_PROFILE_THEME.id) ??

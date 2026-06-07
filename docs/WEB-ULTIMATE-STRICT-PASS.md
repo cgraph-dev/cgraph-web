@@ -880,7 +880,7 @@ settlement remain open.
 `cd81332c14ecd5139b018399b8a170eaa4a8a90f` moves web from local
 `packages/*` mirrors to exact published npm dependencies. The current reviewed package pins are
 `@cgraph-dev/animation-constants@1.1.4`, `@cgraph-dev/api-client@1.1.1`,
-`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.1.3`, and
+`@cgraph-dev/design-tokens@1.0.1`, `@cgraph-dev/shared-types@1.1.4`, and
 `@cgraph-dev/utils@1.0.1`. The original commit removes the mirror workspace and path
 aliases, replaces the old snapshot/mirror gates with a published-package
 dependency guard, and was verified with `pnpm check:packages`,
@@ -1186,9 +1186,24 @@ equip responses. Proof passed `mix compile --warnings-as-errors`,
 `mix test test/cgraph_web/controllers/cosmetics_unified_inventory_controller_test.exs` with 6 / 6,
 and `mix test test/cgraph_web/controllers/api/v1/customization_controller_test.exs` with 17 / 17
 using the no-space `/tmp` Mix build path. This closes backend catalog/equipped-state ownership for
-the promoted PixelLab nameplate/avatar-border rows only; profile-theme background package ownership
-beyond web renderer enrichment, hosted payment settlement, real provider delivery, physical
-cross-device validation, future native/desktop runtime proof, and Level 3 hardening remain open.
+the promoted PixelLab nameplate/avatar-border rows only. At that point profile-theme background
+package ownership beyond web renderer enrichment, hosted payment settlement, real provider delivery,
+physical cross-device validation, future native/desktop runtime proof, and Level 3 hardening still
+remained open.
+
+2026-06-07 profile-theme background package ownership proof: `cgraph-packages` commit
+`ffa56629e11eba949f7d23c36f8ed85689ad0b93` publishes `@cgraph-dev/shared-types@1.1.4` with the
+PixelLab profile-theme preview, full profile background, and mini-profile background URLs for
+`signal-noir`, `aurora-glass`, `deep-space`, and `ember-forge`. Web now consumes that exact package
+version, deletes the web-local `PROFILE_THEME_ASSET_OVERRIDES` table, and keeps
+`apps/web/src/data/profileThemes.ts` as a renderer adapter over the shared catalog. Proof passed full
+package release verification, npm publish/version lookup, focused profile-theme/profile-card web
+tests with 7 / 7, package-owner guard, web typecheck, web lint, full `pnpm check:web-release` with
+411 files / 5,353 tests, production build, bundle budget with the largest JS chunk at 493.32 kB / 500
+kB, and sampled production PixelLab profile-theme/background asset URLs returning HTTP 200. This
+closes profile-theme background package ownership for those static PixelLab rows only; hosted payment
+settlement, real provider delivery, physical cross-device validation, future native/desktop runtime
+proof, and Level 3 hardening remain open.
 
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof

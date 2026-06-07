@@ -126,7 +126,7 @@ Previous published-package baseline:
 - Result: web now consumes exact published npm dependencies
   `@cgraph-dev/animation-constants@1.1.4`,
   `@cgraph-dev/api-client@1.1.1`, `@cgraph-dev/design-tokens@1.0.1`,
-  `@cgraph-dev/shared-types@1.1.3`, and `@cgraph-dev/utils@1.0.1`.
+  `@cgraph-dev/shared-types@1.1.4`, and `@cgraph-dev/utils@1.0.1`.
   Local app package mirrors and `packages/*` workspace membership are removed.
   `check:packages` and `check:package-owner` now enforce exact package pins,
   reject old `@cgraph/*` package dependencies, reject local package protocols,
@@ -469,6 +469,17 @@ Latest proof:
   unified equip/unequip into active cosmetics for real catalog rows, and proves
   the inventory/equipped/customization contracts with focused backend tests
   (6 / 6 and 17 / 17) plus compile with warnings as errors.
+- 2026-06-07: production package commit
+  `ffa56629e11eba949f7d23c36f8ed85689ad0b93` publishes
+  `@cgraph-dev/shared-types@1.1.4`, making the PixelLab profile-theme preview,
+  full-background, and mini-profile background URLs package-owned for
+  `signal-noir`, `aurora-glass`, `deep-space`, and `ember-forge`. Web consumes
+  that exact package version and removes the local profile-theme asset override
+  table. Proof passed package release verification, npm version lookup, 7
+  focused web profile-theme/profile-card tests, package-owner guard, typecheck,
+  lint, `pnpm check:web-release` with 411 files / 5,353 tests, production build,
+  bundle budget, and sampled production profile-theme/background assets returning
+  HTTP 200.
 - 2026-06-06: production web commit
   `152d045c0188f0640f04b38f32ca4b8d8620b1e2` preserves the active routed group
   through stale `/api/v1/groups` list refreshes after invite joins, keeping the
