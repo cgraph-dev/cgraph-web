@@ -133,6 +133,14 @@
     "jobId": "36ab713f-d545-42d1-ad72-4167def26cb6"
   },
   {
+    "id": "plate_stone_sentinel_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_stone_sentinel_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "pixelorama"
+  },
+  {
     "id": "plate_void_relay_01",
     "kind": "nameplate",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_void_relay_01",

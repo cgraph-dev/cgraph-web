@@ -34,8 +34,8 @@ importers:
   apps/web:
     dependencies:
       '@cgraph-dev/animation-constants':
-        specifier: 1.1.4
-        version: 1.1.4
+        specifier: 1.1.5
+        version: 1.1.5
       '@cgraph-dev/api-client':
         specifier: 1.1.1
         version: 1.1.1(axios@1.16.1)
@@ -465,8 +465,8 @@ packages:
   '@bufbuild/protobuf@1.10.1':
     resolution: {integrity: sha512-wJ8ReQbHxsAfXhrf9ixl0aYbZorRuOWpBNzm8pL8ftmSxQx/wnJD5Eg861NwJU/czy2VXFIebCeZnZrI9rktIQ==}
 
-  '@cgraph-dev/animation-constants@1.1.4':
-    resolution: {integrity: sha512-ij9tN6fi9hAYPGLprAwMgbz2gGGAQFsiio8NGRG+NMHNVJjj4TcNpwHBsKQzN0D42HtNJuwSQztVMgwUPhLE0A==}
+  '@cgraph-dev/animation-constants@1.1.5':
+    resolution: {integrity: sha512-m73x6o2gM1xQpuzA20KiVdTIvf3De1oDlB708W2CLlMoCyTsJC5O6SdtREiKjR35FQd2fkP5UUUf53CP/793yw==}
 
   '@cgraph-dev/api-client@1.1.1':
     resolution: {integrity: sha512-HFeejHhwlF5j9/vtcP/8yjfdYOlepty7B+MF4+LvsUeNZedLvoe9EPefT44IK+OEzlDM+m96w3FtE4ugVdbgQg==}
@@ -6129,7 +6129,7 @@ snapshots:
 
   '@bufbuild/protobuf@1.10.1': {}
 
-  '@cgraph-dev/animation-constants@1.1.4': {}
+  '@cgraph-dev/animation-constants@1.1.5': {}
 
   '@cgraph-dev/api-client@1.1.1(axios@1.16.1)':
     dependencies:

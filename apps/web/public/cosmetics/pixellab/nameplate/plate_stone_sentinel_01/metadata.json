@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "plate_stone_sentinel_01",
+    "kind": "nameplate",
+    "endpoint": "manual-pixelorama-export",
+    "size": {
+      "width": 256,
+      "height": 110
+    },
+    "colorPalette": "deep slate blue, royal gold, icy blue, weathered stone",
+    "prompt": "transparent fantasy stone username nameplate, blue carved stone center, ornate gold corner filigree, icy blue outline, empty center for app-rendered username, no text, no logo"
+  },
+  "jobId": null,
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-07T19:09:00.000+03:00",
+  "source": "pixelorama"
+}
