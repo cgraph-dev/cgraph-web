@@ -9,6 +9,7 @@ import { MessageBubble } from '../message-bubble';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
 import type { UIPreferences } from '../preferences';
 import { DEFAULT_UI_PREFERENCES } from '../preferences';
+import { areMessageBubblePropsEqual } from '../utils';
 
 // Mock framer-motion to prevent layout animation infinite loops in jsdom
 // Proxy defined inline because vi.mock factories are hoisted above variable declarations
@@ -23,6 +24,7 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
         bubbleBorderRadius: 'lg',
         messageEffect: 'none',
         equippedTitle: { id: 'title-1', name: 'Legend', color: '#fbbf24' },
+        equippedNameplate: null,
       };
       return selector(state);
     }),
@@ -32,6 +34,7 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
         bubbleBorderRadius: 'lg',
         messageEffect: 'none',
         equippedTitle: null,
+        equippedNameplate: null,
       }),
     }
   ),
@@ -103,6 +106,7 @@ function createMessage(overrides: Partial<Message> = {}): Message {
       bubbleStyle: 'gradient',
       bubbleColor: '#ef4444',
       equippedTitleId: 'title-veteran',
+      equippedNameplateId: null,
       chatTheme: 'midnight',
     },
     metadata: {},
@@ -194,6 +198,42 @@ describe('MessageBubble Customization', () => {
     });
     rerender(<MessageBubble {...defaultProps} message={updatedMsg} />);
     expect(screen.getByText('Hello world')).toBeTruthy();
+  });
+
+  it('uses sender nameplate as a bubble surface for other user messages', () => {
+    const msgWithNameplate = createMessage({
+      sender: {
+        ...createMessage().sender,
+        bubbleStyle: null,
+        bubbleColor: null,
+        equippedNameplateId: 'plate_stone_sentinel_01',
+      },
+    });
+
+    const { container } = render(<MessageBubble {...defaultProps} message={msgWithNameplate} />);
+
+    const bubble = container.querySelector(
+      '[data-nameplate-bubble-id="plate_stone_sentinel_01"]'
+    );
+    expect(bubble).toBeTruthy();
+    expect(bubble?.className).toContain('nameplate-bubble-surface');
+  });
+
+  it('memo comparator detects equippedNameplateId changes', () => {
+    const previous = {
+      ...defaultProps,
+      message: createMessage({
+        sender: { ...createMessage().sender, equippedNameplateId: 'plate_signal_noir_01' },
+      }),
+    };
+    const next = {
+      ...defaultProps,
+      message: createMessage({
+        sender: { ...createMessage().sender, equippedNameplateId: 'plate_stone_sentinel_01' },
+      }),
+    };
+
+    expect(areMessageBubblePropsEqual(previous, next)).toBe(false);
   });
 
   it('memo comparator detects avatarBorderId changes', () => {

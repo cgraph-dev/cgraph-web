@@ -17,7 +17,8 @@ import {
   ArrowDownIcon as ArrowDownIconSolid,
 } from '@heroicons/react/24/solid';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { formatTimeAgo } from '@/lib/utils';
+import { cn, formatTimeAgo } from '@/lib/utils';
+import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
 import ThreadPrefix from '@/modules/forums/components/thread-prefix';
 import ThreadRating from '@/modules/forums/components/thread-rating';
 import { getVoteScoreClass } from './constants';
@@ -31,6 +32,10 @@ import { FADE_UP } from '@/lib/animations/transitions';
  * Post Card display component.
  */
 export function PostCard({ post, onVote }: PostCardProps) {
+  const nameplateBubble = getNameplateBubbleStyle(post.author.equippedNameplateId, {
+    surface: 'forum',
+  });
+
   return (
     <motion.div
       {...FADE_UP}
@@ -38,7 +43,14 @@ export function PostCard({ post, onVote }: PostCardProps) {
       whileHover={{ y: -2 }}
       transition={springs.bouncy}
     >
-      <div className="group relative overflow-hidden rounded-xl bg-[var(--token-bg-primary)] border border-[var(--token-border-muted)] backdrop-blur-2xl backdrop-saturate-[1.8] shadow-[0_8px_32px_rgba(0,0,0,0.4),rgba(255,255,255,0.02)_0px_1px_1px_inset]">
+      <div
+        className={cn(
+          'group relative overflow-hidden rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] shadow-[0_8px_32px_rgba(0,0,0,0.4),rgba(255,255,255,0.02)_0px_1px_1px_inset] backdrop-blur-2xl backdrop-saturate-[1.8]',
+          nameplateBubble?.className
+        )}
+        style={nameplateBubble?.style}
+        data-nameplate-bubble-id={nameplateBubble?.entry.id}
+      >
         {/* Hover gradient glow */}
         <motion.div
           className="pointer-events-none absolute inset-0 bg-gradient-to-r from-primary-500/10 via-violet-500/10 to-transparent opacity-0 group-hover:opacity-100"

@@ -410,6 +410,69 @@
   border-right: 3px solid #8b5cf6;
 }
 
+/* Nameplate-linked message surfaces */
+.nameplate-bubble-surface {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+}
+
+.nameplate-bubble-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.nameplate-bubble-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at var(--nameplate-bubble-sheen-x) 0%, var(--nameplate-bubble-highlight), transparent 42%),
+    linear-gradient(115deg, transparent 0%, var(--nameplate-bubble-accent-soft) 48%, transparent 76%);
+  opacity: 0.86;
+  transform: translateX(-18%);
+  animation: nameplate-bubble-glint calc(7s / var(--animation-speed)) ease-in-out infinite;
+}
+
+.nameplate-bubble-surface::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  border-top: 1px solid var(--nameplate-bubble-highlight);
+  box-shadow: inset 0 -1px 0 var(--nameplate-bubble-accent-soft);
+}
+
+.nameplate-bubble--metallic,
+.nameplate-bubble--fantasy,
+.nameplate-bubble--divine,
+.nameplate-bubble--mythical {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes nameplate-bubble-glint {
+  0%, 100% {
+    opacity: 0.62;
+    transform: translateX(-24%);
+  }
+  45% {
+    opacity: 0.94;
+    transform: translateX(18%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nameplate-bubble-surface::before {
+    animation: none;
+    transform: none;
+  }
+}
+
 /* ==================== MESSAGE EFFECTS ==================== */
 
 .message-effect-slide {

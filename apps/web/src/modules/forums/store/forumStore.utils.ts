@@ -22,6 +22,18 @@ function record(val: unknown): Record<string, unknown> | null {
   return Object.fromEntries(Object.entries(val));
 }
 
+function authorNameplateId(author: Record<string, unknown>): string | null {
+  return (
+    strOrNull(
+      author.equippedNameplateId ??
+        author.equipped_nameplate_id ??
+        author.equipped_nameplate ??
+        author.nameplateId ??
+        author.nameplate_id
+    ) ?? null
+  );
+}
+
 function voteValue(val: unknown): 1 | -1 | 0 {
   if (val === 1 || val === -1) return val;
   return 0;
@@ -115,6 +127,7 @@ export function normalizeComment(raw: Record<string, unknown>, fallbackPostId = 
             ? author.avatar_border_id
             : null,
       equippedTitleId: typeof author.equippedTitleId === 'string' ? author.equippedTitleId : null,
+      equippedNameplateId: authorNameplateId(author),
       reputation: typeof author.reputation === 'number' ? author.reputation : undefined,
     },
     createdAt: str(raw.createdAt ?? raw.created_at),
@@ -198,8 +211,14 @@ export function normalizePost(raw: Record<string, unknown>, fallbackForumId = ''
           : typeof author.avatar_url === 'string'
             ? author.avatar_url
             : null,
-      avatarBorderId: typeof author.avatarBorderId === 'string' ? author.avatarBorderId : null,
+      avatarBorderId:
+        typeof author.avatarBorderId === 'string'
+          ? author.avatarBorderId
+          : typeof author.avatar_border_id === 'string'
+            ? author.avatar_border_id
+            : null,
       equippedTitleId: typeof author.equippedTitleId === 'string' ? author.equippedTitleId : null,
+      equippedNameplateId: authorNameplateId(author),
       reputation: typeof author.reputation === 'number' ? author.reputation : undefined,
     },
     forum: (() => {

@@ -7,7 +7,8 @@
  */
 
 import { Link } from 'react-router-dom';
-import { formatTimeAgo } from '@/lib/utils';
+import { cn, formatTimeAgo } from '@/lib/utils';
+import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
 import MarkdownRenderer from '@/components/content/markdown-renderer';
 import ThreadPrefix from '@/modules/forums/components/thread-prefix';
 import ThreadRating from '@/modules/forums/components/thread-rating';
@@ -29,6 +30,13 @@ export interface PostContentProps {
 /** Full post content area (meta, badges, body, attachments, rating) */
 export function PostContent({ post, onShowEditHistory }: PostContentProps) {
   const { forum, author } = post;
+  const nameplateBubble = getNameplateBubbleStyle(author.equippedNameplateId, {
+    surface: 'forum',
+  });
+  const bodyBubbleClass = cn(
+    nameplateBubble && 'rounded-2xl px-4 py-3',
+    nameplateBubble?.className
+  );
 
   return (
     <>
@@ -106,7 +114,11 @@ export function PostContent({ post, onShowEditHistory }: PostContentProps) {
 
       {/* Body */}
       {post.postType === 'text' && post.content && (
-        <div className="mb-4">
+        <div
+          className={cn('mb-4', bodyBubbleClass)}
+          style={nameplateBubble?.style}
+          data-nameplate-bubble-id={nameplateBubble?.entry.id}
+        >
           <MarkdownRenderer content={post.content} />
         </div>
       )}
@@ -116,14 +128,20 @@ export function PostContent({ post, onShowEditHistory }: PostContentProps) {
           href={post.linkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mb-4 block text-primary-400 hover:underline"
+          className={cn('mb-4 block text-primary-400 hover:underline', bodyBubbleClass)}
+          style={nameplateBubble?.style}
+          data-nameplate-bubble-id={nameplateBubble?.entry.id}
         >
           {post.linkUrl}
         </a>
       )}
 
       {post.postType === 'image' && post.mediaUrls?.[0] && (
-        <div className="mb-4 overflow-hidden rounded-lg">
+        <div
+          className={cn('mb-4 overflow-hidden rounded-lg', bodyBubbleClass)}
+          style={nameplateBubble?.style}
+          data-nameplate-bubble-id={nameplateBubble?.entry.id}
+        >
           <img src={post.mediaUrls[0]} alt="" className="h-auto max-w-full" />
         </div>
       )}

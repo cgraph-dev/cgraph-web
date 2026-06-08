@@ -21,6 +21,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { VoiceMessagePlayer } from '@/components/media/voice-message-player';
 import { DisplayName } from '@/shared/components/ui';
+import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
+import { cn } from '@/lib/utils';
 import type { ChannelMessageItemProps } from './types';
 import type { Role } from '@/modules/groups/store';
 import { formatMessageTime, getAvatarInitial, getDisplayName } from './utils';
@@ -63,6 +65,10 @@ export function ChannelMessageItem({
   const canDelete = Boolean(onDeleteMessage && (isOwnMessage || canManageMessages));
   const canPin = Boolean(onPinMessage && canManageMessages && !message.isPinned);
   const hasMoreActions = canEdit || canDelete || canPin || Boolean(onCopyLink || onReport);
+  const nameplateBubble = getNameplateBubbleStyle(message.author.equippedNameplateId, {
+    isOwn: isOwnMessage,
+    surface: 'group',
+  });
 
   function handleReactionSelect(emoji: string): void {
     onReaction(emoji);
@@ -202,14 +208,22 @@ export function ChannelMessageItem({
             </div>
           </div>
         ) : (
-          <>
+          <div
+            className={cn(
+              nameplateBubble &&
+                'mt-0.5 w-fit max-w-full rounded-2xl px-3 py-2 text-sm leading-relaxed',
+              nameplateBubble?.className
+            )}
+            style={nameplateBubble?.style}
+            data-nameplate-bubble-id={nameplateBubble?.entry.id}
+          >
             <ChannelMessageContent message={message} />
             {message.isEdited && <span className="ml-1 text-[11px] text-gray-500">(edited)</span>}
             {message.isPinned && <span className="ml-2 text-[11px] text-primary-300">Pinned</span>}
             {message.messageType !== 'voice' && message.messageType !== 'audio' && (
               <MessageAttachment message={message} />
             )}
-          </>
+          </div>
         )}
 
         {/* Reactions */}

@@ -22,6 +22,7 @@ import { aggregateReactions, handleRemoveReaction } from '@/lib/chat';
 import { cn } from '@/lib/utils';
 import { getBadgeById } from '@/data/badgesCollection';
 import { getTitleById } from '@/data/titlesCollection';
+import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
 
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import type { MessageBubbleProps } from './types';
@@ -173,6 +174,7 @@ export const MessageBubble = memo(function MessageBubble({
   const [showActions, setShowActions] = useState(false);
   const [showEditHistory, setShowEditHistory] = useState(false);
   const currentUserId = useAuthStore((s) => s.user?.id) || '';
+  const authEquippedNameplateId = useAuthStore((s) => s.user?.equippedNameplateId ?? null);
 
   function toggleEditHistory() {
     setShowEditHistory((prev) => !prev);
@@ -182,6 +184,7 @@ export const MessageBubble = memo(function MessageBubble({
   const ownBubbleRadius = useCustomizationStore((s) => s.bubbleBorderRadius);
   const ownMessageEffect = useCustomizationStore((s) => s.messageEffect);
   const ownEquippedTitle = useCustomizationStore((s) => s.equippedTitle);
+  const ownEquippedNameplate = useCustomizationStore((s) => s.equippedNameplate);
 
   const bubbleStyle = isOwn ? ownBubbleStyle : (message.sender?.bubbleStyle ?? 'default');
   const bubbleColor = isOwn ? null : (message.sender?.bubbleColor ?? null);
@@ -190,16 +193,23 @@ export const MessageBubble = memo(function MessageBubble({
     ? (ownMessageEffect ?? 'none')
     : (message.sender?.messageEffect ?? 'none');
   const equippedTitleId = isOwn ? ownEquippedTitle : (message.sender?.equippedTitleId ?? null);
+  const equippedNameplateId = isOwn
+    ? (ownEquippedNameplate ?? authEquippedNameplateId)
+    : (message.sender?.equippedNameplateId ?? null);
   const senderProfileUser = message.sender ? profileCardUserFromSender(message.sender) : undefined;
 
   const bubbleCssClass = getMessageBubbleClass(bubbleStyle);
+  const nameplateBubble = getNameplateBubbleStyle(equippedNameplateId, {
+    isOwn,
+    surface: 'message',
+  });
   const effectCssClass = getMessageEffectClass(messageEffect ?? 'none');
   const canShowActionMenu = Boolean(
     onToggleMenu && (onSelect || onEdit || onPin || onForward || onDelete)
   );
 
-  const bubbleInlineStyle: React.CSSProperties = {};
-  if (bubbleColor) bubbleInlineStyle.backgroundColor = bubbleColor;
+  const bubbleInlineStyle: React.CSSProperties = { ...(nameplateBubble?.style ?? {}) };
+  if (bubbleColor && !nameplateBubble) bubbleInlineStyle.backgroundColor = bubbleColor;
   if (bubbleRadius != null) bubbleInlineStyle.borderRadius = `${bubbleRadius}px`;
 
   const bubbleVariants = {
@@ -317,15 +327,18 @@ export const MessageBubble = memo(function MessageBubble({
               'px-4 py-2 transition-all duration-200',
               'backdrop-blur-[12px] backdrop-saturate-[1.4]',
               bubbleCssClass,
+              nameplateBubble?.className,
               isOwn ? 'is-own text-white' : 'text-white',
               // Fallback Tailwind classes only when no custom bubble CSS class applies
               !bubbleColor &&
+                !nameplateBubble &&
                 bubbleStyle === 'default' &&
                 (isOwn
                   ? 'bg-primary-600/90 hover:bg-primary-500/90 rounded-2xl rounded-br-md shadow-[0_2px_8px_color-mix(in_srgb,var(--color-brand-purple)_15%,transparent)]'
                   : 'rounded-2xl rounded-bl-md border border-transparent bg-[var(--token-card-bg)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:bg-[var(--token-card-bg)] dark:border-[var(--token-border-muted)] dark:bg-[var(--token-card-bg)] dark:hover:bg-[var(--token-card-bg)]')
             )}
             style={bubbleInlineStyle}
+            data-nameplate-bubble-id={nameplateBubble?.entry.id}
           >
             {message.isPinned && (
               <div className="bg-primary-500/15 mb-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-primary-200">

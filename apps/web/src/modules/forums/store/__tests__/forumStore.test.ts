@@ -9,6 +9,7 @@
 import { describe, it, expect, afterEach, vi, type MockedFunction } from 'vitest';
 import { useForumStore } from '@/modules/forums/store';
 import type { Forum, Post, Comment, ForumCategory } from '@/modules/forums/store';
+import { normalizeComment, normalizePost } from '../forumStore.utils';
 vi.mock('@/lib/api', () => ({
   api: {
     get: vi.fn(),
@@ -242,6 +243,32 @@ afterEach(() => {
 // Tests
 
 describe('forumStore (module)', () => {
+  describe('normalizers', () => {
+    it('keeps post author nameplate identity from API payloads', () => {
+      const post = normalizePost({
+        ...mockPost,
+        author: {
+          ...mockPost.author,
+          equipped_nameplate_id: 'plate_stone_sentinel_01',
+        },
+      });
+
+      expect(post.author.equippedNameplateId).toBe('plate_stone_sentinel_01');
+    });
+
+    it('keeps comment author nameplate identity from API payloads', () => {
+      const comment = normalizeComment({
+        ...mockComment,
+        author: {
+          ...mockComment.author,
+          equippedNameplateId: 'plate_signal_noir_01',
+        },
+      });
+
+      expect(comment.author.equippedNameplateId).toBe('plate_signal_noir_01');
+    });
+  });
+
   describe('initial state', () => {
     it('should have empty forums, posts, comments, and correct defaults', () => {
       const s = useForumStore.getState();

@@ -93,6 +93,8 @@ export function areMessageBubblePropsEqual(
     prevProps.message.sender?.bubbleRadius === nextProps.message.sender?.bubbleRadius &&
     prevProps.message.sender?.messageEffect === nextProps.message.sender?.messageEffect &&
     prevProps.message.sender?.equippedTitleId === nextProps.message.sender?.equippedTitleId &&
+    prevProps.message.sender?.equippedNameplateId ===
+      nextProps.message.sender?.equippedNameplateId &&
     prevProps.message.sender?.avatarBorderId === nextProps.message.sender?.avatarBorderId
   );
 }

@@ -13,7 +13,8 @@ import {
   ArrowUpIcon as ArrowUpIconSolid,
   ArrowDownIcon as ArrowDownIconSolid,
 } from '@heroicons/react/24/solid';
-import { formatTimeAgo } from '@/lib/utils';
+import { cn, formatTimeAgo } from '@/lib/utils';
+import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
 import MarkdownRenderer from '@/components/content/markdown-renderer';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { CommentItemProps } from './types';
@@ -38,6 +39,9 @@ export function CommentItem({
   const [isCollapsed, setIsCollapsed] = useState(comment.isCollapsed);
 
   const marginLeft = Math.min(depth * COMMENT_INDENT_PER_LEVEL, MAX_COMMENT_INDENT);
+  const nameplateBubble = getNameplateBubbleStyle(comment.author.equippedNameplateId, {
+    surface: 'forum',
+  });
 
   return (
     <div style={{ marginLeft }}>
@@ -94,7 +98,15 @@ export function CommentItem({
           {!isCollapsed && (
             <>
               {/* Content */}
-              <div className="mt-1">
+              <div
+                className={cn(
+                  'mt-1',
+                  nameplateBubble && 'w-fit max-w-full rounded-2xl px-3 py-2',
+                  nameplateBubble?.className
+                )}
+                style={nameplateBubble?.style}
+                data-nameplate-bubble-id={nameplateBubble?.entry.id}
+              >
                 <MarkdownRenderer content={comment.content} className="text-sm" />
               </div>
 
