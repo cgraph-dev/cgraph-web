@@ -42,6 +42,13 @@ const SIZE_CONFIG: Record<
   },
 };
 
+const IMAGE_NAMEPLATE_MIN_WIDTH: Record<NameplateSize, string> = {
+  xs: '3.5rem',
+  sm: '4.667rem',
+  md: '5.875rem',
+  lg: '7rem',
+};
+
 function getTextEffectStyles(
   effect: NameplateTextEffect,
   primaryColor: string,
@@ -174,6 +181,7 @@ export const NameplateRenderer = memo(function NameplateRenderer({
 
   const borderStyles = getBorderStyles(nameplate.borderStyle, nameplate.borderColor);
   const imageUrl = nameplate.imageUrl ?? nameplate.previewUrl;
+  const hasImageAsset = Boolean(imageUrl);
   const lottiePath =
     nameplate.lottieUrl ??
     (nameplate.lottieFile ? `/lottie/nameplates/${nameplate.lottieFile}` : null);
@@ -192,18 +200,22 @@ export const NameplateRenderer = memo(function NameplateRenderer({
 
   return (
     <div
-      className={`cgraph-game-nameplate-frame relative inline-flex items-center gap-1.5 overflow-hidden font-bold ${sizeConfig.height} ${sizeConfig.px} ${sizeConfig.rounded} ${className}`}
+      className={`cgraph-game-nameplate-frame relative inline-flex items-center justify-center gap-1.5 font-bold ${sizeConfig.height} ${sizeConfig.px} ${
+        hasImageAsset ? 'overflow-visible' : `overflow-hidden ${sizeConfig.rounded}`
+      } ${className}`}
       style={{
-        background: barBackground,
-        ...borderStyles,
+        background: hasImageAsset ? 'transparent' : barBackground,
+        ...(hasImageAsset ? {} : borderStyles),
         width: width ?? undefined,
+        minWidth: hasImageAsset && !width ? IMAGE_NAMEPLATE_MIN_WIDTH[size] : undefined,
+        aspectRatio: hasImageAsset && !width ? '112 / 48' : undefined,
       }}
     >
       {imageUrl ? (
         <img
           src={imageUrl}
           alt=""
-          className="pointer-events-none absolute inset-0 z-0 h-full w-full rounded-[inherit] object-fill"
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full object-fill"
           loading="lazy"
         />
       ) : lottiePath ? (
@@ -215,8 +227,12 @@ export const NameplateRenderer = memo(function NameplateRenderer({
           fallback={null}
         />
       ) : null}
-      <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[1] rounded-[inherit]" />
-      <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/2" />
+      {!hasImageAsset && (
+        <>
+          <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[1] rounded-[inherit]" />
+          <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/2" />
+        </>
+      )}
       {/* Emblem */}
       {showEmblem && nameplate.emblem && (
         <span className={`relative z-10 ${sizeConfig.emblemSize}`}>{nameplate.emblem}</span>
