@@ -104,6 +104,38 @@
     "jobId": "5395737b-52c6-42fe-913e-ec0910122fc3"
   },
   {
+    "id": "plate_gilded_amethyst_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_gilded_amethyst_loop_01",
+    "imageCount": 2,
+    "jobId": "1780953518895",
+    "source": "pixellab-animated-gif-crop"
+  },
+  {
+    "id": "plate_gilded_crimson_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_gilded_crimson_loop_01",
+    "imageCount": 2,
+    "jobId": "1780953518895",
+    "source": "pixellab-animated-gif-crop"
+  },
+  {
+    "id": "plate_gilded_emerald_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_gilded_emerald_loop_01",
+    "imageCount": 2,
+    "jobId": "1780953518895",
+    "source": "pixellab-animated-gif-crop"
+  },
+  {
+    "id": "plate_gilded_sapphire_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_gilded_sapphire_loop_01",
+    "imageCount": 2,
+    "jobId": "1780953518895",
+    "source": "pixellab-animated-gif-crop"
+  },
+  {
     "id": "plate_ranked_ascendant_01",
     "kind": "nameplate",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_ranked_ascendant_01",

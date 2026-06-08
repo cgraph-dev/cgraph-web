@@ -1,0 +1,23 @@
+{
+  "asset": {
+    "id": "plate_gilded_amethyst_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 112,
+      "height": 48
+    },
+    "frameCount": 13,
+    "durationMs": 130,
+    "loop": "infinite",
+    "colorPalette": "royal purple, antique gold, dark glass",
+    "prompt": "Animate only the existing decorative empty nameplate frame as a seamless looping animation. Keep center empty. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceGrid": "/home/trick/Downloads/pixellab-Animate-only-the-existing-deco-1780953518895.gif"
+  },
+  "jobId": "1780953518895",
+  "status": "completed",
+  "imageCount": 2,
+  "generatedAt": "2026-06-09T00:23:00.000+03:00",
+  "source": "pixellab",
+  "notes": "Cropped from a 2x2 PixelLab animated GIF grid into a standalone 112x48 looping nameplate."
+}
