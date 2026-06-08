@@ -275,6 +275,7 @@ export const NameplateBar = memo(function NameplateBar({
   // Resolve entry from shared registry
   const entry: NameplateEntry | undefined = nameplateId ? getNameplateById(nameplateId) : undefined;
   const imageUrl = entry?.imageUrl ?? entry?.previewUrl;
+  const hasImageAsset = Boolean(imageUrl);
 
   const hasLottie = Boolean(entry?.lottieUrl);
 
@@ -282,7 +283,7 @@ export const NameplateBar = memo(function NameplateBar({
     return null;
   }
 
-  const borderStyles = resolveBorderStyle(entry.borderStyle, entry.borderColor);
+  const borderStyles = hasImageAsset ? {} : resolveBorderStyle(entry.borderStyle, entry.borderColor);
   const textStyles =
     getDisplayNameOverrideStyles({
       font: displayNameFont,
@@ -310,11 +311,14 @@ export const NameplateBar = memo(function NameplateBar({
     <AnimatePresence mode="wait">
       <motion.div
         key={entry.id}
-        className={`cgraph-game-nameplate-frame relative overflow-hidden ${className}`}
+        className={`cgraph-game-nameplate-frame relative ${
+          hasImageAsset ? 'overflow-visible' : 'overflow-hidden'
+        } ${className}`}
         style={{
           width,
           height,
           borderRadius: 8,
+          background: hasImageAsset ? 'transparent' : undefined,
           ...borderStyles,
         }}
         initial={{ opacity: 0, scaleX: 0.85 }}
@@ -328,14 +332,14 @@ export const NameplateBar = memo(function NameplateBar({
         {...animatedBorderProps}
       >
         {/* Layer 1: CSS gradient background (always renders as fallback) */}
-        <GradientBackground gradient={entry.barGradient} />
+        {!hasImageAsset && <GradientBackground gradient={entry.barGradient} />}
 
         {/* Layer 2: static release asset or Lottie animated background */}
         {imageUrl ? (
           <img
             src={imageUrl}
             alt=""
-            className="pointer-events-none absolute inset-0 z-[1] h-full w-full object-fill opacity-95"
+            className="pointer-events-none absolute inset-0 z-[1] h-full w-full object-fill"
             loading="lazy"
           />
         ) : hasLottie && !prefersReducedMotion ? (
@@ -348,8 +352,12 @@ export const NameplateBar = memo(function NameplateBar({
           />
         ) : null}
 
-        <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[2] rounded-[inherit]" />
-        <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[3] w-1/2" />
+        {!hasImageAsset && (
+          <>
+            <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[2] rounded-[inherit]" />
+            <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[3] w-1/2" />
+          </>
+        )}
 
         {/* Layer 3: Content — emblem + username text effect */}
         <div

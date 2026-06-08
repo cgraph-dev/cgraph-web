@@ -117,22 +117,29 @@ export const Nameplate = memo(function Nameplate({
 }: NameplateProps) {
   const entry = nameplateId ? getNameplateById(nameplateId) : undefined;
   const imageUrl = entry?.imageUrl ?? entry?.previewUrl;
+  const hasImageAsset = Boolean(imageUrl);
   const DisplayNameTag = getDisplayNameTag(headingLevel);
 
   const hasEntry = entry != null && entry.id !== 'plate_none';
 
   // Bar background from nameplate entry, or default frosted glass
-  const barBg = hasEntry && entry.barGradient
-    ? `linear-gradient(135deg, ${entry.barGradient[0]} 0%, ${entry.barGradient[1]} 100%)`
-    : 'rgba(255,255,255,0.025)';
+  const barBg = hasImageAsset
+    ? 'transparent'
+    : hasEntry && entry.barGradient
+      ? `linear-gradient(135deg, ${entry.barGradient[0]} 0%, ${entry.barGradient[1]} 100%)`
+      : 'rgba(255,255,255,0.025)';
 
   const barBorder =
-    hasEntry && entry.borderColor
+    hasImageAsset
+      ? '0 solid transparent'
+      : hasEntry && entry.borderColor
       ? `1px solid ${entry.borderColor}`
       : '1px solid rgba(255,255,255,0.05)';
 
   const barShadow =
-    hasEntry && entry.borderColor
+    hasImageAsset
+      ? 'none'
+      : hasEntry && entry.borderColor
       ? `0 0 12px ${entry.borderColor}30, 0 4px 16px rgba(0,0,0,0.55)`
       : '0 4px 16px rgba(0,0,0,0.4)';
 
@@ -166,7 +173,12 @@ export const Nameplate = memo(function Nameplate({
       data-display-name-effect={displayNameEffect ?? undefined}
     >
       <div
-        className="cgraph-game-nameplate-frame relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-xl px-[26px] pb-[10px] pt-2 backdrop-blur-[20px] backdrop-saturate-[1.6]"
+        className={cn(
+          'cgraph-game-nameplate-frame relative inline-flex items-center justify-center gap-1.5 rounded-xl px-[26px] pb-[10px] pt-2',
+          hasImageAsset
+            ? 'overflow-visible'
+            : 'overflow-hidden backdrop-blur-[20px] backdrop-saturate-[1.6]'
+        )}
         style={{
           background: barBg,
           border: barBorder,
@@ -177,7 +189,7 @@ export const Nameplate = memo(function Nameplate({
           <img
             src={imageUrl}
             alt=""
-            className="pointer-events-none absolute inset-0 z-0 h-full w-full object-fill opacity-95"
+            className="pointer-events-none absolute inset-0 z-0 h-full w-full object-fill"
             loading="lazy"
           />
         ) : hasEntry && entry.lottieUrl ? (
@@ -189,7 +201,7 @@ export const Nameplate = memo(function Nameplate({
             fallback={null}
           />
         ) : null}
-        {hasEntry && (
+        {hasEntry && !hasImageAsset && (
           <>
             <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[1] rounded-[inherit]" />
             <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/2" />
