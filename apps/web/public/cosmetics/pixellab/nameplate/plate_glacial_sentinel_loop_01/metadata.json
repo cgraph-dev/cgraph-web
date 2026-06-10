@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_glacial_sentinel_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "icy silver, blue crystal, slate steel, pale frost",
+    "prompt": "Seamless looping animation for an empty silver-blue metal nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Seamless-looping-animation-for-1781105242347.gif",
+    "sourceSha256": "16d31d468f78fba0791d9db0e6325d7df343215167351d4d0c2012278d3115f2"
+  },
+  "jobId": "1781105242347",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-10T19:08:00.000+03:00",
+  "source": "pixellab-animated-gif"
+}

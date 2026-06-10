@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_obsidian_flare_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "obsidian black, ember orange, molten red, dark steel",
+    "prompt": "Seamless looping animation for an empty obsidian and ember fantasy nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Refine-and-animate-this-existi-1781101338117.gif",
+    "sourceSha256": "2794a4714771a1a9272b85868fffb44bd2922b6b077657324d2b41cce54b4b41"
+  },
+  "jobId": "1781101338117",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-10T17:50:00.000+03:00",
+  "source": "pixellab-animated-gif"
+}

@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_royal_banner_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "dark navy cloth, antique gold, charcoal trim, soft bronze",
+    "prompt": "Seamless looping animation for an empty dark navy and antique gold banner nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Seamless-looping-animation-for-1781109502172.gif",
+    "sourceSha256": "d92f86a31825c63c696c6a61a2c797c062862957542bf065ee77a93cf14b3219"
+  },
+  "jobId": "1781109502172",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-10T19:41:00.000+03:00",
+  "source": "pixellab-animated-gif"
+}

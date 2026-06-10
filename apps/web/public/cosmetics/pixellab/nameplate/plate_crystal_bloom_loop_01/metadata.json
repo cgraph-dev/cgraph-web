@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_crystal_bloom_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "purple crystal, silver leaves, moonlit white, dark glass",
+    "prompt": "Seamless looping animation for an empty purple and silver crystal flower nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Seamless-looping-animation-for-1781109708341.gif",
+    "sourceSha256": "8041ba3468ddb43855a5d1f4425c5d580af8bc7c3363af7ebc911d67b142799c"
+  },
+  "jobId": "1781109708341",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-10T19:44:00.000+03:00",
+  "source": "pixellab-animated-gif"
+}

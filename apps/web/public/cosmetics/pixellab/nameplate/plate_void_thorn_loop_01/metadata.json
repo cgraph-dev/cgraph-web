@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_void_thorn_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "void black, violet crystal, deep purple, cold silver",
+    "prompt": "Seamless looping animation for an empty dark purple shadow nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Seamless-looping-animation-for-1781109297015.gif",
+    "sourceSha256": "0ec487070241f9ec0f7b2b25ed243d2cd4b60f48030b9c0bf5a3ab2b10524804"
+  },
+  "jobId": "1781109297015",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-10T19:37:00.000+03:00",
+  "source": "pixellab-animated-gif"
+}

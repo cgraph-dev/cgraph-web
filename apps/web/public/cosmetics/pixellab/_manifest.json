@@ -136,6 +136,62 @@
     "source": "pixellab-animated-gif-crop"
   },
   {
+    "id": "plate_obsidian_flare_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_obsidian_flare_loop_01",
+    "imageCount": 1,
+    "jobId": "1781101338117",
+    "source": "pixellab-animated-gif"
+  },
+  {
+    "id": "plate_glacial_sentinel_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_glacial_sentinel_loop_01",
+    "imageCount": 1,
+    "jobId": "1781105242347",
+    "source": "pixellab-animated-gif"
+  },
+  {
+    "id": "plate_parchment_scroll_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_parchment_scroll_loop_01",
+    "imageCount": 1,
+    "jobId": "1781107851173",
+    "source": "pixellab-animated-gif"
+  },
+  {
+    "id": "plate_cyber_cipher_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_cyber_cipher_loop_01",
+    "imageCount": 1,
+    "jobId": "1781108848623",
+    "source": "pixellab-animated-gif"
+  },
+  {
+    "id": "plate_void_thorn_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_void_thorn_loop_01",
+    "imageCount": 1,
+    "jobId": "1781109297015",
+    "source": "pixellab-animated-gif"
+  },
+  {
+    "id": "plate_royal_banner_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_royal_banner_loop_01",
+    "imageCount": 1,
+    "jobId": "1781109502172",
+    "source": "pixellab-animated-gif"
+  },
+  {
+    "id": "plate_crystal_bloom_loop_01",
+    "kind": "nameplate",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_crystal_bloom_loop_01",
+    "imageCount": 1,
+    "jobId": "1781109708341",
+    "source": "pixellab-animated-gif"
+  },
+  {
     "id": "plate_ranked_ascendant_01",
     "kind": "nameplate",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_ranked_ascendant_01",

@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_parchment_scroll_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "warm parchment, polished gold, soft ivory, antique ink shadow",
+    "prompt": "Seamless looping animation for an empty golden parchment scroll nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Seamless-looping-animation-for-1781107851173.gif",
+    "sourceSha256": "97a501d4355397f403465973bbd353b0f26d62ca1c2e5c94c2c0d05c3313cf5b"
+  },
+  "jobId": "1781107851173",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-10T19:26:00.000+03:00",
+  "source": "pixellab-animated-gif"
+}
