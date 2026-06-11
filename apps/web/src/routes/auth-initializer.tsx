@@ -57,7 +57,7 @@ const E2E_USER: User = {
   displayName: 'E2E User',
   avatarUrl: null,
   avatarBorderId: 'border_cyberpunk_common_01',
-  equippedNameplateId: 'plate_aurora',
+  equippedNameplateId: 'plate_gilded_sapphire_loop_01',
   profileTheme: 'aurora-glass',
   displayNameEffect: 'neon',
   displayNameColor: '#7dd3fc',

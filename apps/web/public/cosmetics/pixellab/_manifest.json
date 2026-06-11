@@ -60,14 +60,6 @@
     "skipped": true
   },
   {
-    "id": "plate_aurora_command_01",
-    "kind": "nameplate",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_aurora_command_01",
-    "imageCount": 0,
-    "jobId": null,
-    "skipped": true
-  },
-  {
     "id": "plate_crimson_blade_01",
     "kind": "nameplate",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_crimson_blade_01",
@@ -90,13 +82,6 @@
     "imageCount": 1,
     "jobId": "1781108848623",
     "source": "pixellab-animated-gif"
-  },
-  {
-    "id": "plate_ember_colossus_01",
-    "kind": "nameplate",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_ember_colossus_01",
-    "imageCount": 2,
-    "jobId": "5395737b-52c6-42fe-913e-ec0910122fc3"
   },
   {
     "id": "plate_emerald_relic_loop_01",
@@ -203,13 +188,6 @@
     "source": "pixellab-animated-gif"
   },
   {
-    "id": "plate_ranked_ascendant_01",
-    "kind": "nameplate",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_ranked_ascendant_01",
-    "imageCount": 2,
-    "jobId": "33a69204-23ea-4b62-bda5-09e00740303e"
-  },
-  {
     "id": "plate_reactor_core_01",
     "kind": "nameplate",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_reactor_core_01",
@@ -242,34 +220,12 @@
     "source": "pixellab-animated-gif"
   },
   {
-    "id": "plate_sakura_vanguard_01",
-    "kind": "nameplate",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_sakura_vanguard_01",
-    "imageCount": 2,
-    "jobId": "cb50711a-bcc9-4c06-b4cf-9807d81cf653"
-  },
-  {
     "id": "plate_scarab_relic_01",
     "kind": "nameplate",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_scarab_relic_01",
     "imageCount": 1,
     "jobId": "1781147637937",
     "source": "pixellab-animated-gif-download"
-  },
-  {
-    "id": "plate_signal_noir_01",
-    "kind": "nameplate",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_signal_noir_01",
-    "imageCount": 0,
-    "jobId": null,
-    "skipped": true
-  },
-  {
-    "id": "plate_solar_grove_01",
-    "kind": "nameplate",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_solar_grove_01",
-    "imageCount": 2,
-    "jobId": "36ab713f-d545-42d1-ad72-4167def26cb6"
   },
   {
     "id": "plate_stone_sentinel_01",
@@ -286,13 +242,6 @@
     "imageCount": 1,
     "jobId": "1781145244091",
     "source": "pixellab-animated-gif-download"
-  },
-  {
-    "id": "plate_void_relay_01",
-    "kind": "nameplate",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_void_relay_01",
-    "imageCount": 2,
-    "jobId": "1222eb67-d602-459d-a10a-d3bc82073cf3"
   },
   {
     "id": "plate_void_thorn_loop_01",

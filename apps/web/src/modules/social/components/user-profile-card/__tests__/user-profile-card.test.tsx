@@ -50,7 +50,7 @@ describe('UserProfileCard', () => {
           display_name: 'Server User',
           avatar_url: '/server.png',
           avatar_border_id: 'border_cyberpunk_common_01',
-          equipped_nameplate_id: 'plate_aurora',
+          equipped_nameplate_id: 'plate_gilded_sapphire_loop_01',
           level: 7,
           xp: 420,
           xp_to_next_level: 1000,
@@ -69,7 +69,7 @@ describe('UserProfileCard', () => {
 
     expect(await screen.findByText('Server User')).toBeInTheDocument();
     expect(screen.getByTestId('new-profile-card')).toHaveTextContent('border_cyberpunk_common_01');
-    expect(screen.getByTestId('new-profile-card')).toHaveTextContent('plate_aurora');
+    expect(screen.getByTestId('new-profile-card')).toHaveTextContent('plate_gilded_sapphire_loop_01');
     expect(mockedGet).toHaveBeenCalledWith(
       '/api/v1/users/user-1',
       expect.objectContaining({ signal: expect.any(AbortSignal) })

@@ -261,11 +261,11 @@ describe('forumStore (module)', () => {
         ...mockComment,
         author: {
           ...mockComment.author,
-          equippedNameplateId: 'plate_signal_noir_01',
+          equippedNameplateId: 'plate_mystic_purple_relic_01',
         },
       });
 
-      expect(comment.author.equippedNameplateId).toBe('plate_signal_noir_01');
+      expect(comment.author.equippedNameplateId).toBe('plate_mystic_purple_relic_01');
     });
   });
 

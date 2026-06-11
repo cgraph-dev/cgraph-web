@@ -2,7 +2,7 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 
 const CURRENT_USER_ID = 'e2e-user';
 const AVATAR_BORDER_ID = 'border_cyberpunk_common_01';
-const NAMEPLATE_ID = 'plate_aurora';
+const NAMEPLATE_ID = 'plate_gilded_sapphire_loop_01';
 const PROFILE_THEME_ID = 'aurora-glass';
 
 const currentUserProfile = {

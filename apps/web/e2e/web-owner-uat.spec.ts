@@ -9,7 +9,7 @@ const VOICE_CHANNEL_ID = 'voice-uat';
 const LIVE_AVATAR_BORDER_ID = 'border_cyberpunk_epic_01';
 const LIVE_TITLE_ID = 'founding_member';
 const LIVE_BADGE_ID = 'badge-founder';
-const LIVE_NAMEPLATE_ID = 'plate_aurora';
+const LIVE_NAMEPLATE_ID = 'plate_gilded_sapphire_loop_01';
 const GIF_DATA_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
 const friendUser = {

@@ -1583,7 +1583,7 @@ Done when:
 - [x] Revalidate avatar border, title, badge, nameplate, and routed profile/chat consistency after
       live updates. `apps/web/e2e/web-owner-uat.spec.ts` dispatches a live friend identity patch and
       verifies the routed DM surface renders the updated avatar border plus `Founder` title, then
-      opens the sender avatar profile card and verifies the live `plate_aurora` nameplate plus
+      opens the sender avatar profile card and verifies the live `plate_gilded_sapphire_loop_01` nameplate plus
       `badge-founder` badge. The 2026-05-31 customization Lottie delivery guard now proves those
       shared catalog Lottie paths have public JSON delivery files. Broader multi-tab/device settings
       proof remains outside this row.

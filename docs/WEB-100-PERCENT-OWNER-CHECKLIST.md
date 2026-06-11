@@ -1266,7 +1266,7 @@ Required implementation-time questions:
       extends the same live routed path to backend-shaped `equipped_badges` and
       `equipped_nameplate` friend patches: `otherIdentitySync`, `presenceManager`, and `chatStore`
       preserve the fields, then `apps/web/e2e/web-owner-uat.spec.ts` opens the routed DM sender
-      profile card and verifies the live `plate_aurora` nameplate plus `badge-founder` badge. The
+      profile card and verifies the live `plate_gilded_sapphire_loop_01` nameplate plus `badge-founder` badge. The
       2026-05-31 Lottie delivery follow-up ships the missing public badge/title/name-effect/nameplate
       JSON files and adds a release-gate asset guard so catalog paths cannot silently regress to 404s.
       The 2026-06-01 profile-card theme-adapter follow-up removes the parallel hardcoded

@@ -7,13 +7,13 @@ describe('otherUserIdentityPatchFromPayload', () => {
     const patch = otherUserIdentityPatchFromPayload('friend-1', {
       customization: {
         equipped_badges: ['badge-founder'],
-        equipped_nameplate: 'plate_aurora',
+        equipped_nameplate: 'plate_gilded_sapphire_loop_01',
       },
     });
 
     expect(patch).toMatchObject({
       equippedBadgeIds: ['badge-founder'],
-      equippedNameplateId: 'plate_aurora',
+      equippedNameplateId: 'plate_gilded_sapphire_loop_01',
     });
   });
 });

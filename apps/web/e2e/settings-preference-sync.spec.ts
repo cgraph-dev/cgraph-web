@@ -587,7 +587,7 @@ test.describe('Settings preference sync', () => {
             surface: 'customization',
             changes: {
               profile_theme: 'aurora-glass',
-              equipped_nameplate: 'plate_aurora',
+              equipped_nameplate: 'plate_gilded_sapphire_loop_01',
               display_name_effect: 'neon',
               display_name_color: '#7dd3fc',
               display_name_secondary_color: '#a78bfa',
@@ -598,7 +598,7 @@ test.describe('Settings preference sync', () => {
     });
 
     await expect(page.locator('[data-profile-theme-id="aurora-glass"]').first()).toBeVisible();
-    await expect(page.locator('[data-nameplate-id="plate_aurora"]').first()).toBeVisible();
+    await expect(page.locator('[data-nameplate-id="plate_gilded_sapphire_loop_01"]').first()).toBeVisible();
     await expect(page.locator('[data-display-name-effect="neon"]').first()).toBeVisible();
 
     await waitForPreferenceSyncReady(page);

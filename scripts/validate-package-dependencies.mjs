@@ -4,10 +4,10 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 
 const expectedPackages = new Map([
-  ['@cgraph-dev/animation-constants', '1.1.10'],
+  ['@cgraph-dev/animation-constants', '1.1.11'],
   ['@cgraph-dev/api-client', '1.1.1'],
   ['@cgraph-dev/design-tokens', '1.0.1'],
-  ['@cgraph-dev/shared-types', '1.1.4'],
+  ['@cgraph-dev/shared-types', '1.1.5'],
   ['@cgraph-dev/utils', '1.0.1'],
 ]);
 

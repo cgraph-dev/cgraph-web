@@ -223,7 +223,7 @@ describe('MessageBubble Customization', () => {
     const previous = {
       ...defaultProps,
       message: createMessage({
-        sender: { ...createMessage().sender, equippedNameplateId: 'plate_signal_noir_01' },
+        sender: { ...createMessage().sender, equippedNameplateId: 'plate_mystic_purple_relic_01' },
       }),
     };
     const next = {

@@ -4,11 +4,6 @@ import { NAMEPLATE_REGISTRY, getNameplateById } from '@cgraph-dev/animation-cons
 import { ALL_BORDERS, getAvatarBorderDisplayTypeById, getBorderById } from '../avatar-borders';
 
 const PIXELLAB_GAME_NAMEPLATE_IDS = [
-  'plate_ranked_ascendant_01',
-  'plate_ember_colossus_01',
-  'plate_void_relay_01',
-  'plate_solar_grove_01',
-  'plate_sakura_vanguard_01',
   'plate_stone_sentinel_01',
 ] as const;
 
@@ -17,13 +12,9 @@ describe('PixelLab game cosmetics package consumption', () => {
     expect(NAMEPLATE_REGISTRY.map((plate) => plate.id)).toEqual(
       expect.arrayContaining([...PIXELLAB_GAME_NAMEPLATE_IDS])
     );
-    expect(NAMEPLATE_REGISTRY).toContainEqual(getNameplateById('plate_void_relay_01'));
+    expect(getNameplateById('plate_void_relay_01')).toBeUndefined();
 
-    const ranked = getNameplateById('plate_ranked_ascendant_01');
-
-    expect(ranked?.rarity).toBe('mythic');
-    expect(ranked?.imageUrl).toContain('/cosmetics/pixellab/nameplate/');
-    expect(ranked?.animationType).toBe('lottie');
+    expect(getNameplateById('plate_ranked_ascendant_01')).toBeUndefined();
 
     const stone = getNameplateById('plate_stone_sentinel_01');
 

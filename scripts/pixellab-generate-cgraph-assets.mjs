@@ -30,69 +30,6 @@ const assetPlan = [
       'transparent pixel art circular avatar frame, aurora glass energy, teal violet highlights, thin luminous edge, professional social app cosmetic, no text, no face, no background',
   },
   {
-    id: 'plate_signal_noir_01',
-    kind: 'nameplate',
-    endpoint: 'generate-ui-v2',
-    size: { width: 300, height: 48 },
-    colorPalette: 'matte graphite, black glass, cyan signal glow, soft silver',
-    prompt:
-      'transparent pixel art username nameplate background strip, matte graphite rounded capsule, cyan encrypted signal pulse line, reserved space for app-rendered text, no letters, no words, no logo',
-  },
-  {
-    id: 'plate_aurora_command_01',
-    kind: 'nameplate',
-    endpoint: 'generate-ui-v2',
-    size: { width: 300, height: 48 },
-    colorPalette: 'aurora teal, violet, indigo glass, pale cyan',
-    prompt:
-      'transparent pixel art username nameplate background strip, aurora glass ribbon, teal purple edge lighting, subtle star particles, centered empty area for app-rendered username, no text',
-  },
-  {
-    id: 'plate_ranked_ascendant_01',
-    kind: 'nameplate',
-    endpoint: 'generate-ui-v2',
-    size: { width: 300, height: 48 },
-    colorPalette: 'royal sapphire, mythic gold, white crystal, dark navy enamel',
-    prompt:
-      'transparent pixel art game rank username nameplate, mythic ascendant tier, ornate sapphire and gold frame, sharp crystalline corner wings, glowing ranked crest accents, empty center for app-rendered username, no letters, no words, no logo, premium MOBA profile cosmetic',
-  },
-  {
-    id: 'plate_ember_colossus_01',
-    kind: 'nameplate',
-    endpoint: 'generate-ui-v2',
-    size: { width: 300, height: 48 },
-    colorPalette: 'molten orange, hammered bronze, obsidian black, ember red',
-    prompt:
-      'transparent pixel art heroic fantasy username nameplate, forged bronze and obsidian bar, molten ember channels, heavy battle pass cosmetic look, dramatic but readable empty center for app-rendered username, no text, no logo',
-  },
-  {
-    id: 'plate_void_relay_01',
-    kind: 'nameplate',
-    endpoint: 'generate-ui-v2',
-    size: { width: 300, height: 48 },
-    colorPalette: 'void purple, black glass, electric violet, cold cyan stars',
-    prompt:
-      'transparent pixel art cosmic void username nameplate, black glass strip, violet gravity arcs, tiny star particles, symmetrical rare game cosmetic, empty center for app-rendered username, no text, no logo',
-  },
-  {
-    id: 'plate_solar_grove_01',
-    kind: 'nameplate',
-    endpoint: 'generate-ui-v2',
-    size: { width: 300, height: 48 },
-    colorPalette: 'emerald leaf green, sun gold, teal glass, warm white',
-    prompt:
-      'transparent pixel art solarpunk username nameplate, emerald vines and sun-gold energy rails, polished fantasy game UI collectible, clear empty center for app-rendered username, no letters, no logo',
-  },
-  {
-    id: 'plate_sakura_vanguard_01',
-    kind: 'nameplate',
-    endpoint: 'generate-ui-v2',
-    size: { width: 300, height: 48 },
-    colorPalette: 'deep rose, sakura pink, pearl white, muted violet',
-    prompt:
-      'transparent pixel art sakura vanguard username nameplate, elegant rose metal bar, animated-petal style accents, premium event collectible, centered empty area for app-rendered username, no text, no logo',
-  },
-  {
     id: 'badge_verified_builder',
     kind: 'badge',
     endpoint: 'generate-ui-v2',

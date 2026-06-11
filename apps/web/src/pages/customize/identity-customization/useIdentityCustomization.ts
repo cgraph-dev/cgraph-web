@@ -175,11 +175,11 @@ function catalogKey(value: string): string {
 
 const NAMEPLATE_ALIAS_IDS: Readonly<Record<string, string>> = {
   'default-plate': 'plate_none',
-  'simple-gradient': 'plate_starter',
-  'clean-border': 'plate_simple_dark',
-  'minimal-dark': 'plate_simple_dark',
-  'minimal-light': 'plate_starter',
-  'ocean-wave': 'plate_ocean_wave',
+  'simple-gradient': 'plate_none',
+  'clean-border': 'plate_none',
+  'minimal-dark': 'plate_none',
+  'minimal-light': 'plate_none',
+  'ocean-wave': 'plate_none',
 };
 
 const TITLE_ALIAS_IDS: Readonly<Record<string, string>> = {

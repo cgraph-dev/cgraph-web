@@ -28,7 +28,7 @@ import {
 const BAR_WIDTH = 300;
 const BAR_HEIGHT = 48;
 export interface NameplateBarProps {
-  /** Nameplate ID from the registry (e.g. 'plate_gold_shimmer'). null → hidden. */
+  /** Nameplate ID from the registry (e.g. 'plate_gilded_sapphire_loop_01'). null -> hidden. */
   nameplateId: string | null;
   /** Optional className for the outermost wrapper. */
   className?: string;
@@ -257,7 +257,7 @@ function GradientBackground({ gradient }: { gradient: readonly [string, string] 
  *
  * @example
  * ```tsx
- * <NameplateBar nameplateId="plate_gold_shimmer" />
+ * <NameplateBar nameplateId="plate_gilded_sapphire_loop_01" />
  * ```
  */
 export const NameplateBar = memo(function NameplateBar({
