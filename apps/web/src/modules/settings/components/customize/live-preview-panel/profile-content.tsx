@@ -175,6 +175,11 @@ export function ProfileContent({
   // Resolve equipped badge IDs to display data; fall back to default preview badges
   const resolvedBadges: (BadgeDisplay | PreviewBadge)[] =
     equippedBadges.length > 0 ? resolveEquippedBadges(equippedBadges) : PREVIEW_BADGES;
+  const equippedNameplate =
+    settings.equippedNameplate && settings.equippedNameplate !== 'plate_none'
+      ? settings.equippedNameplate
+      : null;
+
   return (
     <div className="relative z-10 flex flex-col items-center">
       {/* Avatar */}
@@ -188,10 +193,10 @@ export function ProfileContent({
 
       {/* Name & Title & Status */}
       <div className="mt-3 text-center">
-        {settings.equippedNameplate ? (
+        {equippedNameplate ? (
           <div className="flex justify-center">
             <NameplateBar
-              nameplateId={settings.equippedNameplate}
+              nameplateId={equippedNameplate}
               username={displayName}
               displayNameFont={settings.displayNameFont}
               displayNameEffect={settings.displayNameEffect}

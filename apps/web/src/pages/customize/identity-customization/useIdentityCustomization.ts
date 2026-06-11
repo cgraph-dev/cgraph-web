@@ -776,12 +776,15 @@ export function useIdentityCustomization() {
 
   // --- Nameplate handlers ---
   const handleEquipNameplate = (nameplateId: string | null) => {
+    const normalizedNameplateId = nameplateId === 'plate_none' ? null : nameplateId;
+    const previousNameplateId = equippedNameplate === 'plate_none' ? null : equippedNameplate;
+
     if (
-      nameplateId &&
-      !FREE_NAMEPLATE_IDS.has(nameplateId) &&
-      !ownedNameplateIds.includes(nameplateId)
+      normalizedNameplateId &&
+      !FREE_NAMEPLATE_IDS.has(normalizedNameplateId) &&
+      !ownedNameplateIds.includes(normalizedNameplateId)
     ) {
-      setPreviewState(nameplateId, { equippedNameplate: nameplateId });
+      setPreviewState(normalizedNameplateId, { equippedNameplate: normalizedNameplateId });
       toast('Previewing nameplate — unlock it to save', {
         duration: durations.cinematic.ms,
       });
@@ -789,20 +792,20 @@ export function useIdentityCustomization() {
     }
 
     clearPreview();
-    setEquippedNameplate(nameplateId);
-    if (nameplateId) {
-      applyOwnItemEquipped('nameplate', nameplateId);
-      void persistEquipTarget('nameplate', nameplateId, 'equip').catch((error) => {
-        setEquippedNameplate(equippedNameplate);
-        if (equippedNameplate) applyOwnItemEquipped('nameplate', equippedNameplate);
+    setEquippedNameplate(normalizedNameplateId);
+    if (normalizedNameplateId) {
+      applyOwnItemEquipped('nameplate', normalizedNameplateId);
+      void persistEquipTarget('nameplate', normalizedNameplateId, 'equip').catch((error) => {
+        setEquippedNameplate(previousNameplateId);
+        if (previousNameplateId) applyOwnItemEquipped('nameplate', previousNameplateId);
         else applyOwnItemUnequipped('nameplate');
         toast.error(error instanceof Error ? error.message : 'Could not equip nameplate');
       });
-    } else if (equippedNameplate) {
+    } else if (previousNameplateId) {
       applyOwnIdentityPatch({ equippedNameplateId: null });
-      void persistEquipTarget('nameplate', equippedNameplate, 'unequip').catch((error) => {
-        setEquippedNameplate(equippedNameplate);
-        applyOwnItemEquipped('nameplate', equippedNameplate);
+      void persistEquipTarget('nameplate', previousNameplateId, 'unequip').catch((error) => {
+        setEquippedNameplate(previousNameplateId);
+        applyOwnItemEquipped('nameplate', previousNameplateId);
         toast.error(error instanceof Error ? error.message : 'Could not unequip nameplate');
       });
     }
