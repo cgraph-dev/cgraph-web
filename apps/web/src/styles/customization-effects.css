@@ -410,6 +410,65 @@
   border-right: 3px solid #8b5cf6;
 }
 
+/* Nameplate username text can pan inside fixed art when the name is long. */
+.nameplate-scroll-text {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.nameplate-scroll-text__inner {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.nameplate-scroll-text--scrolling {
+  text-align: left;
+  mask-image: linear-gradient(90deg, transparent 0, #000 0.65rem, #000 calc(100% - 0.65rem), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 0.65rem, #000 calc(100% - 0.65rem), transparent 100%);
+}
+
+.nameplate-scroll-text--scrolling .nameplate-scroll-text__inner {
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  animation: nameplate-text-pan var(--nameplate-text-scroll-duration, 9s) ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes nameplate-text-pan {
+  0%, 13% {
+    transform: translateX(0);
+  }
+  47%, 64% {
+    transform: translateX(calc(-1 * var(--nameplate-text-scroll-distance, 0px)));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nameplate-scroll-text--scrolling {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .nameplate-scroll-text--scrolling .nameplate-scroll-text__inner {
+    animation: none;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* Nameplate-linked message surfaces */
 .nameplate-bubble-surface {
   position: relative;

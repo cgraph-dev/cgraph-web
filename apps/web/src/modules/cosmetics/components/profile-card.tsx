@@ -8,6 +8,7 @@
 
 import { memo } from 'react';
 import { motion } from 'motion/react';
+import { NameplateScrollText } from '@/components/nameplate/nameplate-scroll-text';
 import { cn } from '@/lib/utils';
 import { buildCdnUrl } from '@/lib/cdn';
 import { useAuthStore } from '@/modules/auth/store';
@@ -123,7 +124,7 @@ const NameplateDisplay = memo(function NameplateDisplay({
   readonly displayName: string;
 }) {
   return (
-    <div className="relative inline-flex items-center">
+    <div className="relative inline-flex h-10 w-[13rem] max-w-full items-center justify-center px-8">
       <img
         src={nameplateUrl}
         alt=""
@@ -131,7 +132,10 @@ const NameplateDisplay = memo(function NameplateDisplay({
         draggable={false}
         aria-hidden="true"
       />
-      <span className="relative z-10 px-3 py-1 text-lg font-bold text-white">{displayName}</span>
+      <NameplateScrollText
+        text={displayName}
+        className="relative z-10 min-w-0 max-w-full text-center text-lg font-bold text-white"
+      />
     </div>
   );
 });

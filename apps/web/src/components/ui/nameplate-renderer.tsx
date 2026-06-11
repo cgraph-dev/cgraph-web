@@ -4,6 +4,7 @@ import type {
   NameplateTextEffect,
   NameplateBorderStyle,
 } from '@cgraph-dev/animation-constants';
+import { NameplateScrollText } from '@/components/nameplate/nameplate-scroll-text';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
 type NameplateSize = 'xs' | 'sm' | 'md' | 'lg';
@@ -42,11 +43,11 @@ const SIZE_CONFIG: Record<
   },
 };
 
-const IMAGE_NAMEPLATE_MIN_WIDTH: Record<NameplateSize, string> = {
-  xs: '3.5rem',
-  sm: '4.667rem',
-  md: '5.875rem',
-  lg: '7rem',
+const IMAGE_NAMEPLATE_WIDTH: Record<NameplateSize, string> = {
+  xs: '5.5rem',
+  sm: '7.25rem',
+  md: '9.5rem',
+  lg: '12rem',
 };
 
 function getTextEffectStyles(
@@ -185,6 +186,7 @@ export const NameplateRenderer = memo(function NameplateRenderer({
   const lottiePath =
     nameplate.lottieUrl ??
     (nameplate.lottieFile ? `/lottie/nameplates/${nameplate.lottieFile}` : null);
+  const resolvedWidth = width ?? (hasImageAsset ? IMAGE_NAMEPLATE_WIDTH[size] : undefined);
 
   // "None" selected — render plain text only
   if (nameplate.id === 'plate_none') {
@@ -206,9 +208,8 @@ export const NameplateRenderer = memo(function NameplateRenderer({
       style={{
         background: hasImageAsset ? 'transparent' : barBackground,
         ...(hasImageAsset ? {} : borderStyles),
-        width: width ?? undefined,
-        minWidth: hasImageAsset && !width ? IMAGE_NAMEPLATE_MIN_WIDTH[size] : undefined,
-        aspectRatio: hasImageAsset && !width ? '112 / 48' : undefined,
+        width: resolvedWidth,
+        maxWidth: '100%',
       }}
     >
       {imageUrl ? (
@@ -239,15 +240,14 @@ export const NameplateRenderer = memo(function NameplateRenderer({
       )}
 
       {/* Username text with effects */}
-      <span
-        className={`relative z-10 ${sizeConfig.fontSize} whitespace-nowrap font-bold`}
-        style={{
+      <NameplateScrollText
+        text={username}
+        className={`relative z-10 min-w-0 max-w-full flex-1 text-center ${sizeConfig.fontSize} font-bold`}
+        textStyle={{
           color: nameplate.textColor,
           ...textStyles,
         }}
-      >
-        {username}
-      </span>
+      />
     </div>
   );
 });

@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_frost_gate_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "dark stone, electric ice blue, slate glass, cold steel",
+    "prompt": "Seamless looping animation for a frozen stone username nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153153307.gif",
+    "sourceSha256": "336328b17aa9120e151de4a6c20173ce4f20f3b7ef456e156f97de741c968e8e"
+  },
+  "jobId": "1781153153307",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T04:47:07.300Z",
+  "source": "pixellab-animated-gif"
+}

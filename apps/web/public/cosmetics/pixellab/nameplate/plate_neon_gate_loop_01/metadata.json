@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_neon_gate_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "black graphite, cyan neon, magenta neon, dark glass",
+    "prompt": "Seamless looping animation for a black cyber neon username nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781144854134.gif",
+    "sourceSha256": "ac24630a2f2dac38118e7209be3ce4136dcaefdc073a18f74ae733ce50ba2181"
+  },
+  "jobId": "1781144854134",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T02:31:07.682Z",
+  "source": "pixellab-animated-gif"
+}

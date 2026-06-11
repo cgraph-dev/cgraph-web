@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_lava_war_banner_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "dark iron, molten red, ember orange, smoky brown glass",
+    "prompt": "Seamless looping animation for a dark lava war username nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781146317525.gif",
+    "sourceSha256": "182e8e381eca1038b305b11fe92b35b75f1148e88a501616a3e4ab1467c4095f"
+  },
+  "jobId": "1781146317525",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T02:55:30.317Z",
+  "source": "pixellab-animated-gif"
+}

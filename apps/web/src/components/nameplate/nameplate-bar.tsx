@@ -15,6 +15,7 @@ import { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
+import { NameplateScrollText } from './nameplate-scroll-text';
 import {
   NAME_FONTS,
   type NameFont,
@@ -361,7 +362,7 @@ export const NameplateBar = memo(function NameplateBar({
 
         {/* Layer 3: Content — emblem + username text effect */}
         <div
-          className="relative z-10 flex h-full items-center justify-center gap-2 px-4"
+          className="relative z-10 flex h-full min-w-0 items-center justify-center gap-2 px-4"
           style={{ width, height }}
         >
           {/* Emblem */}
@@ -378,9 +379,11 @@ export const NameplateBar = memo(function NameplateBar({
           )}
 
           {/* Text effect preview */}
-          <span className="truncate text-sm font-bold" style={textStyles}>
-            {username || 'Username'}
-          </span>
+          <NameplateScrollText
+            text={username || 'Username'}
+            className="min-w-0 max-w-full flex-1 truncate text-center text-sm font-bold"
+            textStyle={textStyles}
+          />
 
           {/* Trailing emblem for symmetry on high-rarity plates */}
           {entry.emblem && (entry.rarity === 'legendary' || entry.rarity === 'mythic') && (

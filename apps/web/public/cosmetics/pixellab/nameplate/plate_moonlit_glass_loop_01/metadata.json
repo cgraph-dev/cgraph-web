@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_moonlit_glass_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "midnight navy, silver moonlight, icy blue glow, glass highlights",
+    "prompt": "Seamless looping animation for a moonlit blue glass username nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781147339986.gif",
+    "sourceSha256": "4cf9e1e5d529987b0eafc65631f6b637b76c1679ba570551e9aab3ebd224cd05"
+  },
+  "jobId": "1781147339986",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T03:10:56.508Z",
+  "source": "pixellab-animated-gif"
+}

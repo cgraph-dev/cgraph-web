@@ -25,4 +25,21 @@ describe('NameplateBar', () => {
     expect(container.querySelector('.cgraph-game-nameplate-glow')).not.toBeInTheDocument();
     expect(container.querySelector('.cgraph-game-nameplate-sheen')).not.toBeInTheDocument();
   });
+
+  it('keeps long usernames inside the fixed plate slot', () => {
+    render(
+      <NameplateBar
+        nameplateId="plate_gilded_sapphire_loop_01"
+        username="ThisUsernameIsWayTooLongForANameplate"
+        width={240}
+        height={36}
+      />
+    );
+
+    expect(screen.getByText('ThisUsernameIsWayTooLongForANameplate').parentElement).toHaveClass(
+      'nameplate-scroll-text',
+      'flex-1',
+      'text-center'
+    );
+  });
 });

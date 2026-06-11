@@ -1,0 +1,26 @@
+{
+  "asset": {
+    "id": "plate_mystic_purple_relic_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-create-ui-pro-crop",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "crop": {
+      "width": 224,
+      "height": 96,
+      "x": 0,
+      "y": 0
+    },
+    "colorPalette": "deep purple, silver caps, violet sparkles, dark glass",
+    "prompt": "Single connected transparent pixel art horizontal mystic purple username nameplate, centered blank readable name panel, no detached parts, no text, no letters, no numbers, no logo.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153657997.png",
+    "sourceSha256": "75aca2d3e8aabdfcd0068572a8bb10134f2d5c5bea7fab6dc5023aebbc68fb82"
+  },
+  "jobId": "1781153657997",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T05:00:17.232Z",
+  "source": "pixellab-ui-sheet-crop"
+}

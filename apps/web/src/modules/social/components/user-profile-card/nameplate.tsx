@@ -10,9 +10,15 @@ import {
   type NameFont,
 } from '@cgraph-dev/animation-constants';
 
+import { NameplateScrollText } from '@/components/nameplate/nameplate-scroll-text';
 import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 import { cn } from '@/lib/utils';
 import type { NameplateProps } from './types';
+
+const PROFILE_IMAGE_NAMEPLATE_SIZE = {
+  width: 'min(13.75rem, 100%)',
+  height: '2.75rem',
+} as const;
 
 function getNameFontKey(font?: string): NameFont | null {
   if (!font || font === 'default') {
@@ -168,13 +174,18 @@ export const Nameplate = memo(function Nameplate({
 
   return (
     <div
-      className={cn('relative z-[2] flex flex-col items-center px-4 pt-[22px]', className)}
+      className={cn(
+        'relative z-[2] flex w-full max-w-full flex-col items-center px-4',
+        hasImageAsset ? 'pt-1' : 'pt-[22px]',
+        className
+      )}
       data-nameplate-id={nameplateId ?? undefined}
       data-display-name-effect={displayNameEffect ?? undefined}
     >
       <div
         className={cn(
-          'cgraph-game-nameplate-frame relative inline-flex items-center justify-center gap-1.5 rounded-xl px-[26px] pb-[10px] pt-2',
+          'cgraph-game-nameplate-frame relative inline-flex max-w-full items-center justify-center gap-1.5 rounded-xl',
+          hasImageAsset ? 'px-[34px] py-0' : 'px-[26px] pb-[10px] pt-2',
           hasImageAsset
             ? 'overflow-visible'
             : 'overflow-hidden backdrop-blur-[20px] backdrop-saturate-[1.6]'
@@ -183,6 +194,7 @@ export const Nameplate = memo(function Nameplate({
           background: barBg,
           border: barBorder,
           boxShadow: barShadow,
+          ...(hasImageAsset ? PROFILE_IMAGE_NAMEPLATE_SIZE : {}),
         }}
       >
         {imageUrl ? (
@@ -212,27 +224,29 @@ export const Nameplate = memo(function Nameplate({
         {hasEntry && entry.emblem && <span className="relative z-[1] text-sm">{entry.emblem}</span>}
 
         {/* Display name */}
-        <DisplayNameTag
+        <NameplateScrollText
+          as={DisplayNameTag}
+          text={displayName}
           className={cn(
-            'relative z-[1] text-[1.2rem] font-black leading-[1.1] tracking-[0.025em]',
+            'relative z-[1] block min-w-0 max-w-full text-center text-[1.2rem] font-black leading-none tracking-[0.025em]',
             displayNameClassName
           )}
-          style={{
+          textStyle={{
             fontFamily: "'Inter', system-ui",
             ...textStyles,
           }}
-        >
-          {effectConfig && (
-            <LottieAssetRenderer
-              path={effectConfig.lottieUrl}
-              fallbackPath="/lottie/effects/placeholder.json"
-              label={`${effectConfig.label} name effect`}
-              className="pointer-events-none absolute inset-[-0.45rem] z-0 opacity-45"
-              fallback={null}
-            />
-          )}
-          <span className="relative z-[1]">{displayName}</span>
-        </DisplayNameTag>
+          overlay={
+            effectConfig ? (
+              <LottieAssetRenderer
+                path={effectConfig.lottieUrl}
+                fallbackPath="/lottie/effects/placeholder.json"
+                label={`${effectConfig.label} name effect`}
+                className="pointer-events-none absolute inset-[-0.45rem] z-0 opacity-45"
+                fallback={null}
+              />
+            ) : null
+          }
+        />
       </div>
     </div>
   );

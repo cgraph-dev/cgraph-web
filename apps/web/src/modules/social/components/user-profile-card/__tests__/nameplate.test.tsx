@@ -21,4 +21,21 @@ describe('profile card Nameplate', () => {
     expect(container.querySelector('.cgraph-game-nameplate-glow')).not.toBeInTheDocument();
     expect(container.querySelector('.cgraph-game-nameplate-sheen')).not.toBeInTheDocument();
   });
+
+  it('centers image-backed plates and clips very long display names', () => {
+    const longName = 'ThisUsernameIsWayTooLongForAProfileNameplate';
+    const { container } = render(
+      <Nameplate displayName={longName} nameplateId="plate_gilded_sapphire_loop_01" />
+    );
+
+    expect(container.querySelector('.cgraph-game-nameplate-frame')).toHaveStyle({
+      width: 'min(13.75rem, 100%)',
+      height: '2.75rem',
+    });
+    expect(screen.getByText(longName).parentElement).toHaveClass(
+      'nameplate-scroll-text',
+      'text-center',
+      'leading-none'
+    );
+  });
 });

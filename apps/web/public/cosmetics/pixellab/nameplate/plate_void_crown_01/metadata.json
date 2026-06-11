@@ -1,0 +1,26 @@
+{
+  "asset": {
+    "id": "plate_void_crown_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-create-ui-pro-crop",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "crop": {
+      "width": 224,
+      "height": 96,
+      "x": 0,
+      "y": 0
+    },
+    "colorPalette": "void black, violet crystal, dark crown metal, purple glow",
+    "prompt": "Single connected transparent pixel art horizontal purple crown shadow username nameplate, centered blank readable name panel, attached crown spikes, no text, no letters, no numbers, no logo.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781145244091.png",
+    "sourceSha256": "acb46f5f2091ec8a863ba20f594a903b83b7c7a86b69383f7348c54f9affbd96"
+  },
+  "jobId": "1781145244091",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T02:49:35.859Z",
+  "source": "pixellab-ui-sheet-crop"
+}

@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_emerald_relic_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "carved emerald, dark forest green, antique gold, ivy leaf accents",
+    "prompt": "Seamless looping animation for an emerald forest relic username nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781146163329.gif",
+    "sourceSha256": "95107766215b86c42784d303baa704aef85972f9fc92d68aea15cf4456d1d9dd"
+  },
+  "jobId": "1781146163329",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T02:51:29.808Z",
+  "source": "pixellab-animated-gif"
+}

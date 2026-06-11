@@ -1,0 +1,26 @@
+{
+  "asset": {
+    "id": "plate_crimson_blade_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-create-ui-pro-crop",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "crop": {
+      "width": 224,
+      "height": 96,
+      "x": 0,
+      "y": 0
+    },
+    "colorPalette": "crimson red, polished gold, ruby gem, dark enamel",
+    "prompt": "Single connected transparent pixel art horizontal crimson blade username nameplate, centered blank readable name panel, attached blade ornaments, no text, no letters, no numbers, no logo.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153452387.png",
+    "sourceSha256": "6ef7fde3444ba312949e60801f3ee3d9887390b0a06159256a1a8f42bfa7771b"
+  },
+  "jobId": "1781153452387",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T04:54:12.318Z",
+  "source": "pixellab-ui-sheet-crop"
+}

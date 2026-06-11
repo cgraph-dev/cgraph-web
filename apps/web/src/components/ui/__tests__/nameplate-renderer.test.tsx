@@ -41,6 +41,8 @@ describe('NameplateRenderer', () => {
     expect(container.querySelector('.cgraph-game-nameplate-glow')).not.toBeInTheDocument();
     expect(container.querySelector('.cgraph-game-nameplate-sheen')).not.toBeInTheDocument();
     expect(container.firstElementChild).toHaveStyle({ background: 'transparent' });
+    expect(container.firstElementChild).toHaveStyle({ width: '9.5rem', maxWidth: '100%' });
+    expect(screen.getByText('tricker').parentElement).toHaveClass('nameplate-scroll-text');
   });
 
   it('keeps fallback overlays for non-image nameplates', () => {

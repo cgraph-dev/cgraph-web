@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_royal_shield_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "royal gold, ivory enamel, sapphire blue, polished white crystal",
+    "prompt": "Seamless looping animation for a royal gold-and-cream shield username nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781144706033.gif",
+    "sourceSha256": "46392760b728b95a5c11d429bad17726b1c2c098bcf9653cd61d7d7db00b93cf"
+  },
+  "jobId": "1781144706033",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T02:26:48.334Z",
+  "source": "pixellab-animated-gif"
+}

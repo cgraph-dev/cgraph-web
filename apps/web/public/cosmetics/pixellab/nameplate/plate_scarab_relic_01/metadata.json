@@ -1,0 +1,26 @@
+{
+  "asset": {
+    "id": "plate_scarab_relic_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-create-ui-pro-crop",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "crop": {
+      "width": 224,
+      "height": 96,
+      "x": 0,
+      "y": 0
+    },
+    "colorPalette": "ancient gold, turquoise enamel, dark teal, scarab wing trim",
+    "prompt": "Single connected transparent pixel art horizontal golden scarab relic username nameplate, centered blank readable name panel, attached scarab wing ornaments, no text, no letters, no numbers, no logo.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781147637937.png",
+    "sourceSha256": "daf85c596925e297eff61da6daeca2a100d41e356e3749e67757ba279a15c121"
+  },
+  "jobId": "1781147637937",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T04:49:43.948Z",
+  "source": "pixellab-ui-sheet-crop"
+}

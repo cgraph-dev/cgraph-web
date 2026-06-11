@@ -1,0 +1,26 @@
+{
+  "asset": {
+    "id": "plate_reactor_core_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-create-ui-pro-crop",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "crop": {
+      "width": 224,
+      "height": 96,
+      "x": 0,
+      "y": 0
+    },
+    "colorPalette": "black armor, toxic green, graphite metal, dark reactor glass",
+    "prompt": "Single connected transparent pixel art horizontal reactor core username nameplate, centered blank readable name panel, neon green energy vents, no text, no letters, no numbers, no logo.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153368117.png",
+    "sourceSha256": "bf5873e8ea18801fd582b47a5bab0a4a0c54d7f841d7656dd17a76771a2b1dd5"
+  },
+  "jobId": "1781153368117",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T04:50:44.790Z",
+  "source": "pixellab-ui-sheet-crop"
+}

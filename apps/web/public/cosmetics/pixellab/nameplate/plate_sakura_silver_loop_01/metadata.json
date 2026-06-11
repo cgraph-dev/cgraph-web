@@ -1,0 +1,22 @@
+{
+  "asset": {
+    "id": "plate_sakura_silver_loop_01",
+    "kind": "nameplate",
+    "endpoint": "pixellab-animate-with-text",
+    "size": {
+      "width": 224,
+      "height": 96
+    },
+    "requestedFrameCount": 10,
+    "loop": "infinite",
+    "colorPalette": "rose glass, silver metal, sakura pink, soft pearl white",
+    "prompt": "Seamless looping animation for a sakura silver username nameplate. Keep the center empty and readable. No text, letters, numbers, symbols, logos, icons, runes, or glyphs. Transparent background.",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153254061.gif",
+    "sourceSha256": "6fd9386076e218cb85fe96a24e291fa0bc460fdc31a7d9e85fb19391f2a29d14"
+  },
+  "jobId": "1781153254061",
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-11T04:49:13.604Z",
+  "source": "pixellab-animated-gif"
+}
