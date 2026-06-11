@@ -2,7 +2,7 @@
   "asset": {
     "id": "plate_reactor_core_01",
     "kind": "nameplate",
-    "endpoint": "local-gif-loop-from-pixellab-crop",
+    "endpoint": "pixellab-animated-gif-download",
     "size": {
       "width": 224,
       "height": 96
@@ -15,22 +15,20 @@
     },
     "colorPalette": "black armor, toxic green, graphite metal, dark reactor glass",
     "prompt": "Single connected transparent pixel art horizontal reactor core username nameplate, centered blank readable name panel, neon green energy vents, no text, no letters, no numbers, no logo.",
-    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153368117.png",
-    "sourceSha256": "bf5873e8ea18801fd582b47a5bab0a4a0c54d7f841d7656dd17a76771a2b1dd5",
+    "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153368117.gif",
+    "sourceSha256": "396c30bd54b5978c5fb15ea8ebb5b6ee6e672876c9f1d61f22ac42db4b310917",
     "animated": true,
     "format": "gif",
     "animation": {
       "kind": "seamless-loop",
-      "source": "ffmpeg-brightness-pulse",
-      "durationSeconds": 1.8,
-      "frameRate": 12
+      "source": "pixellab-downloaded-gif"
     },
     "outputFile": "plate_reactor_core_01_0.gif",
-    "outputSha256": "f768fb1e65ca6acf17cb56e8d324b542e190ad374672927e77ffafccac02947e"
+    "outputSha256": "396c30bd54b5978c5fb15ea8ebb5b6ee6e672876c9f1d61f22ac42db4b310917"
   },
   "jobId": "1781153368117",
   "status": "completed",
   "imageCount": 1,
   "generatedAt": "2026-06-11T11:57:58.090Z",
-  "source": "pixellab-ui-sheet-crop-local-gif-loop"
+  "source": "pixellab-animated-gif-download"
 }
