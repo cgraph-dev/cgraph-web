@@ -2,7 +2,7 @@
   "asset": {
     "id": "plate_mystic_purple_relic_01",
     "kind": "nameplate",
-    "endpoint": "pixellab-create-ui-pro-crop",
+    "endpoint": "local-gif-loop-from-pixellab-crop",
     "size": {
       "width": 224,
       "height": 96
@@ -16,11 +16,21 @@
     "colorPalette": "deep purple, silver caps, violet sparkles, dark glass",
     "prompt": "Single connected transparent pixel art horizontal mystic purple username nameplate, centered blank readable name panel, no detached parts, no text, no letters, no numbers, no logo.",
     "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781153657997.png",
-    "sourceSha256": "75aca2d3e8aabdfcd0068572a8bb10134f2d5c5bea7fab6dc5023aebbc68fb82"
+    "sourceSha256": "75aca2d3e8aabdfcd0068572a8bb10134f2d5c5bea7fab6dc5023aebbc68fb82",
+    "animated": true,
+    "format": "gif",
+    "animation": {
+      "kind": "seamless-loop",
+      "source": "ffmpeg-brightness-pulse",
+      "durationSeconds": 1.8,
+      "frameRate": 12
+    },
+    "outputFile": "plate_mystic_purple_relic_01_0.gif",
+    "outputSha256": "ca77e587f8b8f412049fd2f2a1d9d167bc0c23472ae90ee90dd1746c8cb3de36"
   },
   "jobId": "1781153657997",
   "status": "completed",
   "imageCount": 1,
-  "generatedAt": "2026-06-11T05:00:17.232Z",
-  "source": "pixellab-ui-sheet-crop"
+  "generatedAt": "2026-06-11T11:57:58.082Z",
+  "source": "pixellab-ui-sheet-crop-local-gif-loop"
 }

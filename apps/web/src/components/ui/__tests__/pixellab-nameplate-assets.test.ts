@@ -20,7 +20,7 @@ const PIXELLAB_SINGLE_GIF_NAMEPLATE_IDS = [
   'plate_sakura_silver_loop_01',
 ] as const;
 
-const PIXELLAB_STATIC_CROP_NAMEPLATE_IDS = [
+const PIXELLAB_LOCAL_LOOP_NAMEPLATE_IDS = [
   'plate_mystic_purple_relic_01',
   'plate_crimson_blade_01',
   'plate_reactor_core_01',
@@ -44,12 +44,12 @@ describe('PixelLab animated nameplate assets', () => {
     }
   });
 
-  it('ships every static cropped registry row with a public asset file', () => {
-    for (const id of PIXELLAB_STATIC_CROP_NAMEPLATE_IDS) {
+  it('ships every locally looped crop registry row with a public GIF asset file', () => {
+    for (const id of PIXELLAB_LOCAL_LOOP_NAMEPLATE_IDS) {
       const plate = getNameplateById(id);
 
       expect(plate, id).toBeDefined();
-      expect(plate?.imageUrl).toBe(`/cosmetics/pixellab/nameplate/${id}/${id}_0.png`);
+      expect(plate?.imageUrl).toBe(`/cosmetics/pixellab/nameplate/${id}/${id}_0.gif`);
       expect(plate?.previewUrl).toBe(plate?.imageUrl);
       expect(publicFileExists(plate?.imageUrl ?? ''), id).toBe(true);
     }

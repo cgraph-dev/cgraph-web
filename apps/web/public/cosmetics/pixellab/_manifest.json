@@ -73,7 +73,7 @@
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_crimson_blade_01",
     "imageCount": 1,
     "jobId": "1781153452387",
-    "source": "pixellab-ui-sheet-crop"
+    "source": "pixellab-ui-sheet-crop-local-gif-loop"
   },
   {
     "id": "plate_crystal_bloom_loop_01",
@@ -176,7 +176,7 @@
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_mystic_purple_relic_01",
     "imageCount": 1,
     "jobId": "1781153657997",
-    "source": "pixellab-ui-sheet-crop"
+    "source": "pixellab-ui-sheet-crop-local-gif-loop"
   },
   {
     "id": "plate_neon_gate_loop_01",
@@ -215,7 +215,7 @@
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_reactor_core_01",
     "imageCount": 1,
     "jobId": "1781153368117",
-    "source": "pixellab-ui-sheet-crop"
+    "source": "pixellab-ui-sheet-crop-local-gif-loop"
   },
   {
     "id": "plate_royal_banner_loop_01",
@@ -254,7 +254,7 @@
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_scarab_relic_01",
     "imageCount": 1,
     "jobId": "1781147637937",
-    "source": "pixellab-ui-sheet-crop"
+    "source": "pixellab-ui-sheet-crop-local-gif-loop"
   },
   {
     "id": "plate_signal_noir_01",
@@ -285,7 +285,7 @@
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/nameplate/plate_void_crown_01",
     "imageCount": 1,
     "jobId": "1781145244091",
-    "source": "pixellab-ui-sheet-crop"
+    "source": "pixellab-ui-sheet-crop-local-gif-loop"
   },
   {
     "id": "plate_void_relay_01",

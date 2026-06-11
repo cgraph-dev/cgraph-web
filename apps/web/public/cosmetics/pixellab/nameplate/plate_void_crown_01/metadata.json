@@ -2,7 +2,7 @@
   "asset": {
     "id": "plate_void_crown_01",
     "kind": "nameplate",
-    "endpoint": "pixellab-create-ui-pro-crop",
+    "endpoint": "local-gif-loop-from-pixellab-crop",
     "size": {
       "width": 224,
       "height": 96
@@ -16,11 +16,21 @@
     "colorPalette": "void black, violet crystal, dark crown metal, purple glow",
     "prompt": "Single connected transparent pixel art horizontal purple crown shadow username nameplate, centered blank readable name panel, attached crown spikes, no text, no letters, no numbers, no logo.",
     "sourceFile": "/home/trick/Downloads/pixellab-Preserve-the-exact-original-na-1781145244091.png",
-    "sourceSha256": "acb46f5f2091ec8a863ba20f594a903b83b7c7a86b69383f7348c54f9affbd96"
+    "sourceSha256": "acb46f5f2091ec8a863ba20f594a903b83b7c7a86b69383f7348c54f9affbd96",
+    "animated": true,
+    "format": "gif",
+    "animation": {
+      "kind": "seamless-loop",
+      "source": "ffmpeg-brightness-pulse",
+      "durationSeconds": 1.8,
+      "frameRate": 12
+    },
+    "outputFile": "plate_void_crown_01_0.gif",
+    "outputSha256": "b24fe8984f91846ba552281a2a176e5a2364bf2150373b852eaa7f20a456de13"
   },
   "jobId": "1781145244091",
   "status": "completed",
   "imageCount": 1,
-  "generatedAt": "2026-06-11T02:49:35.859Z",
-  "source": "pixellab-ui-sheet-crop"
+  "generatedAt": "2026-06-11T11:57:58.090Z",
+  "source": "pixellab-ui-sheet-crop-local-gif-loop"
 }
