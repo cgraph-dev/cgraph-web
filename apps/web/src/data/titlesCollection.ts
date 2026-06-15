@@ -102,8 +102,6 @@ const RARITY_TEXT_CLASS: Record<TitleRarity, string> = {
   mythic: 'text-pink-300',
 };
 
-const STARTER_TITLE_IDS = new Set(['newcomer']);
-
 function gradientClassForTitle(title: Title): string {
   return RARITY_TEXT_CLASS[title.rarity];
 }
@@ -117,7 +115,6 @@ function colorsForTitle(title: Title): string[] {
 function isStarterTitle(title: Title): boolean {
   return (
     title.rarity === 'free' ||
-    STARTER_TITLE_IDS.has(title.id) ||
     title.unlockRequirement?.toLowerCase() === 'create an account'
   );
 }

@@ -37,6 +37,26 @@ function AnimatedTitleText({
   lottieUrl: string;
   imageUrl?: string;
 }) {
+  if (imageUrl) {
+    return (
+      <motion.div
+        className="inline-flex h-14 w-48 items-center"
+        animate={{ filter: ['brightness(1)', 'brightness(1.08)', 'brightness(1)'] }}
+        transition={{ duration: durations.ambient.ms / 1000, repeat: Infinity, ease: 'easeInOut' }}
+        title={name}
+      >
+        <img
+          src={imageUrl}
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-contain"
+          loading="lazy"
+        />
+        <span className="sr-only">{name}</span>
+      </motion.div>
+    );
+  }
+
   // Base text styling
   const baseClass = `text-lg font-bold ${gradient}`;
 
@@ -160,22 +180,13 @@ function AnimatedTitleText({
 
   return (
     <motion.h4 className={`${baseClass} relative inline-flex overflow-hidden rounded-md px-1`} {...animProps}>
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt=""
-          className="pointer-events-none absolute inset-x-[-18%] bottom-[-38%] h-[150%] w-[136%] object-contain opacity-70"
-          loading="lazy"
-        />
-      ) : (
-        <LottieAssetRenderer
-          path={lottieUrl}
-          fallbackPath="/lottie/effects/placeholder.json"
-          label={`${name} title animation`}
-          className="pointer-events-none absolute inset-[-65%] opacity-45"
-          fallback={null}
-        />
-      )}
+      <LottieAssetRenderer
+        path={lottieUrl}
+        fallbackPath="/lottie/effects/placeholder.json"
+        label={`${name} title animation`}
+        className="pointer-events-none absolute inset-[-65%] opacity-45"
+        fallback={null}
+      />
       <span className="relative z-10">{name}</span>
     </motion.h4>
   );

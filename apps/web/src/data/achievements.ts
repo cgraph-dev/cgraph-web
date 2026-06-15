@@ -221,7 +221,7 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
     icon: '🛡️',
     maxProgress: 5,
     isHidden: false,
-    cosmeticReward: { type: 'title', itemId: 'guardian_of_privacy' },
+    cosmeticReward: { type: 'title', itemId: 'the_connected' },
   },
   {
     id: 'protocol_pioneer',
@@ -560,7 +560,7 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
     icon: '🎤',
     maxProgress: 100,
     isHidden: false,
-    cosmeticReward: { type: 'title', itemId: 'voice_of_the_people' },
+    cosmeticReward: { type: 'title', itemId: 'master_of_discourse' },
   },
 
   {
@@ -816,7 +816,7 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
     icon: '🎂',
     maxProgress: 365,
     isHidden: false,
-    cosmeticReward: { type: 'title', itemId: 'year_one' },
+    cosmeticReward: { type: 'title', itemId: 'the_unwavering' },
   },
   {
     id: 'two_year_titan',
@@ -838,7 +838,7 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
     icon: '🏆',
     maxProgress: 1825,
     isHidden: false,
-    cosmeticReward: { type: 'title', itemId: 'the_timeless' },
+    cosmeticReward: { type: 'title', itemId: 'eternal_presence' },
   },
 
   {

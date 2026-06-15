@@ -107,6 +107,7 @@ function TitlePill({
   titleGradient,
   titleLottieUrl,
   titleImageUrl,
+  compact,
 }: {
   title: string | null;
   accentColor: string;
@@ -115,9 +116,31 @@ function TitlePill({
   titleGradient?: string;
   titleLottieUrl?: string;
   titleImageUrl?: string;
+  compact?: boolean;
 }): React.ReactElement {
   const hasTitle = title !== null;
   const pillColor = hasTitle ? (titleColor ?? accentColor) : accentColor;
+
+  if (hasTitle && titleImageUrl) {
+    return (
+      <div
+        className={cn(
+          'relative mb-[10px] inline-flex items-center justify-center',
+          compact ? 'h-6 w-28' : 'h-8 w-36'
+        )}
+        title={title}
+      >
+        <img
+          src={titleImageUrl}
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-contain"
+          loading="lazy"
+        />
+        <span className="sr-only">{title}</span>
+      </div>
+    );
+  }
 
   const animProps: ReturnType<typeof getTitleAnimationProps> =
     !hasTitle || !titleAnimationType || titleAnimationType === 'none'
@@ -149,15 +172,7 @@ function TitlePill({
           : undefined
       }
     >
-      {hasTitle && titleImageUrl ? (
-        <img
-          src={titleImageUrl}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-[-40%] h-[180%] w-[180%] object-contain opacity-55"
-          loading="lazy"
-        />
-      ) : hasTitle ? (
+      {hasTitle ? (
         <LottieAssetRenderer
           path={titleLottieUrl ?? '/lottie/effects/placeholder.json'}
           fallbackPath="/lottie/effects/placeholder.json"
@@ -206,6 +221,7 @@ export const IdentitySection = memo(function IdentitySection({
         titleGradient={titleGradient}
         titleLottieUrl={titleLottieUrl}
         titleImageUrl={titleImageUrl}
+        compact={compact}
       />
 
       {!compact && (

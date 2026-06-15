@@ -84,15 +84,6 @@ const assetPlan = [
       'transparent pixel art circular avatar frame, solarpunk grove rank frame, emerald leaf filigree, sun-gold power nodes, polished game collectible, no face, no text, no background',
   },
   {
-    id: 'title_founder_spark',
-    kind: 'title-accent',
-    endpoint: 'generate-ui-v2',
-    size: { width: 160, height: 48 },
-    colorPalette: 'cyan, warm gold, soft white sparkle, transparent',
-    prompt:
-      'transparent pixel art decorative title accent, small cyan gold spark trail and underline flourish, meant to sit beside app-rendered title text, no letters, no words',
-  },
-  {
     id: 'theme_signal_noir_preview',
     kind: 'profile-theme-preview',
     endpoint: 'generate-image-v2',
@@ -248,7 +239,7 @@ function printHelp() {
 Options:
   --execute       Actually call PixelLab and spend generations/credits.
   --dry-run       Print the asset plan only. Default.
-  --kind <kind>   Filter by avatar-border, nameplate, badge, title-accent, profile-theme-preview, profile-background, mini-profile-background.
+  --kind <kind>   Filter by avatar-border, nameplate, badge, profile-theme-preview, profile-background, mini-profile-background.
   --id <ids>      Comma-separated asset IDs to generate.
   --limit <n>     Limit number of queued assets.
   --no-wait       Queue jobs and save job metadata without polling for completion.

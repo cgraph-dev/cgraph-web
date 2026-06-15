@@ -183,7 +183,7 @@ const NAMEPLATE_ALIAS_IDS: Readonly<Record<string, string>> = {
 };
 
 const TITLE_ALIAS_IDS: Readonly<Record<string, string>> = {
-  'new-user': 'newcomer',
+  'new-user': 'chatterbox',
   chatter: 'chatterbox',
   'forum-reader': 'forum_founder',
 };

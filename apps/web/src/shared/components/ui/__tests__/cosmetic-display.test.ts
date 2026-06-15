@@ -12,10 +12,11 @@ describe('cosmetic display adapter', () => {
   it('resolves title display data from the package-backed title catalog', () => {
     const title = ALL_TITLES[0]!;
 
-    expect(getTitleDisplay(title.id)).toEqual({
+    expect(getTitleDisplay(title.id)).toMatchObject({
       name: title.displayName,
       gradient: title.gradient,
       lottieUrl: title.lottieUrl ?? '/lottie/effects/placeholder.json',
+      imageUrl: title.imageUrl ?? title.previewUrl,
     });
     expect(getTitleDisplay(null)).toBeNull();
     expect(getTitleDisplay('missing-title')).toBeNull();

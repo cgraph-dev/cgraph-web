@@ -22,6 +22,12 @@ const SIZE_CLASSES = {
   md: 'text-sm px-2 py-1',
 } as const;
 
+const IMAGE_SIZE_CLASSES = {
+  xs: 'h-5 w-24',
+  sm: 'h-7 w-32',
+  md: 'h-8 w-40',
+} as const;
+
 export const InlineTitle = memo(function InlineTitle({
   titleId,
   size = 'sm',
@@ -33,6 +39,24 @@ export const InlineTitle = memo(function InlineTitle({
   if (!display) return null;
 
   const isSpecial = isRareTitle(titleId);
+
+  if (display.imageUrl) {
+    return (
+      <span
+        className={cn('inline-flex items-center align-middle', IMAGE_SIZE_CLASSES[size], className)}
+        title={display.name}
+      >
+        <img
+          src={display.imageUrl}
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-contain"
+          loading="lazy"
+        />
+        <span className="sr-only">{display.name}</span>
+      </span>
+    );
+  }
 
   return (
     <span
@@ -47,22 +71,13 @@ export const InlineTitle = memo(function InlineTitle({
         className
       )}
     >
-      {display.imageUrl ? (
-        <img
-          src={display.imageUrl}
-          alt=""
-          className="pointer-events-none absolute inset-x-[-20%] bottom-[-55%] h-[150%] w-[140%] object-contain opacity-65"
-          loading="lazy"
-        />
-      ) : (
-        <LottieAssetRenderer
-          path={display.lottieUrl}
-          fallbackPath="/lottie/effects/placeholder.json"
-          label={`${display.name} title animation`}
-          className="pointer-events-none absolute inset-[-65%] opacity-45"
-          fallback={null}
-        />
-      )}
+      <LottieAssetRenderer
+        path={display.lottieUrl}
+        fallbackPath="/lottie/effects/placeholder.json"
+        label={`${display.name} title animation`}
+        className="pointer-events-none absolute inset-[-65%] opacity-45"
+        fallback={null}
+      />
       {isSpecial && <span className="relative z-10 mr-0.5 text-[10px]">✦</span>}
       <span className="relative z-10">{display.name}</span>
     </span>
