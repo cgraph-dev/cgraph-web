@@ -11,7 +11,6 @@ import { IdentitySection } from './identity-section';
 import { Nameplate } from './nameplate';
 import { CardShell } from './profile-card-shell';
 import { PulseDots } from './pulse-dots';
-import { ProfileSignalsStrip } from './profile-signals-strip';
 import type { NewProfileCardProps } from './types';
 
 import './profile-card.css';
@@ -127,15 +126,6 @@ export const NewProfileCard = memo(function NewProfileCard({
           titleImageUrl={user.equippedTitle?.imageUrl}
           bio={user.bio ?? null}
           badges={user.profileBadges ?? []}
-          accentColor={accentColor}
-          compact={isMini}
-        />
-
-        <ProfileSignalsStrip
-          pulse={user.pulse ?? 0}
-          streak={user.streak ?? 0}
-          postCount={user.postCount ?? 0}
-          friendCount={user.friendCount ?? 0}
           accentColor={accentColor}
           compact={isMini}
         />

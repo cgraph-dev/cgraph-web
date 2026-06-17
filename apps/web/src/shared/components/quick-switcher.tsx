@@ -55,7 +55,7 @@ const SETTINGS_PAGES: QuickSwitcherItem[] = [
     id: 'settings-appearance',
     type: 'settings',
     name: 'Appearance',
-    path: '/me/appearance/themes',
+    path: '/me/settings/appearance',
     icon: Cog6ToothIcon,
   },
   {

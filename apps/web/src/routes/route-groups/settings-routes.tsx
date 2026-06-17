@@ -35,7 +35,7 @@ export function SettingsRoutes() {
           </RouteErrorBoundary>
         }
       />
-      <Route path="settings/appearance" element={<Navigate to="/me/appearance/themes" replace />} />
+      <Route path="settings/appearance" element={<Navigate to="/me/settings/appearance" replace />} />
       <Route
         path="settings/customization"
         element={<Navigate to="/me/appearance/identity" replace />}
@@ -45,7 +45,7 @@ export function SettingsRoutes() {
         path="settings/subscription-manage"
         element={<Navigate to="/me/subscription" replace />}
       />
-      {/* ARCHIVED: settings/theme route - moved to /me/appearance */}
+      {/* ARCHIVED: settings/theme route - profile cosmetics moved to /me/appearance */}
       {/* ARCHIVED: settings/titles route - moved to /me/appearance/identity */}
       {/* ARCHIVED: settings/badges route - moved to /me/appearance/identity */}
       <Route

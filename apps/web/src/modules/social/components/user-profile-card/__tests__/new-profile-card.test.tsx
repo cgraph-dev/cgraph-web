@@ -33,7 +33,7 @@ describe('NewProfileCard', () => {
     profileBadges: [],
   };
 
-  it('renders mini profile background and live profile signal metrics', () => {
+  it('renders mini profile background without the redundant signal metrics panel', () => {
     const { container } = render(<NewProfileCard user={user} mode="preview" variant="mini" />);
 
     const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
@@ -42,10 +42,10 @@ describe('NewProfileCard', () => {
     expect(backgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('mini_signal_noir_founder');
     expect(screen.getByText('Cipher One')).toBeInTheDocument();
-    expect(screen.getByText('Pulse')).toBeInTheDocument();
-    expect(screen.getByText('Streak')).toBeInTheDocument();
-    expect(screen.getByText('Posts')).toBeInTheDocument();
-    expect(screen.getByText('Network')).toBeInTheDocument();
+    expect(screen.queryByText('Pulse')).not.toBeInTheDocument();
+    expect(screen.queryByText('Streak')).not.toBeInTheDocument();
+    expect(screen.queryByText('Posts')).not.toBeInTheDocument();
+    expect(screen.queryByText('Network')).not.toBeInTheDocument();
   });
 
   it('renders enriched game theme backgrounds for non-default profile themes', () => {

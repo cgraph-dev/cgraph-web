@@ -233,7 +233,7 @@ export function AppRoutes() {
         {/* Settings catch-all → Me settings */}
         <Route
           path="settings/app-theme"
-          element={<Navigate to="/me/appearance/themes" replace />}
+          element={<Navigate to="/me/settings/appearance" replace />}
         />
         <Route path="settings/:section" element={<SettingsSectionRedirect />} />
 

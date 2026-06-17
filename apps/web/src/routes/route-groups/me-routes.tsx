@@ -15,7 +15,6 @@ import {
   PremiumPage,
   InviteFriends,
   Settings,
-  AppThemeSettings,
   E2EEVerification,
   KeyVerification,
   DiscoverySettings,
@@ -108,11 +107,7 @@ export function MeRoutes() {
       />
       <Route
         path="settings/app-theme"
-        element={
-          <RouteErrorBoundary routeName="App Theme">
-            <AppThemeSettings />
-          </RouteErrorBoundary>
-        }
+        element={<Navigate to="/me/settings/appearance" replace />}
       />
       <Route
         path="settings/discovery"

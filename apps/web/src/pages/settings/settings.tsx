@@ -20,11 +20,13 @@ import {
   PhoneIcon,
   ArrowPathIcon,
   LinkIcon,
+  PaintBrushIcon,
 } from '@heroicons/react/24/outline';
 import { GlassSearchInput } from '@/components/ui/glass-search-input';
 
 // These components are available for extended settings functionality
 import { AccountSettings } from '@/modules/settings/components/account-settings';
+import AppThemeSettings from '@/pages/settings/app-theme-settings';
 import { ConnectedAccounts } from '@/pages/settings/connected-accounts';
 import { default as DeleteAccount } from '@/pages/settings/delete-account';
 import { default as DataExport } from '@/pages/settings/data-export';
@@ -50,12 +52,17 @@ import {
   usePreferenceOrchestrator,
 } from '@/modules/settings/store/preferenceOrchestrator';
 
-// Operational preferences only.
-// Moved to /me/appearance: appearance/theme
+// Operational preferences. Profile cosmetics remain in /me/appearance.
 // Moved to /me/subscription: billing/subscription
 // Moved to /me/invites: invites/referrals
 const settingsSections = [
   { id: 'account', label: 'Account', icon: UserIcon, description: 'Email, username, password' },
+  {
+    id: 'appearance',
+    label: 'Appearance',
+    icon: PaintBrushIcon,
+    description: 'App theme and interface style',
+  },
   {
     id: 'connected-accounts',
     label: 'Connected Accounts',
@@ -333,6 +340,7 @@ export default function Settings() {
             ) : (
               <>
                 {section === 'account' && <AccountSettings key="account" />}
+                {section === 'appearance' && <AppThemeSettings key="appearance" />}
                 {section === 'connected-accounts' && (
                   <ConnectedAccounts key="connected-accounts" />
                 )}
