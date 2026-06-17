@@ -271,7 +271,7 @@ export default function Settings() {
                     aria-current={active ? 'page' : undefined}
                     onClick={() => {
                       HapticFeedback.light();
-                      navigate(`../${item.id}`, { relative: 'path' });
+                      navigate(`/me/settings/${item.id}`);
                     }}
                     initial={false}
                     animate={{ opacity: 1, x: 0 }}
