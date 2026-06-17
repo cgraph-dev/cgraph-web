@@ -13,28 +13,22 @@ export interface ProfileEditState {
 }
 
 /**
- * File upload state for avatar and banner
+ * File upload state for avatar.
  */
 export interface FileUploadState {
   isUploadingAvatar: boolean;
-  isUploadingBanner: boolean;
 }
 
 /**
  * Props for ProfileBanner component
  */
 export interface ProfileBannerProps {
-  bannerUrl?: string;
   isOwnProfile: boolean;
   editMode: boolean;
-  isUploading: boolean;
-  onUploadClick: () => void;
   onEditToggle: () => void;
   onSave: () => void;
   onCancel: () => void;
   isActioning: boolean;
-  bannerInputRef: React.RefObject<HTMLInputElement | null>;
-  onBannerChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 /**

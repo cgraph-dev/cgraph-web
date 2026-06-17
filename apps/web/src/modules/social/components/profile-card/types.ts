@@ -19,7 +19,6 @@ export interface ProfileCardUser {
   displayName: string;
   avatarUrl: string;
   avatarBorderId?: string;
-  bannerUrl?: string;
   bio?: string;
   // Gamification
   level: number;

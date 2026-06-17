@@ -1,6 +1,6 @@
 /**
  * Avatar & Profile Settings Component
- * Avatar upload, banner upload, and profile editing
+ * Avatar upload and profile editing
  *
  */
 
@@ -11,7 +11,6 @@ import SyncStatusIndicator from '@/modules/settings/components/sync-status-indic
 import { useAvatarSettings } from './useAvatarSettings';
 import { AvatarPreviewCard } from './avatar-preview-card';
 import { AvatarUploadCard } from './avatar-upload-card';
-import { BannerUploadCard } from './banner-upload-card';
 import { ProfileInfoCard } from './profile-info-card';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
@@ -29,10 +28,6 @@ export default function AvatarSettings() {
     handleAvatarChange,
     handleAvatarUpload,
     clearAvatarUpload,
-    bannerUpload,
-    handleBannerChange,
-    handleBannerUpload,
-    clearBannerUpload,
     syncStatus,
   } = useAvatarSettings();
 
@@ -52,7 +47,7 @@ export default function AvatarSettings() {
               Avatar & Profile
             </h2>
             <p className="mt-1 text-sm text-gray-400">
-              Upload your avatar, banner, and edit profile info
+              Upload your avatar and edit profile info
             </p>
           </div>
         </div>
@@ -71,15 +66,6 @@ export default function AvatarSettings() {
         onChange={handleAvatarChange}
         onUpload={handleAvatarUpload}
         onCancel={clearAvatarUpload}
-      />
-
-      {/* Banner Upload */}
-      <BannerUploadCard
-        upload={bannerUpload}
-        currentBannerUrl={user?.bannerUrl}
-        onChange={handleBannerChange}
-        onUpload={handleBannerUpload}
-        onCancel={clearBannerUpload}
       />
 
       {/* Profile Information */}

@@ -1,49 +1,35 @@
 /**
- * ProfileBanner - Banner section with edit mode overlay
+ * ProfileBanner - profile theme header for public profiles.
  */
 
 import { motion } from 'motion/react';
-import { PencilSquareIcon, CheckIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { tweens } from '@/lib/animation-presets';
-import { FADE_IN } from '@/lib/animations/transitions';
 import type { ProfileThemeConfig } from '@/data/profileThemes';
 
 interface ProfileBannerProps {
-  bannerUrl?: string;
   theme: ProfileThemeConfig;
   isOwnProfile: boolean;
   editMode: boolean;
-  isUploading: boolean;
   isActioning: boolean;
-  onUploadClick: () => void;
   onEditToggle: () => void;
   onSave: () => void;
   onCancel: () => void;
-  bannerInputRef: React.RefObject<HTMLInputElement | null>;
-  onBannerChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 /**
- */
-/**
- * Profile Banner component.
+ * Profile theme header component.
  */
 export function ProfileBanner({
-  bannerUrl,
   theme,
   isOwnProfile,
   editMode,
-  isUploading,
   isActioning,
-  onUploadClick,
   onEditToggle,
   onSave,
   onCancel,
-  bannerInputRef,
-  onBannerChange,
 }: ProfileBannerProps) {
   const themeHeaderImage = theme.profileBackgroundImage ?? theme.previewImage;
-  const headerImage = bannerUrl ?? themeHeaderImage;
 
   return (
     <motion.div
@@ -51,20 +37,20 @@ export function ProfileBanner({
       animate={{ opacity: 1, y: 0 }}
       transition={tweens.smooth}
       className="group relative h-56 overflow-hidden"
-      data-profile-theme-header-image={!bannerUrl ? themeHeaderImage : undefined}
+      data-profile-theme-header-image={themeHeaderImage}
       style={{
         background: `radial-gradient(circle at 18% 18%, ${theme.accentPrimary}55, transparent 32%), radial-gradient(circle at 82% 28%, ${theme.accentSecondary}45, transparent 34%), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
       }}
     >
-      {headerImage && (
+      {themeHeaderImage && (
         <img
-          src={headerImage}
+          src={themeHeaderImage}
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-[center_36%]"
           loading="lazy"
         />
       )}
-      {!headerImage && theme.surfacePattern === 'terminal-grid' && (
+      {!themeHeaderImage && theme.surfacePattern === 'terminal-grid' && (
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{
@@ -73,10 +59,10 @@ export function ProfileBanner({
           }}
         />
       )}
-      {!headerImage && theme.surfacePattern === 'scanline' && (
+      {!themeHeaderImage && theme.surfacePattern === 'scanline' && (
         <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0_8px,rgba(255,255,255,0.055)_8px_9px)]" />
       )}
-      {!headerImage && theme.surfacePattern === 'starfield' && (
+      {!themeHeaderImage && theme.surfacePattern === 'starfield' && (
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -129,39 +115,6 @@ export function ProfileBanner({
           )}
         </div>
       )}
-
-      {/* Banner Edit Overlay */}
-      {isOwnProfile && editMode && (
-        <motion.div
-          {...FADE_IN}
-          className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/45 backdrop-blur-md transition-colors hover:bg-black/55"
-          onClick={onUploadClick}
-        >
-          <div className="text-center">
-            {isUploading ? (
-              <>
-                <div className="mx-auto mb-2 h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-                <p className="font-medium text-white">Uploading...</p>
-              </>
-            ) : (
-              <>
-                <PhotoIcon className="mx-auto mb-2 h-12 w-12 text-white" />
-                <p className="font-medium text-white">Change Banner</p>
-                <p className="mt-1 text-sm text-white/60">Click to upload</p>
-              </>
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Hidden file input for banner */}
-      <input
-        ref={bannerInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={onBannerChange}
-      />
     </motion.div>
   );
 }

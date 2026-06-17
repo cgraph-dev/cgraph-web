@@ -33,7 +33,6 @@ function sidebarProfileCardUser(user: User): ProfileCardUserV2 {
     displayName: user.displayName || user.username || 'User',
     avatarUrl: user.avatarUrl ?? '',
     avatarBorderId: getAvatarBorderId(user) ?? undefined,
-    bannerUrl: user.bannerUrl ?? undefined,
     bio: user.bio,
     level: user.level ?? 1,
     xp: user.xp ?? 0,

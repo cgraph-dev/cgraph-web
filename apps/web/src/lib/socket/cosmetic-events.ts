@@ -17,7 +17,6 @@ import type { Channel } from 'phoenix';
 /** Payload for own profile cosmetic changes. */
 export interface ProfileUpdatedEvent {
   readonly avatarHash?: string;
-  readonly bannerHash?: string;
   readonly accentColor?: string;
   readonly avatarBorderId?: string;
   readonly nameplateId?: string;
@@ -60,11 +59,6 @@ function parseProfileUpdated(payload: unknown): ProfileUpdatedEvent | null {
       ? { avatarHash: payload.avatar_hash }
       : typeof payload.avatarHash === 'string'
         ? { avatarHash: payload.avatarHash }
-        : {}),
-    ...(typeof payload.banner_hash === 'string'
-      ? { bannerHash: payload.banner_hash }
-      : typeof payload.bannerHash === 'string'
-        ? { bannerHash: payload.bannerHash }
         : {}),
     ...(typeof payload.accent_color === 'string'
       ? { accentColor: payload.accent_color }

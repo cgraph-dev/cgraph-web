@@ -1,7 +1,7 @@
 /**
  * CosmeticProfileCard — full user profile with cosmetic elements.
  *
- * Layers: banner → avatar (LiveAvatarDecoration) → display name + nameplate
+ * Layers: theme/accent header → avatar (LiveAvatarDecoration) → display name + nameplate
  * → badges → accent gradient → bio. All assets via `buildCdnUrl`.
  *
  */
@@ -22,7 +22,6 @@ interface CosmeticProfileCardProps {
 
 interface ProfileData {
   readonly avatarUrl: string;
-  readonly bannerUrl: string | null;
   readonly displayName: string;
   readonly bio: string | null;
   readonly accentColor: string | null;
@@ -49,11 +48,8 @@ function useProfileData(userId: string, _groupId: string | null): ProfileData | 
     const avatarUrl = memberData.avatarHash
       ? (buildCdnUrl(memberData.avatarHash, 'avatar') ?? DEFAULT_AVATAR)
       : DEFAULT_AVATAR;
-    const bannerUrl = memberData.bannerHash ? buildCdnUrl(memberData.bannerHash, 'banner') : null;
-
     return {
       avatarUrl,
-      bannerUrl,
       displayName: 'User',
       bio: null,
       accentColor: memberData.accentColor ?? null,
@@ -70,7 +66,6 @@ function useProfileData(userId: string, _groupId: string | null): ProfileData | 
 
   return {
     avatarUrl: currentUser.avatarUrl ?? DEFAULT_AVATAR,
-    bannerUrl: currentUser.bannerUrl ?? null,
     displayName: currentUser.displayName ?? currentUser.username ?? 'User',
     bio: currentUser.bio ?? null,
     accentColor: null,
@@ -85,31 +80,10 @@ function useProfileData(userId: string, _groupId: string | null): ProfileData | 
 // Sub-components
 // Sub-components
 const BannerSection = memo(function BannerSection({
-  bannerUrl,
   accentColor,
 }: {
-  readonly bannerUrl: string | null;
   readonly accentColor: string | null;
 }) {
-  if (bannerUrl) {
-    return (
-      <div className="relative h-28 w-full overflow-hidden rounded-t-xl sm:h-32">
-        <img
-          src={bannerUrl}
-          alt=""
-          className="h-full w-full object-cover"
-          draggable={false}
-          loading="lazy"
-        />
-        {accentColor && (
-          <div
-            className="absolute inset-0"
-            style={{ background: `linear-gradient(to bottom, transparent 40%, ${accentColor}66)` }}
-          />
-        )}
-      </div>
-    );
-  }
   const bg = accentColor
     ? `linear-gradient(135deg, ${accentColor}44, ${accentColor}22)`
     : 'linear-gradient(135deg, var(--color-surface-2, #1e1e2e), var(--color-surface-3, #2a2a3e))';
@@ -204,7 +178,7 @@ export const CosmeticProfileCard = memo(function CosmeticProfileCard({
       transition={{ duration: 0.25, ease: 'easeOut' }}
     >
       {/* Banner */}
-      <BannerSection bannerUrl={profile.bannerUrl} accentColor={profile.accentColor} />
+        <BannerSection accentColor={profile.accentColor} />
 
       {/* Avatar — overlaps banner */}
       <div className="-mt-10 flex justify-center px-4 sm:-mt-12">

@@ -17,7 +17,6 @@ export { FriendshipActions } from './friendship-actions';
 
 // Hooks
 export { useProfileData } from './hooks/useProfileData';
-export { useFileUpload } from './hooks/useFileUpload';
 
 // Types
 export type {

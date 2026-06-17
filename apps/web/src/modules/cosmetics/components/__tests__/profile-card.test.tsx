@@ -20,7 +20,6 @@ const { mockAuthState, mockCosmeticsState, mockBuildCdnUrl } = vi.hoisted(() => 
       string,
       {
         avatarHash: string | null;
-        bannerHash: string | null;
         accentColor: string | null;
         avatarBorderId: string | null;
         nameplateId: string | null;
@@ -165,25 +164,6 @@ describe('CosmeticProfileCard', () => {
     expect(avatar.getAttribute('src')).toBe('/images/default-avatar.webp');
   });
 
-  it('renders banner image when bannerUrl is set', () => {
-    mockAuthState.user = {
-      id: 'user-1',
-      avatarUrl: null,
-      bannerUrl: '/banner.jpg',
-      displayName: 'User',
-      username: 'u',
-      bio: null,
-      badges: [],
-    };
-
-    const { container } = render(<CosmeticProfileCard userId="user-1" groupId={null} />);
-
-    // Banner image has empty alt and is inside the banner section
-    const imgs = container.querySelectorAll('img');
-    const bannerImg = Array.from(imgs).find((img) => img.getAttribute('src') === '/banner.jpg');
-    expect(bannerImg).toBeTruthy();
-  });
-
   it('renders other users profile from memberCosmetics', () => {
     mockAuthState.user = {
       id: 'current-user',
@@ -196,7 +176,6 @@ describe('CosmeticProfileCard', () => {
     };
     mockCosmeticsState.memberCosmetics.set('other-user', {
       avatarHash: 'abc123',
-      bannerHash: null,
       accentColor: '#ff0000',
       avatarBorderId: null,
       nameplateId: null,

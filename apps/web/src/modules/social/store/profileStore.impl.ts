@@ -40,7 +40,6 @@ import {
   createUnblockUser,
   createIsUserBlocked,
   createUploadAvatar,
-  createUploadBanner,
   createFetchProfileFields,
   createClearProfile,
 } from './profile-blocked-and-media';
@@ -74,9 +73,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   unblockUser: createUnblockUser(set, get),
   isUserBlocked: createIsUserBlocked(get),
 
-  // Avatar/banner upload
+  // Avatar upload
   uploadAvatar: createUploadAvatar(set),
-  uploadBanner: createUploadBanner(set),
 
   // Profile fields
   fetchProfileFields: createFetchProfileFields(set),

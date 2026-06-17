@@ -1,6 +1,6 @@
 /**
  * useAvatarSettings hook
- * Manages avatar/banner uploads and profile info editing.
+ * Manages avatar upload and profile info editing.
  */
 
 import { useState, useEffect } from 'react';
@@ -18,7 +18,7 @@ const logger = createLogger('AvatarSettings');
  */
 export function useAvatarSettings(): UseAvatarSettingsReturn {
   const { user, updateUser } = useAuthStore();
-  const { updateProfile, uploadAvatar, uploadBanner } = useProfileStore();
+  const { updateProfile, uploadAvatar } = useProfileStore();
   const { status: syncStatus, setSaving, setSaved, setError } = useSyncStatus();
 
   // Profile form state
@@ -31,10 +31,6 @@ export function useAvatarSettings(): UseAvatarSettingsReturn {
 
   // File upload state
   const [avatarUpload, setAvatarUpload] = useState<FileUploadState>({
-    file: null,
-    preview: null,
-  });
-  const [bannerUpload, setBannerUpload] = useState<FileUploadState>({
     file: null,
     preview: null,
   });
@@ -79,19 +75,6 @@ export function useAvatarSettings(): UseAvatarSettingsReturn {
     }
   };
 
-  // Handle banner file selection
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result: string = typeof reader.result === 'string' ? reader.result : '';
-        setBannerUpload({ file, preview: result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   // Upload avatar
   const handleAvatarUpload = async () => {
     if (!avatarUpload.file) return;
@@ -110,30 +93,8 @@ export function useAvatarSettings(): UseAvatarSettingsReturn {
     }
   };
 
-  // Upload banner
-  const handleBannerUpload = async () => {
-    if (!bannerUpload.file) return;
-
-    setSaving();
-    try {
-      const newBannerUrl = await uploadBanner(bannerUpload.file);
-      updateUser({ bannerUrl: newBannerUrl });
-      setBannerUpload({ file: null, preview: null });
-      setSaved();
-      toast.success('Banner uploaded successfully');
-    } catch (error) {
-      logger.error('Failed to upload banner:', error);
-      setError('Failed to upload banner');
-      toast.error('Failed to upload banner');
-    }
-  };
-
   const clearAvatarUpload = () => {
     setAvatarUpload({ file: null, preview: null });
-  };
-
-  const clearBannerUpload = () => {
-    setBannerUpload({ file: null, preview: null });
   };
 
   return {
@@ -144,10 +105,6 @@ export function useAvatarSettings(): UseAvatarSettingsReturn {
     handleAvatarChange,
     handleAvatarUpload,
     clearAvatarUpload,
-    bannerUpload,
-    handleBannerChange,
-    handleBannerUpload,
-    clearBannerUpload,
     syncStatus,
   };
 }

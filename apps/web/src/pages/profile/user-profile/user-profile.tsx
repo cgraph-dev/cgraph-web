@@ -2,7 +2,7 @@
  * UserProfile - Main profile page component
  *
  * Displays user profile information including:
- * - Banner and avatar with edit capabilities
+ * - Profile theme header and avatar with edit capabilities
  * - User info with verification badges and title
  * - Bio section
  * - XP progress and achievements
@@ -203,21 +203,13 @@ export function UserProfile() {
     >
       <div className="pointer-events-none absolute inset-0 bg-dark-950/40" />
       <ProfileBanner
-        bannerUrl={profile.bannerUrl ?? undefined}
         theme={activeProfileTheme}
         isOwnProfile={isOwnProfile}
         editMode={actions.editMode}
-        isUploading={actions.isUploadingBanner}
         isActioning={actions.isActioning}
-        onUploadClick={() => {
-          actions.bannerInputRef.current?.click();
-          HapticFeedback.medium();
-        }}
         onEditToggle={actions.handleEditToggle}
         onSave={actions.handleSaveProfile}
         onCancel={actions.handleCancelEdit}
-        bannerInputRef={actions.bannerInputRef}
-        onBannerChange={actions.handleBannerChange}
       />
 
       <div className="relative z-10 mx-auto -mt-20 max-w-4xl px-6">

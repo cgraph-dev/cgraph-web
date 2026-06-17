@@ -1,7 +1,7 @@
 /**
  * Profile action handlers hook.
  *
- * Extracts file upload, friendship, and edit handlers from UserProfile.
+ * Extracts avatar upload, friendship, and edit handlers from UserProfile.
  *
  */
 
@@ -23,8 +23,6 @@ interface UseProfileActionsParams {
   setFriendshipStatus: (status: FriendshipStatus) => void;
 }
 
-/**
- */
 /**
  * Hook for managing profile actions.
  */
@@ -53,10 +51,8 @@ export function useProfileActions({
   const [editedBio, setEditedBio] = useState('');
   const [isActioning, setIsActioning] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize edited bio when profile loads
   useEffect(() => {
@@ -74,41 +70,37 @@ export function useProfileActions({
     }
   }, [isOwnProfile, profile, fetchFriends, fetchSentRequests, fetchPendingRequests]);
 
-  // File upload handler
-  async function handleFileUpload(file: File, type: 'avatar' | 'banner') {
+  // Avatar upload handler. Profile backgrounds come from cosmetic theme assets.
+  async function handleAvatarUpload(file: File) {
     if (!profile || !isOwnProfile) return;
 
-    const setUploading = type === 'avatar' ? setIsUploadingAvatar : setIsUploadingBanner;
-    setUploading(true);
+    setIsUploadingAvatar(true);
 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('type', type);
+      formData.append('type', 'avatar');
 
       const uploadResponse = await http.post('/api/v1/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       const uploadedUrl = uploadResponse.data.url;
-      const updateField = type === 'avatar' ? 'avatar_url' : 'banner_url';
 
       await http.patch(`/api/v1/users/${profile.id}`, {
-        user: { [updateField]: uploadedUrl },
+        user: { avatar_url: uploadedUrl },
       });
 
-      setProfile((prev) =>
-        prev ? { ...prev, [type === 'avatar' ? 'avatarUrl' : 'bannerUrl']: uploadedUrl } : null
-      );
+      setProfile((prev) => (prev ? { ...prev, avatarUrl: uploadedUrl } : null));
 
       HapticFeedback.success();
-      toast.success(`${type === 'avatar' ? 'Avatar' : 'Banner'} updated successfully!`);
+      toast.success('Avatar updated successfully!');
     } catch (err) {
-      logger.error(`Failed to upload ${type}:`, err);
-      toast.error(`Failed to upload ${type}. Please try again.`);
+      logger.error('Failed to upload avatar:', err);
+      toast.error('Failed to upload avatar. Please try again.');
       HapticFeedback.error();
     } finally {
-      setUploading(false);
+      setIsUploadingAvatar(false);
     }
   }
 
@@ -123,23 +115,7 @@ export function useProfileActions({
         toast.error('Image must be less than 5MB');
         return;
       }
-      handleFileUpload(file, 'avatar');
-    }
-    e.target.value = '';
-  }
-
-  function handleBannerChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('Image must be less than 10MB');
-        return;
-      }
-      handleFileUpload(file, 'banner');
+      handleAvatarUpload(file);
     }
     e.target.value = '';
   }
@@ -292,11 +268,8 @@ export function useProfileActions({
     setEditedBio,
     isActioning,
     isUploadingAvatar,
-    isUploadingBanner,
     avatarInputRef,
-    bannerInputRef,
     handleAvatarChange,
-    handleBannerChange,
     handleSendRequest,
     handleAcceptRequest,
     handleDeclineRequest,

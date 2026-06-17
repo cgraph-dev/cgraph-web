@@ -7,7 +7,6 @@ export { default } from './avatar-settings';
 // Components
 export { AvatarPreviewCard } from './avatar-preview-card';
 export { AvatarUploadCard } from './avatar-upload-card';
-export { BannerUploadCard } from './banner-upload-card';
 export { ProfileInfoCard } from './profile-info-card';
 
 // Hooks
@@ -22,6 +21,4 @@ export {
   MAX_LOCATION_LENGTH,
   MAX_OCCUPATION_LENGTH,
   MAX_AVATAR_SIZE_MB,
-  MAX_BANNER_SIZE_MB,
-  RECOMMENDED_BANNER_SIZE,
 } from './constants';

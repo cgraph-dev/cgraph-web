@@ -11,7 +11,6 @@ import { identityFieldsFromApi } from './canonicalIdentity';
 
 export interface OwnIdentityPatch {
   avatarUrl?: string | null;
-  bannerUrl?: string | null;
   avatarBorderId?: string | null;
   equippedTitleId?: string | null;
   equippedBadgeIds?: readonly string[];
@@ -70,7 +69,6 @@ function isThemePreset(value: string | null): value is ThemePreset {
 export function applyOwnIdentityPatch(patch: OwnIdentityPatch): void {
   const userUpdates: Partial<User> = {};
   setDefined(userUpdates, 'avatarUrl', patch.avatarUrl);
-  setDefined(userUpdates, 'bannerUrl', patch.bannerUrl);
   setDefined(userUpdates, 'avatarBorderId', patch.avatarBorderId);
   setDefined(userUpdates, 'equippedTitleId', patch.equippedTitleId);
   setDefined(userUpdates, 'equippedBadgeIds', patch.equippedBadgeIds);
@@ -135,9 +133,6 @@ export function applyOwnProfileUpdate(raw: Record<string, unknown>): void {
 
   if (hasKey(raw, ['avatar_hash', 'avatarUrl', 'avatar_url'])) {
     patch.avatarUrl = firstString(raw, ['avatar_hash', 'avatarUrl', 'avatar_url']);
-  }
-  if (hasKey(raw, ['banner_hash', 'bannerUrl', 'banner_url'])) {
-    patch.bannerUrl = firstString(raw, ['banner_hash', 'bannerUrl', 'banner_url']);
   }
   if (hasKey(raw, ['avatarBorderId', 'avatar_border_id', 'from_avatar_border_id'])) {
     patch.avatarBorderId = identity.avatarBorderId;

@@ -116,28 +116,6 @@ export function createUploadAvatar(set: Set) {
   };
 }
 
-/** Upload a banner image. */
-export function createUploadBanner(set: Set) {
-  return async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // Backend mounts banner upload at PUT /api/v1/me/banner
-    // (UserProfileController), not /users/me/banner.
-    const response = await http.put('/api/v1/me/banner', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-
-    const bannerUrl = response.data.banner_url || response.data.url;
-
-    set((state) => ({
-      myProfile: state.myProfile ? { ...state.myProfile, bannerUrl } : null,
-    }));
-
-    return bannerUrl;
-  };
-}
-
 /** Fetch available profile fields. */
 export function createFetchProfileFields(set: Set) {
   return async () => {

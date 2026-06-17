@@ -2,7 +2,7 @@
  * Profile Blocked Users & Media Actions Unit Tests
  *
  * Tests for createFetchBlockedUsers, createBlockUser, createUnblockUser,
- * createIsUserBlocked, createUploadAvatar, createUploadBanner, createClearProfile.
+ * createIsUserBlocked, createUploadAvatar, createClearProfile.
  */
 
 import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
@@ -47,7 +47,6 @@ import {
   createUnblockUser,
   createIsUserBlocked,
   createUploadAvatar,
-  createUploadBanner,
   createClearProfile,
 } from '../profile-blocked-and-media';
 
@@ -290,25 +289,6 @@ describe('createUploadAvatar', () => {
     const result = await uploadAvatar(file);
 
     expect(result).toBe('https://cdn.example.com/fallback.png');
-  });
-});
-
-describe('createUploadBanner', () => {
-  it('uploads file and updates myProfile.bannerUrl', async () => {
-    const { set } = createMockStore();
-    const uploadBanner = createUploadBanner(set);
-
-    mockedApi.put.mockResolvedValueOnce({
-      data: { banner_url: 'https://cdn.example.com/banner.png' },
-    });
-
-    const file = new File(['data'], 'banner.png', { type: 'image/png' });
-    const result = await uploadBanner(file);
-
-    expect(result).toBe('https://cdn.example.com/banner.png');
-    expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/me/banner', expect.any(FormData), {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
   });
 });
 

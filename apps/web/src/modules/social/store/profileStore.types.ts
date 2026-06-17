@@ -211,9 +211,8 @@ export interface ProfileState {
   unblockUser: (userId: string) => Promise<void>;
   isUserBlocked: (userId: string) => boolean;
 
-  // Avatar/banner upload
+  // Avatar upload
   uploadAvatar: (file: File) => Promise<string>;
-  uploadBanner: (file: File) => Promise<string>;
 
   // Profile fields
   fetchProfileFields: () => Promise<void>;

@@ -3,7 +3,7 @@
  *
  * Tests for the modular Zustand profile store (modules/social/store).
  * Covers profile fetching, updates, signatures, badges, titles,
- * blocked users, avatar/banner uploads, profile fields, and error handling.
+ * blocked users, avatar uploads, profile fields, and error handling.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
@@ -637,7 +637,7 @@ describe('Social profileStore', () => {
     });
   });
 
-  // 11. uploadAvatar / uploadBanner
+  // 11. uploadAvatar
   describe('uploadAvatar', () => {
     beforeEach(() => {
       useProfileStore.setState({ myProfile: mockProfile });
@@ -656,26 +656,6 @@ describe('Social profileStore', () => {
       expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData), {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-    });
-  });
-
-  describe('uploadBanner', () => {
-    beforeEach(() => {
-      useProfileStore.setState({ myProfile: mockProfile });
-    });
-
-    it('should POST FormData and update myProfile.bannerUrl', async () => {
-      mockedApi.put.mockResolvedValue({
-        data: { banner_url: 'https://cdn.example.com/bann.png' },
-      });
-
-      const file = new File(['img'], 'banner.png', { type: 'image/png' });
-      const url = await useProfileStore.getState().uploadBanner(file);
-
-      expect(url).toBe('https://cdn.example.com/bann.png');
-      expect(useProfileStore.getState().myProfile?.bannerUrl).toBe(
-        'https://cdn.example.com/bann.png'
-      );
     });
   });
 

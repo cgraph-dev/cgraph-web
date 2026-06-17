@@ -2,6 +2,8 @@
 
 Profile themes are a 3-file cosmetic set. Keep all three visually matched so the picker card, live preview, mini popout, and public profile page feel like the same owned theme.
 
+Profile backgrounds are catalog-owned assets, not user uploads. Source them from the approved Klepy/profile-theme asset pipeline and ship them with the app or cosmetic catalog. Users can upload only their profile picture/avatar; profile headers, mini profile backgrounds, and preview backgrounds must come from equipped profile themes.
+
 ## Required Sizes
 
 Use these exact exported sizes for the web app:
@@ -9,6 +11,8 @@ Use these exact exported sizes for the web app:
 - Theme picker preview: `320x180`
 - Full profile background/header: `640x360`
 - Mini profile background/header: `320x285`
+
+The right-side live preview is smaller on screen, but it renders from the same `640x360` full profile background asset and scales/crops it into the preview card. Do not generate smaller full-profile sources just because the preview panel is narrow.
 
 Higher-quality source files are fine if the generator supports them, then downscale:
 
@@ -21,6 +25,7 @@ The renderer uses these areas:
 - Full card header: top `136px` of the `640x360` asset
 - Mini card header: top `104px` of the `320x285` asset
 - Public profile header: full-width crop from the same `640x360` asset
+- Sidebar/user hover mini card: `320x285` mini asset
 - Avatar overlap: keep the lower center of the header clean because the avatar anchors there
 
 Export PNG for static themes, GIF or WebP for animated themes. Prefer seamless loops between `8` and `16` frames, `1.5s` to `3s`, with calm motion. No text, letters, logos, icons, avatars, people, or UI buttons inside profile theme backgrounds.

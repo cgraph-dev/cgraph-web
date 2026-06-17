@@ -282,7 +282,7 @@ describe('cosmeticsApi', () => {
     expect(unequipped).toEqual({ id: 'inventory-1' });
   });
 
-  it('handles border purchase and profile customization endpoints', async () => {
+  it('handles border purchase and accent color customization endpoints', async () => {
     mockApi.post.mockResolvedValue({
       data: {
         item: {
@@ -297,18 +297,11 @@ describe('cosmeticsApi', () => {
         },
       },
     });
-    mockApi.put
-      .mockResolvedValueOnce({ data: { bannerHash: 'banner-hash-1' } })
-      .mockResolvedValueOnce({ data: { accentColor: '#112233' } });
-    mockApi.delete.mockResolvedValue({ data: {} });
+    mockApi.put.mockResolvedValueOnce({ data: { accentColor: '#112233' } });
 
     const purchase = await cosmeticsApi.purchaseBorder('border-9');
-    const file = new File(['banner'], 'banner.png', { type: 'image/png' });
-    const uploaded = await cosmeticsApi.uploadBanner(file);
-    await cosmeticsApi.removeBanner();
     const accent = await cosmeticsApi.updateAccentColor('#112233');
 
-    const uploadCall = mockApi.put.mock.calls[0];
     expect(mockApi.post).toHaveBeenCalledWith('/api/v1/marketplace/purchase', {
       listing_id: 'border-9',
       type: 'avatar_border',
@@ -320,17 +313,9 @@ describe('cosmeticsApi', () => {
         cosmetic: expect.objectContaining({ id: 'border-9', name: 'Aurora Ring' }),
       })
     );
-    expect(uploadCall![0]).toBe('/api/v1/me/banner');
-    expect(uploadCall![1]).toBeInstanceOf(FormData);
-    expect((uploadCall![1] as FormData).get('banner')).toBe(file);
-    expect(uploadCall![2]).toEqual({
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/me/banner');
-    expect(mockApi.put).toHaveBeenNthCalledWith(2, '/api/v1/me/accent-color', {
+    expect(mockApi.put).toHaveBeenCalledWith('/api/v1/me/accent-color', {
       accent_color: '#112233',
     });
-    expect(uploaded).toEqual({ bannerHash: 'banner-hash-1' });
     expect(accent).toEqual({ accentColor: '#112233' });
   });
 });

@@ -95,7 +95,6 @@ export interface ProfileCardUserV2 extends ProfileCardUser {
   nameplateId?: string | null;
   profileBadges?: ProfileBadge[];
   bannerType?: 'animated' | 'static' | 'none';
-  bannerUrl?: string;
   energyRingTier?: BadgeDisplayTier;
   pulseTier?: PulseTier;
   pulseFilled?: number;

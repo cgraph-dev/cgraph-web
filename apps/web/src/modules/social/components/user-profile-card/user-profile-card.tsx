@@ -149,7 +149,6 @@ function profileCardUserFromApi(userData: Record<string, unknown>): ProfileCardU
     displayName,
     avatarUrl: identity.avatarUrl ?? '',
     avatarBorderId: identity.avatarBorderId ?? undefined,
-    bannerUrl: identity.bannerUrl ?? undefined,
     bio: asString(userData.bio),
     level: asNumber(userData.level, 1),
     xp: asNumber(userData.xp) || asNumber(userData.total_xp),

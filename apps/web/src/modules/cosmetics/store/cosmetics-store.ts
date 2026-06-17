@@ -129,8 +129,7 @@ interface CosmeticsState {
   // Fetch active cosmetics for a user
   fetchUserActiveCosmetics: (userId: string) => Promise<void>;
 
-  // Banner & accent actions
-  uploadBanner: (file: File) => Promise<void>;
+  // Accent actions
   updateAccentColor: (hex: string) => Promise<void>;
 
   // Marketplace actions
@@ -171,7 +170,6 @@ type ActionKeys =
   | 'fetchUnlockHistory'
   | 'fetchUpcomingUnlocks'
   | 'fetchUserActiveCosmetics'
-  | 'uploadBanner'
   | 'updateAccentColor'
   | 'fetchMarketplaceListings'
   | 'fetchMarketplaceFeatured'
@@ -609,17 +607,6 @@ export const useCosmeticsStore = create<CosmeticsState>()((set, get) => ({
       }
     } catch (err) {
       logger.warn('fetchUserActiveCosmetics failed:', err);
-    }
-  },
-
-  uploadBanner: async (file: File) => {
-    set({ error: null });
-    try {
-      await cosmeticsApi.uploadBanner(file);
-    } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : 'Failed to upload banner',
-      });
     }
   },
 

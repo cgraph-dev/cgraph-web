@@ -26,12 +26,6 @@ export interface UseAvatarSettingsReturn {
   handleAvatarUpload: () => Promise<void>;
   clearAvatarUpload: () => void;
 
-  // Banner upload
-  bannerUpload: FileUploadState;
-  handleBannerChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleBannerUpload: () => Promise<void>;
-  clearBannerUpload: () => void;
-
   // Sync status
   syncStatus: 'idle' | 'saving' | 'saved' | 'error';
 }

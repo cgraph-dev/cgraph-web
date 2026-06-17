@@ -11,7 +11,6 @@ const { mockCosmeticsApi, mockEntitlementsApi } = vi.hoisted(() => ({
     equip: vi.fn(),
     unequip: vi.fn(),
     purchaseBorder: vi.fn(),
-    uploadBanner: vi.fn(),
     updateAccentColor: vi.fn(),
   },
   mockEntitlementsApi: {
@@ -295,10 +294,7 @@ describe('useCosmeticsStore', () => {
   });
 
   it('updates member cosmetics, clears transient errors, and resets to initial state', async () => {
-    const file = new File(['banner'], 'banner.png', { type: 'image/png' });
-    mockCosmeticsApi.uploadBanner.mockRejectedValue(new Error('upload failed'));
-    await useCosmeticsStore.getState().uploadBanner(file);
-    expect(useCosmeticsStore.getState().error).toBe('upload failed');
+    useCosmeticsStore.setState({ error: 'transient failure' });
 
     mockCosmeticsApi.updateAccentColor.mockResolvedValue({ accentColor: '#112233' });
     await useCosmeticsStore.getState().updateAccentColor('#112233');

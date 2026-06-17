@@ -584,20 +584,6 @@ export const cosmeticsApi = {
     });
     return response.data.item ?? response.data.unequipped;
   },
-  async uploadBanner(file: File): Promise<{ bannerHash: string }> {
-    const formData = new FormData();
-    formData.append('banner', file);
-
-    const response = await http.put<{ bannerHash: string }>('/api/v1/me/banner', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return { bannerHash: response.data.bannerHash };
-  },
-
-  async removeBanner(): Promise<void> {
-    await http.delete('/api/v1/me/banner');
-  },
-
   async updateAccentColor(hex: string): Promise<{ accentColor: string }> {
     const response = await http.put<{ accentColor: string }>('/api/v1/me/accent-color', {
       accent_color: hex,

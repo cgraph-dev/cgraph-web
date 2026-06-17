@@ -77,7 +77,7 @@ describe('own identity socket sync owner', () => {
 
     expect(useAuthStore.getState().user).toMatchObject({
       avatarUrl: 'avatar-v2',
-      bannerUrl: 'banner-v2',
+      bannerUrl: null,
       avatarBorderId: 'border-gold',
       equippedTitleId: 'title-founder',
       equippedBadgeIds: ['badge-a', 'badge-b'],
