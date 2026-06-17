@@ -602,6 +602,19 @@ the current deployed private-package install proof without claiming real provide
 native QR/mobile approval, physical cross-device lab validation, hosted Stripe settlement, or Level
 3 hardening.
 
+2026-06-17 profile preview stat cleanup proof: production web commit
+`c5c3d767600662d006d66748de1bc70c7a949d8f` removes raw Pulse/Streak numeric stat panels from
+profile preview/card and chat info surfaces. The supported profile reputation display remains the
+permanent PulseDots row; the old chat info `StatsGrid` is deleted, stale `showPulse` /
+`showStreak` profile-card config flags are gone, and tests now guard against reintroducing the
+raw `Pulse`, `Streak`, `Posts`, and `Network` preview labels. Local proof passed focused
+chat/profile/theme tests with 5 files / 111 tests, web lint, typecheck, release gates with
+419 files / 5,370 tests, and bundle budget. GitHub Actions `Web Release Gates` run `27693306611`
+also passed install, package checks, package-owner guard, lint, typecheck, release gates, and
+bundle budget. This is Level 2 UI truth cleanup only; it does not claim real provider delivery,
+future native QR/mobile approval, physical cross-device validation, hosted Stripe settlement, or
+Level 3 hardening.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` revalidated the current local web
 route/contract surface before any Level 3 work. The slice fixes the stale
