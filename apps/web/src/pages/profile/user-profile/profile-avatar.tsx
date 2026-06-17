@@ -51,7 +51,7 @@ export function ProfileAvatar({
       <ThemedAvatar
         src={profile.avatarUrl || undefined}
         alt={profile.displayName || profile.username || 'User'}
-        size="xlarge"
+        size="xxlarge"
         avatarBorderId={borderId}
       />
 

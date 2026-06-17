@@ -42,18 +42,29 @@ export function ProfileBanner({
   bannerInputRef,
   onBannerChange,
 }: ProfileBannerProps) {
+  const themeHeaderImage = theme.profileBackgroundImage ?? theme.previewImage;
+  const headerImage = bannerUrl ?? themeHeaderImage;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={tweens.smooth}
-      className="group relative h-48 overflow-hidden"
+      className="group relative h-56 overflow-hidden"
+      data-profile-theme-header-image={!bannerUrl ? themeHeaderImage : undefined}
       style={{
         background: `radial-gradient(circle at 18% 18%, ${theme.accentPrimary}55, transparent 32%), radial-gradient(circle at 82% 28%, ${theme.accentSecondary}45, transparent 34%), linear-gradient(135deg, ${theme.backgroundGradient.join(', ')})`,
       }}
     >
-      {bannerUrl && <img src={bannerUrl} alt="" className="h-full w-full object-cover" />}
-      {!bannerUrl && theme.surfacePattern === 'terminal-grid' && (
+      {headerImage && (
+        <img
+          src={headerImage}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-[center_36%]"
+          loading="lazy"
+        />
+      )}
+      {!headerImage && theme.surfacePattern === 'terminal-grid' && (
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{
@@ -62,10 +73,10 @@ export function ProfileBanner({
           }}
         />
       )}
-      {!bannerUrl && theme.surfacePattern === 'scanline' && (
+      {!headerImage && theme.surfacePattern === 'scanline' && (
         <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0_8px,rgba(255,255,255,0.055)_8px_9px)]" />
       )}
-      {!bannerUrl && theme.surfacePattern === 'starfield' && (
+      {!headerImage && theme.surfacePattern === 'starfield' && (
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -73,7 +84,15 @@ export function ProfileBanner({
           }}
         />
       )}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-dark-950/50" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/5 via-dark-950/8 to-dark-950/70" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/[0.07] to-transparent" />
+      <div
+        className="pointer-events-none absolute inset-x-10 bottom-0 h-9 rounded-t-full border-x border-t border-white/[0.08]"
+        style={{
+          background: `linear-gradient(180deg, color-mix(in srgb, ${theme.accentPrimary} 14%, rgba(8,9,15,0.72)) 0%, rgba(8,9,15,0.95) 100%)`,
+          boxShadow: `0 -18px 44px color-mix(in srgb, ${theme.accentPrimary} 18%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`,
+        }}
+      />
 
       {/* Edit Mode Toggle - Top Right */}
       {isOwnProfile && (

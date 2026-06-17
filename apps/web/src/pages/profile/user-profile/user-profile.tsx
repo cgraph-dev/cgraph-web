@@ -220,7 +220,7 @@ export function UserProfile() {
         onBannerChange={actions.handleBannerChange}
       />
 
-      <div className="relative z-10 mx-auto -mt-16 max-w-4xl px-6">
+      <div className="relative z-10 mx-auto -mt-20 max-w-4xl px-6">
         <motion.div
           {...FADE_UP}
           transition={{ ...tweens.smooth, delay: 0.2 }}

@@ -37,8 +37,14 @@ describe('NewProfileCard', () => {
     const { container } = render(<NewProfileCard user={user} mode="preview" variant="mini" />);
 
     const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
+    const themedHeader = container.querySelector<HTMLElement>('[data-profile-theme-header-image]');
+    const avatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
     const backgroundImage = themedBody?.dataset.profileBackgroundImage;
 
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('/mini-profile-background/');
+    expect(themedHeader?.dataset.profileCardBannerVariant).toBe('mini');
+    expect(avatarZone?.dataset.avatarZoneVariant).toBe('mini');
+    expect(avatarZone?.dataset.avatarSize).toBe('82');
     expect(backgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('mini_signal_noir_founder');
     expect(screen.getByText('Cipher One')).toBeInTheDocument();
@@ -58,8 +64,23 @@ describe('NewProfileCard', () => {
     );
 
     const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
+    const themedHeader = container.querySelector<HTMLElement>('[data-profile-theme-header-image]');
 
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('mini_void_relay');
     expect(themedBody?.dataset.profileBackgroundImage).toContain('mini_void_relay');
     expect(themedBody).toHaveClass('cgraph-game-profile-surface');
+  });
+
+  it('uses the full profile background as the full-card animated header media', () => {
+    const { container } = render(<NewProfileCard user={user} mode="preview" variant="full" />);
+
+    const themedHeader = container.querySelector<HTMLElement>('[data-profile-theme-header-image]');
+    const avatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
+
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('/profile-background/');
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('profile_signal_noir_founder');
+    expect(themedHeader?.dataset.profileCardBannerVariant).toBe('full');
+    expect(avatarZone?.dataset.avatarZoneVariant).toBe('full');
+    expect(avatarZone?.dataset.avatarSize).toBe('98');
   });
 });

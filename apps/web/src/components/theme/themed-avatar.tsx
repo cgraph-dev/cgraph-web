@@ -16,7 +16,7 @@ import { getLegacyAvatarBorderAnimation } from './avatar-border-motion';
 interface ThemedAvatarProps {
   src?: string | null;
   alt?: string;
-  size?: 'xs' | 'small' | 'medium' | 'large' | 'xlarge';
+  size?: 'xs' | 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge';
   className?: string;
   userTheme?: Partial<UserTheme>; // For displaying other users' avatars with their theme
   avatarBorderId?: string | null;
@@ -42,6 +42,7 @@ const sizeMap = {
   medium: 'w-12 h-12',
   large: 'w-16 h-16',
   xlarge: 'w-24 h-24',
+  xxlarge: 'w-28 h-28',
 };
 
 const borderWidthMap = {
@@ -50,6 +51,7 @@ const borderWidthMap = {
   medium: 3,
   large: 4,
   xlarge: 5,
+  xxlarge: 5,
 };
 
 const sizePxMap = {
@@ -58,6 +60,7 @@ const sizePxMap = {
   medium: 48,
   large: 64,
   xlarge: 96,
+  xxlarge: 112,
 };
 
 // Animation speed multipliers - extracted from nested ternary

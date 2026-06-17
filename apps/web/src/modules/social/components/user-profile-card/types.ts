@@ -119,6 +119,7 @@ export interface BannerProps {
   accentColor: string;
   bannerBackground: string;
   backgroundImage?: string;
+  variant?: 'mini' | 'full';
 }
 
 export interface AvatarZoneProps {
@@ -129,6 +130,7 @@ export interface AvatarZoneProps {
   energyRingTier: BadgeDisplayTier;
   accentColor: string;
   avatarBorderId?: string;
+  variant?: 'mini' | 'full';
 }
 
 export interface NameplateProps {

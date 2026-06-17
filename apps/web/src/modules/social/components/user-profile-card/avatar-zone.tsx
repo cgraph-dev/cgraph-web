@@ -84,24 +84,39 @@ export const AvatarZone = memo(function AvatarZone({
   energyRingTier,
   accentColor,
   avatarBorderId,
+  variant = 'full',
 }: AvatarZoneProps) {
   const borderConfig = useMemo(
     () => (avatarBorderId ? getBorderById(avatarBorderId) : undefined),
     [avatarBorderId]
   );
+  const isMini = variant === 'mini';
+  const avatarSize = isMini ? 82 : 98;
+  const borderSize = isMini ? 116 : 134;
+  const initialsSize = isMini ? '1.35rem' : '1.55rem';
 
   return (
     <div
-      className="relative z-[6] -mt-[60px] flex justify-center"
+      className={cn('relative z-[6] flex justify-center', isMini ? '-mt-[58px]' : '-mt-[70px]')}
       data-avatar-border-id={avatarBorderId}
+      data-avatar-zone-variant={variant}
+      data-avatar-size={avatarSize}
     >
-      <div className="relative h-[86px] w-[86px]">
+      <div className="relative" style={{ width: avatarSize, height: avatarSize }}>
         {/* Ambient halo glow behind avatar */}
         <div
-          className="pointer-events-none absolute -inset-[18px] z-0 rounded-full"
+          className="pointer-events-none absolute z-0 rounded-full"
           style={{
-            background: `radial-gradient(circle, color-mix(in srgb, ${accentColor} 12%, transparent) 0%, transparent 70%)`,
+            inset: isMini ? -16 : -20,
+            background: `radial-gradient(circle, color-mix(in srgb, ${accentColor} 14%, transparent) 0%, transparent 70%)`,
             animation: 'pc-halo-pulse 3.5s ease-in-out infinite',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute z-[1] rounded-full border border-white/[0.06]"
+          style={{
+            inset: isMini ? -7 : -9,
+            boxShadow: `0 0 26px color-mix(in srgb, ${accentColor} 16%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`,
           }}
         />
 
@@ -115,14 +130,14 @@ export const AvatarZone = memo(function AvatarZone({
               src={avatarUrl || undefined}
               alt={displayName}
               border={borderConfig}
-              size={120}
+              size={borderSize}
               animationSpeed={1}
               interactive={false}
             >
               {!avatarUrl && (
                 <span
-                  className="flex h-full w-full items-center justify-center text-[1.2rem] font-black text-[#edf0f8]"
-                  style={{ fontFamily: "'Inter', system-ui" }}
+                  className="flex h-full w-full items-center justify-center font-black text-[#edf0f8]"
+                  style={{ fontFamily: "'Inter', system-ui", fontSize: initialsSize }}
                 >
                   {initials}
                 </span>
@@ -131,8 +146,10 @@ export const AvatarZone = memo(function AvatarZone({
           </div>
         ) : (
           <div
-            className="relative z-[2] flex h-[86px] w-[86px] items-center justify-center overflow-hidden rounded-full border-2 border-white/[0.07]"
+            className="relative z-[2] flex items-center justify-center overflow-hidden rounded-full border-2 border-white/[0.07]"
             style={{
+              width: avatarSize,
+              height: avatarSize,
               background: 'linear-gradient(145deg, #0c0f18, #080b14)',
               boxShadow:
                 'inset 0 1.5px 0 rgba(255,255,255,0.11), inset 0 -1px 0 rgba(0,0,0,0.4), 0 0 0 1.5px rgba(0,0,0,0.7), 0 4px 20px rgba(0,0,0,0.5)',
@@ -142,8 +159,8 @@ export const AvatarZone = memo(function AvatarZone({
               <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" loading="lazy" />
             ) : (
               <span
-                className="text-[1.45rem] font-black text-[#edf0f8]"
-                style={{ fontFamily: "'Inter', system-ui" }}
+                className="font-black text-[#edf0f8]"
+                style={{ fontFamily: "'Inter', system-ui", fontSize: initialsSize }}
               >
                 {initials}
               </span>
@@ -154,10 +171,17 @@ export const AvatarZone = memo(function AvatarZone({
         {/* Status dot */}
         <div
           className={cn(
-            'absolute bottom-1 right-1 z-[3] h-3.5 w-3.5 rounded-full border-[2.5px] border-[#08090f]',
+            'absolute z-[3] rounded-full border-[#08090f]',
             isOnline ? 'bg-[#1ad870]' : 'bg-[#222c3c]'
           )}
-          style={isOnline ? { animation: 'pc-status-pulse 2.4s ease-in-out infinite' } : undefined}
+          style={{
+            bottom: isMini ? 2 : 3,
+            right: isMini ? 2 : 3,
+            width: isMini ? 14 : 16,
+            height: isMini ? 14 : 16,
+            borderWidth: isMini ? 2.5 : 3,
+            ...(isOnline ? { animation: 'pc-status-pulse 2.4s ease-in-out infinite' } : {}),
+          }}
         />
       </div>
     </div>

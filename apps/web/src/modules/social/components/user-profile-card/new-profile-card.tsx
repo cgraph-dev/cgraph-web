@@ -75,6 +75,7 @@ export const NewProfileCard = memo(function NewProfileCard({
         accentColor={accentColor}
         bannerBackground={theme.banner}
         backgroundImage={bannerBackgroundImage}
+        variant={variant}
       />
 
       {/* Card body with theme surface tint */}
@@ -104,6 +105,7 @@ export const NewProfileCard = memo(function NewProfileCard({
           energyRingTier={user.energyRingTier ?? 'dim'}
           accentColor={accentColor}
           avatarBorderId={user.avatarBorderId}
+          variant={variant}
         />
 
         {/* Nameplate */}
