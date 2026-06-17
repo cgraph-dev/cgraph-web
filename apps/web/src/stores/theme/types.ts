@@ -46,8 +46,6 @@ export interface ProfileCardConfig {
   layout: ProfileCardLayoutId;
   showLevel: boolean;
   showXp: boolean;
-  showPulse: boolean;
-  showStreak: boolean;
   showBadges: boolean;
   maxBadges: number;
   showTitle: boolean;

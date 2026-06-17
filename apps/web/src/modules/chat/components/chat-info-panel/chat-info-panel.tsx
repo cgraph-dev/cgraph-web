@@ -11,7 +11,6 @@ import { GlassCard } from '@/shared/components/ui';
 import { FADE_UP, springs } from '@/lib/animations/transitions';
 import { useChatInfoPanel } from './useChatInfoPanel';
 import { ProfileSection } from './profile-section';
-import { StatsGrid } from './stats-grid';
 import { BadgesList } from './badges-list';
 import { MutualFriendsList } from './mutual-friends-list';
 import { SharedForumsList } from './shared-forums-list';
@@ -151,9 +150,6 @@ export default function ChatInfoPanel({
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {/* Profile Section */}
         <ProfileSection user={user} />
-
-        {/* Stats Grid */}
-        <StatsGrid pulse={user.pulse || 0} streak={user.streak || 0} />
 
         {/* Bio */}
         {user.bio && (

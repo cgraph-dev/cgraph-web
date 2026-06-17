@@ -29,6 +29,10 @@ Excluded from scope:
 - Forums, Nodes, and other non-messaging surfaces unless they directly break a messaging, hub, or
   broadcast destination.
 
+2026-06-17 messaging UI note: chat-side profile info no longer renders raw Pulse/Streak numeric
+stats. The deleted `StatsGrid` keeps messaging/user preview surfaces aligned with the profile-card
+direction: reputation can appear through PulseDots, not through a generic stat strip.
+
 ## Reference files used
 
 Upstream contract references:

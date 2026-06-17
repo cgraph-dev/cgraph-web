@@ -37,8 +37,6 @@ const mockConfig = {
   layout: 'minimal' as const,
   showLevel: true,
   showXp: true,
-  showPulse: true,
-  showStreak: true,
   showBadges: true,
   showTitle: true,
   showStats: true,

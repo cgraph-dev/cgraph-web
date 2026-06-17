@@ -120,6 +120,11 @@ single-item reads use `getBorderById(...)`, customization-panel color display re
 store catalog, the customization store derives its legacy theme-color compatibility export from
 `stores/theme/presets.COLORS`, and the stale customization-store `RARITY_COLORS` export is gone.
 
+2026-06-17 update: the raw Pulse/Streak profile stat strip is no longer a profile-card or chat-info
+surface. Web keeps the qualitative PulseDots reputation row, deletes the chat info `StatsGrid`, and
+removes the stale `showPulse` / `showStreak` profile-card config flags so customization cannot imply
+raw stat boxes that the product no longer wants.
+
 2026-05-15 update: `UserProfileCard` no longer renders the default placeholder user when callers
 only pass `userId`. The card fetches `/api/v1/users/:id`, maps the response through canonical
 identity fields, and focused component tests cover both backend hydration and provided-user paths.
@@ -240,6 +245,8 @@ on the routed DM surface.
    `apps/web/e2e/settings-preference-sync.spec.ts` now proves privacy reload, settings live sync,
    customization live sync, and app-shell theme live sync on mounted routes. The remaining settings
    gap is real multi-tab/device socket validation and broader final browser coverage.
+   App-wide theme selection now belongs to the Settings > Appearance route; the Customize > Themes
+   route is reserved for profile-theme cosmetics.
 
 6. **Make customization inventory server-owned end-to-end** — Closed for the routed identity
    customization surface. Static `ALL_BORDERS`, `ALL_TITLES`, and `ALL_BADGES` remain presentation

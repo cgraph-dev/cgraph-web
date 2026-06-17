@@ -9,7 +9,6 @@ export {
   default,
   ChatInfoPanel,
   ProfileSection,
-  StatsGrid,
   BadgesList,
   MutualFriendsList,
   SharedForumsList,

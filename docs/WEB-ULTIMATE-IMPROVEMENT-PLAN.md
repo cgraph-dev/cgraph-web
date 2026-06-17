@@ -512,13 +512,12 @@ feature parity.
 
 ## P0 — Critical bugs (Wave 1, ≤ 5 days)
 
-### 1. Surface the app-theme picker in `/me/appearance/themes`
+### 1. Keep app theme in Settings and profile themes in Customize
 
-**File:** `apps/web/src/pages/customize/theme-customization/page.tsx` — only renders
-`ProfileThemePicker`. **Orphan:** `apps/web/src/components/theme-picker/theme-picker.tsx` implements
-the 4 core themes but is only reachable via `Ctrl+Shift+T`. **Fix:** Mount `<ThemePicker />` at the
-top of the themes category page; add current-theme checkmark, live preview tile, and an explicit
-"App theme" section header above "Profile theme". **Effort:** 2 h.
+**Status:** corrected by product decision. `apps/web/src/pages/customize/theme-customization/page.tsx`
+is intentionally profile-theme cosmetics only, and app-wide appearance uses
+`apps/web/src/pages/settings/app-theme-settings.tsx` through Settings > Appearance. Do not re-add the
+app-theme picker to `/me/appearance/themes`.
 
 ### 2. Close the Secret-Chat leak in the socket handler
 
@@ -730,6 +729,10 @@ routes the message through the normal Cloud Chat pipe. Refund on ignore. Tie int
 - `<PulseBadge />` mounted on profile cards + message author rows.
 - Backend: `/api/v1/pulse/*` (already wired per `reputation_controller.ex` — which is also #26
   below). **Effort:** 3 days.
+
+2026-06-17 status: raw Pulse/Streak numeric stat panels were removed from profile preview/card and
+chat-info surfaces. Future Pulse work should build on the permanent PulseDots/reputation model and
+forum-scoped reputation context, not restore the old raw stat boxes.
 
 ### 25. Reply / quote rendering + forwarded-from badge
 

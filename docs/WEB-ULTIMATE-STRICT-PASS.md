@@ -1205,6 +1205,16 @@ closes profile-theme background package ownership for those static PixelLab rows
 settlement, real provider delivery, physical cross-device validation, future native/desktop runtime
 proof, and Level 3 hardening remain open.
 
+2026-06-17 profile preview stat cleanup proof: production web removes the raw Pulse/Streak numeric
+stat strip from profile preview/card and chat info surfaces without starting Level 3. The chat info
+panel deletes its `StatsGrid`, profile preview tests guard against `Pulse`, `Streak`, `Posts`, and
+`Network` labels, and `ProfileCardConfig` no longer exposes stale `showPulse` / `showStreak` flags.
+The permanent PulseDots reputation row remains the supported profile reputation treatment. Focused
+chat/profile/theme tests passed 5 files / 111 tests; web lint, typecheck, release gates with
+419 files / 5,370 tests, and build budget passed. This is Level 2 UI truth cleanup only; external
+provider delivery, hosted Stripe settlement, physical cross-device validation, future native/desktop
+runtime proof, and Level 3 hardening remain open.
+
 2026-06-05 Level 2 route-stability proof: production web commit
 `97e66a5426e1e472ca8d3b57d7cfd4e6c4aa749c` keeps the Level 2 browser proof
 truthful without starting Level 3. The live appearance preview now passes

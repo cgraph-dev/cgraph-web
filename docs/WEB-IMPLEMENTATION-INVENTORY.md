@@ -58,6 +58,10 @@ missing:
   nameplate/avatar-border rows now have shared-package plus backend equipped-state proof, and
   `@cgraph-dev/shared-types@1.1.4` owns the PixelLab profile-theme preview, full-background, and
   mini-profile background URLs for the current shared theme IDs.
+- Raw Pulse/Streak statistic panels are intentionally removed from profile preview/card and chat
+  info surfaces. The remaining profile reputation treatment is the permanent qualitative
+  PulseDots row, while the deleted chat info stats grid and stale `showPulse` / `showStreak`
+  profile-card config flags no longer imply configurable raw stat boxes.
 - Routed group GIF, sticker, and voice-note sends are browser-proven in
   `apps/web/e2e/web-owner-uat.spec.ts`: the live group composer sends structured rich-message
   payloads through the channel message endpoint and uploads channel voice notes through

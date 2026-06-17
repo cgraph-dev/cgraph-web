@@ -11,8 +11,6 @@ export interface UserInfo {
   avatarUrl?: string;
   level?: number;
   xp?: number;
-  pulse?: number;
-  streak?: number;
   onlineStatus?: 'online' | 'offline' | 'away';
   lastSeenAt?: string;
   bio?: string;
