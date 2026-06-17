@@ -203,13 +203,22 @@ describe('NodeGateModal', () => {
   });
 
   it('shows loading state during payment', async () => {
+    let resolveSubscription: (value: { id: string; status: string }) => void = () => {};
     mockSubscribeToGroup.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100))
+      () =>
+        new Promise((resolve) => {
+          resolveSubscription = resolve;
+        })
     );
+
     render(<NodeGateModal {...defaultProps} />);
     fireEvent.click(screen.getByText('Pay & Join'));
 
     expect(screen.getByText('Processing...')).toBeInTheDocument();
+    resolveSubscription({ id: 'sub-1', status: 'active' });
+    await waitFor(() => {
+      expect(screen.getByText('Pay & Join')).toBeInTheDocument();
+    });
   });
 
   it('shows insufficient nodes error', async () => {
