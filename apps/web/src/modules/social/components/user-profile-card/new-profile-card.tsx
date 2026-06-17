@@ -130,7 +130,7 @@ export const NewProfileCard = memo(function NewProfileCard({
           compact={isMini}
         />
 
-        {/* Divider + Pulse + Actions (full only shows pulse) */}
+        {/* Divider + reputation dots */}
         {!isMini && (
           <>
             <div

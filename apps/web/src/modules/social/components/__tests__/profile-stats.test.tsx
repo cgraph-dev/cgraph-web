@@ -288,11 +288,6 @@ describe('ProfileStatsGrid', () => {
     expect(screen.getByText('5,000')).toBeInTheDocument();
   });
 
-  it('renders login streak', () => {
-    render(<ProfileStatsGrid profile={makeProfile({ loginStreak: 10 })} />);
-    expect(screen.getByText('10')).toBeInTheDocument();
-  });
-
   it('renders friends count', () => {
     render(<ProfileStatsGrid profile={makeProfile({ friendsCount: 100 })} />);
     expect(screen.getByText('100')).toBeInTheDocument();
@@ -308,9 +303,9 @@ describe('ProfileStatsGrid', () => {
     expect(screen.getByText('Total XP')).toBeInTheDocument();
   });
 
-  it('shows "Day Streak" label', () => {
+  it('does not show raw streak stats', () => {
     render(<ProfileStatsGrid profile={makeProfile()} />);
-    expect(screen.getByText('Day Streak')).toBeInTheDocument();
+    expect(screen.queryByText('Day Streak')).not.toBeInTheDocument();
   });
 
   it('shows "Friends" label', () => {
@@ -322,9 +317,9 @@ describe('ProfileStatsGrid', () => {
 describe('ProfileSidebar', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('renders Pulse Reputation label', () => {
+  it('renders community reputation label', () => {
     render(<ProfileSidebar profile={makeProfile()} />);
-    expect(screen.getByText('Pulse Reputation')).toBeInTheDocument();
+    expect(screen.getByText('Community Reputation')).toBeInTheDocument();
   });
 
   it('renders PulseDots component', () => {

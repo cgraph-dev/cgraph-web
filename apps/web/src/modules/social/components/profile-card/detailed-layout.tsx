@@ -74,23 +74,13 @@ export const DetailedLayout = memo(function DetailedLayout({
 
       {/* Stats row */}
       {config.showStats && (
-        <div className="grid grid-cols-4 gap-2 text-center">
-          {config.showPulse && user.topCommunities?.[0] && (
-            <StatItem
-              label="Pulse"
-              value={user.topCommunities[0].score}
-              color={theme?.colors.accent}
-            />
-          )}
-          {config.showStreak && (
-            <StatItem label="Streak" value={user.streak} suffix="🔥" color={theme?.colors.accent} />
-          )}
+        <div className="grid grid-cols-2 gap-2 text-center">
           <StatItem label="Posts" value={user.postCount || 0} color={theme?.colors.accent} />
           <StatItem label="Friends" value={user.friendCount || 0} color={theme?.colors.accent} />
         </div>
       )}
 
-      {/* Top Communities by Pulse */}
+      {/* Top Communities */}
       {user.topCommunities && user.topCommunities.length > 0 && (
         <div>
           <div className="mb-1 text-xs opacity-60">Top Communities</div>

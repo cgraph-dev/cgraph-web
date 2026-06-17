@@ -51,7 +51,7 @@ describe('QuickSwitcher', () => {
   it('routes default settings pages to mounted Me destinations', () => {
     render(<QuickSwitcher isOpen={true} onClose={vi.fn()} />);
     fireEvent.click(screen.getByText('Appearance'));
-    expect(mockNavigate).toHaveBeenCalledWith('/me/appearance/themes');
+    expect(mockNavigate).toHaveBeenCalledWith('/me/settings/appearance');
   });
 
   it('shows custom items', () => {

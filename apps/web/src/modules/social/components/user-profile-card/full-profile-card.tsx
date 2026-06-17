@@ -155,15 +155,7 @@ export const FullProfileCard = memo(function FullProfileCard({
         )}
 
         {/* Quick Stats Grid */}
-        <div className="mb-4 grid grid-cols-4 gap-3">
-          <div className="rounded-lg bg-white/5 p-3 text-center">
-            <div className="text-lg font-bold text-white">{user.pulse.toLocaleString()}</div>
-            <div className="text-xs text-white/60">Pulse</div>
-          </div>
-          <div className="rounded-lg bg-white/5 p-3 text-center">
-            <div className="text-lg font-bold text-white">{user.streak}</div>
-            <div className="text-xs text-white/60">Streak</div>
-          </div>
+        <div className="mb-4 grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-white/5 p-3 text-center">
             <div className="text-lg font-bold text-white">{user.postCount || 0}</div>
             <div className="text-xs text-white/60">Posts</div>

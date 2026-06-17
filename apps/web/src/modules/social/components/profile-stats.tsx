@@ -7,8 +7,6 @@ import {
   UserPlusIcon,
   StarIcon,
   SparklesIcon,
-  BoltIcon,
-  FireIcon,
   ChartBarIcon,
   CalendarDaysIcon,
   MapPinIcon,
@@ -37,7 +35,7 @@ export function ProfileStatsGrid({ profile }: ProfileStatsGridProps) {
         <ChartBarIcon className="h-5 w-5 text-primary-400" />
         Statistics
       </h2>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <motion.div
           className="border-primary-500/20 rounded-xl border bg-[var(--token-bg-secondary)] p-4 text-center"
           whileHover={{ borderColor: 'rgba(16, 185, 129, 0.5)' }}
@@ -63,20 +61,6 @@ export function ProfileStatsGrid({ profile }: ProfileStatsGridProps) {
           <div className="mt-1 flex items-center justify-center gap-1 text-xs text-gray-500">
             <SparklesIcon className="h-3 w-3" />
             Total XP
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="rounded-xl border border-orange-500/20 bg-[var(--token-bg-secondary)] p-4 text-center"
-          whileHover={{ borderColor: 'rgba(249, 115, 22, 0.5)' }}
-        >
-          <div className="flex items-center justify-center gap-1 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-2xl font-bold text-transparent">
-            {(profile.loginStreak || 0).toLocaleString()}
-            {(profile.loginStreak || 0) > 0 && <FireIcon className="h-5 w-5 text-orange-400" />}
-          </div>
-          <div className="mt-1 flex items-center justify-center gap-1 text-xs text-gray-500">
-            <BoltIcon className="h-3 w-3" />
-            Day Streak
           </div>
         </motion.div>
 
@@ -113,7 +97,6 @@ export function ProfileSidebar({ profile, isOwnProfile }: ProfileSidebarProps) {
 
   return (
     <div className="space-y-6">
-      {/* Pulse Reputation Card */}
       <GlassCard variant="holographic" glow glowColor="rgba(16, 185, 129, 0.3)" className="p-6">
         <div className="mb-4 flex items-center gap-3">
           <motion.div
@@ -124,7 +107,7 @@ export function ProfileSidebar({ profile, isOwnProfile }: ProfileSidebarProps) {
             <SparklesIcon className="h-6 w-6 text-primary-400" />
           </motion.div>
           <div>
-            <p className="text-sm text-gray-400">Pulse Reputation</p>
+            <p className="text-sm text-gray-400">Community Reputation</p>
             {topCommunities.length > 0 && topCommunities[0] ? (
               <PulseDots
                 score={topCommunities[0].score}
