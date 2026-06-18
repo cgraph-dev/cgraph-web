@@ -1,0 +1,32 @@
+import { describe, expect, it } from 'vitest';
+import { avatarUrlFromUploadResponse } from '../avatar-upload';
+
+describe('avatarUrlFromUploadResponse', () => {
+  it('reads direct snake_case avatar URLs', () => {
+    expect(avatarUrlFromUploadResponse({ avatar_url: '/uploads/avatar.jpg' })).toBe(
+      '/uploads/avatar.jpg'
+    );
+  });
+
+  it('reads direct camelCase avatar URLs', () => {
+    expect(avatarUrlFromUploadResponse({ avatarUrl: '/uploads/avatar.jpg' })).toBe(
+      '/uploads/avatar.jpg'
+    );
+  });
+
+  it('reads nested data camelCase avatar URLs', () => {
+    expect(avatarUrlFromUploadResponse({ data: { avatarUrl: '/uploads/avatar.jpg' } })).toBe(
+      '/uploads/avatar.jpg'
+    );
+  });
+
+  it('reads nested user avatar URLs from show responses', () => {
+    expect(
+      avatarUrlFromUploadResponse({ data: { user: { avatarUrl: '/uploads/avatar.jpg' } } })
+    ).toBe('/uploads/avatar.jpg');
+  });
+
+  it('returns null when the response has no avatar URL', () => {
+    expect(avatarUrlFromUploadResponse({ data: { user: {} } })).toBeNull();
+  });
+});

@@ -8,7 +8,7 @@
  */
 
 import { durations } from '@cgraph-dev/animation-constants';
-import { memo, useMemo, useRef, type CSSProperties } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { THEME_COLORS } from '@/types/avatar-borders';
@@ -47,8 +47,10 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
   customColors,
   reducedMotion: propReducedMotion,
   children,
+  fallback,
 }: AvatarBorderRendererProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [imageFailed, setImageFailed] = useState(false);
   const preferences = {
     reducedMotion: false,
     animationSpeed: 1,
@@ -72,9 +74,24 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
     };
   }, [border, customColors]);
 
+  useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
+
   // Resolved avatar content: children override > img > empty
   const avatarContent =
-    children ?? (src ? <img src={src} alt={alt} className="h-full w-full object-cover" loading="lazy" /> : null);
+    children ??
+    (src && !imageFailed ? (
+      <img
+        src={src}
+        alt={alt}
+        className="h-full w-full object-cover"
+        loading="lazy"
+        onError={() => setImageFailed(true)}
+      />
+    ) : (
+      fallback ?? null
+    ));
 
   // If no border or 'none', just render the avatar
   if (!border || border.id === 'none') {

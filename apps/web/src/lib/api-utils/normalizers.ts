@@ -5,11 +5,10 @@
  * (snake_case, camelCase, nested structures) into a consistent shape.
  */
 
-// API base URL for resolving relative media paths
-import { getMediaBaseUrl } from '@/lib/backend-url';
 import { identityFieldsFromApi } from '@/lib/identity';
+import { resolveAvatarUrl, resolveMediaUrl } from '@/lib/media-url';
 
-const API_URL = getMediaBaseUrl();
+export { resolveMediaUrl } from '@/lib/media-url';
 
 /** Type guard for Record<string, unknown> */
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -32,36 +31,6 @@ function asBoolean(v: unknown): boolean | undefined {
 }
 
 /**
- * Resolves a potentially relative URL to an absolute URL.
- *
- * Backend may return relative paths like `/uploads/voice/uuid.opus` which need
- * to be prefixed with the API base URL for proper resource loading.
- *
- * @param url - The URL to resolve (may be relative or absolute)
- * @returns The absolute URL, or undefined if input was falsy
- */
-export function resolveMediaUrl(url: string | undefined | null): string | undefined {
-  if (!url) return undefined;
-
-  // Already an absolute URL (http:// or https://)
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-
-  // Data URLs should pass through unchanged
-  if (url.startsWith('data:')) {
-    return url;
-  }
-
-  // Relative URL - prefix with API base URL
-  // Ensure single slash between base and path
-  const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-  const path = url.startsWith('/') ? url : `/${url}`;
-
-  return `${base}${path}`;
-}
-
-/**
  * Normalizes sender data from various formats.
  */
 function normalizeSender(
@@ -77,7 +46,7 @@ function normalizeSender(
     id: identity.id,
     username: identity.username,
     displayName: identity.displayName,
-    avatarUrl: identity.avatarUrl,
+    avatarUrl: resolveAvatarUrl(identity.avatarUrl),
     avatarBorderId: identity.avatarBorderId,
     equippedTitleId: identity.equippedTitleId,
     equippedBadgeIds: identity.equippedBadgeIds,
@@ -249,6 +218,7 @@ export function normalizeParticipant(raw: Record<string, unknown>): Record<strin
   }
 
   const userObj = isRecord(raw.user) ? raw.user : null;
+  const identity = userObj ? identityFieldsFromApi(userObj) : null;
   const userId = raw.userId ?? raw.user_id ?? userObj?.id ?? raw.id;
 
   return {
@@ -259,7 +229,12 @@ export function normalizeParticipant(raw: Record<string, unknown>): Record<strin
     isMuted: raw.isMuted ?? raw.is_muted ?? false,
     mutedUntil: raw.mutedUntil ?? raw.muted_until ?? null,
     joinedAt: raw.joinedAt ?? raw.joined_at ?? raw.insertedAt ?? raw.inserted_at,
-    user: userObj ? identityFieldsFromApi(userObj) : null,
+    user: identity
+      ? {
+          ...identity,
+          avatarUrl: resolveAvatarUrl(identity.avatarUrl),
+        }
+      : null,
   };
 }
 
@@ -280,7 +255,7 @@ export function normalizeConversation(raw: Record<string, unknown>): Record<stri
     type: raw.type ?? 'direct',
     conversationType: raw.conversationType ?? raw.conversation_type ?? undefined,
     name: raw.name ?? null,
-    avatarUrl: raw.avatarUrl ?? raw.avatar_url ?? null,
+    avatarUrl: resolveAvatarUrl(asString(raw.avatarUrl) ?? asString(raw.avatar_url)),
     participants: Array.isArray(participants)
       ? participants.map((p) => normalizeParticipant(p))
       : [],

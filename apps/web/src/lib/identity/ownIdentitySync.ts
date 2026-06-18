@@ -7,6 +7,7 @@ import {
   type ThemePreset,
 } from '@/modules/settings/store/customization/customizationStore';
 import { isProfileThemeId } from '@/data/profileThemes';
+import { resolveAvatarUrl } from '@/lib/media-url';
 import { identityFieldsFromApi } from './canonicalIdentity';
 
 export interface OwnIdentityPatch {
@@ -132,7 +133,7 @@ export function applyOwnProfileUpdate(raw: Record<string, unknown>): void {
   const patch: OwnIdentityPatch = {};
 
   if (hasKey(raw, ['avatar_hash', 'avatarUrl', 'avatar_url'])) {
-    patch.avatarUrl = firstString(raw, ['avatar_hash', 'avatarUrl', 'avatar_url']);
+    patch.avatarUrl = resolveAvatarUrl(firstString(raw, ['avatar_hash', 'avatarUrl', 'avatar_url']));
   }
   if (hasKey(raw, ['avatarBorderId', 'avatar_border_id', 'from_avatar_border_id'])) {
     patch.avatarBorderId = identity.avatarBorderId;

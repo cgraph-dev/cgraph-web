@@ -53,6 +53,7 @@ export function ProfileAvatar({
         alt={profile.displayName || profile.username || 'User'}
         size="xxlarge"
         avatarBorderId={borderId}
+        fallbackText={profile.displayName || profile.username || 'U'}
       />
 
       {/* Avatar Edit Overlay */}

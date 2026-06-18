@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
+import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
 import { toast } from '@/shared/components/ui';
 import { useFriendStore } from '@/modules/social/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
@@ -77,21 +78,12 @@ export function useProfileActions({
     setIsUploadingAvatar(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'avatar');
-
-      const uploadResponse = await http.post('/api/v1/uploads', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      const uploadedUrl = uploadResponse.data.url;
-
-      await http.patch(`/api/v1/users/${profile.id}`, {
-        user: { avatar_url: uploadedUrl },
-      });
+      const uploadedUrl = await uploadCurrentUserAvatar(file);
+      if (!uploadedUrl) throw new Error('Avatar URL missing from upload response');
 
       setProfile((prev) => (prev ? { ...prev, avatarUrl: uploadedUrl } : null));
+      const { useAuthStore } = await import('@/modules/auth/store');
+      useAuthStore.getState().updateUser({ avatarUrl: uploadedUrl });
 
       HapticFeedback.success();
       toast.success('Avatar updated successfully!');

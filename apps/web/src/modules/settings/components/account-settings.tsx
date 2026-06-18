@@ -2,25 +2,29 @@
  * Account settings form component.
  */
 import { useState, useActionState } from 'react';
-import { useAuthStore } from '@/modules/auth/store';
+import { motion } from 'motion/react';
+import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { http } from '@/lib/api-client';
+import { tweens } from '@/lib/animation-presets';
 import { createLogger } from '@/lib/logger';
+import { useAuthStore } from '@/modules/auth/store';
+import { GlassCard, toast } from '@/shared/components/ui';
+import type { SaveProfileState } from './account-settings.types';
+import { AvatarSection } from './avatar-section';
+import { ProfileFormFields } from './profile-form-fields';
 
 const logger = createLogger('AccountSettings');
-import { http } from '@/lib/api-client';
-import { toast } from '@/shared/components/ui';
 
 /** Safely extract a string from FormData */
 function getFormString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === 'string' ? value : '';
 }
-import { motion } from 'motion/react';
-import { GlassCard } from '@/shared/components/ui';
-import { HapticFeedback } from '@/lib/animations/animation-engine';
-import type { SaveProfileState } from './account-settings.types';
-import { AvatarSection } from './avatar-section';
-import { ProfileFormFields } from './profile-form-fields';
-import { tweens } from '@/lib/animation-presets';
+
+function nullableFormString(formData: FormData, key: string): string | null {
+  const value = getFormString(formData, key).trim();
+  return value.length > 0 ? value : null;
+}
 
 /**
  * AccountSettings - User account management component
@@ -47,18 +51,23 @@ export function AccountSettings() {
 
   const [saveState, saveAction, isSaving] = useActionState(
     async (_prev: SaveProfileState, formData: FormData): Promise<SaveProfileState> => {
-      const displayName = getFormString(formData, 'displayName');
-      const bio = getFormString(formData, 'bio');
-      const pronouns = getFormString(formData, 'pronouns');
+      const displayName = nullableFormString(formData, 'displayName');
+      const bio = nullableFormString(formData, 'bio');
+      const pronouns = nullableFormString(formData, 'pronouns');
 
       try {
         const response = await http.put('/api/v1/me', {
-          display_name: displayName,
-          bio,
-          pronouns,
+          user: {
+            display_name: displayName,
+            bio,
+            pronouns,
+          },
         });
+        const updated = response.data.data ?? response.data.user ?? response.data;
         updateUser({
-          displayName: response.data.data.display_name || response.data.data.displayName,
+          displayName: updated.display_name ?? updated.displayName ?? displayName,
+          bio: updated.bio ?? bio ?? '',
+          pronouns: updated.pronouns ?? pronouns ?? '',
         });
         toast.success('Settings saved');
         HapticFeedback.success();

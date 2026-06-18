@@ -31,6 +31,8 @@ export interface AvatarBorderRendererProps {
   reducedMotion?: boolean;
   /** Custom content to render inside the border instead of an img */
   children?: React.ReactNode;
+  /** Content to render when no image is available or the image fails to load */
+  fallback?: React.ReactNode;
 }
 
 export interface BorderColors {

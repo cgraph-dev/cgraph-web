@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import { getBorderById } from '@/data/avatar-borders';
@@ -93,7 +93,23 @@ export const AvatarZone = memo(function AvatarZone({
   const isMini = variant === 'mini';
   const avatarSize = isMini ? 82 : 98;
   const borderSize = isMini ? 116 : 134;
+  const frameSize = borderConfig ? borderSize : avatarSize;
   const initialsSize = isMini ? '1.35rem' : '1.55rem';
+  const [avatarImageFailed, setAvatarImageFailed] = useState(false);
+  const canRenderAvatar = Boolean(avatarUrl) && !avatarImageFailed;
+
+  useEffect(() => {
+    setAvatarImageFailed(false);
+  }, [avatarUrl]);
+
+  const fallbackAvatar = (
+    <span
+      className="flex h-full w-full items-center justify-center font-black text-[#edf0f8]"
+      style={{ fontFamily: "'Inter', system-ui", fontSize: initialsSize }}
+    >
+      {initials}
+    </span>
+  );
 
   return (
     <div
@@ -101,8 +117,9 @@ export const AvatarZone = memo(function AvatarZone({
       data-avatar-border-id={avatarBorderId}
       data-avatar-zone-variant={variant}
       data-avatar-size={avatarSize}
+      data-avatar-frame-size={frameSize}
     >
-      <div className="relative" style={{ width: avatarSize, height: avatarSize }}>
+      <div className="relative overflow-visible" style={{ width: frameSize, height: frameSize }}>
         {/* Ambient halo glow behind avatar */}
         <div
           className="pointer-events-none absolute z-0 rounded-full"
@@ -125,23 +142,17 @@ export const AvatarZone = memo(function AvatarZone({
 
         {/* Avatar circle — Lottie border or plain */}
         {borderConfig ? (
-          <div className="absolute inset-0 z-[2] flex items-center justify-center">
+          <div className="relative z-[2] flex h-full w-full items-center justify-center">
             <AvatarBorderRenderer
-              src={avatarUrl || undefined}
+              src={canRenderAvatar ? avatarUrl || undefined : undefined}
               alt={displayName}
               border={borderConfig}
               size={borderSize}
               animationSpeed={1}
               interactive={false}
+              fallback={fallbackAvatar}
             >
-              {!avatarUrl && (
-                <span
-                  className="flex h-full w-full items-center justify-center font-black text-[#edf0f8]"
-                  style={{ fontFamily: "'Inter', system-ui", fontSize: initialsSize }}
-                >
-                  {initials}
-                </span>
-              )}
+              {!canRenderAvatar ? fallbackAvatar : undefined}
             </AvatarBorderRenderer>
           </div>
         ) : (
@@ -155,15 +166,16 @@ export const AvatarZone = memo(function AvatarZone({
                 'inset 0 1.5px 0 rgba(255,255,255,0.11), inset 0 -1px 0 rgba(0,0,0,0.4), 0 0 0 1.5px rgba(0,0,0,0.7), 0 4px 20px rgba(0,0,0,0.5)',
             }}
           >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" loading="lazy" />
+            {canRenderAvatar ? (
+              <img
+                src={avatarUrl || undefined}
+                alt={displayName}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                onError={() => setAvatarImageFailed(true)}
+              />
             ) : (
-              <span
-                className="font-black text-[#edf0f8]"
-                style={{ fontFamily: "'Inter', system-ui", fontSize: initialsSize }}
-              >
-                {initials}
-              </span>
+              fallbackAvatar
             )}
           </div>
         )}

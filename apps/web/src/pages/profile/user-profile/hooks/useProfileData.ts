@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
 import { identityFieldsFromApi } from '@/lib/identity';
+import { resolveAvatarUrl } from '@/lib/media-url';
 import type { Achievement } from '@cgraph-dev/shared-types';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
 
@@ -112,7 +113,7 @@ export function useProfileData({
           id: identity.id || userData.id,
           username: identity.username || userData.username,
           displayName: identity.displayName ?? userData.display_name,
-          avatarUrl: identity.avatarUrl ?? userData.avatar_url,
+          avatarUrl: resolveAvatarUrl(identity.avatarUrl ?? userData.avatar_url),
           bannerUrl: identity.bannerUrl ?? userData.banner_url,
           bio: userData.bio,
           status: profileStatusFromIdentity(identity.status || userData.status),

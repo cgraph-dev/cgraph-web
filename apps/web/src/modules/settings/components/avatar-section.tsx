@@ -36,8 +36,9 @@ export function AvatarSection({ user }: AvatarSectionProps) {
 
       updateUser({ avatarUrl });
       toast.success('Avatar updated');
-    } catch {
+    } catch (error) {
       toast.error('Could not update avatar. Please try again.');
+      throw error;
     } finally {
       setIsSaving(false);
     }
@@ -56,6 +57,7 @@ export function AvatarSection({ user }: AvatarSectionProps) {
         disabled={isSaving || !user}
         maxFileSizeMb={5}
         size="large"
+        saveLabel="Save avatar"
         label={isSaving ? 'Saving avatar...' : 'Avatar preview'}
         helperText="Crop once and it updates your profile, sidebar, chats, and profile cards."
         onAvatarCropped={handleAvatarCropped}

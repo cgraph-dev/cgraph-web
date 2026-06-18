@@ -324,7 +324,7 @@ export default function Sidebar({
             >
               <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
                 <div
-                  className="h-11 w-11 cursor-pointer overflow-hidden rounded-full p-[1.5px]"
+                  className="h-11 w-11 cursor-pointer overflow-visible rounded-full p-[1.5px]"
                   role="img"
                   aria-label={`Your profile picture: ${user.displayName || user.username || 'User'}`}
                   style={{
@@ -339,6 +339,7 @@ export default function Sidebar({
                       size="medium"
                       className="h-full w-full rounded-full"
                       avatarBorderId={getAvatarBorderId(user)}
+                      fallbackText={user.displayName || user.username || 'U'}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)] text-base font-semibold text-[var(--token-text-primary)]">
@@ -364,7 +365,7 @@ export default function Sidebar({
           <NavLink to={profileRoute} className="relative block">
             <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
               <div
-                className="h-11 w-11 cursor-pointer overflow-hidden rounded-full p-[1.5px]"
+                className="h-11 w-11 cursor-pointer overflow-visible rounded-full p-[1.5px]"
                 role="img"
                 aria-label={`Your profile picture: ${user?.displayName || user?.username || 'User'}`}
                 style={{
@@ -379,6 +380,7 @@ export default function Sidebar({
                     size="medium"
                     className="h-full w-full rounded-full"
                     avatarBorderId={getAvatarBorderId(user)}
+                    fallbackText={user.displayName || user.username || 'U'}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)] text-base font-semibold text-[var(--token-text-primary)]">

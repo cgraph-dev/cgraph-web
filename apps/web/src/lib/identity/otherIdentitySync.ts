@@ -2,6 +2,7 @@ import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import type { ChatIdentityPatch } from '@/modules/chat/store/chatStore.types';
 import { useFriendStore } from '@/modules/social/store/friendStore.impl';
 import type { Friend, FriendIdentityPatch } from '@/modules/social/store/friend-types';
+import { resolveAvatarUrl } from '@/lib/media-url';
 import { identityFieldsFromApi } from './canonicalIdentity';
 
 export type OtherUserIdentityPatch = ChatIdentityPatch & FriendIdentityPatch;
@@ -44,7 +45,7 @@ export function otherUserIdentityPatchFromPayload(
     patch.displayName = identity.displayName;
   }
   if (hasKey(records, ['avatarUrl', 'avatar_url', 'from_avatar_url'])) {
-    patch.avatarUrl = identity.avatarUrl;
+    patch.avatarUrl = resolveAvatarUrl(identity.avatarUrl);
   }
   if (hasKey(records, ['status', 'presence']) && isFriendStatus(identity.status)) {
     patch.status = identity.status;

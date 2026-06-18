@@ -2,7 +2,12 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+const mocks = vi.hoisted(() => ({
+  httpPut: vi.fn(),
+  updateUser: vi.fn(),
+}));
 
 vi.mock('@/modules/auth/store', () => ({
   useAuthStore: () => ({
@@ -14,13 +19,13 @@ vi.mock('@/modules/auth/store', () => ({
       canChangeUsername: true,
       usernameNextChangeAt: null,
     },
-    updateUser: vi.fn(),
+    updateUser: mocks.updateUser,
   }),
 }));
 
-vi.mock('@/lib/api', () => ({
-  api: {
-    put: vi.fn().mockResolvedValue({ data: { data: { display_name: 'Updated' } } }),
+vi.mock('@/lib/api-client', () => ({
+  http: {
+    put: mocks.httpPut,
   },
 }));
 
@@ -52,7 +57,29 @@ vi.mock('../avatar-section', () => ({
 }));
 
 vi.mock('../profile-form-fields', () => ({
-  ProfileFormFields: () => <div data-testid="profile-form-fields">Profile Fields</div>,
+  ProfileFormFields: ({
+    user,
+    isSaving,
+  }: {
+    user: {
+      displayName?: string;
+      bio?: string;
+      pronouns?: string;
+    } | null;
+    isSaving: boolean;
+  }) => (
+    <div data-testid="profile-form-fields">
+      <input aria-label="Display Name" name="displayName" defaultValue={user?.displayName ?? ''} />
+      <textarea aria-label="About Me" name="bio" defaultValue={user?.bio ?? ''} />
+      <select aria-label="Pronouns" name="pronouns" defaultValue={user?.pronouns ?? ''}>
+        <option value="">Prefer not to say</option>
+        <option value="they/them">they/them</option>
+      </select>
+      <button type="submit" disabled={isSaving}>
+        Save Changes
+      </button>
+    </div>
+  ),
 }));
 
 import { AccountSettings } from '../account-settings';
@@ -60,6 +87,9 @@ import { AccountSettings } from '../account-settings';
 describe('AccountSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.httpPut.mockResolvedValue({
+      data: { data: { display_name: 'Updated', bio: 'Updated bio', pronouns: null } },
+    });
   });
 
   it('renders AvatarSection component', () => {
@@ -120,5 +150,29 @@ describe('AccountSettings', () => {
   it('shows username cooldown copy when username can be changed', () => {
     render(<AccountSettings />);
     expect(screen.getByText(/Username can be changed every 14 days/i)).toBeInTheDocument();
+  });
+
+  it('saves profile fields using the backend user envelope', async () => {
+    render(<AccountSettings />);
+
+    fireEvent.change(screen.getByLabelText('Display Name'), { target: { value: 'Updated' } });
+    fireEvent.change(screen.getByLabelText('About Me'), { target: { value: 'Updated bio' } });
+    fireEvent.click(screen.getByText('Save Changes'));
+
+    await waitFor(() => {
+      expect(mocks.httpPut).toHaveBeenCalledWith('/api/v1/me', {
+        user: {
+          display_name: 'Updated',
+          bio: 'Updated bio',
+          pronouns: null,
+        },
+      });
+    });
+
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      displayName: 'Updated',
+      bio: 'Updated bio',
+      pronouns: '',
+    });
   });
 });

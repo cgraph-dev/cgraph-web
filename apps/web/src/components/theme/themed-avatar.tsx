@@ -3,6 +3,7 @@
  */
 import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 import { useThemeStore, THEME_COLORS } from '@/stores';
 
@@ -23,6 +24,8 @@ interface ThemedAvatarProps {
   avatarBorderConfig?: AvatarBorderConfig;
   /** Gamification equipped border (animated CSS borders) */
   equippedBorder?: Record<string, unknown> | null;
+  /** Initials or short fallback text shown when no avatar image is available. */
+  fallbackText?: string;
   onClick?: () => void;
   style?: React.CSSProperties;
 }
@@ -84,9 +87,11 @@ export function ThemedAvatar({
   avatarBorderId,
   avatarBorderConfig,
   equippedBorder,
+  fallbackText,
   onClick,
   style,
 }: ThemedAvatarProps) {
+  const [imageFailed, setImageFailed] = useState(false);
   const currentUserTheme: AvatarTheme = {
     avatarBorder: useThemeStore((state) => state.avatarBorder),
     avatarBorderColor: useThemeStore((state) => state.avatarBorderColor),
@@ -108,6 +113,22 @@ export function ThemedAvatar({
 
   const borderWidth = borderWidthMap[size];
   const speedMultiplier = ANIMATION_SPEED_MULTIPLIERS[theme.animationSpeed];
+  const displaySrc = src && !imageFailed ? src : null;
+  const fallbackInitial =
+    (fallbackText || alt || 'U').trim().charAt(0).toUpperCase() || 'U';
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
+
+  const fallbackNode = (
+    <span
+      className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-600 to-purple-600 font-black text-white"
+      aria-hidden="true"
+    >
+      {fallbackInitial}
+    </span>
+  );
 
   // Prefer advanced avatar borders when provided (discord-style compatibility)
   const resolvedBorder: AvatarBorderConfig | undefined =
@@ -121,14 +142,17 @@ export function ThemedAvatar({
     return (
       <div className={className} style={style} data-avatar-border-id={resolvedBorder.id}>
         <AvatarBorderRenderer
-          src={src || '/default-avatar.png'}
+          src={displaySrc || undefined}
           alt={alt}
           border={resolvedBorder}
           size={sizePxMap[size]}
           animationSpeed={speedMultiplier}
           interactive={!!onClick}
           onClick={onClick}
-        />
+          fallback={fallbackNode}
+        >
+          {!displaySrc ? fallbackNode : undefined}
+        </AvatarBorderRenderer>
       </div>
     );
   }
@@ -165,14 +189,16 @@ export function ThemedAvatar({
       data-avatar-border-id={avatarBorderId ?? undefined}
     >
       {/* Avatar Image */}
-      <img
-        src={src || '/default-avatar.png'}
-        alt={alt}
-        className="h-full w-full object-cover"
-        onError={(e) => {
-          e.currentTarget.src = '/default-avatar.png';
-        }}
-      />
+      {displaySrc ? (
+        <img
+          src={displaySrc}
+          alt={alt}
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        fallbackNode
+      )}
 
       {/* Gradient overlay for glassmorphism effect */}
       {theme.effectPreset === 'glassmorphism' && theme.glowEnabled && (
