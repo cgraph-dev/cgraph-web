@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "profile_deep_space",
+    "kind": "profile-background",
+    "endpoint": "desktop-static-theme-import",
+    "size": {
+      "width": 640,
+      "height": 360
+    },
+    "theme": "Deep Space",
+    "prompt": "black cosmic observatory, violet gravity arcs, distant star map, nebula shimmer, dark glass lower surface, mythic space-profile atmosphere",
+    "sourceFile": "/home/trick/Desktop/Themes/DeepSpace/DeepSpace1280x720.png"
+  },
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-18T22:32:38.449740Z",
+  "source": "desktop-themes"
+}

@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "theme_retro_terminal_preview",
+    "kind": "profile-theme-preview",
+    "endpoint": "desktop-static-theme-import",
+    "size": {
+      "width": 320,
+      "height": 180
+    },
+    "theme": "Retro Terminal",
+    "prompt": "green phosphor terminal world, dark CRT grid, command-line glow, old monitor bloom, subtle horizontal scanlines, hacker console atmosphere",
+    "sourceFile": "/home/trick/Desktop/Themes/RetroTerminal/RetroTerminal1280x720.png"
+  },
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-18T22:32:36.968821Z",
+  "source": "desktop-themes"
+}

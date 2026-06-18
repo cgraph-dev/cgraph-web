@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "mini_sakura_dream",
+    "kind": "mini-profile-background",
+    "endpoint": "desktop-static-theme-import",
+    "size": {
+      "width": 320,
+      "height": 285
+    },
+    "theme": "Sakura Dream",
+    "prompt": "moonlit sakura pavilion, rose glass panels, drifting petals, pearl metal rails, soft pink bloom lights, elegant limited-event profile theme",
+    "sourceFile": "/home/trick/Desktop/Themes/SakuraDream/SakuraDream640x570.png"
+  },
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-18T22:32:38.838416Z",
+  "source": "desktop-themes"
+}

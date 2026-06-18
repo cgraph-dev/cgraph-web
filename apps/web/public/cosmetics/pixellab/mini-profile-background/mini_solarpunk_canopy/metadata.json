@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "mini_solarpunk_canopy",
+    "kind": "mini-profile-background",
+    "endpoint": "desktop-static-theme-import",
+    "size": {
+      "width": 320,
+      "height": 285
+    },
+    "theme": "Solarpunk Canopy",
+    "prompt": "lush emerald glass greenhouse, sunlit leaves, botanical brass rails, soft golden pollen particles, premium nature-tech profile card",
+    "sourceFile": "/home/trick/Desktop/Themes/SolarpunkCanopy/SolarpunkCanopy640x570.png"
+  },
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-18T22:32:37.681357Z",
+  "source": "desktop-themes"
+}

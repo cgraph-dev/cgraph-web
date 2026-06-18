@@ -46,7 +46,7 @@ describe('NewProfileCard', () => {
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('mini');
     expect(avatarZone?.dataset.avatarSize).toBe('82');
     expect(backgroundImage).toContain('/mini-profile-background/');
-    expect(backgroundImage).toContain('mini_signal_noir_founder');
+    expect(backgroundImage).toContain('mini_signal_noir');
     expect(screen.getByText('Cipher One')).toBeInTheDocument();
     expect(screen.queryByText('Pulse')).not.toBeInTheDocument();
     expect(screen.queryByText('Streak')).not.toBeInTheDocument();
@@ -66,8 +66,8 @@ describe('NewProfileCard', () => {
     const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
     const themedHeader = container.querySelector<HTMLElement>('[data-profile-theme-header-image]');
 
-    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('mini_void_relay');
-    expect(themedBody?.dataset.profileBackgroundImage).toContain('mini_void_relay');
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('mini_deep_space');
+    expect(themedBody?.dataset.profileBackgroundImage).toContain('mini_deep_space');
     expect(themedBody).toHaveClass('cgraph-game-profile-surface');
   });
 
@@ -78,7 +78,7 @@ describe('NewProfileCard', () => {
     const avatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
 
     expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('/profile-background/');
-    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('profile_signal_noir_founder');
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('profile_signal_noir');
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('full');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('full');
     expect(avatarZone?.dataset.avatarSize).toBe('98');

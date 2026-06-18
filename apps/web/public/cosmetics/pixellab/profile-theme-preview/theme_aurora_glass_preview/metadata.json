@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "theme_aurora_glass_preview",
+    "kind": "profile-theme-preview",
+    "endpoint": "desktop-static-theme-import",
+    "size": {
+      "width": 320,
+      "height": 180
+    },
+    "theme": "Aurora Glass",
+    "prompt": "crystal aurora lounge, polished blue glass ribbons, gold-and-ice trim, soft northern lights across transparent panels, premium ranked-profile energy",
+    "sourceFile": "/home/trick/Desktop/Themes/AuroraGlass/AuroraGlass1280x720.png"
+  },
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-18T22:32:36.055746Z",
+  "source": "desktop-themes"
+}

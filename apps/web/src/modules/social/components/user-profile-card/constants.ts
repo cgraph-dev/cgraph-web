@@ -55,9 +55,9 @@ const SIGNAL_NOIR_BUNDLE_IMAGES = {
   previewImage:
     '/cosmetics/pixellab/profile-theme-preview/theme_signal_noir_preview/theme_signal_noir_preview_0.png',
   profileBackgroundImage:
-    '/cosmetics/pixellab/profile-background/profile_signal_noir_founder/profile_signal_noir_founder_0.png',
+    '/cosmetics/pixellab/profile-background/profile_signal_noir/profile_signal_noir_0.png',
   miniProfileBackgroundImage:
-    '/cosmetics/pixellab/mini-profile-background/mini_signal_noir_founder/mini_signal_noir_founder_0.png',
+    '/cosmetics/pixellab/mini-profile-background/mini_signal_noir/mini_signal_noir_0.png',
   bundleId: 'signal-noir-founder',
 } as const;
 

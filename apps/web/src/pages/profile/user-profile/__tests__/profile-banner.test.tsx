@@ -28,7 +28,7 @@ describe('ProfileBanner', () => {
     const image = container.querySelector<HTMLImageElement>('img');
 
     expect(banner?.dataset.profileThemeHeaderImage).toContain('/profile-background/');
-    expect(image?.src).toContain('profile_signal_noir_founder');
+    expect(image?.src).toContain('profile_signal_noir');
   });
 
   it('does not expose personal banner upload controls in edit mode', () => {

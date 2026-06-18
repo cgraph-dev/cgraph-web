@@ -1,18 +1,18 @@
 {
   "asset": {
-    "id": "theme_signal_noir_preview",
-    "kind": "profile-theme-preview",
+    "id": "mini_signal_noir",
+    "kind": "mini-profile-background",
     "endpoint": "desktop-static-theme-import",
     "size": {
       "width": 320,
-      "height": 180
+      "height": 285
     },
     "theme": "Signal Noir",
     "prompt": "encrypted noir command room, black glass panels, cyan signal lines, faint waveform pulses, subtle privacy-grid scanlines, cold blue edge light, quiet secure messaging mood",
-    "sourceFile": "/home/trick/Desktop/Themes/SignalNoir/signalnoir1280x720.png"
+    "sourceFile": "/home/trick/Desktop/Themes/SignalNoir/SignalNoir640x570.png"
   },
   "status": "completed",
   "imageCount": 1,
-  "generatedAt": "2026-06-18T22:32:35.608034Z",
+  "generatedAt": "2026-06-18T22:32:35.607815Z",
   "source": "desktop-themes"
 }

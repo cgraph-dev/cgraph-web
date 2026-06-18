@@ -10,12 +10,10 @@ import {
   DEFAULT_PROFILE_THEME as SHARED_DEFAULT_PROFILE_THEME,
   DEFAULT_PROFILE_THEME_ID,
   PROFILE_THEME_BUNDLE_IDS,
-  PROFILE_THEME_BUNDLES,
+  PROFILE_THEME_BUNDLES as SHARED_PROFILE_THEME_BUNDLES,
   PROFILE_THEME_CATEGORIES as PROFILE_THEME_CATEGORY_IDS,
   PROFILE_THEME_CATEGORY_INFO as SHARED_PROFILE_THEME_CATEGORIES,
   PROFILE_THEME_IDS,
-  getProfileThemeBundleById as getSharedProfileThemeBundleById,
-  getProfileThemeBundlesByTheme as getSharedProfileThemeBundlesByTheme,
   isProfileThemeId,
   isProfileThemeBundleId,
 } from '@cgraph-dev/shared-types';
@@ -32,14 +30,97 @@ import type {
 export {
   DEFAULT_PROFILE_THEME_ID,
   PROFILE_THEME_BUNDLE_IDS,
-  PROFILE_THEME_BUNDLES,
   PROFILE_THEME_CATEGORY_IDS,
   PROFILE_THEME_IDS,
   isProfileThemeBundleId,
   isProfileThemeId,
 };
 
-export const ALL_PROFILE_THEMES: ProfileThemeConfig[] = [...SHARED_PROFILE_THEMES];
+type ProfileThemeAssets = Pick<
+  ProfileThemeConfig,
+  'previewImage' | 'profileBackgroundImage' | 'miniProfileBackgroundImage'
+>;
+
+const PROFILE_THEME_ASSETS: Record<ProfileThemeId, Required<ProfileThemeAssets>> = {
+  'signal-noir': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_signal_noir_preview/theme_signal_noir_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_signal_noir/profile_signal_noir_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_signal_noir/mini_signal_noir_0.png',
+  },
+  'aurora-glass': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_aurora_glass_preview/theme_aurora_glass_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_aurora_glass/profile_aurora_glass_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_aurora_glass/mini_aurora_glass_0.png',
+  },
+  'retro-terminal': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_retro_terminal_preview/theme_retro_terminal_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_retro_terminal/profile_retro_terminal_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_retro_terminal/mini_retro_terminal_0.png',
+  },
+  'solarpunk-canopy': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_solarpunk_canopy_preview/theme_solarpunk_canopy_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_solarpunk_canopy/profile_solarpunk_canopy_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_solarpunk_canopy/mini_solarpunk_canopy_0.png',
+  },
+  'deep-space': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_deep_space_preview/theme_deep_space_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_deep_space/profile_deep_space_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_deep_space/mini_deep_space_0.png',
+  },
+  'sakura-dream': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_sakura_dream_preview/theme_sakura_dream_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_sakura_dream/profile_sakura_dream_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_sakura_dream/mini_sakura_dream_0.png',
+  },
+  'ember-forge': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_ember_forge_preview/theme_ember_forge_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_ember_forge/profile_ember_forge_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_ember_forge/mini_ember_forge_0.png',
+  },
+};
+
+function withWebProfileThemeAssets(theme: ProfileThemeConfig): ProfileThemeConfig {
+  return {
+    ...theme,
+    ...PROFILE_THEME_ASSETS[theme.id],
+  };
+}
+
+function withWebProfileThemeBundleAssets(
+  bundle: ProfileThemeBundleConfig
+): ProfileThemeBundleConfig {
+  return {
+    ...bundle,
+    ...PROFILE_THEME_ASSETS[bundle.includes.profileThemeId],
+  };
+}
+
+export const ALL_PROFILE_THEMES: ProfileThemeConfig[] =
+  SHARED_PROFILE_THEMES.map(withWebProfileThemeAssets);
+
+export const PROFILE_THEME_BUNDLES: ProfileThemeBundleConfig[] =
+  SHARED_PROFILE_THEME_BUNDLES.map(withWebProfileThemeBundleAssets);
 
 export const DEFAULT_PROFILE_THEME: ProfileThemeConfig =
   ALL_PROFILE_THEMES.find((theme) => theme.id === SHARED_DEFAULT_PROFILE_THEME.id) ??
@@ -65,13 +146,16 @@ export function getProfileThemeOrDefault(id: string | null | undefined): Profile
 export function getProfileThemeBundleById(
   id: string | null | undefined
 ): ProfileThemeBundleConfig | undefined {
-  return getSharedProfileThemeBundleById(id);
+  if (!isProfileThemeBundleId(id)) return undefined;
+  return PROFILE_THEME_BUNDLES.find((bundle) => bundle.id === id);
 }
 
 export function getProfileThemeBundlesByTheme(
   themeId: ProfileThemeId
 ): readonly ProfileThemeBundleConfig[] {
-  return getSharedProfileThemeBundlesByTheme(themeId);
+  return PROFILE_THEME_BUNDLES.filter(
+    (bundle) => bundle.themeId === themeId || bundle.includes.profileThemeId === themeId
+  );
 }
 
 export type {

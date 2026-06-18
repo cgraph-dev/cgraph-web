@@ -29,9 +29,11 @@ describe('profile theme catalog adapter', () => {
     expect(DEFAULT_PROFILE_THEME.id).toBe(SHARED_DEFAULT_PROFILE_THEME.id);
     expect(getProfileThemeOrDefault(DEFAULT_PROFILE_THEME_ID).id).toBe(DEFAULT_PROFILE_THEME_ID);
     expect(PROFILE_THEME_BUNDLE_IDS).toEqual(SHARED_PROFILE_THEME_BUNDLE_IDS);
-    expect(PROFILE_THEME_BUNDLES).toEqual(SHARED_PROFILE_THEME_BUNDLES);
-    expect(getProfileThemeBundleById('signal-noir-founder')).toEqual(
-      getSharedProfileThemeBundleById('signal-noir-founder')
+    expect(PROFILE_THEME_BUNDLES.map((bundle) => bundle.id)).toEqual(
+      SHARED_PROFILE_THEME_BUNDLES.map((bundle) => bundle.id)
+    );
+    expect(getProfileThemeBundleById('signal-noir-founder')?.id).toBe(
+      getSharedProfileThemeBundleById('signal-noir-founder')?.id
     );
   });
 
@@ -41,20 +43,33 @@ describe('profile theme catalog adapter', () => {
     expect(PROFILE_THEME_CATEGORIES).not.toBe(SHARED_PROFILE_THEME_CATEGORIES);
 
     const signalThemes = getThemesByCategory('signal');
+    const sharedSignalThemes = getSharedThemesByCategory('signal');
 
-    expect(signalThemes).toEqual(getSharedThemesByCategory('signal'));
-    expect(signalThemes).not.toBe(getSharedThemesByCategory('signal'));
+    expect(signalThemes.map((theme) => theme.id)).toEqual(
+      sharedSignalThemes.map((theme) => theme.id)
+    );
+    expect(signalThemes).not.toBe(sharedSignalThemes);
+    expect(signalThemes[0].profileBackgroundImage).toContain('profile_signal_noir');
   });
 
-  it('exposes package-owned renderer assets without inventing new profile theme ids', () => {
+  it('exposes web renderer assets without inventing new profile theme ids', () => {
+    const signal = getProfileThemeOrDefault('signal-noir');
     const aurora = getProfileThemeOrDefault('aurora-glass');
+    const retro = getProfileThemeOrDefault('retro-terminal');
+    const solarpunk = getProfileThemeOrDefault('solarpunk-canopy');
     const ember = getProfileThemeOrDefault('ember-forge');
     const deepSpace = getProfileThemeOrDefault('deep-space');
+    const sakura = getProfileThemeOrDefault('sakura-dream');
 
-    expect(aurora.profileBackgroundImage).toContain('profile_ranked_ascendant');
-    expect(aurora.miniProfileBackgroundImage).toContain('mini_ranked_ascendant');
-    expect(ember.profileBackgroundImage).toContain('profile_ember_colossus');
-    expect(deepSpace.profileBackgroundImage).toContain('profile_void_relay');
+    expect(signal.profileBackgroundImage).toContain('profile_signal_noir');
+    expect(aurora.profileBackgroundImage).toContain('profile_aurora_glass');
+    expect(retro.profileBackgroundImage).toContain('profile_retro_terminal');
+    expect(solarpunk.profileBackgroundImage).toContain('profile_solarpunk_canopy');
+    expect(deepSpace.profileBackgroundImage).toContain('profile_deep_space');
+    expect(sakura.profileBackgroundImage).toContain('profile_sakura_dream');
+    expect(ember.profileBackgroundImage).toContain('profile_ember_forge');
+    expect(aurora.miniProfileBackgroundImage).toContain('mini_aurora_glass');
+    expect(retro.previewImage).toContain('theme_retro_terminal_preview');
     expect(ALL_PROFILE_THEMES).toHaveLength(SHARED_PROFILE_THEMES.length);
   });
 

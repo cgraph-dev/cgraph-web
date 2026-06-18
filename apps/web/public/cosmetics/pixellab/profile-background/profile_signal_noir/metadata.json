@@ -1,11 +1,11 @@
 {
   "asset": {
-    "id": "theme_signal_noir_preview",
-    "kind": "profile-theme-preview",
+    "id": "profile_signal_noir",
+    "kind": "profile-background",
     "endpoint": "desktop-static-theme-import",
     "size": {
-      "width": 320,
-      "height": 180
+      "width": 640,
+      "height": 360
     },
     "theme": "Signal Noir",
     "prompt": "encrypted noir command room, black glass panels, cyan signal lines, faint waveform pulses, subtle privacy-grid scanlines, cold blue edge light, quiet secure messaging mood",
@@ -13,6 +13,6 @@
   },
   "status": "completed",
   "imageCount": 1,
-  "generatedAt": "2026-06-18T22:32:35.608034Z",
+  "generatedAt": "2026-06-18T22:32:35.607494Z",
   "source": "desktop-themes"
 }

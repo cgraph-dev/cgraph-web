@@ -1,0 +1,18 @@
+{
+  "asset": {
+    "id": "mini_ember_forge",
+    "kind": "mini-profile-background",
+    "endpoint": "desktop-static-theme-import",
+    "size": {
+      "width": 320,
+      "height": 285
+    },
+    "theme": "Ember Forge",
+    "prompt": "molten forge hall, bronze armor trim, ember channels, slow heat shimmer, dark basalt card surface, battle-pass legendary profile mood",
+    "sourceFile": "/home/trick/Desktop/Themes/EmberForge/EmberForge640x570.png"
+  },
+  "status": "completed",
+  "imageCount": 1,
+  "generatedAt": "2026-06-18T22:32:39.306000Z",
+  "source": "desktop-themes"
+}
