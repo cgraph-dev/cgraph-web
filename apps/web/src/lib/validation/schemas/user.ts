@@ -10,6 +10,8 @@ import { dateTimeSchema, uuidSchema, emailSchema } from './base';
 
 // User Schemas
 
+const avatarUrlSchema = z.string().min(1);
+
 /**
  * User status enum
  */
@@ -22,7 +24,7 @@ export const userRefSchema = z.object({
   id: uuidSchema,
   username: z.string().nullable(),
   display_name: z.string().nullable().optional(),
-  avatar_url: z.string().url().nullable().optional(),
+  avatar_url: avatarUrlSchema.nullable().optional(),
   avatar_border_id: z.string().nullable().optional(),
   avatarBorderId: z.string().nullable().optional(),
 });
@@ -38,7 +40,7 @@ export const userSchema = z.object({
   email: emailSchema,
   username: z.string().nullable(),
   display_name: z.string().nullable().optional(),
-  avatar_url: z.string().url().nullable().optional(),
+  avatar_url: avatarUrlSchema.nullable().optional(),
   avatar_border_id: z.string().nullable().optional(),
   wallet_address: z.string().nullable().optional(),
   email_verified_at: dateTimeSchema.nullable().optional(),

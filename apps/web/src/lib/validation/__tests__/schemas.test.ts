@@ -120,6 +120,11 @@ describe('userRefSchema', () => {
   it('rejects user ref with invalid uuid', () => {
     expect(userRefSchema.safeParse({ ...validUserRef, id: 'bad' }).success).toBe(false);
   });
+
+  it('accepts relative avatar media paths', () => {
+    const ref = { ...validUserRef, avatar_url: '/uploads/avatars/user/avatar.png' };
+    expect(userRefSchema.safeParse(ref).success).toBe(true);
+  });
 });
 
 describe('userSchema', () => {
@@ -129,6 +134,11 @@ describe('userSchema', () => {
 
   it('accepts user with optional gamification fields', () => {
     const user = { ...validUser, level: 5, xp: 1200, nodes: 300, badges: ['early_adopter'] };
+    expect(userSchema.safeParse(user).success).toBe(true);
+  });
+
+  it('accepts relative avatar media paths', () => {
+    const user = { ...validUser, avatar_url: '/uploads/avatars/user/avatar.png' };
     expect(userSchema.safeParse(user).success).toBe(true);
   });
 
