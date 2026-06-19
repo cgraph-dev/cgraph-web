@@ -11,7 +11,6 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { toast } from '@/components/feedback/toast';
-import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { cn } from '@/lib/utils';
 
 export interface CroppedAvatarPayload {
@@ -80,7 +79,6 @@ async function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
 export function AvatarUploadCropper({
   avatarUrl,
   displayName,
-  avatarBorderId,
   disabled = false,
   maxFileSizeMb = 5,
   size = 'large',
@@ -251,13 +249,10 @@ export function AvatarUploadCropper({
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-400 via-sky-400 to-purple-500 opacity-70 transition group-hover:opacity-100" />
         <div className="relative h-full w-full overflow-hidden rounded-full bg-[var(--token-bg-secondary)] ring-1 ring-white/10">
           {previewUrl ? (
-            <ThemedAvatar
+            <img
               src={previewUrl}
               alt={`${displayName || 'User'} avatar preview`}
-              size={size}
-              className="h-full w-full rounded-full"
-              avatarBorderId={avatarBorderId}
-              fallbackText={initialsFor(displayName)}
+              className="h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-600 to-purple-600 text-3xl font-bold text-white">

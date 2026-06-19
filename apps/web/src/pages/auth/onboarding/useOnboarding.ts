@@ -8,7 +8,8 @@ import { useAuthStore } from '@/modules/auth/store';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import type { CroppedAvatarPayload } from '@/components/avatar/avatar-upload-cropper';
-import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
+import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
+import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 import { DEFAULT_PROFILE_DATA, ONBOARDING_STEPS } from './constants';
 import type { ProfileData, ProfileUpdatePayload } from './types';
 
@@ -49,10 +50,17 @@ export function useOnboarding() {
         // Upload avatar if changed
         let avatarUrl = profileData.avatarUrl;
         if (avatarFile) {
-          const uploadedAvatarUrl = await uploadCurrentUserAvatar(avatarFile);
-          if (typeof uploadedAvatarUrl === 'string') {
-            avatarUrl = uploadedAvatarUrl;
-          }
+          const result = await uploadCurrentUserAvatarAndSync(avatarFile);
+          avatarUrl = result.user?.avatarUrl ?? result.avatarUrl;
+          applyOwnIdentityPatch({
+            avatarUrl,
+            avatarBorderId: result.user?.avatarBorderId,
+            equippedTitleId: result.user?.equippedTitleId,
+            equippedBadgeIds: result.user?.equippedBadgeIds,
+            equippedNameplateId: result.user?.equippedNameplateId,
+            profileTheme: result.user?.profileTheme,
+            chatTheme: result.user?.chatTheme,
+          });
         }
 
         // Update profile via API

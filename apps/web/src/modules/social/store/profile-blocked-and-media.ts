@@ -3,7 +3,7 @@
  */
 import { http } from '@/lib/api-client';
 import { ensureArray, isRecord, asString, asBool, asOptionalString, asEnum } from '@/lib/api-utils';
-import { avatarUrlFromUploadResponse } from '@/lib/avatar-upload';
+import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 import { createLogger } from '@/lib/logger';
 import type { StoreApi } from 'zustand';
@@ -97,15 +97,8 @@ export function createIsUserBlocked(get: Get) {
 /** Upload an avatar image. */
 export function createUploadAvatar(set: Set) {
   return async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // Backend mounts avatar upload at POST /api/v1/me/avatar
-    // (UserController), not /users/me/avatar.
-    const response = await http.post('/api/v1/me/avatar', formData);
-
-    const avatarUrl = avatarUrlFromUploadResponse(response.data);
-    if (!avatarUrl) throw new Error('Avatar upload response did not include avatar URL');
+    const result = await uploadCurrentUserAvatarAndSync(file);
+    const avatarUrl = result.user?.avatarUrl ?? result.avatarUrl;
 
     applyOwnIdentityPatch({ avatarUrl });
     set((state) => ({

@@ -17,7 +17,8 @@ import {
   AvatarUploadCropper,
   type CroppedAvatarPayload,
 } from '@/components/avatar/avatar-upload-cropper';
-import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
+import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
+import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 
 const logger = createLogger('ProfileEditForm');
 
@@ -77,9 +78,19 @@ export function ProfileEditForm({ user, onSaved, onCancel }: ProfileEditFormProp
       let newAvatarUrl: string | null = null;
       if (pendingAvatarBlobRef.current) {
         setIsUploadingAvatar(true);
-        newAvatarUrl = await uploadCurrentUserAvatar(pendingAvatarBlobRef.current);
+        const result = await uploadCurrentUserAvatarAndSync(pendingAvatarBlobRef.current);
+        newAvatarUrl = result.user?.avatarUrl ?? result.avatarUrl;
         pendingAvatarBlobRef.current = null;
         setIsUploadingAvatar(false);
+        applyOwnIdentityPatch({
+          avatarUrl: newAvatarUrl,
+          avatarBorderId: result.user?.avatarBorderId,
+          equippedTitleId: result.user?.equippedTitleId,
+          equippedBadgeIds: result.user?.equippedBadgeIds,
+          equippedNameplateId: result.user?.equippedNameplateId,
+          profileTheme: result.user?.profileTheme,
+          chatTheme: result.user?.chatTheme,
+        });
       }
 
       // Update profile fields

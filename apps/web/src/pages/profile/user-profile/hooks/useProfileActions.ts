@@ -9,9 +9,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
-import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
+import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
-import { resolveAvatarUrl } from '@/lib/media-url';
 import { toast } from '@/shared/components/ui';
 import { useFriendStore } from '@/modules/social/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
@@ -80,13 +79,35 @@ export function useProfileActions({
     setIsUploadingAvatar(true);
 
     try {
-      const uploadedUrl = resolveAvatarUrl(await uploadCurrentUserAvatar(file));
-      if (!uploadedUrl) throw new Error('Avatar URL missing from upload response');
+      const result = await uploadCurrentUserAvatarAndSync(file);
+      const uploadedUrl = result.user?.avatarUrl ?? result.avatarUrl;
 
       setProfile((prev) => (prev ? { ...prev, avatarUrl: uploadedUrl } : null));
-      applyOwnIdentityPatch({ avatarUrl: uploadedUrl });
+      applyOwnIdentityPatch({
+        avatarUrl: uploadedUrl,
+        avatarBorderId: result.user?.avatarBorderId,
+        equippedTitleId: result.user?.equippedTitleId,
+        equippedBadgeIds: result.user?.equippedBadgeIds,
+        equippedNameplateId: result.user?.equippedNameplateId,
+        profileTheme: result.user?.profileTheme,
+        chatTheme: result.user?.chatTheme,
+      });
       const { useAuthStore } = await import('@/modules/auth/store');
-      useAuthStore.getState().updateUser({ avatarUrl: uploadedUrl });
+      useAuthStore.getState().updateUser(
+        result.user
+          ? {
+              avatarUrl: uploadedUrl,
+              avatarBorderId: result.user.avatarBorderId,
+              equippedTitleId: result.user.equippedTitleId,
+              equippedBadgeIds: result.user.equippedBadgeIds,
+              equippedNameplateId: result.user.equippedNameplateId,
+              profileTheme: result.user.profileTheme,
+              chatTheme: result.user.chatTheme,
+              displayName: result.user.displayName,
+              username: result.user.username,
+            }
+          : { avatarUrl: uploadedUrl }
+      );
 
       HapticFeedback.success();
       toast.success('Avatar updated successfully!');

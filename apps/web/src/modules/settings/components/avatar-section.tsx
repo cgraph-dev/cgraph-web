@@ -9,9 +9,8 @@ import {
 } from '@/components/avatar/avatar-upload-cropper';
 import { toast } from '@/components/feedback/toast';
 import { getAvatarBorderId } from '@/lib/utils';
-import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
+import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
-import { resolveAvatarUrl } from '@/lib/media-url';
 import { useAuthStore } from '@/modules/auth/store';
 import type { User } from '@/modules/auth/store/authStore.types';
 
@@ -33,11 +32,33 @@ export function AvatarSection({ user }: AvatarSectionProps) {
 
     setIsSaving(true);
     try {
-      const avatarUrl = resolveAvatarUrl(await uploadCurrentUserAvatar(payload.blob));
-      if (!avatarUrl) throw new Error('Avatar URL missing from upload response');
+      const result = await uploadCurrentUserAvatarAndSync(payload.blob);
+      const userPatch: Partial<User> = result.user
+        ? {
+            avatarUrl: result.user.avatarUrl ?? result.avatarUrl,
+            avatarBorderId: result.user.avatarBorderId,
+            equippedTitleId: result.user.equippedTitleId,
+            equippedBadgeIds: result.user.equippedBadgeIds,
+            equippedNameplateId: result.user.equippedNameplateId,
+            profileTheme: result.user.profileTheme,
+            chatTheme: result.user.chatTheme,
+            displayName: result.user.displayName,
+            username: result.user.username,
+            bio: result.user.bio,
+            pronouns: result.user.pronouns,
+          }
+        : { avatarUrl: result.avatarUrl };
 
-      applyOwnIdentityPatch({ avatarUrl });
-      updateUser({ avatarUrl });
+      updateUser(userPatch);
+      applyOwnIdentityPatch({
+        avatarUrl: userPatch.avatarUrl,
+        avatarBorderId: userPatch.avatarBorderId,
+        equippedTitleId: userPatch.equippedTitleId,
+        equippedBadgeIds: userPatch.equippedBadgeIds,
+        equippedNameplateId: userPatch.equippedNameplateId,
+        profileTheme: userPatch.profileTheme,
+        chatTheme: userPatch.chatTheme,
+      });
       toast.success('Avatar updated');
     } catch (error) {
       toast.error('Could not update avatar. Please try again.');

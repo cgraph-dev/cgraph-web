@@ -38,6 +38,18 @@ describe('avatarUrlFromUploadResponse', () => {
     ).toBe('/uploads/avatar.jpg');
   });
 
+  it('reads top-level user avatar URLs from wrapped responses', () => {
+    expect(avatarUrlFromUploadResponse({ user: { avatar_url: '/uploads/avatar.jpg' } })).toBe(
+      '/uploads/avatar.jpg'
+    );
+  });
+
+  it('reads profile avatar URLs from wrapped responses', () => {
+    expect(
+      avatarUrlFromUploadResponse({ data: { profile: { avatar_url: '/uploads/avatar.jpg' } } })
+    ).toBe('/uploads/avatar.jpg');
+  });
+
   it('returns null when the response has no avatar URL', () => {
     expect(avatarUrlFromUploadResponse({ data: { user: {} } })).toBeNull();
   });

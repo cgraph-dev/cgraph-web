@@ -40,7 +40,7 @@ vi.mock('@/components/feedback/toast', () => ({
 }));
 
 vi.mock('@/lib/avatar-upload', () => ({
-  uploadCurrentUserAvatar: vi.fn(),
+  uploadCurrentUserAvatarAndSync: vi.fn(),
 }));
 
 vi.mock('@/lib/utils', () => ({
@@ -63,9 +63,9 @@ describe('AvatarSection', () => {
     expect(screen.getByText('Profile Picture')).toBeInTheDocument();
   });
 
-  it('renders themed avatar when user has avatarUrl', () => {
+  it('renders avatar preview image when user has avatarUrl', () => {
     render(<AvatarSection user={mockUser as never} />);
-    expect(screen.getByTestId('themed-avatar')).toBeInTheDocument();
+    expect(screen.getByAltText('Test User avatar preview')).toBeInTheDocument();
   });
 
   it('renders initial fallback when no avatarUrl', () => {
