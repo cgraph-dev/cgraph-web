@@ -1,4 +1,4 @@
-import { type ChangeEvent, useEffect, useRef, useState } from 'react';
+import { type ChangeEvent, type CSSProperties, useEffect, useRef, useState } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
 import {
@@ -33,10 +33,10 @@ interface AvatarUploadCropperProps {
   onAvatarCropped: (payload: CroppedAvatarPayload) => void | Promise<void>;
 }
 
-const previewSizeClass: Record<NonNullable<AvatarUploadCropperProps['size']>, string> = {
-  medium: 'h-20 w-20',
-  large: 'h-24 w-24',
-  xlarge: 'h-32 w-32',
+const previewSizePx: Record<NonNullable<AvatarUploadCropperProps['size']>, number> = {
+  medium: 80,
+  large: 96,
+  xlarge: 128,
 };
 
 /** Builds the initials shown before a user selects an avatar image. */
@@ -233,6 +233,16 @@ export function AvatarUploadCropper({
 
   const hasPendingAvatar = Boolean(pendingPayload);
   const controlsDisabled = disabled || isSubmitting;
+  const previewPixelSize = previewSizePx[size];
+  const previewButtonStyle: CSSProperties = {
+    width: previewPixelSize,
+    height: previewPixelSize,
+    minWidth: previewPixelSize,
+    minHeight: previewPixelSize,
+    maxWidth: previewPixelSize,
+    maxHeight: previewPixelSize,
+    borderRadius: '9999px',
+  };
 
   return (
     <div className={cn('flex flex-col items-center gap-4', className)}>
@@ -240,11 +250,10 @@ export function AvatarUploadCropper({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={controlsDisabled}
-        className={cn(
-          'focus-visible:ring-primary-400/70 group relative rounded-full p-[3px] transition focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60',
-          previewSizeClass[size]
-        )}
+        className="focus-visible:ring-primary-400/70 group relative shrink-0 rounded-full p-[3px] transition focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+        style={previewButtonStyle}
         aria-label="Choose avatar image"
+        data-testid="avatar-upload-preview-button"
       >
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary-400 via-sky-400 to-purple-500 opacity-70 transition group-hover:opacity-100" />
         <div className="relative h-full w-full overflow-hidden rounded-full bg-[var(--token-bg-secondary)] ring-1 ring-white/10">

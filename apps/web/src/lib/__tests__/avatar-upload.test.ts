@@ -26,6 +26,12 @@ describe('avatarUrlFromUploadResponse', () => {
     );
   });
 
+  it('reads legacy avatar_hash media paths from user show responses', () => {
+    expect(avatarUrlFromUploadResponse({ data: { avatar_hash: '/uploads/avatar.jpg' } })).toBe(
+      '/uploads/avatar.jpg'
+    );
+  });
+
   it('reads nested user avatar URLs from show responses', () => {
     expect(
       avatarUrlFromUploadResponse({ data: { user: { avatarUrl: '/uploads/avatar.jpg' } } })

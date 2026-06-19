@@ -10,6 +10,7 @@ import {
   asOptionalString,
 } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
+import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
 import type { UserBadge, ExtendedProfile } from './profileStore.types';
 /** Safely extract a string or null from an unknown value */
 function asNullableString(v: unknown): string | null {
@@ -61,7 +62,7 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
 
     displayName: identity.displayName,
 
-    avatarUrl: identity.avatarUrl,
+    avatarUrl: resolveAvatarUrl(identity.avatarUrl) ?? resolveAvatarUrlFromRecord(user),
 
     avatarBorderId: identity.avatarBorderId,
 

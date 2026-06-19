@@ -6,7 +6,7 @@
  */
 
 import { identityFieldsFromApi } from '@/lib/identity';
-import { resolveAvatarUrl, resolveMediaUrl } from '@/lib/media-url';
+import { resolveAvatarUrl, resolveMediaUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
 
 export { resolveMediaUrl } from '@/lib/media-url';
 
@@ -46,7 +46,7 @@ function normalizeSender(
     id: identity.id,
     username: identity.username,
     displayName: identity.displayName,
-    avatarUrl: resolveAvatarUrl(identity.avatarUrl),
+    avatarUrl: resolveAvatarUrl(identity.avatarUrl) ?? resolveAvatarUrlFromRecord(sender),
     avatarBorderId: identity.avatarBorderId,
     equippedTitleId: identity.equippedTitleId,
     equippedBadgeIds: identity.equippedBadgeIds,

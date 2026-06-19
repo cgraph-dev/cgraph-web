@@ -27,3 +27,29 @@ export function resolveMediaUrl(url: string | undefined | null): string | undefi
 export function resolveAvatarUrl(url: string | undefined | null): string | null {
   return resolveMediaUrl(url) ?? null;
 }
+
+const AVATAR_URL_FIELDS = ['avatarUrl', 'avatar_url', 'avatar_hash', 'from_avatar_url'] as const;
+
+/**
+ * Extracts an avatar URL from common backend/socket user payload shapes.
+ *
+ * Some endpoints still use `avatar_hash` for the stored media path while newer
+ * endpoints return `avatar_url`/`avatarUrl`. Keep that compatibility here so
+ * account settings, live previews, profile cards, and refresh hydration all
+ * render the same canonical avatar.
+ */
+export function resolveAvatarUrlFromRecord(
+  record: Record<string, unknown> | null | undefined,
+  extraFields: readonly string[] = []
+): string | null {
+  if (!record) return null;
+
+  for (const field of [...AVATAR_URL_FIELDS, ...extraFields]) {
+    const value = record[field];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return resolveAvatarUrl(value);
+    }
+  }
+
+  return null;
+}

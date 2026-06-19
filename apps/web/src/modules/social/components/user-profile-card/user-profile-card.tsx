@@ -23,7 +23,7 @@ import { useFriendStore } from '@/modules/social/store';
 import { http } from '@/lib/api-client';
 import { asBool, asNumber, asString, isRecord } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
-import { resolveAvatarUrl } from '@/lib/media-url';
+import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
 import { getBadgeById } from '@/data/badgesCollection';
 import { getTitleById } from '@/data/titlesCollection';
 
@@ -148,7 +148,7 @@ function profileCardUserFromApi(userData: Record<string, unknown>): ProfileCardU
     id: identity.id,
     username: identity.username,
     displayName,
-    avatarUrl: resolveAvatarUrl(identity.avatarUrl) ?? '',
+    avatarUrl: resolveAvatarUrl(identity.avatarUrl) ?? resolveAvatarUrlFromRecord(userData) ?? '',
     avatarBorderId: identity.avatarBorderId ?? undefined,
     bio: asString(userData.bio),
     level: asNumber(userData.level, 1),

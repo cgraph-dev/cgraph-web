@@ -7,7 +7,7 @@
  */
 
 import { isRecord } from './response-extractors';
-import { resolveAvatarUrl } from '@/lib/media-url';
+import { resolveAvatarUrlFromRecord } from '@/lib/media-url';
 
 /**
  * Type-safe extraction of participant user ID.
@@ -51,14 +51,10 @@ export function getParticipantAvatarUrl(
 ): string | null {
   if (!participant) return null;
   const user = isRecord(participant.user) ? participant.user : null;
-  if (user && typeof user.avatarUrl === 'string' && user.avatarUrl)
-    return resolveAvatarUrl(user.avatarUrl);
-  if (user && typeof user.avatar_url === 'string' && user.avatar_url)
-    return resolveAvatarUrl(user.avatar_url);
-  if (typeof participant.avatarUrl === 'string' && participant.avatarUrl)
-    return resolveAvatarUrl(participant.avatarUrl);
-  if (typeof participant.avatar_url === 'string' && participant.avatar_url)
-    return resolveAvatarUrl(participant.avatar_url);
+  const userAvatarUrl = resolveAvatarUrlFromRecord(user);
+  if (userAvatarUrl) return userAvatarUrl;
+  const participantAvatarUrl = resolveAvatarUrlFromRecord(participant);
+  if (participantAvatarUrl) return participantAvatarUrl;
   return null;
 }
 

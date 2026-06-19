@@ -79,6 +79,18 @@ describe('AvatarSection', () => {
     expect(screen.getByText('Change Image')).toBeInTheDocument();
   });
 
+  it('keeps the upload preview locked to the compact avatar size', () => {
+    render(<AvatarSection user={mockUser as never} />);
+
+    expect(screen.getByTestId('avatar-upload-preview-button')).toHaveStyle({
+      width: '96px',
+      height: '96px',
+      maxWidth: '96px',
+      maxHeight: '96px',
+      borderRadius: '9999px',
+    });
+  });
+
   it('renders file size hint', () => {
     render(<AvatarSection user={mockUser as never} />);
     expect(

@@ -1,6 +1,6 @@
 import { http } from '@/lib/api-client';
 import { asString, isRecord } from '@/lib/api-utils';
-import { resolveAvatarUrl } from '@/lib/media-url';
+import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
 import type { User } from '@/modules/auth/store/authStore.types';
 import { mapUserFromApi } from '@/modules/auth/store/authStore.utils';
 
@@ -11,13 +11,7 @@ export interface CurrentUserAvatarUploadResult {
 }
 
 function avatarUrlFromRecord(record: Record<string, unknown>): string | null {
-  return (
-    asString(record.avatar_url) ||
-    asString(record.avatarUrl) ||
-    asString(record.url) ||
-    asString(record.from_avatar_url) ||
-    null
-  );
+  return resolveAvatarUrlFromRecord(record, ['url']);
 }
 
 function looksLikeUserRecord(

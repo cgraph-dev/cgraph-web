@@ -139,6 +139,16 @@ describe('mapUserFromApi', () => {
     expect(user.streak).toBe(7);
   });
 
+  it('maps legacy avatar_hash as the persisted avatar URL', () => {
+    const user = mapUserFromApi({
+      id: 'user-1',
+      username: 'testuser',
+      avatar_hash: '/uploads/avatars/user-1/avatar.jpg',
+    });
+
+    expect(user.avatarUrl).toBe('/uploads/avatars/user-1/avatar.jpg');
+  });
+
   it('provides safe defaults for missing fields', () => {
     const user = mapUserFromApi({});
 

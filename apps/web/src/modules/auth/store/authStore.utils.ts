@@ -3,7 +3,7 @@ import type { ApiErrorResponse, User } from './authStore.types';
 import type { StateStorage } from 'zustand/middleware';
 import { authLogger } from '@/lib/logger';
 import { identityFieldsFromApi } from '@/lib/identity';
-import { resolveAvatarUrl } from '@/lib/media-url';
+import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
 function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
@@ -65,7 +65,7 @@ export function mapUserFromApi(apiUser: Record<string, unknown>): User {
     email: isString(apiUser.email) ? apiUser.email : '',
     username: identity.username || null,
     displayName: identity.displayName,
-    avatarUrl: resolveAvatarUrl(identity.avatarUrl),
+    avatarUrl: resolveAvatarUrl(identity.avatarUrl) ?? resolveAvatarUrlFromRecord(apiUser),
     avatarBorderId: identity.avatarBorderId,
     equippedTitleId: identity.equippedTitleId,
     equippedBadgeIds: identity.equippedBadgeIds,
