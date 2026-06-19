@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
 import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
+import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
+import { resolveAvatarUrl } from '@/lib/media-url';
 import { toast } from '@/shared/components/ui';
 import { useFriendStore } from '@/modules/social/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
@@ -78,10 +80,11 @@ export function useProfileActions({
     setIsUploadingAvatar(true);
 
     try {
-      const uploadedUrl = await uploadCurrentUserAvatar(file);
+      const uploadedUrl = resolveAvatarUrl(await uploadCurrentUserAvatar(file));
       if (!uploadedUrl) throw new Error('Avatar URL missing from upload response');
 
       setProfile((prev) => (prev ? { ...prev, avatarUrl: uploadedUrl } : null));
+      applyOwnIdentityPatch({ avatarUrl: uploadedUrl });
       const { useAuthStore } = await import('@/modules/auth/store');
       useAuthStore.getState().updateUser({ avatarUrl: uploadedUrl });
 

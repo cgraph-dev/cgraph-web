@@ -26,6 +26,27 @@ function nullableFormString(formData: FormData, key: string): string | null {
   return value.length > 0 ? value : null;
 }
 
+function profileUpdatePayload(formData: FormData): {
+  displayName: string | null;
+  bio: string;
+  pronouns: string | null;
+  user: {
+    display_name?: string;
+    bio: string;
+    pronouns?: string;
+  };
+} {
+  const displayName = nullableFormString(formData, 'displayName');
+  const bio = getFormString(formData, 'bio').trim();
+  const pronouns = nullableFormString(formData, 'pronouns');
+  const userPayload: { display_name?: string; bio: string; pronouns?: string } = { bio };
+
+  if (displayName) userPayload.display_name = displayName;
+  if (pronouns) userPayload.pronouns = pronouns;
+
+  return { displayName, bio, pronouns, user: userPayload };
+}
+
 /**
  * AccountSettings - User account management component
  *
@@ -51,23 +72,23 @@ export function AccountSettings() {
 
   const [saveState, saveAction, isSaving] = useActionState(
     async (_prev: SaveProfileState, formData: FormData): Promise<SaveProfileState> => {
-      const displayName = nullableFormString(formData, 'displayName');
-      const bio = nullableFormString(formData, 'bio');
-      const pronouns = nullableFormString(formData, 'pronouns');
+      const payload = profileUpdatePayload(formData);
 
       try {
         const response = await http.put('/api/v1/me', {
-          user: {
-            display_name: displayName,
-            bio,
-            pronouns,
-          },
+          user: payload.user,
         });
         const updated = response.data.data ?? response.data.user ?? response.data;
         updateUser({
-          displayName: updated.display_name ?? updated.displayName ?? displayName,
-          bio: updated.bio ?? bio ?? '',
-          pronouns: updated.pronouns ?? pronouns ?? '',
+          displayName:
+            updated.display_name ??
+            updated.displayName ??
+            payload.displayName ??
+            user?.displayName ??
+            user?.username ??
+            '',
+          bio: updated.bio ?? payload.bio,
+          pronouns: updated.pronouns ?? payload.pronouns ?? '',
         });
         toast.success('Settings saved');
         HapticFeedback.success();

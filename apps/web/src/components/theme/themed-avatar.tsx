@@ -12,6 +12,7 @@ import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-
 import type { AvatarBorderConfig } from '@/types/avatar-borders';
 import { getBorderById } from '@/data/avatar-borders';
 import { tweens, loop } from '@/lib/animation-presets';
+import { resolveAvatarUrl } from '@/lib/media-url';
 import { getLegacyAvatarBorderAnimation } from './avatar-border-motion';
 
 interface ThemedAvatarProps {
@@ -113,13 +114,14 @@ export function ThemedAvatar({
 
   const borderWidth = borderWidthMap[size];
   const speedMultiplier = ANIMATION_SPEED_MULTIPLIERS[theme.animationSpeed];
-  const displaySrc = src && !imageFailed ? src : null;
+  const normalizedSrc = resolveAvatarUrl(src);
+  const displaySrc = normalizedSrc && !imageFailed ? normalizedSrc : null;
   const fallbackInitial =
     (fallbackText || alt || 'U').trim().charAt(0).toUpperCase() || 'U';
 
   useEffect(() => {
     setImageFailed(false);
-  }, [src]);
+  }, [normalizedSrc]);
 
   const fallbackNode = (
     <span

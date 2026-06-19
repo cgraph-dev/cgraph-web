@@ -3,6 +3,7 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { getBorderById } from '@/data/avatar-borders';
 import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
+import { resolveAvatarUrl } from '@/lib/media-url';
 
 import type { AvatarZoneProps, BadgeDisplayTier } from './types';
 function LegendaryRing(): React.ReactElement {
@@ -96,11 +97,12 @@ export const AvatarZone = memo(function AvatarZone({
   const frameSize = borderConfig ? borderSize : avatarSize;
   const initialsSize = isMini ? '1.35rem' : '1.55rem';
   const [avatarImageFailed, setAvatarImageFailed] = useState(false);
-  const canRenderAvatar = Boolean(avatarUrl) && !avatarImageFailed;
+  const normalizedAvatarUrl = resolveAvatarUrl(avatarUrl);
+  const canRenderAvatar = Boolean(normalizedAvatarUrl) && !avatarImageFailed;
 
   useEffect(() => {
     setAvatarImageFailed(false);
-  }, [avatarUrl]);
+  }, [normalizedAvatarUrl]);
 
   const fallbackAvatar = (
     <span
@@ -144,7 +146,7 @@ export const AvatarZone = memo(function AvatarZone({
         {borderConfig ? (
           <div className="relative z-[2] flex h-full w-full items-center justify-center">
             <AvatarBorderRenderer
-              src={canRenderAvatar ? avatarUrl || undefined : undefined}
+              src={canRenderAvatar ? normalizedAvatarUrl || undefined : undefined}
               alt={displayName}
               border={borderConfig}
               size={borderSize}
@@ -168,7 +170,7 @@ export const AvatarZone = memo(function AvatarZone({
           >
             {canRenderAvatar ? (
               <img
-                src={avatarUrl || undefined}
+                src={normalizedAvatarUrl || undefined}
                 alt={displayName}
                 className="h-full w-full object-cover"
                 loading="lazy"

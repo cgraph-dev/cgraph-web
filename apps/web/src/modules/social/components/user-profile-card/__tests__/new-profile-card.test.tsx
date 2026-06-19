@@ -49,6 +49,7 @@ describe('NewProfileCard', () => {
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('mini_signal_noir');
+    expect(themedBody).toHaveClass('overflow-visible');
     expect(screen.getByText('Cipher One')).toBeInTheDocument();
     expect(screen.queryByText('Pulse')).not.toBeInTheDocument();
     expect(screen.queryByText('Streak')).not.toBeInTheDocument();
@@ -73,6 +74,7 @@ describe('NewProfileCard', () => {
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('mini_deep_space');
     expect(themedBody?.dataset.profileBackgroundImage).toContain('mini_deep_space');
     expect(themedBody).toHaveClass('cgraph-game-profile-surface');
+    expect(themedBody).toHaveClass('overflow-visible');
   });
 
   it('uses the full profile background once as the full-card theme surface', () => {
@@ -87,8 +89,39 @@ describe('NewProfileCard', () => {
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/profile-background/');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('profile_signal_noir');
     expect(themedBody?.dataset.profileBackgroundImage).toContain('profile_signal_noir');
+    expect(themedBody).toHaveClass('overflow-visible');
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('full');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('full');
     expect(avatarZone?.dataset.avatarSize).toBe('98');
+  });
+
+  it('renders the supplied avatar image above the profile theme surface', () => {
+    render(
+      <NewProfileCard
+        user={{ ...user, avatarUrl: 'https://cdn.example.com/avatar.jpg' }}
+        mode="preview"
+        variant="mini"
+      />
+    );
+
+    expect(screen.getByRole('img', { name: 'Cipher One' })).toHaveAttribute(
+      'src',
+      'https://cdn.example.com/avatar.jpg'
+    );
+  });
+
+  it('renders backend-relative avatar paths in the profile card avatar zone', () => {
+    render(
+      <NewProfileCard
+        user={{ ...user, avatarUrl: '/uploads/avatars/u1/avatar.jpg' }}
+        mode="preview"
+        variant="mini"
+      />
+    );
+
+    expect(screen.getByRole('img', { name: 'Cipher One' })).toHaveAttribute(
+      'src',
+      expect.stringContaining('/uploads/avatars/u1/avatar.jpg')
+    );
   });
 });

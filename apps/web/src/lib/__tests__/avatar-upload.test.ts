@@ -32,6 +32,12 @@ describe('avatarUrlFromUploadResponse', () => {
     ).toBe('/uploads/avatar.jpg');
   });
 
+  it('reads nested user snake_case avatar URLs from show responses', () => {
+    expect(
+      avatarUrlFromUploadResponse({ data: { user: { avatar_url: '/uploads/avatar.jpg' } } })
+    ).toBe('/uploads/avatar.jpg');
+  });
+
   it('returns null when the response has no avatar URL', () => {
     expect(avatarUrlFromUploadResponse({ data: { user: {} } })).toBeNull();
   });

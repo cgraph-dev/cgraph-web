@@ -11,6 +11,7 @@ import { toast } from '@/components/feedback/toast';
 import { getAvatarBorderId } from '@/lib/utils';
 import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
+import { resolveAvatarUrl } from '@/lib/media-url';
 import { useAuthStore } from '@/modules/auth/store';
 import type { User } from '@/modules/auth/store/authStore.types';
 
@@ -32,7 +33,7 @@ export function AvatarSection({ user }: AvatarSectionProps) {
 
     setIsSaving(true);
     try {
-      const avatarUrl = await uploadCurrentUserAvatar(payload.blob);
+      const avatarUrl = resolveAvatarUrl(await uploadCurrentUserAvatar(payload.blob));
       if (!avatarUrl) throw new Error('Avatar URL missing from upload response');
 
       applyOwnIdentityPatch({ avatarUrl });
