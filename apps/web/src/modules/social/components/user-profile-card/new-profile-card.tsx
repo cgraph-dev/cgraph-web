@@ -39,12 +39,13 @@ export const NewProfileCard = memo(function NewProfileCard({
   const displayNameColor = user.displayNameColor ?? user.display_name_color;
   const displayNameSecondaryColor =
     user.displayNameSecondaryColor ?? user.display_name_secondary_color;
-  const bannerBackgroundImage = isMini
-    ? (theme.miniProfileBackgroundImage ?? theme.previewImage)
-    : (theme.profileBackgroundImage ?? theme.previewImage);
   const cardBackgroundImage = isMini
     ? theme.miniProfileBackgroundImage
     : theme.profileBackgroundImage;
+  const fallbackHeaderImage = isMini
+    ? (theme.miniProfileBackgroundImage ?? theme.previewImage)
+    : (theme.profileBackgroundImage ?? theme.previewImage);
+  const bannerBackgroundImage = cardBackgroundImage ? undefined : fallbackHeaderImage;
 
   const initials = user.displayName
     .split(' ')
@@ -57,7 +58,12 @@ export const NewProfileCard = memo(function NewProfileCard({
   const showCloseButton = variant === 'full' && mode === 'popout' && Boolean(onClose);
 
   return (
-    <CardShell accentColor={accentColor} className={className} profileThemeId={themeId}>
+    <CardShell
+      accentColor={accentColor}
+      backgroundImage={cardBackgroundImage}
+      className={className}
+      profileThemeId={themeId}
+    >
       {showCloseButton && (
         <button
           type="button"
@@ -73,7 +79,7 @@ export const NewProfileCard = memo(function NewProfileCard({
       <BannerCanvas
         bannerType={user.bannerType ?? 'static'}
         accentColor={accentColor}
-        bannerBackground={theme.banner}
+        bannerBackground={cardBackgroundImage ? 'transparent' : theme.banner}
         backgroundImage={bannerBackgroundImage}
         variant={variant}
       />
@@ -84,7 +90,7 @@ export const NewProfileCard = memo(function NewProfileCard({
         data-profile-background-image={cardBackgroundImage ?? undefined}
         style={{
           background: cardBackgroundImage
-            ? `linear-gradient(180deg, rgba(8,9,15,0.58) 0%, rgba(8,9,15,0.9) 52%, #08090f 100%), linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), url("${cardBackgroundImage}") center top / cover no-repeat, #08090f`
+            ? `linear-gradient(180deg, rgba(8,9,15,0.03) 0%, rgba(8,9,15,0.44) 54%, rgba(8,9,15,0.9) 100%), linear-gradient(180deg, ${theme.surface} 0%, transparent 55%)`
             : `linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), #08090f`,
         }}
       >

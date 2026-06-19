@@ -17,6 +17,7 @@ export const CardShell = memo(function CardShell({
   accentColor,
   className,
   profileThemeId,
+  backgroundImage,
 }: CardShellProps) {
   return (
     <div
@@ -27,7 +28,29 @@ export const CardShell = memo(function CardShell({
         boxShadow: `0 0 0 1px rgba(0,0,0,0.6), 0 12px 40px rgba(0,0,0,0.55), 0 0 70px color-mix(in srgb, ${accentColor} 7%, transparent)`,
       }}
     >
-      <div className="w-full rounded-[21px] bg-[#08090f]">{children}</div>
+      <div
+        className="relative w-full overflow-hidden rounded-[21px] bg-[#08090f]"
+        data-profile-card-background-image={backgroundImage ?? undefined}
+      >
+        {backgroundImage && (
+          <div
+            className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `linear-gradient(180deg, rgba(8,9,15,0.04) 0%, rgba(8,9,15,0.42) 58%, rgba(8,9,15,0.86) 100%), url("${backgroundImage}")`,
+            }}
+          />
+        )}
+        {backgroundImage && (
+          <div
+            className="pointer-events-none absolute inset-0 z-0"
+            style={{
+              background:
+                'linear-gradient(180deg, transparent 0%, rgba(8,9,15,0.28) 44%, #08090f 100%)',
+            }}
+          />
+        )}
+        <div className="relative z-[1]">{children}</div>
+      </div>
     </div>
   );
 });

@@ -20,6 +20,10 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+vi.mock('@/lib/identity/ownIdentitySync', () => ({
+  applyOwnIdentityPatch: vi.fn(),
+}));
+
 import { api } from '@/lib/api-client';
 
 const mockedApi = {
@@ -653,9 +657,7 @@ describe('Social profileStore', () => {
       expect(useProfileStore.getState().myProfile?.avatarUrl).toBe(
         'https://cdn.example.com/new.png'
       );
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData), {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData));
     });
   });
 

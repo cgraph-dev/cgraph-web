@@ -7,6 +7,7 @@ import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
 import { identityFieldsFromApi } from '@/lib/identity';
 import { resolveAvatarUrl } from '@/lib/media-url';
+import { profileApiPathForHandle, type ProfileLookupMode } from '@/lib/profile-route';
 import type { Achievement } from '@cgraph-dev/shared-types';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
 
@@ -15,7 +16,8 @@ const logger = createLogger('useProfileData');
 /** Stable empty array for stub achievements (avoids new reference each render) */
 const EMPTY_ACHIEVEMENTS: Achievement[] = [];
 interface UseProfileDataOptions {
-  userId: string | undefined;
+  profileHandle: string | undefined;
+  lookupMode: ProfileLookupMode;
   isOwnProfile: boolean;
 }
 
@@ -50,7 +52,8 @@ function profileStatusFromIdentity(status: unknown): UserProfileData['status'] {
  * Hook for managing profile data.
  */
 export function useProfileData({
-  userId,
+  profileHandle,
+  lookupMode,
   isOwnProfile,
 }: UseProfileDataOptions): UseProfileDataReturn {
   // Gamification defaults — data comes from API response, these are fallbacks
@@ -92,8 +95,9 @@ export function useProfileData({
 
   // Fetch profile data
   useEffect(() => {
-    if (!userId) return;
+    if (!profileHandle) return;
 
+    const handle = profileHandle;
     const controller = new AbortController();
 
     async function fetchProfile() {
@@ -101,7 +105,7 @@ export function useProfileData({
       setError(null);
 
       try {
-        const response = await http.get(`/api/v1/users/${userId}`, {
+        const response = await http.get(profileApiPathForHandle(handle, lookupMode), {
           signal: controller.signal,
         });
         if (controller.signal.aborted) return;
@@ -195,7 +199,7 @@ export function useProfileData({
 
     fetchProfile();
     return () => controller.abort();
-  }, [userId, isOwnProfile, achievements.length]);
+  }, [profileHandle, lookupMode, isOwnProfile, achievements.length]);
 
   return {
     profile,

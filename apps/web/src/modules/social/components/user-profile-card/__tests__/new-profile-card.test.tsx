@@ -37,14 +37,16 @@ describe('NewProfileCard', () => {
     const { container } = render(<NewProfileCard user={user} mode="preview" variant="mini" />);
 
     const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
-    const themedHeader = container.querySelector<HTMLElement>('[data-profile-theme-header-image]');
+    const themedHeader = container.querySelector<HTMLElement>('[data-profile-card-banner-variant]');
+    const cardShell = container.querySelector<HTMLElement>('[data-profile-card-background-image]');
     const avatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
     const backgroundImage = themedBody?.dataset.profileBackgroundImage;
 
-    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('/mini-profile-background/');
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toBeUndefined();
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('mini');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('mini');
     expect(avatarZone?.dataset.avatarSize).toBe('82');
+    expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('mini_signal_noir');
     expect(screen.getByText('Cipher One')).toBeInTheDocument();
@@ -64,21 +66,27 @@ describe('NewProfileCard', () => {
     );
 
     const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
-    const themedHeader = container.querySelector<HTMLElement>('[data-profile-theme-header-image]');
+    const themedHeader = container.querySelector<HTMLElement>('[data-profile-card-banner-variant]');
+    const cardShell = container.querySelector<HTMLElement>('[data-profile-card-background-image]');
 
-    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('mini_deep_space');
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toBeUndefined();
+    expect(cardShell?.dataset.profileCardBackgroundImage).toContain('mini_deep_space');
     expect(themedBody?.dataset.profileBackgroundImage).toContain('mini_deep_space');
     expect(themedBody).toHaveClass('cgraph-game-profile-surface');
   });
 
-  it('uses the full profile background as the full-card animated header media', () => {
+  it('uses the full profile background once as the full-card theme surface', () => {
     const { container } = render(<NewProfileCard user={user} mode="preview" variant="full" />);
 
-    const themedHeader = container.querySelector<HTMLElement>('[data-profile-theme-header-image]');
+    const themedHeader = container.querySelector<HTMLElement>('[data-profile-card-banner-variant]');
+    const themedBody = container.querySelector<HTMLElement>('[data-profile-background-image]');
+    const cardShell = container.querySelector<HTMLElement>('[data-profile-card-background-image]');
     const avatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
 
-    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('/profile-background/');
-    expect(themedHeader?.dataset.profileThemeHeaderImage).toContain('profile_signal_noir');
+    expect(themedHeader?.dataset.profileThemeHeaderImage).toBeUndefined();
+    expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/profile-background/');
+    expect(cardShell?.dataset.profileCardBackgroundImage).toContain('profile_signal_noir');
+    expect(themedBody?.dataset.profileBackgroundImage).toContain('profile_signal_noir');
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('full');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('full');
     expect(avatarZone?.dataset.avatarSize).toBe('98');

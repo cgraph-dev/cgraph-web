@@ -20,6 +20,12 @@ describe('avatarUrlFromUploadResponse', () => {
     );
   });
 
+  it('reads nested data snake_case avatar URLs from user show responses', () => {
+    expect(avatarUrlFromUploadResponse({ data: { avatar_url: '/uploads/avatar.jpg' } })).toBe(
+      '/uploads/avatar.jpg'
+    );
+  });
+
   it('reads nested user avatar URLs from show responses', () => {
     expect(
       avatarUrlFromUploadResponse({ data: { user: { avatarUrl: '/uploads/avatar.jpg' } } })

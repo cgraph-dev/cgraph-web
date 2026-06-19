@@ -6,6 +6,7 @@ const { authState } = vi.hoisted(() => {
     isAuthenticated: false,
     user: null as {
       id: string;
+      username?: string | null;
       email?: string;
       emailVerifiedAt?: string | null;
       onboardingCompleted?: boolean;
@@ -193,7 +194,14 @@ describe('Route Guards', () => {
 
     it('redirects to user profile when user has id', () => {
       authState.isAuthenticated = true;
-      authState.user = { id: 'user-42' };
+      authState.user = { id: 'user-42', username: 'tricker' };
+      render(<ProfileRedirectRoute />);
+      expect(screen.getByTestId('navigate')).toHaveAttribute('data-to', '/tricker');
+    });
+
+    it('falls back to user id when username is missing', () => {
+      authState.isAuthenticated = true;
+      authState.user = { id: 'user-42', username: null };
       render(<ProfileRedirectRoute />);
       expect(screen.getByTestId('navigate')).toHaveAttribute('data-to', '/user/user-42');
     });

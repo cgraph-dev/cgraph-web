@@ -27,9 +27,7 @@ export async function uploadCurrentUserAvatar(blob: Blob): Promise<string | null
   const formData = new FormData();
   formData.append('file', blob, 'avatar.jpg');
 
-  const response = await http.post('/api/v1/me/avatar', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const response = await http.post('/api/v1/me/avatar', formData);
 
   return avatarUrlFromUploadResponse(response.data);
 }

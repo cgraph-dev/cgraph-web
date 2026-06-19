@@ -366,6 +366,7 @@ export function Social() {
         type: 'user',
         name: user.display_name || user.username,
         description: `@${user.username}`,
+        username: user.username,
         avatarUrl: user.avatar_url ?? undefined,
         canonicalUrl: user.canonical_url ?? undefined,
       });

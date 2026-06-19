@@ -244,7 +244,8 @@ export function AppRoutes() {
         {/* Onboarding & User profile */}
         <Route path="onboarding" element={<Onboarding />} />
         <Route path="user/:userId" element={<UserProfile />} />
-        <Route path="u/:userId" element={<UserProfile />} />
+        <Route path="u/:username" element={<UserProfile />} />
+        <Route path="profile/:username" element={<UserProfile />} />
 
         {/* Admin */}
         <Route
@@ -255,6 +256,9 @@ export function AppRoutes() {
             </AdminRoute>
           }
         />
+
+        {/* Canonical public profile URLs: /:username */}
+        <Route path=":username" element={<UserProfile />} />
       </Route>
 
       {/* 404 */}

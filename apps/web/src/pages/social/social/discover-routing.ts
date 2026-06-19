@@ -1,5 +1,6 @@
 import type { SearchResult } from './types';
 import { getGroupDestinationRoute } from '@/modules/groups/routing';
+import { isCanonicalUsername } from '@/lib/profile-route';
 
 function safeInAppRoute(route: string | undefined, resultType: SearchResult['type']): string | null {
   const trimmed = route?.trim();
@@ -14,7 +15,15 @@ function safeInAppRoute(route: string | undefined, resultType: SearchResult['typ
     }
 
     const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    if (resultType === 'user' && path.startsWith('/user/')) return path;
+    const usernamePath = parsed.pathname.split('/').filter(Boolean);
+    if (
+      resultType === 'user' &&
+      (path.startsWith('/user/') ||
+        path.startsWith('/u/') ||
+        (usernamePath.length === 1 && isCanonicalUsername(usernamePath[0])))
+    ) {
+      return path;
+    }
     if (resultType === 'group' && path.startsWith('/groups/')) return path;
     if (resultType === 'forum' && path.startsWith('/forums')) return path;
   } catch {
@@ -48,6 +57,7 @@ export function getDiscoverResultRoute(result: SearchResult): string {
   if (backendRoute) return backendRoute;
 
   if (result.type === 'user') {
+    if (isCanonicalUsername(result.username)) return `/${encodeURIComponent(result.username)}`;
     return `/user/${result.id}`;
   }
 

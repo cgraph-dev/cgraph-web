@@ -37,6 +37,7 @@ export interface SearchResult {
   type: SearchResultType;
   name: string;
   description: string;
+  username?: string;
   slug?: string;
   route?: string;
   canonicalUrl?: string;

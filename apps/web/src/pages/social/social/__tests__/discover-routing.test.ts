@@ -53,6 +53,20 @@ describe('getDiscoverResultRoute', () => {
     expect(getDiscoverResultRoute(result({ id: 'user-1', type: 'user' }))).toBe('/user/user-1');
   });
 
+  it('opens users with usernames on canonical username routes', () => {
+    expect(
+      getDiscoverResultRoute(result({ id: 'user-1', type: 'user', username: 'tricker' }))
+    ).toBe('/tricker');
+  });
+
+  it('accepts safe canonical username URLs for users', () => {
+    expect(
+      getDiscoverResultRoute(
+        result({ id: 'user-1', type: 'user', canonicalUrl: '/tricker' })
+      )
+    ).toBe('/tricker');
+  });
+
   it('opens forums by slug instead of id', () => {
     expect(
       getDiscoverResultRoute(result({ id: 'forum-id', type: 'forum', slug: 'forum-slug' }))

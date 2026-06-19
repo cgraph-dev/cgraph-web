@@ -4,6 +4,7 @@
 import { http } from '@/lib/api-client';
 import { ensureArray, isRecord, asString, asBool, asOptionalString, asEnum } from '@/lib/api-utils';
 import { avatarUrlFromUploadResponse } from '@/lib/avatar-upload';
+import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 import { createLogger } from '@/lib/logger';
 import type { StoreApi } from 'zustand';
 import { removeBlockedUserFromFriendCaches } from './friendStore.sync';
@@ -101,13 +102,12 @@ export function createUploadAvatar(set: Set) {
 
     // Backend mounts avatar upload at POST /api/v1/me/avatar
     // (UserController), not /users/me/avatar.
-    const response = await http.post('/api/v1/me/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await http.post('/api/v1/me/avatar', formData);
 
     const avatarUrl = avatarUrlFromUploadResponse(response.data);
     if (!avatarUrl) throw new Error('Avatar upload response did not include avatar URL');
 
+    applyOwnIdentityPatch({ avatarUrl });
     set((state) => ({
       myProfile: state.myProfile ? { ...state.myProfile, avatarUrl } : null,
     }));

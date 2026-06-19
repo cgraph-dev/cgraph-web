@@ -13,6 +13,7 @@ import {
   isCurrentPostAuthGate,
 } from '@/modules/auth/routing/post-auth-redirect';
 import { routeLogger } from '@/lib/logger';
+import { publicProfilePath } from '@/lib/profile-route';
 
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
 
@@ -92,7 +93,7 @@ export function ProfileRedirectRoute() {
     return <Navigate to="/user/e2e-user" replace />;
   }
   if (user?.id) {
-    return <Navigate to={`/user/${user.id}`} replace />;
+    return <Navigate to={publicProfilePath(user)} replace />;
   }
   // Render nothing while waiting for user data — avoids visible spinner
   return null;

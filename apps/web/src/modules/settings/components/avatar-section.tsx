@@ -10,6 +10,7 @@ import {
 import { toast } from '@/components/feedback/toast';
 import { getAvatarBorderId } from '@/lib/utils';
 import { uploadCurrentUserAvatar } from '@/lib/avatar-upload';
+import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 import { useAuthStore } from '@/modules/auth/store';
 import type { User } from '@/modules/auth/store/authStore.types';
 
@@ -34,6 +35,7 @@ export function AvatarSection({ user }: AvatarSectionProps) {
       const avatarUrl = await uploadCurrentUserAvatar(payload.blob);
       if (!avatarUrl) throw new Error('Avatar URL missing from upload response');
 
+      applyOwnIdentityPatch({ avatarUrl });
       updateUser({ avatarUrl });
       toast.success('Avatar updated');
     } catch (error) {

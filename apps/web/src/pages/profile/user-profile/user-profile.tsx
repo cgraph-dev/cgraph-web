@@ -10,19 +10,10 @@
  * - Activity summary
  */
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import type React from 'react';
-
-const PROFILE_ID_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{1,79}$/;
-const INVALID_PROFILE_IDS = new Set(['undefined', 'null', 'nan', 'object-object']);
-
-function isValidProfileId(userId: string | undefined): userId is string {
-  if (!userId) return false;
-
-  const normalized = userId.trim().toLowerCase().replaceAll(/[\s[\]]/g, '-');
-  return PROFILE_ID_RE.test(userId) && !INVALID_PROFILE_IDS.has(normalized);
-}
 
 import {
   PaintBrushIcon,
@@ -57,6 +48,7 @@ import { useProfileActions } from './hooks/useProfileActions';
 import { TipButton } from '@/modules/nodes/components/tip-button';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
+import { isCanonicalUsername, isValidProfileHandle, publicProfilePath } from '@/lib/profile-route';
 
 /** Stable empty array for stub achievements */
 const EMPTY_ACHIEVEMENTS: never[] = [];
@@ -155,13 +147,19 @@ function ActivitySummary({
  * User Profile component.
  */
 export function UserProfile() {
-  const { userId } = useParams<{ userId: string }>();
+  const { userId, username } = useParams<{ userId?: string; username?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: currentUser } = useAuthStore();
   const equippedBadges = useCustomizationStore((s) => s.equippedBadges) ?? [];
   const selectedProfileThemeId = useCustomizationStore((s) => s.selectedProfileThemeId);
 
-  const isOwnProfile = currentUser?.id === userId;
+  const profileHandle = username ?? userId;
+  const lookupMode = username ? 'username' : 'id';
+  const isOwnProfile =
+    currentUser?.id === profileHandle ||
+    (Boolean(username) &&
+      currentUser?.username?.toLowerCase() === username?.trim().toLowerCase());
 
   const {
     profile,
@@ -174,7 +172,7 @@ export function UserProfile() {
     totalUnlocked,
     showAllAchievements,
     setShowAllAchievements,
-  } = useProfileData({ userId, isOwnProfile });
+  } = useProfileData({ profileHandle, lookupMode, isOwnProfile });
 
   const actions = useProfileActions({
     profile,
@@ -184,7 +182,15 @@ export function UserProfile() {
   });
 
   // Guard against broken route params while still allowing UUIDs and profile handles.
-  if (!isValidProfileId(userId)) {
+  useEffect(() => {
+    if (!profile?.username || !isCanonicalUsername(profile.username)) return;
+    const canonicalPath = publicProfilePath(profile);
+    if (location.pathname !== canonicalPath) {
+      navigate(canonicalPath, { replace: true });
+    }
+  }, [location.pathname, navigate, profile]);
+
+  if (!isValidProfileHandle(profileHandle)) {
     return <ProfileInvalidUser onGoBack={() => navigate(-1)} />;
   }
 

@@ -111,6 +111,7 @@ export interface CardShellProps {
   accentColor: string;
   className?: string;
   profileThemeId?: string;
+  backgroundImage?: string | null;
 }
 
 export interface BannerProps {
