@@ -164,7 +164,6 @@ describe('AccountSettings', () => {
         user: {
           display_name: 'Updated',
           bio: 'Updated bio',
-          pronouns: null,
         },
       });
     });
