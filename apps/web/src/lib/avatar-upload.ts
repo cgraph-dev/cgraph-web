@@ -82,7 +82,9 @@ export async function uploadCurrentUserAvatarAndSync(
   const formData = new FormData();
   formData.append('file', blob, 'avatar.jpg');
 
-  const response = await http.post('/api/v1/me/avatar', formData);
+  const response = await http.post('/api/v1/me/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   const uploadRecord = userRecordFromApiResponse(response.data);
   const uploadAvatarUrl = avatarUrlFromUploadResponse(response.data);
 

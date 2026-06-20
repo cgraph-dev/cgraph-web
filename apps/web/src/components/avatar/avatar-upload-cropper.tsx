@@ -1,4 +1,5 @@
 import { type ChangeEvent, type CSSProperties, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
 import {
@@ -121,6 +122,12 @@ export function AvatarUploadCropper({
     }
   }
 
+  function rememberOwnedObjectUrl(url: string | undefined) {
+    if (url?.startsWith('blob:')) {
+      ownedObjectUrlsRef.current.add(url);
+    }
+  }
+
   function replacePendingPayload(payload: CroppedAvatarPayload | null, revokePrevious = true) {
     setPendingPayload((previous) => {
       if (revokePrevious) {
@@ -186,16 +193,24 @@ export function AvatarUploadCropper({
     if (!cropImageSrc || !croppedAreaPixels) return;
 
     setIsCropping(true);
+    let nextPreviewUrl: string | undefined;
     try {
       const blob = await getCroppedBlob(cropImageSrc, croppedAreaPixels);
       const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
-      const nextPreviewUrl = URL.createObjectURL(blob);
+      nextPreviewUrl = URL.createObjectURL(blob);
       const payload = { blob, file, previewUrl: nextPreviewUrl };
-      replacePendingPayload(payload);
+      rememberOwnedObjectUrl(nextPreviewUrl);
       setPreviewUrl(nextPreviewUrl);
+      await onAvatarCropped(payload);
+      replacePendingPayload(null);
+      setSourceImageSrc(null);
       setCropImageSrc(null);
-    } catch {
-      toast.error('Could not crop this image');
+    } catch (error) {
+      if (nextPreviewUrl) {
+        revokeOwnedObjectUrl(nextPreviewUrl);
+        setPreviewUrl(avatarUrl ?? null);
+      }
+      toast.error(error instanceof Error ? 'Could not save avatar. Please try again.' : 'Could not crop this image');
     } finally {
       setIsCropping(false);
     }
@@ -234,6 +249,7 @@ export function AvatarUploadCropper({
   const hasPendingAvatar = Boolean(pendingPayload);
   const controlsDisabled = disabled || isSubmitting;
   const previewPixelSize = previewSizePx[size];
+  const isSavingCrop = isCropping || isSubmitting;
   const previewButtonStyle: CSSProperties = {
     width: previewPixelSize,
     height: previewPixelSize,
@@ -336,8 +352,9 @@ export function AvatarUploadCropper({
         className="hidden"
       />
 
-      {cropImageSrc && (
-        <div
+      {cropImageSrc &&
+        createPortal(
+          <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
           role="dialog"
           aria-modal="true"
@@ -361,6 +378,7 @@ export function AvatarUploadCropper({
                 onClick={closeCropDialog}
                 className="rounded-lg p-2 text-[var(--token-text-muted)] transition hover:bg-white/10 hover:text-[var(--token-text-primary)]"
                 aria-label="Close crop dialog"
+                disabled={isSavingCrop}
               >
                 <XMarkIcon className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -388,7 +406,7 @@ export function AvatarUploadCropper({
                 <button
                   type="button"
                   onClick={() => adjustZoom(-0.1)}
-                  disabled={zoom <= 1}
+                  disabled={zoom <= 1 || isSavingCrop}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] text-[var(--token-text-primary)] transition hover:bg-[var(--token-bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Zoom out"
                 >
@@ -401,13 +419,14 @@ export function AvatarUploadCropper({
                   step={0.05}
                   value={zoom}
                   onChange={(event) => setZoom(Number(event.target.value))}
+                  disabled={isSavingCrop}
                   className="w-full accent-primary-500"
                   aria-label="Avatar zoom"
                 />
                 <button
                   type="button"
                   onClick={() => adjustZoom(0.1)}
-                  disabled={zoom >= 3}
+                  disabled={zoom >= 3 || isSavingCrop}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] text-[var(--token-text-primary)] transition hover:bg-[var(--token-bg-tertiary)] disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Zoom in"
                 >
@@ -420,6 +439,7 @@ export function AvatarUploadCropper({
               <button
                 type="button"
                 onClick={closeCropDialog}
+                disabled={isSavingCrop}
                 className="rounded-xl px-4 py-2 text-sm font-semibold text-[var(--token-text-secondary)] transition hover:bg-white/10 hover:text-[var(--token-text-primary)]"
               >
                 Cancel
@@ -427,16 +447,17 @@ export function AvatarUploadCropper({
               <button
                 type="button"
                 onClick={handleConfirmCrop}
-                disabled={isCropping || !croppedAreaPixels}
+                disabled={isSavingCrop || !croppedAreaPixels}
                 className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                {isCropping ? 'Cropping...' : 'Apply Crop'}
+                {isSavingCrop ? 'Saving...' : saveLabel}
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body
+        )}
     </div>
   );
 }
