@@ -276,7 +276,9 @@ describe('createUploadAvatar', () => {
     const result = await uploadAvatar(file);
 
     expect(result).toBe('https://cdn.example.com/avatar.png');
-    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData));
+    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData), {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   });
 
   it('falls back to response.data.url when avatar_url is missing', async () => {

@@ -657,7 +657,9 @@ describe('Social profileStore', () => {
       expect(useProfileStore.getState().myProfile?.avatarUrl).toBe(
         'https://cdn.example.com/new.png'
       );
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData));
+      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/me/avatar', expect.any(FormData), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
     });
   });
 
