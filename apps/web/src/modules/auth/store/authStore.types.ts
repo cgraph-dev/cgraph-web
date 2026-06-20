@@ -1,8 +1,8 @@
 // Type for API error responses
 export interface ApiErrorResponse {
-  error?: string;
+  error?: string | { message?: string; code?: string };
   message?: string;
-  errors?: Record<string, string[]>;
+  errors?: Record<string, string | string[]>;
 }
 
 export interface User {

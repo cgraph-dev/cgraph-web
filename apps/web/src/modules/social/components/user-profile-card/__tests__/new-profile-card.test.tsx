@@ -44,6 +44,7 @@ describe('NewProfileCard', () => {
 
     expect(themedHeader?.dataset.profileThemeHeaderImage).toBeUndefined();
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('mini');
+    expect(themedHeader?.dataset.profileCardBannerDecorative).toBe('false');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('mini');
     expect(avatarZone?.dataset.avatarSize).toBe('82');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/mini-profile-background/');
@@ -51,6 +52,8 @@ describe('NewProfileCard', () => {
     expect(backgroundImage).toContain('mini_signal_noir');
     expect(themedBody).toHaveClass('overflow-visible');
     expect(screen.getByText('Cipher One')).toBeInTheDocument();
+    expect(screen.getByText('Score')).toBeInTheDocument();
+    expect(screen.getByText('2450')).toBeInTheDocument();
     expect(screen.queryByText('Pulse')).not.toBeInTheDocument();
     expect(screen.queryByText('Streak')).not.toBeInTheDocument();
     expect(screen.queryByText('Posts')).not.toBeInTheDocument();
@@ -71,6 +74,7 @@ describe('NewProfileCard', () => {
     const cardShell = container.querySelector<HTMLElement>('[data-profile-card-background-image]');
 
     expect(themedHeader?.dataset.profileThemeHeaderImage).toBeUndefined();
+    expect(themedHeader?.dataset.profileCardBannerDecorative).toBe('false');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('mini_deep_space');
     expect(themedBody?.dataset.profileBackgroundImage).toContain('mini_deep_space');
     expect(themedBody).toHaveClass('cgraph-game-profile-surface');
@@ -86,6 +90,7 @@ describe('NewProfileCard', () => {
     const avatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
 
     expect(themedHeader?.dataset.profileThemeHeaderImage).toBeUndefined();
+    expect(themedHeader?.dataset.profileCardBannerDecorative).toBe('false');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/profile-background/');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('profile_signal_noir');
     expect(themedBody?.dataset.profileBackgroundImage).toContain('profile_signal_noir');

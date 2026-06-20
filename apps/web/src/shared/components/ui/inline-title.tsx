@@ -12,20 +12,24 @@ import { getTitleDisplay, isRareTitle } from './cosmetic-display';
 
 interface InlineTitleProps {
   titleId: string | null | undefined;
-  size?: 'xs' | 'sm' | 'md';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
 const SIZE_CLASSES = {
-  xs: 'text-[10px] px-1 py-0.5',
-  sm: 'text-xs px-1.5 py-0.5',
-  md: 'text-sm px-2 py-1',
+  xs: 'text-xs px-2 py-1',
+  sm: 'text-sm px-2.5 py-1',
+  md: 'text-base px-3 py-1.5',
+  lg: 'text-lg px-4 py-2',
+  xl: 'text-xl px-5 py-2.5',
 } as const;
 
 const IMAGE_SIZE_CLASSES = {
-  xs: 'h-5 w-24',
-  sm: 'h-7 w-32',
-  md: 'h-8 w-40',
+  xs: 'h-8 w-36',
+  sm: 'h-10 w-48',
+  md: 'h-14 w-64',
+  lg: 'h-16 w-72',
+  xl: 'h-20 w-80',
 } as const;
 
 export const InlineTitle = memo(function InlineTitle({

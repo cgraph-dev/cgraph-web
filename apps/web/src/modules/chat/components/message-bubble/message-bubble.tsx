@@ -121,6 +121,7 @@ function titleFromId(titleId: string | null | undefined): ProfileCardUser['equip
     color: title.colors[0] ?? '#ffffff',
     gradient: title.gradient,
     lottieUrl: title.lottieUrl ?? '/lottie/effects/placeholder.json',
+    imageUrl: title.imageUrl ?? title.previewUrl,
   };
 }
 
@@ -281,7 +282,7 @@ export const MessageBubble = memo(function MessageBubble({
               size="0.75rem"
               className="font-medium"
             />
-            {equippedTitleId && <InlineTitle titleId={equippedTitleId} size="xs" />}
+            {equippedTitleId && <InlineTitle titleId={equippedTitleId} size="sm" />}
           </div>
         )}
 

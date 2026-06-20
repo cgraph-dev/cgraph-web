@@ -11,6 +11,7 @@ import { useSearchStore } from '@/modules/search/store';
 import { useFriendStore } from '@/modules/social/store';
 import { useAuthStore } from '@/modules/auth/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { publicProfilePath } from '@/lib/profile-route';
 import type { Friend, FriendRequest } from '@/modules/social/store';
 
 /** People tab — search and discover users. */
@@ -79,15 +80,16 @@ export function PeopleTab() {
             const isPending =
               sentRequests.some((r: FriendRequest) => r.user.id === user.id) ||
               pendingRequests.some((r: FriendRequest) => r.user.id === user.id);
+            const profilePath = publicProfilePath({ id: user.id, username: user.username });
 
             return (
               <div
                 key={user.id}
                 className="hover:border-primary-500/20 flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] p-3 transition-colors hover:bg-[var(--token-bg-primary)]"
-                onClick={() => navigate(`/user/${user.id}`)}
+                onClick={() => navigate(profilePath)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && navigate(`/user/${user.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(profilePath)}
               >
                 {/* Avatar */}
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-600 to-purple-600 text-sm font-bold text-white ring-2 ring-white/10">

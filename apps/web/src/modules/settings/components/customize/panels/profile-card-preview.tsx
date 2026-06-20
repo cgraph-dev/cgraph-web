@@ -26,10 +26,23 @@ export const ProfileCardPreviewLarge = memo(function ProfileCardPreviewLarge() {
   };
 
   const enrichedUser = useProfileCardData(profileUser, 'preview');
+  const previewKey = [
+    enrichedUser.accentTheme ?? enrichedUser.profile_theme ?? 'theme',
+    enrichedUser.avatarUrl ?? 'avatar',
+    enrichedUser.avatarBorderId ?? 'border',
+    enrichedUser.nameplateId ?? enrichedUser.equipped_nameplate ?? 'nameplate',
+    enrichedUser.equippedTitle?.id ?? 'title',
+  ].join(':');
 
   return (
     <div className="flex justify-center">
-      <NewProfileCard user={enrichedUser} mode="preview" className="w-[360px]" />
+      <NewProfileCard
+        key={previewKey}
+        user={enrichedUser}
+        mode="preview"
+        variant="mini"
+        className="w-[320px] max-w-full"
+      />
     </div>
   );
 });

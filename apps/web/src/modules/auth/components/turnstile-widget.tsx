@@ -53,11 +53,35 @@ interface TurnstileWidgetProps {
 
 let scriptPromise: Promise<void> | null = null;
 
+function isLocalDevelopmentHostname(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === 'web.cgraph.org'
+  );
+}
+
+function isTurnstileDisabledForLocalDevelopment(): boolean {
+  if (!import.meta.env.DEV || import.meta.env.VITE_DEV_DISABLE_TURNSTILE !== 'true') {
+    return false;
+  }
+
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return isLocalDevelopmentHostname(window.location.hostname);
+}
+
 /**
  * Returns whether the frontend has a Turnstile site key configured.
  */
 export function isTurnstileEnabled(): boolean {
-  if (import.meta.env.VITE_E2E_AUTH_BYPASS === 'true') {
+  if (
+    import.meta.env.VITE_E2E_AUTH_BYPASS === 'true' ||
+    isTurnstileDisabledForLocalDevelopment()
+  ) {
     return false;
   }
 
@@ -127,6 +151,7 @@ export function TurnstileWidget({
   const [status, setStatus] = useState<TurnstileStatus>('idle');
   const [retryNonce, setRetryNonce] = useState(0);
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  const disableForLocalDevelopment = isTurnstileDisabledForLocalDevelopment();
 
   useEffect(() => {
     onTokenChangeRef.current = onTokenChange;
@@ -144,7 +169,7 @@ export function TurnstileWidget({
   useImperativeHandle(ref, () => ({ reset: resetWidget }), [resetWidget]);
 
   useEffect(() => {
-    if (!siteKey) {
+    if (!siteKey || disableForLocalDevelopment) {
       setStatus('disabled');
       onTokenChangeRef.current(null);
       return;
@@ -212,7 +237,7 @@ export function TurnstileWidget({
         widgetIdRef.current = null;
       }
     };
-  }, [retryNonce, siteKey, size, theme]);
+  }, [disableForLocalDevelopment, retryNonce, siteKey, size, theme]);
 
   useEffect(() => {
     if (resetSignal === undefined) {
@@ -222,7 +247,7 @@ export function TurnstileWidget({
     resetWidget();
   }, [resetSignal, resetWidget]);
 
-  if (!siteKey) {
+  if (!siteKey || disableForLocalDevelopment) {
     return null;
   }
 

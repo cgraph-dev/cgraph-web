@@ -305,11 +305,71 @@ describe('fetchCustomizations', () => {
     expect(useCustomizationStore.getState().isDirty).toBe(false);
   });
 
+  it('keeps saved custom_config identity cosmetics over stale top-level nulls', async () => {
+    mockedApi.get.mockResolvedValueOnce({
+      data: {
+        data: {
+          avatar_border_id: null,
+          title_id: null,
+          equipped_nameplate: null,
+          custom_config: {
+            avatar_border_id: 'border-stone',
+            title_id: 'title-founder',
+            equipped_nameplate: 'plate_gilded_sapphire_loop_01',
+          },
+        },
+      },
+    });
+
+    await useCustomizationStore.getState().fetchCustomizations();
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      selectedBorderId: 'border-stone',
+      equippedTitle: 'title-founder',
+      title: 'title-founder',
+      equippedNameplate: 'plate_gilded_sapphire_loop_01',
+    });
+  });
+
   it('handles fetch failure', async () => {
     mockedApi.get.mockRejectedValueOnce(new Error('Network error'));
     await useCustomizationStore.getState().fetchCustomizations();
     expect(useCustomizationStore.getState().isLoading).toBe(false);
     expect(useCustomizationStore.getState().error).toBe('Network error');
+  });
+
+  it('keeps saved custom_config identity cosmetics after save responses with stale top-level nulls', async () => {
+    useCustomizationStore.setState({
+      ...DEFAULT_STATE,
+      selectedBorderId: 'border-stone',
+      equippedTitle: 'title-founder',
+      title: 'title-founder',
+      equippedNameplate: 'plate_gilded_sapphire_loop_01',
+    });
+    mockedApi.patch.mockResolvedValueOnce({
+      data: {
+        data: {
+          avatar_border_id: null,
+          title_id: null,
+          equipped_nameplate: null,
+          custom_config: {
+            avatar_border_id: 'border-stone',
+            title_id: 'title-founder',
+            equipped_nameplate: 'plate_gilded_sapphire_loop_01',
+          },
+        },
+      },
+    });
+
+    await useCustomizationStore.getState().saveCustomizations();
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      selectedBorderId: 'border-stone',
+      equippedTitle: 'title-founder',
+      title: 'title-founder',
+      equippedNameplate: 'plate_gilded_sapphire_loop_01',
+      isDirty: false,
+    });
   });
 });
 

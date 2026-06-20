@@ -34,7 +34,7 @@ export const MinimalLayout = memo(function MinimalLayout({
           </span>
         </div>
         {config.showTitle && user.equippedTitle && (
-          <InlineTitle titleId={user.equippedTitle.id} size="xs" />
+          <InlineTitle titleId={user.equippedTitle.id} size="md" />
         )}
       </div>
     </div>

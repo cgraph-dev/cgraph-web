@@ -44,10 +44,10 @@ const SIZE_CONFIG: Record<
 };
 
 const IMAGE_NAMEPLATE_WIDTH: Record<NameplateSize, string> = {
-  xs: '5.5rem',
-  sm: '7.25rem',
-  md: '9.5rem',
-  lg: '12rem',
+  xs: '7rem',
+  sm: '9rem',
+  md: '11rem',
+  lg: '14.5rem',
 };
 
 function getTextEffectStyles(
@@ -235,7 +235,7 @@ export const NameplateRenderer = memo(function NameplateRenderer({
         </>
       )}
       {/* Emblem */}
-      {showEmblem && nameplate.emblem && (
+      {showEmblem && !hasImageAsset && nameplate.emblem && (
         <span className={`relative z-10 ${sizeConfig.emblemSize}`}>{nameplate.emblem}</span>
       )}
 

@@ -56,7 +56,12 @@ import {
   THEME_COLORS,
   DEFAULT_STATE,
 } from './customizationStore.types';
-import { apiSchemaMapper, debouncedSave, PERSIST_PARTIALIZE } from './customizationStore.schema';
+import {
+  apiSchemaMapper,
+  debouncedSave,
+  persistCustomizationState,
+  PERSIST_PARTIALIZE,
+} from './customizationStore.schema';
 
 const logger = createLogger('customizationStore');
 const CUSTOMIZATION_THEME_PRESET_SET = new Set<string>(CUSTOMIZATION_THEME_PRESETS);
@@ -297,7 +302,7 @@ export const useCustomizationStore = create<CustomizationStore>()(
             const data = response.data.data;
             const customConfig = isRecord(data?.custom_config) ? data.custom_config : {};
             const parsed = withCanonicalAliases(
-              apiSchemaMapper.fromApi({ ...customConfig, ...data }, DEFAULT_STATE)
+              apiSchemaMapper.fromApi({ ...data, ...customConfig }, DEFAULT_STATE)
             );
 
             set({
@@ -315,7 +320,37 @@ export const useCustomizationStore = create<CustomizationStore>()(
 
         saveCustomizations: async (_userId?: string) => {
           const state = get();
-          debouncedSave(state, _set);
+          set({ isSaving: true, error: null });
+
+          try {
+            const response = await persistCustomizationState(state);
+            const data = isRecord(response) && isRecord(response.data) ? response.data : response;
+
+            if (isRecord(data)) {
+              const customConfig = isRecord(data.custom_config) ? data.custom_config : {};
+              const parsed = mapServerCustomizationPatch({ ...data, ...customConfig }, get());
+
+              set({
+                ...parsed,
+                isSaving: false,
+                isDirty: false,
+                error: null,
+                lastSyncedAt: Date.now(),
+              });
+            } else {
+              set({
+                isSaving: false,
+                isDirty: false,
+                error: null,
+                lastSyncedAt: Date.now(),
+              });
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to save';
+            logger.error('Failed to save customizations:', error);
+            set({ isSaving: false, error: message });
+            throw error;
+          }
         },
 
         resetToDefaults: () => set({ ...DEFAULT_STATE, isDirty: true }),

@@ -126,7 +126,7 @@ function TitlePill({
       <div
         className={cn(
           'relative mb-[10px] inline-flex items-center justify-center',
-          compact ? 'h-6 w-28' : 'h-8 w-36'
+          compact ? 'h-12 w-56 max-w-[90%]' : 'h-16 w-72 max-w-[94%]'
         )}
         title={title}
       >

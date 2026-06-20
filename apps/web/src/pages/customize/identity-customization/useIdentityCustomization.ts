@@ -15,6 +15,7 @@ import {
   applyOwnItemUnequipped,
 } from '@/lib/identity';
 import { useAuthStore } from '@/modules/auth/store';
+import { getApiErrorMessage } from '@/modules/auth/store/authStore.utils';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import toast from 'react-hot-toast';
 import {
@@ -341,17 +342,30 @@ function buildInventoryOwnership(items: readonly InventoryItemPayload[]): Invent
 }
 
 function hydrateEquippedCosmetics(ownership: InventoryOwnership) {
-  const avatarBorderType = getAvatarBorderDisplayTypeById(ownership.equipped.avatarBorder);
+  const current = useCustomizationStore.getState();
+  const avatarBorderId = ownership.equipped.avatarBorder ?? current.selectedBorderId;
+  const titleId = ownership.equipped.title ?? current.equippedTitle;
+  const nameplateId = ownership.equipped.nameplate ?? current.equippedNameplate;
+  const badgeIds =
+    ownership.equipped.badges.length > 0 ? ownership.equipped.badges : current.equippedBadges;
+  const avatarBorderType = getAvatarBorderDisplayTypeById(avatarBorderId);
 
   useCustomizationStore.setState({
-    selectedBorderId: ownership.equipped.avatarBorder,
+    selectedBorderId: avatarBorderId,
     avatarBorderType,
     avatarBorder: avatarBorderType,
-    equippedTitle: ownership.equipped.title,
-    title: ownership.equipped.title,
-    equippedBadges: ownership.equipped.badges,
-    equippedNameplate: ownership.equipped.nameplate,
+    equippedTitle: titleId,
+    title: titleId,
+    equippedBadges: [...badgeIds],
+    equippedNameplate: nameplateId,
     isDirty: false,
+  });
+
+  useAuthStore.getState().updateUser({
+    avatarBorderId,
+    equippedTitleId: titleId,
+    equippedBadgeIds: [...badgeIds],
+    equippedNameplateId: nameplateId,
   });
 }
 
@@ -752,7 +766,7 @@ export function useIdentityCustomization() {
       await saveCustomizations(user.id);
       toast.success('Identity customizations saved successfully!');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save customizations');
+      toast.error(getApiErrorMessage(err, 'Failed to save customizations'));
     }
   };
 

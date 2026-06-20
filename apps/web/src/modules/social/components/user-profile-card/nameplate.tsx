@@ -16,8 +16,8 @@ import { cn } from '@/lib/utils';
 import type { NameplateProps } from './types';
 
 const PROFILE_IMAGE_NAMEPLATE_SIZE = {
-  width: 'min(13.75rem, 100%)',
-  height: '2.75rem',
+  width: 'min(15.5rem, 100%)',
+  height: '3rem',
 } as const;
 
 function getNameFontKey(font?: string): NameFont | null {
@@ -221,7 +221,9 @@ export const Nameplate = memo(function Nameplate({
         )}
 
         {/* Emblem from nameplate entry */}
-        {hasEntry && entry.emblem && <span className="relative z-[1] text-sm">{entry.emblem}</span>}
+        {hasEntry && !hasImageAsset && entry.emblem && (
+          <span className="relative z-[1] text-sm">{entry.emblem}</span>
+        )}
 
         {/* Display name */}
         <NameplateScrollText

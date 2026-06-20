@@ -6,6 +6,10 @@ function shouldUseSameOriginApiProxy(): boolean {
   return !import.meta.env.PROD;
 }
 
+function isTestRuntime(): boolean {
+  return import.meta.env.MODE === 'test';
+}
+
 function isLegacyApiUrl(url: string | undefined): boolean {
   return url === LEGACY_BACKEND_API_URL || url === '/api';
 }
@@ -14,11 +18,21 @@ function isLegacySocketUrl(url: string | undefined): boolean {
   return url === LEGACY_BACKEND_WS_URL;
 }
 
+function normalizeBackendBaseUrl(url: string | undefined): string | null {
+  const trimmedUrl = url?.trim();
+
+  if (!trimmedUrl || isLegacyApiUrl(trimmedUrl)) {
+    return null;
+  }
+
+  return trimmedUrl.endsWith('/') ? trimmedUrl.slice(0, -1) : trimmedUrl;
+}
+
 /** Resolve the API base URL for the current runtime. */
 export function getApiBaseUrl(): string {
-  const envUrl = import.meta.env.VITE_API_URL;
+  const envUrl = normalizeBackendBaseUrl(import.meta.env.VITE_API_URL);
 
-  if (envUrl !== undefined && envUrl !== '' && !isLegacyApiUrl(envUrl)) {
+  if (envUrl) {
     return envUrl;
   }
 
@@ -27,13 +41,21 @@ export function getApiBaseUrl(): string {
 
 /** Resolve the media base URL for the current runtime. */
 export function getMediaBaseUrl(): string {
-  const envUrl = import.meta.env.VITE_API_URL;
+  const envUrl = normalizeBackendBaseUrl(import.meta.env.VITE_API_URL);
 
-  if (envUrl !== undefined && envUrl !== '' && !isLegacyApiUrl(envUrl)) {
+  if (envUrl) {
     return envUrl;
   }
 
-  return shouldUseSameOriginApiProxy() ? '' : PROD_BACKEND_API_URL;
+  if (shouldUseSameOriginApiProxy()) {
+    if (isTestRuntime()) {
+      return '';
+    }
+
+    return normalizeBackendBaseUrl(import.meta.env.VITE_DEV_API_TARGET) ?? '';
+  }
+
+  return PROD_BACKEND_API_URL;
 }
 
 /** Resolve the Phoenix socket URL for the current runtime. */

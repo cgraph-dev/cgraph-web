@@ -55,7 +55,7 @@ export function MemberCard({ member }: MemberCardProps) {
             </span>
           )}
         </div>
-        {member.title && <InlineTitle titleId={member.title} size="xs" />}
+        {member.title && <InlineTitle titleId={member.title} size="sm" />}
         <div className="mt-1 flex items-center gap-4 text-xs text-gray-400">
           <span>{member.postCount.toLocaleString()} posts</span>
           <span>

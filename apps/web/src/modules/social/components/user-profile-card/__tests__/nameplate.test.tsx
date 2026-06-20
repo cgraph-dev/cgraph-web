@@ -29,8 +29,8 @@ describe('profile card Nameplate', () => {
     );
 
     expect(container.querySelector('.cgraph-game-nameplate-frame')).toHaveStyle({
-      width: 'min(13.75rem, 100%)',
-      height: '2.75rem',
+      width: 'min(15.5rem, 100%)',
+      height: '3rem',
     });
     expect(screen.getByText(longName).parentElement).toHaveClass(
       'nameplate-scroll-text',

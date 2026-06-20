@@ -46,6 +46,24 @@ describe('getApiErrorMessage', () => {
     expect(getApiErrorMessage(err, 'fallback')).toBe('Primary error');
   });
 
+  it('extracts message from standardized backend error envelopes', () => {
+    const err = new AxiosError('fail');
+    err.response = {
+      data: { error: { code: 'media_storage_unavailable', message: 'Media storage failed' } },
+      status: 502,
+    } as AxiosResponse;
+    expect(getApiErrorMessage(err, 'fallback')).toBe('Media storage failed');
+  });
+
+  it('extracts field validation errors from backend error maps', () => {
+    const err = new AxiosError('fail');
+    err.response = {
+      data: { errors: { avatar: ['invalid file type'] } },
+      status: 422,
+    } as AxiosResponse;
+    expect(getApiErrorMessage(err, 'fallback')).toBe('avatar: invalid file type');
+  });
+
   it('returns fallback for AxiosError with no response data fields', () => {
     const err = new AxiosError('fail');
     err.response = { data: {}, status: 500 } as AxiosResponse;
@@ -147,6 +165,11 @@ describe('mapUserFromApi', () => {
     });
 
     expect(user.avatarUrl).toBe('/uploads/avatars/user-1/avatar.jpg');
+  });
+
+  it('maps pulse from canonical pulse and reputation fields', () => {
+    expect(mapUserFromApi({ pulse: 2450 }).pulse).toBe(2450);
+    expect(mapUserFromApi({ reputation: 780 }).pulse).toBe(780);
   });
 
   it('provides safe defaults for missing fields', () => {

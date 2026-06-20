@@ -77,15 +77,19 @@ export const apiSchemaMapper = createSchemaMapper<CustomizationState>({
 
 // DEBOUNCED SAVE
 
+export async function persistCustomizationState(state: CustomizationStore): Promise<unknown> {
+  const payload = apiSchemaMapper.toApi(state);
+  const response = await http.patch('/api/v1/me/customizations', {
+    ...payload,
+    custom_config: payload,
+  });
+  notifyCustomizationChanged();
+  return response.data;
+}
+
 export const debouncedSave = createDebouncedSave<CustomizationStore>(
   async (state, _set) => {
-    const payload = apiSchemaMapper.toApi(state);
-    await http.patch('/api/v1/me/customizations', {
-      ...payload,
-      custom_config: payload,
-    });
-    // Notify friends via WebSocket that customizations have changed
-    notifyCustomizationChanged();
+    await persistCustomizationState(state);
   },
   { delay: 1000 }
 );

@@ -7,6 +7,9 @@
   "description": "CGraph browser client workspace",
   "scripts": {
     "dev": "pnpm --filter @cgraph/web dev",
+    "dev:production-backend": "pnpm env:local:production && pnpm dev",
+    "dev:production-backend:no-captcha": "pnpm env:local:production && VITE_DEV_DISABLE_TURNSTILE=true pnpm dev",
+    "env:local:production": "node scripts/sync-vercel-public-env.mjs",
     "build": "pnpm --filter @cgraph/web build",
     "check:packages": "node scripts/validate-package-dependencies.mjs",
     "check:package-owner": "node scripts/validate-package-dependencies.mjs",

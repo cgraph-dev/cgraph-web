@@ -97,7 +97,7 @@ export function ProfileNameSection({ profile }: ProfileNameSectionProps) {
       {/* User Title + Pulse */}
       <div className="mt-0.5 flex items-center gap-2">
         <p className="text-white/40">@{profile.username}</p>
-        {profile.equippedTitle && <InlineTitle titleId={profile.equippedTitle} size="sm" />}
+        {profile.equippedTitle && <InlineTitle titleId={profile.equippedTitle} size="lg" />}
         {pulse !== null && <PulseBadge score={pulse.score} tier={pulse.tier} />}
       </div>
 

@@ -14,6 +14,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { TrophyIcon } from '@heroicons/react/24/outline';
+import { publicProfilePath } from '@/lib/profile-route';
 import { usePulseStore } from '@/modules/pulse/store/pulseStore';
 import { PulseBadge } from '@/modules/pulse/components/pulse-badge';
 import type { PulseLeaderEntry, PulseTier } from '@/modules/pulse/types';
@@ -151,7 +152,7 @@ function LeaderRow({ entry, rank }: LeaderRowProps): React.ReactNode {
 
   return (
     <Link
-      to={`/user/${entry.userId}`}
+      to={publicProfilePath({ id: entry.userId, username: entry.username })}
       className="flex h-full items-center gap-3 px-4 transition-colors hover:bg-[var(--token-bg-secondary)]"
     >
       <span className="w-8 shrink-0 text-center text-sm font-bold text-[var(--token-text-muted)]">

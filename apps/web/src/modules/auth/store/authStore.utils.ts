@@ -24,9 +24,35 @@ function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
   if (typeof value !== 'object' || value === null) return false;
   const obj = Object.fromEntries(Object.entries(value));
   return (
-    (obj.error === undefined || typeof obj.error === 'string') &&
+    (obj.error === undefined ||
+      typeof obj.error === 'string' ||
+      (typeof obj.error === 'object' && obj.error !== null)) &&
     (obj.message === undefined || typeof obj.message === 'string')
   );
+}
+
+function messageFromApiErrorField(error: ApiErrorResponse['error']): string | null {
+  if (typeof error === 'string') return error;
+  if (typeof error === 'object' && error !== null && typeof error.message === 'string') {
+    return error.message;
+  }
+  return null;
+}
+
+function messageFromApiErrors(errors: ApiErrorResponse['errors']): string | null {
+  if (!errors || typeof errors !== 'object') return null;
+
+  for (const [field, value] of Object.entries(errors)) {
+    if (typeof value === 'string' && value.length > 0) {
+      return `${field}: ${value}`;
+    }
+
+    if (Array.isArray(value) && value.length > 0) {
+      return `${field}: ${value.join(', ')}`;
+    }
+  }
+
+  return null;
 }
 
 type UserStatus = 'online' | 'idle' | 'dnd' | 'offline';
@@ -43,7 +69,12 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
     const data: unknown = error.response?.data;
     if (isApiErrorResponse(data)) {
-      return data.error || data.message || fallback;
+      return (
+        messageFromApiErrorField(data.error) ||
+        data.message ||
+        messageFromApiErrors(data.errors) ||
+        fallback
+      );
     }
     return fallback;
   }
@@ -84,7 +115,13 @@ export function mapUserFromApi(apiUser: Record<string, unknown>): User {
     twoFactorEnabled: isBoolean(apiUser.totp_enabled) ? apiUser.totp_enabled : false,
     status: isUserStatus(apiUser.status) ? apiUser.status : 'offline',
     statusMessage: isString(apiUser.custom_status) ? apiUser.custom_status : null,
-    pulse: isNumber(apiUser.karma) ? apiUser.karma : 0,
+    pulse: isNumber(apiUser.pulse)
+      ? apiUser.pulse
+      : isNumber(apiUser.karma)
+        ? apiUser.karma
+        : isNumber(apiUser.reputation)
+          ? apiUser.reputation
+          : 0,
     isVerified: isBoolean(apiUser.is_verified) ? apiUser.is_verified : false,
     isPremium: isBoolean(apiUser.is_premium) ? apiUser.is_premium : false,
     isAdmin: isBoolean(apiUser.is_admin) ? apiUser.is_admin : false,

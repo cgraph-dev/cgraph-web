@@ -92,7 +92,7 @@ export function PostbitSidebar({ author, forumId, postId, currentUserId }: Postb
       </ForumUserPopover>
 
       {/* User title */}
-      {author.equippedTitleId && <InlineTitle titleId={author.equippedTitleId} size="xs" />}
+      {author.equippedTitleId && <InlineTitle titleId={author.equippedTitleId} size="sm" />}
 
       {/* Auto-title from post count (shown when no custom title) */}
       {!author.equippedTitleId && author.postCount !== undefined && (

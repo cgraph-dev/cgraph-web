@@ -137,7 +137,7 @@ export function PostContent({
               </span>
             </ForumUserPopover>
             {post.author.equippedTitleId && (
-              <InlineTitle titleId={post.author.equippedTitleId} size="xs" />
+              <InlineTitle titleId={post.author.equippedTitleId} size="sm" />
             )}
             {post.author.reputation !== undefined && (
               <span className="bg-purple-500/20 rounded px-1.5 py-0.5 text-xs text-purple-400">

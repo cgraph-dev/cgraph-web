@@ -49,7 +49,7 @@ export function CommentHeader({
             {comment.author.displayName || comment.author.username}
           </span>
           {comment.author.equippedTitleId && (
-            <InlineTitle titleId={comment.author.equippedTitleId} size="xs" />
+            <InlineTitle titleId={comment.author.equippedTitleId} size="sm" />
           )}
           {isOwnComment && (
             <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-xs text-blue-400">You</span>

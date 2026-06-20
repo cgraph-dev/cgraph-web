@@ -12,6 +12,7 @@ import { getAvatarBorderId } from '@/lib/utils';
 import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 import { useAuthStore } from '@/modules/auth/store';
+import { getApiErrorMessage } from '@/modules/auth/store/authStore.utils';
 import type { User } from '@/modules/auth/store/authStore.types';
 
 interface AvatarSectionProps {
@@ -32,7 +33,7 @@ export function AvatarSection({ user }: AvatarSectionProps) {
 
     setIsSaving(true);
     try {
-      const result = await uploadCurrentUserAvatarAndSync(payload.blob);
+      const result = await uploadCurrentUserAvatarAndSync(payload.file);
       const userPatch: Partial<User> = result.user
         ? {
             avatarUrl: result.user.avatarUrl ?? result.avatarUrl,
@@ -61,7 +62,7 @@ export function AvatarSection({ user }: AvatarSectionProps) {
       });
       toast.success('Avatar updated');
     } catch (error) {
-      toast.error('Could not update avatar. Please try again.');
+      toast.error(getApiErrorMessage(error, 'Could not update avatar. Please try again.'));
       throw error;
     } finally {
       setIsSaving(false);

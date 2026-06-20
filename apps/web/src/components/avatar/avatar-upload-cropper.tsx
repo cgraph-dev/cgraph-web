@@ -170,6 +170,9 @@ export function AvatarUploadCropper({
 
   function closeCropDialog() {
     setCropImageSrc(null);
+    if (!pendingPayload) {
+      setSourceImageSrc(null);
+    }
   }
 
   function adjustZoom(delta: number) {
@@ -201,16 +204,14 @@ export function AvatarUploadCropper({
       const payload = { blob, file, previewUrl: nextPreviewUrl };
       rememberOwnedObjectUrl(nextPreviewUrl);
       setPreviewUrl(nextPreviewUrl);
-      await onAvatarCropped(payload);
-      replacePendingPayload(null);
-      setSourceImageSrc(null);
+      replacePendingPayload(payload);
       setCropImageSrc(null);
     } catch (error) {
       if (nextPreviewUrl) {
         revokeOwnedObjectUrl(nextPreviewUrl);
         setPreviewUrl(avatarUrl ?? null);
       }
-      toast.error(error instanceof Error ? 'Could not save avatar. Please try again.' : 'Could not crop this image');
+      toast.error(error instanceof Error ? 'Could not prepare avatar. Please try again.' : 'Could not crop this image');
     } finally {
       setIsCropping(false);
     }
@@ -451,7 +452,7 @@ export function AvatarUploadCropper({
                 className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                {isSavingCrop ? 'Saving...' : saveLabel}
+                {isSavingCrop ? 'Preparing...' : 'Apply crop'}
               </button>
             </div>
           </div>

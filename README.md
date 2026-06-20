@@ -33,6 +33,7 @@ owner explicitly re-enables that CI-budget path.
 
 ```sh
 pnpm install
+pnpm dev:production-backend
 pnpm check:packages
 pnpm typecheck
 pnpm lint
@@ -49,10 +50,38 @@ Copy `apps/web/.env.example` into the environment manager for the target
 deployment. Do not commit `.env` files. All `VITE_*` values are public in the
 built browser bundle; secrets belong on the backend.
 
+For local development against the production Fly backend, first pull Vercel's
+production env and then generate the ignored local Vite env:
+
+```sh
+vercel env pull .vercel/.env.production.local --environment=production
+pnpm env:local:production
+pnpm dev
+```
+
+`pnpm dev:production-backend` runs the env sync and then starts Vite. Local API
+and socket requests stay same-origin (`/api`, `/socket`) and Vite proxies them
+to `cgraph-backend-prod-v2.fly.dev`, which keeps the browser flow close to
+production while still using localhost.
+
+When Turnstile blocks local frontend work, use the local-only no-captcha dev
+script instead:
+
+```sh
+pnpm dev:production-backend:no-captcha
+```
+
+That script does not disable auth or production security. It only skips the
+frontend Turnstile widget in Vite dev on local hosts and lets the Vite proxy add
+a private server-side bypass header to Fly. The matching Fly secret must be set
+on the backend; the token is stored in ignored `apps/web/.env.local` and is
+never exposed as a `VITE_*` browser variable.
+
 Required production values:
 
 - `VITE_API_URL`
 - `VITE_WS_URL`
+- `VITE_SOCKET_URL`
 - `VITE_TURNSTILE_SITE_KEY`
 
 Optional production values:

@@ -40,7 +40,7 @@ export const DetailedLayout = memo(function DetailedLayout({
             <span className="text-sm opacity-60">@{user.username}</span>
           </div>
           {config.showTitle && user.equippedTitle && (
-            <InlineTitle titleId={user.equippedTitle.id} size="sm" />
+            <InlineTitle titleId={user.equippedTitle.id} size="lg" />
           )}
           {config.showBio && user.bio && (
             <p className={cn('mt-2 line-clamp-2 opacity-80', sizeConfig.textSize)}>{user.bio}</p>

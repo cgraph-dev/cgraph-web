@@ -82,6 +82,7 @@ export const NewProfileCard = memo(function NewProfileCard({
         bannerBackground={cardBackgroundImage ? 'transparent' : theme.banner}
         backgroundImage={bannerBackgroundImage}
         variant={variant}
+        decorative={!cardBackgroundImage}
       />
 
       {/* Card body with theme surface tint */}
@@ -90,7 +91,7 @@ export const NewProfileCard = memo(function NewProfileCard({
         data-profile-background-image={cardBackgroundImage ?? undefined}
         style={{
           background: cardBackgroundImage
-            ? `linear-gradient(180deg, rgba(8,9,15,0.03) 0%, rgba(8,9,15,0.44) 54%, rgba(8,9,15,0.9) 100%), linear-gradient(180deg, ${theme.surface} 0%, transparent 55%)`
+            ? 'linear-gradient(180deg, rgba(8,9,15,0.03) 0%, rgba(8,9,15,0.28) 54%, rgba(8,9,15,0.82) 100%)'
             : `linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), #08090f`,
         }}
       >
@@ -139,23 +140,24 @@ export const NewProfileCard = memo(function NewProfileCard({
         />
 
         {/* Divider + reputation dots */}
-        {!isMini && (
-          <>
+        <>
+          {!isMini && (
             <div
               className="mx-[1.2rem] my-[0.85rem] h-px"
               style={{
                 background: `linear-gradient(90deg, transparent 0%, ${theme.border} 20%, ${theme.border} 80%, transparent 100%)`,
               }}
             />
+          )}
 
-            <PulseDots
-              filled={user.pulseFilled ?? 0}
-              tier={user.pulseTier ?? 'Newcomer'}
-              score={user.pulse ?? 0}
-              prefersReducedMotion={true}
-            />
-          </>
-        )}
+          <PulseDots
+            filled={user.pulseFilled ?? 0}
+            tier={user.pulseTier ?? 'Newcomer'}
+            score={user.pulse ?? 0}
+            prefersReducedMotion={true}
+            compact={isMini}
+          />
+        </>
 
         {/* Action buttons (hidden in preview mode) */}
         {!isPreview && (

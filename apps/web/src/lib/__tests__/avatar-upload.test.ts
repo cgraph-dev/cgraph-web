@@ -94,10 +94,13 @@ describe('avatarUrlFromUploadResponse', () => {
     expect(mockedHttp.post).toHaveBeenCalledWith(
       '/api/v1/me/avatar',
       expect.any(FormData),
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      expect.objectContaining({ headers: { 'Content-Type': 'multipart/form-data' } })
     );
     const [, formData] = mockedHttp.post.mock.calls[0];
-    expect((formData as FormData).get('file')).toBeInstanceOf(File);
+    const file = (formData as FormData).get('file');
+    expect(file).toBeInstanceOf(File);
+    expect((file as File).name).toBe('avatar.jpg');
+    expect((file as File).type).toBe('image/jpeg');
     expect(result.avatarUrl).toBe('/uploads/avatars/user-1/avatar-123.png');
   });
 });

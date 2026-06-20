@@ -366,7 +366,7 @@ export const NameplateBar = memo(function NameplateBar({
           style={{ width, height }}
         >
           {/* Emblem */}
-          {entry.emblem && (
+          {!hasImageAsset && entry.emblem && (
             <motion.span
               className="flex-shrink-0 text-base"
               initial={{ scale: 0, rotate: -45 }}
@@ -386,17 +386,19 @@ export const NameplateBar = memo(function NameplateBar({
           />
 
           {/* Trailing emblem for symmetry on high-rarity plates */}
-          {entry.emblem && (entry.rarity === 'legendary' || entry.rarity === 'mythic') && (
-            <motion.span
-              className="flex-shrink-0 text-base"
-              initial={{ scale: 0, rotate: 45 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 300, damping: 20 }}
-              aria-hidden="true"
-            >
-              {entry.emblem}
-            </motion.span>
-          )}
+          {!hasImageAsset &&
+            entry.emblem &&
+            (entry.rarity === 'legendary' || entry.rarity === 'mythic') && (
+              <motion.span
+                className="flex-shrink-0 text-base"
+                initial={{ scale: 0, rotate: 45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, type: 'spring', stiffness: 300, damping: 20 }}
+                aria-hidden="true"
+              >
+                {entry.emblem}
+              </motion.span>
+            )}
         </div>
       </motion.div>
     </AnimatePresence>

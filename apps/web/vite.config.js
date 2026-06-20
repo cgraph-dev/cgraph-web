@@ -1,11 +1,12 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 const NODE_MODULES_SEGMENT = '/node_modules/';
 const CSP_EXTRA_CONNECT_SOURCES_MARKER = '__CGRAPH_CSP_EXTRA_CONNECT_SOURCES__';
+const DEV_TURNSTILE_BYPASS_HEADER = 'x-cgraph-dev-turnstile-bypass';
 const BASE_CONNECT_SOURCES = new Set([
   'https://cgraph-backend-prod-v2.fly.dev',
   'wss://cgraph-backend-prod-v2.fly.dev',
@@ -27,13 +28,13 @@ function getAbsoluteUrlOrigin(value) {
   }
 }
 
-function getCspExtraConnectSources() {
+function getCspExtraConnectSources(env) {
   return [
-    process.env.VITE_API_URL,
-    process.env.VITE_SOCKET_URL,
-    process.env.VITE_WS_URL,
-    process.env.VITE_DEV_API_TARGET,
-    process.env.VITE_DEV_WS_TARGET,
+    env.VITE_API_URL,
+    env.VITE_SOCKET_URL,
+    env.VITE_WS_URL,
+    env.VITE_DEV_API_TARGET,
+    env.VITE_DEV_WS_TARGET,
   ]
     .map(getAbsoluteUrlOrigin)
     .filter(Boolean)
@@ -42,13 +43,31 @@ function getCspExtraConnectSources() {
     .join(' ');
 }
 
-function cspConnectSourcesPlugin() {
+function cspConnectSourcesPlugin(env) {
   return {
     name: 'cgraph-csp-connect-sources',
     transformIndexHtml(html) {
-      return html.replace(CSP_EXTRA_CONNECT_SOURCES_MARKER, getCspExtraConnectSources());
+      return html.replace(CSP_EXTRA_CONNECT_SOURCES_MARKER, getCspExtraConnectSources(env));
     },
   };
+}
+
+function shouldInjectDevTurnstileBypass(env) {
+  return (
+    env.VITE_DEV_DISABLE_TURNSTILE === 'true' &&
+    typeof env.CGRAPH_DEV_TURNSTILE_BYPASS_TOKEN === 'string' &&
+    env.CGRAPH_DEV_TURNSTILE_BYPASS_TOKEN.length > 0
+  );
+}
+
+function configureApiProxy(proxy, env) {
+  if (!shouldInjectDevTurnstileBypass(env)) {
+    return;
+  }
+
+  proxy.on('proxyReq', (proxyReq) => {
+    proxyReq.setHeader(DEV_TURNSTILE_BYPASS_HEADER, env.CGRAPH_DEV_TURNSTILE_BYPASS_TOKEN);
+  });
 }
 
 function getPackageNameFromModuleId(id) {
@@ -72,12 +91,14 @@ function isPublishedCgraphPackageModule(id, packageName) {
   return getPackageNameFromModuleId(id) === `@cgraph-dev/${packageName}`;
 }
 
-const coverageMinimum = Number(process.env.WEB_COVERAGE_MIN ?? 65);
-
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    cspConnectSourcesPlugin(),
+export default defineConfig(({ mode }) => {
+  const env = { ...process.env, ...loadEnv(mode, process.cwd(), '') };
+  const coverageMinimum = Number(env.WEB_COVERAGE_MIN ?? 65);
+
+  return {
+    plugins: [
+      cspConnectSourcesPlugin(env),
     react(),
     // Bundle analyzer - generates stats.html after build
     visualizer({
@@ -87,15 +108,15 @@ export default defineConfig({
       brotliSize: true,
       template: 'treemap',
     }),
-  ],
-  resolve: {
+    ],
+    resolve: {
     alias: {
       // LiveKit ships a single large ESM file; source modules keep the call vendor chunk under budget.
       'livekit-client': path.resolve(__dirname, './node_modules/livekit-client/src/index.ts'),
       '@': path.resolve(__dirname, './src'),
     },
-  },
-  test: {
+    },
+    test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
@@ -124,24 +145,26 @@ export default defineConfig({
         lines: coverageMinimum,
       },
     },
-  },
-  server: {
+    },
+    server: {
     port: 3000,
+    allowedHosts: ['web.cgraph.org'],
     proxy: {
       '/api': {
-        target: process.env.VITE_DEV_API_TARGET || 'https://cgraph-backend-prod-v2.fly.dev',
+        target: env.VITE_DEV_API_TARGET || 'https://cgraph-backend-prod-v2.fly.dev',
         changeOrigin: true,
         secure: true,
+        configure: (proxy) => configureApiProxy(proxy, env),
       },
       '/socket': {
-        target: process.env.VITE_DEV_WS_TARGET || 'wss://cgraph-backend-prod-v2.fly.dev',
+        target: env.VITE_DEV_WS_TARGET || 'wss://cgraph-backend-prod-v2.fly.dev',
         ws: true,
         changeOrigin: true,
         secure: true,
       },
     },
-  },
-  build: {
+    },
+    build: {
     outDir: 'dist',
     sourcemap: true,
     chunkSizeWarningLimit: 500,
@@ -379,5 +402,6 @@ export default defineConfig({
         },
       },
     },
-  },
+    },
+  };
 });

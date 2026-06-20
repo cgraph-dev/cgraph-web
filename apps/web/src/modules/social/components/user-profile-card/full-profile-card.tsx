@@ -93,7 +93,7 @@ export const FullProfileCard = memo(function FullProfileCard({
               <h2 className="text-2xl font-bold text-white">{user.displayName}</h2>
               {(() => {
                 const titleId = isOwnProfile ? storeEquippedTitle : user.equippedTitle?.id;
-                return titleId ? <InlineTitle titleId={titleId} size="sm" /> : null;
+                return titleId ? <InlineTitle titleId={titleId} size="lg" /> : null;
               })()}
             </div>
             <p className="text-sm text-white/60">@{user.username}</p>

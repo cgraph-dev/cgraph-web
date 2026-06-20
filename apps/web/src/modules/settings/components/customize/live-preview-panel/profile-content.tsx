@@ -13,6 +13,7 @@ import { AnimatedAvatar } from '../animated-avatar';
 import type { ThemePreset } from '@/modules/settings/store/customization';
 import { springs, tweens, loop } from '@/lib/animation-presets';
 import { GlowText, FireText } from '@/shared/components/ui';
+import { InlineTitle } from '@/shared/components/ui/inline-title';
 import { PREVIEW_BADGES } from './constants';
 import type { BadgeDisplay, TitleDisplay } from '@/shared/components/ui/cosmetic-display';
 import { resolveEquippedBadges } from '@/shared/components/ui/cosmetic-display';
@@ -202,8 +203,8 @@ export function ProfileContent({
               displayNameEffect={settings.displayNameEffect}
               displayNameColor={settings.displayNameColor}
               displayNameSecondaryColor={settings.displayNameSecondaryColor}
-              width={240}
-              height={36}
+              width={248}
+              height={48}
             />
           </div>
         ) : (
@@ -225,7 +226,9 @@ export function ProfileContent({
             animate={{ opacity: 1, scale: 1 }}
             key={effectiveTitle}
           >
-            {isLegendaryTitle ? (
+            {effectiveTitle ? (
+              <InlineTitle titleId={effectiveTitle} size="lg" />
+            ) : isLegendaryTitle ? (
               <FireText size="sm">{titleInfo.name}</FireText>
             ) : (
               <span className={`text-xs font-medium ${titleInfo.gradient}`}>{titleInfo.name}</span>

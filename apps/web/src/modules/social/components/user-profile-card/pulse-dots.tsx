@@ -11,20 +11,27 @@ export const PulseDots = memo(function PulseDots({
   tier,
   score,
   prefersReducedMotion,
+  compact = false,
 }: PulseDotsProps) {
   const isDim = tier === 'Newcomer';
 
   return (
-    <div className="mb-4 flex items-center justify-between px-[1.2rem]">
+    <div
+      className={cn(
+        'flex items-center justify-between',
+        compact ? 'mb-3 px-[1rem]' : 'mb-4 px-[1.2rem]'
+      )}
+    >
       {/* Star dots */}
-      <div className="flex items-center gap-1.5">
+      <div className={cn('flex items-center', compact ? 'gap-1' : 'gap-1.5')}>
         {Array.from({ length: 5 }, (_, i) => {
           const isOn = i < filled;
           return (
             <div
               key={i}
               className={cn(
-                'flex h-5 w-5 items-center justify-center rounded-full transition-transform duration-200',
+                'flex items-center justify-center rounded-full transition-transform duration-200',
+                compact ? 'h-4 w-4' : 'h-5 w-5',
                 !isOn && 'border border-white/[0.055] bg-white/[0.025]',
               )}
               style={
@@ -44,7 +51,7 @@ export const PulseDots = memo(function PulseDots({
             >
               <svg
                 viewBox="0 0 16 16"
-                className="relative z-[1] h-[7px] w-[7px]"
+                className={cn('relative z-[1]', compact ? 'h-1.5 w-1.5' : 'h-[7px] w-[7px]')}
                 fill={isOn ? 'rgba(255,255,255,0.9)' : 'rgba(45,54,72,0.2)'}
               >
                 <path d="M8 1L10 6H15L11 9L13 14L8 11L3 14L5 9L1 6H6Z" />
@@ -58,7 +65,8 @@ export const PulseDots = memo(function PulseDots({
       <div className="text-right">
         <div
           className={cn(
-            'text-[11px] font-bold tracking-[0.03em]',
+            'font-bold tracking-[0.03em]',
+            compact ? 'text-[10px]' : 'text-[11px]',
             isDim ? 'text-[#222c3c]' : 'text-[#7c6ef5]',
           )}
           style={{ fontFamily: "'Inter', system-ui" }}
@@ -66,7 +74,10 @@ export const PulseDots = memo(function PulseDots({
           {tier}
         </div>
         <div
-          className="mt-px text-[9px] tracking-[0.05em] text-[#222c3c]"
+          className={cn(
+            'mt-px tracking-[0.05em] text-[#222c3c]',
+            compact ? 'text-[8px]' : 'text-[9px]'
+          )}
           style={{ fontFamily: "'JetBrains Mono', monospace" }}
         >
           Score <span className="text-[#3d4d62]">{score}</span>

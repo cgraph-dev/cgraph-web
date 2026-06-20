@@ -75,12 +75,21 @@ async function fetchCurrentUserRecord(): Promise<Record<string, unknown> | null>
   return userRecordFromApiResponse(response.data);
 }
 
-/** Uploads a cropped avatar blob and returns the canonical current-user data. */
+function avatarFileFromUpload(upload: Blob | File): File {
+  if (upload instanceof File) {
+    return upload;
+  }
+
+  return new File([upload], 'avatar.jpg', { type: upload.type || 'image/jpeg' });
+}
+
+/** Uploads a cropped avatar image and returns the canonical current-user data. */
 export async function uploadCurrentUserAvatarAndSync(
-  blob: Blob
+  upload: Blob | File
 ): Promise<CurrentUserAvatarUploadResult> {
+  const file = avatarFileFromUpload(upload);
   const formData = new FormData();
-  formData.append('file', blob, 'avatar.jpg');
+  formData.append('file', file, file.name || 'avatar.jpg');
 
   const response = await http.post('/api/v1/me/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
@@ -108,6 +117,6 @@ export async function uploadCurrentUserAvatarAndSync(
 }
 
 /** Uploads a cropped avatar blob for the authenticated user. */
-export async function uploadCurrentUserAvatar(blob: Blob): Promise<string | null> {
-  return (await uploadCurrentUserAvatarAndSync(blob)).avatarUrl;
+export async function uploadCurrentUserAvatar(upload: Blob | File): Promise<string | null> {
+  return (await uploadCurrentUserAvatarAndSync(upload)).avatarUrl;
 }

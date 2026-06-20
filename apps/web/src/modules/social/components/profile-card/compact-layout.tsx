@@ -47,7 +47,7 @@ export const CompactLayout = memo(function CompactLayout({
           </span>
         </div>
         {config.showTitle && user.equippedTitle && (
-          <InlineTitle titleId={user.equippedTitle.id} size="xs" />
+          <InlineTitle titleId={user.equippedTitle.id} size="md" />
         )}
         {config.showBadges && user.equippedBadges && user.equippedBadges.length > 0 && (
           <div className="mt-1 flex gap-1">

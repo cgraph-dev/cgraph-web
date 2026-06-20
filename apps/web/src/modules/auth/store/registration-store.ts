@@ -803,7 +803,6 @@ export const usePhoneRegistrationStore = create<PhoneRegistrationState>((set, ge
         const avatarResponse = await http.post('/api/v1/me/avatar', avatarUpload, {
           headers: {
             Authorization: `Bearer ${pendingAuth.tokens.access_token}`,
-            'Content-Type': 'multipart/form-data',
           },
         });
 

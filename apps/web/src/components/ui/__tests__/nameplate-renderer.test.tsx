@@ -27,6 +27,7 @@ describe('NameplateRenderer', () => {
   it('renders image-backed nameplates without fallback frame overlays', () => {
     const imageNameplate: NameplateEntry = {
       ...BASE_NAMEPLATE,
+      emblem: '◆',
       imageUrl: '/cosmetics/pixellab/nameplate/plate_gilded_emerald_loop_01/plate_gilded_emerald_loop_01_0.gif',
       previewUrl: '/cosmetics/pixellab/nameplate/plate_gilded_emerald_loop_01/plate_gilded_emerald_loop_01_0.png',
       barGradient: null,
@@ -41,8 +42,9 @@ describe('NameplateRenderer', () => {
     expect(container.querySelector('.cgraph-game-nameplate-glow')).not.toBeInTheDocument();
     expect(container.querySelector('.cgraph-game-nameplate-sheen')).not.toBeInTheDocument();
     expect(container.firstElementChild).toHaveStyle({ background: 'transparent' });
-    expect(container.firstElementChild).toHaveStyle({ width: '9.5rem', maxWidth: '100%' });
+    expect(container.firstElementChild).toHaveStyle({ width: '11rem', maxWidth: '100%' });
     expect(screen.getByText('tricker').parentElement).toHaveClass('nameplate-scroll-text');
+    expect(screen.queryByText('◆')).not.toBeInTheDocument();
   });
 
   it('keeps fallback overlays for non-image nameplates', () => {

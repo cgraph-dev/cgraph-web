@@ -120,6 +120,7 @@ export interface BannerProps {
   bannerBackground: string;
   backgroundImage?: string;
   variant?: 'mini' | 'full';
+  decorative?: boolean;
 }
 
 export interface AvatarZoneProps {
@@ -163,6 +164,7 @@ export interface PulseDotsProps {
   tier: PulseTier;
   score: number;
   prefersReducedMotion: boolean;
+  compact?: boolean;
 }
 
 export interface ActionButtonsProps {
