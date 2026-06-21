@@ -14,7 +14,7 @@ import {
   applyOwnItemEquipped,
   applyOwnItemUnequipped,
 } from '@/lib/identity';
-import { useAuthStore } from '@/modules/auth/store';
+import { useAuthStore, type User } from '@/modules/auth/store';
 import { getApiErrorMessage } from '@/modules/auth/store/authStore.utils';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import toast from 'react-hot-toast';
@@ -197,6 +197,44 @@ const FREE_NAMEPLATE_IDS = new Set(
   NAMEPLATE_REGISTRY.filter((plate) => plate.free).map((plate) => plate.id)
 );
 
+export function hasPremiumAccessForCustomization(
+  user: Pick<User, 'isPremium' | 'subscription'> | null | undefined
+): boolean {
+  const tier = user?.subscription?.tier;
+  return user?.isPremium === true || tier === 'premium' || tier === 'enterprise';
+}
+
+export function isBorderUnlockedForCustomization(
+  border: Pick<BorderDefinition, 'id' | 'unlocked' | 'isPremium'>,
+  ownedBorderIds: ReadonlySet<string>,
+  hasPremiumAccess: boolean
+): boolean {
+  return border.unlocked || ownedBorderIds.has(border.id) || (hasPremiumAccess && border.isPremium);
+}
+
+export function isTitleUnlockedForCustomization(
+  title: Pick<TitleDefinition, 'id' | 'unlocked' | 'isPremium' | 'category'>,
+  ownedTitleIds: ReadonlySet<string>,
+  hasPremiumAccess: boolean
+): boolean {
+  return (
+    title.unlocked ||
+    ownedTitleIds.has(title.id) ||
+    (hasPremiumAccess && (title.isPremium || title.category === 'premium'))
+  );
+}
+
+export function getOwnedNameplateIdsForCustomization(
+  ownedNameplateIds: ReadonlySet<string>,
+  hasPremiumAccess: boolean
+): string[] {
+  const premiumNameplateIds = hasPremiumAccess
+    ? NAMEPLATE_REGISTRY.filter((plate) => !plate.free).map((plate) => plate.id)
+    : [];
+
+  return [...new Set([...FREE_NAMEPLATE_IDS, ...premiumNameplateIds, ...ownedNameplateIds])];
+}
+
 function createCatalogLookup(type: InventoryType): ReadonlyMap<string, string> {
   const lookup = new Map<string, string>();
   const add = (key: string | null | undefined, catalogId: string) => {
@@ -374,7 +412,11 @@ function hydrateEquippedCosmetics(ownership: InventoryOwnership) {
 }
 
 /** Map static BorderDefinition to the component's Border type */
-function mapBorderDefinition(b: BorderDefinition, ownership: InventoryOwnership): Border {
+function mapBorderDefinition(
+  b: BorderDefinition,
+  ownership: InventoryOwnership,
+  hasPremiumAccess: boolean
+): Border {
   const equipTarget = ownership.equipTargets.avatar_border.get(b.id);
   return {
     id: b.id,
@@ -384,7 +426,7 @@ function mapBorderDefinition(b: BorderDefinition, ownership: InventoryOwnership)
     colors: b.colors,
     imageUrl: b.imageUrl,
     previewUrl: b.previewUrl,
-    unlocked: ownership.owned.avatar_border.has(b.id),
+    unlocked: isBorderUnlockedForCustomization(b, ownership.owned.avatar_border, hasPremiumAccess),
     serverItemId: equipTarget?.itemId,
     serverItemType: equipTarget?.itemType,
     unlockRequirement: b.unlockRequirement,
@@ -392,7 +434,11 @@ function mapBorderDefinition(b: BorderDefinition, ownership: InventoryOwnership)
 }
 
 /** Map static TitleDefinition to the component's Title type */
-function mapTitleDefinition(t: TitleDefinition, ownership: InventoryOwnership): Title {
+function mapTitleDefinition(
+  t: TitleDefinition,
+  ownership: InventoryOwnership,
+  hasPremiumAccess: boolean
+): Title {
   const equipTarget = ownership.equipTargets.title.get(t.id);
   return {
     id: t.id,
@@ -402,7 +448,7 @@ function mapTitleDefinition(t: TitleDefinition, ownership: InventoryOwnership): 
     lottieUrl: t.lottieUrl ?? '/lottie/effects/placeholder.json',
     imageUrl: t.imageUrl,
     previewUrl: t.previewUrl,
-    unlocked: t.unlocked || ownership.owned.title.has(t.id),
+    unlocked: isTitleUnlockedForCustomization(t, ownership.owned.title, hasPremiumAccess),
     serverItemId: equipTarget?.itemId,
     serverItemType: equipTarget?.itemType,
     unlockRequirement: t.unlockRequirement,
@@ -434,6 +480,7 @@ function mapBadgeDefinition(b: BadgeDefinition, ownership: InventoryOwnership): 
  */
 export function useIdentityCustomization() {
   const { user } = useAuthStore();
+  const hasPremiumAccess = hasPremiumAccessForCustomization(user);
   const store = useCustomizationStore();
   const {
     avatarBorderType,
@@ -531,10 +578,12 @@ export function useIdentityCustomization() {
 
     function applyOwnership(ownership: InventoryOwnership) {
       if (canceled) return;
-      setBorders(ALL_BORDERS.map((b) => mapBorderDefinition(b, ownership)));
-      setTitles(ALL_TITLES.map((t) => mapTitleDefinition(t, ownership)));
+      setBorders(ALL_BORDERS.map((b) => mapBorderDefinition(b, ownership, hasPremiumAccess)));
+      setTitles(ALL_TITLES.map((t) => mapTitleDefinition(t, ownership, hasPremiumAccess)));
       setBadges(ALL_BADGES.map((b) => mapBadgeDefinition(b, ownership)));
-      setOwnedNameplateIds([...new Set([...FREE_NAMEPLATE_IDS, ...ownership.owned.nameplate])]);
+      setOwnedNameplateIds(
+        getOwnedNameplateIdsForCustomization(ownership.owned.nameplate, hasPremiumAccess)
+      );
       setInventoryEquipTargets(ownership.equipTargets);
       setIsLoadingIdentity(false);
     }
@@ -569,7 +618,14 @@ export function useIdentityCustomization() {
     return () => {
       canceled = true;
     };
-  }, [user?.id, fetchCustomizations]);
+  }, [
+    user?.id,
+    user?.isPremium,
+    user?.subscription?.tier,
+    user?.subscription?.status,
+    fetchCustomizations,
+    hasPremiumAccess,
+  ]);
 
   // --- Filtering ---
 
@@ -771,11 +827,15 @@ export function useIdentityCustomization() {
       toast.error('User not authenticated');
       return;
     }
-    if (previewingLockedItem) {
+    if (previewingLockedItem && !hasPremiumAccess) {
       toast.error('Premium item selected! Purchase premium to save these customizations.', {
         duration: 4000,
       });
       return;
+    }
+    if (previewingLockedItem && hasPremiumAccess) {
+      setPreviewingLockedItem(null);
+      setPreviewSnapshot(null);
     }
     try {
       await saveCustomizations(user.id);
@@ -811,6 +871,7 @@ export function useIdentityCustomization() {
     if (
       normalizedNameplateId &&
       !FREE_NAMEPLATE_IDS.has(normalizedNameplateId) &&
+      !hasPremiumAccess &&
       !ownedNameplateIds.includes(normalizedNameplateId)
     ) {
       setPreviewState(normalizedNameplateId, { equippedNameplate: normalizedNameplateId });
