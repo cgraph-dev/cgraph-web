@@ -5,7 +5,6 @@
  */
 
 import { durations } from '@cgraph-dev/animation-constants';
-import { useState } from 'react';
 import { motion } from 'motion/react';
 import { EyeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
@@ -203,26 +202,9 @@ export function TitlesSection({
   previewingTitle,
   onEquip,
 }: TitlesSectionProps) {
-  const [showAnimations, setShowAnimations] = useState(true);
-
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between py-2">
-        <label className="group flex cursor-pointer items-center gap-3">
-          <div className="relative flex items-center">
-            <input
-              type="checkbox"
-              checked={showAnimations}
-              onChange={(e) => setShowAnimations(e.target.checked)}
-              className="peer sr-only"
-            />
-            <div className="aurora-social-toggle h-4 w-8 rounded-full border-0 backdrop-blur-md" />
-            <div className="aurora-social-toggle-thumb absolute left-[2px] top-[2px] h-3 w-3 rounded-full" />
-          </div>
-          <span className="text-xs font-bold tracking-tight text-[var(--token-text-muted)] transition-colors group-hover:text-[var(--token-text-secondary)]">
-            SHOW ANIMATIONS
-          </span>
-        </label>
+      <div className="flex items-center justify-end py-2">
         <div className="rounded-full border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)/0.3] px-3 py-1 text-[10px] font-bold tracking-widest text-[var(--token-text-muted)] backdrop-blur-md">
           {titles.length} TITLES
         </div>
@@ -256,17 +238,13 @@ export function TitlesSection({
 
                 <div className="relative flex items-center justify-between">
                   <div className="flex flex-col gap-1.5">
-                    {showAnimations ? (
-                      <AnimatedTitleText
-                        name={title.name}
-                        animationType={title.animationType}
-                        gradient={title.gradient}
-                        lottieUrl={title.lottieUrl}
-                        imageUrl={title.imageUrl ?? title.previewUrl}
-                      />
-                    ) : (
-                      <h4 className={`text-xl font-bold ${title.gradient}`}>{title.name}</h4>
-                    )}
+                    <AnimatedTitleText
+                      name={title.name}
+                      animationType={title.animationType}
+                      gradient={title.gradient}
+                      lottieUrl={title.lottieUrl}
+                      imageUrl={title.imageUrl ?? title.previewUrl}
+                    />
 
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold tracking-wider text-[var(--token-text-muted)]">

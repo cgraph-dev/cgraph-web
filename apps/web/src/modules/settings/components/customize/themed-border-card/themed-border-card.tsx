@@ -8,16 +8,25 @@
 
 import { motion } from 'motion/react';
 import { LockClosedIcon, CheckIcon, SparklesIcon } from '@heroicons/react/24/solid';
-import { LottieBorderRenderer } from '@/lib/lottie/lottie-border-renderer';
-import { RARITY_COLORS } from '@/data/avatar-borders';
+import { getAvatarBorderDisplayTypeById, RARITY_COLORS } from '@/data/avatar-borders';
 import type { ThemedBorderCardProps } from './types';
 import { SIZE_CONFIG } from './constants';
-import { getBorderAnimation } from './animations';
 import { CornerBrackets } from './corner-brackets';
 import { tweens, loop } from '@/lib/animation-presets';
+import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-border-renderer';
+import type { AvatarBorderConfig } from '@/types/avatar-borders';
 
-/** Avatar size in px for each card size */
-const AVATAR_PX: Record<string, number> = { sm: 48, md: 64, lg: 96 };
+const PREVIEW_SIZE_PX: Record<'sm' | 'md' | 'lg', number> = { sm: 42, md: 56, lg: 76 };
+type RendererBorderConfig = AvatarBorderConfig & { imageUrl?: string };
+
+function renderAvatarPlaceholder() {
+  return (
+    <div className="relative h-full w-full overflow-hidden rounded-full bg-[#071d35] shadow-inner shadow-black/40">
+      <span className="absolute left-1/2 top-[22%] h-[30%] w-[30%] -translate-x-1/2 rounded-full bg-sky-500" />
+      <span className="absolute bottom-[15%] left-1/2 h-[34%] w-[58%] -translate-x-1/2 rounded-t-full bg-sky-500" />
+    </div>
+  );
+}
 
 /**
  * Themed Border Card display component.
@@ -34,8 +43,23 @@ export default function ThemedBorderCard({
   const rarityColor = RARITY_COLORS[border.rarity] ?? RARITY_COLORS.common;
   const isLocked = !border.unlocked && !allowPreview;
   const canInteract = !isLocked;
-
-  const borderAnimation = getBorderAnimation(border, showAnimation);
+  const rendererBorder: RendererBorderConfig = {
+    id: border.id,
+    type: getAvatarBorderDisplayTypeById(border.id),
+    name: border.name,
+    description: border.description,
+    theme: border.theme,
+    rarity: border.rarity,
+    unlockType: border.unlocked ? 'default' : 'subscription',
+    primaryColor: border.colors[0] ?? '#38bdf8',
+    secondaryColor: border.colors[1],
+    accentColor: border.colors[2] ?? border.colors[0] ?? '#38bdf8',
+    isPremium: border.isPremium,
+    previewUrl: border.previewUrl,
+    imageUrl: border.imageUrl,
+    lottieUrl: border.lottieFile,
+    tags: [],
+  };
 
   return (
     <motion.button
@@ -49,34 +73,14 @@ export default function ThemedBorderCard({
       {/* Corner brackets for selection */}
       {isSelected && <CornerBrackets color={border.colors[0] || '#fff'} />}
 
-      {/* Avatar preview with animated border — Lottie or CSS fallback */}
-      {border.lottieFile && showAnimation ? (
-        <LottieBorderRenderer
-          lottieUrl={border.lottieFile}
-          avatarSize={Math.round((AVATAR_PX[size] ?? 64) * 0.65)}
-          borderWidth={Math.round((AVATAR_PX[size] ?? 64) * 0.18)}
-          fallbackColor={border.colors[0]}
-        >
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)]">
-            <span className="text-2xl">👤</span>
-          </div>
-        </LottieBorderRenderer>
-      ) : (
-        <motion.div
-          className={`${config.avatar} relative overflow-visible rounded-full`}
-          style={{
-            background: `linear-gradient(135deg, ${border.colors.join(', ')})`,
-            padding: '3px',
-            ...borderAnimation.style,
-          }}
-          animate={borderAnimation.animate}
-          transition={borderAnimation.transition}
-        >
-          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[var(--token-bg-secondary)]">
-            <span className="text-2xl">👤</span>
-          </div>
-        </motion.div>
-      )}
+      <AvatarBorderRenderer
+        border={rendererBorder}
+        size={PREVIEW_SIZE_PX[size]}
+        interactive={false}
+        reducedMotion={!showAnimation}
+      >
+        {renderAvatarPlaceholder()}
+      </AvatarBorderRenderer>
 
       {/* Border name */}
       <span className={`${config.text} w-full truncate text-center font-medium text-white/60`}>

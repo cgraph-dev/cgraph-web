@@ -235,6 +235,64 @@ export function getOwnedNameplateIdsForCustomization(
   return [...new Set([...FREE_NAMEPLATE_IDS, ...premiumNameplateIds, ...ownedNameplateIds])];
 }
 
+function sanitizeHydratedAvatarBorderId(
+  borderId: string | null,
+  ownership: InventoryOwnership,
+  hasPremiumAccess: boolean
+): string | null {
+  if (!borderId) return null;
+  const border = ALL_BORDERS.find((candidate) => candidate.id === borderId);
+  if (!border) return null;
+
+  return isBorderUnlockedForCustomization(border, ownership.owned.avatar_border, hasPremiumAccess)
+    ? borderId
+    : null;
+}
+
+function sanitizeHydratedTitleId(
+  titleId: string | null,
+  ownership: InventoryOwnership,
+  hasPremiumAccess: boolean
+): string | null {
+  if (!titleId) return null;
+  const title = ALL_TITLES.find((candidate) => candidate.id === titleId);
+  if (!title) return null;
+
+  return isTitleUnlockedForCustomization(title, ownership.owned.title, hasPremiumAccess)
+    ? titleId
+    : null;
+}
+
+function sanitizeHydratedNameplateId(
+  nameplateId: string | null,
+  ownership: InventoryOwnership,
+  hasPremiumAccess: boolean
+): string | null {
+  if (!nameplateId || nameplateId === 'plate_none') return null;
+  const nameplate = NAMEPLATE_REGISTRY.find((candidate) => candidate.id === nameplateId);
+  if (!nameplate) return null;
+
+  if (
+    nameplate.free ||
+    FREE_NAMEPLATE_IDS.has(nameplateId) ||
+    ownership.owned.nameplate.has(nameplateId)
+  ) {
+    return nameplateId;
+  }
+
+  return hasPremiumAccess && !nameplate.free ? nameplateId : null;
+}
+
+function sanitizeHydratedBadgeIds(
+  badgeIds: readonly string[],
+  ownership: InventoryOwnership
+): string[] {
+  return badgeIds.filter((badgeId) => {
+    const badge = ALL_BADGES.find((candidate) => candidate.id === badgeId);
+    return Boolean(badge?.unlocked || ownership.owned.badge.has(badgeId));
+  });
+}
+
 function createCatalogLookup(type: InventoryType): ReadonlyMap<string, string> {
   const lookup = new Map<string, string>();
   const add = (key: string | null | undefined, catalogId: string) => {
@@ -383,13 +441,27 @@ function buildInventoryOwnership(items: readonly InventoryItemPayload[]): Invent
   };
 }
 
-function hydrateEquippedCosmetics(ownership: InventoryOwnership) {
+function hydrateEquippedCosmetics(ownership: InventoryOwnership, hasPremiumAccess: boolean) {
   const current = useCustomizationStore.getState();
-  const avatarBorderId = ownership.equipped.avatarBorder ?? current.selectedBorderId;
-  const titleId = ownership.equipped.title ?? current.equippedTitle;
-  const nameplateId = ownership.equipped.nameplate ?? current.equippedNameplate;
-  const badgeIds =
-    ownership.equipped.badges.length > 0 ? ownership.equipped.badges : current.equippedBadges;
+  const avatarBorderId = sanitizeHydratedAvatarBorderId(
+    ownership.equipped.avatarBorder ?? current.selectedBorderId,
+    ownership,
+    hasPremiumAccess
+  );
+  const titleId = sanitizeHydratedTitleId(
+    ownership.equipped.title ?? current.equippedTitle,
+    ownership,
+    hasPremiumAccess
+  );
+  const nameplateId = sanitizeHydratedNameplateId(
+    ownership.equipped.nameplate ?? current.equippedNameplate,
+    ownership,
+    hasPremiumAccess
+  );
+  const badgeIds = sanitizeHydratedBadgeIds(
+    ownership.equipped.badges.length > 0 ? ownership.equipped.badges : current.equippedBadges,
+    ownership
+  );
   const avatarBorderType = getAvatarBorderDisplayTypeById(avatarBorderId);
 
   useCustomizationStore.setState({
@@ -492,8 +564,6 @@ export function useIdentityCustomization() {
     error,
     fetchCustomizations,
     saveCustomizations,
-    setAvatarBorder,
-    selectBorderId,
     setEquippedTitle,
     setEquippedBadges,
     // New cosmetics
@@ -602,7 +672,7 @@ export function useIdentityCustomization() {
         const ownership = buildInventoryOwnership(readInventoryItems(response.data));
 
         if (!canceled) {
-          hydrateEquippedCosmetics(ownership);
+          hydrateEquippedCosmetics(ownership, hasPremiumAccess);
           applyOwnership(ownership);
         }
       } catch {
@@ -647,9 +717,13 @@ export function useIdentityCustomization() {
 
   // --- Border / Title store helpers ---
 
-  function applyBorderToStore(borderId: string) {
-    setAvatarBorder(getAvatarBorderDisplayTypeById(borderId));
-    selectBorderId(borderId);
+  function applyBorderToStore(borderId: string | null) {
+    const avatarBorderType = getAvatarBorderDisplayTypeById(borderId);
+    useCustomizationStore.getState().updateSettings({
+      selectedBorderId: borderId,
+      avatarBorderType,
+      avatarBorder: avatarBorderType,
+    });
   }
 
   function applyTitleToStore(titleId: string | null) {
@@ -769,7 +843,7 @@ export function useIdentityCustomization() {
         applyBorderToStore(previousBorderId);
         applyOwnItemEquipped('avatar_border', previousBorderId);
       } else {
-        selectBorderId(null);
+        applyBorderToStore(null);
         applyOwnItemUnequipped('avatar_border');
       }
       toast.error(error instanceof Error ? error.message : 'Could not equip avatar border');
@@ -827,12 +901,7 @@ export function useIdentityCustomization() {
       toast.error('User not authenticated');
       return;
     }
-    if (previewingLockedItem && !hasPremiumAccess) {
-      toast.error('Premium item selected! Purchase premium to save these customizations.', {
-        duration: 4000,
-      });
-      return;
-    }
+    if (previewingLockedItem && !hasPremiumAccess) clearPreview();
     if (previewingLockedItem && hasPremiumAccess) {
       setPreviewingLockedItem(null);
       setPreviewSnapshot(null);

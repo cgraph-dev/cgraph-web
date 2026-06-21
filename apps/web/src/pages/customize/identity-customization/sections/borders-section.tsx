@@ -5,7 +5,7 @@
  */
 
 import { durations } from '@cgraph-dev/animation-constants';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import type { Border } from '../types';
@@ -38,7 +38,6 @@ export function BordersSection({
   onEquip,
   hasActiveFilter = false,
 }: BordersSectionProps) {
-  const [showAnimations, setShowAnimations] = useState(true);
   const ownedBorderById = useMemo(() => new Map(borders.map((b) => [b.id, b])), [borders]);
 
   // Get borders from the new collection system
@@ -63,22 +62,7 @@ export function BordersSection({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between py-2">
-        <label className="group flex cursor-pointer items-center gap-3">
-          <div className="relative flex items-center">
-            <input
-              type="checkbox"
-              checked={showAnimations}
-              onChange={(e) => setShowAnimations(e.target.checked)}
-              className="peer sr-only"
-            />
-            <div className="aurora-social-toggle h-4 w-8 rounded-full border-0 backdrop-blur-md" />
-            <div className="aurora-social-toggle-thumb absolute left-[2px] top-[2px] h-3 w-3 rounded-full" />
-          </div>
-          <span className="group-hover:text-white/78 text-xs font-bold tracking-tight text-white/60 transition-colors">
-            SHOW ANIMATIONS
-          </span>
-        </label>
+      <div className="flex items-center justify-end py-2">
         <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold tracking-widest text-white/55 backdrop-blur-md">
           {displayBorders.length} BORDERS
         </div>
@@ -123,7 +107,7 @@ export function BordersSection({
                     };
                     onEquip(border.id, oldBorder);
                   }}
-                  showAnimation={showAnimations}
+                  showAnimation={true}
                   size="md"
                   allowPreview={true}
                 />
