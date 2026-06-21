@@ -33,6 +33,10 @@ import type { Rarity, Border, Title, Badge } from './types';
 export type SectionId = 'borders' | 'titles' | 'badges' | 'name-styles' | 'nameplates';
 
 type InventoryType = Extract<InventoryItemType, 'avatar_border' | 'title' | 'badge' | 'nameplate'>;
+type CustomizationSnapshot = Pick<
+  ReturnType<typeof useCustomizationStore.getState>,
+  'selectedBorderId' | 'avatarBorderType' | 'avatarBorder' | 'equippedTitle' | 'equippedNameplate'
+>;
 
 const GENERIC_BADGE_LOTTIE_URL = '/lottie/effects/placeholder.json';
 
@@ -509,10 +513,7 @@ export function useIdentityCustomization() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRarity, setSelectedRarity] = useState<Rarity | 'all'>('all');
   const [previewingLockedItem, setPreviewingLockedItem] = useState<string | null>(null);
-  const [previewSnapshot, setPreviewSnapshot] = useState<{
-    equippedTitle: string | null;
-    equippedNameplate: string | null;
-  } | null>(null);
+  const [previewSnapshot, setPreviewSnapshot] = useState<CustomizationSnapshot | null>(null);
 
   // API data state
   const [borders, setBorders] = useState<Border[]>([]);
@@ -642,13 +643,20 @@ export function useIdentityCustomization() {
 
   // --- Preview helpers ---
 
-  function setPreviewState(itemId: string, updates: Partial<typeof store>) {
+  function setPreviewState(
+    itemId: string,
+    updates: Partial<ReturnType<typeof useCustomizationStore.getState>>
+  ) {
     setPreviewSnapshot((current) => {
       if (current) return current;
+      const state = useCustomizationStore.getState();
 
       return {
-        equippedTitle: useCustomizationStore.getState().equippedTitle,
-        equippedNameplate: useCustomizationStore.getState().equippedNameplate,
+        selectedBorderId: state.selectedBorderId,
+        avatarBorderType: state.avatarBorderType,
+        avatarBorder: state.avatarBorder,
+        equippedTitle: state.equippedTitle,
+        equippedNameplate: state.equippedNameplate,
       };
     });
     useCustomizationStore.setState({ ...updates, isDirty: false });
@@ -659,10 +667,14 @@ export function useIdentityCustomization() {
     if (type === 'title') {
       setPreviewState(itemId, { equippedTitle: itemId, title: itemId });
     } else {
-      setPreviewingLockedItem(itemId);
+      const avatarBorderType = getAvatarBorderDisplayTypeById(itemId);
+      setPreviewState(itemId, {
+        selectedBorderId: itemId,
+        avatarBorderType,
+        avatarBorder: avatarBorderType,
+      });
     }
 
-    setPreviewingLockedItem(itemId);
     toast('Previewing item — Purchase premium to save', {
       duration: durations.cinematic.ms,
     });
@@ -671,6 +683,9 @@ export function useIdentityCustomization() {
   function clearPreview() {
     if (previewSnapshot) {
       useCustomizationStore.setState({
+        selectedBorderId: previewSnapshot.selectedBorderId,
+        avatarBorderType: previewSnapshot.avatarBorderType,
+        avatarBorder: previewSnapshot.avatarBorder,
         equippedTitle: previewSnapshot.equippedTitle,
         title: previewSnapshot.equippedTitle,
         equippedNameplate: previewSnapshot.equippedNameplate,
@@ -688,8 +703,8 @@ export function useIdentityCustomization() {
       handlePreviewItem(borderId, 'border');
       return;
     }
+    const previousBorderId = previewSnapshot?.selectedBorderId ?? selectedBorderId;
     clearPreview();
-    const previousBorderId = selectedBorderId;
     applyBorderToStore(borderId);
     applyOwnItemEquipped('avatar_border', borderId);
 
@@ -710,8 +725,8 @@ export function useIdentityCustomization() {
       handlePreviewItem(titleId, 'title');
       return;
     }
+    const previousTitle = previewSnapshot?.equippedTitle ?? equippedTitle;
     clearPreview();
-    const previousTitle = equippedTitle;
     applyTitleToStore(titleId);
     applyOwnItemEquipped('title', titleId);
 

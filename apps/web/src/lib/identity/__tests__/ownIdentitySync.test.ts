@@ -62,7 +62,7 @@ describe('own identity socket sync owner', () => {
     applyOwnProfileUpdate({
       avatar_hash: 'avatar-v2',
       banner_hash: 'banner-v2',
-      avatar_border_id: 'border-gold',
+      avatar_border_id: 'border_cyberpunk_common_01',
       equipped_title_id: 'title-founder',
       equipped_badge_ids: ['badge-a', 'badge-b'],
       nameplate_id: 'plate-1',
@@ -78,7 +78,7 @@ describe('own identity socket sync owner', () => {
     expect(useAuthStore.getState().user).toMatchObject({
       avatarUrl: '/avatar-v2',
       bannerUrl: null,
-      avatarBorderId: 'border-gold',
+      avatarBorderId: 'border_cyberpunk_common_01',
       equippedTitleId: 'title-founder',
       equippedBadgeIds: ['badge-a', 'badge-b'],
       equippedNameplateId: 'plate-1',
@@ -91,7 +91,9 @@ describe('own identity socket sync owner', () => {
     });
 
     expect(useCustomizationStore.getState()).toMatchObject({
-      selectedBorderId: 'border-gold',
+      selectedBorderId: 'border_cyberpunk_common_01',
+      avatarBorderType: 'lottie',
+      avatarBorder: 'lottie',
       equippedTitle: 'title-founder',
       title: 'title-founder',
       equippedBadges: ['badge-a', 'badge-b'],
@@ -113,7 +115,7 @@ describe('own identity socket sync owner', () => {
   it('adds and removes equipped item state without duplicating badges', () => {
     applyOwnItemEquipped('badge', 'badge-a');
     applyOwnItemEquipped('badge', 'badge-b');
-    applyOwnItemEquipped('border', 'border-fire');
+    applyOwnItemEquipped('border', 'border_cyberpunk_common_01');
     applyOwnItemUnequipped('badge', 'badge-a');
     applyOwnItemUnequipped('border');
 

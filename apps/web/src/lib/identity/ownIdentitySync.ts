@@ -6,6 +6,7 @@ import {
   type CustomizationServerPatch,
   type ThemePreset,
 } from '@/modules/settings/store/customization/customizationStore';
+import { getAvatarBorderDisplayTypeById } from '@/data/avatar-borders';
 import { isProfileThemeId } from '@/data/profileThemes';
 import { resolveAvatarUrl } from '@/lib/media-url';
 import { identityFieldsFromApi } from './canonicalIdentity';
@@ -86,8 +87,12 @@ export function applyOwnIdentityPatch(patch: OwnIdentityPatch): void {
   }
 
   const customizationUpdates: CustomizationServerPatch = {};
-  if (patch.avatarBorderId !== undefined)
+  if (patch.avatarBorderId !== undefined) {
+    const avatarBorderType = getAvatarBorderDisplayTypeById(patch.avatarBorderId);
     customizationUpdates.selectedBorderId = patch.avatarBorderId;
+    customizationUpdates.avatarBorderType = avatarBorderType;
+    customizationUpdates.avatarBorder = avatarBorderType;
+  }
   if (patch.equippedTitleId !== undefined)
     customizationUpdates.equippedTitle = patch.equippedTitleId;
   if (patch.equippedBadgeIds !== undefined)
