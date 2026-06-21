@@ -56,6 +56,28 @@ function sidebarProfileCardUser(user: User): ProfileCardUserV2 {
   };
 }
 
+function SidebarProfileAvatar({ user }: { user: User | null }) {
+  const displayName = user?.displayName || user?.username || 'User';
+  const avatarBorderId = user ? getAvatarBorderId(user) : undefined;
+
+  return (
+    <div
+      className="h-[52px] w-[52px] cursor-pointer overflow-visible rounded-full"
+      role="img"
+      aria-label={`Your profile picture: ${displayName}`}
+    >
+      <ThemedAvatar
+        src={user?.avatarUrl}
+        alt={`${displayName} avatar`}
+        size="sidebar"
+        className="h-[52px] w-[52px] rounded-full"
+        avatarBorderId={avatarBorderId}
+        fallbackText={displayName}
+      />
+    </div>
+  );
+}
+
 /**
  * Lock badge overlay for level-gated nav items.
  * Shows a small lock icon with tooltip when the feature is locked.
@@ -323,30 +345,7 @@ export default function Sidebar({
               aria-label="Open your public profile"
             >
               <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
-                <div
-                  className="h-11 w-11 cursor-pointer overflow-visible rounded-full p-[1.5px]"
-                  role="img"
-                  aria-label={`Your profile picture: ${user.displayName || user.username || 'User'}`}
-                  style={{
-                    background:
-                      'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 60%, transparent), rgba(59,130,246,0.5), color-mix(in srgb, var(--color-brand-purple) 50%, transparent))',
-                  }}
-                >
-                  {user.avatarUrl ? (
-                    <ThemedAvatar
-                      src={user.avatarUrl}
-                      alt={user.displayName || user.username || 'User avatar'}
-                      size="medium"
-                      className="h-full w-full rounded-full"
-                      avatarBorderId={getAvatarBorderId(user)}
-                      fallbackText={user.displayName || user.username || 'U'}
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)] text-base font-semibold text-[var(--token-text-primary)]">
-                      {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
+                <SidebarProfileAvatar user={user} />
 
                 <motion.div
                   className="pointer-events-none absolute -inset-0.5 rounded-full"
@@ -364,30 +363,7 @@ export default function Sidebar({
         ) : (
           <NavLink to={profileRoute} className="relative block">
             <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
-              <div
-                className="h-11 w-11 cursor-pointer overflow-visible rounded-full p-[1.5px]"
-                role="img"
-                aria-label={`Your profile picture: ${user?.displayName || user?.username || 'User'}`}
-                style={{
-                  background:
-                    'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 60%, transparent), rgba(59,130,246,0.5), color-mix(in srgb, var(--color-brand-purple) 50%, transparent))',
-                }}
-              >
-                {user?.avatarUrl ? (
-                  <ThemedAvatar
-                    src={user.avatarUrl}
-                    alt={user.displayName || user.username || 'User avatar'}
-                    size="medium"
-                    className="h-full w-full rounded-full"
-                    avatarBorderId={getAvatarBorderId(user)}
-                    fallbackText={user.displayName || user.username || 'U'}
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-[var(--token-bg-secondary)] text-base font-semibold text-[var(--token-text-primary)]">
-                    {(user?.displayName || user?.username || 'U').charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
+              <SidebarProfileAvatar user={user} />
 
               <motion.div
                 className="pointer-events-none absolute -inset-0.5 rounded-full"
