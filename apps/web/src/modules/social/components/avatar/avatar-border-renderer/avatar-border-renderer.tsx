@@ -40,6 +40,7 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
   alt = 'Avatar',
   border: propBorder,
   size = 80,
+  avatarScale,
   className,
   animationSpeed = 1,
   interactive = true,
@@ -124,7 +125,7 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
     ('animationType' in border && border.animationType === 'lottie') ||
     ('animation_type' in border && border.animation_type === 'lottie');
   if (imageUrl) {
-    const avatarSize = Math.round(size * 0.66);
+    const avatarSize = Math.round(size * (avatarScale ?? 0.66));
     return (
       <motion.div
         ref={containerRef}
@@ -160,7 +161,7 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
     const lottieConfig = isLottieConfig(rawConfig) ? rawConfig : undefined;
     // Use the same proportions as ThemedBorderCard (0.65 avatar, 0.18 border)
     // so the Lottie frame is properly visible around the avatar
-    const lottieAvatarSize = Math.round(size * 0.65);
+    const lottieAvatarSize = Math.round(size * (avatarScale ?? 0.65));
     const lottieBorderWidth = Math.round(size * 0.18);
     return (
       <LottieBorderRenderer
@@ -179,6 +180,7 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
   // Calculate dimensions
   const borderWidth = Math.max(3, size * 0.06);
   const innerSize = size - borderWidth * 2;
+  const avatarSize = avatarScale ? Math.round(size * avatarScale) : innerSize;
 
   // Get theme-specific styles
   const themeStyles = getThemeStyles(border.theme, colors);
@@ -293,8 +295,8 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
       <div
         className="relative z-10 overflow-hidden rounded-full bg-[var(--token-card-bg)]"
         style={{
-          width: innerSize,
-          height: innerSize,
+          width: avatarSize,
+          height: avatarSize,
         }}
       >
         {avatarContent}

@@ -13,6 +13,8 @@ export interface AvatarBorderRendererProps {
   border?: AvatarBorderConfig;
   /** Size in pixels */
   size?: number;
+  /** Optional avatar scale inside framed borders. Used by dense picker previews. */
+  avatarScale?: number;
   /** Custom class name */
   className?: string;
   /** Animation speed multiplier */
