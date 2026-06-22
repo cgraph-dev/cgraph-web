@@ -144,6 +144,13 @@ function isThemePreset(value: string | null): value is ThemePreset {
   return Boolean(value && CUSTOMIZATION_THEME_PRESET_SET.has(value));
 }
 
+function serverAuthoritativeCustomizationPayload(data: unknown): Record<string, unknown> {
+  if (!isRecord(data)) return {};
+
+  const customConfig = isRecord(data.custom_config) ? data.custom_config : {};
+  return { ...customConfig, ...data };
+}
+
 function mapServerCustomizationPatch(
   updates: Record<string, unknown>,
   current: CustomizationStore
@@ -300,9 +307,8 @@ export const useCustomizationStore = create<CustomizationStore>()(
           try {
             const response = await http.get('/api/v1/me/customizations');
             const data = response.data.data;
-            const customConfig = isRecord(data?.custom_config) ? data.custom_config : {};
             const parsed = withCanonicalAliases(
-              apiSchemaMapper.fromApi({ ...data, ...customConfig }, DEFAULT_STATE)
+              apiSchemaMapper.fromApi(serverAuthoritativeCustomizationPayload(data), DEFAULT_STATE)
             );
 
             set({
@@ -327,8 +333,10 @@ export const useCustomizationStore = create<CustomizationStore>()(
             const data = isRecord(response) && isRecord(response.data) ? response.data : response;
 
             if (isRecord(data)) {
-              const customConfig = isRecord(data.custom_config) ? data.custom_config : {};
-              const parsed = mapServerCustomizationPatch({ ...data, ...customConfig }, get());
+              const parsed = mapServerCustomizationPatch(
+                serverAuthoritativeCustomizationPayload(data),
+                get()
+              );
 
               set({
                 ...parsed,

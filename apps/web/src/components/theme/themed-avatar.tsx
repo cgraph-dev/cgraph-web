@@ -44,7 +44,7 @@ const sizeMap = {
   xs: 'w-6 h-6',
   small: 'w-8 h-8',
   medium: 'w-12 h-12',
-  sidebar: 'w-[52px] h-[52px]',
+  sidebar: 'w-14 h-14',
   large: 'w-16 h-16',
   xlarge: 'w-24 h-24',
   xxlarge: 'w-28 h-28',
@@ -64,7 +64,7 @@ const sizePxMap = {
   xs: 24,
   small: 32,
   medium: 48,
-  sidebar: 52,
+  sidebar: 56,
   large: 64,
   xlarge: 96,
   xxlarge: 112,
@@ -155,6 +155,7 @@ export function ThemedAvatar({
           interactive={!!onClick}
           onClick={onClick}
           fallback={fallbackNode}
+          avatarScale={size === 'sidebar' ? 0.62 : undefined}
         >
           {!displaySrc ? fallbackNode : undefined}
         </AvatarBorderRenderer>

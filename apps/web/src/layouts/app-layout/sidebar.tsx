@@ -62,7 +62,7 @@ function SidebarProfileAvatar({ user }: { user: User | null }) {
 
   return (
     <div
-      className="h-[52px] w-[52px] cursor-pointer overflow-visible rounded-full"
+      className="h-14 w-14 cursor-pointer overflow-visible rounded-full"
       role="img"
       aria-label={`Your profile picture: ${displayName}`}
     >
@@ -70,7 +70,7 @@ function SidebarProfileAvatar({ user }: { user: User | null }) {
         src={user?.avatarUrl}
         alt={`${displayName} avatar`}
         size="sidebar"
-        className="h-[52px] w-[52px] rounded-full"
+        className="h-14 w-14 rounded-full"
         avatarBorderId={avatarBorderId}
         fallbackText={displayName}
       />

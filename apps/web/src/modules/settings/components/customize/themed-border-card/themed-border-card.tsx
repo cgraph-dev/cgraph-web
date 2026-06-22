@@ -76,7 +76,7 @@ export default function ThemedBorderCard({
       <AvatarBorderRenderer
         border={rendererBorder}
         size={PREVIEW_SIZE_PX[size]}
-        avatarScale={0.58}
+        avatarScale={0.5}
         interactive={false}
         reducedMotion={!showAnimation}
       >

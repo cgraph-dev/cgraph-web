@@ -305,7 +305,7 @@ describe('fetchCustomizations', () => {
     expect(useCustomizationStore.getState().isDirty).toBe(false);
   });
 
-  it('keeps saved custom_config identity cosmetics over stale top-level nulls', async () => {
+  it('uses server-cleared identity cosmetics over stale custom_config values', async () => {
     mockedApi.get.mockResolvedValueOnce({
       data: {
         data: {
@@ -324,10 +324,10 @@ describe('fetchCustomizations', () => {
     await useCustomizationStore.getState().fetchCustomizations();
 
     expect(useCustomizationStore.getState()).toMatchObject({
-      selectedBorderId: 'border-stone',
-      equippedTitle: 'title-founder',
-      title: 'title-founder',
-      equippedNameplate: 'plate_gilded_sapphire_loop_01',
+      selectedBorderId: null,
+      equippedTitle: null,
+      title: null,
+      equippedNameplate: null,
     });
   });
 
@@ -338,7 +338,7 @@ describe('fetchCustomizations', () => {
     expect(useCustomizationStore.getState().error).toBe('Network error');
   });
 
-  it('keeps saved custom_config identity cosmetics after save responses with stale top-level nulls', async () => {
+  it('uses server-cleared identity cosmetics after save responses with stale custom_config values', async () => {
     useCustomizationStore.setState({
       ...DEFAULT_STATE,
       selectedBorderId: 'border-stone',
@@ -364,10 +364,10 @@ describe('fetchCustomizations', () => {
     await useCustomizationStore.getState().saveCustomizations();
 
     expect(useCustomizationStore.getState()).toMatchObject({
-      selectedBorderId: 'border-stone',
-      equippedTitle: 'title-founder',
-      title: 'title-founder',
-      equippedNameplate: 'plate_gilded_sapphire_loop_01',
+      selectedBorderId: null,
+      equippedTitle: null,
+      title: null,
+      equippedNameplate: null,
       isDirty: false,
     });
   });
