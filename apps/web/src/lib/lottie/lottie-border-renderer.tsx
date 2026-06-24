@@ -12,7 +12,7 @@
  *
  */
 
-import { useRef, useEffect, useState, memo } from 'react';
+import { useRef, useEffect, useState, memo, type CSSProperties } from 'react';
 import type { AnimationItem } from 'lottie-web';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { loadLottieCanvasPlayer } from './lottie-player';
@@ -82,6 +82,12 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
   const prefersReducedMotion = useReducedMotion();
 
   const totalSize = avatarSize + borderWidth * 2;
+  const ringInnerRadius = Math.max(0, avatarSize / 2 - 1);
+  const ringOuterRadius = avatarSize / 2 + Math.max(1, borderWidth * 0.35);
+  const ringMaskStyle: CSSProperties = {
+    maskImage: `radial-gradient(circle at center, transparent 0 ${ringInnerRadius}px, #000 ${ringOuterRadius}px 100%)`,
+    WebkitMaskImage: `radial-gradient(circle at center, transparent 0 ${ringInnerRadius}px, #000 ${ringOuterRadius}px 100%)`,
+  };
   // Use canvas for all Lottie borders to prevent browser freezing with heavily layered AI-traced SVGs
   const renderer = 'canvas';
   const lottieLoop = lottieConfig?.loop ?? true;
@@ -227,10 +233,11 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
           inset: 0,
           pointerEvents: 'none',
           zIndex: 2,
+          ...ringMaskStyle,
         }}
       />
 
-      {/* Avatar circle on top with opaque background */}
+      {/* Avatar circle stays fully opaque; animation is masked to the ring. */}
       <div
         style={{
           position: 'absolute',
@@ -241,7 +248,7 @@ export const LottieBorderRenderer = memo(function LottieBorderRenderer({
           height: avatarSize,
           borderRadius: '50%',
           overflow: 'hidden',
-          zIndex: 1,
+          zIndex: 3,
           background: 'linear-gradient(145deg, #0c0f18, #080b14)',
           boxShadow:
             'inset 0 1.5px 0 rgba(255,255,255,0.11), inset 0 -1px 0 rgba(0,0,0,0.4), 0 0 0 1.5px rgba(0,0,0,0.7)',

@@ -2,17 +2,12 @@
  * ProfileContent - Avatar, name, title, status, badges, and XP bar
  */
 
-import { durations, NAME_FONTS } from '@cgraph-dev/animation-constants';
-import type { NameFont } from '@cgraph-dev/animation-constants';
+import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
-
-function isNameFont(value: string): value is NameFont {
-  return value in NAME_FONTS;
-}
 import { AnimatedAvatar } from '../animated-avatar';
 import type { ThemePreset } from '@/modules/settings/store/customization';
 import { springs, tweens, loop } from '@/lib/animation-presets';
-import { GlowText, FireText } from '@/shared/components/ui';
+import { DisplayName, FireText } from '@/shared/components/ui';
 import { InlineTitle } from '@/shared/components/ui/inline-title';
 import { PREVIEW_BADGES } from './constants';
 import type { BadgeDisplay, TitleDisplay } from '@/shared/components/ui/cosmetic-display';
@@ -46,115 +41,6 @@ interface ProfileContentProps {
   equippedBadges?: string[];
   /** Lottie JSON URL for 'lottie' border type. */
   lottieUrl?: string;
-}
-
-/**
- * Renders the display name with the selected font and text effect.
- */
-function StyledDisplayName({
-  displayName,
-  font,
-  effect,
-  color,
-  secondaryColor,
-  fallbackGradient,
-}: {
-  /** Display name to render. */
-  displayName: string;
-  /** Selected font key from NAME_FONTS registry. */
-  font: string;
-  /** Selected text effect (solid, gradient, neon, toon, pop). */
-  effect: string;
-  /** Primary text color hex. */
-  color: string;
-  /** Secondary color for gradient/neon/pop effects. */
-  secondaryColor: string | null;
-  /** Fallback gradient when using the default solid effect. */
-  fallbackGradient: [string, string];
-}) {
-  const fontKey: NameFont = isNameFont(font) ? font : 'default';
-  const fontConfig = NAME_FONTS[fontKey];
-  const secondary = secondaryColor || fallbackGradient[1];
-
-  const baseStyle: React.CSSProperties = {
-    fontSize: '1.125rem',
-    fontWeight: fontConfig.fontWeight || '700',
-    fontFamily: fontConfig.fontFamily || 'inherit',
-    fontStyle: fontConfig.fontStyle || 'normal',
-    letterSpacing: fontConfig.letterSpacing ?? 0,
-    lineHeight: 1.3,
-  };
-
-  switch (effect) {
-    case 'gradient':
-      return (
-        <h4
-          style={{
-            ...baseStyle,
-            background: `linear-gradient(135deg, ${color}, ${secondary})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
-          {displayName}
-        </h4>
-      );
-    case 'neon':
-      return (
-        <h4
-          style={{
-            ...baseStyle,
-            color,
-            textShadow: `0 0 7px ${color}, 0 0 10px ${color}, 0 0 21px ${color}, 0 0 42px ${secondary}`,
-          }}
-        >
-          {displayName}
-        </h4>
-      );
-    case 'toon':
-      return (
-        <h4
-          style={{
-            ...baseStyle,
-            color,
-            WebkitTextStroke: '1px rgba(0,0,0,0.6)',
-            textShadow: '2px 2px 0 rgba(0,0,0,0.3)',
-          }}
-        >
-          {displayName}
-        </h4>
-      );
-    case 'pop':
-      return (
-        <h4
-          style={{
-            ...baseStyle,
-            color,
-            textShadow: `3px 3px 0 ${secondary}, -1px -1px 0 rgba(0,0,0,0.2)`,
-          }}
-        >
-          {displayName}
-        </h4>
-      );
-    default:
-      // Solid: if font is default and color is still white, use the theme
-      // gradient via GlowText for backward compatibility
-      if (fontKey === 'default' && color === '#ffffff') {
-        return (
-          <GlowText
-            as="h4"
-            gradient={fallbackGradient}
-            size="lg"
-            animate={true}
-            glowIntensity="medium"
-          >
-            {displayName}
-          </GlowText>
-        );
-      }
-      return <h4 style={{ ...baseStyle, color }}>{displayName}</h4>;
-  }
 }
 
 /**
@@ -208,13 +94,14 @@ export function ProfileContent({
             />
           </div>
         ) : (
-          <StyledDisplayName
-            displayName={displayName}
+          <DisplayName
+            name={displayName}
             font={settings.displayNameFont || 'default'}
             effect={settings.displayNameEffect || 'solid'}
-            color={settings.displayNameColor || '#ffffff'}
-            secondaryColor={settings.displayNameSecondaryColor ?? null}
-            fallbackGradient={[colors.primary, colors.secondary]}
+            color={settings.displayNameColor || colors.primary}
+            secondaryColor={settings.displayNameSecondaryColor ?? colors.secondary}
+            size="1.125rem"
+            className="font-bold"
           />
         )}
 

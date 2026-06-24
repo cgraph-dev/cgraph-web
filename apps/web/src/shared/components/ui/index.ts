@@ -97,7 +97,12 @@ export { default as GlassCard } from '@/components/ui/glass-card';
 export { GlassCardNeon } from '@/components/ui/glass-card-variants';
 export { InlineTitle } from './inline-title';
 export { InlineBadges } from './inline-badges';
-export { DisplayName } from './display-name';
+export {
+  DisplayName,
+  WEB_NAME_EFFECT_KEYS,
+  WEB_NAME_EFFECTS,
+  type WebNameEffect,
+} from './display-name';
 export {
   BADGE_DISPLAY_MAP,
   BADGE_RARITY_HEX,

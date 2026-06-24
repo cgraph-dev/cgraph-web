@@ -37,7 +37,10 @@ describe('PixelLab game cosmetics package consumption', () => {
     const ember = getBorderById('border_ember_colossus_01');
 
     expect(ember?.theme).toBe('elemental');
-    expect(ember?.imageUrl).toContain('/cosmetics/pixellab/avatar-border/');
+    expect(ember?.imageUrl).toBe(
+      '/cosmetics/pixellab/avatar-border/border_ember_colossus_01/border_ember_colossus_01_0.gif'
+    );
+    expect(ember?.lottieUrl).toBeUndefined();
     expect(getAvatarBorderDisplayTypeById('border_void_relay_01')).toBe('mythic');
   });
 });

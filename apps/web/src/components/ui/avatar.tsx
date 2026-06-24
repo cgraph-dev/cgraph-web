@@ -247,17 +247,17 @@ export default function Avatar({
     const frameSize = cfg.px + frameBorderWidth * 2;
     return (
       <span
-        className="cgraph-game-avatar-frame relative inline-flex items-center justify-center"
+        className="cgraph-game-avatar-frame relative isolate inline-flex items-center justify-center overflow-visible"
         style={{ width: frameSize, height: frameSize }}
       >
         <img
           src={borderImageUrl}
           alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          className="cgraph-game-avatar-frame-asset pointer-events-none absolute inset-0 z-[3] h-full w-full object-contain"
           loading="lazy"
         />
-        <span className="cgraph-game-avatar-frame-glow pointer-events-none absolute inset-0" />
-        <span className="relative z-10 inline-flex items-center justify-center">
+        <span className="cgraph-game-avatar-frame-glow pointer-events-none absolute inset-[-2px] z-0" />
+        <span className="relative z-[1] inline-flex items-center justify-center opacity-100">
           {avatarContent}
         </span>
       </span>

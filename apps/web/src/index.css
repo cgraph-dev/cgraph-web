@@ -573,6 +573,44 @@
     96% { text-shadow: -1px 0 #ff0000, 1px 0 #00ff00; transform: translateX(0); }
   }
 
+  @keyframes cgraph-display-gradient-pan {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  @keyframes cgraph-display-glitch {
+    0%, 86%, 100% { transform: translate3d(0, 0, 0); }
+    88% { transform: translate3d(-1px, 0, 0); }
+    90% { transform: translate3d(1px, -1px, 0); }
+    92% { transform: translate3d(0, 1px, 0); }
+  }
+
+  @keyframes cgraph-display-pulse {
+    0%, 100% {
+      filter: brightness(1);
+      text-shadow:
+        0 0 5px color-mix(in srgb, var(--cgraph-name-primary) 55%, transparent),
+        0 0 13px color-mix(in srgb, var(--cgraph-name-secondary) 34%, transparent);
+    }
+    50% {
+      filter: brightness(1.16);
+      text-shadow:
+        0 0 8px color-mix(in srgb, var(--cgraph-name-primary) 78%, transparent),
+        0 0 22px color-mix(in srgb, var(--cgraph-name-secondary) 62%, transparent);
+    }
+  }
+
+  @keyframes cgraph-display-ember {
+    0%, 100% { text-shadow: 0 0 5px rgba(255, 132, 43, 0.68), 0 0 16px rgba(255, 64, 21, 0.32); }
+    42% { text-shadow: 0 0 9px rgba(255, 189, 86, 0.86), 0 0 24px rgba(255, 74, 31, 0.48); }
+    64% { text-shadow: 0 0 4px rgba(255, 132, 43, 0.54), 0 0 12px rgba(255, 64, 21, 0.24); }
+  }
+
+  @keyframes cgraph-display-frost {
+    0%, 100% { filter: brightness(1) saturate(1); }
+    50% { filter: brightness(1.18) saturate(1.14); }
+  }
+
   @keyframes cgraph-cosmetic-sheen {
     0%, 38% { transform: translateX(-135%) skewX(-18deg); opacity: 0; }
     48% { opacity: 0.72; }
@@ -631,18 +669,140 @@
     animation: cgraph-cosmetic-glow-breathe 3.8s ease-in-out infinite;
   }
 
+  .cgraph-display-name {
+    --cgraph-name-primary: currentColor;
+    --cgraph-name-secondary: currentColor;
+    --cgraph-name-shadow: rgba(0, 0, 0, 0.45);
+    position: relative;
+    display: inline-block;
+    isolation: isolate;
+    color: var(--cgraph-name-primary);
+    letter-spacing: 0;
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .cgraph-display-name--effect-gradient::after,
+  .cgraph-display-name--effect-holo::after,
+  .cgraph-display-name--effect-chrome::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .cgraph-display-name--effect-gradient::after {
+    background-image: linear-gradient(
+      135deg,
+      var(--cgraph-name-primary),
+      var(--cgraph-name-secondary),
+      var(--cgraph-name-primary)
+    );
+    animation: cgraph-display-gradient-pan 5.8s linear infinite;
+  }
+
+  .cgraph-display-name--effect-holo {
+    text-shadow: 0 0 12px rgba(192, 132, 252, 0.42);
+  }
+
+  .cgraph-display-name--effect-holo::after {
+    background-image: linear-gradient(
+      90deg,
+      #7dd3fc,
+      #c084fc,
+      #f0abfc,
+      #67e8f9,
+      #7dd3fc
+    );
+    animation: cgraph-display-gradient-pan 3.8s linear infinite;
+  }
+
+  .cgraph-display-name--effect-chrome {
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.48), 0 0 10px rgba(255, 255, 255, 0.18);
+  }
+
+  .cgraph-display-name--effect-chrome::after {
+    background-image: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      var(--cgraph-name-primary) 26%,
+      #a8b3c9 48%,
+      var(--cgraph-name-secondary) 68%,
+      #ffffff 100%
+    );
+  }
+
+  .cgraph-display-name--effect-neon {
+    text-shadow:
+      0 0 5px var(--cgraph-name-primary),
+      0 0 12px color-mix(in srgb, var(--cgraph-name-primary) 78%, transparent),
+      0 0 24px color-mix(in srgb, var(--cgraph-name-secondary) 52%, transparent);
+  }
+
+  .cgraph-display-name--effect-toon {
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.62);
+    text-shadow:
+      1px 1px 0 rgba(0, 0, 0, 0.76),
+      2px 2px 0 color-mix(in srgb, var(--cgraph-name-secondary) 52%, transparent);
+  }
+
+  .cgraph-display-name--effect-pop {
+    text-shadow:
+      2px 2px 0 var(--cgraph-name-secondary),
+      3px 3px 0 var(--cgraph-name-shadow);
+  }
+
+  .cgraph-display-name--effect-glitch {
+    text-shadow:
+      1px 0 #22d3ee,
+      -1px 0 #f472b6,
+      0 0 10px color-mix(in srgb, var(--cgraph-name-primary) 40%, transparent);
+    animation: cgraph-display-glitch 2.4s steps(1, end) infinite;
+  }
+
+  .cgraph-display-name--effect-pulse {
+    animation: cgraph-display-pulse 2.6s ease-in-out infinite;
+  }
+
+  .cgraph-display-name--effect-ember {
+    color: var(--cgraph-name-primary);
+    animation: cgraph-display-ember 2.1s ease-in-out infinite;
+  }
+
+  .cgraph-display-name--effect-frost {
+    color: var(--cgraph-name-primary);
+    text-shadow:
+      0 0 7px rgba(125, 211, 252, 0.78),
+      0 0 16px color-mix(in srgb, var(--cgraph-name-secondary) 40%, transparent);
+    animation: cgraph-display-frost 3.2s ease-in-out infinite;
+  }
+
   .cgraph-game-avatar-frame {
+    isolation: isolate;
+    opacity: 1;
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.14));
-    animation: cgraph-cosmetic-glow-breathe 4.6s ease-in-out infinite;
+  }
+
+  .cgraph-game-avatar-frame-asset {
+    opacity: 1 !important;
+    transform: translateZ(0);
   }
 
   .cgraph-game-avatar-frame-glow {
+    z-index: 0;
     border-radius: 9999px;
     background:
       conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.45), transparent 28%),
       radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 62%);
     mix-blend-mode: screen;
-    opacity: 0.36;
+    opacity: 0.26;
     animation: cgraph-cosmetic-frame-turn 7.5s linear infinite;
   }
 
@@ -672,7 +832,8 @@
   @media (prefers-reduced-motion: reduce) {
     .cgraph-game-nameplate-sheen,
     .cgraph-game-nameplate-glow,
-    .cgraph-game-avatar-frame,
+    .cgraph-display-name,
+    .cgraph-display-name::after,
     .cgraph-game-avatar-frame-glow,
     .cgraph-game-profile-surface::before {
       animation: none;

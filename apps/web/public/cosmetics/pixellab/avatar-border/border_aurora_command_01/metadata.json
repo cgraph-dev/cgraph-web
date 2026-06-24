@@ -2,17 +2,17 @@
   "asset": {
     "id": "border_aurora_command_01",
     "kind": "avatar-border",
-    "endpoint": "generate-ui-v2",
+    "endpoint": "pixellab-animated-gif",
     "size": {
-      "width": 192,
-      "height": 192
+      "width": 256,
+      "height": 256
     },
-    "colorPalette": "deep teal, electric cyan, violet, glass highlights",
-    "prompt": "transparent pixel art circular avatar frame, aurora glass energy, teal violet highlights, thin luminous edge, professional social app cosmetic, no text, no face, no background"
+    "file": "border_aurora_command_01_0.gif",
+    "prompt": "User supplied animated avatar frame replacement from NEW FRAMES batch."
   },
-  "jobId": "b0a6c3f7-7ee9-4f17-92bd-c528be5f4343",
+  "jobId": null,
   "status": "completed",
-  "imageCount": 2,
-  "generatedAt": "2026-06-06T23:18:26.582Z",
-  "source": "pixellab"
+  "imageCount": 1,
+  "generatedAt": "2026-06-24T11:02:38.578Z",
+  "source": "desktop-new-frames"
 }

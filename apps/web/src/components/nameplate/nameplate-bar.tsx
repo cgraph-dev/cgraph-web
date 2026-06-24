@@ -59,6 +59,8 @@ const textEffectReset: React.CSSProperties = {
   WebkitTextFillColor: undefined,
 };
 
+type CSSPropertiesWithVars = React.CSSProperties & Record<`--${string}`, string>;
+
 function isNameFont(value: string | undefined): value is NameFont {
   return Boolean(value && value in NAME_FONTS);
 }
@@ -84,7 +86,12 @@ function getDisplayNameOverrideStyles({
 
   const primary = color ?? '#ffffff';
   const secondary = secondaryColor ?? primary;
-  const style: React.CSSProperties = { ...textEffectReset };
+  const style: CSSPropertiesWithVars = {
+    ...textEffectReset,
+    '--cgraph-name-primary': primary,
+    '--cgraph-name-secondary': secondary,
+    '--cgraph-name-shadow': 'rgba(0,0,0,0.45)',
+  };
 
   if (hasFontOverride) {
     const fontConfig = NAME_FONTS[font];
@@ -92,17 +99,15 @@ function getDisplayNameOverrideStyles({
     style.fontWeight = fontConfig.fontWeight;
     style.fontStyle = fontConfig.fontStyle;
     style.letterSpacing =
-      fontConfig.letterSpacing != null ? `${fontConfig.letterSpacing}px` : undefined;
+      fontConfig.letterSpacing != null ? `${Math.max(0, fontConfig.letterSpacing)}px` : undefined;
   }
 
   switch (effect) {
     case 'gradient':
       return {
         ...style,
-        background: `linear-gradient(135deg, ${primary}, ${secondary})`,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
+        color: primary,
+        textShadow: `0 0 10px ${secondary}66`,
       };
     case 'neon':
       return {
@@ -122,6 +127,45 @@ function getDisplayNameOverrideStyles({
         ...style,
         color: primary,
         textShadow: `3px 3px 0 ${secondary}, -1px -1px 0 rgba(0,0,0,0.2)`,
+      };
+    case 'holo':
+      return {
+        ...style,
+        color: primary,
+        textShadow: `1px 0 #7dd3fc, -1px 0 #f0abfc, 0 0 14px ${secondary}66`,
+        animation: 'cgraph-display-gradient-pan 3.8s linear infinite',
+      };
+    case 'glitch':
+      return {
+        ...style,
+        color: primary,
+        textShadow: '1px 0 #22d3ee, -1px 0 #f472b6',
+        animation: 'cgraph-display-glitch 2.4s steps(1, end) infinite',
+      };
+    case 'chrome':
+      return {
+        ...style,
+        color: primary,
+        textShadow: `0 1px 0 rgba(0,0,0,0.6), 0 0 12px ${secondary}55`,
+      };
+    case 'pulse':
+      return {
+        ...style,
+        color: primary,
+        animation: 'cgraph-display-pulse 2.6s ease-in-out infinite',
+      };
+    case 'ember':
+      return {
+        ...style,
+        color: primary,
+        animation: 'cgraph-display-ember 2.1s ease-in-out infinite',
+      };
+    case 'frost':
+      return {
+        ...style,
+        color: primary,
+        animation: 'cgraph-display-frost 3.2s ease-in-out infinite',
+        textShadow: `0 0 7px #7dd3fc, 0 0 16px ${secondary}66`,
       };
     default:
       return hasColorOverride ? { ...style, color: primary } : style;
@@ -177,19 +221,13 @@ function resolveTextEffectStyle(
       };
     case 'metallic':
       return {
-        background: `linear-gradient(135deg, ${color}, ${sec}, ${color})`,
-        backgroundSize: '200% 200%',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
+        color,
+        textShadow: `0 1px 0 ${sec}90, 0 -1px 0 rgba(255,255,255,0.45), 0 0 8px ${sec}55`,
       };
     case 'holographic':
       return {
-        background: `linear-gradient(90deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8b00ff, #ff0000)`,
-        backgroundSize: '200% 100%',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
+        color: sec,
+        textShadow: '1px 0 #7dd3fc, -1px 0 #f0abfc',
         animation: 'nameplate-holo 3s linear infinite',
       };
     case 'fire':
@@ -215,11 +253,8 @@ function resolveTextEffectStyle(
       };
     case 'rainbow':
       return {
-        background: `linear-gradient(90deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8b00ff)`,
-        backgroundSize: '200% 100%',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
+        color: sec,
+        textShadow: '0 0 8px rgba(255,255,255,0.35)',
         animation: 'nameplate-rainbow 4s linear infinite',
       };
     case 'shadow':

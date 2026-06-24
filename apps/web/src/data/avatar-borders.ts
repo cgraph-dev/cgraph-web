@@ -24,7 +24,58 @@ import {
 // with web consumers that import BorderTheme from this file.
 export type BorderTheme = AvatarBorderTheme;
 
-export const AVATAR_BORDERS: readonly AvatarBorderConfig[] = SHARED_AVATAR_BORDERS;
+const PIXELLAB_AVATAR_BORDER_GIF_URLS: Readonly<Record<string, string>> = {
+  border_8bit_common_01:
+    '/cosmetics/pixellab/avatar-border/border_8bit_common_01/border_8bit_common_01_0.gif',
+  border_kawaii_common_01:
+    '/cosmetics/pixellab/avatar-border/border_kawaii_common_01/border_kawaii_common_01_0.gif',
+  border_cyberpunk_common_01:
+    '/cosmetics/pixellab/avatar-border/border_cyberpunk_common_01/border_cyberpunk_common_01_0.gif',
+  border_cosmic_common_01:
+    '/cosmetics/pixellab/avatar-border/border_cosmic_common_01/border_cosmic_common_01_0.gif',
+  border_signal_noir_01:
+    '/cosmetics/pixellab/avatar-border/border_signal_noir_01/border_signal_noir_01_0.gif',
+  border_aurora_command_01:
+    '/cosmetics/pixellab/avatar-border/border_aurora_command_01/border_aurora_command_01_0.gif',
+  border_ranked_ascendant_01:
+    '/cosmetics/pixellab/avatar-border/border_ranked_ascendant_01/border_ranked_ascendant_01_0.gif',
+  border_ember_colossus_01:
+    '/cosmetics/pixellab/avatar-border/border_ember_colossus_01/border_ember_colossus_01_0.gif',
+  border_void_relay_01:
+    '/cosmetics/pixellab/avatar-border/border_void_relay_01/border_void_relay_01_0.gif',
+  border_solar_grove_01:
+    '/cosmetics/pixellab/avatar-border/border_solar_grove_01/border_solar_grove_01_0.gif',
+  border_anime_rare_01:
+    '/cosmetics/pixellab/avatar-border/border_anime_rare_01/border_anime_rare_01_0.gif',
+  border_cyberpunk_rare_01:
+    '/cosmetics/pixellab/avatar-border/border_cyberpunk_rare_01/border_cyberpunk_rare_01_0.gif',
+  border_8bit_epic_01:
+    '/cosmetics/pixellab/avatar-border/border_8bit_epic_01/border_8bit_epic_01_0.gif',
+  border_cyberpunk_epic_01:
+    '/cosmetics/pixellab/avatar-border/border_cyberpunk_epic_01/border_cyberpunk_epic_01_0.gif',
+  border_cosmic_legendary_01:
+    '/cosmetics/pixellab/avatar-border/border_cosmic_legendary_01/border_cosmic_legendary_01_0.gif',
+  border_cyberpunk_mythic_01:
+    '/cosmetics/pixellab/avatar-border/border_cyberpunk_mythic_01/border_cyberpunk_mythic_01_0.gif',
+};
+
+function withWebAvatarBorderAssets(border: AvatarBorderConfig): AvatarBorderConfig {
+  const imageUrl = PIXELLAB_AVATAR_BORDER_GIF_URLS[border.id];
+  if (!imageUrl) return border;
+
+  return {
+    ...border,
+    type: border.type === 'lottie' ? 'static' : border.type,
+    previewUrl: imageUrl,
+    imageUrl,
+    lottieUrl: undefined,
+    lottieConfig: undefined,
+    tags: Array.from(new Set([...border.tags, 'pixellab', 'gif-frame'])),
+  };
+}
+
+export const AVATAR_BORDERS: readonly AvatarBorderConfig[] =
+  SHARED_AVATAR_BORDERS.map(withWebAvatarBorderAssets);
 
 export function getBorderById(id: string | null | undefined): AvatarBorderConfig | undefined {
   if (!id) return undefined;
@@ -248,10 +299,10 @@ function toBorderDefinition(b: AvatarBorderConfig): BorderDefinition {
   };
 }
 
-/** All 11 borders as legacy BorderDefinition for existing UI */
+/** All shared borders as legacy BorderDefinition values for existing UI */
 export const ALL_BORDERS: BorderDefinition[] = AVATAR_BORDERS.map(toBorderDefinition);
 
-/** Deduplicated theme list derived from the actual 11 borders */
+/** Deduplicated theme list derived from the active shared borders */
 const themeConfig: Partial<
   Record<BorderTheme, { name: string; icon: string; accentColor: string; description: string }>
 > = {

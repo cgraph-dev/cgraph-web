@@ -3,10 +3,7 @@ import { memo } from 'react';
 import {
   NAME_FONTS,
   NAME_FONT_KEYS,
-  NAME_EFFECTS,
-  NAME_EFFECT_KEYS,
   getNameplateById,
-  type NameEffect,
   type NameFont,
 } from '@cgraph-dev/animation-constants';
 
@@ -28,14 +25,6 @@ function getNameFontKey(font?: string): NameFont | null {
   return NAME_FONT_KEYS.find((key) => key === font) ?? null;
 }
 
-function getNameEffectKey(effect?: string): NameEffect | null {
-  if (!effect) {
-    return null;
-  }
-
-  return NAME_EFFECT_KEYS.find((key) => key === effect) ?? null;
-}
-
 function getFontWeight(fontWeight: unknown): React.CSSProperties['fontWeight'] | undefined {
   return typeof fontWeight === 'string' || typeof fontWeight === 'number' ? fontWeight : undefined;
 }
@@ -51,7 +40,8 @@ function getNameFontStyles(font?: string): React.CSSProperties {
     fontFamily: config.fontFamily,
     fontWeight: getFontWeight(config.fontWeight),
     fontStyle: config.fontStyle,
-    letterSpacing: config.letterSpacing != null ? `${config.letterSpacing}px` : undefined,
+    letterSpacing:
+      config.letterSpacing != null ? `${Math.max(0, config.letterSpacing)}px` : undefined,
   };
 }
 
@@ -63,28 +53,76 @@ function getNameEffectStyles(
   if (!effect || effect === 'solid' || !color) {
     return color ? { color } : {};
   }
+  const secondary = secondaryColor ?? color;
+  const vars: React.CSSProperties & Record<`--${string}`, string> = {
+    '--cgraph-name-primary': color,
+    '--cgraph-name-secondary': secondary,
+    '--cgraph-name-shadow': 'rgba(0,0,0,0.45)',
+  };
   switch (effect) {
     case 'gradient':
       return {
-        background: `linear-gradient(135deg, ${color}, ${secondaryColor ?? color})`,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
+        ...vars,
+        color,
+        textShadow: `0 0 10px ${secondary}66`,
       };
     case 'neon':
       return {
+        ...vars,
         color,
         textShadow: `0 0 5px ${color}, 0 0 10px ${color}, 0 0 20px ${color}80`,
       };
     case 'toon':
       return {
+        ...vars,
         color,
         WebkitTextStroke: '1px rgba(0,0,0,0.5)',
         textShadow: '2px 2px 0 rgba(0,0,0,0.3)',
       };
     case 'pop':
       return {
+        ...vars,
         color,
-        textShadow: `3px 3px 0 ${secondaryColor ?? 'rgba(0,0,0,0.3)'}`,
+        textShadow: `3px 3px 0 ${secondary}`,
+      };
+    case 'holo':
+      return {
+        ...vars,
+        color,
+        textShadow: `1px 0 #7dd3fc, -1px 0 #f0abfc, 0 0 14px ${secondary}66`,
+        animation: 'cgraph-display-gradient-pan 3.8s linear infinite',
+      };
+    case 'glitch':
+      return {
+        ...vars,
+        color,
+        textShadow: '1px 0 #22d3ee, -1px 0 #f472b6',
+        animation: 'cgraph-display-glitch 2.4s steps(1, end) infinite',
+      };
+    case 'chrome':
+      return {
+        ...vars,
+        color,
+        textShadow: `0 1px 0 rgba(0,0,0,0.6), 0 0 12px ${secondary}55`,
+      };
+    case 'pulse':
+      return {
+        ...vars,
+        color,
+        animation: 'cgraph-display-pulse 2.6s ease-in-out infinite',
+      };
+    case 'ember':
+      return {
+        ...vars,
+        color,
+        animation: 'cgraph-display-ember 2.1s ease-in-out infinite',
+      };
+    case 'frost':
+      return {
+        ...vars,
+        color,
+        animation: 'cgraph-display-frost 3.2s ease-in-out infinite',
+        textShadow: `0 0 7px #7dd3fc, 0 0 16px ${secondary}66`,
       };
     default:
       return color ? { color } : {};
@@ -169,9 +207,6 @@ export const Nameplate = memo(function Nameplate({
     }
     return { color: '#edf0f8' };
   })();
-  const effectKey = getNameEffectKey(displayNameEffect);
-  const effectConfig = effectKey ? NAME_EFFECTS[effectKey] : null;
-
   return (
     <div
       className={cn(
@@ -237,17 +272,7 @@ export const Nameplate = memo(function Nameplate({
             fontFamily: "'Inter', system-ui",
             ...textStyles,
           }}
-          overlay={
-            effectConfig ? (
-              <LottieAssetRenderer
-                path={effectConfig.lottieUrl}
-                fallbackPath="/lottie/effects/placeholder.json"
-                label={`${effectConfig.label} name effect`}
-                className="pointer-events-none absolute inset-[-0.45rem] z-0 opacity-45"
-                fallback={null}
-              />
-            ) : null
-          }
+          overlay={null}
         />
       </div>
     </div>

@@ -41,14 +41,14 @@ function getTitleAnimationProps(
       };
     case 'shimmer':
       return {
-        animate: { backgroundPosition: ['200% center', '-200% center'] },
+        animate: {
+          filter: ['brightness(1)', 'brightness(1.25)', 'brightness(1)'],
+          textShadow: [`0 0 4px ${color}44`, `0 0 10px ${color}88`, `0 0 4px ${color}44`],
+        },
         transition: { duration: durations.cinematic.ms / 1000, repeat: Infinity, ease: 'linear' },
         style: {
-          backgroundImage: `linear-gradient(90deg, ${color} 0%, rgba(255,255,255,0.6) 50%, ${color} 100%)`,
-          backgroundSize: '200% 100%',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          color: 'transparent',
+          color,
+          textShadow: `0 0 8px ${color}66`,
         },
       };
     case 'rainbow':

@@ -62,31 +62,24 @@ function getTextEffectStyles(
       };
     case 'metallic':
       return {
-        background: `linear-gradient(180deg, ${primaryColor} 0%, ${secondaryColor ?? primaryColor} 50%, ${primaryColor} 100%)`,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
+        color: primaryColor,
+        textShadow: `0 1px 0 ${secondaryColor ?? primaryColor}, 0 -1px 0 rgba(255,255,255,0.45), 0 0 8px ${(secondaryColor ?? primaryColor)}55`,
         filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
       };
     case 'holographic':
       return {
-        background: `linear-gradient(90deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8b00ff, #ff0000)`,
-        backgroundSize: '200% 100%',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
+        color: secondaryColor ?? primaryColor,
+        textShadow: '1px 0 #7dd3fc, -1px 0 #f0abfc',
         animation: 'nameplate-holo 3s linear infinite',
       };
     case 'fire':
       return {
-        background: `linear-gradient(180deg, #ffd700 0%, #ff4500 50%, #8b0000 100%)`,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        textShadow: '0 0 10px rgba(255,69,0,0.5)',
+        color: secondaryColor ?? primaryColor,
+        textShadow: '0 0 8px rgba(255,69,0,0.7), 0 -1px 8px rgba(255,215,0,0.45)',
       };
     case 'ice':
       return {
-        background: `linear-gradient(180deg, #e0f2fe 0%, #67e8f9 50%, #06b6d4 100%)`,
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
+        color: secondaryColor ?? primaryColor,
         textShadow: '0 0 8px rgba(103,232,249,0.4)',
       };
     case 'neon':
@@ -102,10 +95,8 @@ function getTextEffectStyles(
       };
     case 'rainbow':
       return {
-        background: 'linear-gradient(90deg, #ff0000, #ff7700, #ffff00, #00ff00, #0077ff, #8b00ff)',
-        backgroundSize: '200% 100%',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
+        color: secondaryColor ?? primaryColor,
+        textShadow: '0 0 8px rgba(255,255,255,0.35)',
         animation: 'nameplate-rainbow 4s linear infinite',
       };
     case 'shadow':

@@ -53,4 +53,24 @@ describe('NameplateRenderer', () => {
     expect(container.querySelector('.cgraph-game-nameplate-glow')).toBeInTheDocument();
     expect(container.querySelector('.cgraph-game-nameplate-sheen')).toBeInTheDocument();
   });
+
+  it.each(['metallic', 'holographic', 'fire', 'ice', 'rainbow'] as const)(
+    'keeps %s text readable in picker previews',
+    (textEffect) => {
+      render(
+        <NameplateRenderer
+          nameplate={{ ...BASE_NAMEPLATE, textEffect, lottieUrl: undefined, lottieFile: undefined }}
+          username="tricker"
+        />
+      );
+
+      const renderedName = screen.getByText('tricker');
+      expect(renderedName).toBeInTheDocument();
+      expect(renderedName.getAttribute('style') ?? '').not.toContain(
+        '-webkit-text-fill-color: transparent'
+      );
+      expect(renderedName.getAttribute('style') ?? '').not.toContain('color: transparent');
+      expect(renderedName.getAttribute('style') ?? '').not.toContain('background:');
+    }
+  );
 });

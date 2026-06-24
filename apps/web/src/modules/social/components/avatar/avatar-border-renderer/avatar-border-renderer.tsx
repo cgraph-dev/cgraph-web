@@ -130,7 +130,7 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
       <motion.div
         ref={containerRef}
         className={cn(
-          'cgraph-game-avatar-frame relative flex cursor-pointer items-center justify-center',
+          'cgraph-game-avatar-frame relative isolate flex cursor-pointer items-center justify-center overflow-visible',
           className
         )}
         style={{ width: size, height: size }}
@@ -141,12 +141,12 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
         <img
           src={imageUrl}
           alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          className="cgraph-game-avatar-frame-asset pointer-events-none absolute inset-0 z-[3] h-full w-full object-contain"
           loading="lazy"
         />
-        <span className="cgraph-game-avatar-frame-glow pointer-events-none absolute inset-0" />
+        <span className="cgraph-game-avatar-frame-glow pointer-events-none absolute inset-[-2px] z-0" />
         <div
-          className="relative z-10 overflow-hidden rounded-full bg-[var(--token-card-bg)]"
+          className="relative z-[1] overflow-hidden rounded-full bg-[var(--token-card-bg)] opacity-100 shadow-inner shadow-black/30"
           style={{ width: avatarSize, height: avatarSize }}
         >
           {avatarContent}

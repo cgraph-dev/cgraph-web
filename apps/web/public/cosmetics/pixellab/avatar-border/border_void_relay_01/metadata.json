@@ -2,17 +2,17 @@
   "asset": {
     "id": "border_void_relay_01",
     "kind": "avatar-border",
-    "endpoint": "generate-ui-v2",
+    "endpoint": "pixellab-animated-gif",
     "size": {
-      "width": 192,
-      "height": 192
+      "width": 256,
+      "height": 256
     },
-    "colorPalette": "black glass, void purple, electric violet, cold cyan",
-    "prompt": "transparent pixel art single centered circular avatar frame, cosmic void relay theme, fully closed black glass ring with violet gravity arcs and tiny star shards attached to the frame, premium profile cosmetic, no multiple frames, no extra sample circles, transparent outside and inside circle, no face, no text, no background"
+    "file": "border_void_relay_01_0.gif",
+    "prompt": "User supplied animated avatar frame replacement from NEW FRAMES batch."
   },
-  "jobId": "d76ead20-8630-4ee7-a829-242371fbf659",
+  "jobId": null,
   "status": "completed",
-  "imageCount": 2,
-  "generatedAt": "2026-06-07T02:06:28.950Z",
-  "source": "pixellab"
+  "imageCount": 1,
+  "generatedAt": "2026-06-24T11:02:38.578Z",
+  "source": "desktop-new-frames"
 }

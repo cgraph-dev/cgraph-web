@@ -1,47 +1,131 @@
 [
   {
-    "id": "border_aurora_command_01",
+    "id": "border_8bit_common_01",
     "kind": "avatar-border",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_aurora_command_01",
-    "imageCount": 0,
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_8bit_common_01",
+    "imageCount": 1,
     "jobId": null,
-    "skipped": true
+    "source": "desktop-new-frames"
   },
   {
-    "id": "border_ember_colossus_01",
+    "id": "border_kawaii_common_01",
     "kind": "avatar-border",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_ember_colossus_01",
-    "imageCount": 2,
-    "jobId": "b17a702f-adff-4802-a78a-c4c34d988a76"
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_kawaii_common_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
   },
   {
-    "id": "border_ranked_ascendant_01",
+    "id": "border_cyberpunk_common_01",
     "kind": "avatar-border",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_ranked_ascendant_01",
-    "imageCount": 2,
-    "jobId": "29acd142-fad2-4ecd-a183-a5acc332d03c"
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_cyberpunk_common_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_cosmic_common_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_cosmic_common_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
   },
   {
     "id": "border_signal_noir_01",
     "kind": "avatar-border",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_signal_noir_01",
-    "imageCount": 0,
+    "imageCount": 1,
     "jobId": null,
-    "skipped": true
+    "source": "desktop-new-frames"
   },
   {
-    "id": "border_solar_grove_01",
+    "id": "border_aurora_command_01",
     "kind": "avatar-border",
-    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_solar_grove_01",
-    "imageCount": 2,
-    "jobId": "ec8a96da-2a06-463a-9e88-598c95500188"
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_aurora_command_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_ranked_ascendant_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_ranked_ascendant_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_ember_colossus_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_ember_colossus_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
   },
   {
     "id": "border_void_relay_01",
     "kind": "avatar-border",
     "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_void_relay_01",
-    "imageCount": 2,
-    "jobId": "d76ead20-8630-4ee7-a829-242371fbf659"
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_solar_grove_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_solar_grove_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_anime_rare_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_anime_rare_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_cyberpunk_rare_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_cyberpunk_rare_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_8bit_epic_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_8bit_epic_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_cyberpunk_epic_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_cyberpunk_epic_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_cosmic_legendary_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_cosmic_legendary_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
+  },
+  {
+    "id": "border_cyberpunk_mythic_01",
+    "kind": "avatar-border",
+    "path": "/home/trick/Projects/Repos/CGraphRepos (2)/cgraph-web/apps/web/public/cosmetics/pixellab/avatar-border/border_cyberpunk_mythic_01",
+    "imageCount": 1,
+    "jobId": null,
+    "source": "desktop-new-frames"
   },
   {
     "id": "badge_privacy_guardian",

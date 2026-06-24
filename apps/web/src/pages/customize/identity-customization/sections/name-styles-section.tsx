@@ -13,28 +13,30 @@ import { useAuthStore } from '@/modules/auth/store';
 import {
   NAME_FONTS,
   NAME_FONT_KEYS,
-  NAME_EFFECTS,
-  NAME_EFFECT_KEYS,
   NAME_COLORS,
   type NameFont,
-  type NameEffect,
 } from '@cgraph-dev/animation-constants';
-import { GlassCard } from '@/shared/components/ui';
+import {
+  DisplayName,
+  GlassCard,
+  WEB_NAME_EFFECTS,
+  WEB_NAME_EFFECT_KEYS,
+  type WebNameEffect,
+} from '@/shared/components/ui';
 import { tweens } from '@/lib/animation-presets';
-import { LottieAssetRenderer } from '@/lib/lottie/lottie-asset-renderer';
 
 // Narrow store strings into the registry union types. Indexed access
 // into the readonly arrays returns `T | undefined` under
 // noUncheckedIndexedAccess, so we hold a typed default to fall back on.
 const DEFAULT_NAME_FONT: NameFont = NAME_FONT_KEYS[0] ?? 'default';
-const DEFAULT_NAME_EFFECT: NameEffect = NAME_EFFECT_KEYS[0] ?? 'solid';
+const DEFAULT_NAME_EFFECT: WebNameEffect = WEB_NAME_EFFECT_KEYS[0] ?? 'solid';
 
 function getNameFont(value: string): NameFont {
   return NAME_FONT_KEYS.find((font) => font === value) ?? DEFAULT_NAME_FONT;
 }
 
-function getNameEffect(value: string): NameEffect {
-  return NAME_EFFECT_KEYS.find((effect) => effect === value) ?? DEFAULT_NAME_EFFECT;
+function getNameEffect(value: string): WebNameEffect {
+  return WEB_NAME_EFFECT_KEYS.find((effect) => effect === value) ?? DEFAULT_NAME_EFFECT;
 }
 
 export interface NameStylesSectionProps {
@@ -59,100 +61,25 @@ function NamePreview({
   name,
 }: {
   font: NameFont;
-  effect: NameEffect;
+  effect: WebNameEffect;
   color: string;
   secondaryColor: string | null;
   name: string;
 }) {
-  const fontConfig = NAME_FONTS[font] || NAME_FONTS.default;
-
-  const baseStyle: React.CSSProperties = {
-    fontSize: '1.75rem',
-    fontWeight: fontConfig.fontWeight || '600',
-    fontFamily: fontConfig.fontFamily || 'inherit',
-    fontStyle: fontConfig.fontStyle || 'normal',
-    letterSpacing: fontConfig.letterSpacing ?? 0,
-  };
-
   const secondary = secondaryColor || 'var(--token-interactive-primary)';
-  const effectConfig = NAME_EFFECTS[effect];
-
-  const previewText = (() => {
-    switch (effect) {
-      case 'gradient':
-        return (
-          <span
-            className="relative z-[1]"
-            style={{
-              ...baseStyle,
-              background: `linear-gradient(135deg, ${color}, ${secondary})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            {name}
-          </span>
-        );
-      case 'neon':
-        return (
-          <span
-            className="relative z-[1]"
-            style={{
-              ...baseStyle,
-              color,
-              textShadow: `0 0 7px ${color}, 0 0 10px ${color}, 0 0 21px ${color}, 0 0 42px ${secondary}`,
-            }}
-          >
-            {name}
-          </span>
-        );
-      case 'toon':
-        return (
-          <span
-            className="relative z-[1]"
-            style={{
-              ...baseStyle,
-              color,
-              WebkitTextStroke: '1px rgba(0,0,0,0.6)',
-              textShadow: `2px 2px 0 rgba(0,0,0,0.3)`,
-            }}
-          >
-            {name}
-          </span>
-        );
-      case 'pop':
-        return (
-          <span
-            className="relative z-[1]"
-            style={{
-              ...baseStyle,
-              color,
-              textShadow: `3px 3px 0 ${secondary}, -1px -1px 0 rgba(0,0,0,0.2)`,
-            }}
-          >
-            {name}
-          </span>
-        );
-      default:
-        return (
-          <span className="relative z-[1]" style={{ ...baseStyle, color }}>
-            {name}
-          </span>
-        );
-    }
-  })();
 
   return (
-    <span className="relative inline-flex min-h-12 min-w-[12rem] items-center justify-center px-6">
-      <LottieAssetRenderer
-        path={effectConfig.lottieUrl}
-        fallbackPath="/lottie/effects/placeholder.json"
-        label={`${effectConfig.label} name effect`}
-        className="pointer-events-none absolute inset-0 z-0 opacity-50"
-        fallback={null}
+    <span className="relative inline-flex min-h-16 min-w-[14rem] max-w-full items-center justify-center rounded-2xl border border-white/10 bg-black/15 px-8 shadow-[inset_0_0_28px_rgba(255,255,255,0.035),0_12px_40px_rgba(0,0,0,0.24)]">
+      <span className="pointer-events-none absolute inset-x-8 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/16 to-transparent" />
+      <DisplayName
+        name={name}
+        font={font}
+        effect={effect}
+        color={color}
+        secondaryColor={secondary}
+        size="1.75rem"
+        className="relative z-[1] max-w-full px-2 text-center font-black"
       />
-      {previewText}
     </span>
   );
 }
@@ -177,8 +104,16 @@ export function NameStylesSection({
   const previewName = useAuthStore(
     (s) => s.user?.displayName || s.user?.username || 'Your name'
   );
-  const needsSecondary =
-    selectedEffect === 'gradient' || selectedEffect === 'neon' || selectedEffect === 'pop';
+  const needsSecondary = [
+    'gradient',
+    'neon',
+    'pop',
+    'holo',
+    'chrome',
+    'pulse',
+    'ember',
+    'frost',
+  ].includes(selectedEffect);
 
   return (
     <div className="space-y-6">
@@ -227,9 +162,9 @@ export function NameStylesSection({
 
       <div>
         <h3 className="mb-3 text-sm font-semibold text-[var(--token-text-secondary)]">Text Effect</h3>
-        <div className="grid grid-cols-5 gap-3">
-          {NAME_EFFECT_KEYS.map((effectKey) => {
-            const config = NAME_EFFECTS[effectKey];
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+          {WEB_NAME_EFFECT_KEYS.map((effectKey) => {
+            const config = WEB_NAME_EFFECTS[effectKey];
             const isSelected = effectKey === selectedEffect;
             return (
               <Button
@@ -242,17 +177,17 @@ export function NameStylesSection({
                     : 'aurora-social-button-muted text-white/72 hover:scale-[1.02] hover:text-white'
                 }`}
               >
-                <div className="relative mb-2 h-8 w-full overflow-hidden rounded-lg border border-white/5 bg-black/10">
-                  <LottieAssetRenderer
-                    path={config.lottieUrl}
-                    fallbackPath="/lottie/effects/placeholder.json"
-                    label={`${config.label} name effect preview`}
-                    className="pointer-events-none absolute inset-0 opacity-70"
-                    fallback={null}
+                <div className="relative mb-2 flex h-9 w-full items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-black/15 px-2">
+                  <span className="pointer-events-none absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                  <DisplayName
+                    name={config.label}
+                    font={getNameFont(selectedFont)}
+                    effect={effectKey}
+                    color={selectedColor}
+                    secondaryColor={selectedSecondaryColor ?? 'var(--token-interactive-primary)'}
+                    size="0.875rem"
+                    className="relative z-[1] max-w-full font-bold"
                   />
-                  <div className="relative z-[1] flex h-full items-center justify-center text-sm font-bold tracking-tight">
-                    {config.label}
-                  </div>
                 </div>
                 <div className={`mt-1 text-[10px] leading-tight transition-colors border-none font-medium ${
                   isSelected ? 'text-[var(--token-text-secondary)]' : 'text-[var(--token-text-muted)] group-hover:text-[var(--token-text-secondary)]'
