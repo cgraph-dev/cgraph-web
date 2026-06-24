@@ -59,6 +59,8 @@ const PIXELLAB_AVATAR_BORDER_GIF_URLS: Readonly<Record<string, string>> = {
     '/cosmetics/pixellab/avatar-border/border_cyberpunk_mythic_01/border_cyberpunk_mythic_01_0.gif',
 };
 
+const REMOVED_AVATAR_BORDER_IDS = new Set<string>(['border_special_avatar_frame']);
+
 function withWebAvatarBorderAssets(border: AvatarBorderConfig): AvatarBorderConfig {
   const imageUrl = PIXELLAB_AVATAR_BORDER_GIF_URLS[border.id];
   if (!imageUrl) return border;
@@ -75,7 +77,9 @@ function withWebAvatarBorderAssets(border: AvatarBorderConfig): AvatarBorderConf
 }
 
 export const AVATAR_BORDERS: readonly AvatarBorderConfig[] =
-  SHARED_AVATAR_BORDERS.map(withWebAvatarBorderAssets);
+  SHARED_AVATAR_BORDERS.filter((border) => !REMOVED_AVATAR_BORDER_IDS.has(border.id)).map(
+    withWebAvatarBorderAssets
+  );
 
 export function getBorderById(id: string | null | undefined): AvatarBorderConfig | undefined {
   if (!id) return undefined;

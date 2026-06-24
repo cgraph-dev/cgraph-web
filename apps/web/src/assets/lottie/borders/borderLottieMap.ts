@@ -31,10 +31,6 @@ export const BORDER_LOTTIE_MAP: Record<string, string> = {
 
   // Kawaii
   kawaii_free: `${BASE}/kawaii_free_01.json`,
-
-  // Special animated borders (real Lottie animations)
-  special_avatar_frame: `${BASE}/avatar-frame.json`,
-  avatar_frame: `${BASE}/avatar-frame.json`,
 };
 
 /**

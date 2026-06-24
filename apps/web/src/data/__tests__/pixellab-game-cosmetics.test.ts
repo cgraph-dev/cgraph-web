@@ -29,6 +29,7 @@ describe('PixelLab game cosmetics package consumption', () => {
   it('uses shared game avatar borders through the web adapter', () => {
     const ids = ALL_BORDERS.map((border) => border.id);
 
+    expect(ids).not.toContain('border_special_avatar_frame');
     expect(ids).toContain('border_ranked_ascendant_01');
     expect(ids).toContain('border_ember_colossus_01');
     expect(ids).toContain('border_void_relay_01');
