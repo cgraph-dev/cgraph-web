@@ -795,17 +795,6 @@
     transform: translateZ(0);
   }
 
-  .cgraph-game-avatar-frame-glow {
-    z-index: 0;
-    border-radius: 9999px;
-    background:
-      conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.45), transparent 28%),
-      radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 62%);
-    mix-blend-mode: screen;
-    opacity: 0.26;
-    animation: cgraph-cosmetic-frame-turn 7.5s linear infinite;
-  }
-
   .cgraph-game-profile-surface {
     isolation: isolate;
   }
@@ -834,7 +823,6 @@
     .cgraph-game-nameplate-glow,
     .cgraph-display-name,
     .cgraph-display-name::after,
-    .cgraph-game-avatar-frame-glow,
     .cgraph-game-profile-surface::before {
       animation: none;
     }

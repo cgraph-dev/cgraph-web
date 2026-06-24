@@ -31,10 +31,9 @@ describe('AvatarBorderRenderer', () => {
 
     const frameAsset = container.querySelector('.cgraph-game-avatar-frame-asset');
     const avatarLayer = screen.getByTestId('avatar-content').parentElement;
-    const glowLayer = container.querySelector('.cgraph-game-avatar-frame-glow');
 
     expect(frameAsset).toHaveClass('z-[3]');
     expect(avatarLayer).toHaveClass('z-[1]');
-    expect(glowLayer).toHaveClass('z-0');
+    expect(container.querySelector('.cgraph-game-avatar-frame-glow')).not.toBeInTheDocument();
   });
 });

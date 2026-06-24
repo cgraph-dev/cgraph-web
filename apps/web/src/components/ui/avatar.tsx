@@ -256,7 +256,6 @@ export default function Avatar({
           className="cgraph-game-avatar-frame-asset pointer-events-none absolute inset-0 z-[3] h-full w-full object-contain"
           loading="lazy"
         />
-        <span className="cgraph-game-avatar-frame-glow pointer-events-none absolute inset-[-2px] z-0" />
         <span className="relative z-[1] inline-flex items-center justify-center opacity-100">
           {avatarContent}
         </span>
