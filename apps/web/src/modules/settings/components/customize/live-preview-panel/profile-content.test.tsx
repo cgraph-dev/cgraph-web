@@ -9,6 +9,7 @@ vi.mock('../animated-avatar', () => ({
 }));
 
 vi.mock('@/shared/components/ui', () => ({
+  DisplayName: ({ name }: { name: string }) => <span>{name}</span>,
   FireText: ({ children }: { children: ReactNode }) => <span>{children}</span>,
   GlowText: ({
     as: Tag = 'span',

@@ -121,6 +121,7 @@ const LEGACY_AVATAR_BORDER_DISPLAY_TYPES = [
   'fire',
   'ice',
   'electric',
+  'lottie',
   'glow',
   'pulse',
   'rotate',

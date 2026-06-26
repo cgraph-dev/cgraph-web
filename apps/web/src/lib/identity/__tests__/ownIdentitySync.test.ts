@@ -92,8 +92,8 @@ describe('own identity socket sync owner', () => {
 
     expect(useCustomizationStore.getState()).toMatchObject({
       selectedBorderId: 'border_cyberpunk_common_01',
-      avatarBorderType: 'lottie',
-      avatarBorder: 'lottie',
+      avatarBorderType: 'static',
+      avatarBorder: 'static',
       equippedTitle: 'title-founder',
       title: 'title-founder',
       equippedBadges: ['badge-a', 'badge-b'],
