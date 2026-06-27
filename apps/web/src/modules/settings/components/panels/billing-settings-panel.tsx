@@ -308,7 +308,6 @@ export function BillingSettingsPanel() {
                   disabled={isLoading}
                   className="group relative w-full overflow-hidden rounded-xl bg-primary-600 px-6 py-4 text-sm font-black uppercase tracking-widest text-white shadow-2xl transition-all"
                 >
-                  <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
                   {isLoading ? 'Encrypting...' : 'Upgrade Now'}
                 </motion.button>
               </div>

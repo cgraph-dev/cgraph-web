@@ -1,7 +1,6 @@
 /**
  * Profile showcase display components.
  */
-import { durations } from '@cgraph-dev/animation-constants';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { SparklesIcon, TrophyIcon } from '@heroicons/react/24/outline';
@@ -84,19 +83,6 @@ export function EquippedBadgesShowcase({
                     </p>
                   </div>
                 </div>
-
-                {/* Shine effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '200%' }}
-                  transition={{
-                    duration: durations.loop.ms / 1000,
-                    repeat: Infinity,
-                    repeatDelay: 3,
-                    ease: 'linear',
-                  }}
-                />
               </motion.div>
             );
           })}

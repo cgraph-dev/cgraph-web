@@ -33,15 +33,6 @@ export const GLOW_TRANSITION = {
   repeat: Infinity,
   ease: 'easeInOut' as const,
 } as const;
-// SHIMMER
-export const SHIMMER_GRADIENT =
-  'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)';
-
-export const SHIMMER_TRANSITION = {
-  duration: durations.loop.ms / 1000,
-  repeat: Infinity,
-  ease: 'linear' as const,
-} as const;
 // PARTICLE CONFIG
 export const PARTICLE_COUNT = 8;
 export const PARTICLE_DURATION_MS = 600;

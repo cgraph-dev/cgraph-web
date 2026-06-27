@@ -45,7 +45,7 @@ export default function GlowText({
   animate = true,
   glowIntensity = 'medium',
   size = 'xl',
-  shimmer = false,
+  shimmer: _shimmer = false,
   gradientFlow = false,
   as: Component = 'span',
 }: GlowTextProps) {
@@ -59,6 +59,7 @@ export default function GlowText({
     ? gradient[0]
     : gradient.match(/#[a-fA-F0-9]{6}|#[a-fA-F0-9]{3}|rgb[a]?\([^)]+\)/)?.[0] || '#667eea';
   void _primaryColor; // Reserved for future enhanced glow effects
+  void _shimmer; // Prop kept for API compatibility; moving shine is disabled globally.
   const MotionComponent = motion[Component];
 
   return (
@@ -120,35 +121,11 @@ export default function GlowText({
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             color: 'transparent',
-            backgroundSize: shimmer ? '200% 100%' : '100% 100%',
+            backgroundSize: '100% 100%',
           }}
         >
           {children}
         </span>
-      )}
-
-      {/* Shimmer overlay */}
-      {shimmer && (
-        <motion.span
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)`,
-            backgroundSize: '200% 100%',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-          }}
-          animate={{
-            backgroundPosition: ['200% 0%', '-200% 0%'],
-          }}
-          transition={{
-            duration: durations.cinematic.ms / 1000,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-        >
-          {children}
-        </motion.span>
       )}
     </MotionComponent>
   );

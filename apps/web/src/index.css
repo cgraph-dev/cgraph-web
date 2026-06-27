@@ -131,7 +131,7 @@
 }
 
 @layer components {
-  /* ─── Button Shimmer & Flowing Border ────────────────────────── */
+  /* ─── Button Flowing Border ────────────────────────── */
   @keyframes btn-shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(200%); }
@@ -143,24 +143,12 @@
   }
 
   .btn-shimmer::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.08),
-      transparent
-    );
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-    pointer-events: none;
+    content: none;
+    display: none;
   }
 
   .btn-shimmer:hover::after {
-    opacity: 1;
-    animation: btn-shimmer 2s ease-in-out infinite;
-    animation-delay: 0.2s;
+    animation: none;
   }
 
   @keyframes btn-border-flow {
@@ -348,18 +336,12 @@
   }
 
   .matrix-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease-out;
+    content: none;
+    display: none;
   }
 
   .matrix-button:hover::before {
-    left: 100%;
+    left: auto;
   }
 
   .matrix-button:hover {
@@ -390,30 +372,12 @@
   }
 
   .auth-cta-button::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -100%;
-    width: 60%;
-    height: 200%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(16, 185, 129, 0.07) 30%,
-      color-mix(in srgb, var(--color-brand-purple, #8b5cf6) 10%, transparent) 50%,
-      rgba(16, 185, 129, 0.07) 70%,
-      transparent 100%
-    );
-    transform: rotate(15deg);
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-    pointer-events: none;
-    z-index: 1;
+    content: none;
+    display: none;
   }
 
   .auth-cta-button:hover::after {
-    opacity: 1;
-    animation: auth-btn-shimmer 4s ease-in-out infinite;
+    animation: none;
   }
 
   .auth-cta-button:hover {
@@ -629,17 +593,6 @@
     }
   }
 
-  @keyframes cgraph-cosmetic-profile-ambience {
-    0%, 100% {
-      opacity: 0.32;
-      transform: translate3d(-2%, -1%, 0) scale(1);
-    }
-    50% {
-      opacity: 0.58;
-      transform: translate3d(2%, 1%, 0) scale(1.03);
-    }
-  }
-
   @keyframes cgraph-cosmetic-frame-turn {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
@@ -650,16 +603,8 @@
   }
 
   .cgraph-game-nameplate-sheen {
-    background: linear-gradient(
-      100deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.02) 34%,
-      rgba(255, 255, 255, 0.58) 49%,
-      rgba(255, 255, 255, 0.08) 62%,
-      transparent 100%
-    );
-    mix-blend-mode: screen;
-    animation: cgraph-cosmetic-sheen 4.8s ease-in-out infinite;
+    display: none;
+    animation: none;
   }
 
   .cgraph-game-nameplate-glow {
@@ -682,37 +627,27 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .cgraph-display-name--effect-gradient::after,
-  .cgraph-display-name--effect-holo::after,
-  .cgraph-display-name--effect-chrome::after {
-    content: attr(data-text);
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
+  .cgraph-display-name--effect-gradient,
+  .cgraph-display-name--effect-holo,
+  .cgraph-display-name--effect-chrome {
     background-size: 200% 100%;
-    background-position: 0% 50%;
+    background-position: 50% 50%;
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
   }
 
-  .cgraph-display-name--effect-gradient::after {
+  .cgraph-display-name--effect-gradient {
     background-image: linear-gradient(
       135deg,
       var(--cgraph-name-primary),
       var(--cgraph-name-secondary),
       var(--cgraph-name-primary)
     );
-    animation: cgraph-display-gradient-pan 5.8s linear infinite;
   }
 
   .cgraph-display-name--effect-holo {
-    text-shadow: 0 0 12px rgba(192, 132, 252, 0.42);
-  }
-
-  .cgraph-display-name--effect-holo::after {
     background-image: linear-gradient(
       90deg,
       #7dd3fc,
@@ -721,14 +656,10 @@
       #67e8f9,
       #7dd3fc
     );
-    animation: cgraph-display-gradient-pan 3.8s linear infinite;
+    text-shadow: 0 0 12px rgba(192, 132, 252, 0.42);
   }
 
   .cgraph-display-name--effect-chrome {
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.48), 0 0 10px rgba(255, 255, 255, 0.18);
-  }
-
-  .cgraph-display-name--effect-chrome::after {
     background-image: linear-gradient(
       180deg,
       #ffffff 0%,
@@ -737,6 +668,7 @@
       var(--cgraph-name-secondary) 68%,
       #ffffff 100%
     );
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.48), 0 0 10px rgba(255, 255, 255, 0.18);
   }
 
   .cgraph-display-name--effect-neon {
@@ -799,20 +731,6 @@
     isolation: isolate;
   }
 
-  .cgraph-game-profile-surface::before {
-    content: '';
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background:
-      radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.12), transparent 28%),
-      radial-gradient(circle at 82% 10%, rgba(125, 211, 252, 0.12), transparent 30%),
-      linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.08) 48%, transparent 62%);
-    mix-blend-mode: screen;
-    animation: cgraph-cosmetic-profile-ambience 8s ease-in-out infinite;
-  }
-
   .cgraph-game-profile-surface > * {
     position: relative;
     z-index: 1;
@@ -822,8 +740,7 @@
     .cgraph-game-nameplate-sheen,
     .cgraph-game-nameplate-glow,
     .cgraph-display-name,
-    .cgraph-display-name::after,
-    .cgraph-game-profile-surface::before {
+    .cgraph-display-name::after {
       animation: none;
     }
   }
@@ -1294,23 +1211,9 @@
 }
 
 .auth-card-shimmer::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -100%;
-  width: 40%;
-  height: 200%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(16, 185, 129, 0.03) 30%,
-    color-mix(in srgb, var(--color-brand-purple, #8b5cf6) 5%, transparent) 50%,
-    rgba(16, 185, 129, 0.03) 70%,
-    transparent 100%
-  );
-  animation: auth-card-shimmer 8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
+  content: none;
+  display: none;
+  animation: none;
 }
 
 /* ============================================
@@ -2135,43 +2038,14 @@ a, button, [role='button'], input, select, textarea, label, summary,
 
 /* Specular highlight blob — convex glass reflection at top-left */
 .theme-bubble .glass-card-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    radial-gradient(ellipse at 25% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
-    linear-gradient(105deg, transparent 45%, rgba(255, 255, 255, 0.04) 80%, rgba(255, 255, 255, 0.08) 95%);
-  pointer-events: none;
-  z-index: 1;
-  border-radius: inherit;
+  content: none;
+  display: none;
 }
 
 /* Chromatic specular edge — iridescent top line */
 .theme-bubble .glass-card-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.38) 8%,
-    rgba(139, 92, 246, 0.35) 22%,
-    rgba(59, 130, 246, 0.32) 38%,
-    rgba(16, 185, 129, 0.28) 55%,
-    rgba(251, 146, 60, 0.28) 72%,
-    rgba(255, 255, 255, 0.38) 88%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: bubble-shimmer 12s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 2;
+  content: none;
+  display: none;
 }
 
 /* ══════════════════════════════════════════════════
@@ -2359,11 +2233,8 @@ a, button, [role='button'], input, select, textarea, label, summary,
 
 /* Caustic refraction overlay on glass cards */
 .theme-bubble .glass-card-container::before {
-  background:
-    radial-gradient(ellipse at 30% 18%, rgba(255, 255, 255, 0.14) 0%, transparent 45%),
-    radial-gradient(ellipse at 65% 65%, rgba(255, 255, 255, 0.04) 0%, transparent 40%),
-    linear-gradient(105deg, transparent 45%, rgba(255, 255, 255, 0.04) 80%, rgba(255, 255, 255, 0.08) 95%);
-  animation: water-drop-caustic 18s ease-in-out infinite;
+  background: none;
+  animation: none;
 }
 
 /* Meniscus edge — brighter bottom border that pulses gently */

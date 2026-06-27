@@ -22,8 +22,6 @@ import {
   BOUNCE_ANIMATION,
   GLOW_ANIMATION,
   GLOW_TRANSITION,
-  SHIMMER_GRADIENT,
-  SHIMMER_TRANSITION,
   PARTICLE_COUNT,
   PARTICLE_DURATION_MS,
   SUPER_PARTICLE_COUNT,
@@ -218,17 +216,6 @@ export function AnimatedReactionBubble({
         />
       )}
 
-      {/* Shimmer effect for active reactions */}
-      {reaction.hasReacted && (
-        <div className="absolute inset-0 overflow-hidden rounded-full">
-          <motion.div
-            className="absolute inset-0"
-            style={{ background: SHIMMER_GRADIENT }}
-            animate={{ x: ['-100%', '100%'] }}
-            transition={SHIMMER_TRANSITION}
-          />
-        </div>
-      )}
     </motion.button>
   );
 }

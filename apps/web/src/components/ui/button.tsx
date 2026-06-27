@@ -19,16 +19,14 @@ export function Button({
   leftIcon,
   rightIcon,
   fullWidth = false,
-  animated = true,
+  animated: _animated = true,
   disabled,
   children,
   className = '',
   ref,
   ...props
 }: ButtonProps & { ref?: React.Ref<HTMLButtonElement> }) {
-  const { tapScale, hoverScale, shouldAnimate } = useMotionSafe();
-
-  const hasShimmer = animated && shouldAnimate && variant === 'primary';
+  const { tapScale, hoverScale } = useMotionSafe();
 
   const baseStyles =
     'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
@@ -60,7 +58,7 @@ export function Button({
     <motion.button
       ref={ref}
       disabled={disabled || isLoading}
-      className={` ${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? 'w-full' : ''} ${hasShimmer ? 'btn-shimmer' : ''} ${className} `}
+      className={` ${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? 'w-full' : ''} ${className} `}
       whileTap={tapScale()}
       whileHover={hoverScale()}
       transition={{ type: 'spring', stiffness: 400, damping: 25, mass: 0.8 }}

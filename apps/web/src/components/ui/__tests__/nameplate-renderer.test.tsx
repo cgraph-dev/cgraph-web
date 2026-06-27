@@ -47,11 +47,11 @@ describe('NameplateRenderer', () => {
     expect(screen.queryByText('◆')).not.toBeInTheDocument();
   });
 
-  it('keeps fallback overlays for non-image nameplates', () => {
+  it('keeps fallback glow without moving sheen for non-image nameplates', () => {
     const { container } = render(<NameplateRenderer nameplate={BASE_NAMEPLATE} username="tricker" />);
 
     expect(container.querySelector('.cgraph-game-nameplate-glow')).toBeInTheDocument();
-    expect(container.querySelector('.cgraph-game-nameplate-sheen')).toBeInTheDocument();
+    expect(container.querySelector('.cgraph-game-nameplate-sheen')).not.toBeInTheDocument();
   });
 
   it.each(['metallic', 'holographic', 'fire', 'ice', 'rainbow'] as const)(

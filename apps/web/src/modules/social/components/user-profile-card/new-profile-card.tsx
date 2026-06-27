@@ -97,14 +97,6 @@ export const NewProfileCard = memo(function NewProfileCard({
             : `linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), #08090f`,
         }}
       >
-        {/* Accent line */}
-        <div
-          className="h-px"
-          style={{
-            background: `linear-gradient(90deg, transparent 0%, color-mix(in srgb, ${accentColor} 28%, transparent) 22%, color-mix(in srgb, ${accentColor} 16%, transparent) 78%, transparent 100%)`,
-          }}
-        />
-
         {/* Avatar */}
         <AvatarZone
           avatarUrl={user.avatarUrl}

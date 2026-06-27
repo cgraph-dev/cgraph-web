@@ -292,7 +292,6 @@ export default function DataExport() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
           >
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
             <div className="flex items-center justify-center gap-2">
               <ArrowDownTrayIcon className="h-5 w-5" />
               Request Export ({selectedCount})

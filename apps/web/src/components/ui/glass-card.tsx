@@ -15,7 +15,7 @@ export type { GlassCardProps } from './glass-card.types';
 function resolveThemeVariant(theme: { variant?: ThemeVariant }): ThemeVariant {
   return theme.variant ?? 'aurora';
 }
-/** Glassmorphism card with optional 3D hover, glow, shimmer, and theme-aware styling. */
+/** Glassmorphism card with optional 3D hover, glow, and theme-aware styling. */
 export default function GlassCard({
   children,
   variant = 'default',
@@ -23,7 +23,7 @@ export default function GlassCard({
   glow = false,
   glowColor: glowColorProp,
   hover3D = true,
-  shimmer = false,
+  shimmer: _shimmer = false,
   borderGradient = false,
   particles = false,
   spotlight = true,
@@ -54,7 +54,6 @@ export default function GlassCard({
   // --- Feature gating per theme + reduced motion ---
   const effectiveHover3D = hover3D && behavior.hover3D && !prefersReducedMotion;
   const effectiveSpotlight = spotlight && behavior.spotlight && !prefersReducedMotion;
-  const effectiveShimmer = shimmer && behavior.shimmer && !prefersReducedMotion;
   const effectiveParticles = particles && behavior.particles && !prefersReducedMotion;
 
   // Motion values for 3D tilt effect
@@ -178,20 +177,6 @@ export default function GlassCard({
             maskComposite: 'exclude',
           }}
         />
-      )}
-
-      {/* Shimmer effect - only on hover, gated by theme */}
-      {effectiveShimmer && isHovered && (
-        <div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl">
-          <div
-            className="absolute inset-0 animate-shimmer"
-            style={{
-              background:
-                'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
-              backgroundSize: '200% 100%',
-            }}
-          />
-        </div>
       )}
 
       {/* Particles effect - only animate when hovered, gated by theme */}

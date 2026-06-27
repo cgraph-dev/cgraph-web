@@ -9,7 +9,6 @@
  * - Animated hover effects
  */
 
-import { durations } from '@cgraph-dev/animation-constants';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -152,22 +151,6 @@ export function AuthButton({
       className={`focus:ring-primary-500/50 relative overflow-hidden rounded-xl font-semibold transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${sizeClasses[size]} ${variantClasses[variant]} ${fullWidth ? 'w-full' : ''} ${isSuccess ? 'bg-gradient-to-r from-green-500 to-emerald-500' : ''} ${isError ? 'bg-gradient-to-r from-red-500 to-rose-500' : ''} ${className} `}
       {...props}
     >
-      {/* Shimmer effect */}
-      {variant === 'primary' && !isDisabled && (
-        <motion.div
-          animate={{
-            x: ['0%', '200%'],
-          }}
-          transition={{
-            repeat: Infinity,
-            duration: durations.loop.ms / 1000,
-            ease: 'linear',
-          }}
-          className="absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-          style={{ width: '50%' }}
-        />
-      )}
-
       <AnimatePresence mode="wait">{getContent()}</AnimatePresence>
     </button>
   );

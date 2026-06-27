@@ -249,10 +249,7 @@ export const Nameplate = memo(function Nameplate({
           />
         ) : null}
         {hasEntry && !hasImageAsset && (
-          <>
-            <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[1] rounded-[inherit]" />
-            <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/2" />
-          </>
+          <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[1] rounded-[inherit]" />
         )}
 
         {/* Emblem from nameplate entry */}

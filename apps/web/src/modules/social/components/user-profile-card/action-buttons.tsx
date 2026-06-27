@@ -13,31 +13,6 @@ const GLASS_BORDER: React.CSSProperties = {
   borderBottom: '1px solid rgba(0,0,0,0.3)',
   backdropFilter: 'blur(12px) saturate(1.4)',
 };
-function InnerShine(): React.ReactElement {
-  return (
-    <div
-      className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[45%]"
-      style={{
-        background:
-          'linear-gradient(to bottom, rgba(255,255,255,0.04), transparent)',
-        borderRadius: '14px 14px 50% 50%',
-      }}
-    />
-  );
-}
-
-function Sheen(): React.ReactElement {
-  return (
-    <div
-      className="pointer-events-none absolute top-0 h-full w-[55%] group-hover/btn:animate-[pc-btn-sheen_0.6s_ease-out_forwards]"
-      style={{
-        left: '-85%',
-        background:
-          'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.06) 50%, transparent 75%)',
-      }}
-    />
-  );
-}
 function ChatIcon(): React.ReactElement {
   return (
     <svg
@@ -123,8 +98,6 @@ export const ActionButtons = memo(function ActionButtons({
             className={GLASS_BASE}
             style={{ ...GLASS_BORDER, background: accentBloom }}
           >
-            <InnerShine />
-            <Sheen />
             <span style={{ color: accentText }}>
               <ChatIcon />
             </span>
@@ -142,8 +115,6 @@ export const ActionButtons = memo(function ActionButtons({
             className={cn(GLASS_BASE)}
             style={{ ...GLASS_BORDER, background: 'rgba(255,255,255,0.02)' }}
           >
-            <InnerShine />
-            <Sheen />
             <span className="text-[#3d4d62]">
               <ExternalLinkIcon />
             </span>
@@ -170,8 +141,6 @@ export const ActionButtons = memo(function ActionButtons({
           className={GLASS_BASE}
           style={{ ...GLASS_BORDER, background: accentBloom }}
         >
-          <InnerShine />
-          <Sheen />
           <span style={{ color: accentText }}>
             <ChatIcon />
           </span>
@@ -198,8 +167,6 @@ export const ActionButtons = memo(function ActionButtons({
               'radial-gradient(ellipse at 50% 100%, rgba(232,160,32,0.20) 0%, rgba(255,255,255,0.03) 70%)',
           }}
         >
-          <InnerShine />
-          <Sheen />
           <span className="text-[#e8a020]">
             <StarIcon />
           </span>
@@ -222,8 +189,6 @@ export const ActionButtons = memo(function ActionButtons({
               'linear-gradient(145deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015))',
           }}
         >
-          <InnerShine />
-          <Sheen />
           <UserPlusIcon />
           <span
             className="text-[10px] font-semibold tracking-[0.02em]"
@@ -242,14 +207,6 @@ export const ActionButtons = memo(function ActionButtons({
           className="group/vp relative flex w-full items-center justify-center gap-1.5 overflow-hidden rounded-[12px] border border-white/[0.055] bg-white/[0.02] py-[9px] text-[#3d4d62] transition-all duration-200 hover:border-[var(--pc-accent)] hover:text-[var(--pc-accent)]"
           style={viewProfileStyle}
         >
-          <div
-            className="pointer-events-none absolute top-0 h-full w-[55%] group-hover/vp:animate-[pc-btn-sheen_0.6s_ease-out_forwards]"
-            style={{
-              left: '-85%',
-              background:
-                'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%)',
-            }}
-          />
           <ExternalLinkIcon />
           <span
             className="text-[0.72rem] font-semibold"

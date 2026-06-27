@@ -389,10 +389,7 @@ export const NameplateBar = memo(function NameplateBar({
         ) : null}
 
         {!hasImageAsset && (
-          <>
-            <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[2] rounded-[inherit]" />
-            <span className="cgraph-game-nameplate-sheen pointer-events-none absolute inset-y-0 left-0 z-[3] w-1/2" />
-          </>
+          <span className="cgraph-game-nameplate-glow pointer-events-none absolute inset-0 z-[2] rounded-[inherit]" />
         )}
 
         {/* Layer 3: Content — emblem + username text effect */}

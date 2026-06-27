@@ -207,8 +207,6 @@ export function DeleteAccount() {
               }}
               className="group relative overflow-hidden rounded-xl border border-red-500/30 bg-red-500/20 px-6 py-3 text-sm font-black uppercase tracking-wider text-red-400 shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all"
             >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
               Start Deletion Process
             </motion.button>
           ) : (
