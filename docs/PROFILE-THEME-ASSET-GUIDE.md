@@ -38,6 +38,29 @@ Export PNG for static themes, GIF or WebP for animated themes. Prefer seamless l
 
 Do not put important details in the exact center-bottom edge of the header; the avatar and nameplate will sit there. Avoid pure black empty areas, but keep contrast high enough for white and neon UI.
 
+## Fixed Layout Skeleton
+
+Theme files must never define avatar, username, title, badge, or status-dot positions. The app owns one fixed skeleton and only swaps the theme artwork behind it.
+
+- Mini card avatar slot: `124x124`, centered horizontally, avatar circle `82x82`.
+- Full card avatar slot: `148x148`, centered horizontally, avatar circle `98x98`.
+- Mini card avatar center: about `150px` from the card top.
+- Full card avatar center: about `176px` from the card top.
+- Avatar frame/ring assets are centered on the slot, not on the background art.
+- Online status dot is attached to the avatar circle, not to the theme image.
+- Username/nameplate row always follows the avatar slot at the same spacing.
+- Title, bio, badges, and pulse dots stay in fixed rows below the username.
+
+Signal Noir is the reference composition: a readable hero scene, a calm center column, and a dark lower body that lets the real avatar frame, username, title, badges, and pulse dots own the layout. Other themes should follow that structure even when the art style changes.
+
+When creating backgrounds, treat any decorative circular cutout or podium as background-only decoration. It may visually support the avatar, but it must not require a custom offset. Do not bake a hard avatar hole, profile-circle placeholder, status dot, nameplate, title pill, pulse dots, or card controls into the artwork. If a theme only looks correct after moving the avatar, remake that single theme background instead of changing the layout.
+
+Recommended designer overlay:
+
+- Full theme safe overlay: `640x360`, center guide at x `320`, avatar focal guide around the lower center of the header.
+- Mini theme safe overlay: `320x285`, center guide at x `160`, avatar focal guide around the banner/body transition.
+- Keep high-contrast detail outside the avatar/nameplate column, and reserve the central vertical column for readable UI.
+
 ## Storage Paths
 
 Use lowercase slugs with underscores:

@@ -88,10 +88,12 @@ export const NewProfileCard = memo(function NewProfileCard({
       {/* Card body with theme surface tint */}
       <div
         className="cgraph-game-profile-surface relative overflow-visible"
+        data-profile-card-layout="fixed-identity-skeleton"
+        data-profile-theme-surface="normalized"
         data-profile-background-image={cardBackgroundImage ?? undefined}
         style={{
           background: cardBackgroundImage
-            ? 'linear-gradient(180deg, rgba(8,9,15,0.03) 0%, rgba(8,9,15,0.28) 54%, rgba(8,9,15,0.82) 100%)'
+            ? 'linear-gradient(180deg, rgba(8,9,15,0.34) 0%, rgba(8,9,15,0.64) 48%, rgba(8,9,15,0.9) 100%)'
             : `linear-gradient(180deg, ${theme.surface} 0%, transparent 55%), #08090f`,
         }}
       >

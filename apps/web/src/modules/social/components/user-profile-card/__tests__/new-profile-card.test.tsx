@@ -4,8 +4,25 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ProfileCardUserV2 } from '../types';
 
 vi.mock('@/modules/social/components/avatar/avatar-border-renderer', () => ({
-  AvatarBorderRenderer: ({ alt }: { alt: string }) => (
-    <div data-testid="avatar-border-renderer">{alt}</div>
+  AvatarBorderRenderer: ({
+    alt,
+    size,
+    avatarScale,
+    className,
+  }: {
+    alt: string;
+    size?: number;
+    avatarScale?: number;
+    className?: string;
+  }) => (
+    <div
+      className={className}
+      data-testid="avatar-border-renderer"
+      data-size={size}
+      data-avatar-scale={avatarScale}
+    >
+      {alt}
+    </div>
   ),
 }));
 
@@ -45,8 +62,13 @@ describe('NewProfileCard', () => {
     expect(themedHeader?.dataset.profileThemeHeaderImage).toBeUndefined();
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('mini');
     expect(themedHeader?.dataset.profileCardBannerDecorative).toBe('false');
+    expect(themedBody?.dataset.profileCardLayout).toBe('fixed-identity-skeleton');
+    expect(themedBody?.dataset.profileThemeSurface).toBe('normalized');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('mini');
     expect(avatarZone?.dataset.avatarSize).toBe('82');
+    expect(avatarZone?.dataset.avatarFrameSize).toBe('124');
+    expect(avatarZone?.dataset.avatarLayoutAnchor).toBe('fixed');
+    expect(avatarZone?.dataset.avatarAnchorY).toBe('150');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('mini_signal_noir');
@@ -128,5 +150,46 @@ describe('NewProfileCard', () => {
       'src',
       expect.stringContaining('/uploads/avatars/u1/avatar.jpg')
     );
+  });
+
+  it('keeps the mini avatar skeleton fixed across theme changes and avatar borders', () => {
+    const { container, rerender } = render(
+      <NewProfileCard
+        user={{ ...user, accentTheme: 'deep-space', avatarBorderId: 'border_8bit_common_01' }}
+        mode="preview"
+        variant="mini"
+      />
+    );
+
+    const firstAvatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
+    const firstStatusDot = container.querySelector<HTMLElement>('[data-avatar-status-dot]');
+    const firstRenderer = screen.getByTestId('avatar-border-renderer');
+
+    expect(firstAvatarZone?.dataset.avatarLayoutAnchor).toBe('fixed');
+    expect(firstAvatarZone?.dataset.avatarSize).toBe('82');
+    expect(firstAvatarZone?.dataset.avatarFrameSize).toBe('124');
+    expect(firstAvatarZone?.dataset.avatarAnchorY).toBe('150');
+    expect(firstStatusDot?.dataset.statusAttachedTo).toBe('avatar-container');
+    expect(firstRenderer).toHaveAttribute('data-size', '124');
+    expect(Number(firstRenderer.getAttribute('data-avatar-scale'))).toBeCloseTo(82 / 124, 4);
+
+    rerender(
+      <NewProfileCard
+        user={{ ...user, accentTheme: 'sakura-dream', avatarBorderId: 'border_8bit_common_01' }}
+        mode="preview"
+        variant="mini"
+      />
+    );
+
+    const nextAvatarZone = container.querySelector<HTMLElement>('[data-avatar-zone-variant]');
+    const nextStatusDot = container.querySelector<HTMLElement>('[data-avatar-status-dot]');
+    const nextRenderer = screen.getByTestId('avatar-border-renderer');
+
+    expect(nextAvatarZone?.dataset.avatarLayoutAnchor).toBe(firstAvatarZone?.dataset.avatarLayoutAnchor);
+    expect(nextAvatarZone?.dataset.avatarSize).toBe(firstAvatarZone?.dataset.avatarSize);
+    expect(nextAvatarZone?.dataset.avatarFrameSize).toBe(firstAvatarZone?.dataset.avatarFrameSize);
+    expect(nextAvatarZone?.dataset.avatarAnchorY).toBe(firstAvatarZone?.dataset.avatarAnchorY);
+    expect(nextStatusDot?.dataset.statusAttachedTo).toBe(firstStatusDot?.dataset.statusAttachedTo);
+    expect(nextRenderer).toHaveAttribute('data-size', firstRenderer.getAttribute('data-size'));
   });
 });

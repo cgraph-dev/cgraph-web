@@ -127,6 +127,11 @@ export const ACCENT_THEMES = {
   'deep-space': createAccentTheme(profileThemeConfig('deep-space')),
   'sakura-dream': createAccentTheme(profileThemeConfig('sakura-dream')),
   'ember-forge': createAccentTheme(profileThemeConfig('ember-forge')),
+  'neon-rain-district': createAccentTheme(profileThemeConfig('neon-rain-district')),
+  'arcane-library': createAccentTheme(profileThemeConfig('arcane-library')),
+  'ocean-abyss-lab': createAccentTheme(profileThemeConfig('ocean-abyss-lab')),
+  'celestial-throne': createAccentTheme(profileThemeConfig('celestial-throne')),
+  'toxic-reactor-core': createAccentTheme(profileThemeConfig('toxic-reactor-core')),
 } satisfies Record<AccentThemeId, AccentTheme>;
 
 /** Return a known profile-card accent theme id, or undefined for stale/custom values. */

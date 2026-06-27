@@ -53,23 +53,29 @@ describe('profile theme catalog adapter', () => {
   });
 
   it('exposes web renderer assets without inventing new profile theme ids', () => {
-    const signal = getProfileThemeOrDefault('signal-noir');
-    const aurora = getProfileThemeOrDefault('aurora-glass');
-    const retro = getProfileThemeOrDefault('retro-terminal');
-    const solarpunk = getProfileThemeOrDefault('solarpunk-canopy');
-    const ember = getProfileThemeOrDefault('ember-forge');
-    const deepSpace = getProfileThemeOrDefault('deep-space');
-    const sakura = getProfileThemeOrDefault('sakura-dream');
+    const expectedAssetSlugs = {
+      'signal-noir': 'signal_noir',
+      'aurora-glass': 'aurora_glass',
+      'retro-terminal': 'retro_terminal',
+      'solarpunk-canopy': 'solarpunk_canopy',
+      'deep-space': 'deep_space',
+      'sakura-dream': 'sakura_dream',
+      'ember-forge': 'ember_forge',
+      'neon-rain-district': 'neon_rain_district',
+      'arcane-library': 'arcane_library',
+      'ocean-abyss-lab': 'ocean_abyss_lab',
+      'celestial-throne': 'celestial_throne',
+      'toxic-reactor-core': 'toxic_reactor_core',
+    } as const;
 
-    expect(signal.profileBackgroundImage).toContain('profile_signal_noir');
-    expect(aurora.profileBackgroundImage).toContain('profile_aurora_glass');
-    expect(retro.profileBackgroundImage).toContain('profile_retro_terminal');
-    expect(solarpunk.profileBackgroundImage).toContain('profile_solarpunk_canopy');
-    expect(deepSpace.profileBackgroundImage).toContain('profile_deep_space');
-    expect(sakura.profileBackgroundImage).toContain('profile_sakura_dream');
-    expect(ember.profileBackgroundImage).toContain('profile_ember_forge');
-    expect(aurora.miniProfileBackgroundImage).toContain('mini_aurora_glass');
-    expect(retro.previewImage).toContain('theme_retro_terminal_preview');
+    for (const [themeId, slug] of Object.entries(expectedAssetSlugs)) {
+      const theme = getProfileThemeOrDefault(themeId);
+
+      expect(theme.previewImage).toContain(`theme_${slug}_preview`);
+      expect(theme.profileBackgroundImage).toContain(`profile_${slug}`);
+      expect(theme.miniProfileBackgroundImage).toContain(`mini_${slug}`);
+    }
+
     expect(ALL_PROFILE_THEMES).toHaveLength(SHARED_PROFILE_THEMES.length);
   });
 

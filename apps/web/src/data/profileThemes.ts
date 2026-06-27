@@ -98,6 +98,46 @@ const PROFILE_THEME_ASSETS: Record<ProfileThemeId, Required<ProfileThemeAssets>>
     miniProfileBackgroundImage:
       '/cosmetics/pixellab/mini-profile-background/mini_ember_forge/mini_ember_forge_0.png',
   },
+  'neon-rain-district': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_neon_rain_district_preview/theme_neon_rain_district_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_neon_rain_district/profile_neon_rain_district_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_neon_rain_district/mini_neon_rain_district_0.png',
+  },
+  'arcane-library': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_arcane_library_preview/theme_arcane_library_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_arcane_library/profile_arcane_library_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_arcane_library/mini_arcane_library_0.png',
+  },
+  'ocean-abyss-lab': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_ocean_abyss_lab_preview/theme_ocean_abyss_lab_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_ocean_abyss_lab/profile_ocean_abyss_lab_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_ocean_abyss_lab/mini_ocean_abyss_lab_0.png',
+  },
+  'celestial-throne': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_celestial_throne_preview/theme_celestial_throne_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_celestial_throne/profile_celestial_throne_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_celestial_throne/mini_celestial_throne_0.png',
+  },
+  'toxic-reactor-core': {
+    previewImage:
+      '/cosmetics/pixellab/profile-theme-preview/theme_toxic_reactor_core_preview/theme_toxic_reactor_core_preview_0.png',
+    profileBackgroundImage:
+      '/cosmetics/pixellab/profile-background/profile_toxic_reactor_core/profile_toxic_reactor_core_0.png',
+    miniProfileBackgroundImage:
+      '/cosmetics/pixellab/mini-profile-background/mini_toxic_reactor_core/mini_toxic_reactor_core_0.png',
+  },
 };
 
 function withWebProfileThemeAssets(theme: ProfileThemeConfig): ProfileThemeConfig {

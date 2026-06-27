@@ -6,6 +6,26 @@ import { AvatarBorderRenderer } from '@/modules/social/components/avatar/avatar-
 import { resolveAvatarUrl } from '@/lib/media-url';
 
 import type { AvatarZoneProps, BadgeDisplayTier } from './types';
+
+const AVATAR_LAYOUT = {
+  mini: {
+    avatarSize: 82,
+    slotSize: 124,
+    overlap: -16,
+    anchorY: 150,
+    statusSize: 14,
+    statusBorder: 2.5,
+  },
+  full: {
+    avatarSize: 98,
+    slotSize: 148,
+    overlap: -34,
+    anchorY: 176,
+    statusSize: 16,
+    statusBorder: 3,
+  },
+} as const;
+
 function LegendaryRing(): React.ReactElement {
   return (
     <svg
@@ -92,9 +112,10 @@ export const AvatarZone = memo(function AvatarZone({
     [avatarBorderId]
   );
   const isMini = variant === 'mini';
-  const avatarSize = isMini ? 82 : 98;
-  const borderSize = isMini ? 116 : 134;
-  const frameSize = borderConfig ? borderSize : avatarSize;
+  const layout = isMini ? AVATAR_LAYOUT.mini : AVATAR_LAYOUT.full;
+  const avatarSize = layout.avatarSize;
+  const frameSize = layout.slotSize;
+  const avatarScale = avatarSize / frameSize;
   const initialsSize = isMini ? '1.35rem' : '1.55rem';
   const [avatarImageFailed, setAvatarImageFailed] = useState(false);
   const normalizedAvatarUrl = resolveAvatarUrl(avatarUrl);
@@ -115,18 +136,27 @@ export const AvatarZone = memo(function AvatarZone({
 
   return (
     <div
-      className={cn('relative z-[6] flex justify-center', isMini ? '-mt-[58px]' : '-mt-[70px]')}
+      className="relative z-[6] flex justify-center"
       data-avatar-border-id={avatarBorderId}
       data-avatar-zone-variant={variant}
       data-avatar-size={avatarSize}
       data-avatar-frame-size={frameSize}
+      data-avatar-layout-anchor="fixed"
+      data-avatar-anchor-y={layout.anchorY}
+      style={{ height: frameSize, marginTop: layout.overlap }}
     >
-      <div className="relative overflow-visible" style={{ width: frameSize, height: frameSize }}>
+      <div
+        className="relative overflow-visible"
+        data-avatar-slot="true"
+        data-avatar-slot-size={frameSize}
+        data-avatar-container-size={avatarSize}
+        style={{ width: frameSize, height: frameSize }}
+      >
         {/* Ambient halo glow behind avatar */}
         <div
           className="pointer-events-none absolute z-0 rounded-full"
           style={{
-            inset: isMini ? -16 : -20,
+            inset: isMini ? 2 : 0,
             background: `radial-gradient(circle, color-mix(in srgb, ${accentColor} 14%, transparent) 0%, transparent 70%)`,
             animation: 'pc-halo-pulse 3.5s ease-in-out infinite',
           }}
@@ -134,22 +164,33 @@ export const AvatarZone = memo(function AvatarZone({
         <div
           className="pointer-events-none absolute z-[1] rounded-full border border-white/[0.06]"
           style={{
-            inset: isMini ? -7 : -9,
+            inset: isMini ? 12 : 14,
             boxShadow: `0 0 26px color-mix(in srgb, ${accentColor} 16%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`,
           }}
         />
 
         {/* Energy ring SVG (hidden when Lottie border is active) */}
-        {!borderConfig && <RingForTier tier={energyRingTier} />}
+        {!borderConfig && (
+          <div
+            className="absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2"
+            style={{ width: avatarSize, height: avatarSize }}
+          >
+            <RingForTier tier={energyRingTier} />
+          </div>
+        )}
 
         {/* Avatar circle — Lottie border or plain */}
         {borderConfig ? (
-          <div className="relative z-[2] flex h-full w-full items-center justify-center">
+          <div
+            className="absolute left-1/2 top-1/2 z-[2] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+            style={{ width: frameSize, height: frameSize }}
+          >
             <AvatarBorderRenderer
               src={canRenderAvatar ? normalizedAvatarUrl || undefined : undefined}
               alt={displayName}
               border={borderConfig}
-              size={borderSize}
+              size={frameSize}
+              avatarScale={avatarScale}
               animationSpeed={1}
               interactive={false}
               fallback={fallbackAvatar}
@@ -159,7 +200,7 @@ export const AvatarZone = memo(function AvatarZone({
           </div>
         ) : (
           <div
-            className="relative z-[2] flex items-center justify-center overflow-hidden rounded-full border-2 border-white/[0.07]"
+            className="absolute left-1/2 top-1/2 z-[2] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full border-2 border-white/[0.07]"
             style={{
               width: avatarSize,
               height: avatarSize,
@@ -188,12 +229,15 @@ export const AvatarZone = memo(function AvatarZone({
             'absolute z-[3] rounded-full border-[#08090f]',
             isOnline ? 'bg-[#1ad870]' : 'bg-[#222c3c]'
           )}
+          data-avatar-status-dot="true"
+          data-status-attached-to="avatar-container"
           style={{
-            bottom: isMini ? 2 : 3,
-            right: isMini ? 2 : 3,
-            width: isMini ? 14 : 16,
-            height: isMini ? 14 : 16,
-            borderWidth: isMini ? 2.5 : 3,
+            left: `calc(50% + ${avatarSize / 2 - layout.statusSize * 0.35}px)`,
+            top: `calc(50% + ${avatarSize * 0.18}px)`,
+            width: layout.statusSize,
+            height: layout.statusSize,
+            borderWidth: layout.statusBorder,
+            transform: 'translate(-50%, -50%)',
             ...(isOnline ? { animation: 'pc-status-pulse 2.4s ease-in-out infinite' } : {}),
           }}
         />
