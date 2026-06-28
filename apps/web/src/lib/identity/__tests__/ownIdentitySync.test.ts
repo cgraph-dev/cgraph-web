@@ -21,7 +21,7 @@ const baseUser: User = {
   avatarUrl: null,
   avatarBorderId: null,
   equippedTitleId: null,
-  equippedBadgeIds: ['badge-a'],
+  equippedBadgeIds: ['badge-newcomer'],
   equippedNameplateId: null,
   profileTheme: null,
   chatTheme: null,
@@ -59,13 +59,22 @@ describe('own identity socket sync owner', () => {
   });
 
   it('applies profile_updated payloads to auth and customization through one server-sync path', () => {
+    useAuthStore.getState().updateUser({
+      isPremium: true,
+      subscription: {
+        tier: 'premium',
+        status: 'active',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      },
+    });
+
     applyOwnProfileUpdate({
       avatar_hash: 'avatar-v2',
       banner_hash: 'banner-v2',
       avatar_border_id: 'border_cyberpunk_common_01',
-      equipped_title_id: 'title-founder',
-      equipped_badge_ids: ['badge-a', 'badge-b'],
-      nameplate_id: 'plate-1',
+      equipped_title_id: 'elite',
+      equipped_badge_ids: ['badge-newcomer', 'badge-founder'],
+      nameplate_id: 'plate_gilded_sapphire_loop_01',
       profile_theme: 'aurora-glass',
       chat_theme: 'cyan',
       display_name_font: 'mono',
@@ -79,9 +88,9 @@ describe('own identity socket sync owner', () => {
       avatarUrl: '/avatar-v2',
       bannerUrl: null,
       avatarBorderId: 'border_cyberpunk_common_01',
-      equippedTitleId: 'title-founder',
-      equippedBadgeIds: ['badge-a', 'badge-b'],
-      equippedNameplateId: 'plate-1',
+      equippedTitleId: 'elite',
+      equippedBadgeIds: ['badge-newcomer', 'badge-founder'],
+      equippedNameplateId: 'plate_gilded_sapphire_loop_01',
       profileTheme: 'aurora-glass',
       chatTheme: 'cyan',
       displayNameFont: 'mono',
@@ -94,10 +103,10 @@ describe('own identity socket sync owner', () => {
       selectedBorderId: 'border_cyberpunk_common_01',
       avatarBorderType: 'static',
       avatarBorder: 'static',
-      equippedTitle: 'title-founder',
-      title: 'title-founder',
-      equippedBadges: ['badge-a', 'badge-b'],
-      equippedNameplate: 'plate-1',
+      equippedTitle: 'elite',
+      title: 'elite',
+      equippedBadges: ['badge-newcomer', 'badge-founder'],
+      equippedNameplate: 'plate_gilded_sapphire_loop_01',
       selectedProfileThemeId: 'aurora-glass',
       profileTheme: 'aurora-glass',
       chatTheme: 'cyan',
@@ -113,19 +122,19 @@ describe('own identity socket sync owner', () => {
   });
 
   it('adds and removes equipped item state without duplicating badges', () => {
-    applyOwnItemEquipped('badge', 'badge-a');
-    applyOwnItemEquipped('badge', 'badge-b');
+    applyOwnItemEquipped('badge', 'badge-newcomer');
+    applyOwnItemEquipped('badge', 'badge-first-message');
     applyOwnItemEquipped('border', 'border_cyberpunk_common_01');
-    applyOwnItemUnequipped('badge', 'badge-a');
+    applyOwnItemUnequipped('badge', 'badge-newcomer');
     applyOwnItemUnequipped('border');
 
     expect(useAuthStore.getState().user).toMatchObject({
       avatarBorderId: null,
-      equippedBadgeIds: ['badge-b'],
+      equippedBadgeIds: ['badge-first-message'],
     });
     expect(useCustomizationStore.getState()).toMatchObject({
       selectedBorderId: null,
-      equippedBadges: ['badge-b'],
+      equippedBadges: ['badge-first-message'],
       isDirty: false,
     });
   });

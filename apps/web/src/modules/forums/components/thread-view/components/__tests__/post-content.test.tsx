@@ -181,6 +181,7 @@ vi.mock('@/stores/theme', () => ({
 
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ debug: vi.fn(), error: vi.fn(), warn: vi.fn() }),
+  authLogger: { debug: vi.fn(), error: vi.fn(), warn: vi.fn(), info: vi.fn() },
   chatLogger: { debug: vi.fn() },
 }));
 
