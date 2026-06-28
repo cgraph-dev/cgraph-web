@@ -1,5 +1,6 @@
 import type { Notification as StoreNotification } from '@/modules/social/store';
 import { getGroupDestinationRoute } from '@/modules/groups/routing';
+import { publicProfilePath } from '@/lib/profile-route';
 
 type RoutableNotification = Pick<
   StoreNotification,
@@ -38,6 +39,11 @@ function groupRoute(params: Record<string, unknown>): string | undefined {
   return getGroupDestinationRoute({ groupId, channelId, messageId });
 }
 
+function userProfileRoute(id?: string, username?: string): string | undefined {
+  if (!id && !username) return undefined;
+  return publicProfilePath({ id: id ?? null, username: username ?? null });
+}
+
 function routeFromAction(action: Record<string, unknown>): string | undefined {
   const screen = stringValue(action, 'screen');
   const params = isRecord(action.params) ? action.params : {};
@@ -51,7 +57,8 @@ function routeFromAction(action: Record<string, unknown>): string | undefined {
 
   if (screen === 'profile') {
     const userId = stringValue(params, 'user_id');
-    return userId ? `/user/${userId}` : undefined;
+    const username = stringValue(params, 'username') ?? stringValue(params, 'user_name');
+    return userProfileRoute(userId, username);
   }
 
   if (screen === 'friend_requests') {
@@ -95,10 +102,16 @@ export function getNotificationActionUrl(notification: RoutableNotification): st
     stringValue(data, 'sender_id') ??
     stringValue(data, 'accepter_id') ??
     notification.sender?.id;
+  const username =
+    stringValue(data, 'username') ??
+    stringValue(data, 'user_name') ??
+    stringValue(data, 'sender_username') ??
+    notification.sender?.username ??
+    undefined;
 
   if (notification.type === 'friend_request') {
     return '/social/friends';
   }
 
-  return userId ? `/user/${userId}` : undefined;
+  return userProfileRoute(userId, username);
 }

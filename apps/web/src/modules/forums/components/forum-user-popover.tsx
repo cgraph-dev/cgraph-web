@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { formatTimeAgo } from '@/lib/utils';
+import { publicProfilePath } from '@/lib/profile-route';
 
 interface ForumUserInfo {
   id: string;
@@ -57,8 +58,8 @@ export function ForumUserPopover({ user, children }: ForumUserPopoverProps) {
 
   const handleViewProfile = useCallback(() => {
     setOpen(false);
-    navigate(`/profile/${user.username ?? user.id}`);
-  }, [navigate, user.username, user.id]);
+    navigate(publicProfilePath(user));
+  }, [navigate, user]);
 
   const handleMessage = useCallback(() => {
     setOpen(false);

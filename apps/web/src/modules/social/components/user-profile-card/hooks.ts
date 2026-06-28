@@ -5,19 +5,20 @@
  */
 
 import { createLogger } from '@/lib/logger';
+import { publicProfilePath } from '@/lib/profile-route';
 
 const logger = createLogger('UserProfileCard');
 
 /**
  * Hook for profile card navigation actions
  */
-export function useProfileCardNavigation(userId: string) {
+export function useProfileCardNavigation(userId: string, username?: string | null) {
   function handleViewProfile() {
     if (!userId || userId === 'undefined' || userId === 'null') {
       logger.warn('UserProfileCard: Cannot view profile - invalid userId');
       return;
     }
-    window.location.href = `/user/${userId}`;
+    window.location.href = publicProfilePath({ id: userId, username });
   }
 
   function handleMessage() {

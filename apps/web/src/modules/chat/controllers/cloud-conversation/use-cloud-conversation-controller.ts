@@ -18,6 +18,7 @@ import { socketManager } from '@/lib/socket';
 import { apiClient } from '@/lib/api-client';
 import { getErrorMessage } from '@/lib/api';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { publicProfilePath } from '@/lib/profile-route';
 import { toast } from '@/shared/components/ui';
 import { buildMessageAttachmentMetadata, messageContentTypeForMime } from '@cgraph-dev/shared-types';
 import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
@@ -677,7 +678,7 @@ export function useCloudConversationController() {
 
   // Handle avatar click
   const handleAvatarClick = (userId: string) => {
-    navigate(`/user/${userId}`);
+    navigate(publicProfilePath({ id: userId }));
   };
 
   const handleStartCall = (callType: DirectCallType) => {

@@ -8,6 +8,7 @@ import { createLogger } from '@/lib/logger';
 import { useFriendStore } from '@/modules/social/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { http } from '@/lib/api-client';
+import { publicProfilePath } from '@/lib/profile-route';
 
 const logger = createLogger('ChatInfoPanel');
 
@@ -149,7 +150,7 @@ export function useChatInfoPanel({
       logger.warn('ChatInfoPanel: Cannot view profile - invalid userId');
       return;
     }
-    navigate(`/user/${userId}`);
+    navigate(publicProfilePath({ id: userId }));
   };
 
   const handleCustomizeChat = () => {
@@ -161,7 +162,7 @@ export function useChatInfoPanel({
   };
 
   const handleNavigateToUser = (friendId: string) => {
-    navigate(`/user/${friendId}`);
+    navigate(publicProfilePath({ id: friendId }));
   };
 
   const handleNavigateToForum = (forumId: string) => {

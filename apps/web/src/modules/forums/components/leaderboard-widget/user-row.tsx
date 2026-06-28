@@ -8,6 +8,7 @@ import { CheckBadgeIcon } from '@heroicons/react/24/solid';
 
 import type { UserRowProps } from './types';
 import { formatPulse, getRankIcon, deriveUserDisplayInfo } from './utils';
+import { publicProfilePath } from '@/lib/profile-route';
 
 /**
  */
@@ -25,7 +26,7 @@ export function UserRow({
   isVerified,
 }: UserRowProps) {
   const { name, handle, initial } = deriveUserDisplayInfo(displayName, username, userId);
-  const profilePath = username ? `/u/${username}` : `/users/${userId}`;
+  const profilePath = publicProfilePath({ id: userId, username });
 
   return (
     <Link

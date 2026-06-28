@@ -181,6 +181,15 @@ export function UserProfile() {
     setFriendshipStatus,
   });
 
+  useEffect(() => {
+    if (username || !userId || currentUser?.id !== userId) return;
+    if (!isCanonicalUsername(currentUser.username)) return;
+    const canonicalPath = publicProfilePath(currentUser);
+    if (location.pathname !== canonicalPath) {
+      navigate(canonicalPath, { replace: true });
+    }
+  }, [currentUser, location.pathname, navigate, userId, username]);
+
   // Guard against broken route params while still allowing UUIDs and profile handles.
   useEffect(() => {
     if (!profile?.username || !isCanonicalUsername(profile.username)) return;

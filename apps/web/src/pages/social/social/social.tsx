@@ -28,6 +28,7 @@ import { getGroupRoute } from '@/modules/groups/routing';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { captureError } from '@/lib/error-tracking';
 import { tweens } from '@/lib/animation-presets';
+import { publicProfilePath } from '@/lib/profile-route';
 
 function isNotificationType(value: string): value is NotificationType {
   return (
@@ -203,7 +204,7 @@ function SocialMainPane({
             <UsersIcon className="h-5 w-5 text-primary-400" />
             <button
               type="button"
-              onClick={() => onOpenRoute(`/user/${friend.id}`)}
+              onClick={() => onOpenRoute(publicProfilePath(friend))}
               className="min-w-0 flex-1 text-left"
             >
               <span className="block truncate text-sm font-bold text-white">

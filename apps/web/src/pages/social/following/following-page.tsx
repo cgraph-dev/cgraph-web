@@ -14,6 +14,7 @@ import { useFollowStore, type FollowUser } from '@/modules/social/store/followSt
 import { useAuthStore } from '@/modules/auth/store';
 import Button from '@/components/ui/button';
 import { logger } from '@/lib/logger';
+import { publicProfilePath } from '@/lib/profile-route';
 
 const ROW_HEIGHT = 72;
 
@@ -145,7 +146,7 @@ function FollowingRow({ user, busy, onUnfollow }: FollowingRowProps): React.Reac
   const display = user.displayName ?? user.username;
   return (
     <div className="flex h-full items-center gap-3 px-4 hover:bg-[var(--token-bg-secondary)]">
-      <Link to={`/user/${user.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+      <Link to={publicProfilePath(user)} className="flex min-w-0 flex-1 items-center gap-3">
         {user.avatarUrl ? (
           <img
             src={user.avatarUrl}

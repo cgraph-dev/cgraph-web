@@ -19,6 +19,7 @@ import {
 import type { NavItem } from './constants';
 import { loop } from '@/lib/animation-presets';
 import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
+import { publicProfilePath } from '@/lib/profile-route';
 type FeatureGateKey = string;
 type IconComponent = (props: { className?: string }) => ReactNode;
 
@@ -287,7 +288,7 @@ export default function Sidebar({
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const { theme } = useThemeEnhanced();
   const isLight = theme.category === 'light';
-  const profileRoute = user?.id ? `/user/${user.id}` : '/me/profile';
+  const profileRoute = user ? publicProfilePath(user) : '/me/profile';
   const profileCardUser = useMemo(() => (user ? sidebarProfileCardUser(user) : null), [user]);
 
   // Glass effects: aurora/bubble = blur+saturate, dark = blur only, light = none (solid bg)

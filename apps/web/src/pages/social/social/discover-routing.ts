@@ -1,6 +1,6 @@
 import type { SearchResult } from './types';
 import { getGroupDestinationRoute } from '@/modules/groups/routing';
-import { isCanonicalUsername } from '@/lib/profile-route';
+import { isCanonicalUsername, publicProfilePath } from '@/lib/profile-route';
 
 function safeInAppRoute(route: string | undefined, resultType: SearchResult['type']): string | null {
   const trimmed = route?.trim();
@@ -37,6 +37,10 @@ function safeInAppRoute(route: string | undefined, resultType: SearchResult['typ
  * Resolves a search result into the app route it should open.
  */
 export function getDiscoverResultRoute(result: SearchResult): string {
+  if (result.type === 'user' && isCanonicalUsername(result.username)) {
+    return publicProfilePath({ id: result.id, username: result.username });
+  }
+
   const backendCanonicalRoute = safeInAppRoute(result.canonicalUrl, result.type);
   if (backendCanonicalRoute) return backendCanonicalRoute;
 
@@ -57,8 +61,7 @@ export function getDiscoverResultRoute(result: SearchResult): string {
   if (backendRoute) return backendRoute;
 
   if (result.type === 'user') {
-    if (isCanonicalUsername(result.username)) return `/${encodeURIComponent(result.username)}`;
-    return `/user/${result.id}`;
+    return publicProfilePath({ id: result.id, username: result.username });
   }
 
   if (result.type === 'forum') {

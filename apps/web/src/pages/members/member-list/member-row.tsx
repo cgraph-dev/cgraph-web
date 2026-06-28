@@ -15,6 +15,7 @@ import UserStars from '@/modules/social/components/common/user-stars';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { formatDate, formatRelativeTime } from './utils';
 import type { Member } from './types';
+import { publicProfilePath } from '@/lib/profile-route';
 
 interface MemberRowProps {
   member: Member;
@@ -30,7 +31,7 @@ export function MemberRow({ member }: MemberRowProps) {
     <tr className="border-border hover:bg-muted/30 border-b transition-colors last:border-0">
       {/* Member */}
       <td className="px-4 py-3">
-        <Link to={`/profile/${member.username}`} className="group flex items-center gap-3">
+        <Link to={publicProfilePath(member)} className="group flex items-center gap-3">
           <div className="relative">
             {member.avatarUrl ? (
               <ThemedAvatar

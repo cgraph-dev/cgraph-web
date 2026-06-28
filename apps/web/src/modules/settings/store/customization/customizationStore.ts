@@ -58,9 +58,11 @@ import {
 } from './customizationStore.types';
 import {
   apiSchemaMapper,
+  currentUserHasPremiumAccess,
   debouncedSave,
   persistCustomizationState,
   PERSIST_PARTIALIZE,
+  sanitizeCustomizationStateForAccess,
 } from './customizationStore.schema';
 
 const logger = createLogger('customizationStore');
@@ -195,6 +197,15 @@ function mapServerCustomizationPatch(
   return withServerPatchAliases(next);
 }
 
+function withCurrentAccess(state: CustomizationState): CustomizationState {
+  const premiumAccess = currentUserHasPremiumAccess();
+  if (premiumAccess === null) return withCanonicalAliases(state);
+
+  return withCanonicalAliases(
+    sanitizeCustomizationStateForAccess(state, premiumAccess)
+  );
+}
+
 // STORE CREATION
 
 export const useCustomizationStore = create<CustomizationStore>()(
@@ -224,9 +235,10 @@ export const useCustomizationStore = create<CustomizationStore>()(
         updateSettings: (updates) => setAndSave(updates),
         applyServerSettings: (updates) => {
           const mappedUpdates = mapServerCustomizationPatch(updates, get());
+          const nextState = withCurrentAccess({ ...get(), ...mappedUpdates });
 
           set({
-            ...withServerPatchAliases(mappedUpdates),
+            ...withServerPatchAliases(nextState),
             isDirty: false,
             lastSyncedAt: Date.now(),
           });
@@ -310,9 +322,10 @@ export const useCustomizationStore = create<CustomizationStore>()(
             const parsed = withCanonicalAliases(
               apiSchemaMapper.fromApi(serverAuthoritativeCustomizationPayload(data), DEFAULT_STATE)
             );
+            const nextState = withCurrentAccess(parsed);
 
             set({
-              ...parsed,
+              ...nextState,
               isLoading: false,
               lastSyncedAt: Date.now(),
               isDirty: false,
@@ -325,10 +338,11 @@ export const useCustomizationStore = create<CustomizationStore>()(
         },
 
         saveCustomizations: async (_userId?: string) => {
-          const state = get();
+          const state = withCurrentAccess(get());
           set({ isSaving: true, error: null });
 
           try {
+            set(withServerPatchAliases(state));
             const response = await persistCustomizationState(state);
             const data = isRecord(response) && isRecord(response.data) ? response.data : response;
 
@@ -337,9 +351,10 @@ export const useCustomizationStore = create<CustomizationStore>()(
                 serverAuthoritativeCustomizationPayload(data),
                 get()
               );
+              const nextState = withCurrentAccess({ ...get(), ...parsed });
 
               set({
-                ...parsed,
+                ...withServerPatchAliases(nextState),
                 isSaving: false,
                 isDirty: false,
                 error: null,

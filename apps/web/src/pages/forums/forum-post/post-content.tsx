@@ -19,6 +19,7 @@ import {
   ClockIcon,
   ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
+import { publicProfilePath } from '@/lib/profile-route';
 
 export interface PostContentProps {
   /** The full post object from the store */
@@ -55,7 +56,7 @@ export function PostContent({ post, onShowEditHistory }: PostContentProps) {
         <span>•</span>
         <span>
           Posted by{' '}
-          <Link to={author.username ? `/u/${author.username}` : '#'} className="hover:underline">
+          <Link to={publicProfilePath(author)} className="hover:underline">
             u/{author.username || author.displayName || 'unknown'}
           </Link>
         </span>

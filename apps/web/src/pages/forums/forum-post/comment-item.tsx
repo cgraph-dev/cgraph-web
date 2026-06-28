@@ -19,6 +19,7 @@ import MarkdownRenderer from '@/components/content/markdown-renderer';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { CommentItemProps } from './types';
 import { MAX_COMMENT_INDENT, COMMENT_INDENT_PER_LEVEL } from './constants';
+import { publicProfilePath } from '@/lib/profile-route';
 
 /**
  */
@@ -60,7 +61,7 @@ export function CommentItem({
           {/* Comment header */}
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <Link
-              to={comment.author.username ? `/u/${comment.author.username}` : '#'}
+              to={publicProfilePath(comment.author)}
               className="flex items-center gap-2"
             >
               <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-[var(--token-card-bg)]">

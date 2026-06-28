@@ -1,10 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
+import { NAMEPLATE_REGISTRY } from '@cgraph-dev/animation-constants';
+import { getFreeBorders, getPremiumBorders } from '@/data/avatar-borders';
+import { ALL_BADGES } from '@/data/badgesCollection';
+import { ALL_PROFILE_THEMES, DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
+import { getPremiumTitles } from '@/data/titlesCollection';
 import {
   useCustomizationStore,
   DEFAULT_STATE,
   THEME_COLORS,
 } from '../customizationStore';
+import {
+  sanitizeCustomizationPayloadForAccess,
+  sanitizeCustomizationStateForAccess,
+  userHasPremiumAccess,
+} from '../customizationStore.schema';
 
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() },
@@ -207,13 +216,16 @@ describe('batch and legacy actions', () => {
   });
 
   it('applyServerSettings maps API patches without marking dirty', () => {
+    const freeBorder = getFreeBorders()[0];
+    expect(freeBorder).toBeDefined();
+
     useCustomizationStore.setState({ ...DEFAULT_STATE, isDirty: true, lastSyncedAt: null });
 
     useCustomizationStore.getState().applyServerSettings({
       app_theme: 'emerald',
       background_effect: 'neon',
       chat_theme: 'cyan',
-      avatar_border_id: 'border-1',
+      avatar_border_id: freeBorder!.id,
     });
 
     expect(useCustomizationStore.getState()).toMatchObject({
@@ -222,7 +234,7 @@ describe('batch and legacy actions', () => {
       effectPreset: 'neon',
       chatBubbleColor: 'cyan',
       chatTheme: 'cyan',
-      selectedBorderId: 'border-1',
+      selectedBorderId: freeBorder!.id,
       isDirty: false,
     });
     expect(useCustomizationStore.getState().lastSyncedAt).toEqual(expect.any(Number));
@@ -370,6 +382,139 @@ describe('fetchCustomizations', () => {
       equippedNameplate: null,
       isDirty: false,
     });
+  });
+});
+
+describe('sanitizeCustomizationPayloadForAccess', () => {
+  it('clears premium-only cosmetics for non-premium saves while preserving free cosmetics', () => {
+    const freeBorder = getFreeBorders()[0];
+    const premiumBorder = getPremiumBorders()[0];
+    const premiumTitle = getPremiumTitles()[0];
+    const freeBadge = ALL_BADGES.find((badge) => badge.unlocked);
+    const premiumBadge = ALL_BADGES.find((badge) => !badge.unlocked);
+    const freeNameplate = NAMEPLATE_REGISTRY.find((plate) => plate.free);
+    const premiumNameplate = NAMEPLATE_REGISTRY.find((plate) => !plate.free);
+    const freeTheme = ALL_PROFILE_THEMES.find((theme) => theme.tier === 'free');
+    const premiumThemeId =
+      ALL_PROFILE_THEMES.find((theme) => theme.tier !== 'free')?.id ?? 'premium-theme-for-test';
+
+    expect(freeBorder).toBeDefined();
+    expect(premiumBorder).toBeDefined();
+    expect(premiumTitle).toBeDefined();
+    expect(freeBadge).toBeDefined();
+    expect(premiumBadge).toBeDefined();
+    expect(freeNameplate).toBeDefined();
+    expect(premiumNameplate).toBeDefined();
+    expect(freeTheme).toBeDefined();
+
+    const freePayload = {
+      avatar_border_id: freeBorder!.id,
+      title_id: null,
+      equipped_badges: [freeBadge!.id],
+      equipped_nameplate: freeNameplate!.id,
+      profile_theme: freeTheme!.id,
+    };
+
+    expect(sanitizeCustomizationPayloadForAccess(freePayload, false)).toEqual(freePayload);
+
+    expect(
+      sanitizeCustomizationPayloadForAccess(
+        {
+          avatar_border_id: premiumBorder!.id,
+          title_id: premiumTitle!.id,
+          equipped_badges: [freeBadge!.id, premiumBadge!.id],
+          equipped_nameplate: premiumNameplate!.id,
+          profile_theme: premiumThemeId,
+        },
+        false
+      )
+    ).toEqual({
+      avatar_border_id: null,
+      title_id: null,
+      equipped_badges: [freeBadge!.id],
+      equipped_nameplate: null,
+      profile_theme: DEFAULT_PROFILE_THEME_ID,
+    });
+  });
+
+  it('preserves premium cosmetics while premium access is active', () => {
+    const premiumBorder = getPremiumBorders()[0];
+    const premiumTitle = getPremiumTitles()[0];
+    const premiumBadge = ALL_BADGES.find((badge) => !badge.unlocked);
+    const premiumNameplate = NAMEPLATE_REGISTRY.find((plate) => !plate.free);
+    const premiumThemeId =
+      ALL_PROFILE_THEMES.find((theme) => theme.tier !== 'free')?.id ?? 'premium-theme-for-test';
+
+    expect(premiumBorder).toBeDefined();
+    expect(premiumTitle).toBeDefined();
+    expect(premiumBadge).toBeDefined();
+    expect(premiumNameplate).toBeDefined();
+
+    const payload = {
+      avatar_border_id: premiumBorder!.id,
+      title_id: premiumTitle!.id,
+      equipped_badges: [premiumBadge!.id],
+      equipped_nameplate: premiumNameplate!.id,
+      profile_theme: premiumThemeId,
+    };
+
+    expect(sanitizeCustomizationPayloadForAccess(payload, true)).toEqual(payload);
+  });
+
+  it('clears stale premium local state after access expires', () => {
+    const premiumBorder = getPremiumBorders()[0];
+    const premiumTitle = getPremiumTitles()[0];
+    const premiumBadge = ALL_BADGES.find((badge) => !badge.unlocked);
+    const premiumNameplate = NAMEPLATE_REGISTRY.find((plate) => !plate.free);
+
+    expect(premiumBorder).toBeDefined();
+    expect(premiumTitle).toBeDefined();
+    expect(premiumBadge).toBeDefined();
+    expect(premiumNameplate).toBeDefined();
+
+    const next = sanitizeCustomizationStateForAccess(
+      {
+        ...DEFAULT_STATE,
+        selectedBorderId: premiumBorder!.id,
+        equippedTitle: premiumTitle!.id,
+        title: premiumTitle!.id,
+        equippedBadges: [premiumBadge!.id],
+        equippedNameplate: premiumNameplate!.id,
+      },
+      false
+    );
+
+    expect(next).toMatchObject({
+      selectedBorderId: null,
+      equippedTitle: null,
+      title: null,
+      equippedBadges: [],
+      equippedNameplate: null,
+    });
+  });
+
+  it('treats expired premium subscriptions as non-premium', () => {
+    expect(
+      userHasPremiumAccess({
+        isPremium: true,
+        subscription: {
+          tier: 'premium',
+          status: 'active',
+          expiresAt: '2000-01-01T00:00:00.000Z',
+        },
+      })
+    ).toBe(false);
+
+    expect(
+      userHasPremiumAccess({
+        isPremium: true,
+        subscription: {
+          tier: 'premium',
+          status: 'active',
+          expiresAt: '2999-01-01T00:00:00.000Z',
+        },
+      })
+    ).toBe(true);
   });
 });
 

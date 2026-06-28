@@ -9,6 +9,7 @@ import type { Message } from '@/modules/chat/store/chatStore.impl';
 import { getMessageSenderId } from '@/lib/api-utils';
 import { formatDateHeader, groupMessagesByDate } from '@/lib/chat/messageUtils';
 import { handleAddReaction } from '@/lib/chat/reactionUtils';
+import { publicProfilePath } from '@/lib/profile-route';
 import { GlassCard } from '@/shared/components/ui';
 import { springs } from '@/lib/animation-presets';
 import { AnimatedMessageWrapper } from './animated-message-wrapper';
@@ -382,7 +383,9 @@ export function MessageList({
               showAvatar={showAvatar}
               onReply={() => onReply(message)}
               uiPreferences={uiPreferences}
-              onAvatarClick={(avatarUserId) => navigate(`/user/${avatarUserId}`)}
+              onAvatarClick={(avatarUserId) =>
+                navigate(publicProfilePath({ id: avatarUserId }))
+              }
               onEdit={() => onEdit(message)}
               onDelete={() => onDelete(message.id)}
               onPin={() => onPin(message.id)}

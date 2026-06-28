@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import type { QueueItemCardProps } from './types';
 import { ITEM_TYPE_ICONS, PRIORITY_COLORS, REASON_LABELS } from './constants';
+import { publicProfilePath } from '@/lib/profile-route';
 
 /**
  */
@@ -37,7 +38,7 @@ export function QueueItemCard({
     } else if (item.itemType === 'post' || item.itemType === 'comment') {
       window.open(`/forums/post/${item.itemId}`, '_blank');
     } else if (item.itemType === 'user') {
-      window.open(`/profile/${item.authorId}`, '_blank');
+      window.open(publicProfilePath({ id: item.authorId }), '_blank');
     }
   };
 

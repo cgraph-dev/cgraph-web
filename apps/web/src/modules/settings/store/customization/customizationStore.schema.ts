@@ -9,8 +9,15 @@
 import { http } from '@/lib/api-client';
 import { notifyCustomizationChanged } from '@/lib/socket/customization-events';
 import { createSchemaMapper, createDebouncedSave } from '@/lib/store-helpers';
+import { getBorderById } from '@/data/avatar-borders';
+import { getBadgeById } from '@/data/badgesCollection';
+import { DEFAULT_PROFILE_THEME, getThemeById } from '@/data/profileThemes';
+import { getTitleById } from '@/data/titlesCollection';
+import { useAuthStore } from '@/modules/auth/store';
+import { getNameplateById } from '@cgraph-dev/animation-constants';
 
 import type { CustomizationState, CustomizationStore } from './customizationStore.types';
+import type { User } from '@/modules/auth/store/authStore.types';
 
 // Re-export CustomizationState for use by the schema mapper
 export type { CustomizationState };
@@ -75,10 +82,125 @@ export const apiSchemaMapper = createSchemaMapper<CustomizationState>({
   profileThemeAccent: 'profile_theme_accent',
 });
 
-// DEBOUNCED SAVE
+type CustomizationApiPayload = Record<string, unknown>;
 
-export async function persistCustomizationState(state: CustomizationStore): Promise<unknown> {
-  const payload = apiSchemaMapper.toApi(state);
+export function userHasPremiumAccess(
+  user: Pick<User, 'isPremium' | 'subscription'> | null
+): boolean {
+  if (!user) return false;
+
+  const tier = user?.subscription?.tier;
+  const status = user?.subscription?.status;
+  const expiresAt = user?.subscription?.expiresAt;
+  const isPaidTier = tier === 'premium' || tier === 'enterprise';
+  const isActiveStatus = status === undefined || status === null || status === 'active';
+  const expiresAtTime = expiresAt ? Date.parse(expiresAt) : Number.NaN;
+  const isUnexpired = !expiresAt || Number.isNaN(expiresAtTime) || expiresAtTime > Date.now();
+
+  return (user.isPremium === true || isPaidTier) && isActiveStatus && isUnexpired;
+}
+
+export function currentUserHasPremiumAccess(): boolean | null {
+  const user = useAuthStore.getState().user;
+  return user ? userHasPremiumAccess(user) : null;
+}
+
+function isFreeAvatarBorder(id: unknown): boolean {
+  if (typeof id !== 'string' || id.length === 0) return true;
+  const border = getBorderById(id);
+  return Boolean(border && !border.isPremium);
+}
+
+function isFreeTitle(id: unknown): boolean {
+  if (typeof id !== 'string' || id.length === 0) return true;
+  const title = getTitleById(id);
+  return Boolean(title && title.unlocked && !title.isPremium && title.category !== 'premium');
+}
+
+function isFreeBadge(id: unknown): id is string {
+  if (typeof id !== 'string' || id.length === 0) return false;
+  return getBadgeById(id)?.unlocked === true;
+}
+
+function isFreeNameplate(id: unknown): boolean {
+  if (typeof id !== 'string' || id.length === 0) return true;
+  const plate = getNameplateById(id);
+  return Boolean(plate?.free);
+}
+
+function isFreeProfileTheme(id: unknown): boolean {
+  if (typeof id !== 'string' || id.length === 0) return true;
+  return getThemeById(id)?.tier === 'free';
+}
+
+export function sanitizeCustomizationPayloadForAccess(
+  payload: CustomizationApiPayload,
+  hasPremiumAccess: boolean
+): CustomizationApiPayload {
+  if (hasPremiumAccess) return payload;
+
+  const next: CustomizationApiPayload = { ...payload };
+
+  if (!isFreeAvatarBorder(next.avatar_border_id)) {
+    next.avatar_border_id = null;
+  }
+
+  if (!isFreeTitle(next.title_id)) {
+    next.title_id = null;
+  }
+
+  if (Array.isArray(next.equipped_badges)) {
+    next.equipped_badges = next.equipped_badges.filter(isFreeBadge);
+  }
+
+  if (!isFreeNameplate(next.equipped_nameplate)) {
+    next.equipped_nameplate = null;
+  }
+
+  if (!isFreeProfileTheme(next.profile_theme)) {
+    next.profile_theme = DEFAULT_PROFILE_THEME.id;
+  }
+
+  return next;
+}
+
+export function sanitizeCustomizationStateForAccess(
+  state: CustomizationState,
+  hasPremiumAccess: boolean
+): CustomizationState {
+  if (hasPremiumAccess) return state;
+
+  const selectedBorderId = isFreeAvatarBorder(state.selectedBorderId)
+    ? state.selectedBorderId
+    : null;
+  const equippedTitle = isFreeTitle(state.equippedTitle) ? state.equippedTitle : null;
+  const equippedNameplate = isFreeNameplate(state.equippedNameplate)
+    ? state.equippedNameplate
+    : null;
+  const selectedProfileThemeId = isFreeProfileTheme(state.selectedProfileThemeId)
+    ? state.selectedProfileThemeId
+    : DEFAULT_PROFILE_THEME.id;
+
+  return {
+    ...state,
+    selectedBorderId,
+    equippedTitle,
+    title: equippedTitle,
+    equippedBadges: state.equippedBadges.filter(isFreeBadge),
+    equippedNameplate,
+    selectedProfileThemeId,
+    profileTheme: selectedProfileThemeId,
+  };
+}
+
+// DEBOUNCED SAVE
+export async function persistCustomizationState(state: CustomizationState): Promise<unknown> {
+  const premiumAccess = currentUserHasPremiumAccess();
+  const mappedPayload = apiSchemaMapper.toApi(state);
+  const payload =
+    premiumAccess === null
+      ? mappedPayload
+      : sanitizeCustomizationPayloadForAccess(mappedPayload, premiumAccess);
   const response = await http.patch('/api/v1/me/customizations', {
     ...payload,
     custom_config: payload,
@@ -88,8 +210,14 @@ export async function persistCustomizationState(state: CustomizationStore): Prom
 }
 
 export const debouncedSave = createDebouncedSave<CustomizationStore>(
-  async (state, _set) => {
-    await persistCustomizationState(state);
+  async (state, set) => {
+    const premiumAccess = currentUserHasPremiumAccess();
+    const safeState =
+      premiumAccess === null
+        ? state
+        : sanitizeCustomizationStateForAccess(state, premiumAccess);
+    set(safeState);
+    await persistCustomizationState(safeState);
   },
   { delay: 1000 }
 );

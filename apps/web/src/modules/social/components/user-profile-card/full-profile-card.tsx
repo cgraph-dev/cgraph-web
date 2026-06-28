@@ -27,6 +27,7 @@ import {
 } from './constants';
 import { TipButton } from '@/modules/nodes/components/tip-button';
 import type { FullProfileCardProps } from './types';
+import { publicProfilePath } from '@/lib/profile-route';
 
 export const FullProfileCard = memo(function FullProfileCard({
   user,
@@ -231,7 +232,7 @@ export const FullProfileCard = memo(function FullProfileCard({
           )}
 
           <Link
-            to={`/user/${user.id}`}
+            to={publicProfilePath(user)}
             className="col-span-2 flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-3 font-medium text-white transition-colors hover:bg-white/20"
           >
             <EyeIcon className="h-5 w-5" />

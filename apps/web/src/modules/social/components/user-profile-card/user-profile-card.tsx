@@ -211,9 +211,12 @@ export default function UserProfileCard({
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const { handleViewProfile, handleMessage } = useProfileCardNavigation(userId);
   const { sendRequest } = useFriendStore();
   const profileUser = user ?? fetchedUser;
+  const { handleViewProfile, handleMessage } = useProfileCardNavigation(
+    userId,
+    profileUser?.username
+  );
 
   async function handleAddFriend() {
     if (userId) await sendRequest(userId);

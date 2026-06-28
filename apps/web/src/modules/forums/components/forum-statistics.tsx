@@ -25,6 +25,7 @@ import {
 } from '@/modules/forums/components/forum-statistics/transformStatisticsData';
 import { StatCard } from '@/modules/forums/components/forum-statistics/stat-card';
 import { StatBadge } from '@/modules/forums/components/forum-statistics/stat-badge';
+import { publicProfilePath } from '@/lib/profile-route';
 
 const logger = createLogger('ForumStatistics');
 
@@ -194,7 +195,7 @@ export function ForumStatistics({
               {stats.membersOnline.slice(0, MAX_VISIBLE_ONLINE_MEMBERS).map((member) => (
                 <a
                   key={member.id}
-                  href={`/profile/${member.username}`}
+                  href={publicProfilePath(member)}
                   className="text-sm text-blue-600 hover:underline dark:text-blue-400"
                 >
                   {member.displayName || member.username}
@@ -233,7 +234,7 @@ export function ForumStatistics({
               <UserIcon className="h-4 w-4 text-gray-400" />
               <span className="text-gray-500">Welcome our newest member:</span>
               <a
-                href={`/profile/${stats.newestMember.username}`}
+                href={publicProfilePath(stats.newestMember)}
                 className="font-medium text-blue-600 hover:underline dark:text-blue-400"
               >
                 {stats.newestMember.displayName || stats.newestMember.username}

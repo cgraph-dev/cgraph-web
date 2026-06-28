@@ -7,6 +7,7 @@ import { getAvatarBorderId } from '@/lib/utils';
 import { InlineTitle } from '@/shared/components/ui/inline-title';
 import { ROLE_COLORS } from './constants';
 import type { MemberCardProps } from './types';
+import { publicProfilePath } from '@/lib/profile-route';
 
 /**
  * Individual member card component displaying avatar, name, role badge, and stats
@@ -23,7 +24,7 @@ export function MemberCard({ member }: MemberCardProps) {
 
   return (
     <Link
-      to={`/profile/${member.userId}`}
+      to={publicProfilePath({ id: member.userId })}
       className="flex items-center gap-4 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] p-4 transition-colors hover:border-primary-500/50"
     >
       {/* Avatar */}

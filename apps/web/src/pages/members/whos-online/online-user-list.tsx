@@ -14,6 +14,7 @@ import {
 import OnlineStatusIndicator from '@/modules/social/components/common/online-status-indicator';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { OnlineUserListProps, OnlineUser } from './types';
+import { publicProfilePath } from '@/lib/profile-route';
 
 function DeviceIcon({ device }: { device: OnlineUser['device'] }) {
   switch (device) {
@@ -91,7 +92,7 @@ export function OnlineUserList({
                 </div>
                 <div>
                   <Link
-                    to={`/profile/${user.username}`}
+                    to={publicProfilePath(user)}
                     className="font-medium hover:underline"
                     style={{ color: user.userGroupColor || undefined }}
                   >

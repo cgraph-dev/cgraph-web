@@ -25,6 +25,7 @@ import { getVoteScoreClass } from './constants';
 import type { PostCardProps } from './types';
 import { tweens, springs } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
+import { publicProfilePath } from '@/lib/profile-route';
 
 /**
  */
@@ -129,7 +130,7 @@ export function PostCard({ post, onVote }: PostCardProps) {
               <span>
                 Posted by{' '}
                 <Link
-                  to={post.author.username ? `/u/${post.author.username}` : '#'}
+                  to={publicProfilePath(post.author)}
                   className="hover:underline"
                 >
                   u/{post.author.username || post.author.displayName || 'unknown'}
