@@ -32,6 +32,7 @@ vi.mock('@/lib/api-client', () => {
     http: rawApi,
     apiClient: {
       search: {
+        global: vi.fn(),
         searchUsers: vi.fn(),
         searchGroups: vi.fn(),
         searchForums: vi.fn(),
@@ -48,6 +49,7 @@ import { apiClient } from '@/lib/api-client';
 // Typed mock helpers — vi.mocked() is the assertion-free Vitest idiom
 const mockedApiGet = vi.mocked(api.get);
 const mockedSearch = {
+  global: vi.mocked(apiClient.search.global),
   searchUsers: vi.mocked(apiClient.search.searchUsers),
   searchGroups: vi.mocked(apiClient.search.searchGroups),
   searchForums: vi.mocked(apiClient.search.searchForums),
@@ -100,6 +102,46 @@ const mockMessage: SearchMessage = {
   created_at: '2026-02-02T00:00:00Z',
 };
 
+const mockGlobalResults = [
+  {
+    id: 'u1',
+    type: 'user',
+    username: 'alice',
+    name: 'Alice',
+    avatar_url: 'https://cdn.example.com/alice.png',
+    metadata: { status: 'online' },
+  },
+  {
+    id: 'g1',
+    type: 'group',
+    name: 'Developers',
+    description: 'A group for devs',
+    metadata: { slug: 'developers', member_count: 42, is_public: true },
+  },
+  {
+    id: 'f1',
+    type: 'forum',
+    name: 'General',
+    description: 'General discussion',
+    metadata: { slug: 'general', post_count: 1024, is_public: true },
+  },
+  {
+    id: 'p1',
+    type: 'post',
+    title: 'Hello World',
+    match_context: 'This is a post',
+    created_at: '2026-02-01T00:00:00Z',
+    metadata: { forum_slug: 'general' },
+  },
+  {
+    id: 'm1',
+    type: 'message',
+    match_context: 'Hey there',
+    created_at: '2026-02-02T00:00:00Z',
+    metadata: { conversation_id: 'conv-1' },
+  },
+];
+
 // Helpers
 
 const okResult = <T>(data: T) => ({ ok: true as const, data });
@@ -124,6 +166,7 @@ const getInitialState = () => ({
 
 // Default: all search mocks return empty ok results
 function setupEmptyMocks() {
+  mockedSearch.global.mockResolvedValue(okResult({ results: [] }));
   mockedSearch.searchUsers.mockResolvedValue(okResult([]));
   mockedSearch.searchGroups.mockResolvedValue(okResult([]));
   mockedSearch.searchForums.mockResolvedValue(okResult([]));
@@ -213,13 +256,9 @@ describe('Search Store', () => {
     });
 
     it('should set isLoading while searching', async () => {
-      mockedSearch.searchUsers.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(okResult([])), 50))
+      mockedSearch.global.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve(okResult({ results: [] })), 50))
       );
-      mockedSearch.searchGroups.mockResolvedValue(okResult([]));
-      mockedSearch.searchForums.mockResolvedValue(okResult([]));
-      mockedSearch.searchPosts.mockResolvedValue(okResult([]));
-      mockedSearch.searchMessages.mockResolvedValue(okResult([]));
 
       useSearchStore.getState().setQuery('test');
       const p = useSearchStore.getState().search();
@@ -228,24 +267,21 @@ describe('Search Store', () => {
       expect(useSearchStore.getState().isLoading).toBe(false);
     });
 
-    it('should call all five search methods', async () => {
+    it('should use the single global search endpoint', async () => {
       setupEmptyMocks();
       useSearchStore.getState().setQuery('hello');
       await useSearchStore.getState().search();
 
-      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('hello');
-      expect(mockedSearch.searchMessages).toHaveBeenCalledWith('hello');
-      expect(mockedSearch.searchPosts).toHaveBeenCalledWith('hello');
-      expect(mockedSearch.searchGroups).toHaveBeenCalledWith('hello');
-      expect(mockedSearch.searchForums).toHaveBeenCalledWith('hello');
+      expect(mockedSearch.global).toHaveBeenCalledWith('hello', { limit: 50 });
+      expect(mockedSearch.searchUsers).not.toHaveBeenCalled();
+      expect(mockedSearch.searchMessages).not.toHaveBeenCalled();
+      expect(mockedSearch.searchPosts).not.toHaveBeenCalled();
+      expect(mockedSearch.searchGroups).not.toHaveBeenCalled();
+      expect(mockedSearch.searchForums).not.toHaveBeenCalled();
     });
 
-    it('should populate result arrays from API responses', async () => {
-      mockedSearch.searchUsers.mockResolvedValue(okResult([mockUser]));
-      mockedSearch.searchGroups.mockResolvedValue(okResult([mockGroup]));
-      mockedSearch.searchForums.mockResolvedValue(okResult([mockForum]));
-      mockedSearch.searchPosts.mockResolvedValue(okResult([mockPost]));
-      mockedSearch.searchMessages.mockResolvedValue(okResult([mockMessage]));
+    it('should populate result arrays from the global API response', async () => {
+      mockedSearch.global.mockResolvedValue(okResult({ results: mockGlobalResults }));
 
       useSearchStore.getState().setQuery('test');
       await useSearchStore.getState().search();
@@ -276,18 +312,14 @@ describe('Search Store', () => {
       expect(s.hasSearched).toBe(false);
     });
 
-    it('should use empty array when result is not ok', async () => {
-      mockedSearch.searchUsers.mockResolvedValue(errResult());
-      mockedSearch.searchGroups.mockResolvedValue(okResult([mockGroup]));
-      mockedSearch.searchForums.mockResolvedValue(okResult([]));
-      mockedSearch.searchPosts.mockResolvedValue(okResult([]));
-      mockedSearch.searchMessages.mockResolvedValue(okResult([]));
+    it('should use empty arrays when the global result is not ok', async () => {
+      mockedSearch.global.mockResolvedValue(errResult());
 
       useSearchStore.getState().setQuery('test');
       await useSearchStore.getState().search();
 
       expect(useSearchStore.getState().users).toEqual([]);
-      expect(useSearchStore.getState().groups).toHaveLength(1);
+      expect(useSearchStore.getState().groups).toEqual([]);
     });
   });
 
@@ -337,26 +369,20 @@ describe('Search Store', () => {
       useSearchStore.getState().setQuery('original');
       await useSearchStore.getState().search('override');
 
-      expect(mockedSearch.searchUsers).toHaveBeenCalledWith('override');
+      expect(mockedSearch.global).toHaveBeenCalledWith('override', { limit: 50 });
     });
   });
 
-  // 7. search – per-category error resilience
+  // 7. search – error resilience
   describe('search error resilience', () => {
-    it('should fall back to empty array if one endpoint rejects', async () => {
-      mockedSearch.searchUsers.mockRejectedValue(new Error('User search down'));
-      mockedSearch.searchGroups.mockResolvedValue(okResult([]));
-      mockedSearch.searchForums.mockResolvedValue(okResult([]));
-      mockedSearch.searchPosts.mockResolvedValue(okResult([mockPost]));
-      mockedSearch.searchMessages.mockResolvedValue(okResult([]));
+    it('should expose an error if the global endpoint rejects', async () => {
+      mockedSearch.global.mockRejectedValue(new Error('Search down'));
 
       useSearchStore.setState({ category: 'all' });
       useSearchStore.getState().setQuery('test');
       await useSearchStore.getState().search();
 
-      // Users should be empty (catch handler), posts filled
-      expect(useSearchStore.getState().users).toEqual([]);
-      expect(useSearchStore.getState().posts).toHaveLength(1);
+      expect(useSearchStore.getState().error).toBe('Search down');
       expect(useSearchStore.getState().hasSearched).toBe(true);
     });
   });

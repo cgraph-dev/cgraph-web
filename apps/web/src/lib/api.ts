@@ -11,9 +11,16 @@ import {
 import { getApiBaseUrl } from './backend-url';
 import { reconnectSocketWithFreshToken } from './socket-token-reconnect';
 import { createLogger } from '@/lib/logger';
+import {
+  createRateLimitCooldownError,
+  getRateLimitRemainingMs,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 
 const logger = createLogger('API');
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
+const RATE_LIMITED_READ_METHODS = new Set(['get', 'head', 'options']);
 
 /**
  * API URL Configuration
@@ -155,6 +162,11 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    const rateLimitMessage = rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], error);
+    if (rateLimitMessage) {
+      logger.warn('API rate limited:', rateLimitMessage);
+    }
+
     // Only trip breaker on server errors (5xx) or network failures
     const status = error?.response?.status;
     if (!status || status >= 500) {
@@ -173,5 +185,14 @@ api.interceptors.request.use((config) => {
     );
     return Promise.reject(err);
   }
+
+  const method = (config.method ?? 'get').toLowerCase();
+  if (RATE_LIMITED_READ_METHODS.has(method)) {
+    const remainingMs = getRateLimitRemainingMs(USER_API_RATE_LIMIT_SCOPE);
+    if (remainingMs > 0) {
+      return Promise.reject(createRateLimitCooldownError(remainingMs));
+    }
+  }
+
   return config;
 });

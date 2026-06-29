@@ -259,6 +259,14 @@ export default defineConfig(({ mode }) => {
           }
 
           if (
+            packageName === 'tailwind-merge' ||
+            packageName === 'clsx' ||
+            packageName === 'class-variance-authority'
+          ) {
+            return 'style-utils';
+          }
+
+          if (
             packageName === 'react' ||
             packageName === 'react-dom' ||
             packageName === 'scheduler'

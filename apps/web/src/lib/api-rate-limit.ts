@@ -1,6 +1,7 @@
 const DEFAULT_RETRY_MS = 30_000;
 
 export const USER_API_RATE_LIMIT_SCOPE = 'api:user-session';
+export const RATE_LIMIT_COOLDOWN_ERROR_CODE = 'ERR_CGRAPH_RATE_LIMIT_COOLDOWN';
 
 const cooldowns = new Map<string, number>();
 
@@ -22,8 +23,63 @@ function getNestedRecord(value: Record<string, unknown>, key: string): Record<st
   return isRecord(nested) ? nested : null;
 }
 
+function getResponseRecord(value: Record<string, unknown>): Record<string, unknown> | null {
+  return getNestedRecord(value, 'response');
+}
+
+function getHeaderValue(headers: Record<string, unknown>, headerName: string): unknown {
+  const get = headers.get;
+  if (typeof get === 'function') {
+    const value = get.call(headers, headerName);
+    if (value !== undefined && value !== null) return value;
+  }
+
+  const normalizedName = headerName.toLowerCase();
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === normalizedName) return value;
+  }
+
+  return undefined;
+}
+
+function parseRetryAfterHeader(value: unknown): number | null {
+  const seconds = toNumber(value);
+  if (seconds !== null) return Math.max(seconds * 1000, 0);
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    const timestamp = Date.parse(value);
+    if (Number.isFinite(timestamp)) return Math.max(timestamp - Date.now(), 0);
+  }
+
+  return null;
+}
+
+function extractRetryAfterHeaderMs(headers: unknown): number | null {
+  if (!isRecord(headers)) return null;
+
+  const retryAfterMs = toNumber(getHeaderValue(headers, 'retry-after-ms'));
+  if (retryAfterMs !== null) return Math.max(retryAfterMs, 0);
+
+  const retryAfter = parseRetryAfterHeader(getHeaderValue(headers, 'retry-after'));
+  if (retryAfter !== null) return retryAfter;
+
+  const resetAt = parseRetryAfterHeader(getHeaderValue(headers, 'x-ratelimit-reset'));
+  if (resetAt !== null) return resetAt;
+
+  return null;
+}
+
 function extractRetryAfterMs(value: unknown): number | null {
   if (!isRecord(value)) return null;
+
+  const response = getResponseRecord(value);
+  if (response) {
+    const fromHeaders = extractRetryAfterHeaderMs(response.headers);
+    if (fromHeaders !== null) return fromHeaders;
+
+    const fromData = extractRetryAfterMs(response.data);
+    if (fromData !== null) return fromData;
+  }
 
   const retryAfterMs = toNumber(value.retry_after_ms ?? value.retryAfterMs);
   if (retryAfterMs !== null) return Math.max(retryAfterMs, 0);
@@ -46,6 +102,12 @@ function extractMessage(value: unknown): string | null {
   if (typeof value === 'string' && value.trim() !== '') return value;
   if (!isRecord(value)) return null;
 
+  const response = getResponseRecord(value);
+  if (response) {
+    const fromData = extractMessage(response.data);
+    if (fromData) return fromData;
+  }
+
   const direct = extractMessage(value.message ?? value.detail);
   if (direct) return direct;
 
@@ -61,12 +123,12 @@ function extractStatus(value: unknown): number | null {
   const ownStatus = toNumber(value.status);
   if (ownStatus !== null) return ownStatus;
 
-  const response = getNestedRecord(value, 'response');
+  const response = getResponseRecord(value);
   const responseStatus = response ? toNumber(response.status) : null;
   return responseStatus;
 }
 
-function isRateLimited(value: unknown): boolean {
+export function isRateLimited(value: unknown): boolean {
   if (!isRecord(value)) return false;
 
   if (extractStatus(value) === 429) return true;
@@ -95,6 +157,50 @@ export function getMaxRateLimitRemainingMs(scopes: readonly string[]): number {
 export function formatRateLimitWait(remainingMs: number): string {
   const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
   return `Too many requests. Please wait ${seconds} seconds before retrying.`;
+}
+
+export interface RateLimitCooldownError extends Error {
+  code: typeof RATE_LIMIT_COOLDOWN_ERROR_CODE;
+  isRateLimitCooldown: true;
+  response: {
+    status: 429;
+    data: {
+      error: {
+        code: 'rate_limit_cooldown';
+        message: string;
+        retry_after_ms: number;
+      };
+    };
+  };
+}
+
+export function createRateLimitCooldownError(remainingMs: number): RateLimitCooldownError {
+  const retryAfterMs = Math.max(remainingMs, 1000);
+  const message = formatRateLimitWait(retryAfterMs);
+  const error: RateLimitCooldownError = Object.assign(new Error(message), {
+    name: 'RateLimitCooldownError',
+    code: RATE_LIMIT_COOLDOWN_ERROR_CODE,
+    isRateLimitCooldown: true,
+    response: {
+      status: 429,
+      data: {
+        error: {
+          code: 'rate_limit_cooldown',
+          message,
+          retry_after_ms: retryAfterMs,
+        },
+      },
+    },
+  });
+  return error;
+}
+
+export function isRateLimitCooldownError(value: unknown): value is RateLimitCooldownError {
+  return (
+    isRecord(value) &&
+    value.code === RATE_LIMIT_COOLDOWN_ERROR_CODE &&
+    value.isRateLimitCooldown === true
+  );
 }
 
 export function rememberRateLimit(
