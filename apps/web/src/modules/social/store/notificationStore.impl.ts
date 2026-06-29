@@ -6,11 +6,21 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { apiClient } from '@/lib/api-client';
 import { isRecord, asString } from '@/lib/api-utils';
+import {
+  getMaxRateLimitRemainingMs,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 
 const logger = createLogger('NotificationStore');
 
 /** Maximum notifications kept in memory to prevent unbounded growth. */
 const MAX_NOTIFICATIONS = 200;
+const NOTIFICATION_RATE_LIMIT_SCOPE = 'notifications:read';
+const NOTIFICATION_RATE_LIMIT_SCOPES = [
+  USER_API_RATE_LIMIT_SCOPE,
+  NOTIFICATION_RATE_LIMIT_SCOPE,
+] as const;
 
 export interface Notification {
   id: string;
@@ -57,13 +67,20 @@ export const useNotificationStore = create<NotificationState>()(
       hasMore: true,
 
       fetchNotifications: async (cursor: string | null = null) => {
+        const remaining = getMaxRateLimitRemainingMs(NOTIFICATION_RATE_LIMIT_SCOPES);
+        if (remaining > 0) {
+          set({ isLoading: false });
+          return;
+        }
+
         set({ isLoading: true });
         const result = await apiClient.notifications.list({
           limit: 20,
           ...(cursor ? { cursor } : {}),
         });
         if (!result.ok) {
-          logger.warn('Failed to fetch notifications:', result.error.message);
+          const rateLimitMessage = rememberRateLimit(NOTIFICATION_RATE_LIMIT_SCOPES, result);
+          logger.warn('Failed to fetch notifications:', rateLimitMessage ?? result.error.message);
           set({ isLoading: false });
           return;
         }

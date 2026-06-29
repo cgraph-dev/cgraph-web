@@ -35,6 +35,7 @@ vi.mock('@/lib/apiUtils', () => ({
 }));
 
 import { api } from '@/lib/api-client';
+import { clearRateLimitScopes, USER_API_RATE_LIMIT_SCOPE } from '@/lib/api-rate-limit';
 import { useNotificationStore, type Notification } from '../notificationStore.impl';
 
 const mockedApi = {
@@ -73,6 +74,7 @@ const getInitialState = () => ({
 
 beforeEach(() => {
   useNotificationStore.setState(getInitialState());
+  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE, 'notifications:read']);
   vi.clearAllMocks();
 });
 
@@ -147,6 +149,27 @@ describe('NotificationStore', () => {
     it('resets isLoading on error', async () => {
       mockedApi.get.mockRejectedValueOnce(new Error('network'));
       await useNotificationStore.getState().fetchNotifications();
+      expect(useNotificationStore.getState().isLoading).toBe(false);
+    });
+
+    it('pauses background notification fetches after a rate-limit response', async () => {
+      mockedApi.get.mockRejectedValueOnce({
+        response: {
+          status: 429,
+          data: {
+            error: {
+              code: 'RATE_LIMIT_EXCEEDED',
+              message: 'Too many requests. Please wait 20 seconds before retrying.',
+              details: { retry_after_seconds: 20 },
+            },
+          },
+        },
+      });
+
+      await useNotificationStore.getState().fetchNotifications();
+      await useNotificationStore.getState().fetchNotifications();
+
+      expect(mockedApi.get).toHaveBeenCalledTimes(1);
       expect(useNotificationStore.getState().isLoading).toBe(false);
     });
 

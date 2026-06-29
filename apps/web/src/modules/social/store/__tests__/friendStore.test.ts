@@ -36,6 +36,7 @@ vi.mock('@/lib/apiUtils', () => ({
 }));
 
 import { api } from '@/lib/api-client';
+import { clearRateLimitScopes, USER_API_RATE_LIMIT_SCOPE } from '@/lib/api-rate-limit';
 import { useFriendStore } from '../friendStore.impl';
 import type { Friend, FriendRequest } from '../friend-types';
 
@@ -81,6 +82,7 @@ const getInitialState = () => ({
 
 beforeEach(() => {
   useFriendStore.setState(getInitialState());
+  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE, 'friends:read', 'friends:write']);
   vi.clearAllMocks();
 });
 
@@ -165,8 +167,6 @@ describe('FriendStore', () => {
   describe('sendRequest', () => {
     it('sends with username payload for plain text', async () => {
       mockedApi.post.mockResolvedValueOnce({});
-      // mock fetchSentRequests call that happens inside sendRequest
-      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('alice');
 
@@ -179,7 +179,6 @@ describe('FriendStore', () => {
 
     it('sends with user_id payload for UUID', async () => {
       mockedApi.post.mockResolvedValueOnce({});
-      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('a1b2c3d4-e5f6-7890-abcd-ef1234567890');
 
@@ -192,7 +191,6 @@ describe('FriendStore', () => {
 
     it('sends with email payload for email format', async () => {
       mockedApi.post.mockResolvedValueOnce({});
-      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('alice@example.com');
 
@@ -205,7 +203,6 @@ describe('FriendStore', () => {
 
     it('sends with uid payload for numeric UID', async () => {
       mockedApi.post.mockResolvedValueOnce({});
-      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('#1234567890');
 
@@ -224,13 +221,66 @@ describe('FriendStore', () => {
       expect(useFriendStore.getState().isLoading).toBe(false);
     });
 
-    it('refreshes sent requests on success', async () => {
+    it('does not require a sent-requests refresh for a successful send', async () => {
       mockedApi.post.mockResolvedValueOnce({});
-      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
 
       await useFriendStore.getState().sendRequest('alice');
 
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/sent');
+      expect(mockedApi.get).not.toHaveBeenCalledWith('/api/v1/friends/sent');
+      expect(useFriendStore.getState().isLoading).toBe(false);
+      expect(useFriendStore.getState().error).toBeNull();
+    });
+
+    it('adds the outgoing request from the send response when available', async () => {
+      mockedApi.post.mockResolvedValueOnce({
+        data: {
+          data: {
+            id: 'req-out-1',
+            to: {
+              id: 'user-alice',
+              username: 'alice',
+              display_name: 'Alice',
+              avatar_url: null,
+            },
+            created_at: '2026-06-01T00:00:00Z',
+          },
+        },
+      });
+
+      await useFriendStore.getState().sendRequest('alice');
+
+      expect(useFriendStore.getState().sentRequests).toEqual([
+        expect.objectContaining({
+          id: 'req-out-1',
+          type: 'outgoing',
+          user: expect.objectContaining({ id: 'user-alice', username: 'alice' }),
+        }),
+      ]);
+      expect(mockedApi.get).not.toHaveBeenCalled();
+    });
+
+    it('pauses duplicate sends after a rate-limit response', async () => {
+      mockedApi.post.mockRejectedValueOnce({
+        response: {
+          status: 429,
+          data: {
+            error: {
+              code: 'RATE_LIMIT_EXCEEDED',
+              message: 'Too many requests. Please wait 18 seconds before retrying.',
+              details: { retry_after_seconds: 18 },
+            },
+          },
+        },
+      });
+
+      await expect(useFriendStore.getState().sendRequest('alice')).rejects.toThrow(
+        'Too many requests'
+      );
+      await expect(useFriendStore.getState().sendRequest('alice')).rejects.toThrow(
+        'Too many requests'
+      );
+
+      expect(mockedApi.post).toHaveBeenCalledTimes(1);
     });
   });
 

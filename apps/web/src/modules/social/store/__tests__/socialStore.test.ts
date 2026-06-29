@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
 import { useFriendStore } from '../friendStore.impl';
 import { useNotificationStore } from '../notificationStore.impl';
+import { clearRateLimitScopes, USER_API_RATE_LIMIT_SCOPE } from '@/lib/api-rate-limit';
 
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
@@ -63,6 +64,12 @@ const makeNotification = (overrides = {}) => ({
 });
 
 beforeEach(() => {
+  clearRateLimitScopes([
+    USER_API_RATE_LIMIT_SCOPE,
+    'friends:read',
+    'friends:write',
+    'notifications:read',
+  ]);
   useFriendStore.setState({
     friends: [],
     pendingRequests: [],
@@ -131,7 +138,6 @@ describe('fetchSentRequests', () => {
 describe('sendRequest', () => {
   it('sends by username', async () => {
     mockApi.post.mockResolvedValueOnce({});
-    mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest('alice');
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
@@ -142,7 +148,6 @@ describe('sendRequest', () => {
 
   it('sends by email', async () => {
     mockApi.post.mockResolvedValueOnce({});
-    mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest('alice@example.com');
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
@@ -154,7 +159,6 @@ describe('sendRequest', () => {
   it('sends by UUID', async () => {
     const uuid = '12345678-1234-1234-1234-123456789abc';
     mockApi.post.mockResolvedValueOnce({});
-    mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest(uuid);
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
@@ -165,7 +169,6 @@ describe('sendRequest', () => {
 
   it('sends by UID (numeric)', async () => {
     mockApi.post.mockResolvedValueOnce({});
-    mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().sendRequest('#12345');
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/friends',
@@ -174,11 +177,10 @@ describe('sendRequest', () => {
     );
   });
 
-  it('refreshes sent requests on success', async () => {
+  it('does not require a sent-requests refresh on success', async () => {
     mockApi.post.mockResolvedValueOnce({});
-    mockApi.get.mockResolvedValueOnce({ data: { data: [makeRequest({ type: 'outgoing' })] } });
     await useFriendStore.getState().sendRequest('alice');
-    expect(mockApi.get).toHaveBeenCalledWith('/api/v1/friends/sent');
+    expect(mockApi.get).not.toHaveBeenCalledWith('/api/v1/friends/sent');
   });
 
   it('sets error and rethrows on failure', async () => {

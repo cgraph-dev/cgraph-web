@@ -10,6 +10,12 @@ import { create } from 'zustand';
 import { createIdempotencyKey } from '@cgraph-dev/utils';
 import { apiClient } from '@/lib/api-client';
 import { logger } from '@/lib/logger';
+import {
+  formatRateLimitWait,
+  getMaxRateLimitRemainingMs,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 
 // Re-export types so existing consumers keep working
 export type { Friend, FriendRequest, FriendState } from './friend-types';
@@ -18,9 +24,48 @@ import type { FriendIdentityPatch, FriendState } from './friend-types';
 import { normalizeFriend, normalizeRequest } from './friend-normalizers';
 import { registerFriendBlockSyncHandler } from './friendStore.sync';
 
+const FRIEND_READ_RATE_LIMIT_SCOPE = 'friends:read';
+const FRIEND_WRITE_RATE_LIMIT_SCOPE = 'friends:write';
+const FRIEND_READ_SCOPES = [USER_API_RATE_LIMIT_SCOPE, FRIEND_READ_RATE_LIMIT_SCOPE] as const;
+const FRIEND_WRITE_SCOPES = [USER_API_RATE_LIMIT_SCOPE, FRIEND_WRITE_RATE_LIMIT_SCOPE] as const;
+
 function patchRequestUser(userId: string, patch: FriendIdentityPatch) {
   return (request: FriendState['pendingRequests'][number]) =>
     request.user.id === userId ? { ...request, user: { ...request.user, ...patch } } : request;
+}
+
+function shouldPauseFriendRead(set: (state: Partial<FriendState>) => void): boolean {
+  const remaining = getMaxRateLimitRemainingMs(FRIEND_READ_SCOPES);
+  if (remaining <= 0) return false;
+  set({ isLoading: false });
+  return true;
+}
+
+function handleFriendReadError(
+  set: (state: Partial<FriendState>) => void,
+  context: string,
+  error: unknown
+) {
+  const rateLimitMessage = rememberRateLimit(FRIEND_READ_SCOPES, error);
+  if (rateLimitMessage) {
+    logger.warn(context, rateLimitMessage);
+    set({ isLoading: false });
+    return;
+  }
+
+  const message =
+    typeof error === 'object' &&
+    error !== null &&
+    'error' in error &&
+    typeof error.error === 'object' &&
+    error.error !== null &&
+    'message' in error.error &&
+    typeof error.error.message === 'string'
+      ? error.error.message
+      : 'Request failed';
+
+  logger.error(context, error);
+  set({ error: message, isLoading: false });
 }
 
 export const useFriendStore = create<FriendState>()((set, get) => ({
@@ -31,11 +76,11 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
   error: null,
 
   fetchFriends: async () => {
+    if (shouldPauseFriendRead(set)) return;
     set({ isLoading: true, error: null });
     const result = await apiClient.friends.list();
     if (!result.ok) {
-      logger.error('Failed to fetch friends', result.error);
-      set({ error: result.error.message, isLoading: false });
+      handleFriendReadError(set, 'Failed to fetch friends', result);
       return;
     }
     set({
@@ -45,10 +90,10 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
   },
 
   fetchPendingRequests: async () => {
+    if (shouldPauseFriendRead(set)) return;
     const result = await apiClient.friends.getIncomingRequests();
     if (!result.ok) {
-      logger.error('Failed to fetch pending requests', result.error);
-      set({ error: result.error.message });
+      handleFriendReadError(set, 'Failed to fetch pending requests', result);
       return;
     }
     set({
@@ -57,10 +102,10 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
   },
 
   fetchSentRequests: async () => {
+    if (shouldPauseFriendRead(set)) return;
     const result = await apiClient.friends.getOutgoingRequests();
     if (!result.ok) {
-      logger.error('Failed to fetch sent requests', result.error);
-      set({ error: result.error.message });
+      handleFriendReadError(set, 'Failed to fetch sent requests', result);
       return;
     }
     set({
@@ -81,6 +126,13 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
   },
 
   sendRequest: async (usernameOrIdOrEmail: string) => {
+    const remaining = getMaxRateLimitRemainingMs(FRIEND_WRITE_SCOPES);
+    if (remaining > 0) {
+      const message = formatRateLimitWait(remaining);
+      set({ isLoading: false, error: message });
+      throw new Error(message);
+    }
+
     set({ isLoading: true, error: null });
     const input = usernameOrIdOrEmail.trim();
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input);
@@ -94,11 +146,25 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
 
     const result = await apiClient.friends.sendRequest(identifier, undefined, idempotencyKey);
     if (!result.ok) {
+      const rateLimitMessage = rememberRateLimit(FRIEND_WRITE_SCOPES, result);
+      const message = rateLimitMessage ?? result.error.message;
       logger.error('Failed to send friend request', result.error);
-      set({ error: result.error.message, isLoading: false });
-      throw new Error(result.error.message);
+      set({ error: message, isLoading: false });
+      throw new Error(message);
     }
-    await get().fetchSentRequests();
+
+    if (result.data.id && result.data.to) {
+      const request = normalizeRequest(result.data, 'outgoing');
+      set((state) => ({
+        sentRequests: [
+          request,
+          ...state.sentRequests.filter(
+            (existing) => existing.id !== request.id && existing.user.id !== request.user.id
+          ),
+        ],
+      }));
+    }
+
     set({ isLoading: false });
   },
 
