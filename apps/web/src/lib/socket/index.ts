@@ -60,9 +60,7 @@ export const socketManager: SocketManager = new Proxy(createSocketManagerProxyTa
 
 registerSocketTokenReconnectHandler(async () => {
   const manager = getSocketManager();
-  if (manager.isConnected()) {
-    await manager.reconnectWithNewToken();
-  }
+  await manager.reconnectWithNewToken();
 });
 
 /**
