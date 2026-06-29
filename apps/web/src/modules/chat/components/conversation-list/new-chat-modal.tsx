@@ -9,6 +9,11 @@ import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
 import { isRecord, asString, asOptionalString, asEnum } from '@/lib/api-utils';
+import {
+  getMaxRateLimitRemainingMs,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 import { getAvatarBorderId } from '@/lib/utils';
 import type { NewChatModalProps, MockUser } from './types';
 import { FADE_IN } from '@/lib/animations/transitions';
@@ -16,6 +21,7 @@ import { TypePicker, type ChatTierType } from '@/pages/messages/new-chat/type-pi
 import { WebOnlyRecipientPrompt } from '@/pages/messages/new-chat/web-only-recipient-prompt';
 
 const logger = createLogger('NewChatModal');
+const USER_SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
 
 /**
  * Modal for creating a new 1:1 or group conversation. Searches users
@@ -46,6 +52,11 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
+        if (getMaxRateLimitRemainingMs(USER_SEARCH_RATE_LIMIT_SCOPES) > 0) {
+          setUsers([]);
+          return;
+        }
+
         // Backend exposes user search at /search/users (SearchController),
         // not /users/search. The wrong path 404s and the modal shows an
         // empty list, which looked like "search is broken".
@@ -63,7 +74,9 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
           }))
         );
       } catch (error) {
-        logger.error('Failed to search users:', error);
+        if (!rememberRateLimit(USER_SEARCH_RATE_LIMIT_SCOPES, error)) {
+          logger.error('Failed to search users:', error);
+        }
         setUsers([]);
       }
     }, 200);

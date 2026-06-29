@@ -31,15 +31,22 @@ vi.mock('lodash.debounce', () => ({
 }));
 
 import { api } from '@/lib/api-client';
+import {
+  clearRateLimitScopes,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 import { useUserSearch } from '../useUserSearch';
 
 const mockApi = { get: api.get as ReturnType<typeof vi.fn> };
 
 beforeEach(() => {
+  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE]);
   vi.clearAllMocks();
 });
 
 afterEach(() => {
+  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE]);
   vi.restoreAllMocks();
 });
 
@@ -108,6 +115,30 @@ describe('useUserSearch', () => {
     });
 
     expect(result.current.error).toBe('Failed to search users');
+    expect(result.current.results).toEqual([]);
+  });
+
+  it('does not call search while the user API cooldown is active', async () => {
+    rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], {
+      response: {
+        status: 429,
+        data: {
+          error: {
+            message: 'Too many requests. Please wait 18 seconds before retrying.',
+            details: { retry_after_seconds: 18 },
+          },
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useUserSearch('al'));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockApi.get).not.toHaveBeenCalled();
+    expect(result.current.error).toContain('Too many requests');
     expect(result.current.results).toEqual([]);
   });
 

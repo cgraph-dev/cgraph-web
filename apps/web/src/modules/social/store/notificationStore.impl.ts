@@ -21,6 +21,19 @@ const NOTIFICATION_RATE_LIMIT_SCOPES = [
   USER_API_RATE_LIMIT_SCOPE,
   NOTIFICATION_RATE_LIMIT_SCOPE,
 ] as const;
+const NOTIFICATION_ROOT_FRESH_MS = 20_000;
+
+let notificationRootInFlight: Promise<void> | null = null;
+let notificationRootLastSuccessAt = 0;
+
+function isNotificationRootFresh(): boolean {
+  return Date.now() - notificationRootLastSuccessAt < NOTIFICATION_ROOT_FRESH_MS;
+}
+
+function resetNotificationFetchGuards() {
+  notificationRootInFlight = null;
+  notificationRootLastSuccessAt = 0;
+}
 
 export interface Notification {
   id: string;
@@ -67,76 +80,99 @@ export const useNotificationStore = create<NotificationState>()(
       hasMore: true,
 
       fetchNotifications: async (cursor: string | null = null) => {
+        if (cursor === null) {
+          if (notificationRootInFlight) return notificationRootInFlight;
+          if (isNotificationRootFresh()) return;
+        }
+
         const remaining = getMaxRateLimitRemainingMs(NOTIFICATION_RATE_LIMIT_SCOPES);
         if (remaining > 0) {
           set({ isLoading: false });
           return;
         }
 
-        set({ isLoading: true });
-        const result = await apiClient.notifications.list({
-          limit: 20,
-          ...(cursor ? { cursor } : {}),
-        });
-        if (!result.ok) {
-          const rateLimitMessage = rememberRateLimit(NOTIFICATION_RATE_LIMIT_SCOPES, result);
-          logger.warn('Failed to fetch notifications:', rateLimitMessage ?? result.error.message);
-          set({ isLoading: false });
-          return;
-        }
-        // Map apiClient Notification (snake_case, optional fields) -> store Notification (camelCase, required fields)
-        const knownTypes: Notification['type'][] = [
-          'message',
-          'friend_request',
-          'group_invite',
-          'mention',
-          'forum_reply',
-          'system',
-        ];
-        const newNotifications: Notification[] = result.data.filter(isRecord).map((n) => {
-          const rawType = asString(n['type']);
-          const type: Notification['type'] = knownTypes.find((t) => t === rawType) ?? 'system';
-          const actor = isRecord(n['actor'])
-            ? n['actor']
-            : isRecord(n['sender'])
-              ? n['sender']
-              : null;
-          const sender = actor
-            ? {
-                id: asString(actor['id']),
-                username: asString(actor['username']),
-                displayName:
-                  typeof actor['display_name'] === 'string' ? actor['display_name'] : null,
-                avatarUrl: typeof actor['avatar_url'] === 'string' ? actor['avatar_url'] : null,
-              }
-            : undefined;
-          return {
-            id: asString(n['id']),
-            type,
-            title: asString(n['title']),
-            body: asString(n['body'] ?? n['message']),
-            isRead: Boolean(n['is_read'] ?? n['read'] ?? false),
-            action: isRecord(n['action']) ? n['action'] : null,
-            actionUrl: typeof n['action_url'] === 'string' ? n['action_url'] : null,
-            data: isRecord(n['data']) ? n['data'] : {},
-            sender,
-            createdAt: asString(n['created_at']),
-          };
-        });
-        // Derive pagination from the raw array length (cursor support via store state)
-        const hasMore = newNotifications.length === 20;
+        const request = (async () => {
+          set({ isLoading: true });
+          const result = await apiClient.notifications.list({
+            limit: 20,
+            ...(cursor ? { cursor } : {}),
+          });
+          if (!result.ok) {
+            const rateLimitMessage = rememberRateLimit(NOTIFICATION_RATE_LIMIT_SCOPES, result);
+            logger.warn('Failed to fetch notifications:', rateLimitMessage ?? result.error.message);
+            set({ isLoading: false });
+            return;
+          }
+          // Map apiClient Notification (snake_case, optional fields) -> store Notification (camelCase, required fields)
+          const knownTypes: Notification['type'][] = [
+            'message',
+            'friend_request',
+            'group_invite',
+            'mention',
+            'forum_reply',
+            'system',
+          ];
+          const newNotifications: Notification[] = result.data.filter(isRecord).map((n) => {
+            const rawType = asString(n['type']);
+            const type: Notification['type'] = knownTypes.find((t) => t === rawType) ?? 'system';
+            const actor = isRecord(n['actor'])
+              ? n['actor']
+              : isRecord(n['sender'])
+                ? n['sender']
+                : null;
+            const sender = actor
+              ? {
+                  id: asString(actor['id']),
+                  username: asString(actor['username']),
+                  displayName:
+                    typeof actor['display_name'] === 'string' ? actor['display_name'] : null,
+                  avatarUrl: typeof actor['avatar_url'] === 'string' ? actor['avatar_url'] : null,
+                }
+              : undefined;
+            return {
+              id: asString(n['id']),
+              type,
+              title: asString(n['title']),
+              body: asString(n['body'] ?? n['message']),
+              isRead: Boolean(n['is_read'] ?? n['read'] ?? false),
+              action: isRecord(n['action']) ? n['action'] : null,
+              actionUrl: typeof n['action_url'] === 'string' ? n['action_url'] : null,
+              data: isRecord(n['data']) ? n['data'] : {},
+              sender,
+              createdAt: asString(n['created_at']),
+            };
+          });
+          // Derive pagination from the raw array length (cursor support via store state)
+          const hasMore = newNotifications.length === 20;
 
-        set((state) => {
-          const merged =
-            cursor === null ? newNotifications : [...state.notifications, ...newNotifications];
-          const capped = merged.slice(0, MAX_NOTIFICATIONS);
-          return {
-            notifications: capped,
-            unreadCount: capped.filter((n) => !n.isRead).length,
-            hasMore,
-            isLoading: false,
-          };
-        });
+          set((state) => {
+            const merged =
+              cursor === null ? newNotifications : [...state.notifications, ...newNotifications];
+            const capped = merged.slice(0, MAX_NOTIFICATIONS);
+            return {
+              notifications: capped,
+              unreadCount: capped.filter((n) => !n.isRead).length,
+              hasMore,
+              isLoading: false,
+            };
+          });
+
+          if (cursor === null) {
+            notificationRootLastSuccessAt = Date.now();
+          }
+        })();
+
+        if (cursor === null) {
+          const guardedRequest = request.finally(() => {
+            if (notificationRootInFlight === guardedRequest) {
+              notificationRootInFlight = null;
+            }
+          });
+          notificationRootInFlight = guardedRequest;
+          return guardedRequest;
+        }
+
+        return request;
       },
 
       markAsRead: async (notificationId: string) => {
@@ -199,13 +235,15 @@ export const useNotificationStore = create<NotificationState>()(
         set({ notifications: [], unreadCount: 0 });
       },
 
-      reset: () =>
+      reset: () => {
+        resetNotificationFetchGuards();
         set({
           notifications: [],
           unreadCount: 0,
           isLoading: false,
           hasMore: true,
-        }),
+        });
+      },
     }),
     {
       name: 'NotificationStore',

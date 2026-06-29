@@ -5,8 +5,15 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import debounce from 'lodash.debounce';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import {
+  formatRateLimitWait,
+  getMaxRateLimitRemainingMs,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 
 const logger = createLogger('useUserSearch');
+const USER_SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -61,6 +68,11 @@ function toUserSearchResult(value: unknown): UserSearchResult | null {
   };
 }
 
+function getUserSearchCooldownMessage(): string | null {
+  const remaining = getMaxRateLimitRemainingMs(USER_SEARCH_RATE_LIMIT_SCOPES);
+  return remaining > 0 ? formatRateLimitWait(remaining) : null;
+}
+
 /**
  * Debounced user search hook.
  *
@@ -86,6 +98,14 @@ export function useUserSearch(query: string): UseUserSearchReturn {
         // Guard: only search if this is still the latest query
         if (q !== latestQuery.current) return;
 
+        const cooldownMessage = getUserSearchCooldownMessage();
+        if (cooldownMessage) {
+          setResults([]);
+          setError(cooldownMessage);
+          setIsLoading(false);
+          return;
+        }
+
         setIsLoading(true);
         setError(null);
 
@@ -100,9 +120,12 @@ export function useUserSearch(query: string): UseUserSearchReturn {
             setResults(users);
           }
         } catch (err) {
-          logger.error('User search failed:', err);
+          const rateLimitMessage = rememberRateLimit(USER_SEARCH_RATE_LIMIT_SCOPES, err);
+          if (!rateLimitMessage) {
+            logger.error('User search failed:', err);
+          }
           if (q === latestQuery.current) {
-            setError('Failed to search users');
+            setError(rateLimitMessage ?? 'Failed to search users');
             setResults([]);
           }
         } finally {
@@ -119,6 +142,14 @@ export function useUserSearch(query: string): UseUserSearchReturn {
       setResults([]);
       setIsLoading(false);
       setError(null);
+      return;
+    }
+
+    const cooldownMessage = getUserSearchCooldownMessage();
+    if (cooldownMessage) {
+      setResults([]);
+      setIsLoading(false);
+      setError(cooldownMessage);
       return;
     }
 

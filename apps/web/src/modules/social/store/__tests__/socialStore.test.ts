@@ -64,6 +64,8 @@ const makeNotification = (overrides = {}) => ({
 });
 
 beforeEach(() => {
+  useFriendStore.getState().reset();
+  useNotificationStore.getState().reset();
   clearRateLimitScopes([
     USER_API_RATE_LIMIT_SCOPE,
     'friends:read',

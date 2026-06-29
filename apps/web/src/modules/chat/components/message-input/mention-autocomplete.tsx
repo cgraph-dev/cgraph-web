@@ -5,6 +5,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { http } from '@/lib/api-client';
+import {
+  getMaxRateLimitRemainingMs,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { MentionUser } from './types';
 import { tweens, loop } from '@/lib/animation-presets';
@@ -16,6 +21,7 @@ interface MentionAutocompleteProps {
 }
 
 // User search is handled via API exclusively
+const USER_SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
 
 /**
  */
@@ -46,6 +52,11 @@ export function MentionAutocomplete({
     searchTimeoutRef.current = setTimeout(async () => {
       setIsLoading(true);
       try {
+        if (getMaxRateLimitRemainingMs(USER_SEARCH_RATE_LIMIT_SCOPES) > 0) {
+          setUsers([]);
+          return;
+        }
+
         const response = await http.get('/api/v1/search/users', {
           params: { q: query, limit: 10 },
         });
@@ -73,7 +84,8 @@ export function MentionAutocomplete({
           // API returned no users field — show empty results
           setUsers([]);
         }
-      } catch {
+      } catch (error) {
+        rememberRateLimit(USER_SEARCH_RATE_LIMIT_SCOPES, error);
         // API error — show empty results
         setUsers([]);
       } finally {

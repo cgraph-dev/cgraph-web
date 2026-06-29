@@ -81,6 +81,7 @@ const getInitialState = () => ({
 });
 
 beforeEach(() => {
+  useFriendStore.getState().reset();
   useFriendStore.setState(getInitialState());
   clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE, 'friends:read', 'friends:write']);
   vi.clearAllMocks();
@@ -122,6 +123,17 @@ describe('FriendStore', () => {
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends');
     });
 
+    it('coalesces concurrent friend list reads', async () => {
+      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
+
+      const first = useFriendStore.getState().fetchFriends();
+      const second = useFriendStore.getState().fetchFriends();
+      await Promise.all([first, second]);
+
+      expect(mockedApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends');
+    });
+
     it('sets isLoading false on success', async () => {
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
       await useFriendStore.getState().fetchFriends();
@@ -140,6 +152,16 @@ describe('FriendStore', () => {
     it('calls correct endpoint', async () => {
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
       await useFriendStore.getState().fetchPendingRequests();
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/requests');
+    });
+
+    it('skips immediate duplicate pending request refreshes', async () => {
+      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
+
+      await useFriendStore.getState().fetchPendingRequests();
+      await useFriendStore.getState().fetchPendingRequests();
+
+      expect(mockedApi.get).toHaveBeenCalledTimes(1);
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/requests');
     });
 

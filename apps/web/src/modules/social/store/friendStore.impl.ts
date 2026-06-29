@@ -28,6 +28,32 @@ const FRIEND_READ_RATE_LIMIT_SCOPE = 'friends:read';
 const FRIEND_WRITE_RATE_LIMIT_SCOPE = 'friends:write';
 const FRIEND_READ_SCOPES = [USER_API_RATE_LIMIT_SCOPE, FRIEND_READ_RATE_LIMIT_SCOPE] as const;
 const FRIEND_WRITE_SCOPES = [USER_API_RATE_LIMIT_SCOPE, FRIEND_WRITE_RATE_LIMIT_SCOPE] as const;
+const FRIEND_READ_FRESH_MS = 15_000;
+
+type FriendReadKey = 'friends' | 'incoming' | 'outgoing';
+
+const friendReadInFlight = new Map<FriendReadKey, Promise<void>>();
+const friendReadLastSuccessAt = new Map<FriendReadKey, number>();
+
+function invalidateFriendReads(keys: FriendReadKey[]) {
+  for (const key of keys) {
+    friendReadLastSuccessAt.delete(key);
+  }
+}
+
+function markFriendReadFresh(key: FriendReadKey) {
+  friendReadLastSuccessAt.set(key, Date.now());
+}
+
+function resetFriendReadGuards() {
+  friendReadInFlight.clear();
+  friendReadLastSuccessAt.clear();
+}
+
+function isFriendReadFresh(key: FriendReadKey): boolean {
+  const lastSuccessAt = friendReadLastSuccessAt.get(key) ?? 0;
+  return Date.now() - lastSuccessAt < FRIEND_READ_FRESH_MS;
+}
 
 function patchRequestUser(userId: string, patch: FriendIdentityPatch) {
   return (request: FriendState['pendingRequests'][number]) =>
@@ -68,6 +94,32 @@ function handleFriendReadError(
   set({ error: message, isLoading: false });
 }
 
+function runFriendRead(
+  key: FriendReadKey,
+  set: (state: Partial<FriendState>) => void,
+  read: () => Promise<void>
+) {
+  if (shouldPauseFriendRead(set)) return Promise.resolve();
+
+  const inFlight = friendReadInFlight.get(key);
+  if (inFlight) return inFlight;
+
+  if (isFriendReadFresh(key)) return Promise.resolve();
+
+  const request = read()
+    .then(() => {
+      markFriendReadFresh(key);
+    })
+    .finally(() => {
+      if (friendReadInFlight.get(key) === request) {
+        friendReadInFlight.delete(key);
+      }
+    });
+
+  friendReadInFlight.set(key, request);
+  return request;
+}
+
 export const useFriendStore = create<FriendState>()((set, get) => ({
   friends: [],
   pendingRequests: [],
@@ -75,8 +127,8 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchFriends: async () => {
-    if (shouldPauseFriendRead(set)) return;
+  fetchFriends: () =>
+    runFriendRead('friends', set, async () => {
     set({ isLoading: true, error: null });
     const result = await apiClient.friends.list();
     if (!result.ok) {
@@ -87,10 +139,10 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       friends: result.data.map(normalizeFriend),
       isLoading: false,
     });
-  },
+    }),
 
-  fetchPendingRequests: async () => {
-    if (shouldPauseFriendRead(set)) return;
+  fetchPendingRequests: () =>
+    runFriendRead('incoming', set, async () => {
     const result = await apiClient.friends.getIncomingRequests();
     if (!result.ok) {
       handleFriendReadError(set, 'Failed to fetch pending requests', result);
@@ -99,10 +151,10 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
     set({
       pendingRequests: result.data.map((r) => normalizeRequest(r, 'incoming')),
     });
-  },
+    }),
 
-  fetchSentRequests: async () => {
-    if (shouldPauseFriendRead(set)) return;
+  fetchSentRequests: () =>
+    runFriendRead('outgoing', set, async () => {
     const result = await apiClient.friends.getOutgoingRequests();
     if (!result.ok) {
       handleFriendReadError(set, 'Failed to fetch sent requests', result);
@@ -111,7 +163,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
     set({
       sentRequests: result.data.map((r) => normalizeRequest(r, 'outgoing')),
     });
-  },
+    }),
 
   upsertIncomingRequest: (request) => {
     set((state) => ({
@@ -163,6 +215,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
           ),
         ],
       }));
+      markFriendReadFresh('outgoing');
     }
 
     set({ isLoading: false });
@@ -176,6 +229,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       set({ error: result.error.message, isLoading: false });
       throw new Error(result.error.message);
     }
+    invalidateFriendReads(['friends', 'incoming']);
     await Promise.all([get().fetchFriends(), get().fetchPendingRequests()]);
     set({ isLoading: false });
   },
@@ -188,6 +242,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       set({ error: result.error.message, isLoading: false });
       throw new Error(result.error.message);
     }
+    invalidateFriendReads(['incoming']);
     await get().fetchPendingRequests();
     set({ isLoading: false });
   },
@@ -215,6 +270,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       set({ error: result.error.message, isLoading: false });
       throw new Error(result.error.message);
     }
+    invalidateFriendReads(['friends', 'incoming']);
     set((state) => ({
       friends: state.friends.filter((f) => f.id !== userId),
       pendingRequests: state.pendingRequests.filter((r) => r.user.id !== userId),
@@ -245,14 +301,16 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
 
   clearError: () => set({ error: null }),
 
-  reset: () =>
+  reset: () => {
+    resetFriendReadGuards();
     set({
       friends: [],
       pendingRequests: [],
       sentRequests: [],
       isLoading: false,
       error: null,
-    }),
+    });
+  },
 }));
 
 registerFriendBlockSyncHandler((userId) => {

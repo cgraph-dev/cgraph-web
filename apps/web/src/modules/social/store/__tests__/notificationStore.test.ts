@@ -73,6 +73,7 @@ const getInitialState = () => ({
 });
 
 beforeEach(() => {
+  useNotificationStore.getState().reset();
   useNotificationStore.setState(getInitialState());
   clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE, 'notifications:read']);
   vi.clearAllMocks();
@@ -144,6 +145,28 @@ describe('NotificationStore', () => {
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/notifications', {
         params: { limit: 20 },
       });
+    });
+
+    it('coalesces concurrent first-page fetches', async () => {
+      mockedApi.get.mockResolvedValueOnce({ data: { notifications: [] } });
+
+      const first = useNotificationStore.getState().fetchNotifications();
+      const second = useNotificationStore.getState().fetchNotifications();
+      await Promise.all([first, second]);
+
+      expect(mockedApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/notifications', {
+        params: { limit: 20 },
+      });
+    });
+
+    it('skips immediate duplicate first-page refreshes after success', async () => {
+      mockedApi.get.mockResolvedValueOnce({ data: { notifications: [] } });
+
+      await useNotificationStore.getState().fetchNotifications();
+      await useNotificationStore.getState().fetchNotifications();
+
+      expect(mockedApi.get).toHaveBeenCalledTimes(1);
     });
 
     it('resets isLoading on error', async () => {
