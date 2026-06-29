@@ -177,8 +177,7 @@ export interface RateLimitCooldownError extends Error {
 export function createRateLimitCooldownError(remainingMs: number): RateLimitCooldownError {
   const retryAfterMs = Math.max(remainingMs, 1000);
   const message = formatRateLimitWait(retryAfterMs);
-  const error: RateLimitCooldownError = Object.assign(new Error(message), {
-    name: 'RateLimitCooldownError',
+  const details = {
     code: RATE_LIMIT_COOLDOWN_ERROR_CODE,
     isRateLimitCooldown: true,
     response: {
@@ -191,7 +190,9 @@ export function createRateLimitCooldownError(remainingMs: number): RateLimitCool
         },
       },
     },
-  });
+  } satisfies Pick<RateLimitCooldownError, 'code' | 'isRateLimitCooldown' | 'response'>;
+  const error = Object.assign(new Error(message), details);
+  error.name = 'RateLimitCooldownError';
   return error;
 }
 
