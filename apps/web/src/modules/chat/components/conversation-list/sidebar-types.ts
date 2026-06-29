@@ -49,6 +49,7 @@ export interface ConversationSidebarProps {
   isLoading: boolean;
   onSearchChange: (query: string) => void;
   onOpenSearch: () => void;
+  onAddFriend: () => void;
   onNewConversation: () => void;
   onMarkAsRead: (conversationId: string) => void;
   onMarkAsUnread: (conversationId: string) => void;

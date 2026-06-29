@@ -12,6 +12,7 @@ import {
   MagnifyingGlassPlusIcon,
   ChatBubbleLeftRightIcon,
   InboxIcon,
+  UserPlusIcon,
 } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { EmptyState } from './empty-state';
@@ -34,6 +35,7 @@ export function ConversationSidebar({
   isLoading,
   onSearchChange,
   onOpenSearch,
+  onAddFriend,
   onNewConversation,
   onMarkAsRead,
   onMarkAsUnread,
@@ -74,6 +76,18 @@ export function ConversationSidebar({
               whileTap={{ scale: 0.88 }}
             >
               <MagnifyingGlassPlusIcon className="h-5 w-5 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+            </motion.button>
+            <motion.button
+              onClick={() => {
+                onAddFriend();
+                HapticFeedback.medium();
+              }}
+              className="group rounded-xl border border-transparent p-2 text-white/40 backdrop-blur-md transition-all hover:border-[var(--token-border-muted)] hover:bg-[var(--token-card-bg)/0.4] hover:text-white hover:shadow-[0_4px_16px_rgba(0,0,0,0.2),rgba(255,255,255,0.02)_0px_1px_1px_inset]"
+              title="Add friend"
+              aria-label="Add friend"
+              whileTap={{ scale: 0.88 }}
+            >
+              <UserPlusIcon className="h-5 w-5 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
             </motion.button>
             <motion.button
               onClick={() => {

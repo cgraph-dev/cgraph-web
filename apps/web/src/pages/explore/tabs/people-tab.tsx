@@ -7,9 +7,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/outline';
-import { useSearchStore } from '@/modules/search/store';
 import { useFriendStore } from '@/modules/social/store';
 import { useAuthStore } from '@/modules/auth/store';
+import { useUserSearch } from '@/modules/social/hooks/useUserSearch';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { publicProfilePath } from '@/lib/profile-route';
 import type { Friend, FriendRequest } from '@/modules/social/store';
@@ -19,16 +19,12 @@ export function PeopleTab() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
 
-  const { users, isLoading, search: performSearch, setQuery: setSearchQuery } = useSearchStore();
+  const { results: users, isLoading, error } = useUserSearch(query);
   const { friends, sentRequests, pendingRequests, sendRequest } = useFriendStore();
   const { user: currentUser } = useAuthStore();
 
   function handleSearch(value: string) {
     setQuery(value);
-    setSearchQuery(value);
-    if (value.length >= 2) {
-      performSearch(value);
-    }
   }
 
   return (
@@ -63,8 +59,14 @@ export function PeopleTab() {
         </div>
       )}
 
+      {query.length >= 2 && !isLoading && error && (
+        <div className="py-10 text-center text-sm text-red-300/80">
+          Could not search people right now.
+        </div>
+      )}
+
       {/* No results */}
-      {query.length >= 2 && !isLoading && users.length === 0 && (
+      {query.length >= 2 && !isLoading && !error && users.length === 0 && (
         <div className="py-10 text-center text-sm text-white/40">No people found for "{query}"</div>
       )}
 
@@ -81,6 +83,7 @@ export function PeopleTab() {
               sentRequests.some((r: FriendRequest) => r.user.id === user.id) ||
               pendingRequests.some((r: FriendRequest) => r.user.id === user.id);
             const profilePath = publicProfilePath({ id: user.id, username: user.username });
+            const displayName = user.display_name ?? user.username;
 
             return (
               <div
@@ -100,15 +103,13 @@ export function PeopleTab() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    (user.display_name ?? user.username).charAt(0).toUpperCase()
+                    displayName.charAt(0).toUpperCase()
                   )}
                 </div>
 
                 {/* Info */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-white">
-                    {user.display_name ?? user.username}
-                  </p>
+                  <p className="truncate text-sm font-semibold text-white">{displayName}</p>
                   <p className="truncate text-xs text-white/40">@{user.username}</p>
                 </div>
 
