@@ -611,7 +611,7 @@
     box-shadow:
       inset 0 0 18px rgba(255, 255, 255, 0.08),
       0 0 18px color-mix(in srgb, currentColor 28%, transparent);
-    animation: cgraph-cosmetic-glow-breathe 3.8s ease-in-out infinite;
+    animation: none;
   }
 
   .cgraph-display-name {
@@ -719,7 +719,7 @@
   .cgraph-game-avatar-frame {
     isolation: isolate;
     opacity: 1;
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.14));
+    filter: none;
   }
 
   .cgraph-game-avatar-frame-asset {
@@ -1135,42 +1135,14 @@
   100% { background-position: 0% -200%; }
 }
 
-/* Auth card flowing gradient border — matches landing page marketing-btn */
-@keyframes auth-border-flow {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
 .auth-card-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(16, 185, 129, 0.4) 20%,
-    color-mix(in srgb, var(--color-brand-purple, #8b5cf6) 45%, transparent) 40%,
-    rgba(16, 185, 129, 0.4) 60%,
-    color-mix(in srgb, var(--color-brand-purple, #8b5cf6) 30%, transparent) 80%,
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: auth-border-flow 5s linear infinite;
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0.5;
-  z-index: 1;
-  transition: opacity 0.5s ease;
+  content: none;
+  display: none;
+  animation: none;
 }
 
 .auth-card-border:hover::before {
-  opacity: 0.8;
+  opacity: 0;
 }
 
 /* Auth card inner ambient glow — emerald and purple corner accents */

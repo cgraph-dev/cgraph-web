@@ -243,7 +243,7 @@ export default function Avatar({
   }
 
   if (borderImageUrl) {
-    const frameBorderWidth = Math.max(6, Math.round(cfg.px * 0.22));
+    const frameBorderWidth = Math.max(2, Math.round(cfg.px * 0.06));
     const frameSize = cfg.px + frameBorderWidth * 2;
     return (
       <span

@@ -70,7 +70,6 @@ function NamePreview({
 
   return (
     <span className="relative inline-flex min-h-16 min-w-[14rem] max-w-full items-center justify-center rounded-2xl border border-white/10 bg-black/15 px-8 shadow-[inset_0_0_28px_rgba(255,255,255,0.035),0_12px_40px_rgba(0,0,0,0.24)]">
-      <span className="pointer-events-none absolute inset-x-8 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/16 to-transparent" />
       <DisplayName
         name={name}
         font={font}
@@ -126,7 +125,6 @@ export function NameStylesSection({
           secondaryColor={selectedSecondaryColor}
           name={previewName}
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
       </GlassCard>
 
       <div>
@@ -178,7 +176,6 @@ export function NameStylesSection({
                 }`}
               >
                 <div className="relative mb-2 flex h-9 w-full items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-black/15 px-2">
-                  <span className="pointer-events-none absolute inset-x-3 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   <DisplayName
                     name={config.label}
                     font={getNameFont(selectedFont)}

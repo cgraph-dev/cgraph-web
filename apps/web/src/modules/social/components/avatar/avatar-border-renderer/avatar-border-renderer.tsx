@@ -130,7 +130,8 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
       <motion.div
         ref={containerRef}
         className={cn(
-          'cgraph-game-avatar-frame relative isolate flex cursor-pointer items-center justify-center overflow-visible',
+          'cgraph-game-avatar-frame relative isolate flex items-center justify-center overflow-visible',
+          interactive && 'cursor-pointer',
           className
         )}
         style={{ width: size, height: size }}
@@ -219,31 +220,12 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
   return (
     <motion.div
       ref={containerRef}
-      className={cn('relative flex cursor-pointer items-center justify-center', className)}
+      className={cn('relative flex items-center justify-center', interactive && 'cursor-pointer', className)}
       style={containerStyle}
       onClick={onClick}
       whileHover={interactive && !reducedMotion ? { scale: 1.05 } : undefined}
       whileTap={interactive && !reducedMotion ? { scale: 0.98 } : undefined}
     >
-      {/* Outer glow effect */}
-      {getAnimationTypeFromBorder(border.type) !== 'none' && !reducedMotion && (
-        <motion.div
-          className="absolute inset-0 rounded-full blur-md"
-          style={{
-            background: `radial-gradient(circle, ${colors.accent}40 0%, transparent 70%)`,
-          }}
-          animate={{
-            opacity: [0.5, 0.8, 0.5],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: durations.loop.ms / 1000 / finalAnimationSpeed,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-      )}
-
       {/* Animated border ring */}
       <motion.div
         className="absolute inset-0 rounded-full"
@@ -253,23 +235,6 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
         }}
         animate={getAnimationVariant()}
       >
-        {/* Shimmer overlay */}
-        {getAnimationTypeFromBorder(border.type) === 'shimmer' && !reducedMotion && (
-          <motion.div
-            className="absolute inset-0 overflow-hidden rounded-full"
-            style={{
-              background: `linear-gradient(90deg, transparent, ${colors.accent}60, transparent)`,
-              backgroundSize: '200% 100%',
-            }}
-            animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
-            transition={{
-              duration: durations.cinematic.ms / 1000 / finalAnimationSpeed,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          />
-        )}
-
         {/* Rotating ring for rotate animations */}
         {(getAnimationTypeFromBorder(border.type) === 'rotate' ||
           border.type.includes('rotating')) &&
@@ -300,28 +265,6 @@ export const AvatarBorderRenderer = memo(function AvatarBorderRenderer({
       >
         {avatarContent}
       </div>
-      {/* Ripple effect for certain borders */}
-      {getAnimationTypeFromBorder(border.type) === 'ripple' && !reducedMotion && (
-        <>
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="absolute inset-0 rounded-full border-2"
-              style={{ borderColor: colors.accent }}
-              animate={{
-                scale: [1, 1.5],
-                opacity: [0.6, 0],
-              }}
-              transition={{
-                duration: durations.loop.ms / 1000 / finalAnimationSpeed,
-                repeat: Infinity,
-                delay: i * 0.6,
-                ease: 'easeOut',
-              }}
-            />
-          ))}
-        </>
-      )}
 
       {/* Premium badge indicator */}
       {border.isPremium && (

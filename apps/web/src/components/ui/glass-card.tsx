@@ -26,7 +26,7 @@ export default function GlassCard({
   shimmer: _shimmer = false,
   borderGradient = false,
   particles = false,
-  spotlight = true,
+  spotlight = false,
   themeVariant: themeVariantOverride,
   className,
   ...props
@@ -74,7 +74,8 @@ export default function GlassCard({
     damping: 20,
   });
 
-  // Spotlight radial gradient that follows cursor — color is theme-dependent
+  // Spotlight remains opt-in. Profile/theme surfaces must never receive a
+  // synthetic moving reflection on top of user-selected artwork.
   const spotlightBackground = useMotionTemplate`radial-gradient(300px circle at ${spotlightX}px ${spotlightY}px, ${behavior.spotlightColor}, transparent 70%)`;
 
   const handleMouseMoveInternal = (e: React.MouseEvent<HTMLDivElement>) => {

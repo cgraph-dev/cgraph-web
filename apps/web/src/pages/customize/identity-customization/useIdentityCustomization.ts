@@ -17,6 +17,7 @@ import {
 import { useAuthStore, type User } from '@/modules/auth/store';
 import { getApiErrorMessage } from '@/modules/auth/store/authStore.utils';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { userHasPremiumAccess } from '@/modules/settings/store/customization/customizationStore.schema';
 import toast from 'react-hot-toast';
 import {
   ALL_BORDERS,
@@ -200,8 +201,7 @@ const FREE_NAMEPLATE_IDS = new Set(
 export function hasPremiumAccessForCustomization(
   user: Pick<User, 'isPremium' | 'subscription'> | null | undefined
 ): boolean {
-  const tier = user?.subscription?.tier;
-  return user?.isPremium === true || tier === 'premium' || tier === 'enterprise';
+  return userHasPremiumAccess(user ?? null);
 }
 
 export function isBorderUnlockedForCustomization(
@@ -677,7 +677,9 @@ export function useIdentityCustomization() {
         }
       } catch {
         if (!canceled) {
-          applyOwnership(createEmptyOwnership());
+          const emptyOwnership = createEmptyOwnership();
+          hydrateEquippedCosmetics(emptyOwnership, hasPremiumAccess);
+          applyOwnership(emptyOwnership);
           toast.error('Could not load cosmetic inventory');
         }
       }
@@ -693,6 +695,7 @@ export function useIdentityCustomization() {
     user?.isPremium,
     user?.subscription?.tier,
     user?.subscription?.status,
+    user?.subscription?.expiresAt,
     fetchCustomizations,
     hasPremiumAccess,
   ]);

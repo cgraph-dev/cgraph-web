@@ -18,6 +18,19 @@ describe('identity customization premium access', () => {
     ).toBe(true);
   });
 
+  it('does not treat expired premium as customization access', () => {
+    expect(
+      hasPremiumAccessForCustomization({
+        isPremium: true,
+        subscription: {
+          tier: 'premium',
+          status: 'active',
+          expiresAt: new Date(Date.now() - 60_000).toISOString(),
+        },
+      })
+    ).toBe(false);
+  });
+
   it('unlocks premium catalog borders without requiring an inventory row', () => {
     expect(
       isBorderUnlockedForCustomization(

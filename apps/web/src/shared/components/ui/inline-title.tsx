@@ -25,11 +25,11 @@ const SIZE_CLASSES = {
 } as const;
 
 const IMAGE_SIZE_CLASSES = {
-  xs: 'h-8 w-36',
-  sm: 'h-10 w-48',
-  md: 'h-14 w-64',
-  lg: 'h-16 w-72',
-  xl: 'h-20 w-80',
+  xs: 'h-9 w-40',
+  sm: 'h-12 w-56',
+  md: 'h-16 w-72',
+  lg: 'h-20 w-80',
+  xl: 'h-24 w-96',
 } as const;
 
 export const InlineTitle = memo(function InlineTitle({

@@ -108,7 +108,7 @@ export function getAnimationTypeFromBorder(borderType: string): string {
   if (borderType.includes('ripple')) return 'ripple';
   if (borderType.includes('bounce')) return 'bounce';
   if (borderType === 'static' || borderType === 'none') return 'none';
-  return 'pulse'; // Default fallback
+  return 'none';
 }
 
 export const getThemeStyles = (theme: BorderTheme, colors: BorderColors): React.CSSProperties => {

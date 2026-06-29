@@ -152,22 +152,26 @@ export const AvatarZone = memo(function AvatarZone({
         data-avatar-container-size={avatarSize}
         style={{ width: frameSize, height: frameSize }}
       >
-        {/* Ambient halo glow behind avatar */}
-        <div
-          className="pointer-events-none absolute z-0 rounded-full"
-          style={{
-            inset: isMini ? 2 : 0,
-            background: `radial-gradient(circle, color-mix(in srgb, ${accentColor} 14%, transparent) 0%, transparent 70%)`,
-            animation: 'pc-halo-pulse 3.5s ease-in-out infinite',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute z-[1] rounded-full border border-white/[0.06]"
-          style={{
-            inset: isMini ? 12 : 14,
-            boxShadow: `0 0 26px color-mix(in srgb, ${accentColor} 16%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`,
-          }}
-        />
+        {!borderConfig && (
+          <>
+            {/* Ambient halo glow behind plain avatars only. Image frames carry their own art. */}
+            <div
+              className="pointer-events-none absolute z-0 rounded-full"
+              style={{
+                inset: isMini ? 2 : 0,
+                background: `radial-gradient(circle, color-mix(in srgb, ${accentColor} 14%, transparent) 0%, transparent 70%)`,
+                animation: 'pc-halo-pulse 3.5s ease-in-out infinite',
+              }}
+            />
+            <div
+              className="pointer-events-none absolute z-[1] rounded-full border border-white/[0.06]"
+              style={{
+                inset: isMini ? 12 : 14,
+                boxShadow: `0 0 26px color-mix(in srgb, ${accentColor} 16%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`,
+              }}
+            />
+          </>
+        )}
 
         {/* Energy ring SVG (hidden when Lottie border is active) */}
         {!borderConfig && (

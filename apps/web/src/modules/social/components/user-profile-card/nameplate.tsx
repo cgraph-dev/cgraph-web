@@ -59,11 +59,20 @@ function getNameEffectStyles(
     '--cgraph-name-secondary': secondary,
     '--cgraph-name-shadow': 'rgba(0,0,0,0.45)',
   };
+  const clippedGradient = (gradient: string): React.CSSProperties => ({
+    backgroundImage: gradient,
+    backgroundSize: '220% 100%',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    color,
+    WebkitTextFillColor: 'transparent',
+  });
+
   switch (effect) {
     case 'gradient':
       return {
         ...vars,
-        color,
+        ...clippedGradient(`linear-gradient(135deg, ${color}, ${secondary}, ${color})`),
         textShadow: `0 0 10px ${secondary}66`,
       };
     case 'neon':
@@ -88,7 +97,9 @@ function getNameEffectStyles(
     case 'holo':
       return {
         ...vars,
-        color,
+        ...clippedGradient(
+          `linear-gradient(110deg, ${color}, #7dd3fc, ${secondary}, #f0abfc, ${color})`
+        ),
         textShadow: `1px 0 #7dd3fc, -1px 0 #f0abfc, 0 0 14px ${secondary}66`,
         animation: 'cgraph-display-gradient-pan 3.8s linear infinite',
       };
@@ -102,7 +113,9 @@ function getNameEffectStyles(
     case 'chrome':
       return {
         ...vars,
-        color,
+        ...clippedGradient(
+          `linear-gradient(180deg, #ffffff 0%, ${color} 30%, ${secondary} 58%, #111827 100%)`
+        ),
         textShadow: `0 1px 0 rgba(0,0,0,0.6), 0 0 12px ${secondary}55`,
       };
     case 'pulse':
