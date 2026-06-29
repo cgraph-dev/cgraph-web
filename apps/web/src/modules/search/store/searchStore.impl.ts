@@ -4,6 +4,12 @@
 import { create } from 'zustand';
 import { apiClient, http } from '@/lib/api-client';
 import { ensureObject, extractErrorMessage } from '@/lib/api-utils';
+import {
+  formatRateLimitWait,
+  getMaxRateLimitRemainingMs,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 import type {
   SearchUser,
   SearchGroup,
@@ -48,6 +54,7 @@ const MAX_SEARCH_FORUMS = 50;
 const MAX_SEARCH_POSTS = 100;
 const MAX_SEARCH_MESSAGES = 100;
 const MAX_GLOBAL_SEARCH_RESULTS = 50;
+const SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
 
 type SearchBuckets = Pick<SearchState, 'users' | 'groups' | 'forums' | 'posts' | 'messages'>;
 
@@ -129,6 +136,11 @@ function emptyBuckets(): SearchBuckets {
     posts: [],
     messages: [],
   };
+}
+
+function getSearchCooldownMessage(): string | null {
+  const remaining = getMaxRateLimitRemainingMs(SEARCH_RATE_LIMIT_SCOPES);
+  return remaining > 0 ? formatRateLimitWait(remaining) : null;
 }
 
 function normalizeGlobalResults(results: readonly ApiSearchResult[]): SearchBuckets {
@@ -262,86 +274,97 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       return;
     }
 
+    const cooldownMessage = getSearchCooldownMessage();
+    if (cooldownMessage) {
+      set({
+        ...emptyBuckets(),
+        error: cooldownMessage,
+        isLoading: false,
+        hasSearched: true,
+      });
+      return;
+    }
+
     set({ isLoading: true, error: null });
 
     try {
       if (category === 'all') {
         const result = await apiClient.search.global(query, { limit: MAX_GLOBAL_SEARCH_RESULTS });
+        const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
         set({
           ...(result.ok ? normalizeGlobalResults(result.data.results) : emptyBuckets()),
+          error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
         });
         return;
       }
 
-      const searchPromises: Promise<void>[] = [];
-
-      // Search users
       if (category === 'users') {
-        searchPromises.push(
-          apiClient.search
-            .searchUsers(query)
-            .then((result) => {
-              set({ users: result.ok ? result.data.slice(0, MAX_SEARCH_USERS) : [] });
-            })
-            .catch(() => set({ users: [] }))
-        );
+        const result = await apiClient.search.searchUsers(query);
+        const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        set({
+          users: result.ok ? result.data.slice(0, MAX_SEARCH_USERS) : [],
+          error: rateLimitMessage,
+          isLoading: false,
+          hasSearched: true,
+        });
+        return;
       }
 
-      // Search messages
       if (category === 'messages') {
-        searchPromises.push(
-          apiClient.search
-            .searchMessages(query)
-            .then((result) => {
-              set({ messages: result.ok ? result.data.slice(0, MAX_SEARCH_MESSAGES) : [] });
-            })
-            .catch(() => set({ messages: [] }))
-        );
+        const result = await apiClient.search.searchMessages(query);
+        const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        set({
+          messages: result.ok ? result.data.slice(0, MAX_SEARCH_MESSAGES) : [],
+          error: rateLimitMessage,
+          isLoading: false,
+          hasSearched: true,
+        });
+        return;
       }
 
-      // Search posts
       if (category === 'posts') {
-        searchPromises.push(
-          apiClient.search
-            .searchPosts(query)
-            .then((result) => {
-              set({ posts: result.ok ? result.data.slice(0, MAX_SEARCH_POSTS) : [] });
-            })
-            .catch(() => set({ posts: [] }))
-        );
+        const result = await apiClient.search.searchPosts(query);
+        const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        set({
+          posts: result.ok ? result.data.slice(0, MAX_SEARCH_POSTS) : [],
+          error: rateLimitMessage,
+          isLoading: false,
+          hasSearched: true,
+        });
+        return;
       }
 
-      // Search groups
       if (category === 'groups') {
-        searchPromises.push(
-          apiClient.search
-            .searchGroups(query)
-            .then((result) => {
-              set({ groups: result.ok ? result.data.slice(0, MAX_SEARCH_GROUPS) : [] });
-            })
-            .catch(() => set({ groups: [] }))
-        );
+        const result = await apiClient.search.searchGroups(query);
+        const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        set({
+          groups: result.ok ? result.data.slice(0, MAX_SEARCH_GROUPS) : [],
+          error: rateLimitMessage,
+          isLoading: false,
+          hasSearched: true,
+        });
+        return;
       }
 
-      // Search forums
       if (category === 'forums') {
-        searchPromises.push(
-          apiClient.search
-            .searchForums(query)
-            .then((result) => {
-              set({ forums: result.ok ? result.data.slice(0, MAX_SEARCH_FORUMS) : [] });
-            })
-            .catch(() => set({ forums: [] }))
-        );
+        const result = await apiClient.search.searchForums(query);
+        const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        set({
+          forums: result.ok ? result.data.slice(0, MAX_SEARCH_FORUMS) : [],
+          error: rateLimitMessage,
+          isLoading: false,
+          hasSearched: true,
+        });
+        return;
       }
 
-      await Promise.all(searchPromises);
       set({ isLoading: false, hasSearched: true });
     } catch (error: unknown) {
+      const rateLimitMessage = rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, error);
       set({
-        error: extractErrorMessage(error, 'Search failed'),
+        error: rateLimitMessage ?? extractErrorMessage(error, 'Search failed'),
         isLoading: false,
         hasSearched: true,
       });

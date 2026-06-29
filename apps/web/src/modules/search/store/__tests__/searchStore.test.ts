@@ -45,6 +45,11 @@ vi.mock('@/lib/api-client', () => {
 
 import { api } from '@/lib/api-client';
 import { apiClient } from '@/lib/api-client';
+import {
+  clearRateLimitScopes,
+  rememberRateLimit,
+  USER_API_RATE_LIMIT_SCOPE,
+} from '@/lib/api-rate-limit';
 
 // Typed mock helpers — vi.mocked() is the assertion-free Vitest idiom
 const mockedApiGet = vi.mocked(api.get);
@@ -177,6 +182,7 @@ function setupEmptyMocks() {
 // Tests
 
 afterEach(() => {
+  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE]);
   useSearchStore.setState(getInitialState());
   vi.clearAllMocks();
 });
@@ -320,6 +326,54 @@ describe('Search Store', () => {
 
       expect(useSearchStore.getState().users).toEqual([]);
       expect(useSearchStore.getState().groups).toEqual([]);
+    });
+
+    it('should skip global search while the user API cooldown is active', async () => {
+      rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], {
+        response: {
+          status: 429,
+          data: {
+            error: {
+              message: 'Too many requests. Please wait 18 seconds before retrying.',
+              details: { retry_after_seconds: 18 },
+            },
+          },
+        },
+      });
+
+      useSearchStore.getState().setQuery('alice');
+      await useSearchStore.getState().search();
+
+      const s = useSearchStore.getState();
+      expect(mockedSearch.global).not.toHaveBeenCalled();
+      expect(s.error).toContain('Too many requests');
+      expect(s.isLoading).toBe(false);
+      expect(s.hasSearched).toBe(true);
+    });
+
+    it('should remember global search rate limits and skip the next search', async () => {
+      mockedSearch.global.mockRejectedValueOnce({
+        response: {
+          status: 429,
+          data: {
+            error: {
+              message: 'Too many requests. Please wait 18 seconds before retrying.',
+              details: { retry_after_seconds: 18 },
+            },
+          },
+        },
+      });
+
+      useSearchStore.getState().setQuery('alice');
+      await useSearchStore.getState().search();
+
+      expect(useSearchStore.getState().error).toContain('Too many requests');
+
+      mockedSearch.global.mockClear();
+      await useSearchStore.getState().search('alice again');
+
+      expect(mockedSearch.global).not.toHaveBeenCalled();
+      expect(useSearchStore.getState().error).toContain('Too many requests');
     });
   });
 
