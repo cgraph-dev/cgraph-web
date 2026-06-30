@@ -4,7 +4,7 @@
 import { createLogger } from '@/lib/logger';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Notification as ApiNotification } from '@cgraph-dev/api-client';
+import type { NotificationContract as ApiNotification } from '@cgraph-dev/api-client';
 import { apiClient } from '@/lib/api-client';
 import { isRecord, asString } from '@/lib/api-utils';
 import {

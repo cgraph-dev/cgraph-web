@@ -5,7 +5,7 @@ import { extname, join } from 'node:path';
 
 const expectedPackages = new Map([
   ['@cgraph-dev/animation-constants', '1.1.13'],
-  ['@cgraph-dev/api-client', '1.1.1'],
+  ['@cgraph-dev/api-client', '1.2.0'],
   ['@cgraph-dev/design-tokens', '1.0.1'],
   ['@cgraph-dev/shared-types', '1.1.13'],
   ['@cgraph-dev/utils', '1.0.1'],
