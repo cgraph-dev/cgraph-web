@@ -4,6 +4,7 @@
 import { createLogger } from '@/lib/logger';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import type { Notification as ApiNotification } from '@cgraph-dev/api-client';
 import { apiClient } from '@/lib/api-client';
 import { isRecord, asString } from '@/lib/api-utils';
 import {
@@ -35,15 +36,24 @@ function resetNotificationFetchGuards() {
   notificationRootLastSuccessAt = 0;
 }
 
+type NotificationApiRecord = ApiNotification & Record<string, unknown>;
+type NotificationStoreType = ApiNotification['type'] &
+  ('message' | 'friend_request' | 'group_invite' | 'mention' | 'forum_reply' | 'system');
+type NotificationStoreData = NonNullable<ApiNotification['data']>;
+
+function isNotificationApiRecord(value: ApiNotification): value is NotificationApiRecord {
+  return isRecord(value);
+}
+
 export interface Notification {
-  id: string;
-  type: 'message' | 'friend_request' | 'group_invite' | 'mention' | 'forum_reply' | 'system';
-  title: string;
+  id: ApiNotification['id'];
+  type: NotificationStoreType;
+  title: ApiNotification['title'];
   body: string;
   isRead: boolean;
   action?: Record<string, unknown> | null;
   actionUrl?: string | null;
-  data: Record<string, unknown>;
+  data: NotificationStoreData;
   sender?: {
     id: string;
     username: string;
@@ -103,7 +113,6 @@ export const useNotificationStore = create<NotificationState>()(
             set({ isLoading: false });
             return;
           }
-          // Map apiClient Notification (snake_case, optional fields) -> store Notification (camelCase, required fields)
           const knownTypes: Notification['type'][] = [
             'message',
             'friend_request',
@@ -112,36 +121,38 @@ export const useNotificationStore = create<NotificationState>()(
             'forum_reply',
             'system',
           ];
-          const newNotifications: Notification[] = result.data.filter(isRecord).map((n) => {
-            const rawType = asString(n['type']);
-            const type: Notification['type'] = knownTypes.find((t) => t === rawType) ?? 'system';
-            const actor = isRecord(n['actor'])
-              ? n['actor']
-              : isRecord(n['sender'])
-                ? n['sender']
-                : null;
-            const sender = actor
-              ? {
-                  id: asString(actor['id']),
-                  username: asString(actor['username']),
-                  displayName:
-                    typeof actor['display_name'] === 'string' ? actor['display_name'] : null,
-                  avatarUrl: typeof actor['avatar_url'] === 'string' ? actor['avatar_url'] : null,
-                }
-              : undefined;
-            return {
-              id: asString(n['id']),
-              type,
-              title: asString(n['title']),
-              body: asString(n['body'] ?? n['message']),
-              isRead: Boolean(n['is_read'] ?? n['read'] ?? false),
-              action: isRecord(n['action']) ? n['action'] : null,
-              actionUrl: typeof n['action_url'] === 'string' ? n['action_url'] : null,
-              data: isRecord(n['data']) ? n['data'] : {},
-              sender,
-              createdAt: asString(n['created_at']),
-            };
-          });
+          const newNotifications: Notification[] = result.data
+            .filter(isNotificationApiRecord)
+            .map((n) => {
+              const rawType = asString(n['type']);
+              const type: Notification['type'] = knownTypes.find((t) => t === rawType) ?? 'system';
+              const actor = isRecord(n['actor'])
+                ? n['actor']
+                : isRecord(n['sender'])
+                  ? n['sender']
+                  : null;
+              const sender = actor
+                ? {
+                    id: asString(actor['id']),
+                    username: asString(actor['username']),
+                    displayName:
+                      typeof actor['display_name'] === 'string' ? actor['display_name'] : null,
+                    avatarUrl: typeof actor['avatar_url'] === 'string' ? actor['avatar_url'] : null,
+                  }
+                : undefined;
+              return {
+                id: asString(n['id']),
+                type,
+                title: asString(n['title']),
+                body: asString(n['body'] ?? n['message']),
+                isRead: Boolean(n['is_read'] ?? n['read'] ?? false),
+                action: isRecord(n['action']) ? n['action'] : null,
+                actionUrl: typeof n['action_url'] === 'string' ? n['action_url'] : null,
+                data: isRecord(n['data']) ? n['data'] : {},
+                sender,
+                createdAt: asString(n['created_at']),
+              };
+            });
           // Derive pagination from the raw array length (cursor support via store state)
           const hasMore = newNotifications.length === 20;
 
