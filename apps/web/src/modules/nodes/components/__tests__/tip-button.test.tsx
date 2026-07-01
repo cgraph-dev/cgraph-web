@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-const { mockUseSendTip, mockUseNodeWallet } = vi.hoisted(() => ({
+const { mockUseSendTip, mockUseNodeWallet, mockUseSpendableNodeBalance } = vi.hoisted(() => ({
   mockUseSendTip: vi.fn(),
   mockUseNodeWallet: vi.fn(),
+  mockUseSpendableNodeBalance: vi.fn(),
 }));
 
 vi.mock('../../hooks/useNodes', () => ({
   useSendTip: mockUseSendTip,
   useNodeWallet: mockUseNodeWallet,
+  useSpendableNodeBalance: mockUseSpendableNodeBalance,
 }));
 
 vi.mock('@cgraph-dev/shared-types/nodes', () => ({
@@ -37,6 +39,7 @@ describe('TipButton', () => {
     mockUseNodeWallet.mockReturnValue({
       data: { available_balance: 5000 },
     });
+    mockUseSpendableNodeBalance.mockReturnValue(5000);
   });
   it('renders a button with tip text', () => {
     render(<TipButton {...makeDefaultProps()} />);
