@@ -1,5 +1,7 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { nodesKeys } from '../useNodes';
 
 const { mockNodesApi, mockSafeRedirect } = vi.hoisted(() => ({
   mockNodesApi: {
@@ -8,6 +10,7 @@ const { mockNodesApi, mockSafeRedirect } = vi.hoisted(() => ({
     getBundles: vi.fn(),
     sendTip: vi.fn(),
     unlockContent: vi.fn(),
+    sendGift: vi.fn(),
     createCheckout: vi.fn(),
     requestWithdrawal: vi.fn(),
   },
@@ -16,9 +19,37 @@ const { mockNodesApi, mockSafeRedirect } = vi.hoisted(() => ({
 
 vi.mock('../../services/nodesApi', () => ({ nodesApi: mockNodesApi }));
 vi.mock('@/lib/security', () => ({ safeRedirect: mockSafeRedirect }));
+
+import {
+  nodesKeys,
+  useSendGift,
+  useSendTip,
+  useSpendableNodeBalance,
+  useUnlockContent,
+} from '../useNodes';
+import { useNodesStore } from '../../store/nodesStore';
+
+function createQueryWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  const wrapper = ({ children }: { readonly children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: queryClient }, children);
+
+  return { queryClient, wrapper };
+}
+
 describe('nodesKeys', () => {
   it('builds wallet key', () => {
     expect(nodesKeys.wallet()).toEqual(['nodes', 'wallet']);
+  });
+
+  it('builds transaction root key', () => {
+    expect(nodesKeys.transactionsRoot()).toEqual(['nodes', 'transactions']);
   });
 
   it('builds transactions key without filter', () => {
@@ -50,6 +81,7 @@ describe('nodesKeys', () => {
 describe('hook API bindings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useNodesStore.getState().reset();
   });
 
   it('nodesApi.getWallet is wired as useNodeWallet queryFn', () => {
@@ -81,5 +113,74 @@ describe('hook API bindings', () => {
 
   it('nodesApi.requestWithdrawal is wired as useRequestWithdrawal mutationFn', () => {
     expect(mockNodesApi.requestWithdrawal).toBeDefined();
+  });
+});
+
+describe('Nodes spendable reservation hooks', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useNodesStore.getState().reset();
+  });
+
+  it('subtracts reserved Nodes from spendable balance', () => {
+    useNodesStore.getState().reserveNodes(40);
+
+    const { result } = renderHook(() =>
+      useSpendableNodeBalance({ available_balance: 125 } as const)
+    );
+
+    expect(result.current).toBe(85);
+  });
+
+  it('reserves tip amount while the mutation is pending and releases after settlement', async () => {
+    let resolveTip!: (value: unknown) => void;
+    mockNodesApi.sendTip.mockReturnValue(
+      new Promise((resolve) => {
+        resolveTip = resolve;
+      })
+    );
+    const { wrapper } = createQueryWrapper();
+    const { result } = renderHook(() => useSendTip(), { wrapper });
+
+    act(() => {
+      result.current.mutate({ recipientId: 'user-2', amount: 75 });
+    });
+
+    await waitFor(() => expect(useNodesStore.getState().reservedNodes).toBe(75));
+
+    await act(async () => {
+      resolveTip({ id: 'tx-1' });
+    });
+
+    await waitFor(() => expect(useNodesStore.getState().reservedNodes).toBe(0));
+    expect(mockNodesApi.sendTip).toHaveBeenCalledWith('user-2', 75);
+  });
+
+  it('releases gift reservation when the server rejects the mutation', async () => {
+    mockNodesApi.sendGift.mockRejectedValue(new Error('insufficient balance'));
+    const { wrapper } = createQueryWrapper();
+    const { result } = renderHook(() => useSendGift(), { wrapper });
+
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({ recipientId: 'user-2', amount: 25 })
+      ).rejects.toThrow('insufficient balance');
+    });
+
+    expect(useNodesStore.getState().reservedNodes).toBe(0);
+    expect(mockNodesApi.sendGift).toHaveBeenCalledWith('user-2', 25, undefined);
+  });
+
+  it('passes content unlock thread id while reserving the provided price', async () => {
+    mockNodesApi.unlockContent.mockResolvedValue({ id: 'tx-2' });
+    const { wrapper } = createQueryWrapper();
+    const { result } = renderHook(() => useUnlockContent(), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({ threadId: 'thread-42', amount: 40 });
+    });
+
+    expect(useNodesStore.getState().reservedNodes).toBe(0);
+    expect(mockNodesApi.unlockContent).toHaveBeenCalledWith('thread-42');
   });
 });

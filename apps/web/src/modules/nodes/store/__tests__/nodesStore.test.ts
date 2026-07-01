@@ -9,7 +9,7 @@ const { mockNodesApi } = vi.hoisted(() => ({
 
 vi.mock('../../services/nodesApi', () => ({ nodesApi: mockNodesApi }));
 
-import { useNodesStore } from '../nodesStore';
+import { getSpendableNodeBalance, useNodesStore } from '../nodesStore';
 const makeWallet = (overrides?: Record<string, unknown>) => ({
   user_id: 'user-1',
   available_balance: 5000,
@@ -44,6 +44,7 @@ describe('useNodesStore', () => {
 
       expect(state.wallet).toBeNull();
       expect(state.bundles).toEqual([]);
+      expect(state.reservedNodes).toBe(0);
       expect(state.isLoading).toBe(false);
       expect(state.error).toBeNull();
     });
@@ -55,6 +56,36 @@ describe('useNodesStore', () => {
       useNodesStore.getState().setWallet(wallet);
 
       expect(useNodesStore.getState().wallet).toEqual(wallet);
+    });
+  });
+  describe('reserved Nodes', () => {
+    it('reserves and releases pending spend without going below zero', () => {
+      useNodesStore.getState().reserveNodes(40);
+      useNodesStore.getState().reserveNodes(15);
+
+      expect(useNodesStore.getState().reservedNodes).toBe(55);
+
+      useNodesStore.getState().releaseReservedNodes(30);
+      expect(useNodesStore.getState().reservedNodes).toBe(25);
+
+      useNodesStore.getState().releaseReservedNodes(100);
+      expect(useNodesStore.getState().reservedNodes).toBe(0);
+    });
+
+    it('ignores invalid reservation amounts', () => {
+      useNodesStore.getState().reserveNodes(Number.NaN);
+      useNodesStore.getState().reserveNodes(-10);
+
+      expect(useNodesStore.getState().reservedNodes).toBe(0);
+    });
+
+    it('returns spendable balance after local reservations', () => {
+      const wallet = makeWallet({ available_balance: 100 });
+
+      useNodesStore.getState().reserveNodes(35);
+
+      expect(useNodesStore.getState().getSpendableBalance(wallet)).toBe(65);
+      expect(getSpendableNodeBalance(wallet, 120)).toBe(0);
     });
   });
   describe('fetchWallet', () => {
@@ -133,6 +164,7 @@ describe('useNodesStore', () => {
       const state = useNodesStore.getState();
       expect(state.wallet).toBeNull();
       expect(state.bundles).toEqual([]);
+      expect(state.reservedNodes).toBe(0);
       expect(state.isLoading).toBe(false);
       expect(state.error).toBeNull();
     });

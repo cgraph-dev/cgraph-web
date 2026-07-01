@@ -6,7 +6,7 @@
  */
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { useSendTip, useNodeWallet } from '../hooks/useNodes';
+import { useSendTip, useNodeWallet, useSpendableNodeBalance } from '../hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
 import { MIN_TIP } from '@cgraph-dev/shared-types/nodes';
 import toast from 'react-hot-toast';
@@ -33,11 +33,12 @@ export function TipModal({
   const [amount, setAmount] = useState<number>(PRESETS[0]);
   const [customMode, setCustomMode] = useState(false);
   const { data: wallet } = useNodeWallet();
+  const spendableBalance = useSpendableNodeBalance(wallet);
   const tipMutation = useSendTip();
 
   if (!isOpen) return null;
 
-  const available = wallet?.available_balance ?? 0;
+  const available = spendableBalance;
   const belowMinimum = amount < MIN_TIP;
   const canTip = amount >= MIN_TIP && amount <= available;
   const creatorReceives = Math.floor(amount * 0.8);

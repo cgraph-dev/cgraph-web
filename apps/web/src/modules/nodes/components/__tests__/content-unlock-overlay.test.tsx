@@ -75,14 +75,14 @@ describe('ContentUnlockOverlay', () => {
 
     expect(screen.getByTestId('glass-card')).toBeInTheDocument();
   });
-  it('calls mutate with postId when unlock button is clicked', () => {
+  it('calls mutate with postId and price when unlock button is clicked', () => {
     const mutate = makeMutateFn();
 
     render(<ContentUnlockOverlay {...makeDefaultProps()} />);
     fireEvent.click(screen.getByText('Unlock for 200 Nodes'));
 
     expect(mutate).toHaveBeenCalledWith(
-      'thread-42',
+      { threadId: 'thread-42', amount: 200 },
       expect.objectContaining({
         onSuccess: expect.any(Function),
         onError: expect.any(Function),

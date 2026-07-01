@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GiftIcon, XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { FocusTrap } from '@/shared/components/accessibility';
-import { useSendGift, useNodeWallet } from '../hooks/useNodes';
+import { useSendGift, useNodeWallet, useSpendableNodeBalance } from '../hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
 import { MIN_TIP, PLATFORM_CUT_PERCENT } from '@cgraph-dev/shared-types/nodes';
 import toast from 'react-hot-toast';
@@ -37,11 +37,12 @@ export function GiftModal({
   const [message, setMessage] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const { data: wallet } = useNodeWallet();
+  const spendableBalance = useSpendableNodeBalance(wallet);
   const giftMutation = useSendGift();
 
   if (!isOpen) return null;
 
-  const available = wallet?.available_balance ?? 0;
+  const available = spendableBalance;
   const belowMinimum = amount < MIN_GIFT;
   const platformCut = Math.floor(amount * PLATFORM_CUT_RATIO);
   const recipientReceives = amount - platformCut;

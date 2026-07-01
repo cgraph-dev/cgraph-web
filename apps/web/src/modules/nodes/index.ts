@@ -23,6 +23,7 @@ export {
   useSendTip,
   useUnlockContent,
   useCreateCheckout,
+  useSpendableNodeBalance,
   nodesKeys,
 } from './hooks/useNodes';
 

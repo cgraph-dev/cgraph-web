@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-const { mockUseSendTip, mockUseNodeWallet } = vi.hoisted(() => ({
+const { mockUseSendTip, mockUseNodeWallet, mockUseSpendableNodeBalance } = vi.hoisted(() => ({
   mockUseSendTip: vi.fn(),
   mockUseNodeWallet: vi.fn(),
+  mockUseSpendableNodeBalance: vi.fn(),
 }));
 
 vi.mock('../../hooks/useNodes', () => ({
   useSendTip: mockUseSendTip,
   useNodeWallet: mockUseNodeWallet,
+  useSpendableNodeBalance: mockUseSpendableNodeBalance,
 }));
 
 vi.mock('@cgraph-dev/shared-types/nodes', () => ({
@@ -44,6 +46,9 @@ describe('TipModal', () => {
     mockUseNodeWallet.mockReturnValue({
       data: { available_balance: 5000 },
     });
+    mockUseSpendableNodeBalance.mockImplementation(
+      (wallet?: { available_balance?: number }) => wallet?.available_balance ?? 0
+    );
     makeMutateFn();
   });
   it('renders nothing when isOpen is false', () => {
@@ -87,6 +92,21 @@ describe('TipModal', () => {
     render(<TipModal {...makeDefaultProps()} />);
     expect(screen.getByText(/Your balance:.*5,000/)).toBeInTheDocument();
   });
+
+  it('uses spendable balance after local reservations', () => {
+    mockUseNodeWallet.mockReturnValue({
+      data: { available_balance: 100 },
+    });
+    mockUseSpendableNodeBalance.mockReturnValue(60);
+
+    render(<TipModal {...makeDefaultProps()} />);
+
+    fireEvent.click(screen.getByText(/100$/));
+
+    expect(screen.getByText(/Your balance:.*60/)).toBeInTheDocument();
+    expect(screen.getByText(/Send.*100/)).toBeDisabled();
+  });
+
   it('selects a preset amount when clicked', () => {
     render(<TipModal {...makeDefaultProps()} />);
 

@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-const { mockUseSendGift, mockUseNodeWallet } = vi.hoisted(() => ({
+const { mockUseSendGift, mockUseNodeWallet, mockUseSpendableNodeBalance } = vi.hoisted(() => ({
   mockUseSendGift: vi.fn(),
   mockUseNodeWallet: vi.fn(),
+  mockUseSpendableNodeBalance: vi.fn(),
 }));
 
 vi.mock('../../hooks/useNodes', () => ({
   useSendGift: mockUseSendGift,
   useNodeWallet: mockUseNodeWallet,
+  useSpendableNodeBalance: mockUseSpendableNodeBalance,
 }));
 
 vi.mock('@cgraph-dev/shared-types/nodes', () => ({
@@ -71,6 +73,9 @@ describe('GiftModal', () => {
     mockUseNodeWallet.mockReturnValue({
       data: { available_balance: 5000 },
     });
+    mockUseSpendableNodeBalance.mockImplementation(
+      (wallet?: { available_balance?: number }) => wallet?.available_balance ?? 0
+    );
   });
   it('returns null when isOpen is false', () => {
     const { container } = render(<GiftModal {...makeDefaultProps({ isOpen: false })} />);
@@ -200,6 +205,20 @@ describe('GiftModal', () => {
     fireEvent.change(input, { target: { value: '50' } });
 
     expect(screen.getByText(/Insufficient balance/)).toBeInTheDocument();
+  });
+
+  it('validates gifts against spendable balance after reservations', () => {
+    mockUseNodeWallet.mockReturnValue({
+      data: { available_balance: 100 },
+    });
+    mockUseSpendableNodeBalance.mockReturnValue(25);
+
+    render(<GiftModal {...makeDefaultProps()} />);
+    const input = screen.getByLabelText(/Amount/);
+    fireEvent.change(input, { target: { value: '50' } });
+
+    expect(screen.getByText(/Insufficient balance.*25.*available/)).toBeInTheDocument();
+    expect(screen.getByText('Send Gift')).toBeDisabled();
   });
 
   it('disables send button when balance is insufficient', () => {

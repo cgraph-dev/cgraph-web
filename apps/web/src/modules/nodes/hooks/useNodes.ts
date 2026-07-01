@@ -5,9 +5,12 @@
  * and mutations for tipping, unlocking, checkout, and gifting.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import { safeRedirect } from '@/lib/security';
 import { nodesApi } from '../services/nodesApi';
 import type { TransactionType } from '../types';
+import { useNodesStore, getSpendableNodeBalance } from '../store/nodesStore';
+import type { Wallet } from '../services/nodesApi';
 import toast from 'react-hot-toast';
 
 const nodesMoneyMutationOptions = {
@@ -17,9 +20,61 @@ const nodesMoneyMutationOptions = {
 export const nodesKeys = {
   all: ['nodes'] as const,
   wallet: () => [...nodesKeys.all, 'wallet'] as const,
+  transactionsRoot: () => [...nodesKeys.all, 'transactions'] as const,
   transactions: (type?: string) => [...nodesKeys.all, 'transactions', type] as const,
   bundles: () => [...nodesKeys.all, 'bundles'] as const,
 };
+
+type ReservedNodesContext = {
+  readonly reservedNodes: number;
+};
+
+type UnlockContentInput =
+  | string
+  | {
+      readonly threadId: string;
+      readonly amount?: number;
+    };
+
+function toReservedNodes(amount: number | undefined) {
+  if (!Number.isFinite(amount)) return 0;
+  return Math.max(0, Math.trunc(amount ?? 0));
+}
+
+function reserveNodeSpend(amount: number | undefined): ReservedNodesContext {
+  const reservedNodes = toReservedNodes(amount);
+  if (reservedNodes > 0) {
+    useNodesStore.getState().reserveNodes(reservedNodes);
+  }
+  return { reservedNodes };
+}
+
+function releaseNodeSpend(context: ReservedNodesContext | undefined) {
+  if (context?.reservedNodes) {
+    useNodesStore.getState().releaseReservedNodes(context.reservedNodes);
+  }
+}
+
+async function refreshNodesLedger(queryClient: QueryClient) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: nodesKeys.wallet() }),
+    queryClient.invalidateQueries({ queryKey: nodesKeys.transactionsRoot() }),
+  ]);
+}
+
+function getUnlockThreadId(input: UnlockContentInput) {
+  return typeof input === 'string' ? input : input.threadId;
+}
+
+function getUnlockAmount(input: UnlockContentInput) {
+  return typeof input === 'string' ? undefined : input.amount;
+}
+
+export function useSpendableNodeBalance(wallet?: Pick<Wallet, 'available_balance'> | null) {
+  const reservedNodes = useNodesStore((state) => state.reservedNodes);
+  return getSpendableNodeBalance(wallet, reservedNodes);
+}
+
 /** Fetch the user's node wallet. */
 export function useNodeWallet() {
   return useQuery({
@@ -53,9 +108,13 @@ export function useSendTip() {
     mutationFn: ({ recipientId, amount }: { recipientId: string; amount: number }) =>
       nodesApi.sendTip(recipientId, amount),
     ...nodesMoneyMutationOptions,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: nodesKeys.wallet() });
-      queryClient.invalidateQueries({ queryKey: nodesKeys.transactions() });
+    onMutate: ({ amount }) => reserveNodeSpend(amount),
+    onSettled: async (_data, _error, _variables, context) => {
+      try {
+        await refreshNodesLedger(queryClient);
+      } finally {
+        releaseNodeSpend(context);
+      }
     },
   });
 }
@@ -64,12 +123,16 @@ export function useSendTip() {
 export function useUnlockContent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (threadId: string) => nodesApi.unlockContent(threadId),
+    mutationFn: (input: UnlockContentInput) => nodesApi.unlockContent(getUnlockThreadId(input)),
     ...nodesMoneyMutationOptions,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: nodesKeys.wallet() });
-      queryClient.invalidateQueries({ queryKey: nodesKeys.transactions() });
-      // Thread data also needs refetch — handled by caller via queryKey invalidation
+    onMutate: (input) => reserveNodeSpend(getUnlockAmount(input)),
+    onSettled: async (_data, _error, _variables, context) => {
+      try {
+        await refreshNodesLedger(queryClient);
+        // Thread data also needs refetch — handled by caller via queryKey invalidation.
+      } finally {
+        releaseNodeSpend(context);
+      }
     },
   });
 }
@@ -106,9 +169,13 @@ export function useSendGift() {
       readonly message?: string;
     }) => nodesApi.sendGift(recipientId, amount, message),
     ...nodesMoneyMutationOptions,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: nodesKeys.wallet() });
-      queryClient.invalidateQueries({ queryKey: nodesKeys.transactions() });
+    onMutate: ({ amount }) => reserveNodeSpend(amount),
+    onSettled: async (_data, _error, _variables, context) => {
+      try {
+        await refreshNodesLedger(queryClient);
+      } finally {
+        releaseNodeSpend(context);
+      }
     },
   });
 }

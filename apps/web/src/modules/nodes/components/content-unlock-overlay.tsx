@@ -25,28 +25,31 @@ export function ContentUnlockOverlay({ postId, price, onUnlocked }: ContentUnloc
   const unlockMutation = useUnlockContent();
 
   const handleUnlock = () => {
-    unlockMutation.mutate(postId, {
-      onSuccess: () => {
-        toast.success('Content unlocked!');
-        onUnlocked?.();
-      },
-      onError: (error) => {
-        const feedback = getNodesActionFeedback(error, 'contentUnlock');
-
-        if (feedback.alreadyComplete) {
-          toast.success('Content already unlocked');
+    unlockMutation.mutate(
+      { threadId: postId, amount: price },
+      {
+        onSuccess: () => {
+          toast.success('Content unlocked!');
           onUnlocked?.();
-          return;
-        }
+        },
+        onError: (error) => {
+          const feedback = getNodesActionFeedback(error, 'contentUnlock');
 
-        if (feedback.shouldOpenShop) {
-          toast.error(feedback.title);
-          navigate('/me/wallet/shop');
-        } else {
-          toast.error(formatNodesToast(feedback));
-        }
-      },
-    });
+          if (feedback.alreadyComplete) {
+            toast.success('Content already unlocked');
+            onUnlocked?.();
+            return;
+          }
+
+          if (feedback.shouldOpenShop) {
+            toast.error(feedback.title);
+            navigate('/me/wallet/shop');
+          } else {
+            toast.error(formatNodesToast(feedback));
+          }
+        },
+      }
+    );
   };
 
   return (
