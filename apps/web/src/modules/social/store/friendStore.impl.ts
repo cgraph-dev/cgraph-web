@@ -216,6 +216,9 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
         ],
       }));
       markFriendReadFresh('outgoing');
+    } else if (result.data.id) {
+      invalidateFriendReads(['outgoing']);
+      await get().fetchSentRequests();
     }
 
     set({ isLoading: false });

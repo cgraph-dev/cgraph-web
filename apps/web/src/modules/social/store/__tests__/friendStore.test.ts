@@ -281,6 +281,47 @@ describe('FriendStore', () => {
       expect(mockedApi.get).not.toHaveBeenCalled();
     });
 
+    it('refreshes sent requests when the backend returns a friendship record without recipient data', async () => {
+      mockedApi.post.mockResolvedValueOnce({
+        data: {
+          data: {
+            id: 'req-out-1',
+            user_id: 'me',
+            friend_id: 'user-alice',
+            status: 'pending',
+            created_at: '2026-06-01T00:00:00Z',
+          },
+        },
+      });
+      mockedApi.get.mockResolvedValueOnce({
+        data: {
+          data: [
+            {
+              id: 'req-out-1',
+              to: {
+                id: 'user-alice',
+                username: 'alice',
+                display_name: 'Alice',
+                avatar_url: null,
+              },
+              sent_at: '2026-06-01T00:00:00Z',
+            },
+          ],
+        },
+      });
+
+      await useFriendStore.getState().sendRequest('alice');
+
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/sent');
+      expect(useFriendStore.getState().sentRequests).toEqual([
+        expect.objectContaining({
+          id: 'req-out-1',
+          type: 'outgoing',
+          user: expect.objectContaining({ id: 'user-alice', username: 'alice' }),
+        }),
+      ]);
+    });
+
     it('pauses duplicate sends after a rate-limit response', async () => {
       mockedApi.post.mockRejectedValueOnce({
         response: {
