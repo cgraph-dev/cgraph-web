@@ -465,8 +465,24 @@ describe('conversation management', () => {
     const conv = makeConv();
     mockApi.post.mockResolvedValueOnce({ data: { conversation: conv } });
     const result = await useChatStore.getState().createConversation(['user-2']);
+    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/conversations', {
+      participant_ids: ['user-2'],
+      type: 'cloud',
+    });
     expect(result.id).toBe('conv-1');
     expect(useChatStore.getState().conversations).toHaveLength(1);
+  });
+
+  it('preserves explicit secret conversation requests for capable callers', async () => {
+    const conv = makeConv({ conversationType: 'secret' });
+    mockApi.post.mockResolvedValueOnce({ data: { conversation: conv } });
+
+    await useChatStore.getState().createConversation(['user-2'], { type: 'secret' });
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/conversations', {
+      participant_ids: ['user-2'],
+      type: 'secret',
+    });
   });
 
   it('addConversation adds new conversation to head', () => {

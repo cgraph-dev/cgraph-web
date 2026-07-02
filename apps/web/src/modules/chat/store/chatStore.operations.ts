@@ -238,8 +238,10 @@ export function createOperationsActions(set: Set, get: Get) {
       userIds: string[],
       options?: { readonly type?: 'secret' | 'cloud' }
     ) => {
-      const body: Record<string, unknown> = { participant_ids: userIds };
-      if (options?.type) body.type = options.type;
+      const body: Record<string, unknown> = {
+        participant_ids: userIds,
+        type: options?.type ?? 'cloud',
+      };
       const response = await http.post('/api/v1/conversations', body);
       const conversation = ensureObject<Conversation>(response.data, 'conversation');
       if (conversation) {
