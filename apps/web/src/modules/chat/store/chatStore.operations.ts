@@ -34,6 +34,7 @@ export function createOperationsActions(set: Set, get: Get) {
 
   // Typing auto-clear timers: `${conversationId}:${userId}` → timer
   const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  const conversationCreatesInFlight = new Map<string, Promise<Conversation>>();
   const TYPING_AUTO_CLEAR_MS = 6000; // Clear typing after 6s of no new event
 
   return {
@@ -234,7 +235,7 @@ export function createOperationsActions(set: Set, get: Get) {
       }));
     },
 
-    createConversation: async (
+    createConversation: (
       userIds: string[],
       options?: { readonly type?: 'secret' | 'cloud' }
     ) => {
@@ -242,15 +243,34 @@ export function createOperationsActions(set: Set, get: Get) {
         participant_ids: userIds,
         type: options?.type ?? 'cloud',
       };
-      const response = await http.post('/api/v1/conversations', body);
-      const conversation = ensureObject<Conversation>(response.data, 'conversation');
-      if (conversation) {
-        set((state) => ({
-          conversations: [conversation, ...state.conversations].slice(0, 200),
-        }));
-        return conversation;
-      }
-      throw new Error('Failed to create conversation');
+      const requestKey = JSON.stringify(body);
+      const inFlight = conversationCreatesInFlight.get(requestKey);
+      if (inFlight) return inFlight;
+
+      const request = http
+        .post('/api/v1/conversations', body)
+        .then((response) => {
+          const conversation = ensureObject<Conversation>(response.data, 'conversation');
+          if (!conversation) {
+            throw new Error('Failed to create conversation');
+          }
+
+          set((state) => ({
+            conversations: [
+              conversation,
+              ...state.conversations.filter((existing) => existing.id !== conversation.id),
+            ].slice(0, 200),
+          }));
+          return conversation;
+        })
+        .finally(() => {
+          if (conversationCreatesInFlight.get(requestKey) === request) {
+            conversationCreatesInFlight.delete(requestKey);
+          }
+        });
+
+      conversationCreatesInFlight.set(requestKey, request);
+      return request;
     },
 
     /** Add a new conversation from real-time socket event */

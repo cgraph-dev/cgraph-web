@@ -387,9 +387,9 @@ test.describe('Post-registration Cloud DM web acceptance', () => {
 
     await page.goto(`/messages?userId=${FRIEND_USER_ID}`);
     await expect(page).toHaveURL(new RegExp(`/messages/${CONVERSATION_ID}$`));
-    await expect
-      .poll(() => calls.conversationCreates)
-      .toContainEqual({ participant_ids: [FRIEND_USER_ID], type: 'cloud' });
+    await expect.poll(() => calls.conversationCreates).toEqual([
+      { participant_ids: [FRIEND_USER_ID], type: 'cloud' },
+    ]);
 
     await expect(page.getByPlaceholder(/type a message/i)).toBeVisible();
     await expect(page.getByLabel('Conversation messages')).toContainText('Existing hello from Bob');

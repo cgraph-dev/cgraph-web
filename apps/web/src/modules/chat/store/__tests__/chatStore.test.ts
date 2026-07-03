@@ -485,6 +485,33 @@ describe('conversation management', () => {
     });
   });
 
+  it('coalesces concurrent identical conversation creates', async () => {
+    const conv = makeConv();
+    mockApi.post.mockResolvedValueOnce({ data: { conversation: conv } });
+
+    const first = useChatStore.getState().createConversation(['user-2']);
+    const second = useChatStore.getState().createConversation(['user-2']);
+    const [firstResult, secondResult] = await Promise.all([first, second]);
+
+    expect(mockApi.post).toHaveBeenCalledTimes(1);
+    expect(firstResult).toBe(secondResult);
+    expect(useChatStore.getState().conversations).toEqual([conv]);
+  });
+
+  it('allows retry after a failed conversation create settles', async () => {
+    const conv = makeConv();
+    mockApi.post
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce({ data: { conversation: conv } });
+
+    await expect(useChatStore.getState().createConversation(['user-2'])).rejects.toThrow(
+      'Network error'
+    );
+    await expect(useChatStore.getState().createConversation(['user-2'])).resolves.toBe(conv);
+
+    expect(mockApi.post).toHaveBeenCalledTimes(2);
+  });
+
   it('addConversation adds new conversation to head', () => {
     const conv = makeConv();
     useChatStore.getState().addConversation(conv);
