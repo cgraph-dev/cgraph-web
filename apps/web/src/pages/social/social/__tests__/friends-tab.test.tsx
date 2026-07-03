@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Friend } from '@/modules/social/store';
+import type { Friend, FriendRequest } from '@/modules/social/store';
 import { FriendsTab } from '../friends-tab';
 
 const navigate = vi.fn();
@@ -81,6 +81,21 @@ function makeFriend(overrides: Partial<Friend> = {}): Friend {
   };
 }
 
+function makeRequest(overrides: Partial<FriendRequest> = {}): FriendRequest {
+  return {
+    id: 'request-1',
+    type: 'incoming',
+    createdAt: '2026-07-03T00:00:00.000Z',
+    user: {
+      id: 'request-user-1',
+      username: 'pendingalice',
+      displayName: 'Alice Pending',
+      avatarUrl: null,
+    },
+    ...overrides,
+  };
+}
+
 function renderFriendsTab(overrides: Partial<React.ComponentProps<typeof FriendsTab>> = {}) {
   return render(
     <FriendsTab
@@ -136,5 +151,54 @@ describe('FriendsTab', () => {
 
     fireEvent.click(removeButton);
     expect(onRemoveFriend).toHaveBeenCalledWith('friendship-1');
+  });
+
+  it('keeps friend-request actions stable and preserves their callbacks', () => {
+    const onAcceptRequest = vi.fn();
+    const onDeclineRequest = vi.fn();
+    const onCancelRequest = vi.fn();
+
+    renderFriendsTab({
+      friends: [],
+      pendingRequests: [makeRequest()],
+      sentRequests: [
+        makeRequest({
+          id: 'sent-request-1',
+          type: 'outgoing',
+          user: {
+            id: 'request-user-2',
+            username: 'sentbob',
+            displayName: 'Bob Sent',
+            avatarUrl: null,
+          },
+        }),
+      ],
+      onAcceptRequest,
+      onDeclineRequest,
+      onCancelRequest,
+    });
+
+    const acceptButton = screen.getByRole('button', {
+      name: 'Accept friend request from Alice Pending',
+    });
+    expect(acceptButton).toHaveClass('h-11', 'w-11', 'focus-visible:ring-2');
+
+    const declineButton = screen.getByRole('button', {
+      name: 'Decline friend request from Alice Pending',
+    });
+    expect(declineButton).toHaveClass('h-11', 'w-11', 'focus-visible:ring-2');
+
+    const cancelButton = screen.getByRole('button', {
+      name: 'Cancel friend request to Bob Sent',
+    });
+    expect(cancelButton).toHaveClass('h-11', 'w-11', 'focus-visible:ring-2');
+
+    fireEvent.click(acceptButton);
+    fireEvent.click(declineButton);
+    fireEvent.click(cancelButton);
+
+    expect(onAcceptRequest).toHaveBeenCalledWith('request-1');
+    expect(onDeclineRequest).toHaveBeenCalledWith('request-1');
+    expect(onCancelRequest).toHaveBeenCalledWith('sent-request-1');
   });
 });

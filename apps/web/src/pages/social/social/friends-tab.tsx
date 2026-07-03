@@ -128,7 +128,7 @@ export function FriendsTab({
                           onAcceptRequest(request.id);
                           HapticFeedback.success();
                         }}
-                        className="border-primary-500/20 bg-primary-500/10 hover:bg-primary-500/16 rounded-xl border p-2.5 text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all"
+                        className="border-primary-500/20 bg-primary-500/10 hover:bg-primary-500/16 focus-visible:ring-primary-300/70 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)]"
                         title="Accept"
                         aria-label={`Accept friend request from ${request.user?.displayName || request.user?.username || 'user'}`}
                       >
@@ -141,7 +141,7 @@ export function FriendsTab({
                           onDeclineRequest(request.id);
                           HapticFeedback.medium();
                         }}
-                        className="rounded-xl bg-[var(--token-card-bg)] p-2.5 text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400"
+                        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)] text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)]"
                         title="Decline"
                         aria-label={`Decline friend request from ${request.user?.displayName || request.user?.username || 'user'}`}
                       >
@@ -196,7 +196,7 @@ export function FriendsTab({
                         onCancelRequest(request.id);
                         HapticFeedback.medium();
                       }}
-                      className="rounded-xl bg-[var(--token-card-bg)] p-2.5 text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400"
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)] text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)]"
                       title="Cancel Request"
                       aria-label={`Cancel friend request to ${request.user?.displayName || request.user?.username || 'user'}`}
                     >
