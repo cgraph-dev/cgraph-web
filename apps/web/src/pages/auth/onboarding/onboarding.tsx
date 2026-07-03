@@ -11,7 +11,7 @@ import { useOnboarding } from './useOnboarding';
 import { ProgressBar } from './progress-bar';
 import { StepHeader } from './step-header';
 import { WelcomeStep } from './welcome-step';
-import { CommunityStep } from './community-step';
+import { FindFriendsStep } from './find-friends-step';
 import { InviteStep } from './invite-step';
 import { AllSetStep } from './all-set-step';
 import { NavigationButtons } from './navigation-buttons';
@@ -48,7 +48,7 @@ export default function Onboarding() {
           />
         );
       case 2:
-        return <CommunityStep />;
+        return <FindFriendsStep />;
       case 3:
         return <InviteStep />;
       case 4:

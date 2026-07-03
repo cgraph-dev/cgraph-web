@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Onboarding from '../onboarding';
 
 const mocks = vi.hoisted(() => ({
+  currentStep: 1,
   handleAvatarCropped: vi.fn(),
   handleNext: vi.fn(),
   handleBack: vi.fn(),
@@ -13,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../useOnboarding', () => ({
   useOnboarding: () => ({
-    currentStep: 1,
+    currentStep: mocks.currentStep,
     isLoading: false,
     error: null,
     avatarPreview: null,
@@ -36,11 +37,29 @@ vi.mock('../useOnboarding', () => ({
   }),
 }));
 
+vi.mock('../find-friends-step', () => ({
+  FindFriendsStep: () => <div>Search people already on CGraph</div>,
+}));
+
 describe('Onboarding', () => {
+  beforeEach(() => {
+    mocks.currentStep = 1;
+  });
+
   it('renders the required wizard as a full-width app route', () => {
     const { container } = render(<Onboarding />);
 
     expect(screen.getByRole('heading', { name: 'Welcome to CGraph' })).toBeInTheDocument();
     expect(container.firstElementChild).toHaveClass('w-full', 'flex-1', 'overflow-y-auto');
+  });
+
+  it('mounts real friend discovery as the second onboarding step', () => {
+    mocks.currentStep = 2;
+
+    render(<Onboarding />);
+
+    expect(screen.getByRole('heading', { name: 'Find Friends' })).toBeInTheDocument();
+    expect(screen.getByText('Search people already on CGraph')).toBeInTheDocument();
+    expect(screen.queryByText('Discover Communities')).not.toBeInTheDocument();
   });
 });

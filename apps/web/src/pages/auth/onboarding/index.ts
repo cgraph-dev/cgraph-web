@@ -14,7 +14,6 @@ export { StepHeader } from './step-header';
 export { WelcomeStep } from './welcome-step';
 export { ProfileStep } from './profile-step';
 export { FindFriendsStep } from './find-friends-step';
-export { CommunityStep } from './community-step';
 export { InviteStep } from './invite-step';
 export { AllSetStep } from './all-set-step';
 export { NavigationButtons } from './navigation-buttons';
