@@ -1,126 +1,213 @@
-import { useCallback } from 'react';
-import { useMessageRequestStore } from '../store/message-request-store';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MessageRequestStatus } from '@cgraph-dev/shared-types';
 import { apiClient } from '@/lib/api-client';
+import { getErrorMessage } from '@/lib/api';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('MessageRequest');
 
-interface UseMessageRequestOptions {
-  /** The conversation ID to manage message request state for. */
-  readonly conversationId: string;
+export type MessageRequestAction =
+  | 'accept'
+  | 'delete'
+  | 'block'
+  | 'block-and-report'
+  | 'unblock';
+
+export type MessageRequestViewStatus = MessageRequestStatus | 'loading' | 'error';
+
+export interface MessageRequestDetails {
+  readonly requesterName: string;
+  readonly requesterAvatar: string | null;
+  readonly sharedGroupCount: number;
+  readonly reportedAsSpam: boolean;
+}
+
+export interface MessageRequestController {
+  readonly status: MessageRequestViewStatus;
+  readonly details: MessageRequestDetails | null;
+  readonly activeAction: MessageRequestAction | null;
+  readonly error: string | null;
+  readonly blocksComposer: boolean;
+  readonly retry: () => void;
+  readonly accept: () => Promise<boolean>;
+  readonly deleteRequest: () => Promise<boolean>;
+  readonly block: () => Promise<boolean>;
+  readonly blockAndReport: () => Promise<boolean>;
+  readonly unblock: () => Promise<boolean>;
+}
+
+type MessageRequestActionResult = Awaited<
+  ReturnType<typeof apiClient.messageRequests.accept>
+>;
+
+type MessageRequestGetResult = Awaited<
+  ReturnType<typeof apiClient.messageRequests.get>
+>;
+
+type MessageRequestGetPayload = Extract<
+  MessageRequestGetResult,
+  { ok: true }
+>['data'];
+
+function requestDetails(
+  data: MessageRequestGetPayload
+): MessageRequestDetails | null {
+  if (!('requester' in data)) return null;
+
+  return {
+    requesterName:
+      data.requester.display_name ?? data.requester.username ?? 'Unknown user',
+    requesterAvatar: data.requester.avatar_url,
+    sharedGroupCount: data.shared_group_count,
+    reportedAsSpam: data.reported_as_spam,
+  };
 }
 
 /**
- * Hook for managing message request actions on a conversation.
- *
- * Wraps the apiClient.messageRequests endpoints with store state management.
- * Used by the MessageRequestBanner component.
- *
- * @see MessageRequestRepository.java
+ * Route-local message-request state based on S1G's conversation request model.
  */
-export function useMessageRequest({ conversationId }: UseMessageRequestOptions) {
-  const setRequestState = useMessageRequestStore((s) => s.setRequestState);
-  const removeRequestState = useMessageRequestStore(
-    (s) => s.removeRequestState,
-  );
-  const setProcessingAction = useMessageRequestStore(
-    (s) => s.setProcessingAction,
-  );
-  const setActionError = useMessageRequestStore((s) => s.setActionError);
-  const status = useMessageRequestStore(
-    (s) => s.requestStates[conversationId],
-  );
-  const isProcessing = useMessageRequestStore(
-    (s) => s.processingAction === conversationId,
-  );
+export function useMessageRequest(
+  conversationId: string | undefined
+): MessageRequestController {
+  const [status, setStatus] = useState<MessageRequestViewStatus>('loading');
+  const [details, setDetails] = useState<MessageRequestDetails | null>(null);
+  const [activeAction, setActiveAction] =
+    useState<MessageRequestAction | null>(null);
+  const actionLockRef = useRef(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const acceptRequest = useCallback(async () => {
-    setProcessingAction(conversationId);
-    setActionError(null);
-    try {
-      const result = await apiClient.messageRequests.accept(conversationId);
-      if (result.ok) {
-        removeRequestState(conversationId);
-        logger.info('Message request accepted', { conversationId });
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to accept';
-      setActionError(message);
-    } finally {
-      setProcessingAction(null);
+  useEffect(() => {
+    if (!conversationId) {
+      setStatus('accepted');
+      setDetails(null);
+      setError(null);
+      return;
     }
-  }, [conversationId, removeRequestState, setProcessingAction, setActionError]);
 
-  const rejectRequest = useCallback(async () => {
-    setProcessingAction(conversationId);
-    setActionError(null);
-    try {
-      const result = await apiClient.messageRequests.reject(conversationId);
-      if (result.ok) {
-        removeRequestState(conversationId);
-        logger.info('Message request rejected', { conversationId });
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to reject';
-      setActionError(message);
-    } finally {
-      setProcessingAction(null);
-    }
-  }, [conversationId, removeRequestState, setProcessingAction, setActionError]);
+    let isActive = true;
+    setStatus('loading');
+    setDetails(null);
+    setError(null);
 
-  const blockRequest = useCallback(async () => {
-    setProcessingAction(conversationId);
-    setActionError(null);
-    try {
-      const result = await apiClient.messageRequests.block(conversationId);
-      if (result.ok) {
-        setRequestState(conversationId, 'blocked');
-        logger.info('Message request blocked', { conversationId });
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to block';
-      setActionError(message);
-    } finally {
-      setProcessingAction(null);
-    }
-  }, [conversationId, setRequestState, setProcessingAction, setActionError]);
+    void apiClient.messageRequests
+      .get(conversationId)
+      .then((result) => {
+        if (!isActive) return;
 
-  const blockAndReport = useCallback(
-    async (reason?: string) => {
-      setProcessingAction(conversationId);
-      setActionError(null);
-      try {
-        const result = await apiClient.messageRequests.blockAndReport(
-          conversationId,
-          reason,
-        );
-        if (result.ok) {
-          setRequestState(conversationId, 'blocked');
-          logger.info('Message request blocked and reported', {
-            conversationId,
-          });
+        if (!result.ok) {
+          setStatus('error');
+          setError(result.error.message);
+          return;
         }
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : 'Failed to block and report';
-        setActionError(message);
+
+        setStatus(result.data.status);
+        setDetails(requestDetails(result.data));
+      })
+      .catch((loadError: unknown) => {
+        if (!isActive) return;
+        setStatus('error');
+        setError(getErrorMessage(loadError));
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [conversationId, reloadKey]);
+
+  const runAction = useCallback(
+    async (
+      action: MessageRequestAction,
+      operation: (targetConversationId: string) => Promise<MessageRequestActionResult>
+    ): Promise<boolean> => {
+      if (!conversationId || actionLockRef.current) return false;
+
+      actionLockRef.current = true;
+      setActiveAction(action);
+      setError(null);
+
+      try {
+        const result = await operation(conversationId);
+        if (!result.ok) {
+          setError(result.error.message);
+          return false;
+        }
+
+        setStatus(result.data.status);
+        if (result.data.status === 'blocked') {
+          setDetails((current) =>
+            current
+              ? {
+                  ...current,
+                  reportedAsSpam:
+                    result.data.reported ?? current.reportedAsSpam,
+                }
+              : current
+          );
+        } else {
+          setDetails(null);
+        }
+
+        logger.info('Message request action completed', {
+          action,
+          conversationId,
+          status: result.data.status,
+        });
+        return true;
+      } catch (actionError: unknown) {
+        setError(getErrorMessage(actionError));
+        return false;
       } finally {
-        setProcessingAction(null);
+        actionLockRef.current = false;
+        setActiveAction(null);
       }
     },
-    [conversationId, setRequestState, setProcessingAction, setActionError],
+    [conversationId]
+  );
+
+  const accept = useCallback(
+    () => runAction('accept', (targetId) => apiClient.messageRequests.accept(targetId)),
+    [runAction]
+  );
+
+  const deleteRequest = useCallback(
+    () => runAction('delete', (targetId) => apiClient.messageRequests.reject(targetId)),
+    [runAction]
+  );
+
+  const block = useCallback(
+    () => runAction('block', (targetId) => apiClient.messageRequests.block(targetId)),
+    [runAction]
+  );
+
+  const blockAndReport = useCallback(
+    () =>
+      runAction('block-and-report', (targetId) =>
+        apiClient.messageRequests.blockAndReport(targetId, 'spam')
+      ),
+    [runAction]
+  );
+
+  const unblock = useCallback(
+    () => runAction('unblock', (targetId) => apiClient.messageRequests.unblock(targetId)),
+    [runAction]
   );
 
   return {
     status,
-    isProcessing,
-    isPending: status === 'pending',
-    acceptRequest,
-    rejectRequest,
-    blockRequest,
+    details,
+    activeAction,
+    error,
+    blocksComposer:
+      status === 'loading' ||
+      status === 'error' ||
+      status === 'pending' ||
+      status === 'blocked',
+    retry: () => setReloadKey((value) => value + 1),
+    accept,
+    deleteRequest,
+    block,
     blockAndReport,
-  } as const;
+    unblock,
+  };
 }

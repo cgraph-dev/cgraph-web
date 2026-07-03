@@ -10,7 +10,7 @@ import { MessageInputArea } from './message-input-area';
 import { LoadingSpinner } from './loading-spinner';
 import { ConversationSurface, MessageList, DEFAULT_UI_PREFERENCES } from '@/modules/chat/components';
 import { BatchActionBar } from '@/modules/chat/components/batch-actions/batch-action-bar';
-import { MessageRequestBanner } from '@/modules/chat/components/message-request-banner';
+import { MessageRequestPanel } from '@/modules/chat/components/message-request-panel';
 import { ForwardMessageModal } from '@/modules/chat/components/forward-message-modal';
 import { NewMessagesBar } from '@/modules/chat/components/new-messages-bar';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
@@ -91,8 +91,7 @@ export default function CloudConversation() {
     handleTyping,
     handleComposerPayload,
     handleStartCall,
-    handleMessageRequestAccepted,
-    handleMessageRequestRejected,
+    handleMessageRequestDeleted,
     messageActions,
   } = useCloudConversationController();
 
@@ -276,18 +275,6 @@ export default function CloudConversation() {
           </aside>
         ) : null
       }
-      requestBanner={
-        conversationId && messageRequest ? (
-          <MessageRequestBanner
-            conversationId={conversationId}
-            requesterName={messageRequest.requesterName}
-            requesterAvatar={messageRequest.requesterAvatar}
-            sharedGroupCount={messageRequest.sharedGroupCount}
-            onAccepted={handleMessageRequestAccepted}
-            onRejected={handleMessageRequestRejected}
-          />
-        ) : null
-      }
       messagesScrollRef={messagesScrollRef}
       onMessagesScroll={handleMessagesScroll}
       messages={
@@ -342,17 +329,24 @@ export default function CloudConversation() {
         />
       }
       composer={
-        <MessageInputArea
-          conversationId={conversationId}
-          attachmentNodePrice={attachmentNodePrice}
-          isSending={isSending}
-          replyTo={replyTo}
-          inputContainerRef={inputContainerRef}
-          onTyping={handleTyping}
-          onAttachmentNodePriceChange={setAttachmentNodePrice}
-          onClearReply={() => setReplyTo(null)}
-          onPayloadSend={handleComposerPayload}
-        />
+        messageRequest.blocksComposer ? (
+          <MessageRequestPanel
+            request={messageRequest}
+            onDeleted={handleMessageRequestDeleted}
+          />
+        ) : (
+          <MessageInputArea
+            conversationId={conversationId}
+            attachmentNodePrice={attachmentNodePrice}
+            isSending={isSending}
+            replyTo={replyTo}
+            inputContainerRef={inputContainerRef}
+            onTyping={handleTyping}
+            onAttachmentNodePriceChange={setAttachmentNodePrice}
+            onClearReply={() => setReplyTo(null)}
+            onPayloadSend={handleComposerPayload}
+          />
+        )
       }
       modalLayer={
         batchForwardPreviewMessage ? (

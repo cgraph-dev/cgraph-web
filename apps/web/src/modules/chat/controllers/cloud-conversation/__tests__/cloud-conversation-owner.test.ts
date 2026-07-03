@@ -32,6 +32,10 @@ describe('Cloud conversation ownership', () => {
 
     expect(cloudSurface).toContain("from '@/modules/chat/controllers/cloud-conversation'");
     expect(cloudSurface).toContain('useCloudConversationController');
+    expect(cloudSurface).toContain('messageRequest.blocksComposer ?');
+    expect(cloudSurface).toContain('<MessageRequestPanel');
+    expect(cloudSurface).toContain('<MessageInputArea');
+    expect(cloudSurface).not.toContain('requestBanner=');
     expect(cloudSurface).not.toContain("from './useEnhancedConversation'");
 
     expect(routeCompatibilityExport.trim()).toBe(
@@ -73,13 +77,17 @@ describe('Cloud conversation ownership', () => {
     const controller = source(
       'src/modules/chat/controllers/cloud-conversation/use-cloud-conversation-controller.ts'
     );
+    const messageRequest = source('src/modules/chat/hooks/use-message-request.ts');
     const voiceUpload = source(
       'src/modules/chat/controllers/cloud-conversation/voice-message-upload.ts'
     );
 
     expect(controller).toContain('useChatStore');
     expect(controller).toContain('socketManager');
-    expect(controller).toContain('apiClient.messageRequests');
+    expect(controller).toContain('useMessageRequest(conversationId)');
+    expect(messageRequest).toContain('apiClient.messageRequests');
+    expect(messageRequest).toContain("status === 'pending'");
+    expect(messageRequest).toContain("status === 'blocked'");
     expect(controller).toContain('uploadMessageAttachment');
     expect(controller).toContain('uploadVoiceMessage');
     expect(controller).toContain('sendMessage(conversationId');

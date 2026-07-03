@@ -13,7 +13,7 @@ import { createLogger } from '@/lib/logger';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
 import { useMessageActions } from '@/modules/chat/hooks/useMessageActions';
-import { useMessageRequestStore } from '@/modules/chat/store/message-request-store';
+import { useMessageRequest } from '@/modules/chat/hooks/use-message-request';
 import { socketManager } from '@/lib/socket';
 import { apiClient } from '@/lib/api-client';
 import { getErrorMessage } from '@/lib/api';
@@ -31,12 +31,6 @@ import {
 } from './voice-message-upload';
 const logger = createLogger('CloudConversationController');
 
-interface PendingMessageRequest {
-  requesterName: string;
-  requesterAvatar: string | null;
-  sharedGroupCount: number;
-}
-
 interface MessageScrollSnapshot {
   conversationId: string | null;
   lastMessageId: string | null;
@@ -44,34 +38,6 @@ interface MessageScrollSnapshot {
 }
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 96;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function stringValue(value: unknown): string | null {
-  return typeof value === 'string' && value.length > 0 ? value : null;
-}
-
-function numberValue(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
-}
-
-function pendingRequestInfo(value: unknown): PendingMessageRequest | null {
-  if (!isRecord(value) || value.status !== 'pending' || !isRecord(value.requester)) {
-    return null;
-  }
-
-  const requester = value.requester;
-  const displayName = stringValue(requester.display_name);
-  const username = stringValue(requester.username);
-
-  return {
-    requesterName: displayName ?? username ?? 'Unknown user',
-    requesterAvatar: stringValue(requester.avatar_url),
-    sharedGroupCount: numberValue(value.shared_group_count) ?? 0,
-  };
-}
 
 function isNearScrollBottom(container: HTMLDivElement | null): boolean {
   if (!container) return true;
@@ -123,10 +89,8 @@ export function useCloudConversationController() {
   const [attachmentNodePrice, setAttachmentNodePrice] = useState<number | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [messageRequest, setMessageRequest] = useState<PendingMessageRequest | null>(null);
   const messageActions = useMessageActions();
-  const setRequestState = useMessageRequestStore((state) => state.setRequestState);
-  const removeRequestState = useMessageRequestStore((state) => state.removeRequestState);
+  const messageRequest = useMessageRequest(conversationId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -173,44 +137,6 @@ export function useCloudConversationController() {
 
     setShowScrollToLatest(true);
   }, []);
-
-  useEffect(() => {
-    if (!conversationId) {
-      setMessageRequest(null);
-      return;
-    }
-
-    let isActive = true;
-
-    void apiClient.messageRequests
-      .get(conversationId)
-      .then((result) => {
-        if (!isActive) return;
-
-        if (!result.ok) {
-          removeRequestState(conversationId);
-          setMessageRequest(null);
-          return;
-        }
-
-        const pending = pendingRequestInfo(result.data);
-        if (pending) {
-          setRequestState(conversationId, 'pending');
-          setMessageRequest(pending);
-          return;
-        }
-
-        removeRequestState(conversationId);
-        setMessageRequest(null);
-      })
-      .catch((error: unknown) => {
-        logger.warn('Failed to load message request state:', error);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [conversationId, removeRequestState, setRequestState]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -689,14 +615,7 @@ export function useCloudConversationController() {
     navigate(route);
   };
 
-  const handleMessageRequestAccepted = () => {
-    if (conversationId) removeRequestState(conversationId);
-    setMessageRequest(null);
-  };
-
-  const handleMessageRequestRejected = () => {
-    if (conversationId) removeRequestState(conversationId);
-    setMessageRequest(null);
+  const handleMessageRequestDeleted = () => {
     navigate('/messages', { replace: true });
   };
 
@@ -729,8 +648,7 @@ export function useCloudConversationController() {
     handleComposerPayload,
     handleAvatarClick,
     handleStartCall,
-    handleMessageRequestAccepted,
-    handleMessageRequestRejected,
+    handleMessageRequestDeleted,
     messageActions,
   };
 }
