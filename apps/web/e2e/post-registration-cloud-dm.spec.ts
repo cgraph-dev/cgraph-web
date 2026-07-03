@@ -31,7 +31,17 @@ const incomingUser = {
   status: 'online',
 };
 
-function conversationFixture() {
+type AcceptanceUser = typeof friendUser;
+
+function peerUserById(userId: string): AcceptanceUser {
+  return userId === INCOMING_USER_ID ? incomingUser : friendUser;
+}
+
+function firstDisplayName(user: AcceptanceUser): string {
+  return user.display_name.split(' ')[0] ?? user.display_name;
+}
+
+function conversationFixture(peerUser: AcceptanceUser = friendUser) {
   return {
     id: CONVERSATION_ID,
     type: 'direct',
@@ -55,16 +65,16 @@ function conversationFixture() {
         },
       },
       {
-        id: 'participant-friend',
-        userId: FRIEND_USER_ID,
+        id: `participant-${peerUser.id}`,
+        userId: peerUser.id,
         nickname: null,
         isMuted: false,
         mutedUntil: null,
         joinedAt: '2026-07-03T00:00:00.000Z',
         user: {
-          id: FRIEND_USER_ID,
-          username: friendUser.username,
-          displayName: friendUser.display_name,
+          id: peerUser.id,
+          username: peerUser.username,
+          displayName: peerUser.display_name,
           avatarUrl: null,
           status: 'online',
         },
@@ -85,14 +95,14 @@ function conversationFixture() {
   };
 }
 
-function messageFixture(overrides: Record<string, unknown>) {
+function messageFixture(overrides: Record<string, unknown>, peerUser: AcceptanceUser = friendUser) {
   return {
     id: 'message-existing-cloud',
     clientMessageId: null,
     sequence: 1,
     conversationId: CONVERSATION_ID,
-    senderId: FRIEND_USER_ID,
-    displayContent: 'Existing hello from Bob',
+    senderId: peerUser.id,
+    displayContent: `Existing hello from ${firstDisplayName(peerUser)}`,
     content: null,
     contentType: 'text',
     messageType: 'text',
@@ -107,9 +117,9 @@ function messageFixture(overrides: Record<string, unknown>) {
     metadata: {},
     reactions: [],
     sender: {
-      id: FRIEND_USER_ID,
-      username: friendUser.username,
-      displayName: friendUser.display_name,
+      id: peerUser.id,
+      username: peerUser.username,
+      displayName: peerUser.display_name,
       avatarUrl: null,
     },
     createdAt: '2026-07-03T00:00:00.000Z',
@@ -136,10 +146,17 @@ async function installPostRegistrationMocks(page: Page): Promise<{
   const conversationCreates: Record<string, unknown>[] = [];
   const friendRequestCreates: Record<string, unknown>[] = [];
   const sentMessages: Record<string, unknown>[] = [];
-  const messages = [messageFixture({})];
+  const messages: Array<ReturnType<typeof messageFixture>> = [];
   let sentRequestCreated = false;
   let incomingAccepted = false;
   let conversationCreated = false;
+  let conversationPeerUser = friendUser;
+
+  function ensureInitialMessage() {
+    if (messages.length === 0) {
+      messages.push(messageFixture({}, conversationPeerUser));
+    }
+  }
 
   await page.addInitScript(() => {
     localStorage.clear();
@@ -158,7 +175,7 @@ async function installPostRegistrationMocks(page: Page): Promise<{
 
     if (path === '/api/v1/conversations' && method === 'GET') {
       await fulfillJson(route, {
-        data: conversationCreated ? [conversationFixture()] : [],
+        data: conversationCreated ? [conversationFixture(conversationPeerUser)] : [],
         page_info: {
           has_next_page: false,
           has_previous_page: false,
@@ -170,13 +187,19 @@ async function installPostRegistrationMocks(page: Page): Promise<{
     }
 
     if (path === '/api/v1/conversations' && method === 'POST') {
-      conversationCreates.push(request.postDataJSON() as Record<string, unknown>);
+      const body = request.postDataJSON() as Record<string, unknown>;
+      conversationCreates.push(body);
+      const participantIds = Array.isArray(body.participant_ids) ? body.participant_ids : [];
+      const peerId = typeof participantIds[0] === 'string' ? participantIds[0] : FRIEND_USER_ID;
+      conversationPeerUser = peerUserById(peerId);
+      messages.length = 0;
       conversationCreated = true;
-      await fulfillJson(route, { data: conversationFixture() }, 201);
+      await fulfillJson(route, { data: conversationFixture(conversationPeerUser) }, 201);
       return;
     }
 
     if (path === `/api/v1/conversations/${CONVERSATION_ID}/messages` && method === 'GET') {
+      ensureInitialMessage();
       await fulfillJson(route, {
         data: messages,
         page_info: {
@@ -192,22 +215,25 @@ async function installPostRegistrationMocks(page: Page): Promise<{
     if (path === `/api/v1/conversations/${CONVERSATION_ID}/messages` && method === 'POST') {
       const body = request.postDataJSON() as Record<string, unknown>;
       sentMessages.push(body);
-      const message = messageFixture({
-        id: 'message-current-cloud',
-        clientMessageId: body.client_message_id ?? null,
-        sequence: 2,
-        senderId: CURRENT_USER_ID,
-        displayContent: body.content,
-        encryptedContent: 'cloud-envelope-current',
-        sender: {
-          id: CURRENT_USER_ID,
-          username: currentUser.username,
-          displayName: currentUser.display_name,
-          avatarUrl: null,
+      const message = messageFixture(
+        {
+          id: 'message-current-cloud',
+          clientMessageId: body.client_message_id ?? null,
+          sequence: 2,
+          senderId: CURRENT_USER_ID,
+          displayContent: body.content,
+          encryptedContent: 'cloud-envelope-current',
+          sender: {
+            id: CURRENT_USER_ID,
+            username: currentUser.username,
+            displayName: currentUser.display_name,
+            avatarUrl: null,
+          },
+          createdAt: '2026-07-03T00:00:01.000Z',
+          updatedAt: '2026-07-03T00:00:01.000Z',
         },
-        createdAt: '2026-07-03T00:00:01.000Z',
-        updatedAt: '2026-07-03T00:00:01.000Z',
-      });
+        conversationPeerUser
+      );
       messages.push(message);
       await fulfillJson(route, { data: message }, 201);
       return;
@@ -409,5 +435,51 @@ test.describe('Post-registration Cloud DM web acceptance', () => {
     const messages = page.getByLabel('Conversation messages');
     await expect(messages).toContainText('Existing hello from Bob');
     await expect(messages).toContainText('Browser Cloud proof');
+  });
+
+  test('opens an accepted friend from Social/Friends into a durable Cloud DM', async ({ page }) => {
+    const calls = await installPostRegistrationMocks(page);
+
+    await page.goto('/social/friends');
+
+    const socialMainPane = page.locator('main').last();
+    await expect(
+      socialMainPane.getByRole('heading', { name: 'Friends', exact: true })
+    ).toBeVisible();
+    await expect(socialMainPane.getByText('Alice Acceptance')).toBeVisible();
+
+    await socialMainPane.getByRole('button', { name: 'Accept' }).click();
+    await expect.poll(() => calls.acceptedRequests).toEqual([INCOMING_FRIENDSHIP_ID]);
+
+    await expect(socialMainPane.getByText('@alice_acceptance')).toBeVisible();
+    await socialMainPane.getByRole('button', { name: 'Message' }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/messages/${CONVERSATION_ID}$`));
+    await expect.poll(() => calls.conversationCreates).toEqual([
+      { participant_ids: [INCOMING_USER_ID], type: 'cloud' },
+    ]);
+
+    await expect(page.getByPlaceholder(/type a message/i)).toBeVisible();
+    const messages = page.getByLabel('Conversation messages');
+    await expect(messages).toContainText('Existing hello from Alice');
+
+    await page.getByPlaceholder(/type a message/i).fill('Friend directory Cloud proof');
+    await page.getByRole('button', { name: 'Send message' }).click();
+
+    await expect.poll(() => calls.sentMessages.map((body) => body.content)).toEqual([
+      'Friend directory Cloud proof',
+    ]);
+    await expect(messages).toContainText('Friend directory Cloud proof');
+
+    await page.reload();
+    await expect(page).toHaveURL(new RegExp(`/messages/${CONVERSATION_ID}$`));
+    await expect(page.getByPlaceholder(/type a message/i)).toBeVisible();
+
+    const reloadedMessages = page.getByLabel('Conversation messages');
+    await expect(reloadedMessages).toContainText('Existing hello from Alice');
+    await expect(reloadedMessages).toContainText('Friend directory Cloud proof');
+    await expect.poll(() => calls.conversationCreates).toEqual([
+      { participant_ids: [INCOMING_USER_ID], type: 'cloud' },
+    ]);
   });
 });
