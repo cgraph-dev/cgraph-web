@@ -201,4 +201,35 @@ describe('FriendsTab', () => {
     expect(onDeclineRequest).toHaveBeenCalledWith('request-1');
     expect(onCancelRequest).toHaveBeenCalledWith('sent-request-1');
   });
+
+  it('keeps long pending request identities from resizing the action cluster', () => {
+    const longDisplayName = 'Alice Pending With A Very Long Display Name That Must Not Move Actions';
+    const longUsername = 'alice_pending_with_a_very_long_username_that_must_not_move_actions';
+
+    renderFriendsTab({
+      friends: [],
+      pendingRequests: [
+        makeRequest({
+          user: {
+            id: 'request-user-long',
+            username: longUsername,
+            displayName: longDisplayName,
+            avatarUrl: null,
+          },
+        }),
+      ],
+      sentRequests: [],
+    });
+
+    const displayName = screen.getByText(longDisplayName);
+    expect(displayName).toHaveClass('truncate', 'font-semibold');
+    expect(displayName.parentElement).toHaveClass('min-w-0', 'flex-1');
+
+    expect(screen.getByText(`@${longUsername}`)).toHaveClass('truncate', 'text-sm');
+
+    const actionCluster = screen.getByRole('button', {
+      name: `Accept friend request from ${longDisplayName}`,
+    }).parentElement as HTMLElement;
+    expect(actionCluster).toHaveClass('flex-shrink-0', 'gap-2');
+  });
 });

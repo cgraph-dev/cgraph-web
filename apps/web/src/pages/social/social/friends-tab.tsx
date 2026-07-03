@@ -111,16 +111,16 @@ export function FriendsTab({
                       </div>
                     </UserProfileCard>
 
-                    <div className="flex-1">
-                      <p className="font-semibold text-white">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-white">
                         {request.user?.displayName || request.user?.username || 'Unknown User'}
                       </p>
-                      <p className="text-sm text-white/40">
+                      <p className="truncate text-sm text-white/40">
                         @{request.user?.username || 'unknown'}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-shrink-0 items-center gap-2">
                       <motion.button
                         whileHover={{ opacity: 0.9 }}
                         whileTap={{ scale: 0.95 }}
