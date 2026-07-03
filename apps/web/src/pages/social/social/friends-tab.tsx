@@ -260,7 +260,7 @@ export function FriendsTab({
                         navigate(`/messages?userId=${friend.id}`);
                         HapticFeedback.medium();
                       }}
-                      className="hover:bg-primary-500/10 hover:border-primary-500/20 rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-2.5 text-white/40 opacity-0 backdrop-blur-md transition-all hover:text-primary-300 group-hover:opacity-100"
+                      className="hover:bg-primary-500/10 hover:border-primary-500/20 focus-visible:ring-primary-300/70 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-white/55 opacity-100 backdrop-blur-md transition-all hover:text-primary-300 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)] sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
                       title="Send Message"
                       aria-label={`Message ${friend.displayName || friend.username}`}
                     >
@@ -274,7 +274,7 @@ export function FriendsTab({
                         onRemoveFriend(friend.friendshipId);
                         HapticFeedback.medium();
                       }}
-                      className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-2.5 text-white/35 opacity-0 backdrop-blur-md transition-all hover:border-red-500/25 hover:bg-red-500/10 hover:text-red-300 group-hover:opacity-100"
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-white/45 opacity-100 backdrop-blur-md transition-all hover:border-red-500/25 hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)] sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
                       title="Remove Friend"
                       aria-label={`Remove ${friend.displayName || friend.username} from friends`}
                     >
