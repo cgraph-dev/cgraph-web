@@ -302,6 +302,5 @@ describe('getTierGlow (extended)', () => {
   it('covers all defined tiers', () => {
     expect(getTierGlow('free')).toBe('#10b981');
     expect(getTierGlow('premium')).toBe('#8b5cf6');
-    expect(getTierGlow('enterprise')).toBe('#ec4899');
   });
 });

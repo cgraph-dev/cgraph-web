@@ -705,17 +705,6 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked' | 'unlockedAt
     isHidden: false,
   },
   {
-    id: 'premium_plus_elite',
-    title: 'Premium+ Elite',
-    description: 'Subscribe to Premium+',
-    category: 'mastery',
-    rarity: 'epic',
-    icon: '💫',
-    maxProgress: 1,
-    isHidden: false,
-  },
-
-  {
     id: 'category_explorer',
     title: 'Category Explorer',
     description: 'Visit forums in all 10 major categories',

@@ -224,10 +224,4 @@ export const TIER_COLORS: Record<
     border: 'border-purple-300/70',
     glow: 'rgba(168,85,247,0.5)',
   },
-  enterprise: {
-    bg: 'bg-gradient-to-r from-yellow-500 to-orange-500',
-    text: 'text-white',
-    border: 'border-yellow-200/80',
-    glow: 'rgba(251,191,36,0.6)',
-  },
 };

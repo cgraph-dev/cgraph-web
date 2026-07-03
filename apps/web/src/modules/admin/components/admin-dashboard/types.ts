@@ -12,7 +12,7 @@ export type AdminTab =
   | 'organizations'
   | 'sso'
   | 'compliance'
-  | 'enterprise-analytics';
+  | 'advanced-analytics';
 
 export interface AdminStats {
   activeUsers: number;

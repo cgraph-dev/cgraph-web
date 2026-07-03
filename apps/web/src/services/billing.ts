@@ -60,7 +60,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-const PLAN_IDS: PlanId[] = ['free', 'premium', 'enterprise'];
+const PLAN_IDS: PlanId[] = ['free', 'premium'];
 const BILLING_STATUSES: BillingStatusValue[] = [
   'active',
   'trialing',

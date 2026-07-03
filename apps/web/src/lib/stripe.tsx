@@ -9,7 +9,7 @@
 /**
  * Subscription plan types
  */
-export type PlanId = 'free' | 'premium' | 'enterprise';
+export type PlanId = 'free' | 'premium';
 
 export interface Plan {
   id: PlanId;
@@ -58,21 +58,5 @@ export const PLANS: Plan[] = [
     ],
     highlighted: true,
     badge: 'Popular',
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: -1, // Custom pricing
-    priceYearly: -1,
-    description: 'Custom solutions for large organizations',
-    features: [
-      'Everything in Premium',
-      'Custom integrations',
-      'SLA guarantees',
-      'Dedicated infrastructure',
-      'Custom branding',
-      'On-boarding support',
-      'Account manager',
-    ],
   },
 ];

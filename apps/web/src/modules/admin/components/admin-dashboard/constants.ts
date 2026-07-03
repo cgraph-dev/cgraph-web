@@ -13,7 +13,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'organizations', icon: '🏢', label: 'Organizations' },
   { id: 'sso', icon: '🔐', label: 'SSO' },
   { id: 'compliance', icon: '✅', label: 'Compliance' },
-  { id: 'enterprise-analytics', icon: '📊', label: 'Enterprise Analytics' },
+  { id: 'advanced-analytics', icon: '📊', label: 'Advanced Analytics' },
 ];
 
 export const RISK_COLORS = {

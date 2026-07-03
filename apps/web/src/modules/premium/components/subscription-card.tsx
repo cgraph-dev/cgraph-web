@@ -16,7 +16,6 @@ import {
   TIER_ICONS,
   TIER_COLORS,
   TIER_GRADIENTS,
-  Crown,
 } from '@/modules/premium/components/subscription-card.constants';
 import { CompactSubscriptionCard } from '@/modules/premium/components/compact-subscription-card';
 import type { SubscriptionTier, SubscriptionPlan } from '@/modules/premium/store/types';
@@ -99,19 +98,6 @@ export function SubscriptionCard({
         >
           <span className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
             Most Popular
-          </span>
-        </motion.div>
-      )}
-
-      {/* Best value badge */}
-      {plan.tier === 'enterprise' && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-3 left-1/2 z-10 -translate-x-1/2"
-        >
-          <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1 text-xs font-bold text-white shadow-lg">
-            <Crown className="h-3 w-3" /> Best Value
           </span>
         </motion.div>
       )}

@@ -16,11 +16,9 @@ export const PROMO_CODES: Record<string, number> = {
   vip50: 0.5,
 };
 
-export const SUBSCRIPTION_TIER_MAP: Record<string, 'free' | 'premium' | 'enterprise'> = {
+export const SUBSCRIPTION_TIER_MAP: Record<string, 'free' | 'premium'> = {
   basic: 'premium',
   plus: 'premium',
   pro: 'premium',
   premium: 'premium',
-  business: 'enterprise',
-  enterprise: 'enterprise',
 };

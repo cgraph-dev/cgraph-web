@@ -38,7 +38,7 @@ export type TabId = 'colors' | 'avatar' | 'bubbles';
 export interface AvatarBorderOption {
   value: AvatarBorderType;
   label: string;
-  tier: 'free' | 'premium' | 'enterprise';
+  tier: 'free' | 'premium';
 }
 
 /**
@@ -47,7 +47,7 @@ export interface AvatarBorderOption {
 export interface BubbleStyleOption {
   value: ChatBubbleStylePreset;
   label: string;
-  tier: 'free' | 'premium' | 'enterprise';
+  tier: 'free' | 'premium';
 }
 
 /**

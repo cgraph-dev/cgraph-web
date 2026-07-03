@@ -13,11 +13,6 @@
       "price": "{{price}}/month",
       "annual_price": "{{price}}/year",
       "save": "Save {{percent}}%"
-    },
-    "enterprise": {
-      "name": "Enterprise",
-      "description": "For teams and organizations",
-      "price": "Contact sales"
     }
   },
   "features": {

@@ -221,16 +221,13 @@ vi.mock('@/modules/premium/components/subscription-card.constants', () => ({
     free: <span>🆓</span>,
     basic: <span>⭐</span>,
     premium: <span>💎</span>,
-    enterprise: <span>👑</span>,
   },
-  TIER_COLORS: { free: 'gray', basic: 'blue', premium: 'purple', enterprise: 'amber' },
+  TIER_COLORS: { free: 'gray', basic: 'blue', premium: 'purple' },
   TIER_GRADIENTS: {
     free: 'from-gray-500 to-gray-600',
     basic: 'from-blue-500 to-cyan-500',
     premium: 'from-purple-500 to-pink-500',
-    enterprise: 'from-amber-500 to-orange-600',
   },
-  Crown: ({ className }: { className?: string }) => <span className={className}>👑</span>,
 }));
 
 vi.mock('@/modules/premium/components/compact-subscription-card', () => ({

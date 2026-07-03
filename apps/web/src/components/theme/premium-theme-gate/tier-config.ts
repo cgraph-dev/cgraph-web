@@ -2,12 +2,10 @@
  * Premium tier configuration for theme gating.
  */
 import { StarIcon } from '@heroicons/react/24/solid';
-import { SparklesIcon } from '@heroicons/react/24/outline';
 
 export const tierHierarchy = {
   free: 0,
   premium: 1,
-  enterprise: 2,
 } as const;
 
 export const tierConfig = {
@@ -25,13 +23,6 @@ export const tierConfig = {
     borderColor: 'border-amber-500',
     icon: StarIcon,
   },
-  enterprise: {
-    label: 'Enterprise',
-    color: 'text-purple-400',
-    bgColor: 'bg-gradient-to-r from-purple-600 to-pink-500',
-    borderColor: 'border-purple-500',
-    icon: SparklesIcon,
-  },
 } as const;
 
-export type PremiumTier = 'free' | 'premium' | 'enterprise';
+export type PremiumTier = 'free' | 'premium';

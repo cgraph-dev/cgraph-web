@@ -50,10 +50,10 @@ describe('useBilling', () => {
       const { result } = renderHook(() => useBilling());
 
       await act(async () => {
-        await result.current.redirectToCheckout('enterprise');
+        await result.current.redirectToCheckout('premium');
       });
 
-      expect(mockRedirectToCheckout).toHaveBeenCalledWith('enterprise', false);
+      expect(mockRedirectToCheckout).toHaveBeenCalledWith('premium', false);
     });
 
     it('propagates errors from billingService', async () => {
@@ -98,8 +98,8 @@ describe('useBilling', () => {
   describe('getPlans', () => {
     it('returns plans from billingService', async () => {
       const mockPlans = [
+        { id: 'free', name: 'Free', price: 0 },
         { id: 'premium', name: 'Premium', price: 9.99 },
-        { id: 'enterprise', name: 'Enterprise', price: 29.99 },
       ];
       mockGetPlans.mockResolvedValueOnce(mockPlans);
 

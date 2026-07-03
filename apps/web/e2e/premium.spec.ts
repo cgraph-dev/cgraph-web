@@ -16,7 +16,7 @@ test.describe('Premium Page', () => {
 
     await expect(page.getByRole('main')).toBeVisible();
     await expect(page.locator('body')).toContainText(
-      /premium|enterprise|free|plan|subscription|manage your plan|upgrade/i
+      /premium|free|plan|subscription|manage your plan|upgrade/i
     );
   });
 

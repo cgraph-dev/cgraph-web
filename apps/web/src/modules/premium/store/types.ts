@@ -2,7 +2,7 @@
  * Premium Types
  */
 
-export type SubscriptionTier = 'free' | 'premium' | 'enterprise';
+export type SubscriptionTier = 'free' | 'premium';
 
 export interface NodePackage {
   id: string;

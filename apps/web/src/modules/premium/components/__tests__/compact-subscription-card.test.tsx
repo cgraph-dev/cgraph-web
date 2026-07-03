@@ -20,11 +20,10 @@ vi.mock('@/lib/animations/animation-engine', () => ({
 }));
 
 vi.mock('@/modules/premium/components/subscription-card.constants', () => ({
-  TIER_ICONS: { free: '🆓', premium: '⭐', enterprise: '👑' },
+  TIER_ICONS: { free: '🆓', premium: '⭐' },
   TIER_GRADIENTS: {
     free: 'from-gray-500',
     premium: 'from-blue-500',
-    enterprise: 'from-purple-500',
   },
 }));
 

@@ -28,7 +28,7 @@ export function ManageSubscriptionPanel() {
   const { currentTier, expiresAt } = usePremiumStore();
 
   const tierLabel = currentTier || (user?.isPremium ? 'premium' : 'free');
-  const isPremium = tierLabel === 'premium' || tierLabel === 'enterprise';
+  const isPremium = tierLabel === 'premium';
 
   // Calculate time remaining
   const getTimeRemaining = () => {

@@ -32,8 +32,8 @@ export const AVATAR_BORDER_OPTIONS: AvatarBorderOption[] = [
   { value: 'fire', label: 'Fire', tier: 'premium' },
   { value: 'ice', label: 'Ice', tier: 'premium' },
   { value: 'electric', label: 'Electric', tier: 'premium' },
-  { value: 'legendary', label: 'Legendary', tier: 'enterprise' },
-  { value: 'mythic', label: 'Mythic', tier: 'enterprise' },
+  { value: 'legendary', label: 'Legendary', tier: 'premium' },
+  { value: 'mythic', label: 'Mythic', tier: 'premium' },
 ];
 
 // BUBBLE STYLE OPTIONS
@@ -46,7 +46,7 @@ export const BUBBLE_STYLE_OPTIONS: BubbleStyleOption[] = [
   { value: 'modern', label: 'Modern', tier: 'premium' },
   { value: 'retro', label: 'Retro', tier: 'premium' },
   { value: 'neon', label: 'Neon', tier: 'premium' },
-  { value: 'glass', label: 'Glass', tier: 'enterprise' },
+  { value: 'glass', label: 'Glass', tier: 'premium' },
 ];
 
 // QUICK PRESETS

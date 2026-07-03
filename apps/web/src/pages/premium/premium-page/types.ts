@@ -20,7 +20,7 @@ export interface PremiumFeature {
  * Premium subscription tier configuration
  *
  * The `id` field must match a valid SubscriptionTier:
- * free | premium | enterprise
+ * free | premium
  *
  * Note: UI badges may display "PRO" as a short branding label for the premium tier.
  */

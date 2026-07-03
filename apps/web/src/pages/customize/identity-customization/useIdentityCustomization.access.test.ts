@@ -13,7 +13,7 @@ describe('identity customization premium access', () => {
     expect(
       hasPremiumAccessForCustomization({
         isPremium: false,
-        subscription: { tier: 'enterprise', status: 'active' },
+        subscription: { tier: 'premium', status: 'active' },
       })
     ).toBe(true);
   });

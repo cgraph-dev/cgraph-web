@@ -2,7 +2,7 @@
  * Premium Page - Main Component
  *
  * Displays premium tiers, features, and handles subscription management.
- * Production-ready with three subscription tiers and Stripe integration ready.
+ * Production-ready with free and premium tiers and Stripe integration ready.
  */
 
 import { durations } from '@cgraph-dev/animation-constants';
@@ -57,9 +57,7 @@ export default function PremiumPage() {
     HapticFeedback.medium();
 
     try {
-      const planId: Parameters<typeof redirectToCheckout>[0] =
-        tierId === 'premium' ? 'premium' : 'enterprise';
-      await redirectToCheckout(planId, billingInterval === 'year');
+      await redirectToCheckout('premium', billingInterval === 'year');
     } catch (error) {
       logger.error('Subscription error:', error);
       toast.error('Subscription failed. Please try again or contact support.');

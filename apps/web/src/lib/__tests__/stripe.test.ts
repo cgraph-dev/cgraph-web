@@ -31,10 +31,10 @@ import type { PlanId } from '../stripe';
 describe('Stripe Integration', () => {
 
   describe('PLANS', () => {
-    it('should have 3 plans: free, premium, enterprise', () => {
-      expect(PLANS).toHaveLength(3);
+    it('should have 2 plans: free and premium', () => {
+      expect(PLANS).toHaveLength(2);
       const ids = PLANS.map((p) => p.id);
-      expect(ids).toEqual(['free', 'premium', 'enterprise']);
+      expect(ids).toEqual(['free', 'premium']);
     });
 
     it('free plan should have price 0', () => {
@@ -55,12 +55,6 @@ describe('Stripe Integration', () => {
       expect(premium.badge).toBe('Popular');
     });
 
-    it('enterprise plan should have custom pricing (-1)', () => {
-      const enterprise = PLANS.find((p) => p.id === 'enterprise')!;
-      expect(enterprise.price).toBe(-1);
-      expect(enterprise.priceYearly).toBe(-1);
-    });
-
     it('all plans should have features arrays', () => {
       for (const plan of PLANS) {
         expect(Array.isArray(plan.features)).toBe(true);
@@ -76,8 +70,8 @@ describe('Stripe Integration', () => {
     });
   });
   describe('tier model consistency', () => {
-    it('plan IDs should match canonical free|premium|enterprise model', () => {
-      const validIds: PlanId[] = ['free', 'premium', 'enterprise'];
+    it('plan IDs should match canonical free|premium model', () => {
+      const validIds: PlanId[] = ['free', 'premium'];
       for (const plan of PLANS) {
         expect(validIds).toContain(plan.id);
       }

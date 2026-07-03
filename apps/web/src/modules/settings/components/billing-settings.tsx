@@ -71,12 +71,6 @@ export function BillingSettings({ className = '' }: BillingSettingsProps) {
   }, [fetchBillingStatus]);
 
   async function handleUpgrade(planId: PlanId) {
-    if (planId === 'enterprise') {
-      // Redirect to contact sales
-      window.open('mailto:sales@cgraph.org?subject=Enterprise%20Inquiry', '_blank');
-      return;
-    }
-
     try {
       setCheckoutLoading(planId);
       const result = await apiClient.billing.createCheckout(planId, billingCycle === 'yearly');

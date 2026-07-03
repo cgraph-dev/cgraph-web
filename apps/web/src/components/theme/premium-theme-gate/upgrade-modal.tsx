@@ -23,7 +23,7 @@ export function UpgradeModal({ requiredTier, onClose }: UpgradeModalProps) {
     {
       tier: 'premium' as const,
       name: 'Premium',
-      price: '$4.99',
+      price: '$9.99',
       period: '/month',
       features: [
         'Animated avatar borders',
@@ -33,22 +33,6 @@ export function UpgradeModal({ requiredTier, onClose }: UpgradeModalProps) {
         'Priority support',
       ],
       highlighted: requiredTier === 'premium',
-    },
-    {
-      tier: 'enterprise' as const,
-      name: 'Enterprise',
-      price: '$9.99',
-      period: '/month',
-      features: [
-        'All Premium features',
-        'Legendary & Mythic borders',
-        'Holographic effects',
-        'Custom particle systems',
-        'Exclusive seasonal themes',
-        'Early access to features',
-        'Custom CSS support',
-      ],
-      highlighted: requiredTier === 'enterprise',
     },
   ];
 
@@ -83,7 +67,7 @@ export function UpgradeModal({ requiredTier, onClose }: UpgradeModalProps) {
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="mx-auto grid max-w-md gap-6">
             {plans.map((plan) => {
               const config = tierConfig[plan.tier];
               return (

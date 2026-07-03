@@ -92,7 +92,7 @@ export function userHasPremiumAccess(
   const tier = user?.subscription?.tier;
   const status = user?.subscription?.status;
   const expiresAt = user?.subscription?.expiresAt;
-  const isPaidTier = tier === 'premium' || tier === 'enterprise';
+  const isPaidTier = tier === 'premium';
   const isActiveStatus = status === undefined || status === null || status === 'active';
   const expiresAtTime = expiresAt ? Date.parse(expiresAt) : Number.NaN;
   const isUnexpired = !expiresAt || Number.isNaN(expiresAtTime) || expiresAtTime > Date.now();

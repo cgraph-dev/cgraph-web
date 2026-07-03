@@ -1,4 +1,4 @@
-export type PlanId = 'free' | 'premium' | 'enterprise';
+export type PlanId = 'free' | 'premium';
 
 export interface Plan {
   id: PlanId;
@@ -29,13 +29,5 @@ export const PLANS: Plan[] = [
     highlighted: true,
     badge: 'Popular',
     features: ['Premium identity items', 'Expanded media storage', 'Priority support'],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    description: 'Custom plans for larger communities and teams.',
-    price: -1,
-    priceYearly: -1,
-    features: ['Custom limits', 'Dedicated onboarding', 'Advanced administration'],
   },
 ];

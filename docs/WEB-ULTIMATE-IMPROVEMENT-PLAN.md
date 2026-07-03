@@ -755,7 +755,7 @@ expects `meta.cursor`. **Effort:** 3 h.
 `lib/cgraph/messaging/envelope_limiter.ex`. **Ref:** Signal-Server `limits/` uses leaky-bucket +
 per-account envelope ceiling. **Build:** Counter in Redis keyed by
 `msg_envelope:{user_id}:{YYYYMMDD}` incremented on every send. Default limits: free 2 000/day,
-premium 20 000/day, enterprise unlimited. Reject with
+premium 20 000/day. Reject with
 `{ error: { code: "envelope_exceeded", message, details: { reset_at } } }`. **Effort:** 1 day.
 
 ### 28. Oban dead-letter queue

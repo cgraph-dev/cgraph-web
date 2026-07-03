@@ -133,14 +133,6 @@ describe('billingService', () => {
           stripePriceId: 'price_premium_monthly',
           stripePriceIdYearly: 'price_premium_yearly',
         },
-        {
-          id: 'enterprise',
-          name: 'Enterprise',
-          price: 2999,
-          priceYearly: 29990,
-          stripePriceId: 'price_enterprise_monthly',
-          stripePriceIdYearly: 'price_enterprise_yearly',
-        },
       ];
 
       mockApi.get.mockResolvedValue({ data: { data: mockPlans } });
@@ -148,10 +140,9 @@ describe('billingService', () => {
       const result = await billingService.getPlans();
 
       expect(mockApi.get).toHaveBeenCalledWith('/api/v1/billing/plans');
-      expect(result).toHaveLength(3);
+      expect(result).toHaveLength(2);
       expect(result[0]!.id).toBe('free');
       expect(result[1]!.price).toBe(999);
-      expect(result[2]!.id).toBe('enterprise');
     });
 
     it('should propagate API errors', async () => {
@@ -188,10 +179,10 @@ describe('billingService', () => {
 
       mockApi.post.mockResolvedValue({ data: { data: mockSession } });
 
-      const result = await billingService.createCheckout('enterprise', true);
+      const result = await billingService.createCheckout('premium', true);
 
       expect(mockApi.post).toHaveBeenCalledWith('/api/v1/billing/checkout', {
-        plan_id: 'enterprise',
+        plan_id: 'premium',
         yearly: true,
       });
       expect(result.sessionId).toBe('cs_test_yearly');
@@ -265,10 +256,10 @@ describe('billingService', () => {
         data: { data: { sessionId: 'cs_yearly', url: 'https://stripe.com/yearly' } },
       });
 
-      await billingService.redirectToCheckout('enterprise', true);
+      await billingService.redirectToCheckout('premium', true);
 
       expect(mockApi.post).toHaveBeenCalledWith('/api/v1/billing/checkout', {
-        plan_id: 'enterprise',
+        plan_id: 'premium',
         yearly: true,
       });
       expect(safeRedirect).toHaveBeenCalledWith('https://stripe.com/yearly');

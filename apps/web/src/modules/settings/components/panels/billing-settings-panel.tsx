@@ -208,7 +208,7 @@ export function BillingSettingsPanel() {
   };
 
   const tierLabel = currentTier || (user?.isPremium ? 'premium' : 'free');
-  const isPremium = tierLabel === 'premium' || tierLabel === 'enterprise';
+  const isPremium = tierLabel === 'premium';
 
   const powerUps = [
     {

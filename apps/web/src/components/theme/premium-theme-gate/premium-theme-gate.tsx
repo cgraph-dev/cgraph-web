@@ -13,7 +13,7 @@ import { tweens, loop } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 
 function isPremiumTier(value: string): value is PremiumTier {
-  return value === 'free' || value === 'premium' || value === 'enterprise';
+  return value === 'free' || value === 'premium';
 }
 
 function getUserTier(subscriptionTier: string | undefined, isPremiumTheme: boolean): PremiumTier {

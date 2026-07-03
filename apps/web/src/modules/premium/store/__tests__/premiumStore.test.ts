@@ -105,10 +105,10 @@ describe('premiumStore', () => {
 
     it('should overwrite previous subscription when called again', () => {
       usePremiumStore.getState().setSubscription('premium', '2026-03-01T00:00:00Z');
-      usePremiumStore.getState().setSubscription('enterprise', '2026-12-31T23:59:59Z');
+      usePremiumStore.getState().setSubscription('premium', '2026-12-31T23:59:59Z');
 
       const s = usePremiumStore.getState();
-      expect(s.currentTier).toBe('enterprise');
+      expect(s.currentTier).toBe('premium');
       expect(s.expiresAt).toBe('2026-12-31T23:59:59Z');
     });
   });
@@ -269,12 +269,12 @@ describe('premiumStore', () => {
       expect(usePremiumStore.getState().purchaseHistory).toHaveLength(1);
     });
 
-    it('should handle tier upgrade by calling setSubscription again', () => {
+    it('should handle renewed premium by calling setSubscription again', () => {
       usePremiumStore.getState().setSubscription('premium', '2026-06-01T00:00:00Z');
       expect(usePremiumStore.getState().currentTier).toBe('premium');
 
-      usePremiumStore.getState().setSubscription('enterprise', '2027-01-01T00:00:00Z');
-      expect(usePremiumStore.getState().currentTier).toBe('enterprise');
+      usePremiumStore.getState().setSubscription('premium', '2027-01-01T00:00:00Z');
+      expect(usePremiumStore.getState().currentTier).toBe('premium');
       expect(usePremiumStore.getState().isSubscribed).toBe(true);
     });
   });

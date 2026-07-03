@@ -58,7 +58,7 @@ export function FeatureComparison({
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [tooltipFeature, setTooltipFeature] = useState<string | null>(null);
 
-  const tiers: SubscriptionTier[] = ['free', 'premium', 'enterprise'];
+  const tiers: SubscriptionTier[] = ['free', 'premium'];
 
   const getPlanPrice = (tier: SubscriptionTier) => {
     const plan = plans.find((p) => p.tier === tier);

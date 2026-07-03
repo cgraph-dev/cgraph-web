@@ -218,7 +218,6 @@ export const getTierGlow = (tier: string): string => {
   const tierColors: Record<string, string> = {
     free: '#10b981',
     premium: '#8b5cf6',
-    enterprise: '#ec4899',
   };
   return tierColors[tier] ?? '#10b981';
 };

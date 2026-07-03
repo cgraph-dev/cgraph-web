@@ -10,7 +10,6 @@ import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/ani
 export type BorderTheme =
   | 'free' // Free tier borders
   | 'premium' // Premium subscription
-  | 'enterprise' // Enterprise subscription
   | 'legendary' // Achievement-locked
   | 'mythic' // Special events/Top 100
   | '8bit' // Retro gaming aesthetic
@@ -147,11 +146,6 @@ export const THEME_COLORS: Record<
     primary: '#10b981',
     secondary: '#059669',
     accent: '#34d399',
-  },
-  enterprise: {
-    primary: '#8b5cf6',
-    secondary: '#7c3aed',
-    accent: '#a78bfa',
   },
   legendary: {
     primary: '#f59e0b',

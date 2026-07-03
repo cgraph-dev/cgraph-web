@@ -4,14 +4,14 @@
  * Premium tier definitions and FAQ content.
  */
 
-import { StarIcon, RocketLaunchIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { StarIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import type { PremiumTier, FAQItem } from './types';
 
 /**
  * Premium subscription tier configurations
  *
  * Tier IDs must match `SubscriptionTier` in store/types.ts and `PlanId` in lib/stripe.tsx:
- * free | premium | enterprise
+ * free | premium
  */
 export const PREMIUM_TIERS: PremiumTier[] = [
   {
@@ -61,30 +61,6 @@ export const PREMIUM_TIERS: PremiumTier[] = [
       { name: 'AI message suggestions', included: true },
       { name: 'Real-time translation', included: true, detail: '100+ languages' },
       { name: 'Animated profile', included: true },
-    ],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: -1,
-    interval: 'month',
-    description: 'Custom solutions for large organizations',
-    icon: <RocketLaunchIcon className="h-6 w-6" />,
-    color: 'rose',
-    gradient: 'from-rose-500 to-red-600',
-    features: [
-      { name: 'Everything in Premium', included: true },
-      { name: 'Dedicated account manager', included: true },
-      { name: 'Custom integrations', included: true },
-      { name: 'SLA guarantee', included: true },
-      { name: 'On-premise option', included: true },
-      { name: '100MB file uploads', included: true },
-      { name: '3x XP boost', included: true },
-      { name: '50% node bonus', included: true },
-      { name: 'Unlimited everything', included: true },
-      { name: 'White-label option', included: true },
-      { name: 'Custom SLA', included: true },
-      { name: 'Priority phone support', included: true },
     ],
   },
 ];
