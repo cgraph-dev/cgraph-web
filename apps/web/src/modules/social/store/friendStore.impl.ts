@@ -250,6 +250,21 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
     set({ isLoading: false });
   },
 
+  cancelRequest: async (requestId: string) => {
+    set({ isLoading: true, error: null });
+    const result = await apiClient.friends.cancelRequest(requestId);
+    if (!result.ok) {
+      logger.error('Failed to cancel friend request', result.error);
+      set({ error: result.error.message, isLoading: false });
+      throw new Error(result.error.message);
+    }
+    invalidateFriendReads(['outgoing']);
+    set((state) => ({
+      sentRequests: state.sentRequests.filter((request) => request.id !== requestId),
+      isLoading: false,
+    }));
+  },
+
   removeFriend: async (friendId: string) => {
     set({ isLoading: true, error: null });
     const result = await apiClient.friends.remove(friendId);
@@ -273,10 +288,11 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       set({ error: result.error.message, isLoading: false });
       throw new Error(result.error.message);
     }
-    invalidateFriendReads(['friends', 'incoming']);
+    invalidateFriendReads(['friends', 'incoming', 'outgoing']);
     set((state) => ({
       friends: state.friends.filter((f) => f.id !== userId),
       pendingRequests: state.pendingRequests.filter((r) => r.user.id !== userId),
+      sentRequests: state.sentRequests.filter((r) => r.user.id !== userId),
       isLoading: false,
     }));
   },

@@ -27,10 +27,6 @@ export interface NewChatModalProps {
   onClose: () => void;
 }
 
-export interface AddFriendModalProps {
-  onClose: () => void;
-}
-
 export interface MockUser {
   id: string;
   username: string;

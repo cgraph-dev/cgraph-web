@@ -10,7 +10,6 @@ import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
 import {
   applySpaceConversationPatch,
-  AddFriendModal,
   ConversationSidebar,
   filterConversations,
   NewChatModal,
@@ -55,7 +54,6 @@ export default function Messages() {
   } = useChatStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
-  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatusMap>({});
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -285,7 +283,7 @@ export default function Messages() {
         isLoading={showArchived ? isLoadingArchivedConversations : isLoadingConversations}
         onSearchChange={setSearchQuery}
         onOpenSearch={() => setIsSearchOpen(true)}
-        onAddFriend={() => setShowAddFriendModal(true)}
+        onAddFriend={() => navigate('/social/friends')}
         onNewConversation={() => setShowNewChatModal(true)}
         onMarkAsRead={handleMarkConversationRead}
         onMarkAsUnread={handleMarkConversationUnread}
@@ -316,7 +314,6 @@ export default function Messages() {
       />
 
       {/* New Chat Modal */}
-      {showAddFriendModal && <AddFriendModal onClose={() => setShowAddFriendModal(false)} />}
       {showNewChatModal && <NewChatModal onClose={() => setShowNewChatModal(false)} />}
     </div>
   );

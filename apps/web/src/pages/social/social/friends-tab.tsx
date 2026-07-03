@@ -1,30 +1,206 @@
-/**
- * FriendsTab Component
- * Friends list with pending requests and search
- */
-
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import {
-  MagnifyingGlassIcon,
-  CheckIcon,
-  XMarkIcon,
+  ArrowPathIcon,
   ChatBubbleLeftRightIcon,
+  CheckIcon,
+  MagnifyingGlassIcon,
+  NoSymbolIcon,
   UserMinusIcon,
+  UserPlusIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
-import UserProfileCard from '@/modules/social/components/user-profile-card';
+
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { getAvatarBorderId } from '@/lib/utils';
+import UserProfileCard from '@/modules/social/components/user-profile-card';
+import type { Friend, FriendRequest } from '@/modules/social/store';
+import { FriendRequestDialog } from './friend-request-dialog';
 import type { FriendsTabProps } from './types';
-import { FADE_UP } from '@/lib/animations/transitions';
 
-/**
- */
-/**
- * Friends Tab component.
- */
+interface BlockTarget {
+  id: string;
+  name: string;
+}
+
+function displayName(user: { username: string; displayName: string | null }) {
+  return user.displayName || user.username;
+}
+
+function SectionHeader({ title, count }: { title: string; count: number }) {
+  return (
+    <div className="flex h-9 items-center justify-between border-b border-[var(--token-border-muted)] px-1">
+      <h3 className="text-xs font-semibold uppercase text-white/50">{title}</h3>
+      <span className="text-xs tabular-nums text-white/35">{count}</span>
+    </div>
+  );
+}
+
+interface RequestRowProps {
+  request: FriendRequest;
+  isLoading: boolean;
+  onAcceptRequest: (requestId: string) => Promise<void>;
+  onDeclineRequest: (requestId: string) => Promise<void>;
+  onCancelRequest: (requestId: string) => Promise<void>;
+  onBlock: (target: BlockTarget) => void;
+}
+
+function RequestRow({
+  request,
+  isLoading,
+  onAcceptRequest,
+  onDeclineRequest,
+  onCancelRequest,
+  onBlock,
+}: RequestRowProps) {
+  const name = displayName(request.user);
+
+  return (
+    <div className="flex min-h-14 items-center gap-3 border-b border-[var(--token-border-muted)] px-1 py-2 last:border-b-0">
+      <UserProfileCard userId={request.user.id} trigger="both">
+        <ThemedAvatar
+          src={request.user.avatarUrl}
+          alt={name}
+          size="small"
+          className="h-10 w-10"
+          avatarBorderId={getAvatarBorderId(request.user)}
+          fallbackText={name}
+        />
+      </UserProfileCard>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-white">{name}</p>
+        <p className="truncate text-xs text-white/45">@{request.user.username}</p>
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-1">
+        {request.type === 'incoming' ? (
+          <>
+            <button
+              type="button"
+              onClick={() => void onAcceptRequest(request.id)}
+              disabled={isLoading}
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-emerald-300 hover:bg-emerald-500/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:opacity-40"
+              aria-label={`Accept friend request from ${name}`}
+              title="Accept"
+            >
+              <CheckIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => void onDeclineRequest(request.id)}
+              disabled={isLoading}
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-white/55 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 disabled:opacity-40"
+              aria-label={`Decline friend request from ${name}`}
+              title="Decline"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void onCancelRequest(request.id)}
+            disabled={isLoading}
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-white/55 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 disabled:opacity-40"
+            aria-label={`Cancel friend request to ${name}`}
+            title="Cancel request"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onBlock({ id: request.user.id, name })}
+          disabled={isLoading}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white/45 hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-40"
+          aria-label={`Block ${name}`}
+          title="Block"
+        >
+          <NoSymbolIcon className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface FriendRowProps {
+  friend: Friend;
+  isLoading: boolean;
+  onRemoveFriend: (friendshipId: string) => Promise<void>;
+  onBlock: (target: BlockTarget) => void;
+}
+
+function FriendRow({ friend, isLoading, onRemoveFriend, onBlock }: FriendRowProps) {
+  const navigate = useNavigate();
+  const name = displayName(friend);
+
+  return (
+    <div className="group flex min-h-14 items-center gap-3 border-b border-[var(--token-border-muted)] px-1 py-2 last:border-b-0">
+      <UserProfileCard userId={friend.id} trigger="both">
+        <div className="relative flex-shrink-0">
+          <ThemedAvatar
+            src={friend.avatarUrl}
+            alt={name}
+            size="small"
+            className="h-10 w-10"
+            avatarBorderId={getAvatarBorderId(friend)}
+            fallbackText={name}
+          />
+          {friend.status === 'online' ? (
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-[var(--token-bg-primary)]" />
+          ) : null}
+        </div>
+      </UserProfileCard>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-white">{name}</p>
+        <p className="truncate text-xs text-white/45">@{friend.username}</p>
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={() => {
+            navigate(`/messages?userId=${friend.id}`);
+            HapticFeedback.medium();
+          }}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white/55 hover:bg-primary-500/10 hover:text-primary-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+          aria-label={`Message ${name}`}
+          title="Message"
+        >
+          <ChatBubbleLeftRightIcon className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => void onRemoveFriend(friend.friendshipId)}
+          disabled={isLoading}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white/45 hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-40"
+          aria-label={`Remove ${name} from friends`}
+          title="Remove friend"
+        >
+          <UserMinusIcon className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onBlock({ id: friend.id, name })}
+          disabled={isLoading}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white/45 hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-40"
+          aria-label={`Block ${name}`}
+          title="Block"
+        >
+          <NoSymbolIcon className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function FriendsTab({
   friends,
   pendingRequests,
@@ -35,258 +211,171 @@ export function FriendsTab({
   onDeclineRequest,
   onCancelRequest,
   onRemoveFriend,
-  isLoading,
+  onBlockUser,
+  isLoading = false,
   error,
   onRetry,
 }: FriendsTabProps) {
-  const navigate = useNavigate();
+  const [showAddFriend, setShowAddFriend] = useState(false);
+  const [blockTarget, setBlockTarget] = useState<BlockTarget | null>(null);
+  const [isBlocking, setIsBlocking] = useState(false);
 
-  // Show error state with retry button
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <GlassCard variant="frosted" className="max-w-md p-8 text-center">
-          <div className="mb-4 text-5xl text-red-400">⚠️</div>
-          <h3 className="mb-2 text-xl font-bold text-white">Something went wrong</h3>
-          <p className="mb-6 text-gray-400">{error}</p>
-          {onRetry && (
-            <button
-              onClick={onRetry}
-              className="border-primary-500/20 bg-primary-500/10 hover:bg-primary-500/16 rounded-xl border px-8 py-3 text-sm font-bold text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Try Again
-            </button>
-          )}
-        </GlassCard>
-      </div>
-    );
-  }
-
-  // Show loading state
-  if (isLoading && friends.length === 0 && pendingRequests.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-        <p className="text-gray-400">Loading friends...</p>
-      </div>
-    );
+  async function confirmBlock() {
+    if (!blockTarget || isBlocking) return;
+    setIsBlocking(true);
+    try {
+      await onBlockUser(blockTarget.id);
+      setBlockTarget(null);
+      HapticFeedback.success();
+    } catch {
+      HapticFeedback.error();
+    } finally {
+      setIsBlocking(false);
+    }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Search Bar - Optimized for Sidebar */}
-      <div className="relative">
+    <section className="mx-auto flex h-full w-full max-w-4xl flex-col" aria-label="Friends and requests">
+      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--token-border-muted)] pb-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-xl font-bold text-white">Friends</h2>
+          <p className="mt-1 text-sm text-white/45">
+            {friends.length} friends, {pendingRequests.length} incoming, {sentRequests.length} sent
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAddFriend(true)}
+          className="flex h-11 items-center gap-2 rounded-lg bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+        >
+          <UserPlusIcon className="h-5 w-5" />
+          Add friend
+        </button>
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={isLoading || !onRetry}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-white/55 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 disabled:opacity-40"
+          aria-label="Refresh friends and requests"
+          title="Refresh"
+        >
+          <ArrowPathIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      <div className="relative mt-4">
+        <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
         <input
-          type="text"
+          type="search"
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search friends..."
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Search friends"
           aria-label="Search friends"
-          className="focus:border-primary-500/40 focus:ring-primary-500/20 peer w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] py-3 pl-11 pr-4 text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:outline-none focus:ring-1 focus:placeholder:text-transparent"
+          className="h-11 w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] pl-10 pr-3 text-sm text-white placeholder:text-white/30 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/25"
         />
-        <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
       </div>
 
-      {/* Pending Requests */}
-      {pendingRequests.length > 0 && (
-        <div>
-          <h3 className="text-primary-400/80 mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider">
-            <span className="from-primary-500/30 h-px flex-1 bg-gradient-to-r to-transparent" />
-            Pending Requests ({pendingRequests.length})
-            <span className="from-primary-500/30 h-px flex-1 bg-gradient-to-l to-transparent" />
-          </h3>
-          <div className="space-y-2">
-            {pendingRequests.map((request, index) => (
-              <motion.div
-                key={request.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <GlassCard variant="neon" glow className="p-4">
-                  <div className="flex items-center gap-3">
-                    <UserProfileCard userId={request.user?.id || ''} trigger="both">
-                      <div className="shadow-primary-500/20 ring-primary-500/20 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-violet-600 font-medium text-white shadow-lg ring-2">
-                        {request.user?.username?.charAt(0).toUpperCase() || '?'}
-                      </div>
-                    </UserProfileCard>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-white">
-                        {request.user?.displayName || request.user?.username || 'Unknown User'}
-                      </p>
-                      <p className="truncate text-sm text-white/40">
-                        @{request.user?.username || 'unknown'}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-shrink-0 items-center gap-2">
-                      <motion.button
-                        whileHover={{ opacity: 0.9 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          onAcceptRequest(request.id);
-                          HapticFeedback.success();
-                        }}
-                        className="border-primary-500/20 bg-primary-500/10 hover:bg-primary-500/16 focus-visible:ring-primary-300/70 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)]"
-                        title="Accept"
-                        aria-label={`Accept friend request from ${request.user?.displayName || request.user?.username || 'user'}`}
-                      >
-                        <CheckIcon className="h-5 w-5" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ opacity: 0.9 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          onDeclineRequest(request.id);
-                          HapticFeedback.medium();
-                        }}
-                        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)] text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)]"
-                        title="Decline"
-                        aria-label={`Decline friend request from ${request.user?.displayName || request.user?.username || 'user'}`}
-                      >
-                        <XMarkIcon className="h-5 w-5" />
-                      </motion.button>
-                    </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
+      {error ? (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-red-400/25 bg-red-500/10 px-3 py-2" role="alert">
+          <p className="min-w-0 text-sm text-red-100">{error}</p>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="h-9 flex-shrink-0 rounded-lg px-3 text-sm font-semibold text-red-100 hover:bg-red-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+            >
+              Try again
+            </button>
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {/* Sent Requests */}
-      {sentRequests.length > 0 && (
-        <div>
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white/40">
-            <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-            Sent Requests ({sentRequests.length})
-            <span className="h-px flex-1 bg-gradient-to-l from-white/10 to-transparent" />
-          </h3>
-          <div className="space-y-2">
-            {sentRequests.map((request, index) => (
-              <motion.div
+      <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+        {pendingRequests.length > 0 ? (
+          <div className="mb-5">
+            <SectionHeader title="Incoming requests" count={pendingRequests.length} />
+            {pendingRequests.map((request) => (
+              <RequestRow
                 key={request.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <GlassCard variant="crystal" className="p-4">
-                  <div className="flex items-center gap-3">
-                    <UserProfileCard userId={request.user?.id || ''} trigger="both">
-                      <div className="shadow-primary-500/20 ring-primary-500/20 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-violet-600 font-medium text-white shadow-lg ring-2">
-                        {request.user?.username?.charAt(0).toUpperCase() || '?'}
-                      </div>
-                    </UserProfileCard>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-white">
-                        {request.user?.displayName || request.user?.username || 'Unknown User'}
-                      </p>
-                      <p className="truncate text-sm text-white/40">
-                        @{request.user?.username || 'unknown'}
-                      </p>
-                    </div>
-
-                    <motion.button
-                      whileHover={{ opacity: 0.9 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        onCancelRequest(request.id);
-                        HapticFeedback.medium();
-                      }}
-                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)] text-white/60 transition-all hover:bg-red-500/20 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)]"
-                      title="Cancel Request"
-                      aria-label={`Cancel friend request to ${request.user?.displayName || request.user?.username || 'user'}`}
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </motion.button>
-                  </div>
-                </GlassCard>
-              </motion.div>
+                request={request}
+                isLoading={isLoading}
+                onAcceptRequest={onAcceptRequest}
+                onDeclineRequest={onDeclineRequest}
+                onCancelRequest={onCancelRequest}
+                onBlock={setBlockTarget}
+              />
             ))}
           </div>
+        ) : null}
+
+        {sentRequests.length > 0 ? (
+          <div className="mb-5">
+            <SectionHeader title="Sent requests" count={sentRequests.length} />
+            {sentRequests.map((request) => (
+              <RequestRow
+                key={request.id}
+                request={request}
+                isLoading={isLoading}
+                onAcceptRequest={onAcceptRequest}
+                onDeclineRequest={onDeclineRequest}
+                onCancelRequest={onCancelRequest}
+                onBlock={setBlockTarget}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        <div>
+          <SectionHeader title="All friends" count={friends.length} />
+          {friends.length > 0 ? (
+            friends.map((friend) => (
+              <FriendRow
+                key={friend.id}
+                friend={friend}
+                isLoading={isLoading}
+                onRemoveFriend={onRemoveFriend}
+                onBlock={setBlockTarget}
+              />
+            ))
+          ) : (
+            <p className="py-10 text-center text-sm text-white/40">No friends found.</p>
+          )}
         </div>
-      )}
-
-      {/* Friends List */}
-      <div>
-        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white/40">
-          <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-          All Friends ({friends.length})
-          <span className="h-px flex-1 bg-gradient-to-l from-white/10 to-transparent" />
-        </h3>
-        {friends.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/5 px-4 py-12 text-center">
-            <p className="text-sm font-bold text-white/20"> No connections found </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-2">
-            {friends.map((friend, index) => (
-              <motion.div key={friend.id} {...FADE_UP} transition={{ delay: index * 0.03 }}>
-                <GlassCard
-                  variant="crystal"
-                  className="group cursor-pointer border-[var(--token-border-muted)] p-3 transition-all duration-300 hover:border-[var(--token-card-border)] hover:bg-[var(--token-bg-primary)]"
-                >
-                  <div className="flex items-center gap-3">
-                    <UserProfileCard userId={friend.id} trigger="both">
-                      <div className="relative flex-shrink-0">
-                        <ThemedAvatar
-                          src={friend.avatarUrl}
-                          alt={friend.displayName || friend.username}
-                          size="medium"
-                          className="h-12 w-12 ring-2 ring-white/[0.08]"
-                          avatarBorderId={getAvatarBorderId(friend)}
-                        />
-                        {friend.status === 'online' && (
-                          <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/40 ring-2 ring-dark-900" />
-                        )}
-                      </div>
-                    </UserProfileCard>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-white">
-                        {friend.displayName || friend.username}
-                      </p>
-                      <p className="truncate text-sm text-white/40">@{friend.username}</p>
-                    </div>
-
-                    <motion.button
-                      whileHover={{ opacity: 0.9 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/messages?userId=${friend.id}`);
-                        HapticFeedback.medium();
-                      }}
-                      className="hover:bg-primary-500/10 hover:border-primary-500/20 focus-visible:ring-primary-300/70 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-white/55 opacity-100 backdrop-blur-md transition-all hover:text-primary-300 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)] sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
-                      title="Send Message"
-                      aria-label={`Message ${friend.displayName || friend.username}`}
-                    >
-                      <ChatBubbleLeftRightIcon className="h-5 w-5" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ opacity: 0.9 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveFriend(friend.friendshipId);
-                        HapticFeedback.medium();
-                      }}
-                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-white/45 opacity-100 backdrop-blur-md transition-all hover:border-red-500/25 hover:bg-red-500/10 hover:text-red-300 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)] sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
-                      title="Remove Friend"
-                      aria-label={`Remove ${friend.displayName || friend.username} from friends`}
-                    >
-                      <UserMinusIcon className="h-5 w-5" />
-                    </motion.button>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </div>
-        )}
       </div>
-    </div>
+
+      <FriendRequestDialog open={showAddFriend} onOpenChange={setShowAddFriend} />
+
+      <Dialog open={blockTarget !== null} onOpenChange={(open) => !open && setBlockTarget(null)}>
+        <DialogContent>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="block-friend-title">
+            <DialogHeader>
+              <div id="block-friend-title">
+                <DialogTitle>Block {blockTarget?.name}?</DialogTitle>
+              </div>
+              <DialogDescription>
+                This removes the account from friends and pending requests. You can unblock them in settings.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setBlockTarget(null)}
+                className="h-11 rounded-lg border border-[var(--token-border-muted)] px-4 text-sm font-semibold text-white/70 hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmBlock()}
+                disabled={isBlocking}
+                className="h-11 rounded-lg bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50"
+              >
+                {isBlocking ? 'Blocking...' : 'Block'}
+              </button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </section>
   );
 }

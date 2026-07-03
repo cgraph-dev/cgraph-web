@@ -10,7 +10,6 @@ import {
   UsersIcon,
   BellIcon,
   MagnifyingGlassIcon,
-  UserPlusIcon,
 } from '@heroicons/react/24/outline';
 import { useFriendStore } from '@/modules/social/store';
 import type { Friend, FriendRequest } from '@/modules/social/store';
@@ -28,7 +27,6 @@ import { getGroupRoute } from '@/modules/groups/routing';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { captureError } from '@/lib/error-tracking';
 import { tweens } from '@/lib/animation-presets';
-import { publicProfilePath } from '@/lib/profile-route';
 
 function isNotificationType(value: string): value is NotificationType {
   return (
@@ -51,13 +49,19 @@ interface SocialMainPaneProps {
   sentRequests: readonly FriendRequest[];
   notifications: readonly Notification[];
   searchResults: readonly SearchResult[];
+  isFriendLoading: boolean;
+  friendError: string | null;
   onOpenRoute: (route: string) => void;
   onJoinGroup: (result: SearchResult) => Promise<void>;
   joiningGroupId: string | null;
-  onAcceptRequest: (requestId: string) => void;
-  onDeclineRequest: (requestId: string) => void;
-  onCancelRequest: (requestId: string) => void;
-  onRemoveFriend: (friendshipId: string) => void;
+  onAcceptRequest: (requestId: string) => Promise<void>;
+  onDeclineRequest: (requestId: string) => Promise<void>;
+  onCancelRequest: (requestId: string) => Promise<void>;
+  onRemoveFriend: (friendshipId: string) => Promise<void>;
+  onBlockUser: (userId: string) => Promise<void>;
+  onRetryFriends: () => void;
+  friendSearchQuery: string;
+  onFriendSearchChange: (query: string) => void;
   onMarkNotificationRead: (notificationId: string) => void;
 }
 
@@ -68,6 +72,8 @@ function SocialMainPane({
   sentRequests,
   notifications,
   searchResults,
+  isFriendLoading,
+  friendError,
   onOpenRoute,
   onJoinGroup,
   joiningGroupId,
@@ -75,8 +81,34 @@ function SocialMainPane({
   onDeclineRequest,
   onCancelRequest,
   onRemoveFriend,
+  onBlockUser,
+  onRetryFriends,
+  friendSearchQuery,
+  onFriendSearchChange,
   onMarkNotificationRead,
 }: SocialMainPaneProps) {
+  if (tab === 'friends') {
+    return (
+      <div className="h-full overflow-hidden px-8 py-6">
+        <FriendsTab
+          friends={[...friends]}
+          pendingRequests={[...pendingRequests]}
+          sentRequests={[...sentRequests]}
+          searchQuery={friendSearchQuery}
+          onSearchChange={onFriendSearchChange}
+          onAcceptRequest={onAcceptRequest}
+          onDeclineRequest={onDeclineRequest}
+          onCancelRequest={onCancelRequest}
+          onRemoveFriend={onRemoveFriend}
+          onBlockUser={onBlockUser}
+          isLoading={isFriendLoading}
+          error={friendError}
+          onRetry={onRetryFriends}
+        />
+      </div>
+    );
+  }
+
   if (tab === 'notifications') {
     const unread = notifications.filter((notification) => !notification.read);
     const visible = (unread.length > 0 ? unread : notifications).slice(0, 8);
@@ -159,129 +191,7 @@ function SocialMainPane({
     );
   }
 
-  const onlineFriends = friends.filter((friend) => friend.status === 'online');
-
-  return (
-    <div className="flex h-full flex-col px-10 py-8">
-      <div className="mb-6 flex items-center gap-3">
-        <UsersIcon className="h-6 w-6 text-primary-400" />
-        <h2 className="text-xl font-black tracking-tight text-white">Friends</h2>
-      </div>
-
-      <div className="mb-8 grid max-w-3xl grid-cols-4 gap-3">
-        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
-          <span className="block text-2xl font-black text-white">{friends.length}</span>
-          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
-            Friends
-          </span>
-        </div>
-        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
-          <span className="block text-2xl font-black text-white">{onlineFriends.length}</span>
-          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
-            Online
-          </span>
-        </div>
-        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
-          <span className="block text-2xl font-black text-white">{pendingRequests.length}</span>
-          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
-            Requests
-          </span>
-        </div>
-        <div className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] p-4">
-          <span className="block text-2xl font-black text-white">{sentRequests.length}</span>
-          <span className="mt-1 block text-xs font-bold uppercase tracking-widest text-white/30">
-            Sent
-          </span>
-        </div>
-      </div>
-
-      <div className="grid max-w-3xl gap-3">
-        {friends.slice(0, 6).map((friend) => (
-          <div
-            key={friend.id}
-            className="bg-[var(--token-card-bg)]/45 flex items-center gap-3 rounded-2xl border border-[var(--token-card-border)] px-4 py-3"
-          >
-            <UsersIcon className="h-5 w-5 text-primary-400" />
-            <button
-              type="button"
-              onClick={() => onOpenRoute(publicProfilePath(friend))}
-              className="min-w-0 flex-1 text-left"
-            >
-              <span className="block truncate text-sm font-bold text-white">
-                {friend.displayName || friend.username}
-              </span>
-              <span className="block truncate text-xs text-white/35">@{friend.username}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onOpenRoute(`/messages?userId=${friend.id}`)}
-              className="rounded-lg bg-primary-500/10 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-primary-300"
-            >
-              Message
-            </button>
-            <button
-              type="button"
-              onClick={() => onRemoveFriend(friend.friendshipId)}
-              className="rounded-lg border border-red-500/20 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-red-300/80"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-
-        {pendingRequests.slice(0, 6).map((request) => (
-          <div
-            key={request.id}
-            className="bg-[var(--token-card-bg)]/45 flex items-center gap-3 rounded-2xl border border-[var(--token-card-border)] px-4 py-3"
-          >
-            <UserPlusIcon className="h-5 w-5 text-primary-400" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-white">
-                {request.user.displayName || request.user.username}
-              </span>
-              <span className="block truncate text-xs text-white/35">@{request.user.username}</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => onAcceptRequest(request.id)}
-              className="rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-white"
-            >
-              Accept
-            </button>
-            <button
-              type="button"
-              onClick={() => onDeclineRequest(request.id)}
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-white/50"
-            >
-              Decline
-            </button>
-          </div>
-        ))}
-
-        {sentRequests.slice(0, 6).map((request) => (
-          <div
-            key={request.id}
-            className="bg-[var(--token-card-bg)]/45 flex items-center gap-3 rounded-2xl border border-[var(--token-card-border)] px-4 py-3"
-          >
-            <UserPlusIcon className="h-5 w-5 text-white/35" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-white">
-                {request.user.displayName || request.user.username}
-              </span>
-              <span className="block truncate text-xs text-white/35">@{request.user.username}</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => onCancelRequest(request.id)}
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-white/50"
-            >
-              Cancel
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 /**
@@ -308,7 +218,9 @@ export function Social() {
     fetchSentRequests,
     acceptRequest,
     declineRequest,
+    cancelRequest,
     removeFriend,
+    blockUser,
     clearError,
   } = useFriendStore();
 
@@ -422,6 +334,11 @@ export function Social() {
 
   function handleMarkAllAsRead() {
     markAllNotificationsRead();
+  }
+
+  function refreshFriendCenter() {
+    clearError();
+    void Promise.allSettled([fetchFriends(), fetchPendingRequests(), fetchSentRequests()]);
   }
 
   async function handleJoinGroupResult(result: SearchResult) {
@@ -551,28 +468,6 @@ export function Social() {
               exit={{ opacity: 0, y: -10 }}
               transition={tweens.standard}
             >
-              {tab === 'friends' && (
-                <FriendsTab
-                  friends={filteredFriends}
-                  pendingRequests={pendingRequests}
-                  sentRequests={sentRequests}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  onAcceptRequest={acceptRequest}
-                  onDeclineRequest={declineRequest}
-                  onCancelRequest={removeFriend}
-                  onRemoveFriend={removeFriend}
-                  isLoading={isLoading}
-                  error={error}
-                  onRetry={() => {
-                    clearError();
-                    fetchFriends();
-                    fetchPendingRequests();
-                    fetchSentRequests();
-                  }}
-                />
-              )}
-
               {tab === 'notifications' && (
                 <NotificationsTab
                   notifications={notifications}
@@ -604,13 +499,19 @@ export function Social() {
           sentRequests={sentRequests}
           notifications={notifications}
           searchResults={searchResults}
+          isFriendLoading={isLoading}
+          friendError={error}
           onOpenRoute={navigate}
           onJoinGroup={handleJoinGroupResult}
           joiningGroupId={joiningGroupId}
           onAcceptRequest={acceptRequest}
           onDeclineRequest={declineRequest}
-          onCancelRequest={removeFriend}
+          onCancelRequest={cancelRequest}
           onRemoveFriend={removeFriend}
+          onBlockUser={blockUser}
+          onRetryFriends={refreshFriendCenter}
+          friendSearchQuery={searchQuery}
+          onFriendSearchChange={setSearchQuery}
           onMarkNotificationRead={handleMarkAsRead}
         />
       </main>

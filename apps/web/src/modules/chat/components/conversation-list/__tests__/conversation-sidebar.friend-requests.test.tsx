@@ -6,74 +6,23 @@ import { ConversationSidebar } from '../conversation-sidebar';
 
 const { friendState } = vi.hoisted(() => ({
   friendState: {
-    pendingRequests: [
-      {
-        id: 'request-incoming-1',
-        type: 'incoming' as const,
-        createdAt: '2026-06-29T10:00:00.000Z',
-        user: {
-          id: 'user-alice',
-          username: 'alice',
-          displayName: 'Alice',
-          avatarUrl: null,
-        },
-      },
-    ],
-    sentRequests: [
-      {
-        id: 'request-outgoing-1',
-        type: 'outgoing' as const,
-        createdAt: '2026-06-29T09:30:00.000Z',
-        user: {
-          id: 'user-bob',
-          username: 'bob',
-          displayName: 'Bob',
-          avatarUrl: null,
-        },
-      },
-    ],
-    isLoading: false,
-    error: null,
+    pendingRequests: [{ id: 'request-incoming-1' }],
+    sentRequests: [{ id: 'request-outgoing-1' }],
     fetchPendingRequests: vi.fn(() => Promise.resolve()),
     fetchSentRequests: vi.fn(() => Promise.resolve()),
-    acceptRequest: vi.fn(() => Promise.resolve()),
-    declineRequest: vi.fn(() => Promise.resolve()),
-    removeFriend: vi.fn(() => Promise.resolve()),
-    clearError: vi.fn(),
   },
 }));
 
 vi.mock('@/lib/animations/animation-engine', () => ({
-  HapticFeedback: {
-    light: vi.fn(),
-    medium: vi.fn(),
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
-vi.mock('@/lib/utils', () => ({
-  formatTimeAgo: () => 'just now',
-  getAvatarBorderId: () => null,
-}));
-
-vi.mock('@/components/theme/themed-avatar', () => ({
-  ThemedAvatar: ({ alt }: { alt?: string }) => <div data-testid="request-avatar">{alt}</div>,
-}));
-
-vi.mock('@/shared/components/ui', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
+  HapticFeedback: { light: vi.fn(), medium: vi.fn() },
 }));
 
 vi.mock('@/modules/social/store', () => ({
   useFriendStore: (selector: (state: typeof friendState) => unknown) => selector(friendState),
 }));
 
-function renderSidebar() {
-  return render(
+function renderSidebar(onAddFriend = vi.fn()) {
+  render(
     <ConversationSidebar
       conversations={[]}
       currentUserId="current-user"
@@ -82,7 +31,7 @@ function renderSidebar() {
       isLoading={false}
       onSearchChange={vi.fn()}
       onOpenSearch={vi.fn()}
-      onAddFriend={vi.fn()}
+      onAddFriend={onAddFriend}
       onNewConversation={vi.fn()}
       onMarkAsRead={vi.fn()}
       onMarkAsUnread={vi.fn()}
@@ -98,39 +47,22 @@ function renderSidebar() {
   );
 }
 
-describe('ConversationSidebar friend requests', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+describe('ConversationSidebar friend request ownership', () => {
+  beforeEach(() => vi.clearAllMocks());
 
-  it('shows incoming and sent friend requests from the messages sidebar', async () => {
+  it('keeps the count visible and routes to the canonical center without a duplicate panel', async () => {
     const user = userEvent.setup();
-    renderSidebar();
+    const onAddFriend = vi.fn();
+    renderSidebar(onAddFriend);
 
-    await waitFor(() => expect(friendState.fetchPendingRequests).toHaveBeenCalled());
-    await waitFor(() => expect(friendState.fetchSentRequests).toHaveBeenCalled());
-
-    const requestsButton = screen.getByRole('button', { name: /friend requests, 2 requests/i });
-    await user.click(requestsButton);
-
-    expect(screen.getByRole('region', { name: /friend requests/i })).toBeInTheDocument();
-    expect(screen.getAllByText('Alice').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Bob').length).toBeGreaterThan(0);
-
-    await user.click(screen.getByRole('button', { name: /accept/i }));
-    expect(friendState.acceptRequest).toHaveBeenCalledWith('request-incoming-1');
-
-    await user.click(screen.getByRole('button', { name: /decline/i }));
-    expect(friendState.declineRequest).toHaveBeenCalledWith('request-incoming-1');
-
-    await user.click(screen.getByRole('button', { name: /cancel request/i }));
-    expect(friendState.removeFriend).toHaveBeenCalledWith('request-outgoing-1');
-  });
-
-  it('keeps the request count visible before opening the panel', () => {
-    renderSidebar();
+    await waitFor(() => expect(friendState.fetchPendingRequests).toHaveBeenCalledOnce());
+    await waitFor(() => expect(friendState.fetchSentRequests).toHaveBeenCalledOnce());
 
     const requestsButton = screen.getByRole('button', { name: /friend requests, 2 requests/i });
     expect(within(requestsButton).getByText('2')).toBeInTheDocument();
+
+    await user.click(requestsButton);
+    expect(onAddFriend).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('region', { name: /friend requests/i })).not.toBeInTheDocument();
   });
 });

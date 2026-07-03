@@ -116,6 +116,11 @@ describe('Cloud conversation ownership', () => {
     expect(route).not.toContain("from './conversation-sidebar'");
     expect(route).not.toContain("from './conversation-spaces'");
     expect(route).not.toContain("from './utils'");
+    expect(route).toContain("onAddFriend={() => navigate('/social/friends')}");
+    expect(sidebar).not.toContain('FriendRequestsPanel');
+    expect(sidebar).not.toContain('acceptRequest');
+    expect(sidebar).not.toContain('declineRequest');
+    expect(sidebar).not.toContain('removeFriend');
 
     expect(sidebarCompatibilityExport.trim()).toBe(
       "export { ConversationSidebar } from '@/modules/chat/components/conversation-list';"

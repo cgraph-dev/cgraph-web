@@ -10,7 +10,6 @@ export { ConversationItem } from './conversation-item';
 export { ConversationSidebar } from './conversation-sidebar';
 export { ConversationMenu } from './conversation-menu';
 export { EmptyState } from './empty-state';
-export { AddFriendModal } from './add-friend-modal';
 export { NewChatModal } from './new-chat-modal';
 export { ConversationItem as RoutedConversationItem } from './routed-conversation-item';
 
@@ -40,7 +39,6 @@ export type {
   ConversationListProps,
   ConversationItemProps,
   ConversationMenuProps,
-  AddFriendModalProps,
   NewChatModalProps,
   MockUser,
   FilterOption,

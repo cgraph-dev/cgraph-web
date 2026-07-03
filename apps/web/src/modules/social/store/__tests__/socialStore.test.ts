@@ -225,6 +225,35 @@ describe('declineRequest', () => {
   });
 });
 
+describe('cancelRequest', () => {
+  it('cancels only the matching outgoing request', async () => {
+    useFriendStore.setState({
+      sentRequests: [
+        makeRequest({ id: 'sent-1', type: 'outgoing' }),
+        makeRequest({ id: 'sent-2', type: 'outgoing' }),
+      ],
+    });
+    mockApi.delete.mockResolvedValueOnce({});
+
+    await useFriendStore.getState().cancelRequest('sent-1');
+
+    expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/friends/sent-1');
+    expect(useFriendStore.getState().sentRequests.map((request) => request.id)).toEqual(['sent-2']);
+  });
+
+  it('keeps outgoing state when cancellation fails', async () => {
+    useFriendStore.setState({
+      sentRequests: [makeRequest({ id: 'sent-1', type: 'outgoing' })],
+    });
+    mockApi.delete.mockRejectedValueOnce(new Error('cancel failed'));
+
+    await expect(useFriendStore.getState().cancelRequest('sent-1')).rejects.toThrow('cancel failed');
+
+    expect(useFriendStore.getState().sentRequests).toHaveLength(1);
+    expect(useFriendStore.getState().error).toBe('cancel failed');
+  });
+});
+
 describe('removeFriend', () => {
   it('removes friend from list optimistically', async () => {
     useFriendStore.setState({ friends: [makeFriend()] });
@@ -241,17 +270,25 @@ describe('removeFriend', () => {
 });
 
 describe('blockUser', () => {
-  it('blocks user and removes from friends + pending', async () => {
+  it('blocks user and removes them from every normal contact/request list', async () => {
     useFriendStore.setState({
       friends: [makeFriend({ id: 'target' })],
       pendingRequests: [
         makeRequest({ user: { id: 'target', username: 'x', displayName: null, avatarUrl: null } }),
+      ],
+      sentRequests: [
+        makeRequest({
+          id: 'sent-target',
+          type: 'outgoing',
+          user: { id: 'target', username: 'x', displayName: null, avatarUrl: null },
+        }),
       ],
     });
     mockApi.post.mockResolvedValueOnce({});
     await useFriendStore.getState().blockUser('target');
     expect(useFriendStore.getState().friends).toHaveLength(0);
     expect(useFriendStore.getState().pendingRequests).toHaveLength(0);
+    expect(useFriendStore.getState().sentRequests).toHaveLength(0);
   });
 
   it('sets error on failure', async () => {

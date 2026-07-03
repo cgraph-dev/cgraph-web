@@ -1,47 +1,44 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Friend, FriendRequest } from '@/modules/social/store';
 import { FriendsTab } from '../friends-tab';
 
-const navigate = vi.fn();
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => navigate,
-  };
-});
-
-vi.mock('motion/react', () => ({
-  motion: {
-    div: ({
-      children,
-      initial: _initial,
-      animate: _animate,
-      exit: _exit,
-      transition: _transition,
-      ...rest
-    }: Record<string, unknown> & { children?: React.ReactNode }) => <div {...rest}>{children}</div>,
-    button: ({
-      children,
-      whileHover: _whileHover,
-      whileTap: _whileTap,
-      ...rest
-    }: Record<string, unknown> & { children?: React.ReactNode }) => (
-      <button {...rest}>{children}</button>
-    ),
+const { navigate, friendStoreState } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  friendStoreState: {
+    sendRequest: vi.fn(() => Promise.resolve()),
+    error: null as string | null,
+    clearError: vi.fn(),
   },
 }));
 
-vi.mock('@/shared/components/ui', () => ({
-  GlassCard: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
-    <div data-testid="glass-card" className={className}>
-      {children}
-    </div>
-  ),
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return { ...actual, useNavigate: () => navigate };
+});
+
+vi.mock('motion/react', () => ({
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  motion: {
+    div: ({ children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => {
+      const {
+        initial: _initial,
+        animate: _animate,
+        exit: _exit,
+        transition: _transition,
+        ...domProps
+      } = rest;
+      return <div {...domProps}>{children}</div>;
+    },
+  },
+}));
+
+vi.mock('@/hooks/useReducedMotion', () => ({ useReducedMotion: () => true }));
+
+vi.mock('@/modules/social/store', () => ({
+  useFriendStore: (selector: (state: typeof friendStoreState) => unknown) => selector(friendStoreState),
 }));
 
 vi.mock('@/modules/social/components/user-profile-card', () => ({
@@ -53,19 +50,10 @@ vi.mock('@/components/theme/themed-avatar', () => ({
 }));
 
 vi.mock('@/lib/animations/animation-engine', () => ({
-  HapticFeedback: {
-    medium: vi.fn(),
-    success: vi.fn(),
-  },
+  HapticFeedback: { medium: vi.fn(), success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock('@/lib/animations/transitions', () => ({
-  FADE_UP: {},
-}));
-
-vi.mock('@/lib/utils', () => ({
-  getAvatarBorderId: () => null,
-}));
+vi.mock('@/lib/utils', () => ({ getAvatarBorderId: () => null }));
 
 function makeFriend(overrides: Partial<Friend> = {}): Friend {
   return {
@@ -104,10 +92,12 @@ function renderFriendsTab(overrides: Partial<React.ComponentProps<typeof Friends
       sentRequests={[]}
       searchQuery=""
       onSearchChange={vi.fn()}
-      onAcceptRequest={vi.fn()}
-      onDeclineRequest={vi.fn()}
-      onCancelRequest={vi.fn()}
-      onRemoveFriend={vi.fn()}
+      onAcceptRequest={vi.fn(() => Promise.resolve())}
+      onDeclineRequest={vi.fn(() => Promise.resolve())}
+      onCancelRequest={vi.fn(() => Promise.resolve())}
+      onRemoveFriend={vi.fn(() => Promise.resolve())}
+      onBlockUser={vi.fn(() => Promise.resolve())}
+      onRetry={vi.fn()}
       {...overrides}
     />
   );
@@ -115,62 +105,41 @@ function renderFriendsTab(overrides: Partial<React.ComponentProps<typeof Friends
 
 describe('FriendsTab', () => {
   beforeEach(() => {
-    navigate.mockClear();
+    vi.clearAllMocks();
+    friendStoreState.error = null;
+    friendStoreState.sendRequest.mockResolvedValue(undefined);
   });
 
-  it('keeps accepted-friend actions stable and discoverable outside hover-only input', () => {
-    const onRemoveFriend = vi.fn();
-    renderFriendsTab({ onRemoveFriend });
+  it('renders one counted contact center and preserves friend actions', () => {
+    const onRemoveFriend = vi.fn(() => Promise.resolve());
+    renderFriendsTab({
+      pendingRequests: [makeRequest()],
+      sentRequests: [makeRequest({ id: 'sent-1', type: 'outgoing' })],
+      onRemoveFriend,
+    });
 
-    const messageButton = screen.getByRole('button', { name: 'Message Alice Example' });
-    expect(messageButton).toHaveClass(
-      'h-11',
-      'w-11',
-      'opacity-100',
-      'sm:opacity-0',
-      'sm:group-focus-within:opacity-100',
-      'sm:group-hover:opacity-100',
-      'focus-visible:ring-2'
-    );
+    expect(screen.getByText('1 friends, 1 incoming, 1 sent')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Friends and requests' })).toBeInTheDocument();
 
-    fireEvent.click(messageButton);
+    fireEvent.click(screen.getByRole('button', { name: 'Message Alice Example' }));
     expect(navigate).toHaveBeenCalledWith('/messages?userId=friend-1');
 
-    const removeButton = screen.getByRole('button', {
-      name: 'Remove Alice Example from friends',
-    });
-    expect(removeButton).toHaveClass(
-      'h-11',
-      'w-11',
-      'opacity-100',
-      'sm:opacity-0',
-      'sm:group-focus-within:opacity-100',
-      'sm:group-hover:opacity-100',
-      'focus-visible:ring-2'
-    );
-
-    fireEvent.click(removeButton);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Alice Example from friends' }));
     expect(onRemoveFriend).toHaveBeenCalledWith('friendship-1');
   });
 
-  it('keeps friend-request actions stable and preserves their callbacks', () => {
-    const onAcceptRequest = vi.fn();
-    const onDeclineRequest = vi.fn();
-    const onCancelRequest = vi.fn();
-
+  it('keeps incoming and outgoing request commands explicit', () => {
+    const onAcceptRequest = vi.fn(() => Promise.resolve());
+    const onDeclineRequest = vi.fn(() => Promise.resolve());
+    const onCancelRequest = vi.fn(() => Promise.resolve());
     renderFriendsTab({
       friends: [],
       pendingRequests: [makeRequest()],
       sentRequests: [
         makeRequest({
-          id: 'sent-request-1',
+          id: 'sent-1',
           type: 'outgoing',
-          user: {
-            id: 'request-user-2',
-            username: 'sentbob',
-            displayName: 'Bob Sent',
-            avatarUrl: null,
-          },
+          user: { id: 'user-bob', username: 'bob', displayName: 'Bob Sent', avatarUrl: null },
         }),
       ],
       onAcceptRequest,
@@ -178,58 +147,99 @@ describe('FriendsTab', () => {
       onCancelRequest,
     });
 
-    const acceptButton = screen.getByRole('button', {
-      name: 'Accept friend request from Alice Pending',
-    });
-    expect(acceptButton).toHaveClass('h-11', 'w-11', 'focus-visible:ring-2');
+    const accept = screen.getByRole('button', { name: 'Accept friend request from Alice Pending' });
+    const decline = screen.getByRole('button', { name: 'Decline friend request from Alice Pending' });
+    const cancel = screen.getByRole('button', { name: 'Cancel friend request to Bob Sent' });
+    expect(accept).toHaveClass('h-11', 'w-11');
+    expect(decline).toHaveClass('h-11', 'w-11');
+    expect(cancel).toHaveClass('h-11', 'w-11');
 
-    const declineButton = screen.getByRole('button', {
-      name: 'Decline friend request from Alice Pending',
-    });
-    expect(declineButton).toHaveClass('h-11', 'w-11', 'focus-visible:ring-2');
-
-    const cancelButton = screen.getByRole('button', {
-      name: 'Cancel friend request to Bob Sent',
-    });
-    expect(cancelButton).toHaveClass('h-11', 'w-11', 'focus-visible:ring-2');
-
-    fireEvent.click(acceptButton);
-    fireEvent.click(declineButton);
-    fireEvent.click(cancelButton);
+    fireEvent.click(accept);
+    fireEvent.click(decline);
+    fireEvent.click(cancel);
 
     expect(onAcceptRequest).toHaveBeenCalledWith('request-1');
     expect(onDeclineRequest).toHaveBeenCalledWith('request-1');
-    expect(onCancelRequest).toHaveBeenCalledWith('sent-request-1');
+    expect(onCancelRequest).toHaveBeenCalledWith('sent-1');
   });
 
-  it('keeps long pending request identities from resizing the action cluster', () => {
-    const longDisplayName = 'Alice Pending With A Very Long Display Name That Must Not Move Actions';
-    const longUsername = 'alice_pending_with_a_very_long_username_that_must_not_move_actions';
+  it('confirms block before mutating and keeps the dialog open on failure', async () => {
+    const onBlockUser = vi
+      .fn<(_: string) => Promise<void>>()
+      .mockRejectedValueOnce(new Error('block failed'))
+      .mockResolvedValueOnce(undefined);
+    renderFriendsTab({ onBlockUser });
 
+    fireEvent.click(screen.getByRole('button', { name: 'Block Alice Example' }));
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Block' }));
+    await waitFor(() => expect(onBlockUser).toHaveBeenCalledWith('friend-1'));
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Block' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+  });
+
+  it('opens the add dialog and locks duplicate submissions while sending', async () => {
+    let resolveRequest: (() => void) | undefined;
+    friendStoreState.sendRequest.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (resolveRequest = resolve))
+    );
+    renderFriendsTab();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add friend' }));
+    fireEvent.change(screen.getByLabelText('Friend identifier'), { target: { value: '@bob' } });
+    const submit = screen.getByRole('button', { name: 'Send request' });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
+
+    expect(friendStoreState.sendRequest).toHaveBeenCalledTimes(1);
+    expect(friendStoreState.sendRequest).toHaveBeenCalledWith('bob');
+    expect(screen.getByRole('button', { name: 'Sending...' })).toBeDisabled();
+
+    resolveRequest?.();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('keeps the add dialog and identifier available after a failed request', async () => {
+    friendStoreState.sendRequest.mockRejectedValueOnce(new Error('not found'));
+    renderFriendsTab();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add friend' }));
+    const identifier = screen.getByLabelText('Friend identifier');
+    fireEvent.change(identifier, { target: { value: '@missing' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send request' }));
+
+    await waitFor(() => expect(friendStoreState.sendRequest).toHaveBeenCalledWith('missing'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(identifier).toHaveValue('@missing');
+  });
+
+  it('keeps long request identity text constrained away from actions', () => {
+    const longName = 'Alice Pending With A Very Long Display Name That Must Not Move Actions';
     renderFriendsTab({
       friends: [],
       pendingRequests: [
         makeRequest({
           user: {
-            id: 'request-user-long',
-            username: longUsername,
-            displayName: longDisplayName,
+            id: 'long-user',
+            username: 'alice_pending_with_a_very_long_username',
+            displayName: longName,
             avatarUrl: null,
           },
         }),
       ],
-      sentRequests: [],
     });
 
-    const displayName = screen.getByText(longDisplayName);
-    expect(displayName).toHaveClass('truncate', 'font-semibold');
-    expect(displayName.parentElement).toHaveClass('min-w-0', 'flex-1');
-
-    expect(screen.getByText(`@${longUsername}`)).toHaveClass('truncate', 'text-sm');
-
-    const actionCluster = screen.getByRole('button', {
-      name: `Accept friend request from ${longDisplayName}`,
-    }).parentElement as HTMLElement;
-    expect(actionCluster).toHaveClass('flex-shrink-0', 'gap-2');
+    const identity = screen.getAllByText(longName).find((element) => element.tagName === 'P');
+    expect(identity).toBeDefined();
+    if (!identity) throw new Error('Expected constrained identity text');
+    expect(identity).toHaveClass('truncate');
+    expect(identity.parentElement).toHaveClass('min-w-0', 'flex-1');
+    expect(screen.getByRole('button', { name: `Accept friend request from ${longName}` })).toHaveClass(
+      'h-11',
+      'w-11'
+    );
   });
 });
