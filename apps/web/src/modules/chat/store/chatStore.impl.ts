@@ -110,6 +110,13 @@ export function toConversation(raw: Record<string, unknown>): Conversation {
           nickname: typeof pr.nickname === 'string' ? pr.nickname : null,
           isMuted: pr.isMuted === true,
           mutedUntil: typeof pr.mutedUntil === 'string' ? pr.mutedUntil : null,
+          messageRequestStatus:
+            pr.messageRequestStatus === 'pending' ||
+            pr.messageRequestStatus === 'accepted' ||
+            pr.messageRequestStatus === 'rejected' ||
+            pr.messageRequestStatus === 'blocked'
+              ? pr.messageRequestStatus
+              : null,
           joinedAt: typeof pr.joinedAt === 'string' ? pr.joinedAt : '',
           user: {
             id: identity.id,

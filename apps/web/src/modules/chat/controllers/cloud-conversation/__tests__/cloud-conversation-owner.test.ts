@@ -84,7 +84,8 @@ describe('Cloud conversation ownership', () => {
 
     expect(controller).toContain('useChatStore');
     expect(controller).toContain('socketManager');
-    expect(controller).toContain('useMessageRequest(conversationId)');
+    expect(controller).toContain('currentParticipantRequestStatus');
+    expect(controller).toContain('useMessageRequest(conversationId, currentParticipantRequestStatus)');
     expect(messageRequest).toContain('apiClient.messageRequests');
     expect(messageRequest).toContain("status === 'pending'");
     expect(messageRequest).toContain("status === 'blocked'");

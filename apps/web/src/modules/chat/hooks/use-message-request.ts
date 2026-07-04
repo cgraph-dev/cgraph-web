@@ -67,7 +67,8 @@ function requestDetails(
  * Route-local message-request state based on S1G's conversation request model.
  */
 export function useMessageRequest(
-  conversationId: string | undefined
+  conversationId: string | undefined,
+  currentParticipantRequestStatus?: MessageRequestStatus | null
 ): MessageRequestController {
   const [status, setStatus] = useState<MessageRequestViewStatus>('loading');
   const [details, setDetails] = useState<MessageRequestDetails | null>(null);
@@ -80,6 +81,17 @@ export function useMessageRequest(
   useEffect(() => {
     if (!conversationId) {
       setStatus('accepted');
+      setDetails(null);
+      setError(null);
+      return;
+    }
+
+    if (
+      currentParticipantRequestStatus === null ||
+      currentParticipantRequestStatus === 'accepted' ||
+      currentParticipantRequestStatus === 'rejected'
+    ) {
+      setStatus(currentParticipantRequestStatus ?? 'accepted');
       setDetails(null);
       setError(null);
       return;
@@ -113,7 +125,7 @@ export function useMessageRequest(
     return () => {
       isActive = false;
     };
-  }, [conversationId, reloadKey]);
+  }, [conversationId, currentParticipantRequestStatus, reloadKey]);
 
   const runAction = useCallback(
     async (

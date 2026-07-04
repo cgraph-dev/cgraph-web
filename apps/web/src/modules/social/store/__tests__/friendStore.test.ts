@@ -134,6 +134,20 @@ describe('FriendStore', () => {
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends');
     });
 
+    it('refetches completed friend reads so cross-user accepts are visible', async () => {
+      mockedApi.get
+        .mockResolvedValueOnce({ data: { data: [] } })
+        .mockResolvedValueOnce({ data: { data: [mockFriend] } });
+
+      await useFriendStore.getState().fetchFriends();
+      await useFriendStore.getState().fetchFriends();
+
+      expect(mockedApi.get).toHaveBeenCalledTimes(2);
+      expect(useFriendStore.getState().friends).toEqual([
+        expect.objectContaining({ id: 'friend-1', username: 'bob' }),
+      ]);
+    });
+
     it('sets isLoading false on success', async () => {
       mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
       await useFriendStore.getState().fetchFriends();
@@ -155,14 +169,19 @@ describe('FriendStore', () => {
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/requests');
     });
 
-    it('skips immediate duplicate pending request refreshes', async () => {
-      mockedApi.get.mockResolvedValueOnce({ data: { data: [] } });
+    it('refetches completed pending request reads', async () => {
+      mockedApi.get
+        .mockResolvedValueOnce({ data: { data: [] } })
+        .mockResolvedValueOnce({ data: { data: [mockRequest] } });
 
       await useFriendStore.getState().fetchPendingRequests();
       await useFriendStore.getState().fetchPendingRequests();
 
-      expect(mockedApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedApi.get).toHaveBeenCalledTimes(2);
       expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/requests');
+      expect(useFriendStore.getState().pendingRequests).toEqual([
+        expect.objectContaining({ id: 'req-1', type: 'incoming' }),
+      ]);
     });
 
     it('sets error on failure', async () => {

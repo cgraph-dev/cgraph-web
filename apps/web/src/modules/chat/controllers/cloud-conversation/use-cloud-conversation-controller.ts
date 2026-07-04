@@ -90,7 +90,11 @@ export function useCloudConversationController() {
   const [isSending, setIsSending] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const messageActions = useMessageActions();
-  const messageRequest = useMessageRequest(conversationId);
+  const conversation = conversations.find((c) => c.id === conversationId);
+  const currentParticipantRequestStatus =
+    conversation?.participants.find((participant) => participant.userId === user?.id)
+      ?.messageRequestStatus;
+  const messageRequest = useMessageRequest(conversationId, currentParticipantRequestStatus);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,7 +108,6 @@ export function useCloudConversationController() {
   const [showScrollToLatest, setShowScrollToLatest] = useState(false);
   const [newMessagesBelow, setNewMessagesBelow] = useState(0);
 
-  const conversation = conversations.find((c) => c.id === conversationId);
   const scrollToMessageId = searchParams.get('scrollTo');
   const callRecipientId =
     conversationId && user?.id ? getRecipientId(conversationId, user.id) : null;

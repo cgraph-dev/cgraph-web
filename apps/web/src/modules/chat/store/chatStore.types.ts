@@ -6,6 +6,8 @@
  * and scheduling types.
  *
  */
+import type { MessageRequestStatus } from '@cgraph-dev/shared-types';
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -222,6 +224,7 @@ export interface ConversationParticipant {
   nickname: string | null;
   isMuted: boolean;
   mutedUntil: string | null;
+  messageRequestStatus?: MessageRequestStatus | null;
   joinedAt: string;
 }
 

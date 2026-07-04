@@ -363,7 +363,11 @@ describe('normalizeConversation', () => {
       last_message_at: '2024-06-01T12:00:00Z',
       unread_count: 3,
       participants: [
-        { id: 'p-1', user: { id: 'u1', username: 'alice', display_name: 'Alice' } },
+        {
+          id: 'p-1',
+          message_request_status: null,
+          user: { id: 'u1', username: 'alice', display_name: 'Alice' },
+        },
         { id: 'p-2', user: { id: 'u2', username: 'bob' } },
       ],
       created_at: '2024-01-01T00:00:00Z',
@@ -381,6 +385,7 @@ describe('normalizeConversation', () => {
     expect(conv.messageTTL).toBe(86400);
     expect((conv.lastMessage as Record<string, unknown>)?.content).toBe('Latest');
     expect((conv.participants as unknown[])?.length).toBe(2);
+    expect((conv.participants as Record<string, unknown>[])[0]?.messageRequestStatus).toBeNull();
   });
 
   it('handles conversation with no participants', () => {

@@ -78,6 +78,16 @@ describe('useMessageRequest', () => {
     });
   });
 
+  it('uses cleared participant request state as accepted without loading request metadata', async () => {
+    const { result } = renderHook(() => useMessageRequest(CONVERSATION_ID, null));
+
+    await waitFor(() => expect(result.current.status).toBe('accepted'));
+
+    expect(result.current.blocksComposer).toBe(false);
+    expect(result.current.details).toBeNull();
+    expect(messageRequestApi.get).not.toHaveBeenCalled();
+  });
+
   it('does not advance state or report success when the API rejects an action', async () => {
     messageRequestApi.accept.mockResolvedValue({
       ok: false,

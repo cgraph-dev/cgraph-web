@@ -228,6 +228,7 @@ export function normalizeParticipant(raw: Record<string, unknown>): Record<strin
     nickname: raw.nickname ?? null,
     isMuted: raw.isMuted ?? raw.is_muted ?? false,
     mutedUntil: raw.mutedUntil ?? raw.muted_until ?? null,
+    messageRequestStatus: raw.messageRequestStatus ?? raw.message_request_status ?? null,
     joinedAt: raw.joinedAt ?? raw.joined_at ?? raw.insertedAt ?? raw.inserted_at,
     user: identity
       ? {
