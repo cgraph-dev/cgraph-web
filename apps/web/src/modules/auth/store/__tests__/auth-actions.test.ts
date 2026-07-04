@@ -481,13 +481,15 @@ describe('createRefreshSessionAction', () => {
     expect(mockedApi.post).not.toHaveBeenCalled();
   });
 
-  it('clears auth state on refresh failure', async () => {
+  it('clears auth state on refresh rejection', async () => {
     const { set, get, state } = createMockSetGet();
     state.refreshToken = 'expired';
     state.isAuthenticated = true;
     const refresh = createRefreshSessionAction(set as never, get as never);
 
-    mockedApi.post.mockRejectedValueOnce(new Error('Token expired'));
+    const error = new AxiosError('Token expired');
+    error.response = { data: { error: 'expired' }, status: 401 } as AxiosResponse;
+    mockedApi.post.mockRejectedValueOnce(error);
 
     await refresh();
 
@@ -499,6 +501,52 @@ describe('createRefreshSessionAction', () => {
         isAuthenticated: false,
       })
     );
+  });
+
+  it('preserves auth state on transient refresh failure', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.refreshToken = 'current-refresh';
+    state.token = 'current-access';
+    state.isAuthenticated = true;
+    const refresh = createRefreshSessionAction(set as never, get as never);
+
+    mockedApi.post.mockRejectedValueOnce(new Error('Network Error'));
+
+    await refresh();
+
+    expect(set).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+      })
+    );
+  });
+
+  it('shares one refresh request across concurrent callers', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.refreshToken = 'old-refresh';
+    const refresh = createRefreshSessionAction(set as never, get as never);
+    let resolveRequest: ((response: AxiosResponse) => void) | null = null;
+
+    mockedApi.post.mockImplementationOnce(
+      () =>
+        new Promise<AxiosResponse>((resolve) => {
+          resolveRequest = resolve;
+        })
+    );
+
+    const first = refresh();
+    const second = refresh();
+
+    expect(mockedApi.post).toHaveBeenCalledTimes(1);
+    resolveRequest?.({
+      data: { tokens: { access_token: 'new-access', refresh_token: 'new-refresh' } },
+    } as AxiosResponse);
+
+    await Promise.all([first, second]);
+    expect(mockedApi.post).toHaveBeenCalledTimes(1);
   });
 
   it('does not clear a newer session when an old refresh fails', async () => {

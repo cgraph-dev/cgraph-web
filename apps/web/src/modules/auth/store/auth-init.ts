@@ -35,7 +35,16 @@ export function initializeAuthStore(useAuthStore: UseBoundStore<StoreApi<AuthSta
         refreshToken: refreshToken ?? useAuthStore.getState().refreshToken,
       });
     },
-    onLogout: () => useAuthStore.getState().logout(),
+    // A refresh rejection is already the server's logout decision. Clear local
+    // state directly so the HTTP interceptor cannot recurse through /logout.
+    onLogout: () =>
+      useAuthStore.setState({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+      }),
   });
 
   // Safety timeout: ensure isLoading is set to false within 3 seconds of module load

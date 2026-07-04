@@ -107,14 +107,20 @@ describe('initializeAuthStore', () => {
     });
   });
 
-  it('onLogout handler calls store logout', () => {
+  it('onLogout clears local auth without calling the server logout action', () => {
     const { store } = createMockStore();
     initializeAuthStore(store as never);
 
     const handlers = mockRegisterTokenHandlers.mock.calls[0]![0];
     handlers.onLogout();
 
-    expect(store.getState().logout).toBeDefined();
+    expect(store.setState).toHaveBeenCalledWith({
+      user: null,
+      token: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
   });
 
   it('safety timeout forces isLoading to false if still loading after 3s', () => {

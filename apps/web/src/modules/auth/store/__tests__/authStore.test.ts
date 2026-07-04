@@ -372,13 +372,15 @@ describe('AuthStore', () => {
       expect(useAuthStore.getState().refreshToken).toBe('new-refresh');
     });
 
-    it('clears auth state on refresh failure', async () => {
+    it('clears auth state on refresh rejection', async () => {
       useAuthStore.setState({
         refreshToken: 'old',
         isAuthenticated: true,
         user: { id: 'x' } as unknown as ReturnType<typeof useAuthStore.getState>['user'],
       });
-      mockedApi.post.mockRejectedValueOnce(new Error('expired'));
+      const error = new AxiosError('expired');
+      error.response = { data: { error: 'expired' }, status: 401 } as AxiosResponse;
+      mockedApi.post.mockRejectedValueOnce(error);
 
       await useAuthStore.getState().refreshSession();
 

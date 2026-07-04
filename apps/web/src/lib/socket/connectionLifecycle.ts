@@ -22,10 +22,9 @@ logger.debug('VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 /**
  * Maximum reconnect attempts before circuit breaker trips and the socket
- * enters the `paused` state. Matches Signal-Desktop's ceiling — high
- * enough to ride out long mobile-tunnel outages, low enough to avoid
- * burning battery indefinitely. Resume happens via the ReconnectBanner
- * UI, on `window.online`, or on tab visibility regain.
+ * enters the `paused` state. This browser-specific stop keeps an unattended
+ * tab from retrying forever; online, visible-tab, and explicit user actions
+ * resume the same socket owner.
  */
 const MAX_RECONNECT_ATTEMPTS_WEB = 64;
 
@@ -45,6 +44,8 @@ export interface SocketManagerState {
   lastSequence: number;
   // Circuit breaker state
   reconnectAttempts: number;
+  connectedToken: string | null;
+  credentialReconnectInProgress: boolean;
 }
 
 /**
@@ -62,9 +63,13 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
     return Promise.resolve();
   }
 
-  if (state.socket?.isConnected()) {
-    logger.debug('Already connected');
-    return Promise.resolve();
+  if (state.socket) {
+    if (state.socket.isConnected() && state.connectedToken === token) {
+      logger.debug('Already connected');
+      return Promise.resolve();
+    }
+
+    return reconnectSocketWithFreshToken(state);
   }
 
   logger.debug('Connecting to:', SOCKET_URL);
@@ -77,8 +82,7 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
     }, 15000);
 
     state.socket = new Socket(SOCKET_URL, {
-      params: { token },
-      // Exponential backoff with equal jitter — prevents thundering herd at scale
+      params: () => ({ token: useAuthStore.getState().token }),
       reconnectAfterMs: exponentialBackoffWithJitter(),
       heartbeatIntervalMs: 5000,
     });
@@ -86,6 +90,8 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
     state.socket.onOpen(() => {
       clearTimeout(connectionTimeout);
       logger.log('Socket connected to:', SOCKET_URL);
+      state.connectedToken = useAuthStore.getState().token;
+      state.credentialReconnectInProgress = false;
       // Reset circuit breaker on successful connection
       state.reconnectAttempts = 0;
       if (state.reconnectTimer) {
@@ -99,9 +105,9 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
 
     state.socket.onClose(() => {
       logger.log('Socket disconnected');
-      // Circuit breaker: track reconnect attempts
-      state.reconnectAttempts++;
-      if (state.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS_WEB) {
+      if (state.credentialReconnectInProgress) {
+        setConnectionStatus('connecting');
+      } else if (++state.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS_WEB) {
         logger.warn(
           `Circuit breaker: max reconnect attempts (${MAX_RECONNECT_ATTEMPTS_WEB}) reached, pausing`
         );
@@ -126,18 +132,7 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
     state.socket.onError((error: unknown) => {
       clearTimeout(connectionTimeout);
       logger.error('Socket error:', error);
-      // Circuit breaker: track reconnect attempts on error too
-      state.reconnectAttempts++;
-      if (state.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS_WEB) {
-        logger.warn(
-          `Circuit breaker: max reconnect attempts (${MAX_RECONNECT_ATTEMPTS_WEB}) reached, pausing`
-        );
-        state.socket?.disconnect();
-        state.socket = null;
-        setConnectionStatus('paused');
-      } else {
-        setConnectionStatus('disconnected');
-      }
+      setConnectionStatus('disconnected');
       state.connectionPromise = null;
       reject(error);
     });
@@ -148,6 +143,62 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
   });
 
   return state.connectionPromise ?? Promise.resolve();
+}
+
+/** Reconnects the current Phoenix socket so its existing channels rejoin with fresh credentials. */
+export function reconnectSocketWithFreshToken(state: SocketManagerState): Promise<void> {
+  if (state.connectionPromise) {
+    return state.connectionPromise;
+  }
+
+  const socket = state.socket;
+  const token = useAuthStore.getState().token;
+  if (!socket || !token) {
+    return connectSocket(state);
+  }
+
+  if (socket.isConnected() && state.connectedToken === token) {
+    return Promise.resolve();
+  }
+
+  state.credentialReconnectInProgress = true;
+  setConnectionStatus('connecting');
+
+  state.connectionPromise = new Promise<void>((resolve, reject) => {
+    let openRef = 0;
+    let errorRef = 0;
+    const timeout = setTimeout(() => {
+      socket.off([openRef, errorRef]);
+      reject(new Error('Socket credential reconnect timeout'));
+    }, 15000);
+    const finish = () => {
+      clearTimeout(timeout);
+      socket.off([openRef, errorRef]);
+    };
+
+    openRef = socket.onOpen(() => {
+      finish();
+      state.connectedToken = useAuthStore.getState().token;
+      state.credentialReconnectInProgress = false;
+      resolve();
+    });
+    errorRef = socket.onError((error: unknown) => {
+      finish();
+      state.credentialReconnectInProgress = false;
+      reject(error instanceof Error ? error : new Error('Socket credential reconnect failed'));
+    });
+
+    socket.disconnect(() => socket.connect(), 1000, 'credentials_changed');
+  })
+    .catch((error) => {
+      logger.warn('Socket credential reconnect failed:', error);
+    })
+    .finally(() => {
+      state.credentialReconnectInProgress = false;
+      state.connectionPromise = null;
+    });
+
+  return state.connectionPromise;
 }
 
 /**
@@ -164,6 +215,8 @@ export function disconnectSocket(state: SocketManagerState) {
   state.threadCallbacks.clear();
   state.socket?.disconnect();
   state.socket = null;
+  state.connectedToken = null;
+  state.credentialReconnectInProgress = false;
   state.connectionPromise = null;
   setConnectionStatus('disconnected');
 }

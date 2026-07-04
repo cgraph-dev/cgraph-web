@@ -39,7 +39,7 @@ vi.mock('../../logger', () => ({
   },
 }));
 
-import { connectSocket } from '../connectionLifecycle';
+import { connectSocket, reconnectSocketWithFreshToken } from '../connectionLifecycle';
 import type { SocketManagerState } from '../connectionLifecycle';
 import { Socket } from 'phoenix';
 
@@ -60,6 +60,8 @@ function makeState(overrides?: Partial<SocketManagerState>): SocketManagerState 
     sessionId: null,
     lastSequence: 0,
     reconnectAttempts: 0,
+    connectedToken: null,
+    credentialReconnectInProgress: false,
     ...overrides,
   };
 }
@@ -72,9 +74,10 @@ interface MockSocketInstance {
   isConnected: ReturnType<typeof vi.fn>;
   connect: ReturnType<typeof vi.fn>;
   disconnect: ReturnType<typeof vi.fn>;
-  onOpen: (cb: SocketCallback) => void;
-  onClose: (cb: SocketCallback) => void;
-  onError: (cb: SocketCallback) => void;
+  off: ReturnType<typeof vi.fn>;
+  onOpen: (cb: SocketCallback) => number;
+  onClose: (cb: SocketCallback) => number;
+  onError: (cb: SocketCallback) => number;
 }
 
 function setupMockSocket(): MockSocketInstance {
@@ -85,14 +88,18 @@ function setupMockSocket(): MockSocketInstance {
     isConnected: vi.fn().mockReturnValue(false),
     connect: vi.fn(),
     disconnect: vi.fn(),
+    off: vi.fn(),
     onOpen(cb: SocketCallback) {
       instance.onOpenCb = cb;
+      return 1;
     },
     onClose(cb: SocketCallback) {
       instance.onCloseCb = cb;
+      return 2;
     },
     onError(cb: SocketCallback) {
       instance.onErrorCb = cb;
+      return 3;
     },
   };
 
@@ -141,6 +148,24 @@ describe('connectSocket', () => {
     expect(Socket).not.toHaveBeenCalled();
   });
 
+  it('reuses an existing disconnected socket instead of creating a second owner', async () => {
+    const mockSocketInstance = setupMockSocket();
+    mockSocketInstance.disconnect.mockImplementation((callback?: () => void) => callback?.());
+    const state = makeState({
+      socket: mockSocketInstance as unknown as Socket,
+      connectedToken: 'test-token',
+    });
+
+    const promise = connectSocket(state);
+
+    expect(mockSocketInstance.disconnect).toHaveBeenCalledTimes(1);
+    expect(mockSocketInstance.connect).toHaveBeenCalledTimes(1);
+    expect(Socket).not.toHaveBeenCalled();
+
+    mockSocketInstance.onOpenCb!();
+    await promise;
+  });
+
   it('creates Socket and connects on success', async () => {
     const mockSocketInstance = setupMockSocket();
     const state = makeState();
@@ -155,7 +180,25 @@ describe('connectSocket', () => {
     expect(state.socket).not.toBeNull();
     expect(mockSocketInstance.connect).toHaveBeenCalled();
     expect(state.reconnectAttempts).toBe(0);
+    expect(state.connectedToken).toBe('test-token');
     expect(state.connectionPromise).toBeNull();
+  });
+
+  it('reads the latest token whenever the transport connects', async () => {
+    const mockSocketInstance = setupMockSocket();
+    const state = makeState();
+
+    const promise = connectSocket(state);
+    const options = vi.mocked(Socket).mock.calls[0]?.[1];
+    expect(typeof options?.params).toBe('function');
+
+    mockToken.value = 'rotated-token';
+    expect((options?.params as () => Record<string, unknown>)()).toEqual({
+      token: 'rotated-token',
+    });
+
+    mockSocketInstance.onOpenCb!();
+    await promise;
   });
 
   it('resets circuit breaker on successful connection', async () => {
@@ -257,12 +300,13 @@ describe('connectSocket', () => {
     vi.unstubAllGlobals();
   });
 
-  it('increments reconnect attempts on error', async () => {
+  it('counts one reconnect attempt when an error is followed by close', async () => {
     const mockSocketInstance = setupMockSocket();
     const state = makeState();
 
     const promise = connectSocket(state);
     mockSocketInstance.onErrorCb!(new Error('test'));
+    mockSocketInstance.onCloseCb!();
 
     // The promise should resolve (caught internally)
     await promise;
@@ -271,12 +315,13 @@ describe('connectSocket', () => {
     expect(state.connectionPromise).toBeNull();
   });
 
-  it('trips circuit breaker on error after max attempts', async () => {
+  it('trips circuit breaker once when an error is followed by close', async () => {
     const mockSocketInstance = setupMockSocket();
     const state = makeState({ reconnectAttempts: 63 });
 
     const promise = connectSocket(state);
     mockSocketInstance.onErrorCb!(new Error('test'));
+    mockSocketInstance.onCloseCb!();
 
     await promise;
 
@@ -298,5 +343,33 @@ describe('connectSocket', () => {
     await promise;
 
     expect(state.connectionPromise).toBeNull();
+  });
+});
+
+describe('reconnectSocketWithFreshToken', () => {
+  it('reuses the current socket and coalesces credential reconnects', async () => {
+    const mockSocketInstance = setupMockSocket();
+    mockSocketInstance.isConnected.mockReturnValue(true);
+    mockSocketInstance.disconnect.mockImplementation((callback?: () => void) => callback?.());
+    const state = makeState({
+      socket: mockSocketInstance as unknown as Socket,
+      connectedToken: 'old-token',
+    });
+
+    mockToken.value = 'new-token';
+    const first = reconnectSocketWithFreshToken(state);
+    const second = reconnectSocketWithFreshToken(state);
+
+    expect(second).toBe(first);
+    expect(mockSocketInstance.disconnect).toHaveBeenCalledTimes(1);
+    expect(mockSocketInstance.connect).toHaveBeenCalledTimes(1);
+
+    mockSocketInstance.onOpenCb!();
+    await first;
+
+    expect(state.connectedToken).toBe('new-token');
+    expect(state.connectionPromise).toBeNull();
+    expect(mockSocketInstance.off).toHaveBeenCalledWith([1, 3]);
+    expect(Socket).not.toHaveBeenCalled();
   });
 });

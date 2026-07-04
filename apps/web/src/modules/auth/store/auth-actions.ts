@@ -335,7 +335,9 @@ export function createLogoutAction(set: Set, get: Get) {
  * Description.
  */
 export function createRefreshSessionAction(set: Set, get: Get) {
-  return async () => {
+  let activeRefresh: Promise<void> | null = null;
+
+  const refresh = async (): Promise<void> => {
     const { refreshToken } = get();
     if (!refreshToken) {
       set({ isLoading: false });
@@ -354,7 +356,7 @@ export function createRefreshSessionAction(set: Set, get: Get) {
       }
     } catch (error) {
       authLogger.warn('Session refresh failed', error);
-      if (get().refreshToken === refreshToken) {
+      if (isAuthFailure(error) && get().refreshToken === refreshToken) {
         set({
           user: null,
           token: null,
@@ -363,6 +365,18 @@ export function createRefreshSessionAction(set: Set, get: Get) {
         });
       }
     }
+  };
+
+  return () => {
+    if (activeRefresh) {
+      return activeRefresh;
+    }
+
+    activeRefresh = refresh().finally(() => {
+      activeRefresh = null;
+    });
+
+    return activeRefresh;
   };
 }
 

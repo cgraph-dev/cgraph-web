@@ -10,7 +10,6 @@
 export { SocketManager } from './socket-manager';
 export { setupForumHandlers, setupThreadHandlers } from './channelHandlers';
 export type { ChannelMaps } from './channelHandlers';
-export { getReconnectDelay } from './reconnect-backoff';
 
 export type {
   ForumThreadPayload,

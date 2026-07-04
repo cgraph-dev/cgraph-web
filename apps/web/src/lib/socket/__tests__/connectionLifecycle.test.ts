@@ -44,6 +44,8 @@ function makeState(overrides?: Partial<SocketManagerState>): SocketManagerState 
     sessionId: null,
     lastSequence: 0,
     reconnectAttempts: 0,
+    connectedToken: null,
+    credentialReconnectInProgress: false,
     ...overrides,
   };
 }

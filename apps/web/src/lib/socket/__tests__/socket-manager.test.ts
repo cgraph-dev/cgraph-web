@@ -29,6 +29,7 @@ vi.mock('../connectionLifecycle', () => ({
   SOCKET_URL: 'ws://localhost:4000/socket',
   connectSocket: vi.fn().mockResolvedValue(undefined),
   disconnectSocket: vi.fn(),
+  reconnectSocketWithFreshToken: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../socketUtils', () => ({
@@ -82,7 +83,11 @@ vi.mock('../threadChannel', () => ({
 import { SocketManager } from '../socket-manager';
 
 // Import mocked modules so we can assert on them
-import { connectSocket, disconnectSocket } from '../connectionLifecycle';
+import {
+  connectSocket,
+  disconnectSocket,
+  reconnectSocketWithFreshToken,
+} from '../connectionLifecycle';
 import { sendTypingDebounced, sendReaction } from '../socketUtils';
 import {
   joinUserChannel as joinUserChannelImpl,
@@ -148,36 +153,19 @@ describe('SocketManager', () => {
     });
   });
   describe('reconnectWithNewToken', () => {
-    it('disconnects, waits, then reconnects', async () => {
-      vi.useFakeTimers();
-      const promise = manager.reconnectWithNewToken();
-      await vi.advanceTimersByTimeAsync(200);
-      await promise;
+    it('delegates credential replacement to the connection owner', async () => {
+      await manager.reconnectWithNewToken();
 
-      expect(disconnectSocket).toHaveBeenCalledTimes(1);
-      expect(connectSocket).toHaveBeenCalledTimes(1);
-      vi.useRealTimers();
+      expect(reconnectSocketWithFreshToken).toHaveBeenCalledTimes(1);
+      expect(disconnectSocket).not.toHaveBeenCalled();
+      expect(connectSocket).not.toHaveBeenCalled();
     });
 
-    it('re-joins user channel and presence lobby after reconnect', async () => {
-      vi.useFakeTimers();
-      const promise = manager.reconnectWithNewToken();
-      await vi.advanceTimersByTimeAsync(200);
-      await promise;
+    it('does not create duplicate channel owners during credential replacement', async () => {
+      await manager.reconnectWithNewToken();
 
-      expect(joinUserChannelImpl).toHaveBeenCalledWith(
-        null,
-        'user-1',
-        expect.any(Map),
-        expect.any(Map),
-        expect.any(Function),
-        expect.objectContaining({
-          sessionId: null,
-          lastSequence: 0,
-        })
-      );
-      expect(joinPresenceLobbyImpl).toHaveBeenCalled();
-      vi.useRealTimers();
+      expect(joinUserChannelImpl).not.toHaveBeenCalled();
+      expect(joinPresenceLobbyImpl).not.toHaveBeenCalled();
     });
   });
   describe('user channel', () => {

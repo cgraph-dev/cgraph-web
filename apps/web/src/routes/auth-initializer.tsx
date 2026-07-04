@@ -104,6 +104,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthLoading = useAuthStore((state) => state.isLoading);
   const token = useAuthStore((state) => state.token);
   const userId = useAuthStore((state) => state.user?.id);
   const colorPreset = useThemeStore((state) => state.theme.colorPreset);
@@ -166,7 +167,12 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       hasToken: Boolean(token),
     });
 
-    if (!isAuthenticated || !userId || !token) return;
+    if (isAuthLoading) return;
+
+    if (!isAuthenticated || !userId || !token) {
+      socketManager.disconnect();
+      return;
+    }
 
     let isCurrentSession = true;
     setE2ESocketBootstrap({
@@ -204,7 +210,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       isCurrentSession = false;
       socketManager.leaveUserChannel(userId);
     };
-  }, [isAuthenticated, token, userId]);
+  }, [isAuthenticated, isAuthLoading, token, userId]);
 
   useEffect(() => {
     const hasProfessionalThemePreferences = Boolean(localStorage.getItem(THEME_PREFERENCES_KEY));

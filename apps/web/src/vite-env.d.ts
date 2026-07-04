@@ -123,6 +123,8 @@ declare module 'phoenix' {
      * @returns The result.
      */
     onMessage(callback: (msg: Record<string, unknown>) => void): number;
+    /** Removes socket lifecycle callbacks by registration reference. */
+    off(refs: number[]): void;
     /**
      * Removes the specified item.
      *

@@ -6,7 +6,12 @@
 import type { Channel } from 'phoenix';
 import { useAuthStore } from '@/modules/auth/store';
 import { socketLogger as logger } from '../logger';
-import { connectSocket, disconnectSocket, type SocketManagerState } from './connectionLifecycle';
+import {
+  connectSocket,
+  disconnectSocket,
+  reconnectSocketWithFreshToken,
+  type SocketManagerState,
+} from './connectionLifecycle';
 import { registerCustomizationChangeNotifier } from './customization-events';
 import {
   sendTypingDebounced as sendTypingDebouncedImpl,
@@ -74,6 +79,8 @@ export class SocketManager {
     sessionId: null,
     lastSequence: 0,
     reconnectAttempts: 0,
+    connectedToken: null,
+    credentialReconnectInProgress: false,
   };
   private statusListeners = new Set<(cId: string, uId: string, online: boolean) => void>();
   private readonly JOIN_DEBOUNCE_MS = 1000;
@@ -145,14 +152,7 @@ export class SocketManager {
    */
   async reconnectWithNewToken(): Promise<void> {
     logger.log('Reconnecting socket with new token...');
-    this.disconnect();
-    await new Promise((r) => setTimeout(r, 100));
-    await this.connect();
-    const userId = useAuthStore.getState().user?.id;
-    if (userId) {
-      this.joinUserChannel(userId);
-      this.joinPresenceLobby();
-    }
+    await reconnectSocketWithFreshToken(this.state);
   }
 
   /**
