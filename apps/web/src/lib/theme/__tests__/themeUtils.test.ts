@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { APP_THEME_MANIFEST_BY_ID } from '@cgraph-dev/design-tokens/app-theme-manifest';
 
 // NOTE: getDefaultPreferences and BROADCAST_CHANNEL removed — no longer exported from preferences (batch 2)
 import {
@@ -216,6 +217,19 @@ describe('THEME_REGISTRY', () => {
   it('should map each theme by its id', () => {
     for (const [id, theme] of Object.entries(THEME_REGISTRY)) {
       expect(theme.id).toBe(id);
+    }
+  });
+
+  it('should derive built-in themes from the shared package manifest', () => {
+    for (const [id, theme] of Object.entries(THEME_REGISTRY)) {
+      const manifest = APP_THEME_MANIFEST_BY_ID[id as keyof typeof APP_THEME_MANIFEST_BY_ID];
+
+      expect(theme.colors).toBe(manifest.colors);
+      expect(theme.glassConfig).toBe(manifest.glassConfig);
+      expect(theme.buttonStyle).toBe(manifest.buttonStyle);
+      expect(theme.typography).toBe(manifest.typography);
+      expect(theme.spacing).toBe(manifest.spacing);
+      expect(theme.animations).toBe(manifest.animations);
     }
   });
 });

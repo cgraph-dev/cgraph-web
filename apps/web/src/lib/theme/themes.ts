@@ -1,391 +1,43 @@
-/**
- * Built-in Theme Definitions
- *
- * All preset themes: Aurora, Dark, Light.
- * Default typography, spacing, and animation constants.
- *
- */
+import {
+  APP_THEME_MANIFEST_BY_ID,
+  DEFAULT_APP_THEME_ANIMATIONS,
+  DEFAULT_APP_THEME_SPACING,
+  DEFAULT_APP_THEME_TYPOGRAPHY,
+  type AppThemeManifest,
+} from '@cgraph-dev/design-tokens/app-theme-manifest';
 
-import type { Theme, ThemeTypography, ThemeSpacing, ThemeAnimations } from './types';
+import type { Theme, ThemeAnimations, ThemeSpacing, ThemeTypography } from './types';
 
-// DEFAULT TYPOGRAPHY AND SPACING
+export const DEFAULT_TYPOGRAPHY: ThemeTypography = DEFAULT_APP_THEME_TYPOGRAPHY;
+export const DEFAULT_SPACING: ThemeSpacing = DEFAULT_APP_THEME_SPACING;
+export const DEFAULT_ANIMATIONS: ThemeAnimations = DEFAULT_APP_THEME_ANIMATIONS;
 
-export const DEFAULT_TYPOGRAPHY: ThemeTypography = {
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-  fontFamilyMono: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
-  fontSizeBase: '14px',
-  fontSizeSmall: '12px',
-  fontSizeLarge: '16px',
-  fontSizeXL: '20px',
-  fontSizeXXL: '28px',
-  lineHeightNormal: '1.5',
-  lineHeightTight: '1.25',
-  lineHeightLoose: '1.75',
-};
+function themeFromManifest(manifest: AppThemeManifest): Theme {
+  return {
+    id: manifest.id,
+    name: manifest.name,
+    description: manifest.description,
+    category: manifest.category,
+    variant: manifest.variant,
+    colorScheme: manifest.colorScheme,
+    isBuiltIn: manifest.isBuiltIn,
+    isPremium: manifest.isPremium,
+    colors: manifest.colors,
+    glassConfig: manifest.glassConfig,
+    buttonStyle: manifest.buttonStyle,
+    typography: manifest.typography,
+    spacing: manifest.spacing,
+    animations: manifest.animations,
+    metadata: manifest.metadata,
+  };
+}
 
-export const DEFAULT_SPACING: ThemeSpacing = {
-  unit: 4,
-  xs: '4px',
-  sm: '8px',
-  md: '16px',
-  lg: '24px',
-  xl: '32px',
-  xxl: '48px',
-  borderRadius: '8px',
-  borderRadiusLarge: '12px',
-  borderRadiusFull: '9999px',
-};
+export const THEME_AURORA: Theme = themeFromManifest(APP_THEME_MANIFEST_BY_ID.aurora);
+export const THEME_DARK: Theme = themeFromManifest(APP_THEME_MANIFEST_BY_ID.dark);
+export const THEME_LIGHT: Theme = themeFromManifest(APP_THEME_MANIFEST_BY_ID.light);
 
-export const DEFAULT_ANIMATIONS: ThemeAnimations = {
-  durationFast: '150ms',
-  durationNormal: '250ms',
-  durationSlow: '400ms',
-  easingDefault: 'cubic-bezier(0.4, 0, 0.2, 1)',
-  easingEmphasized: 'cubic-bezier(0.2, 0, 0, 1)',
-  enableMotion: true,
-  enableGlow: true,
-  enableScanlines: false,
-  enableFlicker: false,
-  enableParallax: true,
-};
+const THEME_BUBBLE: Theme = themeFromManifest(APP_THEME_MANIFEST_BY_ID.bubble);
 
-// BUILT-IN THEMES
-
-/** Dark theme — Steel chrome with vivid lime accent (#DFFF0A brand) */
-export const THEME_DARK: Theme = {
-  id: 'dark',
-  name: 'Dark',
-  description: 'Steel chrome dark theme with vivid lime accent',
-  category: 'dark',
-  variant: 'dark',
-  colorScheme: 'dark',
-  isBuiltIn: true,
-  isPremium: false,
-  colors: {
-    // Lime brand palette: #B2CC00 #C3E000 #97AD00 #DFFF0A #859900
-    primary: '#DFFF0A',
-    primaryLight: '#E5FF3D',
-    primaryDark: '#B3CC08',
-    secondary: '#C3E000',
-    secondaryLight: '#DFFF0A',
-    secondaryDark: '#97AD00',
-    accent: '#B2CC00',
-    accentLight: '#C3E000',
-    accentDark: '#859900',
-    background: '#111215',
-    backgroundElevated: '#19191e',
-    backgroundSunken: '#0c0c0f',
-    surface: '#1e1f23',
-    surfaceElevated: '#26272c',
-    surfaceBorder: 'rgba(223, 255, 10, 0.10)',
-    textPrimary: '#ffffff',
-    textSecondary: '#a0a4b8',
-    textMuted: '#6c7086',
-    textInverse: '#111215',
-    success: '#22c55e',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
-    link: '#DFFF0A',
-    linkHover: '#E5FF3D',
-    glow: 'rgba(223, 255, 10, 0.35)',
-    shadow: 'rgba(0, 0, 0, 0.5)',
-    holoPrimary: 'rgba(223, 255, 10, 0.9)',
-    holoSecondary: 'rgba(195, 224, 0, 0.7)',
-    holoAccent: 'rgba(178, 204, 0, 1)',
-    holoGlow: 'rgba(223, 255, 10, 0.5)',
-    holoScanline: 'rgba(223, 255, 10, 0.08)',
-    holoBackground: 'rgba(17, 18, 21, 0.95)',
-  },
-  glassConfig: {
-    primaryVariant: 'frosted',
-    secondaryVariant: 'default',
-    cardBackground: 'rgba(255, 255, 255, 0.03)',
-    cardBorder: 'rgba(223, 255, 10, 0.08)',
-    cardBlur: 'blur(16px)',
-  },
-  buttonStyle: {
-    family: 'chrome',
-    primaryBg: 'linear-gradient(135deg, rgba(223, 255, 10, 0.12) 0%, rgba(195, 224, 0, 0.08) 100%)',
-    primaryHover:
-      'linear-gradient(135deg, rgba(223, 255, 10, 0.18) 0%, rgba(195, 224, 0, 0.12) 100%)',
-    primaryActive:
-      'linear-gradient(135deg, rgba(223, 255, 10, 0.24) 0%, rgba(195, 224, 0, 0.16) 100%)',
-    borderRadius: '10px',
-    shadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.06)',
-    hoverShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(223, 255, 10, 0.08)',
-    activeShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.4)',
-  },
-  typography: DEFAULT_TYPOGRAPHY,
-  spacing: DEFAULT_SPACING,
-  animations: {
-    ...DEFAULT_ANIMATIONS,
-    enableGlow: true,
-    enableParallax: false,
-    enableMetallic: true,
-    enableSoftShadows: false,
-  },
-  metadata: {
-    author: 'CGraph',
-    version: '5.0.0',
-    createdAt: '2024-01-01',
-    updatedAt: '2026-03-20',
-  },
-};
-
-/** Light theme — Refined daylight interface with sapphire-violet accents */
-export const THEME_LIGHT: Theme = {
-  id: 'light',
-  name: 'Light',
-  description: 'Refined daylight theme with sapphire and violet accents',
-  category: 'light',
-  variant: 'light',
-  colorScheme: 'light',
-  isBuiltIn: true,
-  isPremium: false,
-  colors: {
-    primary: '#2563eb',
-    primaryLight: '#3b82f6',
-    primaryDark: '#1d4ed8',
-    secondary: '#7c3aed',
-    secondaryLight: '#8b5cf6',
-    secondaryDark: '#6d28d9',
-    accent: '#7c3aed',
-    accentLight: '#a78bfa',
-    accentDark: '#6d28d9',
-    background: '#f4f7fb',
-    backgroundElevated: '#ffffff',
-    backgroundSunken: '#e9eef5',
-    surface: '#ffffff',
-    surfaceElevated: '#fbfdff',
-    surfaceBorder: '#d9e2ec',
-    textPrimary: '#0f172a',
-    textSecondary: '#334155',
-    textMuted: '#64748b',
-    textInverse: '#ffffff',
-    success: '#16a34a',
-    warning: '#d97706',
-    error: '#dc2626',
-    info: '#2563eb',
-    link: '#1d4ed8',
-    linkHover: '#1e40af',
-    glow: 'rgba(37, 99, 235, 0.12)',
-    shadow: 'rgba(15, 23, 42, 0.12)',
-    holoPrimary: 'rgba(37, 99, 235, 0.9)',
-    holoSecondary: 'rgba(124, 58, 237, 0.72)',
-    holoAccent: 'rgba(96, 165, 250, 1)',
-    holoGlow: 'rgba(37, 99, 235, 0.18)',
-    holoScanline: 'rgba(37, 99, 235, 0.035)',
-    holoBackground: 'rgba(255, 255, 255, 0.95)',
-  },
-  glassConfig: {
-    primaryVariant: 'frosted',
-    secondaryVariant: 'default',
-    cardBackground: 'rgba(255, 255, 255, 0.88)',
-    cardBorder: 'rgba(148, 163, 184, 0.24)',
-    cardBlur: 'blur(18px)',
-  },
-  buttonStyle: {
-    family: 'elevated',
-    primaryBg: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-    primaryHover: 'linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%)',
-    primaryActive: 'linear-gradient(135deg, #1e40af 0%, #5b21b6 100%)',
-    borderRadius: '12px',
-    shadow: '0 10px 24px rgba(37, 99, 235, 0.18)',
-    hoverShadow: '0 14px 32px rgba(37, 99, 235, 0.22)',
-    activeShadow: 'inset 0 1px 2px rgba(15, 23, 42, 0.18)',
-  },
-  typography: DEFAULT_TYPOGRAPHY,
-  spacing: DEFAULT_SPACING,
-  animations: {
-    ...DEFAULT_ANIMATIONS,
-    enableGlow: false,
-    enableParallax: false,
-    enableMetallic: false,
-    enableSoftShadows: true,
-  },
-  metadata: {
-    author: 'CGraph',
-    version: '5.0.0',
-    createdAt: '2024-01-01',
-    updatedAt: '2026-03-20',
-  },
-};
-
-// AURORA THEME
-
-/** Aurora theme — Deep space dark with purple glass and holographic accents */
-export const THEME_AURORA: Theme = {
-  id: 'aurora',
-  name: 'Aurora',
-  description: 'Deep space dark with purple glass and holographic accents',
-  category: 'dark',
-  variant: 'aurora',
-  colorScheme: 'dark',
-  isBuiltIn: true,
-  isPremium: false,
-  colors: {
-    primary: '#7c3aed',
-    primaryLight: '#8b5cf6',
-    primaryDark: '#6d28d9',
-    secondary: '#06b6d4',
-    secondaryLight: '#22d3ee',
-    secondaryDark: '#0891b2',
-    accent: '#22d3ee',
-    accentLight: '#67e8f9',
-    accentDark: '#0891b2',
-    background: '#0d0f1c',
-    backgroundElevated: '#131628',
-    backgroundSunken: '#080b14',
-    surface: '#1a1e32',
-    surfaceElevated: '#222640',
-    surfaceBorder: 'rgba(139,92,246,0.12)',
-    textPrimary: '#ffffff',
-    textSecondary: '#b4bcd0',
-    textMuted: '#6b7394',
-    textInverse: '#0d0f1c',
-    success: '#22c55e',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
-    link: '#a78bfa',
-    linkHover: '#c4b5fd',
-    glow: 'rgba(139, 92, 246, 0.4)',
-    shadow: 'rgba(0, 0, 0, 0.5)',
-    holoPrimary: 'rgba(139, 92, 246, 0.9)',
-    holoSecondary: 'rgba(6, 182, 212, 0.7)',
-    holoAccent: 'rgba(34, 211, 238, 1)',
-    holoGlow: 'rgba(139, 92, 246, 0.5)',
-    holoScanline: 'rgba(139, 92, 246, 0.1)',
-    holoBackground: 'rgba(13, 15, 28, 0.95)',
-  },
-  glassConfig: {
-    primaryVariant: 'holographic',
-    secondaryVariant: 'aurora',
-    cardBackground: 'rgba(15, 18, 30, 0.4)',
-    cardBorder: 'rgba(255, 255, 255, 0.05)',
-    cardBlur: 'blur(40px)',
-  },
-  buttonStyle: {
-    family: 'gradient',
-    primaryBg: 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(59,130,246,0.08) 100%)',
-    primaryHover: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(59,130,246,0.12) 100%)',
-    primaryActive: 'linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(59,130,246,0.16) 100%)',
-    borderRadius: '12px',
-    shadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
-    hoverShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(139,92,246,0.1)',
-    activeShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)',
-  },
-  typography: DEFAULT_TYPOGRAPHY,
-  spacing: DEFAULT_SPACING,
-  animations: {
-    ...DEFAULT_ANIMATIONS,
-    enableMotion: true,
-    enableGlow: true,
-    enableParallax: true,
-    enableMetallic: false,
-    enableSoftShadows: false,
-  },
-  metadata: {
-    author: 'CGraph',
-    version: '4.0.0',
-    createdAt: '2026-03-17',
-    updatedAt: '2026-03-17',
-  },
-};
-
-// BUBBLE THEME
-
-/** Bubble theme — Liquid glass with prismatic rainbow borders and caustic purple-green glow */
-const THEME_BUBBLE: Theme = {
-  id: 'bubble',
-  name: 'Bubble',
-  description: '3D liquid glass — iOS 26 style glassmorphism with chromatic edges',
-  category: 'dark',
-  variant: 'bubble',
-  colorScheme: 'dark',
-  isBuiltIn: true,
-  isPremium: false,
-  colors: {
-    // Purple-green dual-accent palette
-    primary: '#8B5CF6',
-    primaryLight: '#A78BFA',
-    primaryDark: '#7C3AED',
-    secondary: '#10B981',
-    secondaryLight: '#34D399',
-    secondaryDark: '#059669',
-    accent: '#06B6D4',
-    accentLight: '#22D3EE',
-    accentDark: '#0891B2',
-    background: '#111827',
-    backgroundElevated: '#1F2937',
-    backgroundSunken: '#0B1120',
-    surface: '#1F2937',
-    surfaceElevated: '#374151',
-    surfaceBorder: 'rgba(255, 255, 255, 0.15)',
-    textPrimary: '#ffffff',
-    textSecondary: '#D1D5DB',
-    textMuted: '#9CA3AF',
-    textInverse: '#111827',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6',
-    link: '#A78BFA',
-    linkHover: '#C4B5FD',
-    glow: 'rgba(139, 92, 246, 0.4)',
-    shadow: 'rgba(0, 0, 0, 0.37)',
-    holoPrimary: 'rgba(139, 92, 246, 0.9)',
-    holoSecondary: 'rgba(16, 185, 129, 0.7)',
-    holoAccent: 'rgba(6, 182, 212, 1)',
-    holoGlow: 'rgba(139, 92, 246, 0.5)',
-    holoScanline: 'rgba(139, 92, 246, 0.08)',
-    holoBackground: 'rgba(17, 24, 39, 0.95)',
-  },
-  glassConfig: {
-    primaryVariant: 'frosted',
-    secondaryVariant: 'aurora',
-    cardBackground: 'rgba(255, 255, 255, 0.05)',
-    cardBorder: 'rgba(255, 255, 255, 0.16)',
-    cardBlur: 'blur(22px)',
-  },
-  buttonStyle: {
-    family: 'glass',
-    primaryBg: 'rgba(139, 92, 246, 0.15)',
-    primaryHover: 'rgba(139, 92, 246, 0.22)',
-    primaryActive: 'rgba(139, 92, 246, 0.12)',
-    borderRadius: '20px',
-    shadow:
-      '0 8px 24px rgba(0, 0, 0, 0.14), inset 0 2px 0 rgba(255, 255, 255, 0.18), 0 8px 24px -6px rgba(139, 92, 246, 0.25)',
-    hoverShadow:
-      '0 12px 32px rgba(0, 0, 0, 0.18), inset 0 2px 0 rgba(255, 255, 255, 0.28), 0 12px 36px -6px rgba(139, 92, 246, 0.35)',
-    activeShadow: '0 4px 12px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
-  },
-  typography: DEFAULT_TYPOGRAPHY,
-  spacing: {
-    ...DEFAULT_SPACING,
-    borderRadius: '16px',
-    borderRadiusLarge: '20px',
-  },
-  animations: {
-    ...DEFAULT_ANIMATIONS,
-    enableMotion: true,
-    enableGlow: true,
-    enableParallax: true,
-    enableMetallic: false,
-    enableSoftShadows: true,
-  },
-  metadata: {
-    author: 'CGraph',
-    version: '1.0.0',
-    createdAt: '2026-03-21',
-    updatedAt: '2026-03-21',
-  },
-};
-
-// THEME REGISTRY
-
-/** Central registry of all available built-in themes. */
 export const THEME_REGISTRY: Record<string, Theme> = {
   aurora: THEME_AURORA,
   dark: THEME_DARK,
