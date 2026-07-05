@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { getProfileRenderingAnchorOrDefault } from '@cgraph-dev/shared-types';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ProfileCardUserV2 } from '../types';
@@ -31,6 +32,9 @@ vi.mock('@/lib/lottie/lottie-asset-renderer', () => ({
 }));
 
 import { NewProfileCard } from '../new-profile-card';
+
+const MINI_PROFILE_ANCHOR = getProfileRenderingAnchorOrDefault('mini-card').avatar;
+const FULL_PROFILE_ANCHOR = getProfileRenderingAnchorOrDefault('full-profile').avatar;
 
 describe('NewProfileCard', () => {
   const user: ProfileCardUserV2 = {
@@ -65,10 +69,10 @@ describe('NewProfileCard', () => {
     expect(themedBody?.dataset.profileCardLayout).toBe('fixed-identity-skeleton');
     expect(themedBody?.dataset.profileThemeSurface).toBe('normalized');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('mini');
-    expect(avatarZone?.dataset.avatarSize).toBe('82');
-    expect(avatarZone?.dataset.avatarFrameSize).toBe('124');
+    expect(avatarZone?.dataset.avatarSize).toBe(String(MINI_PROFILE_ANCHOR.avatarSize));
+    expect(avatarZone?.dataset.avatarFrameSize).toBe(String(MINI_PROFILE_ANCHOR.frameSize));
     expect(avatarZone?.dataset.avatarLayoutAnchor).toBe('fixed');
-    expect(avatarZone?.dataset.avatarAnchorY).toBe('150');
+    expect(avatarZone?.dataset.avatarAnchorY).toBe(String(MINI_PROFILE_ANCHOR.anchorY));
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('mini_signal_noir');
@@ -119,7 +123,7 @@ describe('NewProfileCard', () => {
     expect(themedBody).toHaveClass('overflow-visible');
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('full');
     expect(avatarZone?.dataset.avatarZoneVariant).toBe('full');
-    expect(avatarZone?.dataset.avatarSize).toBe('98');
+    expect(avatarZone?.dataset.avatarSize).toBe(String(FULL_PROFILE_ANCHOR.avatarSize));
   });
 
   it('renders the supplied avatar image above the profile theme surface', () => {
@@ -166,12 +170,15 @@ describe('NewProfileCard', () => {
     const firstRenderer = screen.getByTestId('avatar-border-renderer');
 
     expect(firstAvatarZone?.dataset.avatarLayoutAnchor).toBe('fixed');
-    expect(firstAvatarZone?.dataset.avatarSize).toBe('82');
-    expect(firstAvatarZone?.dataset.avatarFrameSize).toBe('124');
-    expect(firstAvatarZone?.dataset.avatarAnchorY).toBe('150');
-    expect(firstStatusDot?.dataset.statusAttachedTo).toBe('avatar-container');
-    expect(firstRenderer).toHaveAttribute('data-size', '124');
-    expect(Number(firstRenderer.getAttribute('data-avatar-scale'))).toBeCloseTo(82 / 124, 4);
+    expect(firstAvatarZone?.dataset.avatarSize).toBe(String(MINI_PROFILE_ANCHOR.avatarSize));
+    expect(firstAvatarZone?.dataset.avatarFrameSize).toBe(String(MINI_PROFILE_ANCHOR.frameSize));
+    expect(firstAvatarZone?.dataset.avatarAnchorY).toBe(String(MINI_PROFILE_ANCHOR.anchorY));
+    expect(firstStatusDot?.dataset.statusAttachedTo).toBe(MINI_PROFILE_ANCHOR.statusAttachedTo);
+    expect(firstRenderer).toHaveAttribute('data-size', String(MINI_PROFILE_ANCHOR.frameSize));
+    expect(Number(firstRenderer.getAttribute('data-avatar-scale'))).toBeCloseTo(
+      MINI_PROFILE_ANCHOR.avatarSize / MINI_PROFILE_ANCHOR.frameSize,
+      4
+    );
 
     rerender(
       <NewProfileCard

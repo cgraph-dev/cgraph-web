@@ -1,4 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import {
+  PROFILE_RENDERING_ANCHORS,
+  PROFILE_RENDERING_SURFACE_IDS,
+} from '@cgraph-dev/shared-types';
 
 import {
   ALL_PROFILE_THEMES,
@@ -38,5 +42,22 @@ describe('profile card theme semantics', () => {
     expect(signalNoir.bundleId).toBe('signal-noir-founder');
     expect(signalNoir.profileBackgroundImage).toContain('/profile-background/');
     expect(signalNoir.miniProfileBackgroundImage).toContain('/mini-profile-background/');
+  });
+
+  it('keeps profile theme rendering structure owned by shared anchors', () => {
+    expect(PROFILE_RENDERING_ANCHORS.map(({ id }) => id)).toEqual([
+      ...PROFILE_RENDERING_SURFACE_IDS,
+    ]);
+
+    for (const theme of ALL_PROFILE_THEMES) {
+      expect(ACCENT_THEMES[theme.id].profileBackgroundImage).toBeDefined();
+
+      for (const anchor of PROFILE_RENDERING_ANCHORS) {
+        expect(anchor.profileTheme.movesStructure).toBe(false);
+        expect(anchor.slots).toContain('profile-theme');
+        expect(anchor.slots).toContain('avatar');
+        expect(anchor.avatar.statusAttachedTo).toBe('avatar-container');
+      }
+    }
   });
 });

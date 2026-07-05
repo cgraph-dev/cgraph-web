@@ -1,4 +1,8 @@
 import { memo, useEffect, useMemo, useState } from 'react';
+import {
+  getProfileRenderingAnchorOrDefault,
+  type ProfileRenderingSurfaceId,
+} from '@cgraph-dev/shared-types';
 
 import { cn } from '@/lib/utils';
 import { getBorderById } from '@/data/avatar-borders';
@@ -7,24 +11,14 @@ import { resolveAvatarUrl } from '@/lib/media-url';
 
 import type { AvatarZoneProps, BadgeDisplayTier } from './types';
 
-const AVATAR_LAYOUT = {
-  mini: {
-    avatarSize: 82,
-    slotSize: 124,
-    overlap: -16,
-    anchorY: 150,
-    statusSize: 14,
-    statusBorder: 2.5,
-  },
-  full: {
-    avatarSize: 98,
-    slotSize: 148,
-    overlap: -34,
-    anchorY: 176,
-    statusSize: 16,
-    statusBorder: 3,
-  },
-} as const;
+const PROFILE_SURFACE_BY_VARIANT = {
+  mini: 'mini-card',
+  full: 'full-profile',
+} as const satisfies Record<NonNullable<AvatarZoneProps['variant']>, ProfileRenderingSurfaceId>;
+
+function getAvatarLayout(variant: NonNullable<AvatarZoneProps['variant']>) {
+  return getProfileRenderingAnchorOrDefault(PROFILE_SURFACE_BY_VARIANT[variant]).avatar;
+}
 
 function LegendaryRing(): React.ReactElement {
   return (
@@ -112,9 +106,9 @@ export const AvatarZone = memo(function AvatarZone({
     [avatarBorderId]
   );
   const isMini = variant === 'mini';
-  const layout = isMini ? AVATAR_LAYOUT.mini : AVATAR_LAYOUT.full;
+  const layout = getAvatarLayout(variant);
   const avatarSize = layout.avatarSize;
-  const frameSize = layout.slotSize;
+  const frameSize = layout.frameSize;
   const avatarScale = avatarSize / frameSize;
   const initialsSize = isMini ? '1.35rem' : '1.55rem';
   const [avatarImageFailed, setAvatarImageFailed] = useState(false);
@@ -234,13 +228,15 @@ export const AvatarZone = memo(function AvatarZone({
             isOnline ? 'bg-[#1ad870]' : 'bg-[#222c3c]'
           )}
           data-avatar-status-dot="true"
-          data-status-attached-to="avatar-container"
+          data-status-attached-to={layout.statusAttachedTo}
           style={{
-            left: `calc(50% + ${avatarSize / 2 - layout.statusSize * 0.35}px)`,
-            top: `calc(50% + ${avatarSize * 0.18}px)`,
+            left: `calc(50% + ${
+              avatarSize / 2 - layout.statusSize * layout.statusOffsetXFactor
+            }px)`,
+            top: `calc(50% + ${avatarSize * layout.statusOffsetYFactor}px)`,
             width: layout.statusSize,
             height: layout.statusSize,
-            borderWidth: layout.statusBorder,
+            borderWidth: layout.statusBorderWidth,
             transform: 'translate(-50%, -50%)',
             ...(isOnline ? { animation: 'pc-status-pulse 2.4s ease-in-out infinite' } : {}),
           }}
