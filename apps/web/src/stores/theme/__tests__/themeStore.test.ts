@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { PROFILE_CARD_LAYOUT_IDS } from '@cgraph-dev/shared-types';
+import { PROFILE_CARD_LAYOUT_IDS, PROFILE_CARD_LAYOUTS } from '@cgraph-dev/shared-types';
 import { CHAT_BUBBLE_PRESET_IDS, colorPresets } from '@cgraph-dev/design-tokens';
 
 vi.mock('@/lib/api-client', () => ({
@@ -327,8 +327,20 @@ describe('THEME_PRESETS & getThemePreset', () => {
 
 describe('PROFILE_CARD_CONFIGS & getProfileCardConfigForLayout', () => {
   it('has the shared profile-card layout set', () => {
-    for (const key of ['default', 'minimal', 'card', 'full', 'compact', 'premium']) {
+    expect(Object.keys(PROFILE_CARD_CONFIGS)).toEqual([...PROFILE_CARD_LAYOUT_IDS]);
+
+    for (const key of PROFILE_CARD_LAYOUT_IDS) {
       expect(PROFILE_CARD_CONFIGS).toHaveProperty(key);
+    }
+  });
+
+  it('uses shared profile-card layout visibility semantics', () => {
+    for (const layout of PROFILE_CARD_LAYOUTS) {
+      expect(PROFILE_CARD_CONFIGS[layout.id]).toMatchObject({
+        layout: layout.id,
+        showBadges: layout.showBadges,
+        showBio: layout.showBio,
+      });
     }
   });
 

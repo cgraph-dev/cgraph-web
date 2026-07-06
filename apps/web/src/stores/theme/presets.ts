@@ -1,5 +1,6 @@
 import {
   DEFAULT_PROFILE_CARD_LAYOUT_ID,
+  getProfileCardLayoutOrDefault,
   isProfileCardLayoutId,
 } from '@cgraph-dev/shared-types';
 import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
@@ -68,14 +69,13 @@ export const COLORS = {
   ocean: colorDefinitionForPreset('ocean'),
 } satisfies Record<ColorPreset, ColorDefinition>;
 
-const BASE_CARD_CONFIG: ProfileCardConfig = {
-  layout: DEFAULT_PROFILE_CARD_LAYOUT_ID,
+type ProfileCardAdapterConfig = Omit<ProfileCardConfig, 'layout' | 'showBadges' | 'showBio'>;
+
+const BASE_CARD_CONFIG: ProfileCardAdapterConfig = {
   showLevel: true,
   showXp: true,
-  showBadges: true,
   maxBadges: 5,
   showTitle: true,
-  showBio: true,
   showStats: true,
   showRecentActivity: true,
   showMutualFriends: true,
@@ -84,54 +84,64 @@ const BASE_CARD_CONFIG: ProfileCardConfig = {
   showSocialLinks: true,
 };
 
-function createProfileCardConfig(overrides: Partial<ProfileCardConfig>): ProfileCardConfig {
-  return { ...BASE_CARD_CONFIG, ...overrides };
-}
-
-export const PROFILE_CARD_CONFIGS: Record<ProfileCardLayoutId, ProfileCardConfig> = {
-  default: createProfileCardConfig({ layout: 'default' }),
-  minimal: createProfileCardConfig({
-    layout: 'minimal',
+const PROFILE_CARD_CONFIG_OVERRIDES = {
+  default: {},
+  minimal: {
     showLevel: false,
     showXp: false,
-    showBadges: false,
     maxBadges: 0,
-    showBio: false,
     showStats: false,
     showRecentActivity: false,
     showMutualFriends: false,
     showForumsInCommon: false,
     showAchievements: false,
     showSocialLinks: false,
-  }),
-  card: createProfileCardConfig({
-    layout: 'card',
+  },
+  card: {
     showRecentActivity: false,
-  }),
-  full: createProfileCardConfig({
-    layout: 'full',
+  },
+  full: {
     maxBadges: 8,
-  }),
-  compact: createProfileCardConfig({
-    layout: 'compact',
+  },
+  compact: {
     showXp: false,
     maxBadges: 3,
-    showBio: false,
     showStats: false,
     showRecentActivity: false,
     showMutualFriends: false,
     showForumsInCommon: false,
     showAchievements: false,
     showSocialLinks: false,
-  }),
-  premium: createProfileCardConfig({
-    layout: 'premium',
+  },
+  premium: {
     maxBadges: 8,
     showRecentActivity: true,
     showMutualFriends: true,
     showForumsInCommon: true,
-  }),
-};
+  },
+} satisfies Record<ProfileCardLayoutId, Partial<ProfileCardAdapterConfig>>;
+
+function createProfileCardConfig(layoutId: ProfileCardLayoutId): ProfileCardConfig {
+  const layout = getProfileCardLayoutOrDefault(layoutId);
+  const overrides = PROFILE_CARD_CONFIG_OVERRIDES[layout.id];
+
+  return {
+    layout: layout.id,
+    showBadges: layout.showBadges,
+    showBio: layout.showBio,
+    ...BASE_CARD_CONFIG,
+    ...overrides,
+  };
+}
+
+export const PROFILE_CARD_CONFIGS = {
+  default: createProfileCardConfig('default'),
+  minimal: createProfileCardConfig('minimal'),
+  card: createProfileCardConfig('card'),
+  full: createProfileCardConfig('full'),
+  compact: createProfileCardConfig('compact'),
+  premium: createProfileCardConfig('premium'),
+} satisfies Record<ProfileCardLayoutId, ProfileCardConfig>;
 
 export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
   'minimalist-dark': {
