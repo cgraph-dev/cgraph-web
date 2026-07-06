@@ -5,6 +5,8 @@ import {
   PROFILE_THEME_BUNDLE_IDS as SHARED_PROFILE_THEME_BUNDLE_IDS,
   PROFILE_THEME_BUNDLES as SHARED_PROFILE_THEME_BUNDLES,
   PROFILE_THEME_CATEGORY_INFO as SHARED_PROFILE_THEME_CATEGORIES,
+  getProfileThemeAssetManifestById,
+  getProfileThemeBundleAssetManifestById,
   getProfileThemeBundleById as getSharedProfileThemeBundleById,
   getThemesByCategory as getSharedThemesByCategory,
 } from '@cgraph-dev/shared-types';
@@ -70,7 +72,11 @@ describe('profile theme catalog adapter', () => {
 
     for (const [themeId, slug] of Object.entries(expectedAssetSlugs)) {
       const theme = getProfileThemeOrDefault(themeId);
+      const manifest = getProfileThemeAssetManifestById(theme.id);
 
+      expect(theme.previewImage).toBe(manifest?.preview.image);
+      expect(theme.profileBackgroundImage).toBe(manifest?.profileBackground.image);
+      expect(theme.miniProfileBackgroundImage).toBe(manifest?.miniProfileBackground.image);
       expect(theme.previewImage).toContain(`theme_${slug}_preview`);
       expect(theme.profileBackgroundImage).toContain(`profile_${slug}`);
       expect(theme.miniProfileBackgroundImage).toContain(`mini_${slug}`);
@@ -84,9 +90,14 @@ describe('profile theme catalog adapter', () => {
     expect(DEFAULT_PROFILE_THEME.miniProfileBackgroundImage).toContain('/mini-profile-background/');
 
     const bundle = getProfileThemeBundleById('signal-noir-founder');
+    const bundleManifest = getProfileThemeBundleAssetManifestById('signal-noir-founder');
 
     expect(bundle?.includes.profileThemeId).toBe(DEFAULT_PROFILE_THEME_ID);
-    expect(bundle?.profileBackgroundImage).toBe(DEFAULT_PROFILE_THEME.profileBackgroundImage);
-    expect(bundle?.miniProfileBackgroundImage).toBe(DEFAULT_PROFILE_THEME.miniProfileBackgroundImage);
+    expect(bundle?.profileBackgroundImage).toBe(bundleManifest?.profileBackground.image);
+    expect(bundle?.miniProfileBackgroundImage).toBe(bundleManifest?.miniProfileBackground.image);
+    expect(bundle?.profileBackgroundImage).toContain('profile_signal_noir_founder');
+    expect(bundle?.miniProfileBackgroundImage).toContain('mini_signal_noir_founder');
+    expect(bundle?.profileBackgroundImage).not.toBe(DEFAULT_PROFILE_THEME.profileBackgroundImage);
+    expect(bundle?.miniProfileBackgroundImage).not.toBe(DEFAULT_PROFILE_THEME.miniProfileBackgroundImage);
   });
 });

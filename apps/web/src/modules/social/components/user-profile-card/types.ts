@@ -7,6 +7,7 @@
 
 import type { ProfileCardUser } from '../profile-card';
 import type { ProfileThemeId } from '@/data/profileThemes';
+import type { ProfileThemeAssetManifest } from '@cgraph-dev/shared-types';
 
 export type { ProfileCardUser };
 
@@ -112,6 +113,7 @@ export interface CardShellProps {
   className?: string;
   profileThemeId?: string;
   backgroundImage?: string | null;
+  backgroundAsset?: ProfileThemeAssetManifest | null;
 }
 
 export interface BannerProps {

@@ -11,6 +11,10 @@ import {
   isProfileThemeId,
   type ProfileThemeConfig,
 } from '@/data/profileThemes';
+import {
+  getProfileThemeAssetManifestOrDefault,
+  type ProfileThemeAssetManifestSet,
+} from '@cgraph-dev/shared-types';
 import type { AccentThemeId, BadgeDisplayTier, NameplateVariant, PulseTier } from './types';
 
 // LEGACY CONSTANTS (preserved)
@@ -49,6 +53,7 @@ interface AccentTheme {
   profileBackgroundImage?: string;
   miniProfileBackgroundImage?: string;
   bundleId?: string;
+  assetManifest: ProfileThemeAssetManifestSet;
 }
 
 const SIGNAL_NOIR_BUNDLE_IMAGES = {
@@ -86,6 +91,7 @@ function gradientStops(theme: ProfileThemeConfig): string {
 
 function createAccentTheme(theme: ProfileThemeConfig): AccentTheme {
   const imageFallback = theme.id === 'signal-noir' ? SIGNAL_NOIR_BUNDLE_IMAGES : null;
+  const assetManifest = getProfileThemeAssetManifestOrDefault(theme.id);
   const primary = theme.backgroundGradient[0] ?? '#08090f';
   const accent = theme.accentPrimary;
   const secondary = theme.accentSecondary;
@@ -108,6 +114,7 @@ function createAccentTheme(theme: ProfileThemeConfig): AccentTheme {
     miniProfileBackgroundImage:
       theme.miniProfileBackgroundImage ?? imageFallback?.miniProfileBackgroundImage,
     bundleId: theme.bundleId ?? imageFallback?.bundleId,
+    assetManifest,
   };
 }
 

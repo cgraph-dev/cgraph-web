@@ -18,7 +18,13 @@ export const CardShell = memo(function CardShell({
   className,
   profileThemeId,
   backgroundImage,
+  backgroundAsset,
 }: CardShellProps) {
+  const safeCenter = backgroundAsset?.platformScaling.web.safeCenter ?? backgroundAsset?.safeCenter;
+  const backgroundPosition = safeCenter
+    ? `${safeCenter.x * 100}% ${safeCenter.y * 100}%`
+    : undefined;
+
   return (
     <div
       className={cn('relative rounded-[22px] p-px', className)}
@@ -31,12 +37,20 @@ export const CardShell = memo(function CardShell({
       <div
         className="relative w-full overflow-hidden rounded-[21px] bg-[#08090f]"
         data-profile-card-background-image={backgroundImage ?? undefined}
+        data-profile-card-asset-surface={backgroundAsset?.surface}
+        data-profile-card-asset-aspect-ratio={backgroundAsset?.intrinsic.aspectRatio}
+        data-profile-card-asset-safe-center={
+          safeCenter ? `${safeCenter.x},${safeCenter.y}` : undefined
+        }
+        data-profile-card-reduced-motion-poster={backgroundAsset?.reducedMotionPoster.image}
       >
         {backgroundImage && (
           <div
             className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center"
             style={{
               backgroundImage: `linear-gradient(180deg, rgba(8,9,15,0.04) 0%, rgba(8,9,15,0.42) 58%, rgba(8,9,15,0.86) 100%), url("${backgroundImage}")`,
+              backgroundPosition,
+              backgroundSize: backgroundAsset?.platformScaling.web.fit,
             }}
           />
         )}

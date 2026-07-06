@@ -1,5 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import { getProfileRenderingAnchorOrDefault } from '@cgraph-dev/shared-types';
+import {
+  getProfileRenderingAnchorOrDefault,
+  getProfileThemeAssetManifestOrDefault,
+} from '@cgraph-dev/shared-types';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ProfileCardUserV2 } from '../types';
@@ -35,6 +38,7 @@ import { NewProfileCard } from '../new-profile-card';
 
 const MINI_PROFILE_ANCHOR = getProfileRenderingAnchorOrDefault('mini-card').avatar;
 const FULL_PROFILE_ANCHOR = getProfileRenderingAnchorOrDefault('full-profile').avatar;
+const SIGNAL_NOIR_ASSET_MANIFEST = getProfileThemeAssetManifestOrDefault('signal-noir');
 
 describe('NewProfileCard', () => {
   const user: ProfileCardUserV2 = {
@@ -74,6 +78,14 @@ describe('NewProfileCard', () => {
     expect(avatarZone?.dataset.avatarLayoutAnchor).toBe('fixed');
     expect(avatarZone?.dataset.avatarAnchorY).toBe(String(MINI_PROFILE_ANCHOR.anchorY));
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/mini-profile-background/');
+    expect(cardShell?.dataset.profileCardAssetSurface).toBe('mini-profile-background');
+    expect(cardShell?.dataset.profileCardAssetAspectRatio).toBe(
+      String(SIGNAL_NOIR_ASSET_MANIFEST.miniProfileBackground.intrinsic.aspectRatio)
+    );
+    expect(cardShell?.dataset.profileCardAssetSafeCenter).toBe('0.5,0.5');
+    expect(cardShell?.dataset.profileCardReducedMotionPoster).toBe(
+      SIGNAL_NOIR_ASSET_MANIFEST.miniProfileBackground.reducedMotionPoster.image
+    );
     expect(backgroundImage).toContain('/mini-profile-background/');
     expect(backgroundImage).toContain('mini_signal_noir');
     expect(themedBody).toHaveClass('overflow-visible');
@@ -119,6 +131,13 @@ describe('NewProfileCard', () => {
     expect(themedHeader?.dataset.profileCardBannerDecorative).toBe('false');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/profile-background/');
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('profile_signal_noir');
+    expect(cardShell?.dataset.profileCardAssetSurface).toBe('profile-background');
+    expect(cardShell?.dataset.profileCardAssetAspectRatio).toBe(
+      String(SIGNAL_NOIR_ASSET_MANIFEST.profileBackground.intrinsic.aspectRatio)
+    );
+    expect(cardShell?.dataset.profileCardReducedMotionPoster).toBe(
+      SIGNAL_NOIR_ASSET_MANIFEST.profileBackground.reducedMotionPoster.image
+    );
     expect(themedBody?.dataset.profileBackgroundImage).toContain('profile_signal_noir');
     expect(themedBody).toHaveClass('overflow-visible');
     expect(themedHeader?.dataset.profileCardBannerVariant).toBe('full');

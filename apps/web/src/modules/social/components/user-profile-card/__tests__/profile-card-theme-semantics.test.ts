@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  PROFILE_THEME_ASSET_MANIFESTS,
   PROFILE_RENDERING_ANCHORS,
   PROFILE_RENDERING_SURFACE_IDS,
+  getProfileThemeAssetManifestById,
 } from '@cgraph-dev/shared-types';
 
 import {
@@ -26,6 +28,13 @@ describe('profile card theme semantics', () => {
         theme.backgroundGradient[theme.backgroundGradient.length - 1]
       );
       expect(accentTheme.rgb).toMatch(/^\d+,\d+,\d+$/);
+      expect(accentTheme.assetManifest).toBe(getProfileThemeAssetManifestById(theme.id));
+      expect(accentTheme.profileBackgroundImage).toBe(
+        accentTheme.assetManifest.profileBackground.image
+      );
+      expect(accentTheme.miniProfileBackgroundImage).toBe(
+        accentTheme.assetManifest.miniProfileBackground.image
+      );
     }
   });
 
@@ -45,6 +54,7 @@ describe('profile card theme semantics', () => {
   });
 
   it('keeps profile theme rendering structure owned by shared anchors', () => {
+    expect(PROFILE_THEME_ASSET_MANIFESTS).toHaveLength(ALL_PROFILE_THEMES.length);
     expect(PROFILE_RENDERING_ANCHORS.map(({ id }) => id)).toEqual([
       ...PROFILE_RENDERING_SURFACE_IDS,
     ]);

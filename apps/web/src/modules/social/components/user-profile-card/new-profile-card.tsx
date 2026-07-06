@@ -42,6 +42,9 @@ export const NewProfileCard = memo(function NewProfileCard({
   const cardBackgroundImage = isMini
     ? theme.miniProfileBackgroundImage
     : theme.profileBackgroundImage;
+  const cardBackgroundAsset = isMini
+    ? theme.assetManifest.miniProfileBackground
+    : theme.assetManifest.profileBackground;
   const fallbackHeaderImage = isMini
     ? (theme.miniProfileBackgroundImage ?? theme.previewImage)
     : (theme.profileBackgroundImage ?? theme.previewImage);
@@ -61,6 +64,7 @@ export const NewProfileCard = memo(function NewProfileCard({
     <CardShell
       accentColor={accentColor}
       backgroundImage={cardBackgroundImage}
+      backgroundAsset={cardBackgroundAsset}
       className={className}
       profileThemeId={themeId}
     >
