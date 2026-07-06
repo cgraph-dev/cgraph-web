@@ -3,6 +3,7 @@ import {
   isProfileCardLayoutId,
 } from '@cgraph-dev/shared-types';
 import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
+import { chatBubblePresets, type ChatBubblePreset } from '@cgraph-dev/design-tokens';
 import { classifyByRules } from '@/lib/store-helpers';
 import type {
   ColorPreset,
@@ -318,45 +319,58 @@ export const DEFAULT_CHAT_BUBBLE: ChatBubbleConfig = {
   groupMessages: true,
 };
 
-export const CHAT_BUBBLE_PRESETS: Record<string, Partial<ChatBubbleConfig>> = {
-  default: {},
-  minimal: {
-    ownMessageBg: '#000000',
-    otherMessageBg: '#1f2937',
-    useGradient: false,
-    borderRadius: 8,
-    bubbleShape: 'sharp',
-    showTail: false,
-    glassEffect: false,
-    shadowIntensity: 0,
-    entranceAnimation: 'fade',
-    hoverEffect: false,
-  },
-  modern: {
-    ownMessageBg: '#8b5cf6',
-    useGradient: true,
-    borderRadius: 20,
-    bubbleShape: 'super-rounded',
-    showTail: false,
-    glassEffect: true,
-    glassBlur: 15,
-    shadowIntensity: 40,
-    entranceAnimation: 'scale',
-    hoverEffect: true,
-  },
-  glass: {
-    ownMessageBg: '#05966980',
-    otherMessageBg: '#37415150',
-    useGradient: true,
-    showTail: false,
-    glassEffect: true,
-    glassBlur: 20,
-    shadowIntensity: 50,
-    borderWidth: 1,
-    entranceAnimation: 'fade',
-    hoverEffect: true,
-  },
-};
+function toLegacyBubbleShape(
+  preset: ChatBubblePreset
+): ChatBubbleConfig['bubbleShape'] {
+  if (preset.shape === 'sharp' || preset.shape === 'minimal') return 'sharp';
+  if (preset.shape === 'dimensional') return 'modern';
+  if (
+    preset.id === 'modern' ||
+    preset.shape === 'pill' ||
+    preset.shape === 'organic' ||
+    preset.shape === 'glass' ||
+    preset.shape === 'outlined'
+  ) {
+    return 'super-rounded';
+  }
+  return 'rounded';
+}
+
+function toLegacyEntranceAnimation(
+  preset: ChatBubblePreset
+): ChatBubbleConfig['entranceAnimation'] {
+  if (preset.id === 'minimal' || preset.id === 'glass' || preset.id === 'outline') return 'fade';
+  if (preset.id === 'modern' || preset.id === 'three-d') return 'scale';
+  if (preset.id === 'cloud') return 'bounce';
+  return 'slide';
+}
+
+function toLegacyChatBubblePreset(preset: ChatBubblePreset): Partial<ChatBubbleConfig> {
+  if (preset.id === 'default') return {};
+
+  return {
+    ownMessageBg: preset.ownColor,
+    otherMessageBg: preset.otherColor,
+    ownMessageText: preset.ownTextColor,
+    otherMessageText: preset.otherTextColor,
+    useGradient: preset.hasGradient,
+    gradientDirection: preset.hasGradient ? 'diagonal' : undefined,
+    borderRadius: preset.borderRadius,
+    bubbleShape: toLegacyBubbleShape(preset),
+    showTail: preset.hasTail,
+    borderStyle: preset.shape === 'outlined' ? 'solid' : 'none',
+    glassEffect: preset.glassBlur > 0 || preset.shape === 'glass',
+    glassBlur: preset.glassBlur,
+    shadowIntensity: preset.shadowIntensity,
+    borderWidth: preset.shape === 'outlined' ? 1 : 0,
+    entranceAnimation: toLegacyEntranceAnimation(preset),
+    hoverEffect: preset.shadowIntensity > 0,
+  };
+}
+
+export const CHAT_BUBBLE_PRESETS: Record<string, Partial<ChatBubbleConfig>> = Object.fromEntries(
+  chatBubblePresets.map((preset) => [preset.id, toLegacyChatBubblePreset(preset)])
+);
 
 export { type ThemeState } from './types';
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { PROFILE_CARD_LAYOUT_IDS } from '@cgraph-dev/shared-types';
+import { CHAT_BUBBLE_PRESET_IDS } from '@cgraph-dev/design-tokens';
 
 vi.mock('@/lib/api-client', () => ({
   http: {
@@ -336,11 +337,8 @@ describe('PROFILE_CARD_CONFIGS & getProfileCardConfigForLayout', () => {
 // CHAT BUBBLE PRESETS
 
 describe('CHAT_BUBBLE_PRESETS', () => {
-  it('contains default, minimal, modern, glass presets', () => {
-    expect(CHAT_BUBBLE_PRESETS).toHaveProperty('default');
-    expect(CHAT_BUBBLE_PRESETS).toHaveProperty('minimal');
-    expect(CHAT_BUBBLE_PRESETS).toHaveProperty('modern');
-    expect(CHAT_BUBBLE_PRESETS).toHaveProperty('glass');
+  it('contains every shared chat bubble preset', () => {
+    expect(Object.keys(CHAT_BUBBLE_PRESETS)).toEqual([...CHAT_BUBBLE_PRESET_IDS]);
   });
 
   it('default preset is an empty override', () => {
@@ -352,6 +350,13 @@ describe('CHAT_BUBBLE_PRESETS', () => {
     expect(minimal.glassEffect).toBe(false);
     expect(minimal.hoverEffect).toBe(false);
     expect(minimal.shadowIntensity).toBe(0);
+  });
+
+  it('adapts shared presets into legacy chat bubble config', () => {
+    const threeD = CHAT_BUBBLE_PRESETS['three-d']!;
+    expect(threeD.bubbleShape).toBe('modern');
+    expect(threeD.entranceAnimation).toBe('scale');
+    expect(threeD.useGradient).toBe(true);
   });
 });
 
@@ -415,6 +420,14 @@ describe('store actions', () => {
     const bubble = useThemeStore.getState().chatBubble;
     expect(bubble.bubbleShape).toBe('sharp');
     expect(bubble.shadowIntensity).toBe(0);
+  });
+
+  it('applyChatBubblePreset applies shared preset ids beyond the old web table', () => {
+    act(() => useThemeStore.getState().applyChatBubblePreset('three-d'));
+    const bubble = useThemeStore.getState().chatBubble;
+    expect(bubble.bubbleShape).toBe('modern');
+    expect(bubble.entranceAnimation).toBe('scale');
+    expect(bubble.borderRadius).toBe(14);
   });
 
   it('applyChatBubblePreset ignores invalid preset', () => {
