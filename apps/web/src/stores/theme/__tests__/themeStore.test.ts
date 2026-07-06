@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { PROFILE_CARD_LAYOUT_IDS } from '@cgraph-dev/shared-types';
-import { CHAT_BUBBLE_PRESET_IDS } from '@cgraph-dev/design-tokens';
+import { CHAT_BUBBLE_PRESET_IDS, colorPresets } from '@cgraph-dev/design-tokens';
 
 vi.mock('@/lib/api-client', () => ({
   http: {
@@ -217,12 +217,18 @@ describe('backend sync', () => {
 // COLORS & PRESET HELPERS
 
 describe('COLORS constant', () => {
-  it('defines all 12 color presets', () => {
+  it('defines every shared color preset', () => {
     const presets = Object.keys(COLORS);
-    expect(presets).toHaveLength(12);
+    expect(presets).toEqual(Object.keys(colorPresets));
     expect(presets).toContain('emerald');
     expect(presets).toContain('midnight');
     expect(presets).toContain('ocean');
+  });
+
+  it('uses shared color values and names', () => {
+    for (const [preset, sharedColor] of Object.entries(colorPresets)) {
+      expect(COLORS[preset as keyof typeof COLORS]).toMatchObject(sharedColor);
+    }
   });
 
   it('each color has required fields', () => {
@@ -233,6 +239,11 @@ describe('COLORS constant', () => {
       expect(color).toHaveProperty('name');
       expect(color).toHaveProperty('gradient');
     }
+  });
+
+  it('keeps legacy glow and Tailwind gradient adapters', () => {
+    expect(COLORS.purple.glow).toBe('rgba(139, 92, 246, 0.5)');
+    expect(COLORS.purple.gradient).toBe('from-purple-500 to-purple-600');
   });
 });
 

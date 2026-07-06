@@ -3,7 +3,11 @@ import {
   isProfileCardLayoutId,
 } from '@cgraph-dev/shared-types';
 import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
-import { chatBubblePresets, type ChatBubblePreset } from '@cgraph-dev/design-tokens';
+import {
+  chatBubblePresets,
+  colorPresets,
+  type ChatBubblePreset,
+} from '@cgraph-dev/design-tokens';
 import { classifyByRules } from '@/lib/store-helpers';
 import type {
   ColorPreset,
@@ -13,92 +17,56 @@ import type {
   ChatBubbleConfig,
 } from './types';
 
-export const COLORS: Record<ColorPreset, ColorDefinition> = {
-  emerald: {
-    primary: '#10b981',
-    secondary: '#34d399',
-    glow: 'rgba(16, 185, 129, 0.5)',
-    name: 'Emerald',
-    gradient: 'from-emerald-500 to-emerald-600',
-  },
-  purple: {
-    primary: '#8b5cf6',
-    secondary: '#a78bfa',
-    glow: 'rgba(139, 92, 246, 0.5)',
-    name: 'Purple',
-    gradient: 'from-purple-500 to-purple-600',
-  },
-  cyan: {
-    primary: '#06b6d4',
-    secondary: '#22d3ee',
-    glow: 'rgba(6, 182, 212, 0.5)',
-    name: 'Cyan',
-    gradient: 'from-cyan-500 to-cyan-600',
-  },
-  orange: {
-    primary: '#f97316',
-    secondary: '#fb923c',
-    glow: 'rgba(249, 115, 22, 0.5)',
-    name: 'Orange',
-    gradient: 'from-orange-500 to-orange-600',
-  },
-  pink: {
-    primary: '#ec4899',
-    secondary: '#f472b6',
-    glow: 'rgba(236, 72, 153, 0.5)',
-    name: 'Pink',
-    gradient: 'from-pink-500 to-pink-600',
-  },
-  gold: {
-    primary: '#eab308',
-    secondary: '#facc15',
-    glow: 'rgba(234, 179, 8, 0.5)',
-    name: 'Gold',
-    gradient: 'from-yellow-500 to-yellow-600',
-  },
-  crimson: {
-    primary: '#dc2626',
-    secondary: '#f87171',
-    glow: 'rgba(220, 38, 38, 0.5)',
-    name: 'Crimson',
-    gradient: 'from-red-500 to-red-600',
-  },
-  arctic: {
-    primary: '#38bdf8',
-    secondary: '#7dd3fc',
-    glow: 'rgba(56, 189, 248, 0.5)',
-    name: 'Arctic',
-    gradient: 'from-sky-400 to-sky-500',
-  },
-  sunset: {
-    primary: '#f59e0b',
-    secondary: '#f97316',
-    glow: 'rgba(245, 158, 11, 0.5)',
-    name: 'Sunset',
-    gradient: 'from-amber-500 to-orange-500',
-  },
-  midnight: {
-    primary: '#4c1d95',
-    secondary: '#6b21a8',
-    glow: 'rgba(76, 29, 149, 0.5)',
-    name: 'Midnight',
-    gradient: 'from-purple-900 to-purple-800',
-  },
-  forest: {
-    primary: '#059669',
-    secondary: '#10b981',
-    glow: 'rgba(5, 150, 105, 0.5)',
-    name: 'Forest',
-    gradient: 'from-emerald-600 to-emerald-500',
-  },
-  ocean: {
-    primary: '#0284c7',
-    secondary: '#0ea5e9',
-    glow: 'rgba(2, 132, 199, 0.5)',
-    name: 'Ocean',
-    gradient: 'from-sky-600 to-sky-500',
-  },
-};
+const COLOR_GRADIENTS = {
+  emerald: 'from-emerald-500 to-emerald-600',
+  purple: 'from-purple-500 to-purple-600',
+  cyan: 'from-cyan-500 to-cyan-600',
+  orange: 'from-orange-500 to-orange-600',
+  pink: 'from-pink-500 to-pink-600',
+  gold: 'from-yellow-500 to-yellow-600',
+  crimson: 'from-red-500 to-red-600',
+  arctic: 'from-sky-400 to-sky-500',
+  sunset: 'from-amber-500 to-orange-500',
+  midnight: 'from-purple-900 to-purple-800',
+  forest: 'from-emerald-600 to-emerald-500',
+  ocean: 'from-sky-600 to-sky-500',
+} as const satisfies Record<ColorPreset, string>;
+
+function glowFromHex(hexColor: string): string {
+  const hex = hexColor.startsWith('#') ? hexColor.slice(1) : hexColor;
+  const red = Number.parseInt(hex.slice(0, 2), 16);
+  const green = Number.parseInt(hex.slice(2, 4), 16);
+  const blue = Number.parseInt(hex.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, 0.5)`;
+}
+
+function colorDefinitionForPreset(preset: ColorPreset): ColorDefinition {
+  const color = colorPresets[preset];
+
+  return {
+    primary: color.primary,
+    secondary: color.secondary,
+    glow: glowFromHex(color.primary),
+    name: color.name,
+    gradient: COLOR_GRADIENTS[preset],
+  };
+}
+
+export const COLORS = {
+  emerald: colorDefinitionForPreset('emerald'),
+  purple: colorDefinitionForPreset('purple'),
+  cyan: colorDefinitionForPreset('cyan'),
+  orange: colorDefinitionForPreset('orange'),
+  pink: colorDefinitionForPreset('pink'),
+  gold: colorDefinitionForPreset('gold'),
+  crimson: colorDefinitionForPreset('crimson'),
+  arctic: colorDefinitionForPreset('arctic'),
+  sunset: colorDefinitionForPreset('sunset'),
+  midnight: colorDefinitionForPreset('midnight'),
+  forest: colorDefinitionForPreset('forest'),
+  ocean: colorDefinitionForPreset('ocean'),
+} satisfies Record<ColorPreset, ColorDefinition>;
 
 const BASE_CARD_CONFIG: ProfileCardConfig = {
   layout: DEFAULT_PROFILE_CARD_LAYOUT_ID,

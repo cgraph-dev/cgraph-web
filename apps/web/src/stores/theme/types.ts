@@ -9,24 +9,12 @@ import type {
   ChatUiMessageEntranceAnimation,
   ProfileCardLayoutId,
 } from '@cgraph-dev/shared-types';
-import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
+import type { ChatBubblePresetId, ColorPresetId } from '@cgraph-dev/design-tokens';
 import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/animation-constants';
 
 // SHARED TYPES
 
-export type ColorPreset =
-  | 'emerald'
-  | 'purple'
-  | 'cyan'
-  | 'orange'
-  | 'pink'
-  | 'gold'
-  | 'crimson'
-  | 'arctic'
-  | 'sunset'
-  | 'midnight'
-  | 'forest'
-  | 'ocean';
+export type ColorPreset = ColorPresetId;
 
 export type AnimationSpeed = 'slow' | 'normal' | 'fast';
 export type BorderRadius = 'none' | 'sm' | 'md' | 'lg' | 'full';
