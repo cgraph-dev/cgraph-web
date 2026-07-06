@@ -124,12 +124,7 @@ function normalizeServerTheme(
 ): Partial<ThemeStore> {
   const next: Partial<ThemeStore> = {};
 
-  const colorPreset = getStringField(rawTheme, [
-    'colorPreset',
-    'color_preset',
-    'mode',
-    'app_theme',
-  ]);
+  const colorPreset = getStringField(rawTheme, ['colorPreset', 'color_preset']);
   if (isColorPreset(colorPreset)) next.colorPreset = colorPreset;
 
   const profileThemeId = getStringField(rawTheme, [

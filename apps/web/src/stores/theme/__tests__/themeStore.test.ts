@@ -10,6 +10,7 @@ vi.mock('@/lib/api-client', () => ({
 }));
 
 import { http } from '@/lib/api-client';
+import { themeEngine } from '@/lib/theme/theme-engine';
 import { useThemeStore } from '../themeStore';
 import {
   COLORS,
@@ -104,6 +105,46 @@ describe('backend sync', () => {
     expect(state.chatBubble.showTail).toBe(false);
     expect(state.lastSyncedAt).toEqual(expect.any(Number));
     expect(http.put).not.toHaveBeenCalled();
+  });
+
+  it('applyServerTheme keeps app-shell aliases out of customization color presets', () => {
+    act(() => useThemeStore.getState().setColorPreset('gold'));
+
+    const setThemeSpy = vi.spyOn(themeEngine, 'setTheme').mockImplementation(() => {});
+
+    try {
+      act(() =>
+        useThemeStore.getState().applyServerTheme({
+          mode: 'ocean',
+          app_theme: 'emerald',
+        })
+      );
+
+      expect(useThemeStore.getState().colorPreset).toBe('gold');
+      expect(setThemeSpy).not.toHaveBeenCalled();
+    } finally {
+      setThemeSpy.mockRestore();
+    }
+  });
+
+  it('applyServerTheme routes explicit app-shell theme fields through the theme engine', () => {
+    act(() => useThemeStore.getState().setColorPreset('cyan'));
+
+    const setThemeSpy = vi.spyOn(themeEngine, 'setTheme').mockImplementation(() => {});
+
+    try {
+      act(() =>
+        useThemeStore.getState().applyServerTheme({
+          app_theme: 'bubble',
+          app_theme_explicit: true,
+        })
+      );
+
+      expect(setThemeSpy).toHaveBeenCalledWith('bubble');
+      expect(useThemeStore.getState().colorPreset).toBe('cyan');
+    } finally {
+      setThemeSpy.mockRestore();
+    }
   });
 
   it('applyServerTheme normalizes legacy chat bubble style aliases through shared tokens', () => {
