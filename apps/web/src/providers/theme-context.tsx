@@ -2,8 +2,8 @@
  * Unified Theme Context — single ThemeProvider for the whole app.
  *
  * Merges the legacy basic ThemeProvider (light/dark/system detection +
- * CSS class toggle) with ThemeProviderEnhanced (CSS-variable injection,
- * 7+ theme support, preferences persistence, accessibility settings).
+ * CSS class toggle) with the enhanced hook API (CSS-variable injection,
+ * package-backed themes, preferences persistence, accessibility settings).
  *
  * Consumers can use:
  *   - `useTheme()`         — simple API: { theme, resolvedTheme, setTheme }
@@ -11,7 +11,6 @@
  *
  * Both hooks read from the same provider.  Only ONE <ThemeProvider> is needed
  * in the component tree (wrapping <App> in main.tsx).
- *
  */
 import {
   createContext,

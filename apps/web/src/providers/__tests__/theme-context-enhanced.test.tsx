@@ -3,12 +3,13 @@ import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { renderHook } from '@testing-library/react';
 import {
-  ThemeProviderEnhanced,
   useThemeEnhanced,
   useThemeColors,
   useIsSpecialTheme,
   useReducedMotion,
 } from '../theme-context-enhanced';
+import * as themeContextEnhanced from '../theme-context-enhanced';
+import { ThemeProvider } from '../theme-context';
 
 // Shared theme fixtures (used inside and outside the factory)
 
@@ -104,6 +105,10 @@ vi.mock('@/lib/theme/theme-engine', () => {
   };
 });
 
+vi.mock('@/lib/theme/tokens', () => ({
+  injectSemanticTokens: vi.fn(),
+}));
+
 // Re-import the mocked module so we can access the spies in tests
 import { themeEngine } from '@/lib/theme/theme-engine';
 const mockEngine = themeEngine as unknown as {
@@ -119,38 +124,50 @@ const mockEngine = themeEngine as unknown as {
 // Helpers
 
 function wrapper({ children }: { children: React.ReactNode }) {
-  return <ThemeProviderEnhanced>{children}</ThemeProviderEnhanced>;
+  return <ThemeProvider>{children}</ThemeProvider>;
 }
 
 // Tests
 
-describe('ThemeProviderEnhanced', () => {
+describe('ThemeProvider enhanced API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockEngine.getCurrentTheme.mockReturnValue(DARK_THEME);
     mockEngine.getPreferences.mockReturnValue(DEFAULT_PREFS);
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    });
   });
 
   // --- Rendering ---
 
   it('renders children', () => {
     render(
-      <ThemeProviderEnhanced>
+      <ThemeProvider>
         <div data-testid="child">Hello</div>
-      </ThemeProviderEnhanced>
+      </ThemeProvider>
     );
     expect(screen.getByTestId('child')).toBeInTheDocument();
   });
 
   it('renders multiple children', () => {
     render(
-      <ThemeProviderEnhanced>
+      <ThemeProvider>
         <span data-testid="a">A</span>
         <span data-testid="b">B</span>
-      </ThemeProviderEnhanced>
+      </ThemeProvider>
     );
     expect(screen.getByTestId('a')).toBeInTheDocument();
     expect(screen.getByTestId('b')).toBeInTheDocument();
+  });
+
+  it('does not export a second enhanced provider from the compatibility barrel', () => {
+    expect('ThemeProviderEnhanced' in themeContextEnhanced).toBe(false);
   });
 
   // --- Context values ---
@@ -200,11 +217,11 @@ describe('ThemeProviderEnhanced', () => {
     expect(mockEngine.setTheme).toHaveBeenCalledWith('light');
   });
 
-  it('toggleDarkMode switches from light to dark', () => {
+  it('toggleDarkMode switches from light to aurora', () => {
     mockEngine.getCurrentTheme.mockReturnValue(LIGHT_THEME);
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.toggleDarkMode());
-    expect(mockEngine.setTheme).toHaveBeenCalledWith('dark');
+    expect(mockEngine.setTheme).toHaveBeenCalledWith('aurora');
   });
 
   // --- Settings ---
@@ -289,7 +306,7 @@ describe('ThemeProviderEnhanced', () => {
 
   it('applies initialTheme when provided and in registry', () => {
     function wrapperWithInitial({ children }: { children: React.ReactNode }) {
-      return <ThemeProviderEnhanced initialTheme="light">{children}</ThemeProviderEnhanced>;
+      return <ThemeProvider initialTheme="light">{children}</ThemeProvider>;
     }
     renderHook(() => useThemeEnhanced(), { wrapper: wrapperWithInitial });
     expect(mockEngine.setTheme).toHaveBeenCalledWith('light');
@@ -297,7 +314,7 @@ describe('ThemeProviderEnhanced', () => {
 
   it('does not apply initialTheme when ID is not in registry', () => {
     function wrapperBad({ children }: { children: React.ReactNode }) {
-      return <ThemeProviderEnhanced initialTheme="nonexistent">{children}</ThemeProviderEnhanced>;
+      return <ThemeProvider initialTheme="nonexistent">{children}</ThemeProvider>;
     }
     renderHook(() => useThemeEnhanced(), { wrapper: wrapperBad });
     expect(mockEngine.setTheme).not.toHaveBeenCalled();
@@ -310,7 +327,7 @@ describe('useThemeEnhanced', () => {
   it('throws when used outside provider', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => renderHook(() => useThemeEnhanced())).toThrow(
-      'useThemeEnhanced must be used within a ThemeProviderEnhanced'
+      'useThemeEnhanced must be used within a ThemeProvider'
     );
     spy.mockRestore();
   });

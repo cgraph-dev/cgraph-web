@@ -8,13 +8,13 @@ export const ThemeContextEnhanced = createContext<ThemeContextValue | undefined>
 
 /**
  * Hook to access the theme context.
- * Must be used within a ThemeProviderEnhanced.
+ * Must be used within the canonical ThemeProvider.
  */
 export function useThemeEnhanced(): ThemeContextValue {
   const context = use(ThemeContextEnhanced);
 
   if (context === undefined) {
-    throw new Error('useThemeEnhanced must be used within a ThemeProviderEnhanced');
+    throw new Error('useThemeEnhanced must be used within a ThemeProvider');
   }
 
   return context;
