@@ -307,7 +307,6 @@
     inset 0 -2px 6px rgba(0, 0, 0, 0.22),
     0 10px 24px rgba(5, 8, 20, 0.14);
   overflow: hidden;
-  isolation: isolate;
   transition:
     background 320ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -323,35 +322,6 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.aurora-social-toggle::before {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle at 22% 50%, rgba(255, 255, 255, 0.16), transparent 32%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 68%);
-  opacity: 0.55;
-  transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-}
-
-.aurora-social-toggle::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 10%;
-  width: 42%;
-  height: 160%;
-  transform: translate(-120%, -50%) rotate(18deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
-  opacity: 0;
-  transition:
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 220ms ease;
-  pointer-events: none;
-}
-
 .aurora-social-toggle:hover {
   border-color: color-mix(in srgb, var(--token-interactive-primary) 28%, transparent);
   box-shadow:
@@ -362,15 +332,6 @@
 
 .aurora-social-toggle:active {
   transform: scale(0.98);
-}
-
-.aurora-social-toggle[data-checked='true']::before {
-  opacity: 0.82;
-}
-
-.aurora-social-toggle[data-checked='true']::after {
-  transform: translate(170%, -50%) rotate(18deg);
-  opacity: 0.8;
 }
 
 .aurora-social-toggle-thumb {
@@ -465,15 +426,6 @@
     0 0 0 1px color-mix(in srgb, var(--token-interactive-primary) 28%, transparent),
     0 12px 30px color-mix(in srgb, var(--token-interactive-primary) 24%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.peer:checked + .aurora-social-toggle::before {
-  opacity: 0.82;
-}
-
-.peer:checked + .aurora-social-toggle::after {
-  transform: translate(170%, -50%) rotate(18deg);
-  opacity: 0.8;
 }
 
 .peer:checked + .aurora-social-toggle + .aurora-social-toggle-thumb {
