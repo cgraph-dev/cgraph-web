@@ -7,7 +7,9 @@ import type { ProfileCardLayoutId } from '@cgraph-dev/shared-types';
 import {
   chatBubblePresets,
   colorPresets,
+  themeProfiles,
   type ChatBubblePreset,
+  type ThemeProfile,
 } from '@cgraph-dev/design-tokens';
 import { classifyByRules } from '@/lib/store-helpers';
 import type {
@@ -143,9 +145,41 @@ export const PROFILE_CARD_CONFIGS = {
   premium: createProfileCardConfig('premium'),
 } satisfies Record<ProfileCardLayoutId, ProfileCardConfig>;
 
+type ThemePresetAdapterConfig = Omit<
+  ThemePresetConfig,
+  'name' | 'fontFamily' | 'glassmorphism' | 'showParticles'
+>;
+
+function themeProfileForPreset(profileId: string): ThemeProfile {
+  const profile = themeProfiles.find((candidate) => candidate.id === profileId);
+  if (!profile) throw new Error(`Missing theme profile: ${profileId}`);
+
+  return profile;
+}
+
+function fontFamilyForThemeProfile(profile: ThemeProfile): string {
+  if (profile.fontFamily === 'Inter') return `${profile.fontFamily}, sans-serif`;
+
+  return `"${profile.fontFamily}", sans-serif`;
+}
+
+function createThemePreset(
+  profileId: string,
+  config: ThemePresetAdapterConfig
+): ThemePresetConfig {
+  const profile = themeProfileForPreset(profileId);
+
+  return {
+    name: profile.name,
+    ...config,
+    fontFamily: fontFamilyForThemeProfile(profile),
+    glassmorphism: profile.glassmorphism,
+    showParticles: profile.particles,
+  };
+}
+
 export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
-  'minimalist-dark': {
-    name: 'Minimalist Dark',
+  'minimalist-dark': createThemePreset('minimalist-dark', {
     colors: {
       primary: '#ffffff',
       secondary: '#a3a3a3',
@@ -158,13 +192,9 @@ export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
     background: { type: 'color', value: '#0a0a0a' },
     cardLayout: 'minimal',
     hoverEffect: 'scale',
-    fontFamily: 'Inter, sans-serif',
-    glassmorphism: false,
     borderRadius: 'lg',
-    showParticles: false,
-  },
-  'minimalist-light': {
-    name: 'Minimalist Light',
+  }),
+  'minimalist-light': createThemePreset('minimalist-light', {
     colors: {
       primary: '#000000',
       secondary: '#525252',
@@ -177,13 +207,9 @@ export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
     background: { type: 'color', value: '#ffffff' },
     cardLayout: 'minimal',
     hoverEffect: 'scale',
-    fontFamily: 'Inter, sans-serif',
-    glassmorphism: false,
     borderRadius: 'lg',
-    showParticles: false,
-  },
-  'cyberpunk-neon': {
-    name: 'Cyberpunk Neon',
+  }),
+  'cyberpunk-neon': createThemePreset('cyberpunk-neon', {
     colors: {
       primary: '#00f0ff',
       secondary: '#ff00ff',
@@ -201,14 +227,10 @@ export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
     },
     cardLayout: 'premium',
     hoverEffect: 'glow',
-    fontFamily: '"Rajdhani", sans-serif',
-    glassmorphism: true,
     borderRadius: 'none',
-    showParticles: true,
     particleType: 'glitch',
-  },
-  'gradient-aurora': {
-    name: 'Gradient Aurora',
+  }),
+  'gradient-aurora': createThemePreset('gradient-aurora', {
     colors: {
       primary: '#22c55e',
       secondary: '#3b82f6',
@@ -226,14 +248,10 @@ export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
     },
     cardLayout: 'full',
     hoverEffect: 'glow',
-    fontFamily: 'Inter, sans-serif',
-    glassmorphism: true,
     borderRadius: 'lg',
-    showParticles: true,
     particleType: 'stars',
-  },
-  'gaming-rgb': {
-    name: 'Gaming RGB',
+  }),
+  'gaming-rgb': createThemePreset('gaming-rgb', {
     colors: {
       primary: '#22c55e',
       secondary: '#3b82f6',
@@ -246,12 +264,9 @@ export const THEME_PRESETS: Record<string, ThemePresetConfig> = {
     background: { type: 'animated', value: 'rgb-gradient' },
     cardLayout: 'premium',
     hoverEffect: 'glow',
-    fontFamily: '"Orbitron", sans-serif',
-    glassmorphism: true,
     borderRadius: 'md',
-    showParticles: true,
     particleType: 'spark',
-  },
+  }),
 };
 
 const CATEGORY_RULES = [

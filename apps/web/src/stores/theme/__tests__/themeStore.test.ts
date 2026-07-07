@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { PROFILE_CARD_LAYOUT_IDS, PROFILE_CARD_LAYOUTS } from '@cgraph-dev/shared-types';
-import { CHAT_BUBBLE_PRESET_IDS, colorPresets } from '@cgraph-dev/design-tokens';
+import { CHAT_BUBBLE_PRESET_IDS, colorPresets, themeProfiles } from '@cgraph-dev/design-tokens';
 
 vi.mock('@/lib/api-client', () => ({
   http: {
@@ -293,10 +293,25 @@ describe('getPresetCategory', () => {
 
 describe('THEME_PRESETS & getThemePreset', () => {
   it('contains expected preset keys', () => {
-    expect(THEME_PRESETS).toHaveProperty('minimalist-dark');
-    expect(THEME_PRESETS).toHaveProperty('cyberpunk-neon');
-    expect(THEME_PRESETS).toHaveProperty('gradient-aurora');
-    expect(THEME_PRESETS).toHaveProperty('gaming-rgb');
+    expect(Object.keys(THEME_PRESETS)).toEqual(themeProfiles.map((profile) => profile.id));
+
+    for (const profile of themeProfiles) {
+      expect(THEME_PRESETS).toHaveProperty(profile.id);
+    }
+  });
+
+  it('uses shared theme-profile metadata', () => {
+    for (const profile of themeProfiles) {
+      expect(THEME_PRESETS[profile.id]).toMatchObject({
+        name: profile.name,
+        glassmorphism: profile.glassmorphism,
+        showParticles: profile.particles,
+      });
+    }
+
+    expect(THEME_PRESETS['minimalist-dark']?.fontFamily).toBe('Inter, sans-serif');
+    expect(THEME_PRESETS['cyberpunk-neon']?.fontFamily).toBe('"Rajdhani", sans-serif');
+    expect(THEME_PRESETS['gaming-rgb']?.fontFamily).toBe('"Orbitron", sans-serif');
   });
 
   it('getThemePreset returns config for a valid id', () => {
