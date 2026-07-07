@@ -13,20 +13,22 @@ import type {
 import {
   CHAT_THEME_BASES,
   chatThemePresetId,
-  chatThemePresetToPreviewStyle,
   deriveDarkChatThemeMessageColors,
   getChatThemeAccentPresetsForBase,
-  rgbIntToHex,
   type ChatThemeAccentPreset,
   type ChatThemeBase,
+} from "@cgraph-dev/shared-types/chat-theme";
+import {
+  chatThemePresetToPreviewStyle,
+  getChatThemePresetSwatch,
   type ChatThemePreviewStyle,
-} from "./chat-theme-contract";
+} from "./chat-theme-preview";
 
 export type {
   ChatThemeAccentPreset,
   ChatThemeBase,
-  ChatThemePreviewStyle,
-} from "./chat-theme-contract";
+} from "@cgraph-dev/shared-types/chat-theme";
+export type { ChatThemePreviewStyle } from "./chat-theme-preview";
 
 export {
   CHAT_THEME_BASES,
@@ -34,6 +36,7 @@ export {
   chatThemePresetToPreviewStyle,
   deriveDarkChatThemeMessageColors,
   getChatThemeAccentPresetsForBase,
+  getChatThemePresetSwatch,
 };
 
 const bubbleIcons = {
@@ -122,13 +125,4 @@ export function getChatThemePreviewStyle(
     getChatThemePresetById(base, presetId),
     base,
   );
-}
-
-export function getChatThemePresetSwatch(
-  preset: ChatThemeAccentPreset,
-): string {
-  if (preset.messageColors.length > 1) {
-    return `linear-gradient(135deg, ${preset.messageColors.map(rgbIntToHex).join(", ")})`;
-  }
-  return rgbIntToHex(preset.accentColor);
 }
