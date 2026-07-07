@@ -4,7 +4,7 @@
  * Customization panel for chat bubbles, colors, animations, and layout options.
  */
 
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import { AnimatePresence } from "motion/react";
 import {
   ColorPickerGrid,
@@ -15,13 +15,12 @@ import {
 } from "../customization-ui";
 import { useCustomizationStore } from "@/modules/settings/store/customization/customizationStore";
 import {
-  DEFAULT_CHAT_THEME_BASE,
   bubbleAnimations,
   bubbleStyles,
   chatThemeBaseTabs,
+  chatThemeSettingsToPreviewStyle,
   getChatThemeAccentPresetsForBase,
   getChatThemePresetSwatch,
-  getChatThemePreviewStyle,
   getDefaultChatThemePresetId,
   chatThemePresetId,
   type ChatThemeBase,
@@ -31,12 +30,8 @@ import { ChatBubbleDemo } from "./chat-bubble-demo";
 // CHAT PANEL COMPONENT
 
 export const ChatPanel = memo(function ChatPanel() {
-  const [selectedChatThemeBase, setSelectedChatThemeBase] =
-    useState<ChatThemeBase>(DEFAULT_CHAT_THEME_BASE);
-  const [selectedChatThemePresetId, setSelectedChatThemePresetId] = useState(
-    () => getDefaultChatThemePresetId(DEFAULT_CHAT_THEME_BASE),
-  );
   const {
+    chatThemeSettings,
     chatBubbleStyle,
     chatBubbleColor,
     bubbleBorderRadius,
@@ -60,23 +55,21 @@ export const ChatPanel = memo(function ChatPanel() {
     toggleGroupMessages,
     toggleTimestamps,
     toggleCompactMode,
+    setChatThemePreset,
   } = useCustomizationStore();
 
+  const selectedChatThemeBase = chatThemeSettings.base;
+  const selectedChatThemePresetId = chatThemeSettings.presetId;
   const chatThemePresets = useMemo(
     () => getChatThemeAccentPresetsForBase(selectedChatThemeBase),
     [selectedChatThemeBase],
   );
   const chatThemePreview = useMemo(
-    () =>
-      getChatThemePreviewStyle(
-        selectedChatThemeBase,
-        selectedChatThemePresetId,
-      ),
-    [selectedChatThemeBase, selectedChatThemePresetId],
+    () => chatThemeSettingsToPreviewStyle(chatThemeSettings),
+    [chatThemeSettings],
   );
   const selectChatThemeBase = (base: ChatThemeBase) => {
-    setSelectedChatThemeBase(base);
-    setSelectedChatThemePresetId(getDefaultChatThemePresetId(base));
+    setChatThemePreset(base, getDefaultChatThemePresetId(base));
   };
 
   return (
@@ -135,7 +128,9 @@ export const ChatPanel = memo(function ChatPanel() {
                       : "border-white/15 hover:border-white/45"
                   }`}
                   style={{ background: getChatThemePresetSwatch(preset) }}
-                  onClick={() => setSelectedChatThemePresetId(presetId)}
+                  onClick={() =>
+                    setChatThemePreset(selectedChatThemeBase, presetId)
+                  }
                 />
               );
             })}

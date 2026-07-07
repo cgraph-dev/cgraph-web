@@ -19,6 +19,7 @@ import {
   type ChatThemeBase,
 } from "@cgraph-dev/shared-types/chat-theme";
 import {
+  chatThemeSettingsToPreviewStyle,
   chatThemePresetToPreviewStyle,
   getChatThemePresetSwatch,
   type ChatThemePreviewStyle,
@@ -33,6 +34,7 @@ export type { ChatThemePreviewStyle } from "./chat-theme-preview";
 export {
   CHAT_THEME_BASES,
   chatThemePresetId,
+  chatThemeSettingsToPreviewStyle,
   chatThemePresetToPreviewStyle,
   deriveDarkChatThemeMessageColors,
   getChatThemeAccentPresetsForBase,
@@ -81,7 +83,7 @@ export const bubbleAnimations: {
   ...bubbleAnimationMetadata[id],
 }));
 
-export const DEFAULT_CHAT_THEME_BASE: ChatThemeBase = "tinted";
+export const DEFAULT_CHAT_THEME_BASE: ChatThemeBase = "classic";
 
 const chatThemeBaseLabels = {
   classic: "Classic",

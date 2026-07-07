@@ -15,6 +15,24 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { DEFAULT_PROFILE_CARD_LAYOUT_ID, isProfileCardLayoutId } from '@cgraph-dev/shared-types';
+import {
+  CHAT_THEME_BASES,
+  CHAT_THEME_CONVERSATION_COLORS,
+  DEFAULT_CHAT_THEME_CONVERSATION_COLOR,
+  DEFAULT_CHAT_THEME_CUSTOM_COLORS,
+  chatThemePresetId,
+  chatThemePresetToSettings,
+  getChatThemeAccentPresetsForBase,
+  type ChatThemeBase,
+  type ChatThemeConversationColor,
+  type ChatThemeConversationOverride,
+  type ChatThemeCustomColor,
+  type ChatThemeCustomColorData,
+  type ChatThemeCustomColorStore,
+  type ChatThemeCustomColorStop,
+  type ChatThemeDefaultConversationColor,
+  type ChatThemeWallpaperPreset,
+} from '@cgraph-dev/shared-types/chat-theme';
 import { isProfileThemeId, type ProfileThemeId } from '@/data/profileThemes';
 import { http } from '@/lib/api-client';
 import { safeLocalStorage } from '@/lib/safeStorage';
@@ -48,11 +66,13 @@ import type {
   CustomizationServerPatch,
   CustomizationState,
   CustomizationStore,
+  CustomizationChatThemeSettings,
   ProfileCardStyle,
   ThemePreset,
 } from './customizationStore.types';
 import {
   CUSTOMIZATION_THEME_PRESETS,
+  DEFAULT_CHAT_THEME_SETTINGS,
   THEME_COLORS,
   DEFAULT_STATE,
 } from './customizationStore.types';
@@ -67,6 +87,11 @@ import {
 
 const logger = createLogger('customizationStore');
 const CUSTOMIZATION_THEME_PRESET_SET = new Set<string>(CUSTOMIZATION_THEME_PRESETS);
+const CHAT_THEME_BASE_SET = new Set<string>(CHAT_THEME_BASES);
+const CHAT_THEME_CONVERSATION_COLOR_SET = new Set<string>([
+  ...CHAT_THEME_CONVERSATION_COLORS,
+  'custom',
+]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -78,6 +103,221 @@ function normalizeProfileCardStyle(value: unknown): ProfileCardStyle {
 
 function normalizeProfileThemeId(value: unknown): ProfileThemeId | null {
   return isProfileThemeId(value) ? value : null;
+}
+
+function isChatThemeBase(value: unknown): value is ChatThemeBase {
+  return typeof value === 'string' && CHAT_THEME_BASE_SET.has(value);
+}
+
+function normalizeRgbInt(value: unknown): number | null {
+  return typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= 0xffffff
+    ? value
+    : null;
+}
+
+function getRecordNumber(
+  value: Record<string, unknown>,
+  keys: readonly string[]
+): number | null {
+  for (const key of keys) {
+    const number = normalizeRgbInt(value[key]);
+    if (number !== null) return number;
+  }
+  return null;
+}
+
+function normalizeChatThemeWallpaper(value: unknown): ChatThemeWallpaperPreset | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const intensity = typeof value.intensity === 'number' ? value.intensity : null;
+  const backgroundColor = getRecordNumber(value, ['backgroundColor', 'background_color']);
+  if (intensity === null || backgroundColor === null) return undefined;
+
+  const secondBackgroundColor = getRecordNumber(value, [
+    'secondBackgroundColor',
+    'second_background_color',
+  ]);
+  const thirdBackgroundColor = getRecordNumber(value, [
+    'thirdBackgroundColor',
+    'third_background_color',
+  ]);
+  const fourthBackgroundColor = getRecordNumber(value, [
+    'fourthBackgroundColor',
+    'fourth_background_color',
+  ]);
+
+  return {
+    intensity,
+    backgroundColor,
+    ...(secondBackgroundColor === null ? {} : { secondBackgroundColor }),
+    ...(thirdBackgroundColor === null ? {} : { thirdBackgroundColor }),
+    ...(fourthBackgroundColor === null ? {} : { fourthBackgroundColor }),
+    ...(typeof value.dark === 'boolean' ? { dark: value.dark } : {}),
+  };
+}
+
+function getChatThemePresetSettings(
+  base: ChatThemeBase,
+  presetId: string
+): CustomizationChatThemeSettings | null {
+  const preset = getChatThemeAccentPresetsForBase(base).find(
+    (item) => chatThemePresetId(item) === presetId
+  );
+  if (!preset) return null;
+
+  return {
+    ...chatThemePresetToSettings(preset, base),
+    presetId: chatThemePresetId(preset),
+  };
+}
+
+function normalizeChatThemeSettings(
+  value: unknown,
+  current: CustomizationChatThemeSettings = DEFAULT_CHAT_THEME_SETTINGS
+): CustomizationChatThemeSettings {
+  if (!isRecord(value)) return current;
+
+  const base = isChatThemeBase(value.base) ? value.base : current.base;
+  const rawPresetId = value.presetId ?? value.preset_id;
+  const presetId = typeof rawPresetId === 'string' ? rawPresetId : null;
+  const presetSettings = presetId ? getChatThemePresetSettings(base, presetId) : null;
+  const fallback = presetSettings ?? (base === current.base ? current : DEFAULT_CHAT_THEME_SETTINGS);
+  const normalizedPresetId =
+    presetSettings?.presetId ?? (presetId === null ? null : fallback.presetId);
+  const accentColor =
+    getRecordNumber(value, ['accentColor', 'accent_color']) ?? fallback.accentColor;
+  const rawMessageColors = value.messageColors ?? value.message_colors;
+  const messageColors = Array.isArray(rawMessageColors)
+    ? rawMessageColors.filter((item): item is number => normalizeRgbInt(item) !== null)
+    : fallback.messageColors;
+  const wallpaper = normalizeChatThemeWallpaper(value.wallpaper) ?? fallback.wallpaper;
+
+  return {
+    base,
+    presetId: normalizedPresetId,
+    accentColor,
+    messageColors: messageColors.length > 0 ? messageColors : fallback.messageColors,
+    ...(wallpaper ? { wallpaper } : {}),
+  };
+}
+
+function normalizeChatThemeCustomColorStop(value: unknown): ChatThemeCustomColorStop | null {
+  if (!isRecord(value)) return null;
+
+  const hue = typeof value.hue === 'number' ? value.hue : null;
+  const saturation = typeof value.saturation === 'number' ? value.saturation : null;
+  if (hue === null || saturation === null) return null;
+
+  return {
+    hue,
+    saturation,
+    ...(typeof value.lightness === 'number' ? { lightness: value.lightness } : {}),
+  };
+}
+
+function normalizeChatThemeCustomColor(value: unknown): ChatThemeCustomColor | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const start = normalizeChatThemeCustomColorStop(value.start);
+  if (!start) return undefined;
+
+  const end = normalizeChatThemeCustomColorStop(value.end);
+  return {
+    start,
+    ...(end ? { end } : {}),
+    ...(typeof value.deg === 'number' ? { deg: value.deg } : {}),
+  };
+}
+
+function normalizeChatThemeCustomColorData(value: unknown): ChatThemeCustomColorData | undefined {
+  if (!isRecord(value) || typeof value.id !== 'string') return undefined;
+
+  const color = normalizeChatThemeCustomColor(value.value);
+  if (!color) return undefined;
+
+  return { id: value.id, value: color };
+}
+
+function isChatThemeConversationColor(value: unknown): value is ChatThemeConversationColor {
+  return typeof value === 'string' && CHAT_THEME_CONVERSATION_COLOR_SET.has(value);
+}
+
+function normalizeConversationColor(value: unknown): ChatThemeConversationColor | null {
+  return isChatThemeConversationColor(value) ? value : null;
+}
+
+function normalizeDefaultConversationColor(
+  value: unknown,
+  current: ChatThemeDefaultConversationColor = DEFAULT_CHAT_THEME_CONVERSATION_COLOR
+): ChatThemeDefaultConversationColor {
+  if (!isRecord(value)) return current;
+
+  const color = normalizeConversationColor(value.color) ?? current.color;
+  const customColorData = normalizeChatThemeCustomColorData(
+    value.customColorData ?? value.custom_color_data
+  );
+
+  return {
+    color,
+    ...(customColorData ? { customColorData } : {}),
+  };
+}
+
+function normalizeCustomChatColors(
+  value: unknown,
+  current: ChatThemeCustomColorStore = DEFAULT_CHAT_THEME_CUSTOM_COLORS
+): ChatThemeCustomColorStore {
+  if (!isRecord(value) || !isRecord(value.colors)) return current;
+
+  const colors = Object.fromEntries(
+    Object.entries(value.colors)
+      .map(([id, color]) => [id, normalizeChatThemeCustomColor(color)] as const)
+      .filter((entry): entry is readonly [string, ChatThemeCustomColor] => Boolean(entry[1]))
+  );
+  const order = Array.isArray(value.order)
+    ? value.order.filter((id): id is string => typeof id === 'string')
+    : current.order;
+
+  return {
+    colors,
+    version: typeof value.version === 'number' ? value.version : current.version,
+    ...(order ? { order } : {}),
+  };
+}
+
+function normalizeConversationChatThemeOverride(
+  value: unknown
+): ChatThemeConversationOverride {
+  if (!isRecord(value)) return {};
+
+  const conversationColor = normalizeConversationColor(
+    value.conversationColor ?? value.conversation_color
+  );
+  const customColor = normalizeChatThemeCustomColor(value.customColor ?? value.custom_color);
+  const customColorId = value.customColorId ?? value.custom_color_id;
+
+  return {
+    ...(conversationColor ? { conversationColor } : {}),
+    ...(customColor ? { customColor } : {}),
+    ...(typeof customColorId === 'string' ? { customColorId } : {}),
+  };
+}
+
+function normalizeConversationChatThemeOverrides(
+  value: unknown,
+  current: CustomizationState['conversationChatThemeOverrides'] = {}
+): CustomizationState['conversationChatThemeOverrides'] {
+  if (!isRecord(value)) return current;
+
+  return Object.fromEntries(
+    Object.entries(value).map(([conversationId, override]) => [
+      conversationId,
+      normalizeConversationChatThemeOverride(override),
+    ])
+  );
 }
 
 function withCanonicalAliases(state: CustomizationState): CustomizationState {
@@ -159,6 +399,18 @@ function mapServerCustomizationPatch(
 ): CustomizationServerPatch {
   const mappedUpdates = apiSchemaMapper.fromApi(updates, current);
   const next: CustomizationServerPatch = { ...withCanonicalAliases(mappedUpdates) };
+  const chatThemeSettings =
+    updates.chat_theme_settings ?? updates.chatThemeSettings ?? mappedUpdates.chatThemeSettings;
+  const defaultConversationColor =
+    updates.default_conversation_color ??
+    updates.defaultConversationColor ??
+    mappedUpdates.defaultConversationColor;
+  const customChatColors =
+    updates.custom_chat_colors ?? updates.customChatColors ?? mappedUpdates.customChatColors;
+  const conversationChatThemeOverrides =
+    updates.conversation_chat_theme_overrides ??
+    updates.conversationChatThemeOverrides ??
+    mappedUpdates.conversationChatThemeOverrides;
 
   const appTheme = getStringPatchValue(updates, ['app_theme', 'appTheme', 'themePreset']);
   if (isThemePreset(appTheme)) {
@@ -192,6 +444,34 @@ function mapServerCustomizationPatch(
     const normalizedStyle = normalizeProfileCardStyle(profileCardStyle);
     next.profileCardStyle = normalizedStyle;
     next.profileLayout = normalizedStyle;
+  }
+
+  if (chatThemeSettings !== undefined) {
+    next.chatThemeSettings = normalizeChatThemeSettings(
+      chatThemeSettings,
+      current.chatThemeSettings
+    );
+  }
+
+  if (defaultConversationColor !== undefined) {
+    next.defaultConversationColor = normalizeDefaultConversationColor(
+      defaultConversationColor,
+      current.defaultConversationColor
+    );
+  }
+
+  if (customChatColors !== undefined) {
+    next.customChatColors = normalizeCustomChatColors(
+      customChatColors,
+      current.customChatColors
+    );
+  }
+
+  if (conversationChatThemeOverrides !== undefined) {
+    next.conversationChatThemeOverrides = normalizeConversationChatThemeOverrides(
+      conversationChatThemeOverrides,
+      current.conversationChatThemeOverrides
+    );
   }
 
   return withServerPatchAliases(next);
@@ -273,6 +553,12 @@ export const useCustomizationStore = create<CustomizationStore>()(
         toggleGroupMessages: createAutoSaveToggle('groupMessages'),
         toggleTimestamps: createAutoSaveToggle('showTimestamps'),
         toggleCompactMode: createAutoSaveToggle('compactMode'),
+        setChatThemePreset: (base, presetId) => {
+          const settings = getChatThemePresetSettings(base, presetId);
+          if (settings) {
+            setAndSave({ chatThemeSettings: settings });
+          }
+        },
 
         // === Profile Actions ===
         setProfileCardStyle: (style) =>
@@ -319,10 +605,11 @@ export const useCustomizationStore = create<CustomizationStore>()(
           try {
             const response = await http.get('/api/v1/me/customizations');
             const data = response.data.data;
-            const parsed = withCanonicalAliases(
-              apiSchemaMapper.fromApi(serverAuthoritativeCustomizationPayload(data), DEFAULT_STATE)
+            const parsed = mapServerCustomizationPatch(
+              serverAuthoritativeCustomizationPayload(data),
+              get()
             );
-            const nextState = withCurrentAccess(parsed);
+            const nextState = withCurrentAccess({ ...DEFAULT_STATE, ...parsed });
 
             set({
               ...nextState,

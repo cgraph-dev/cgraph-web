@@ -2,6 +2,7 @@ import {
   chatThemePresetId,
   type ChatThemeAccentPreset,
   type ChatThemeBase,
+  type ChatThemeSettings,
   type ChatThemeWallpaperPreset,
 } from "@cgraph-dev/shared-types/chat-theme";
 
@@ -22,34 +23,52 @@ export function chatThemePresetToPreviewStyle(
   preset: ChatThemeAccentPreset,
   base: ChatThemeBase,
 ): ChatThemePreviewStyle {
-  const ownBackground = colorStopsToGradient(preset.messageColors);
+  return chatThemeSettingsToPreviewStyle({
+    base,
+    presetId: chatThemePresetId(preset),
+    accentColor: preset.accentColor,
+    messageColors: preset.messageColors,
+    ...(preset.wallpaper ? { wallpaper: preset.wallpaper } : {}),
+  });
+}
+
+export function chatThemeSettingsToPreviewStyle(
+  settings: ChatThemeSettings & { readonly presetId?: string | null },
+): ChatThemePreviewStyle {
+  const ownBackground = colorStopsToGradient(settings.messageColors);
   const ownTailBackground = rgbIntToHex(
-    preset.messageColors[preset.messageColors.length - 1] ?? preset.accentColor,
+    settings.messageColors[settings.messageColors.length - 1] ??
+      settings.accentColor,
   );
-  const wallpaper = preset.wallpaper;
+  const wallpaper = settings.wallpaper;
   const incomingBackground =
-    base === "night" || base === "tinted"
+    settings.base === "night" || settings.base === "tinted"
       ? "rgba(255, 255, 255, 0.12)"
       : "rgba(255, 255, 255, 0.82)";
 
   return {
-    base,
-    presetId: chatThemePresetId(preset),
-    accentHex: rgbIntToHex(preset.accentColor),
+    base: settings.base,
+    presetId: settings.presetId ?? "default",
+    accentHex: rgbIntToHex(settings.accentColor),
     ownBackground,
     ownTailBackground,
-    ownTextColor: base === "night" || base === "tinted" ? "#f8fafc" : "#ffffff",
+    ownTextColor:
+      settings.base === "night" || settings.base === "tinted"
+        ? "#f8fafc"
+        : "#ffffff",
     incomingBackground,
     incomingTextColor:
-      base === "night" || base === "tinted" ? "#f8fafc" : "#111827",
+      settings.base === "night" || settings.base === "tinted"
+        ? "#f8fafc"
+        : "#111827",
     previewBackground: wallpaper
       ? colorStopsToGradient(wallpaperToStops(wallpaper), 145)
-      : base === "day"
+      : settings.base === "day"
         ? "linear-gradient(145deg, #eef7ff, #f7f2ff)"
-        : base === "classic"
+        : settings.base === "classic"
           ? "linear-gradient(145deg, #dcecff, #fff3f8)"
           : "linear-gradient(145deg, #121826, #172033)",
-    previewBorderColor: rgbIntToHex(preset.accentColor),
+    previewBorderColor: rgbIntToHex(settings.accentColor),
   };
 }
 

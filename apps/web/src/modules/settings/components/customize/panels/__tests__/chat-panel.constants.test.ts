@@ -10,6 +10,7 @@ import {
   getChatThemeAccentPresetsForBase,
   getChatThemePresetSwatch,
   getChatThemePreviewStyle,
+  chatThemeSettingsToPreviewStyle,
 } from "../chat-panel.constants";
 
 describe("chat panel constants", () => {
@@ -74,5 +75,25 @@ describe("chat panel constants", () => {
       previewBorderColor: "#0088ff",
     });
     expect(preview.previewBackground).toContain("#1e3557");
+  });
+
+  it("builds a preview style from the backend default no-preset settings", () => {
+    const preview = chatThemeSettingsToPreviewStyle({
+      base: "classic",
+      presetId: null,
+      accentColor: 0x3390ec,
+      messageColors: [0x5ca853],
+    });
+
+    expect(preview).toMatchObject({
+      base: "classic",
+      presetId: "default",
+      accentHex: "#3390ec",
+      ownBackground: "#5ca853",
+      ownTailBackground: "#5ca853",
+      ownTextColor: "#ffffff",
+      incomingTextColor: "#111827",
+      previewBorderColor: "#3390ec",
+    });
   });
 });

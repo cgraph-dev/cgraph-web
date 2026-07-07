@@ -11,6 +11,17 @@ import type {
   ProfileCardLayoutId,
   ProfileThemeId,
 } from '@cgraph-dev/shared-types';
+import type {
+  ChatThemeBase,
+  ChatThemeConversationOverride,
+  ChatThemeCustomColorStore,
+  ChatThemeDefaultConversationColor,
+  ChatThemeSettings,
+} from '@cgraph-dev/shared-types/chat-theme';
+import {
+  DEFAULT_CHAT_THEME_CONVERSATION_COLOR,
+  DEFAULT_CHAT_THEME_CUSTOM_COLORS,
+} from '@cgraph-dev/shared-types/chat-theme';
 import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/animation-constants';
 import { COLORS as THEME_COLOR_CATALOG } from '@/stores/theme/presets';
 import type { ColorDefinition } from '@/stores/theme/types';
@@ -48,7 +59,22 @@ export type ProfileCardStyle = ProfileCardLayoutId;
 
 export type BubbleAnimation = ChatUiMessageEntranceAnimation;
 
+export interface CustomizationChatThemeSettings extends ChatThemeSettings {
+  readonly presetId: string | null;
+}
+
+export type ConversationChatThemeOverrides = Readonly<
+  Record<string, ChatThemeConversationOverride>
+>;
+
 export type ThemeColors = Pick<ColorDefinition, 'primary' | 'secondary' | 'glow' | 'name'>;
+
+export const DEFAULT_CHAT_THEME_SETTINGS: CustomizationChatThemeSettings = {
+  base: 'classic',
+  presetId: null,
+  accentColor: 0x3390ec,
+  messageColors: [0x5ca853],
+};
 
 // STATE INTERFACE
 
@@ -81,6 +107,10 @@ export interface CustomizationState {
   readonly groupMessages: boolean;
   readonly showTimestamps: boolean;
   readonly compactMode: boolean;
+  readonly chatThemeSettings: CustomizationChatThemeSettings;
+  readonly defaultConversationColor: ChatThemeDefaultConversationColor;
+  readonly customChatColors: ChatThemeCustomColorStore;
+  readonly conversationChatThemeOverrides: ConversationChatThemeOverrides;
 
   // === Profile Settings ===
   readonly profileCardStyle: ProfileCardStyle;
@@ -172,6 +202,7 @@ export interface CustomizationActions {
   toggleGroupMessages: () => void;
   toggleTimestamps: () => void;
   toggleCompactMode: () => void;
+  setChatThemePreset: (base: ChatThemeBase, presetId: string) => void;
 
   // Profile actions
   setProfileCardStyle: (style: ProfileCardStyle) => void;
@@ -258,6 +289,10 @@ export const DEFAULT_STATE: CustomizationState = {
   groupMessages: true,
   showTimestamps: true,
   compactMode: false,
+  chatThemeSettings: DEFAULT_CHAT_THEME_SETTINGS,
+  defaultConversationColor: DEFAULT_CHAT_THEME_CONVERSATION_COLOR,
+  customChatColors: DEFAULT_CHAT_THEME_CUSTOM_COLORS,
+  conversationChatThemeOverrides: {},
 
   // Profile
   profileCardStyle: 'default',

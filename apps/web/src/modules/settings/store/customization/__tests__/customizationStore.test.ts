@@ -10,6 +10,7 @@ import {
   THEME_COLORS,
 } from '../customizationStore';
 import {
+  persistCustomizationState,
   sanitizeCustomizationPayloadForAccess,
   sanitizeCustomizationStateForAccess,
   userHasPremiumAccess,
@@ -167,6 +168,26 @@ describe('chat actions', () => {
     useCustomizationStore.getState().toggleCompactMode();
     expect(useCustomizationStore.getState().compactMode).toBe(true);
   });
+
+  it('setChatThemePreset applies the shared T3G preset settings', () => {
+    useCustomizationStore.getState().setChatThemePreset('tinted', 'preset:10');
+
+    expect(useCustomizationStore.getState().chatThemeSettings).toMatchObject({
+      base: 'tinted',
+      presetId: 'preset:10',
+      accentColor: 0x0088ff,
+      messageColors: [0x517893, 0x285c96],
+      wallpaper: {
+        intensity: 40,
+        backgroundColor: 0x1e3557,
+        secondBackgroundColor: 0x182036,
+        thirdBackgroundColor: 0x1c4352,
+        fourthBackgroundColor: 0x16263a,
+        dark: true,
+      },
+    });
+    expect(useCustomizationStore.getState().isDirty).toBe(true);
+  });
 });
 
 // Profile Actions
@@ -317,6 +338,84 @@ describe('fetchCustomizations', () => {
     expect(useCustomizationStore.getState().isDirty).toBe(false);
   });
 
+  it('hydrates source-shaped chat theme settings from the backend payload', async () => {
+    const customColor = {
+      start: { hue: 220, saturation: 88, lightness: 0.42 },
+      end: { hue: 260, saturation: 76, lightness: 0.36 },
+      deg: 42,
+    };
+
+    mockedApi.get.mockResolvedValueOnce({
+      data: {
+        data: {
+          chat_theme_settings: {
+            base: 'tinted',
+            preset_id: 'preset:10',
+            accent_color: 0x0088ff,
+            message_colors: [0x517893, 0x285c96],
+            wallpaper: {
+              intensity: 40,
+              background_color: 0x1e3557,
+              second_background_color: 0x182036,
+              third_background_color: 0x1c4352,
+              fourth_background_color: 0x16263a,
+              dark: true,
+            },
+          },
+          default_conversation_color: {
+            color: 'custom',
+            custom_color_data: { id: 'custom-blue', value: customColor },
+          },
+          custom_chat_colors: {
+            colors: { 'custom-blue': customColor },
+            version: 1,
+            order: ['custom-blue'],
+          },
+          conversation_chat_theme_overrides: {
+            'conversation-1': {
+              conversation_color: 'custom',
+              custom_color_id: 'custom-blue',
+              custom_color: customColor,
+            },
+          },
+        },
+      },
+    });
+
+    await useCustomizationStore.getState().fetchCustomizations();
+
+    expect(useCustomizationStore.getState().chatThemeSettings).toMatchObject({
+      base: 'tinted',
+      presetId: 'preset:10',
+      accentColor: 0x0088ff,
+      messageColors: [0x517893, 0x285c96],
+      wallpaper: {
+        intensity: 40,
+        backgroundColor: 0x1e3557,
+        secondBackgroundColor: 0x182036,
+        thirdBackgroundColor: 0x1c4352,
+        fourthBackgroundColor: 0x16263a,
+        dark: true,
+      },
+    });
+    expect(useCustomizationStore.getState().defaultConversationColor).toEqual({
+      color: 'custom',
+      customColorData: { id: 'custom-blue', value: customColor },
+    });
+    expect(useCustomizationStore.getState().customChatColors).toEqual({
+      colors: { 'custom-blue': customColor },
+      version: 1,
+      order: ['custom-blue'],
+    });
+    expect(useCustomizationStore.getState().conversationChatThemeOverrides).toEqual({
+      'conversation-1': {
+        conversationColor: 'custom',
+        customColorId: 'custom-blue',
+        customColor,
+      },
+    });
+  });
+
   it('uses server-cleared identity cosmetics over stale custom_config values', async () => {
     mockedApi.get.mockResolvedValueOnce({
       data: {
@@ -381,6 +480,95 @@ describe('fetchCustomizations', () => {
       title: null,
       equippedNameplate: null,
       isDirty: false,
+    });
+  });
+});
+
+describe('persistCustomizationState', () => {
+  it('saves chat theme payloads using backend snake_case keys', async () => {
+    const customColor = {
+      start: { hue: 220, saturation: 88, lightness: 0.42 },
+      end: { hue: 260, saturation: 76, lightness: 0.36 },
+      deg: 42,
+    };
+
+    mockedApi.patch.mockResolvedValueOnce({
+      data: { data: {} },
+    });
+
+    await persistCustomizationState({
+      ...DEFAULT_STATE,
+      chatThemeSettings: {
+        base: 'tinted',
+        presetId: 'preset:10',
+        accentColor: 0x0088ff,
+        messageColors: [0x517893, 0x285c96],
+        wallpaper: {
+          intensity: 40,
+          backgroundColor: 0x1e3557,
+          secondBackgroundColor: 0x182036,
+          thirdBackgroundColor: 0x1c4352,
+          fourthBackgroundColor: 0x16263a,
+          dark: true,
+        },
+      },
+      defaultConversationColor: {
+        color: 'custom',
+        customColorData: { id: 'custom-blue', value: customColor },
+      },
+      customChatColors: {
+        colors: { 'custom-blue': customColor },
+        version: 1,
+        order: ['custom-blue'],
+      },
+      conversationChatThemeOverrides: {
+        'conversation-1': {
+          conversationColor: 'custom',
+          customColorId: 'custom-blue',
+          customColor,
+        },
+      },
+    });
+
+    const payload = mockedApi.patch.mock.calls[0]?.[1];
+
+    expect(payload).toMatchObject({
+      chat_theme_settings: {
+        base: 'tinted',
+        preset_id: 'preset:10',
+        accent_color: 0x0088ff,
+        message_colors: [0x517893, 0x285c96],
+        wallpaper: {
+          intensity: 40,
+          background_color: 0x1e3557,
+          second_background_color: 0x182036,
+          third_background_color: 0x1c4352,
+          fourth_background_color: 0x16263a,
+          dark: true,
+        },
+      },
+      default_conversation_color: {
+        color: 'custom',
+        custom_color_data: { id: 'custom-blue', value: customColor },
+      },
+      custom_chat_colors: {
+        colors: { 'custom-blue': customColor },
+        version: 1,
+        order: ['custom-blue'],
+      },
+      conversation_chat_theme_overrides: {
+        'conversation-1': {
+          conversation_color: 'custom',
+          custom_color_id: 'custom-blue',
+          custom_color: customColor,
+        },
+      },
+    });
+    expect(payload.custom_config).toMatchObject({
+      chat_theme_settings: payload.chat_theme_settings,
+      default_conversation_color: payload.default_conversation_color,
+      custom_chat_colors: payload.custom_chat_colors,
+      conversation_chat_theme_overrides: payload.conversation_chat_theme_overrides,
     });
   });
 });

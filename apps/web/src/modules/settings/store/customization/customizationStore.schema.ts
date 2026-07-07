@@ -53,6 +53,10 @@ export const apiSchemaMapper = createSchemaMapper<CustomizationState>({
   groupMessages: 'group_messages',
   showTimestamps: 'show_timestamps',
   compactMode: 'compact_mode',
+  chatThemeSettings: 'chat_theme_settings',
+  defaultConversationColor: 'default_conversation_color',
+  customChatColors: 'custom_chat_colors',
+  conversationChatThemeOverrides: 'conversation_chat_theme_overrides',
 
   // Profile
   profileCardStyle: 'profile_layout',
@@ -83,6 +87,101 @@ export const apiSchemaMapper = createSchemaMapper<CustomizationState>({
 });
 
 type CustomizationApiPayload = Record<string, unknown>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function compactRecord(entries: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(entries).filter(([, value]) => value !== undefined)
+  );
+}
+
+function chatThemeWallpaperToApi(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+
+  return compactRecord({
+    intensity: value.intensity,
+    background_color: value.backgroundColor ?? value.background_color,
+    second_background_color: value.secondBackgroundColor ?? value.second_background_color,
+    third_background_color: value.thirdBackgroundColor ?? value.third_background_color,
+    fourth_background_color: value.fourthBackgroundColor ?? value.fourth_background_color,
+    dark: value.dark,
+  });
+}
+
+function chatThemeSettingsToApi(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+
+  const wallpaper = value.wallpaper;
+
+  return compactRecord({
+    base: value.base,
+    preset_id: value.presetId ?? value.preset_id ?? null,
+    accent_color: value.accentColor ?? value.accent_color,
+    message_colors: value.messageColors ?? value.message_colors,
+    ...(wallpaper === undefined ? {} : { wallpaper: chatThemeWallpaperToApi(wallpaper) }),
+  });
+}
+
+function defaultConversationColorToApi(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+
+  const customColorData = value.customColorData ?? value.custom_color_data;
+
+  return compactRecord({
+    color: value.color,
+    ...(customColorData === undefined ? {} : { custom_color_data: customColorData }),
+  });
+}
+
+function conversationChatThemeOverrideToApi(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+
+  return compactRecord({
+    conversation_color: value.conversationColor ?? value.conversation_color,
+    custom_color: value.customColor ?? value.custom_color,
+    custom_color_id: value.customColorId ?? value.custom_color_id,
+    base: value.base,
+    preset_id: value.presetId ?? value.preset_id,
+  });
+}
+
+function conversationChatThemeOverridesToApi(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+
+  return Object.fromEntries(
+    Object.entries(value).map(([conversationId, override]) => [
+      conversationId,
+      conversationChatThemeOverrideToApi(override),
+    ])
+  );
+}
+
+export function normalizeCustomizationPayloadForApi(
+  payload: CustomizationApiPayload
+): CustomizationApiPayload {
+  const next: CustomizationApiPayload = { ...payload };
+
+  if ('chat_theme_settings' in next) {
+    next.chat_theme_settings = chatThemeSettingsToApi(next.chat_theme_settings);
+  }
+
+  if ('default_conversation_color' in next) {
+    next.default_conversation_color = defaultConversationColorToApi(
+      next.default_conversation_color
+    );
+  }
+
+  if ('conversation_chat_theme_overrides' in next) {
+    next.conversation_chat_theme_overrides = conversationChatThemeOverridesToApi(
+      next.conversation_chat_theme_overrides
+    );
+  }
+
+  return next;
+}
 
 export function userHasPremiumAccess(
   user: Pick<User, 'isPremium' | 'subscription'> | null
@@ -196,7 +295,7 @@ export function sanitizeCustomizationStateForAccess(
 // DEBOUNCED SAVE
 export async function persistCustomizationState(state: CustomizationState): Promise<unknown> {
   const premiumAccess = currentUserHasPremiumAccess();
-  const mappedPayload = apiSchemaMapper.toApi(state);
+  const mappedPayload = normalizeCustomizationPayloadForApi(apiSchemaMapper.toApi(state));
   const payload =
     premiumAccess === null
       ? mappedPayload
@@ -247,6 +346,10 @@ export const PERSIST_PARTIALIZE = (state: CustomizationStore) => ({
   groupMessages: state.groupMessages,
   showTimestamps: state.showTimestamps,
   compactMode: state.compactMode,
+  chatThemeSettings: state.chatThemeSettings,
+  defaultConversationColor: state.defaultConversationColor,
+  customChatColors: state.customChatColors,
+  conversationChatThemeOverrides: state.conversationChatThemeOverrides,
   profileCardStyle: state.profileCardStyle,
   selectedProfileThemeId: state.selectedProfileThemeId,
   showBadges: state.showBadges,
