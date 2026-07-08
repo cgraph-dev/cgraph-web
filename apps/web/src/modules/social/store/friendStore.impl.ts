@@ -23,6 +23,7 @@ export type { Friend, FriendRequest, FriendState } from './friend-types';
 import type { FriendIdentityPatch, FriendState } from './friend-types';
 import { normalizeFriend, normalizeRequest } from './friend-normalizers';
 import { registerFriendBlockSyncHandler } from './friendStore.sync';
+import { useNotificationStore } from './notificationStore.impl';
 
 const FRIEND_READ_RATE_LIMIT_SCOPE = 'friends:read';
 const FRIEND_WRITE_RATE_LIMIT_SCOPE = 'friends:write';
@@ -40,6 +41,15 @@ function resetFriendReadGuards() {
 function patchRequestUser(userId: string, patch: FriendIdentityPatch) {
   return (request: FriendState['pendingRequests'][number]) =>
     request.user.id === userId ? { ...request, user: { ...request.user, ...patch } } : request;
+}
+
+function requestUserIdById(requests: FriendState['pendingRequests'], requestId: string) {
+  return requests.find((request) => request.id === requestId)?.user.id ?? '';
+}
+
+function dismissFriendRequestNotificationFrom(userId: string) {
+  if (!userId) return;
+  useNotificationStore.getState().dismissFriendRequestNotificationsFromUser(userId);
 }
 
 function shouldPauseFriendRead(set: (state: Partial<FriendState>) => void): boolean {
@@ -199,6 +209,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
   },
 
   acceptRequest: async (requestId: string) => {
+    const requesterId = requestUserIdById(get().pendingRequests, requestId);
     set({ isLoading: true, error: null });
     const result = await apiClient.friends.acceptRequest(requestId);
     if (!result.ok) {
@@ -206,11 +217,13 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       set({ error: result.error.message, isLoading: false });
       throw new Error(result.error.message);
     }
+    dismissFriendRequestNotificationFrom(requesterId);
     await Promise.all([get().fetchFriends(), get().fetchPendingRequests()]);
     set({ isLoading: false });
   },
 
   declineRequest: async (requestId: string) => {
+    const requesterId = requestUserIdById(get().pendingRequests, requestId);
     set({ isLoading: true, error: null });
     const result = await apiClient.friends.declineRequest(requestId);
     if (!result.ok) {
@@ -218,6 +231,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       set({ error: result.error.message, isLoading: false });
       throw new Error(result.error.message);
     }
+    dismissFriendRequestNotificationFrom(requesterId);
     await get().fetchPendingRequests();
     set({ isLoading: false });
   },
@@ -265,6 +279,7 @@ export const useFriendStore = create<FriendState>()((set, get) => ({
       sentRequests: state.sentRequests.filter((r) => r.user.id !== userId),
       isLoading: false,
     }));
+    dismissFriendRequestNotificationFrom(userId);
   },
 
   unblockUser: async (userId: string) => {

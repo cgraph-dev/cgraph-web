@@ -37,12 +37,50 @@ function resetNotificationFetchGuards() {
 }
 
 type NotificationApiRecord = ApiNotification & Record<string, unknown>;
-type NotificationStoreType = ApiNotification['type'] &
-  ('message' | 'friend_request' | 'group_invite' | 'mention' | 'forum_reply' | 'system');
+const NOTIFICATION_TYPES = [
+  'message',
+  'friend_request',
+  'friend_accepted',
+  'group_invite',
+  'group_mention',
+  'channel_mention',
+  'mention',
+  'forum_reply',
+  'forum_mention',
+  'post_reply',
+  'achievement',
+  'level_up',
+  'streak_reminder',
+  'quest_completed',
+  'gift_received',
+  'event_reminder',
+  'event_invite',
+  'system',
+] as const;
+
+type NotificationStoreType = (typeof NOTIFICATION_TYPES)[number] & ApiNotification['type'];
 type NotificationStoreData = NonNullable<ApiNotification['data']>;
 
 function isNotificationApiRecord(value: ApiNotification): value is NotificationApiRecord {
   return isRecord(value);
+}
+
+export function toNotificationStoreType(rawType: string): NotificationStoreType {
+  return NOTIFICATION_TYPES.find((type) => type === rawType) ?? 'system';
+}
+
+function notificationSenderId(notification: Notification): string {
+  return (
+    asString(notification.data['sender_id']) ||
+    asString(notification.data['from_user_id']) ||
+    asString(notification.data['requester_id']) ||
+    notification.sender?.id ||
+    ''
+  );
+}
+
+function isFriendRequestFrom(notification: Notification, userId: string): boolean {
+  return notification.type === 'friend_request' && notificationSenderId(notification) === userId;
 }
 
 export interface Notification {
@@ -77,6 +115,7 @@ export interface NotificationState {
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
   addNotification: (notification: Notification) => void;
+  dismissFriendRequestNotificationsFromUser: (userId: string) => void;
   clearAll: () => Promise<void>;
   reset: () => void;
 }
@@ -113,19 +152,11 @@ export const useNotificationStore = create<NotificationState>()(
             set({ isLoading: false });
             return;
           }
-          const knownTypes: Notification['type'][] = [
-            'message',
-            'friend_request',
-            'group_invite',
-            'mention',
-            'forum_reply',
-            'system',
-          ];
           const newNotifications: Notification[] = result.data
             .filter(isNotificationApiRecord)
             .map((n) => {
               const rawType = asString(n['type']);
-              const type: Notification['type'] = knownTypes.find((t) => t === rawType) ?? 'system';
+              const type = toNotificationStoreType(rawType);
               const actor = isRecord(n['actor'])
                 ? n['actor']
                 : isRecord(n['sender'])
@@ -235,6 +266,28 @@ export const useNotificationStore = create<NotificationState>()(
           notifications: [notification, ...state.notifications].slice(0, MAX_NOTIFICATIONS),
           unreadCount: notification.isRead ? state.unreadCount : state.unreadCount + 1,
         }));
+      },
+
+      dismissFriendRequestNotificationsFromUser: (userId: string) => {
+        if (!userId) return;
+
+        set((state) => {
+          const removedUnread = state.notifications.filter(
+            (notification) => isFriendRequestFrom(notification, userId) && !notification.isRead
+          ).length;
+          const notifications = state.notifications.filter(
+            (notification) => !isFriendRequestFrom(notification, userId)
+          );
+
+          if (notifications.length === state.notifications.length) {
+            return {};
+          }
+
+          return {
+            notifications,
+            unreadCount: Math.max(0, state.unreadCount - removedUnread),
+          };
+        });
       },
 
       clearAll: async () => {

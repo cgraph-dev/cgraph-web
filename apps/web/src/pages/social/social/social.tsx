@@ -31,15 +31,28 @@ import { tweens } from '@/lib/animation-presets';
 function isNotificationType(value: string): value is NotificationType {
   return (
     value === 'friend_request' ||
+    value === 'friend_accepted' ||
     value === 'message' ||
+    value === 'group_invite' ||
+    value === 'group_mention' ||
+    value === 'channel_mention' ||
     value === 'forum_reply' ||
+    value === 'forum_mention' ||
+    value === 'post_reply' ||
     value === 'achievement' ||
-    value === 'mention'
+    value === 'mention' ||
+    value === 'level_up' ||
+    value === 'streak_reminder' ||
+    value === 'quest_completed' ||
+    value === 'gift_received' ||
+    value === 'event_reminder' ||
+    value === 'event_invite' ||
+    value === 'system'
   );
 }
 
 function toNotificationType(value: string): NotificationType {
-  return isNotificationType(value) ? value : 'message';
+  return isNotificationType(value) ? value : 'system';
 }
 
 interface SocialMainPaneProps {

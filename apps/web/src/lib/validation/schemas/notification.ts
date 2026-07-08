@@ -17,9 +17,21 @@ import { userRefSchema } from './user';
 export const notificationTypeSchema = z.enum([
   'message',
   'friend_request',
+  'friend_accepted',
   'group_invite',
+  'group_mention',
+  'channel_mention',
   'mention',
   'forum_reply',
+  'forum_mention',
+  'post_reply',
+  'achievement',
+  'level_up',
+  'streak_reminder',
+  'quest_completed',
+  'gift_received',
+  'event_reminder',
+  'event_invite',
   'system',
 ]);
 

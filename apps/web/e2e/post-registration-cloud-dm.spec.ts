@@ -55,6 +55,7 @@ function conversationFixture(peerUser: AcceptanceUser = friendUser) {
         nickname: null,
         isMuted: false,
         mutedUntil: null,
+        messageRequestStatus: 'accepted',
         joinedAt: '2026-07-03T00:00:00.000Z',
         user: {
           id: CURRENT_USER_ID,
@@ -70,6 +71,7 @@ function conversationFixture(peerUser: AcceptanceUser = friendUser) {
         nickname: null,
         isMuted: false,
         mutedUntil: null,
+        messageRequestStatus: 'accepted',
         joinedAt: '2026-07-03T00:00:00.000Z',
         user: {
           id: peerUser.id,
@@ -392,24 +394,27 @@ test.describe('Post-registration Cloud DM web acceptance', () => {
     await expect(page.getByRole('heading', { name: 'Messages', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Add friend' }).click();
-    await page.getByPlaceholder(/@username/i).fill(friendUser.username);
-    await page.getByRole('button', { name: 'Send Request' }).click();
+    await expect(page).toHaveURL(/\/social\/friends$/);
+
+    const socialMainPane = page.locator('main').last();
+    await socialMainPane.getByRole('button', { name: 'Add friend' }).click();
+    await page.getByLabel('Friend identifier').fill(friendUser.username);
+    await page.getByRole('button', { name: 'Send request' }).click();
 
     await expect.poll(() => calls.friendRequestCreates).toEqual([
       { username: friendUser.username },
     ]);
-    await expect(page.getByText('Request sent', { exact: true })).toBeVisible();
+    await expect(socialMainPane.getByText('Bob Acceptance')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Close add friend' }).click();
-    await page.getByRole('button', { name: /friend requests/i }).click();
-
-    await expect(page.getByRole('region', { name: 'Friend requests' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Friends and requests' })).toBeVisible();
     await expect(page.getByText('Bob Acceptance')).toBeVisible();
     await expect(page.getByText('Alice Acceptance')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Accept' }).click();
+    await socialMainPane
+      .getByRole('button', { name: /^Accept friend request from Alice Acceptance$/ })
+      .click();
     await expect.poll(() => calls.acceptedRequests).toEqual([INCOMING_FRIENDSHIP_ID]);
-    await expect(page.getByText('Friend request accepted.')).toBeVisible();
+    await expect(socialMainPane.getByText('@alice_acceptance')).toBeVisible();
 
     await page.goto(`/messages?userId=${FRIEND_USER_ID}`);
     await expect(page).toHaveURL(new RegExp(`/messages/${CONVERSATION_ID}$`));
@@ -448,7 +453,9 @@ test.describe('Post-registration Cloud DM web acceptance', () => {
     ).toBeVisible();
     await expect(socialMainPane.getByText('Alice Acceptance')).toBeVisible();
 
-    await socialMainPane.getByRole('button', { name: 'Accept' }).click();
+    await socialMainPane
+      .getByRole('button', { name: /^Accept friend request from Alice Acceptance$/ })
+      .click();
     await expect.poll(() => calls.acceptedRequests).toEqual([INCOMING_FRIENDSHIP_ID]);
 
     await expect(socialMainPane.getByText('@alice_acceptance')).toBeVisible();

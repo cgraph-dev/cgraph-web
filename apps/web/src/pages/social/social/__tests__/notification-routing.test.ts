@@ -96,4 +96,20 @@ describe('getNotificationActionUrl', () => {
       )
     ).toBe('/social/friends');
   });
+
+  it('routes accepted friend notifications to the accepter profile', () => {
+    expect(
+      getNotificationActionUrl(
+        notification({
+          type: 'friend_accepted',
+          action: {
+            type: 'navigate',
+            screen: 'profile',
+            params: { user_id: 'user-2' },
+          },
+          data: { accepter_id: 'user-2' },
+        })
+      )
+    ).toBe('/user/user-2');
+  });
 });

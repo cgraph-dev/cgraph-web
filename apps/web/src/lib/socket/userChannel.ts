@@ -18,7 +18,11 @@ import {
 } from '@/modules/chat/store';
 import { toTypedMessage } from '@/modules/chat/store/chatStore.normalizers';
 import { useIncomingCallStore, type IncomingCall } from '@/modules/calls/store';
-import { useNotificationStore, type Notification } from '@/modules/social/store';
+import {
+  toNotificationStoreType,
+  useNotificationStore,
+  type Notification,
+} from '@/modules/social/store';
 import { useFriendStore } from '@/modules/social/store';
 import { normalizeIncomingRequestEvent } from '@/modules/social/store/friend-normalizers';
 import { useAuthStore } from '@/modules/auth/store';
@@ -101,25 +105,6 @@ function isNormalizedMessage(value: unknown): value is Message {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
   const record = objectToRecord(value);
   return typeof record['id'] === 'string' && typeof record['content'] === 'string';
-}
-
-/**
- * Map a raw string to a valid `Notification['type']`, defaulting to `'system'`
- * for unrecognised values so notifications are always surfaced.
- *
- * Uses an explicit typed Record to avoid any type assertion.
- */
-const NOTIFICATION_TYPE_MAP: Readonly<Record<string, Notification['type']>> = {
-  message: 'message',
-  friend_request: 'friend_request',
-  group_invite: 'group_invite',
-  mention: 'mention',
-  forum_reply: 'forum_reply',
-  system: 'system',
-};
-
-function toNotificationType(raw: string): Notification['type'] {
-  return NOTIFICATION_TYPE_MAP[raw] ?? 'system';
 }
 
 /**
@@ -256,6 +241,8 @@ export function joinUserChannel(
     const title = data['title'];
     const body = data['body'];
     const read = data['read'];
+    const action = data['action'];
+    const actionUrl = data['action_url'];
     const notifData = data['data'];
     const createdAt = data['created_at'];
 
@@ -283,10 +270,15 @@ export function joinUserChannel(
 
     const notification: Notification = {
       id,
-      type: toNotificationType(type),
+      type: toNotificationStoreType(type),
       title,
       body: typeof body === 'string' ? body : '',
       isRead: typeof read === 'boolean' ? read : false,
+      action:
+        typeof action === 'object' && action !== null && !Array.isArray(action)
+          ? objectToRecord(action)
+          : null,
+      actionUrl: typeof actionUrl === 'string' ? actionUrl : null,
       data: dataField,
       sender,
       createdAt: typeof createdAt === 'string' ? createdAt : new Date().toISOString(),

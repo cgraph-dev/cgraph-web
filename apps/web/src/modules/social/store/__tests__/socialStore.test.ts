@@ -203,6 +203,40 @@ describe('acceptRequest', () => {
     expect(useFriendStore.getState().isLoading).toBe(false);
   });
 
+  it('removes the matching friend request notification after accept', async () => {
+    useFriendStore.setState({
+      pendingRequests: [
+        makeRequest({
+          id: 'req-1',
+          user: { id: 'u-2', username: 'bob', displayName: 'Bob', avatarUrl: null },
+        }),
+      ],
+    });
+    useNotificationStore.setState({
+      notifications: [
+        makeNotification({
+          id: 'n-request',
+          type: 'friend_request',
+          data: { sender_id: 'u-2' },
+        }),
+        makeNotification({
+          id: 'n-keep',
+          type: 'friend_request',
+          data: { sender_id: 'u-3' },
+        }),
+      ],
+      unreadCount: 2,
+    });
+    mockApi.post.mockResolvedValueOnce({});
+    mockApi.get.mockResolvedValueOnce({ data: { data: [makeFriend()] } });
+    mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
+
+    await useFriendStore.getState().acceptRequest('req-1');
+
+    expect(useNotificationStore.getState().notifications.map((n) => n.id)).toEqual(['n-keep']);
+    expect(useNotificationStore.getState().unreadCount).toBe(1);
+  });
+
   it('sets error on failure', async () => {
     mockApi.post.mockRejectedValueOnce(new Error('expired'));
     await expect(useFriendStore.getState().acceptRequest('req-1')).rejects.toThrow();
@@ -216,6 +250,34 @@ describe('declineRequest', () => {
     mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
     await useFriendStore.getState().declineRequest('req-1');
     expect(mockApi.post).toHaveBeenCalledWith('/api/v1/friends/req-1/decline');
+  });
+
+  it('removes the matching friend request notification after decline', async () => {
+    useFriendStore.setState({
+      pendingRequests: [
+        makeRequest({
+          id: 'req-1',
+          user: { id: 'u-2', username: 'bob', displayName: 'Bob', avatarUrl: null },
+        }),
+      ],
+    });
+    useNotificationStore.setState({
+      notifications: [
+        makeNotification({
+          id: 'n-request',
+          type: 'friend_request',
+          data: { sender_id: 'u-2' },
+        }),
+      ],
+      unreadCount: 1,
+    });
+    mockApi.post.mockResolvedValueOnce({});
+    mockApi.get.mockResolvedValueOnce({ data: { data: [] } });
+
+    await useFriendStore.getState().declineRequest('req-1');
+
+    expect(useNotificationStore.getState().notifications).toEqual([]);
+    expect(useNotificationStore.getState().unreadCount).toBe(0);
   });
 
   it('sets error on failure', async () => {
@@ -332,6 +394,38 @@ describe('fetchNotifications', () => {
     expect(useNotificationStore.getState().isLoading).toBe(false);
   });
 
+  it('preserves backend friend accepted notifications and action metadata', async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        notifications: [
+          makeNotification({
+            id: 'n-accepted',
+            type: 'friend_accepted',
+            title: 'Friend request accepted',
+            action: {
+              type: 'navigate',
+              screen: 'profile',
+              params: { user_id: 'u-2' },
+            },
+            data: { accepter_id: 'u-2' },
+          }),
+        ],
+      },
+    });
+
+    await useNotificationStore.getState().fetchNotifications(null);
+
+    expect(useNotificationStore.getState().notifications[0]).toMatchObject({
+      id: 'n-accepted',
+      type: 'friend_accepted',
+      action: {
+        screen: 'profile',
+        params: { user_id: 'u-2' },
+      },
+      data: { accepter_id: 'u-2' },
+    });
+  });
+
   it('appends when cursor is provided', async () => {
     useNotificationStore.setState({ notifications: [makeNotification({ id: 'n-0' })] });
     mockApi.get.mockResolvedValueOnce({
@@ -407,6 +501,37 @@ describe('addNotification', () => {
   it('does not increment unread for already-read notification', () => {
     useNotificationStore.getState().addNotification(makeNotification({ isRead: true }));
     expect(useNotificationStore.getState().unreadCount).toBe(0);
+  });
+
+  it('dismisses only friend-request notifications from the matching sender', () => {
+    useNotificationStore.setState({
+      notifications: [
+        makeNotification({
+          id: 'n-request',
+          type: 'friend_request',
+          data: { sender_id: 'u-2' },
+        }),
+        makeNotification({
+          id: 'n-other-request',
+          type: 'friend_request',
+          data: { sender_id: 'u-3' },
+        }),
+        makeNotification({
+          id: 'n-message',
+          type: 'message',
+          data: { sender_id: 'u-2' },
+        }),
+      ],
+      unreadCount: 3,
+    });
+
+    useNotificationStore.getState().dismissFriendRequestNotificationsFromUser('u-2');
+
+    expect(useNotificationStore.getState().notifications.map((n) => n.id)).toEqual([
+      'n-other-request',
+      'n-message',
+    ]);
+    expect(useNotificationStore.getState().unreadCount).toBe(2);
   });
 });
 

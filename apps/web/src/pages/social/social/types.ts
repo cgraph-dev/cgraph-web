@@ -12,10 +12,23 @@ export type SocialTab = 'friends' | 'notifications' | 'discover';
 
 export type NotificationType =
   | 'friend_request'
+  | 'friend_accepted'
   | 'message'
+  | 'group_invite'
+  | 'group_mention'
+  | 'channel_mention'
   | 'forum_reply'
+  | 'forum_mention'
+  | 'post_reply'
   | 'achievement'
-  | 'mention';
+  | 'mention'
+  | 'level_up'
+  | 'streak_reminder'
+  | 'quest_completed'
+  | 'gift_received'
+  | 'event_reminder'
+  | 'event_invite'
+  | 'system';
 
 export interface Notification {
   id: string;
