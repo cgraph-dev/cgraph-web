@@ -85,7 +85,7 @@ const SEARCH_RESULT_LIMITS: Record<SearchResultCategory, number> = {
   posts: MAX_SEARCH_POSTS,
   messages: MAX_SEARCH_MESSAGES,
 };
-const GLOBAL_LOAD_MORE_CATEGORIES = ['users', 'groups', 'posts', 'messages'] as const;
+const GLOBAL_LOAD_MORE_CATEGORIES = ['users', 'groups', 'forums', 'posts', 'messages'] as const;
 
 type SearchBuckets = Pick<SearchState, 'users' | 'groups' | 'forums' | 'posts' | 'messages'>;
 type GlobalLoadMoreCategory = (typeof GLOBAL_LOAD_MORE_CATEGORIES)[number];

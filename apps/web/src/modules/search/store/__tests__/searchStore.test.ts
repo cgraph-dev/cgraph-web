@@ -608,6 +608,70 @@ describe('Search Store', () => {
       expect(useSearchStore.getState().isLoadingMore).toBe(false);
     });
 
+    it('loads more global forum discovery results from the returned bucket cursor', async () => {
+      const nextForum: SearchForum = {
+        id: 'f2',
+        name: 'Announcements',
+        slug: 'announcements',
+        description: 'Public updates',
+        post_count: 12,
+        is_public: true,
+      };
+
+      mockedSearch.global.mockResolvedValue(
+        okResult(globalResponse({
+          query: 'general',
+          forums: [nextForum],
+          page_info: {
+            forums: {
+              count: 1,
+              total: 2,
+              limit: 1,
+              has_more: false,
+              end_reached: true,
+              start_cursor: 'forums-start-2',
+              end_cursor: null,
+            },
+          },
+        }))
+      );
+
+      useSearchStore.setState({
+        category: 'all',
+        query: 'general',
+        forums: [mockForum],
+        pageInfo: {
+          forums: {
+            count: 1,
+            total: 2,
+            limit: 1,
+            has_more: true,
+            end_reached: false,
+            start_cursor: 'forums-start-1',
+            end_cursor: 'forums-next',
+          },
+        },
+        hasMore: true,
+        hasSearched: true,
+      });
+
+      await useSearchStore.getState().loadMore('forums');
+
+      expect(mockedSearch.global).toHaveBeenCalledWith('general', {
+        limit: 50,
+        types: ['forums'],
+        cursors: { forums: 'forums-next' },
+      });
+      expect(useSearchStore.getState().forums.map((forum) => forum.id)).toEqual(['f1', 'f2']);
+      expect(useSearchStore.getState().pageInfo.forums).toMatchObject({
+        count: 2,
+        total: 2,
+        has_more: false,
+        end_reached: true,
+      });
+      expect(useSearchStore.getState().hasMore).toBe(false);
+    });
+
     it('stops global load more when the local bucket cap is reached', async () => {
       const currentUsers: SearchUser[] = Array.from({ length: 99 }, (_, index) => ({
         id: `u${index}`,
