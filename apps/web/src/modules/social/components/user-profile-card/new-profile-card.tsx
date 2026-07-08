@@ -24,8 +24,11 @@ export const NewProfileCard = memo(function NewProfileCard({
   onMessage = NOOP,
   onTip = NOOP,
   onAddFriend = NOOP,
+  onReviewFriendRequest = NOOP,
   onViewProfile = NOOP,
   onClose,
+  friendshipStatus = 'none',
+  isFriendActionPending = false,
   className,
 }: NewProfileCardProps) {
   const themeId = user.accentTheme ?? normalizeAccentThemeId(user.profile_theme) ?? DEFAULT_PROFILE_THEME_ID;
@@ -163,9 +166,12 @@ export const NewProfileCard = memo(function NewProfileCard({
             onMessage={onMessage}
             onTip={onTip}
             onAddFriend={onAddFriend}
+            onReviewFriendRequest={onReviewFriendRequest}
             onViewProfile={onViewProfile}
             accentColor={accentColor}
             tipEnabled={tipEnabled}
+            friendshipStatus={friendshipStatus}
+            isFriendActionPending={isFriendActionPending}
             compact={isMini}
           />
         )}

@@ -48,6 +48,9 @@ export interface ProfileCardUser {
   forumsInCommon?: { id: string; name: string }[];
   recentActivity?: { type: string; description: string; timestamp: string }[];
   socialLinks?: { platform: string; url: string }[];
+  friendshipStatus?: ProfileCardFriendshipStatus;
+  isFriend?: boolean;
+  isBlocked?: boolean;
   // Pulse
   topCommunities?: { forumId: string; forumName: string; score: number; tier: string }[];
   // Status
@@ -62,6 +65,13 @@ export interface ProfileCardUser {
   display_name_color?: string;
   display_name_secondary_color?: string;
 }
+
+export type ProfileCardFriendshipStatus =
+  | 'none'
+  | 'pending_sent'
+  | 'pending_received'
+  | 'friends'
+  | 'blocked';
 
 // COMPONENT PROPS
 

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import {
   getProfileRenderingAnchorOrDefault,
   getProfileThemeAssetManifestOrDefault,
@@ -173,6 +173,64 @@ describe('NewProfileCard', () => {
       'src',
       expect.stringContaining('/uploads/avatars/u1/avatar.jpg')
     );
+  });
+
+  it('uses the compact primary action for neutral add-friend requests', () => {
+    const onAddFriend = vi.fn();
+    render(
+      <NewProfileCard
+        user={user}
+        mode="popout"
+        variant="mini"
+        friendshipStatus="none"
+        onAddFriend={onAddFriend}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Friend' }));
+
+    expect(onAddFriend).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'Message' })).not.toBeInTheDocument();
+  });
+
+  it('shows a disabled relationship state instead of duplicate add-friend for friends', () => {
+    const onAddFriend = vi.fn();
+    render(
+      <NewProfileCard
+        user={user}
+        mode="popout"
+        variant="full"
+        friendshipStatus="friends"
+        onAddFriend={onAddFriend}
+      />
+    );
+
+    const friendsButton = screen.getByRole('button', { name: 'Friends' });
+    fireEvent.click(friendsButton);
+
+    expect(friendsButton).toBeDisabled();
+    expect(onAddFriend).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Message' })).toBeInTheDocument();
+  });
+
+  it('routes incoming requests to review instead of sending another request', () => {
+    const onAddFriend = vi.fn();
+    const onReviewFriendRequest = vi.fn();
+    render(
+      <NewProfileCard
+        user={user}
+        mode="popout"
+        variant="mini"
+        friendshipStatus="pending_received"
+        onAddFriend={onAddFriend}
+        onReviewFriendRequest={onReviewFriendRequest}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+
+    expect(onReviewFriendRequest).toHaveBeenCalledTimes(1);
+    expect(onAddFriend).not.toHaveBeenCalled();
   });
 
   it('keeps the mini avatar skeleton fixed across theme changes and avatar borders', () => {

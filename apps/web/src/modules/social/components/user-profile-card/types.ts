@@ -5,11 +5,11 @@
  * Includes legacy types + new V2 profile card system types.
  */
 
-import type { ProfileCardUser } from '../profile-card';
+import type { ProfileCardFriendshipStatus, ProfileCardUser } from '../profile-card';
 import type { ProfileThemeId } from '@/data/profileThemes';
 import type { ProfileThemeAssetManifest } from '@cgraph-dev/shared-types';
 
-export type { ProfileCardUser };
+export type { ProfileCardFriendshipStatus, ProfileCardUser };
 
 // LEGACY TYPES (preserved for backward compatibility)
 
@@ -173,9 +173,12 @@ export interface ActionButtonsProps {
   onMessage: () => void;
   onTip: () => void;
   onAddFriend: () => void;
+  onReviewFriendRequest: () => void;
   onViewProfile: () => void;
   accentColor: string;
   tipEnabled: boolean;
+  friendshipStatus: ProfileCardFriendshipStatus;
+  isFriendActionPending?: boolean;
   compact?: boolean;
 }
 
@@ -186,7 +189,10 @@ export interface NewProfileCardProps {
   onMessage?: () => void;
   onTip?: () => void;
   onAddFriend?: () => void;
+  onReviewFriendRequest?: () => void;
   onViewProfile?: () => void;
   onClose?: () => void;
+  friendshipStatus?: ProfileCardFriendshipStatus;
+  isFriendActionPending?: boolean;
   className?: string;
 }

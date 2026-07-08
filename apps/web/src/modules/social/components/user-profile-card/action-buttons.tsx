@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { cn } from '@/lib/utils';
 
-import type { ActionButtonsProps } from './types';
+import type { ActionButtonsProps, ProfileCardFriendshipStatus } from './types';
 const GLASS_BASE =
   'group/btn relative flex flex-col items-center justify-center gap-1 overflow-hidden rounded-[14px] px-2 py-3 transition-transform duration-150 active:scale-[0.96]';
 
@@ -73,13 +73,56 @@ function ExternalLinkIcon(): React.ReactElement {
     </svg>
   );
 }
+
+function relationshipLabel(
+  friendshipStatus: ProfileCardFriendshipStatus,
+  isPending: boolean
+): string {
+  if (isPending && friendshipStatus === 'none') return 'Sending';
+
+  switch (friendshipStatus) {
+    case 'friends':
+      return 'Friends';
+    case 'pending_sent':
+      return 'Pending';
+    case 'pending_received':
+      return 'Review';
+    case 'blocked':
+      return 'Blocked';
+    case 'none':
+      return 'Add Friend';
+  }
+}
+
+function relationshipDisabled(
+  friendshipStatus: ProfileCardFriendshipStatus,
+  isPending: boolean
+): boolean {
+  return (
+    isPending ||
+    friendshipStatus === 'friends' ||
+    friendshipStatus === 'pending_sent' ||
+    friendshipStatus === 'blocked'
+  );
+}
+
+function relationshipClickHandler(
+  friendshipStatus: ProfileCardFriendshipStatus,
+  onAddFriend: () => void,
+  onReviewFriendRequest: () => void
+): () => void {
+  return friendshipStatus === 'pending_received' ? onReviewFriendRequest : onAddFriend;
+}
 export const ActionButtons = memo(function ActionButtons({
   onMessage,
   onTip,
   onAddFriend,
+  onReviewFriendRequest,
   onViewProfile,
   accentColor,
   tipEnabled,
+  friendshipStatus,
+  isFriendActionPending = false,
   compact,
 }: ActionButtonsProps) {
   const viewProfileStyle: React.CSSProperties & { '--pc-accent': string } = {
@@ -87,6 +130,18 @@ export const ActionButtons = memo(function ActionButtons({
   };
   const accentText = `color-mix(in srgb, ${accentColor} 60%, #edf0f8 40%)`;
   const accentBloom = `radial-gradient(ellipse at 50% 100%, color-mix(in srgb, ${accentColor} 28%, transparent) 0%, rgba(255,255,255,0.03) 70%)`;
+  const actionLabel = relationshipLabel(friendshipStatus, isFriendActionPending);
+  const isRelationshipDisabled = relationshipDisabled(friendshipStatus, isFriendActionPending);
+  const handleRelationshipClick = relationshipClickHandler(
+    friendshipStatus,
+    onAddFriend,
+    onReviewFriendRequest
+  );
+  const compactPrimaryIsMessage = friendshipStatus === 'friends';
+  const compactPrimaryDisabled =
+    !compactPrimaryIsMessage && relationshipDisabled(friendshipStatus, isFriendActionPending);
+  const compactPrimaryLabel = compactPrimaryIsMessage ? 'Message' : actionLabel;
+  const handleCompactPrimaryClick = compactPrimaryIsMessage ? onMessage : handleRelationshipClick;
 
   if (compact) {
     return (
@@ -94,18 +149,19 @@ export const ActionButtons = memo(function ActionButtons({
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={onMessage}
-            className={GLASS_BASE}
+            onClick={handleCompactPrimaryClick}
+            disabled={compactPrimaryDisabled}
+            className={cn(GLASS_BASE, compactPrimaryDisabled && 'cursor-default opacity-45')}
             style={{ ...GLASS_BORDER, background: accentBloom }}
           >
             <span style={{ color: accentText }}>
-              <ChatIcon />
+              {compactPrimaryIsMessage ? <ChatIcon /> : <UserPlusIcon />}
             </span>
             <span
               className="text-[10px] font-semibold tracking-[0.02em]"
               style={{ color: accentText, fontFamily: "'Inter', system-ui" }}
             >
-              Message
+              {compactPrimaryLabel}
             </span>
           </button>
 
@@ -181,8 +237,13 @@ export const ActionButtons = memo(function ActionButtons({
         {/* Add Friend */}
         <button
           type="button"
-          onClick={onAddFriend}
-          className={cn(GLASS_BASE, 'text-[#8896b0] hover:text-[#edf0f8]')}
+          onClick={handleRelationshipClick}
+          disabled={isRelationshipDisabled}
+          className={cn(
+            GLASS_BASE,
+            'text-[#8896b0] hover:text-[#edf0f8]',
+            isRelationshipDisabled && 'cursor-default opacity-45 hover:text-[#8896b0]'
+          )}
           style={{
             ...GLASS_BORDER,
             background:
@@ -194,7 +255,7 @@ export const ActionButtons = memo(function ActionButtons({
             className="text-[10px] font-semibold tracking-[0.02em]"
             style={{ fontFamily: "'Inter', system-ui" }}
           >
-            Add Friend
+            {actionLabel}
           </span>
         </button>
       </div>

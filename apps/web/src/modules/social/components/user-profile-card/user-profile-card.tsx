@@ -16,7 +16,13 @@ import { createPortal } from 'react-dom';
 import { NewProfileCard } from './new-profile-card';
 import { useProfileCardNavigation } from './hooks';
 import { HOVER_DELAY_MS, normalizeAccentThemeId } from './constants';
-import type { UserProfileCardProps, CardPosition, ProfileCardUser, ProfileCardUserV2 } from './types';
+import type {
+  UserProfileCardProps,
+  CardPosition,
+  ProfileCardFriendshipStatus,
+  ProfileCardUser,
+  ProfileCardUserV2,
+} from './types';
 import { springs } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
 import { useFriendStore } from '@/modules/social/store';
@@ -90,6 +96,30 @@ function profileBadgesFromApi(
   return equippedBadgeIds.map(badgeAchievementFromId);
 }
 
+const PROFILE_CARD_FRIENDSHIP_STATUSES = [
+  'none',
+  'pending_sent',
+  'pending_received',
+  'friends',
+  'blocked',
+] as const;
+
+function isProfileCardFriendshipStatus(value: string): value is ProfileCardFriendshipStatus {
+  return PROFILE_CARD_FRIENDSHIP_STATUSES.some((status) => status === value);
+}
+
+function friendshipStatusFromApi(userData: Record<string, unknown>): ProfileCardFriendshipStatus {
+  const explicitStatus = asString(userData.friendship_status);
+  if (isProfileCardFriendshipStatus(explicitStatus)) return explicitStatus;
+
+  if (asBool(userData.is_blocked)) return 'blocked';
+  if (asBool(userData.is_friend)) return 'friends';
+  if (asBool(userData.friend_request_received)) return 'pending_received';
+  if (asBool(userData.friend_request_sent)) return 'pending_sent';
+
+  return 'none';
+}
+
 function titleFromApi(
   userData: Record<string, unknown>,
   titleId: string | null
@@ -161,6 +191,9 @@ function profileCardUserFromApi(userData: Record<string, unknown>): ProfileCardU
     messageCount: asNumber(userData.message_count) || asNumber(userData.messages_sent),
     postCount: asNumber(userData.post_count) || asNumber(userData.posts_created),
     friendCount: asNumber(userData.friend_count) || asNumber(userData.friends_count),
+    friendshipStatus: friendshipStatusFromApi(userData),
+    isFriend: asBool(userData.is_friend),
+    isBlocked: asBool(userData.is_blocked),
     isOnline: identity.status === 'online' || asBool(userData.is_online),
     lastSeen: asString(userData.last_seen_at) || asString(userData.last_active_at),
     pronouns: asString(userData.pronouns),
@@ -192,6 +225,31 @@ function ProfileCardStatus({ variant, message }: { variant: 'mini' | 'full'; mes
   );
 }
 
+function resolveProfileFriendshipStatus(
+  userId: string,
+  profileUser: ProfileCardUser | null,
+  friendState: {
+    friends?: readonly { id: string }[];
+    pendingRequests?: readonly { user: { id: string } }[];
+    sentRequests?: readonly { user: { id: string } }[];
+  }
+): ProfileCardFriendshipStatus {
+  if (profileUser?.isBlocked || profileUser?.friendshipStatus === 'blocked') return 'blocked';
+  if (friendState.friends?.some((friend) => friend.id === userId)) return 'friends';
+  if (friendState.pendingRequests?.some((request) => request.user.id === userId)) {
+    return 'pending_received';
+  }
+  if (friendState.sentRequests?.some((request) => request.user.id === userId)) {
+    return 'pending_sent';
+  }
+  if (profileUser?.friendshipStatus && profileUser.friendshipStatus !== 'none') {
+    return profileUser.friendshipStatus;
+  }
+  if (profileUser?.isFriend) return 'friends';
+
+  return 'none';
+}
+
 /** Profile popup card with hover (mini) and click (full) variants. */
 export default function UserProfileCard({
   userId,
@@ -210,16 +268,32 @@ export default function UserProfileCard({
   const [fetchedUser, setFetchedUser] = useState<ProfileCardUser | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isFriendActionPending, setIsFriendActionPending] = useState(false);
 
-  const { sendRequest } = useFriendStore();
+  const friendState = useFriendStore();
+  const { sendRequest } = friendState;
   const profileUser = user ?? fetchedUser;
+  const friendshipStatus = resolveProfileFriendshipStatus(userId, profileUser, friendState);
   const { handleViewProfile, handleMessage } = useProfileCardNavigation(
     userId,
     profileUser?.username
   );
 
   async function handleAddFriend() {
-    if (userId) await sendRequest(userId);
+    if (!userId || friendshipStatus !== 'none' || isFriendActionPending) return;
+
+    setIsFriendActionPending(true);
+    try {
+      await sendRequest(userId);
+    } catch {
+      // The friend store owns the visible error state for failed requests.
+    } finally {
+      setIsFriendActionPending(false);
+    }
+  }
+
+  function handleReviewFriendRequest() {
+    window.location.href = '/social/friends';
   }
 
   useEffect(() => {
@@ -376,6 +450,9 @@ export default function UserProfileCard({
                     onMessage={handleMessage}
                     onViewProfile={handleViewProfile}
                     onAddFriend={handleAddFriend}
+                    onReviewFriendRequest={handleReviewFriendRequest}
+                    friendshipStatus={friendshipStatus}
+                    isFriendActionPending={isFriendActionPending}
                     className="w-[320px]"
                   />
                 ) : (
@@ -386,7 +463,10 @@ export default function UserProfileCard({
                     onMessage={handleMessage}
                     onViewProfile={handleViewProfile}
                     onAddFriend={handleAddFriend}
+                    onReviewFriendRequest={handleReviewFriendRequest}
                     onClose={handleClose}
+                    friendshipStatus={friendshipStatus}
+                    isFriendActionPending={isFriendActionPending}
                     className="w-[360px]"
                   />
                 )}

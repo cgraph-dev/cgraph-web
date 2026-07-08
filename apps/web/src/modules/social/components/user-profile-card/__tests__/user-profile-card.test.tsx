@@ -1,9 +1,18 @@
 /** @module user-profile-card tests */
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import type { ProfileCardUser } from '../../profile-card/types';
 import { http } from '@/lib/api-client';
 import UserProfileCard from '../user-profile-card';
+
+const { friendStoreState } = vi.hoisted(() => ({
+  friendStoreState: {
+    friends: [] as { id: string }[],
+    pendingRequests: [] as { user: { id: string } }[],
+    sentRequests: [] as { user: { id: string } }[],
+    sendRequest: vi.fn(() => Promise.resolve()),
+  },
+}));
 
 vi.mock('@/lib/api-client', () => ({
   http: {
@@ -19,17 +28,32 @@ vi.mock('../hooks', () => ({
 }));
 
 vi.mock('@/modules/social/store', () => ({
-  useFriendStore: () => ({
-    sendRequest: vi.fn(),
-  }),
+  useFriendStore: () => friendStoreState,
 }));
 
 vi.mock('../new-profile-card', () => ({
-  NewProfileCard: ({ user }: { user: ProfileCardUser }) => (
-    <div data-testid="new-profile-card">
+  NewProfileCard: ({
+    user,
+    friendshipStatus,
+    isFriendActionPending,
+    onAddFriend,
+  }: {
+    user: ProfileCardUser;
+    friendshipStatus?: string;
+    isFriendActionPending?: boolean;
+    onAddFriend?: () => void;
+  }) => (
+    <div
+      data-testid="new-profile-card"
+      data-friendship-status={friendshipStatus}
+      data-friend-action-pending={String(Boolean(isFriendActionPending))}
+    >
       <span>{user.displayName}</span>
       <span>{user.avatarBorderId}</span>
       <span>{user.equipped_nameplate}</span>
+      <button type="button" onClick={onAddFriend}>
+        Card add friend
+      </button>
     </div>
   ),
 }));
@@ -37,6 +61,13 @@ vi.mock('../new-profile-card', () => ({
 const mockedGet = vi.mocked(http.get);
 
 describe('UserProfileCard', () => {
+  beforeEach(() => {
+    friendStoreState.friends = [];
+    friendStoreState.pendingRequests = [];
+    friendStoreState.sentRequests = [];
+    friendStoreState.sendRequest.mockResolvedValue(undefined);
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -100,5 +131,98 @@ describe('UserProfileCard', () => {
 
     expect(await screen.findByText('Provided User')).toBeInTheDocument();
     expect(mockedGet).not.toHaveBeenCalled();
+  });
+
+  it('passes backend friendship status through to profile-card actions', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'user-3',
+          username: 'accepted',
+          display_name: 'Accepted User',
+          friendship_status: 'friends',
+          avatar_url: null,
+        },
+      },
+    });
+
+    render(
+      <UserProfileCard userId="user-3" trigger="click">
+        <button type="button">Open accepted</button>
+      </UserProfileCard>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open accepted' }));
+
+    expect(await screen.findByTestId('new-profile-card')).toHaveAttribute(
+      'data-friendship-status',
+      'friends'
+    );
+  });
+
+  it('lets the friend store override profile-card actions after local request updates', async () => {
+    friendStoreState.pendingRequests = [{ user: { id: 'user-4' } }];
+    const user: ProfileCardUser = {
+      id: 'user-4',
+      username: 'pending',
+      displayName: 'Pending User',
+      avatarUrl: '',
+      level: 1,
+      xp: 0,
+      xpToNextLevel: 100,
+      pulse: 0,
+      streak: 0,
+      isOnline: false,
+    };
+
+    render(
+      <UserProfileCard userId="user-4" user={user} trigger="click">
+        <button type="button">Open pending</button>
+      </UserProfileCard>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open pending' }));
+
+    expect(await screen.findByTestId('new-profile-card')).toHaveAttribute(
+      'data-friendship-status',
+      'pending_received'
+    );
+  });
+
+  it('does not send duplicate add-friend requests from the profile card', async () => {
+    let resolveRequest: (() => void) | undefined;
+    friendStoreState.sendRequest.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (resolveRequest = resolve))
+    );
+    const user: ProfileCardUser = {
+      id: 'user-5',
+      username: 'neutral',
+      displayName: 'Neutral User',
+      avatarUrl: '',
+      level: 1,
+      xp: 0,
+      xpToNextLevel: 100,
+      pulse: 0,
+      streak: 0,
+      isOnline: false,
+    };
+
+    render(
+      <UserProfileCard userId="user-5" user={user} trigger="click">
+        <button type="button">Open neutral</button>
+      </UserProfileCard>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open neutral' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Card add friend' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Card add friend' }));
+
+    expect(friendStoreState.sendRequest).toHaveBeenCalledTimes(1);
+    expect(friendStoreState.sendRequest).toHaveBeenCalledWith('user-5');
+
+    await act(async () => {
+      resolveRequest?.();
+      await Promise.resolve();
+    });
   });
 });
