@@ -10,14 +10,19 @@ import { MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/outline';
 import { useFriendStore } from '@/modules/social/store';
 import { useAuthStore } from '@/modules/auth/store';
 import { useUserSearch } from '@/modules/social/hooks/useUserSearch';
+import {
+  friendshipActionLabel,
+  isRelationshipActionDisabled,
+  resolveFriendshipStatus,
+} from '@/modules/social/friendship-status';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { publicProfilePath } from '@/lib/profile-route';
-import type { Friend, FriendRequest } from '@/modules/social/store';
 
 /** People tab — search and discover users. */
 export function PeopleTab() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [sendingUserId, setSendingUserId] = useState<string | null>(null);
 
   const { results: users, isLoading, error } = useUserSearch(query);
   const { friends, sentRequests, pendingRequests, sendRequest } = useFriendStore();
@@ -78,12 +83,16 @@ export function PeopleTab() {
           </p>
           {users.map((user) => {
             const isSelf = user.id === currentUser?.id;
-            const isFriend = friends.some((f: Friend) => f.id === user.id);
-            const isPending =
-              sentRequests.some((r: FriendRequest) => r.user.id === user.id) ||
-              pendingRequests.some((r: FriendRequest) => r.user.id === user.id);
+            const friendshipStatus = resolveFriendshipStatus(user, {
+              friends,
+              pendingRequests,
+              sentRequests,
+            });
+            const isSending = sendingUserId === user.id;
+            const isDisabled = isRelationshipActionDisabled(friendshipStatus, isSending);
             const profilePath = publicProfilePath({ id: user.id, username: user.username });
             const displayName = user.display_name ?? user.username;
+            const actionLabel = friendshipActionLabel(friendshipStatus, isSending);
 
             return (
               <div
@@ -116,25 +125,33 @@ export function PeopleTab() {
                 {/* Action */}
                 {!isSelf && (
                   <button
+                    type="button"
                     onClick={async (e) => {
                       e.stopPropagation();
-                      if (!isFriend && !isPending) {
-                        try {
-                          await sendRequest(user.id);
-                          HapticFeedback.success();
-                        } catch {
-                          HapticFeedback.error();
-                        }
+                      if (friendshipStatus === 'pending_received') {
+                        navigate('/social/friends');
+                        return;
+                      }
+                      if (friendshipStatus !== 'none' || isSending) return;
+
+                      setSendingUserId(user.id);
+                      try {
+                        await sendRequest(user.id);
+                        HapticFeedback.success();
+                      } catch {
+                        HapticFeedback.error();
+                      } finally {
+                        setSendingUserId(null);
                       }
                     }}
-                    disabled={isFriend || isPending}
+                    disabled={isDisabled}
                     className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${
-                      isFriend || isPending
+                      isDisabled
                         ? 'cursor-default bg-[var(--token-card-bg)] text-white/20'
                         : 'bg-primary-500/10 hover:bg-primary-500/20 text-primary-400'
                     }`}
                   >
-                    {isFriend ? 'Connected' : isPending ? 'Pending' : 'Add'}
+                    {actionLabel}
                   </button>
                 )}
               </div>

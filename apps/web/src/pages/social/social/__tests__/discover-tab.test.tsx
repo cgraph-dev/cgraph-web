@@ -2,11 +2,19 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { Friend, FriendRequest } from '@/modules/social/store';
 import { DiscoverTab } from '../discover-tab';
 import type { SearchResult } from '../types';
 
-const navigate = vi.fn();
-const sendRequest = vi.fn();
+const { navigate, sendRequest, friendStoreState } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  sendRequest: vi.fn(),
+  friendStoreState: {
+    friends: [] as Friend[],
+    sentRequests: [] as FriendRequest[],
+    pendingRequests: [] as FriendRequest[],
+  },
+}));
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
@@ -19,9 +27,9 @@ vi.mock('react-router-dom', async () => {
 vi.mock('@/modules/social/store', () => ({
   useFriendStore: () => ({
     sendRequest,
-    friends: [],
-    sentRequests: [],
-    pendingRequests: [],
+    friends: friendStoreState.friends,
+    sentRequests: friendStoreState.sentRequests,
+    pendingRequests: friendStoreState.pendingRequests,
   }),
 }));
 
@@ -48,10 +56,22 @@ const groupResult: SearchResult = {
   isJoined: false,
 };
 
+const userResult: SearchResult = {
+  id: 'user-1',
+  type: 'user',
+  name: 'Alice Example',
+  description: '@alice',
+  username: 'alice',
+};
+
 describe('DiscoverTab', () => {
   beforeEach(() => {
     navigate.mockClear();
     sendRequest.mockClear();
+    sendRequest.mockResolvedValue(undefined);
+    friendStoreState.friends = [];
+    friendStoreState.sentRequests = [];
+    friendStoreState.pendingRequests = [];
   });
 
   it('joins unjoined group results without treating Open as a fake action', () => {
@@ -117,5 +137,60 @@ describe('DiscoverTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
 
     expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes incoming user requests to the request center instead of sending again', () => {
+    friendStoreState.pendingRequests = [
+      {
+        id: 'incoming-1',
+        type: 'incoming',
+        createdAt: '2026-07-09T00:00:00.000Z',
+        user: { id: 'user-1', username: 'alice', displayName: 'Alice Example', avatarUrl: null },
+      },
+    ];
+
+    render(
+      <DiscoverTab
+        searchQuery="alice"
+        searchResults={[userResult]}
+        hasMore={false}
+        isLoadingMore={false}
+        onSearchChange={vi.fn()}
+        onLoadMore={vi.fn()}
+        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
+        joiningGroupId={null}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+
+    expect(navigate).toHaveBeenCalledWith('/social/friends');
+    expect(sendRequest).not.toHaveBeenCalled();
+  });
+
+  it('keeps outgoing user requests as disabled Pending actions', () => {
+    friendStoreState.sentRequests = [
+      {
+        id: 'sent-1',
+        type: 'outgoing',
+        createdAt: '2026-07-09T00:00:00.000Z',
+        user: { id: 'user-1', username: 'alice', displayName: 'Alice Example', avatarUrl: null },
+      },
+    ];
+
+    render(
+      <DiscoverTab
+        searchQuery="alice"
+        searchResults={[userResult]}
+        hasMore={false}
+        isLoadingMore={false}
+        onSearchChange={vi.fn()}
+        onLoadMore={vi.fn()}
+        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
+        joiningGroupId={null}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Pending' })).toBeDisabled();
   });
 });

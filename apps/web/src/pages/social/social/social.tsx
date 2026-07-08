@@ -27,6 +27,7 @@ import { getGroupRoute } from '@/modules/groups/routing';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { captureError } from '@/lib/error-tracking';
 import { tweens } from '@/lib/animation-presets';
+import { normalizeFriendshipStatus } from '@/modules/social/friendship-status';
 
 function isNotificationType(value: string): value is NotificationType {
   return (
@@ -53,6 +54,10 @@ function isNotificationType(value: string): value is NotificationType {
 
 function toNotificationType(value: string): NotificationType {
   return isNotificationType(value) ? value : 'system';
+}
+
+function searchUserField(user: object, key: string): unknown {
+  return Object.prototype.hasOwnProperty.call(user, key) ? Reflect.get(user, key) : undefined;
 }
 
 interface SocialMainPaneProps {
@@ -298,6 +303,11 @@ export function Social() {
         username: user.username,
         avatarUrl: user.avatar_url ?? undefined,
         canonicalUrl: user.canonical_url ?? undefined,
+        friendshipStatus: normalizeFriendshipStatus(searchUserField(user, 'friendship_status')),
+        isFriend: searchUserField(user, 'is_friend') === true,
+        isBlocked: searchUserField(user, 'is_blocked') === true,
+        friendRequestSent: searchUserField(user, 'friend_request_sent') === true,
+        friendRequestReceived: searchUserField(user, 'friend_request_received') === true,
       });
     }
     for (const group of searchGroups) {

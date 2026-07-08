@@ -3,14 +3,19 @@
  * Search and discover users, forums, and groups
  */
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { useFriendStore } from '@/modules/social/store';
-import type { Friend, FriendRequest } from '@/modules/social/store';
 import { useAuthStore } from '@/modules/auth/store';
+import {
+  friendshipActionLabel,
+  isRelationshipActionDisabled,
+  resolveFriendshipStatus,
+} from '@/modules/social/friendship-status';
 import { getSearchResultIcon } from './utils';
 import { getDiscoverResultRoute } from './discover-routing';
 import type { DiscoverTabProps } from './types';
@@ -35,6 +40,7 @@ export function DiscoverTab({
   const navigate = useNavigate();
   const { sendRequest, friends, sentRequests, pendingRequests } = useFriendStore();
   const { user: currentUser } = useAuthStore();
+  const [sendingUserId, setSendingUserId] = useState<string | null>(null);
 
   return (
     <div className="space-y-5">
@@ -115,31 +121,43 @@ export function DiscoverTab({
 
                   {result.type === 'user' && result.id !== currentUser?.id ? (
                     (() => {
-                      const isFriend = friends.some((f: Friend) => f.id === result.id);
-                      const isPending =
-                        sentRequests.some((r: FriendRequest) => r.user.id === result.id) ||
-                        pendingRequests.some((r: FriendRequest) => r.user.id === result.id);
+                      const friendshipStatus = resolveFriendshipStatus(result, {
+                        friends,
+                        pendingRequests,
+                        sentRequests,
+                      });
+                      const isSending = sendingUserId === result.id;
+                      const isDisabled = isRelationshipActionDisabled(friendshipStatus, isSending);
+                      const actionLabel = friendshipActionLabel(friendshipStatus, isSending);
                       return (
                         <button
+                          type="button"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            if (!isFriend && !isPending) {
-                              try {
-                                await sendRequest(result.id);
-                                HapticFeedback.success();
-                              } catch {
-                                HapticFeedback.error();
-                              }
+                            if (friendshipStatus === 'pending_received') {
+                              navigate('/social/friends');
+                              return;
+                            }
+                            if (friendshipStatus !== 'none' || isSending) return;
+
+                            setSendingUserId(result.id);
+                            try {
+                              await sendRequest(result.id);
+                              HapticFeedback.success();
+                            } catch {
+                              HapticFeedback.error();
+                            } finally {
+                              setSendingUserId(null);
                             }
                           }}
                           className={`rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all ${
-                            isFriend || isPending
+                            isDisabled
                               ? 'cursor-default bg-[var(--token-card-bg)] text-white/20'
                               : 'bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 active:scale-[0.95]'
                           }`}
-                          disabled={isFriend || isPending}
+                          disabled={isDisabled}
                         >
-                          {isFriend ? 'Connected' : isPending ? 'Pending' : 'Add'}
+                          {actionLabel}
                         </button>
                       );
                     })()

@@ -105,6 +105,40 @@ describe('useUserSearch', () => {
     });
   });
 
+  it('preserves relationship flags returned by user search', async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        users: [
+          {
+            id: 'u-1',
+            username: 'alice',
+            display_name: 'Alice',
+            avatar_url: null,
+            status: 'online',
+            friendship_status: 'pending_received',
+            is_friend: false,
+            is_blocked: false,
+            friend_request_sent: false,
+            friend_request_received: true,
+          },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() => useUserSearch('al'));
+
+    await waitFor(() => {
+      expect(result.current.results[0]).toMatchObject({
+        id: 'u-1',
+        friendship_status: 'pending_received',
+        is_friend: false,
+        is_blocked: false,
+        friend_request_sent: false,
+        friend_request_received: true,
+      });
+    });
+  });
+
   it('sets error on API failure', async () => {
     mockApi.get.mockRejectedValueOnce(new Error('Network error'));
 

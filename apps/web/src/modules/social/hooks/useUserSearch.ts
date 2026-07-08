@@ -11,6 +11,8 @@ import {
   rememberRateLimit,
   USER_API_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
+import { normalizeFriendshipStatus } from '@/modules/social/friendship-status';
+import type { FriendshipStatus } from '@/modules/social/types';
 
 const logger = createLogger('useUserSearch');
 const USER_SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
@@ -25,6 +27,11 @@ export interface UserSearchResult {
   display_name: string | null;
   avatar_url: string | null;
   status: string;
+  friendship_status?: FriendshipStatus;
+  is_friend?: boolean;
+  is_blocked?: boolean;
+  friend_request_sent?: boolean;
+  friend_request_received?: boolean;
 }
 
 export interface UseUserSearchReturn {
@@ -59,13 +66,25 @@ function toUserSearchResult(value: unknown): UserSearchResult | null {
   const username = record.username;
   if (typeof id !== 'string' || typeof username !== 'string') return null;
 
-  return {
+  const result: UserSearchResult = {
     id,
     username,
     display_name: typeof record.display_name === 'string' ? record.display_name : null,
     avatar_url: typeof record.avatar_url === 'string' ? record.avatar_url : null,
     status: typeof record.status === 'string' ? record.status : 'offline',
   };
+  const friendshipStatus = normalizeFriendshipStatus(record.friendship_status);
+  if (friendshipStatus) result.friendship_status = friendshipStatus;
+  if (typeof record.is_friend === 'boolean') result.is_friend = record.is_friend;
+  if (typeof record.is_blocked === 'boolean') result.is_blocked = record.is_blocked;
+  if (typeof record.friend_request_sent === 'boolean') {
+    result.friend_request_sent = record.friend_request_sent;
+  }
+  if (typeof record.friend_request_received === 'boolean') {
+    result.friend_request_received = record.friend_request_received;
+  }
+
+  return result;
 }
 
 function getUserSearchCooldownMessage(): string | null {

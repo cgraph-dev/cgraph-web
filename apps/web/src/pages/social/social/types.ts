@@ -3,6 +3,7 @@
  */
 
 import type { Friend, FriendRequest } from '@/modules/social/store';
+import type { FriendshipStatus } from '@/modules/social/types';
 
 // TAB TYPES
 
@@ -58,6 +59,11 @@ export interface SearchResult {
   avatarUrl?: string;
   memberCount?: number;
   isJoined?: boolean;
+  friendshipStatus?: FriendshipStatus | null;
+  isFriend?: boolean;
+  isBlocked?: boolean;
+  friendRequestSent?: boolean;
+  friendRequestReceived?: boolean;
 }
 
 // TAB PROPS
