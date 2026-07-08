@@ -2,7 +2,6 @@
  * FriendshipActions - Action buttons based on friendship status
  */
 
-import { motion } from 'motion/react';
 import {
   UserPlusIcon,
   UserMinusIcon,
@@ -45,21 +44,20 @@ export function FriendshipActions({
   if (friendshipStatus === 'friends') {
     return (
       <>
-        <motion.div whileTap={{ scale: 0.88 }}>
-          <Button
-            variant="secondary"
-            leftIcon={<ChatBubbleLeftIcon className="h-5 w-5" />}
-            onClick={() => {
-              onMessage();
-              HapticFeedback.medium();
-            }}
-          >
-            Message
-          </Button>
-        </motion.div>
+        <Button
+          variant="secondary"
+          animated={false}
+          leftIcon={<ChatBubbleLeftIcon className="h-5 w-5" />}
+          onClick={() => {
+            onMessage();
+            HapticFeedback.medium();
+          }}
+        >
+          Message
+        </Button>
         <Dropdown
           trigger={
-            <Button variant="ghost" aria-label="Friend actions">
+            <Button variant="ghost" animated={false} aria-label="Friend actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }
@@ -93,21 +91,20 @@ export function FriendshipActions({
   if (friendshipStatus === 'none') {
     return (
       <div className="flex items-center gap-2">
-        <motion.div whileTap={{ scale: 0.88 }}>
-          <Button
-            leftIcon={<UserPlusIcon className="h-5 w-5" />}
-            onClick={() => {
-              onSendRequest();
-              HapticFeedback.success();
-            }}
-            isLoading={isActioning}
-          >
-            Add Friend
-          </Button>
-        </motion.div>
+        <Button
+          animated={false}
+          leftIcon={<UserPlusIcon className="h-5 w-5" />}
+          onClick={() => {
+            onSendRequest();
+            HapticFeedback.success();
+          }}
+          isLoading={isActioning}
+        >
+          Add Friend
+        </Button>
         <Dropdown
           trigger={
-            <Button variant="ghost" aria-label="Profile actions">
+            <Button variant="ghost" animated={false} aria-label="Profile actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }
@@ -131,22 +128,21 @@ export function FriendshipActions({
   if (friendshipStatus === 'pending_sent') {
     return (
       <div className="flex items-center gap-2">
-        <motion.div whileTap={{ scale: 0.88 }}>
-          <Button
-            variant="secondary"
-            leftIcon={<XMarkIcon className="h-5 w-5" />}
-            onClick={() => {
-              onCancelRequest();
-              HapticFeedback.medium();
-            }}
-            isLoading={isActioning}
-          >
-            Cancel Request
-          </Button>
-        </motion.div>
+        <Button
+          variant="secondary"
+          animated={false}
+          leftIcon={<XMarkIcon className="h-5 w-5" />}
+          onClick={() => {
+            onCancelRequest();
+            HapticFeedback.medium();
+          }}
+          isLoading={isActioning}
+        >
+          Cancel Request
+        </Button>
         <Dropdown
           trigger={
-            <Button variant="ghost" aria-label="Profile actions">
+            <Button variant="ghost" animated={false} aria-label="Profile actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }
@@ -170,32 +166,30 @@ export function FriendshipActions({
   if (friendshipStatus === 'pending_received') {
     return (
       <div className="flex items-center gap-2">
-        <motion.div whileTap={{ scale: 0.88 }}>
-          <Button
-            leftIcon={<UserPlusIcon className="h-5 w-5" />}
-            onClick={() => {
-              onAcceptRequest();
-              HapticFeedback.success();
-            }}
-            isLoading={isActioning}
-          >
-            Accept
-          </Button>
-        </motion.div>
-        <motion.div whileTap={{ scale: 0.88 }}>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              onDeclineRequest();
-              HapticFeedback.medium();
-            }}
-          >
-            Decline
-          </Button>
-        </motion.div>
+        <Button
+          animated={false}
+          leftIcon={<UserPlusIcon className="h-5 w-5" />}
+          onClick={() => {
+            onAcceptRequest();
+            HapticFeedback.success();
+          }}
+          isLoading={isActioning}
+        >
+          Accept
+        </Button>
+        <Button
+          variant="secondary"
+          animated={false}
+          onClick={() => {
+            onDeclineRequest();
+            HapticFeedback.medium();
+          }}
+        >
+          Decline
+        </Button>
         <Dropdown
           trigger={
-            <Button variant="ghost" aria-label="Profile actions">
+            <Button variant="ghost" animated={false} aria-label="Profile actions">
               <EllipsisHorizontalIcon className="h-5 w-5" />
             </Button>
           }

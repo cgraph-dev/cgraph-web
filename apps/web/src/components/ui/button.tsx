@@ -19,7 +19,7 @@ export function Button({
   leftIcon,
   rightIcon,
   fullWidth = false,
-  animated: _animated = true,
+  animated = true,
   disabled,
   children,
   className = '',
@@ -53,15 +53,20 @@ export function Button({
     md: 'px-4 py-2 text-sm gap-2',
     lg: 'px-6 py-3 text-base gap-2',
   };
+  const motionProps = animated
+    ? {
+        whileTap: tapScale(),
+        whileHover: hoverScale(),
+        transition: { type: 'spring' as const, stiffness: 400, damping: 25, mass: 0.8 },
+      }
+    : {};
 
   return (
     <motion.button
       ref={ref}
       disabled={disabled || isLoading}
       className={` ${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? 'w-full' : ''} ${className} `}
-      whileTap={tapScale()}
-      whileHover={hoverScale()}
-      transition={{ type: 'spring', stiffness: 400, damping: 25, mass: 0.8 }}
+      {...motionProps}
       {...props}
     >
       {isLoading ? (

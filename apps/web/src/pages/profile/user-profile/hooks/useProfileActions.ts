@@ -15,8 +15,21 @@ import { toast } from '@/shared/components/ui';
 import { useFriendStore } from '@/modules/social/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
+import type { Friend, FriendRequest } from '@/modules/social/store';
 
 const logger = createLogger('UserProfile');
+
+function pendingRequestForProfile(profileId: string): FriendRequest | undefined {
+  return useFriendStore.getState().pendingRequests.find((request) => request.user.id === profileId);
+}
+
+function sentRequestForProfile(profileId: string): FriendRequest | undefined {
+  return useFriendStore.getState().sentRequests.find((request) => request.user.id === profileId);
+}
+
+function friendForProfile(profileId: string): Friend | undefined {
+  return useFriendStore.getState().friends.find((friend) => friend.id === profileId);
+}
 
 interface UseProfileActionsParams {
   profile: UserProfileData | null;
@@ -41,9 +54,6 @@ export function useProfileActions({
     declineRequest,
     removeFriend,
     blockUser,
-    sentRequests,
-    pendingRequests,
-    friends,
     fetchFriends,
     fetchSentRequests,
     fetchPendingRequests,
@@ -154,8 +164,11 @@ export function useProfileActions({
     if (!profile) return;
     setIsActioning(true);
     try {
-      // Look up the friendship ID from pending requests (backend requires friendship ID, not user ID)
-      const pendingReq = pendingRequests.find((r) => r.user.id === profile.id);
+      let pendingReq = pendingRequestForProfile(profile.id);
+      if (!pendingReq) {
+        await fetchPendingRequests();
+        pendingReq = pendingRequestForProfile(profile.id);
+      }
       if (!pendingReq) {
         toast.error('Friend request not found. Try refreshing the page.');
         return;
@@ -173,8 +186,11 @@ export function useProfileActions({
     if (!profile) return;
     setIsActioning(true);
     try {
-      // Look up the friendship ID from pending requests (backend requires friendship ID, not user ID)
-      const pendingReq = pendingRequests.find((r) => r.user.id === profile.id);
+      let pendingReq = pendingRequestForProfile(profile.id);
+      if (!pendingReq) {
+        await fetchPendingRequests();
+        pendingReq = pendingRequestForProfile(profile.id);
+      }
       if (!pendingReq) {
         toast.error('Friend request not found. Try refreshing the page.');
         return;
@@ -192,9 +208,11 @@ export function useProfileActions({
     if (!profile) return;
     setIsActioning(true);
     try {
-      // Cancel a sent request: look up the friendship ID from sentRequests,
-      // then use DELETE /friends/:id (removeFriend) — the sender cannot use decline (recipient-only)
-      const sentReq = sentRequests.find((r) => r.user.id === profile.id);
+      let sentReq = sentRequestForProfile(profile.id);
+      if (!sentReq) {
+        await fetchSentRequests();
+        sentReq = sentRequestForProfile(profile.id);
+      }
       if (!sentReq) {
         toast.error('Sent request not found. Try refreshing the page.');
         return;
@@ -213,8 +231,11 @@ export function useProfileActions({
     if (!profile) return;
     setIsActioning(true);
     try {
-      // Look up the friendship ID (backend DELETE /friends/:id expects the friendship record ID, not user ID)
-      const friend = friends.find((f) => f.id === profile.id);
+      let friend = friendForProfile(profile.id);
+      if (!friend) {
+        await fetchFriends();
+        friend = friendForProfile(profile.id);
+      }
       if (!friend?.friendshipId) {
         toast.error('Friend not found. Try refreshing the page.');
         return;
