@@ -1,20 +1,66 @@
-/**
- * NotificationsTab Component
- * Notifications list with mark as read functionality
- */
-
 import { useNavigate } from 'react-router-dom';
+import type { ComponentType, SVGProps } from 'react';
 import { motion } from 'motion/react';
+import {
+  BellIcon,
+  CalendarDaysIcon,
+  ChatBubbleLeftRightIcon,
+  DocumentTextIcon,
+  FireIcon,
+  GiftIcon,
+  MegaphoneIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  UserPlusIcon,
+} from '@heroicons/react/24/outline';
 import { BellIcon as BellIconSolid } from '@heroicons/react/24/solid';
-import { GlassCard } from '@/shared/components/ui';
-import { getNotificationIcon, formatTimeAgo } from './utils';
+import { formatTimeAgo } from './utils';
 import type { NotificationsTabProps } from './types';
 
-/**
- */
-/**
- * Notifications Tab component.
- */
+type NotificationIcon = ComponentType<SVGProps<SVGSVGElement>>;
+type NotificationRow = NotificationsTabProps['notifications'][number];
+
+function getNotificationIcon(type: NotificationRow['type']): NotificationIcon {
+  switch (type) {
+    case 'friend_request':
+    case 'friend_accepted':
+      return UserPlusIcon;
+    case 'message':
+      return ChatBubbleLeftRightIcon;
+    case 'group_invite':
+    case 'group_mention':
+    case 'channel_mention':
+      return UserGroupIcon;
+    case 'forum_reply':
+    case 'forum_mention':
+    case 'post_reply':
+      return DocumentTextIcon;
+    case 'achievement':
+    case 'level_up':
+    case 'quest_completed':
+      return TrophyIcon;
+    case 'streak_reminder':
+      return FireIcon;
+    case 'gift_received':
+      return GiftIcon;
+    case 'event_reminder':
+    case 'event_invite':
+      return CalendarDaysIcon;
+    case 'mention':
+      return MegaphoneIcon;
+    default:
+      return BellIcon;
+  }
+}
+
+function rowActionLabel(notification: NotificationRow): string {
+  if (notification.actionUrl) {
+    return `${notification.read ? 'Open' : 'Open unread'} notification: ${notification.title}`;
+  }
+
+  return `${notification.read ? 'Notification' : 'Mark notification as read'}: ${notification.title}`;
+}
+
 export function NotificationsTab({
   notifications,
   onMarkAsRead,
@@ -24,8 +70,7 @@ export function NotificationsTab({
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
+    <section className="space-y-5" aria-label="Notifications">
       <div className="flex flex-col gap-4">
         <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
           <span className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
@@ -35,87 +80,109 @@ export function NotificationsTab({
 
         {unreadCount > 0 && (
           <button
+            type="button"
             onClick={onMarkAllAsRead}
-            className="w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-primary)] py-2.5 text-xs font-black uppercase tracking-widest text-white/40 transition-all hover:bg-[var(--token-bg-secondary)] hover:text-white active:scale-[0.98]"
+            className="w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] py-2.5 text-xs font-black uppercase tracking-widest text-white/50 transition-all hover:bg-[var(--token-bg-secondary)] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 active:scale-[0.98]"
           >
             Mark All as Read
           </button>
         )}
       </div>
 
-      {/* Notifications List */}
       {notifications.length === 0 ? (
-        <GlassCard variant="frosted" className="relative overflow-hidden py-12 px-6 text-center">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-500/[0.06] blur-[50px]" />
+        <div className="rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] px-6 py-12 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--token-bg-secondary)] ring-1 ring-white/[0.06]">
+            <BellIconSolid className="h-7 w-7 text-primary-400/40" />
           </div>
-          <div className="relative">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--token-bg-primary)] ring-1 ring-white/[0.06]">
-              <BellIconSolid className="h-8 w-8 text-primary-400/40" />
-            </div>
-            <h4 className="mb-1 text-sm font-bold text-white/80">All clear</h4>
-            <p className="text-xs text-white/20">
-              No new notifications at this time.
-            </p>
-          </div>
-        </GlassCard>
+          <h4 className="mb-1 text-sm font-bold text-white/80">All clear</h4>
+          <p className="text-xs text-white/30">No new notifications at this time.</p>
+        </div>
       ) : (
-        <div className="space-y-1.5">
+        <ul className="space-y-1.5" aria-label="Notifications list">
           {notifications.map((notification, index) => (
-            <motion.div
+            <motion.li
               key={notification.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03 }}
-              className="group"
+              className="group list-none"
             >
-              <GlassCard
-                variant="crystal"
-                className={`cursor-pointer border-[var(--token-border-muted)] p-3 transition-all duration-300 hover:bg-[var(--token-bg-primary)] hover:border-[var(--token-card-border)] ${
-                  notification.read ? 'opacity-40' : 'opacity-100'
+              <button
+                type="button"
+                className={`relative flex min-h-16 w-full items-start gap-3 rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] p-3 text-left transition-all duration-200 hover:border-[var(--token-card-border)] hover:bg-[var(--token-bg-secondary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 ${
+                  notification.read ? 'opacity-65' : 'opacity-100'
                 }`}
+                aria-label={rowActionLabel(notification)}
                 onClick={() => {
-                  onMarkAsRead(notification.id);
+                  if (!notification.read) {
+                    onMarkAsRead(notification.id);
+                  }
                   if (notification.actionUrl) {
                     navigate(notification.actionUrl);
                   }
                 }}
               >
-                <div className="flex items-start gap-3">
-                  {/* Icon Container */}
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-500 ${
-                      notification.read
-                        ? 'bg-[var(--token-bg-primary)] border-transparent text-white/20'
-                        : 'border-primary-500/20 bg-primary-500/10 text-primary-400 shadow-[0_4px_12px_rgba(0,0,0,0.3)]'
-                    }`}
+                <NotificationAvatar notification={notification} />
+
+                <div className="min-w-0 flex-1">
+                  <div className="mb-0.5 flex items-start justify-between gap-2">
+                    <h4
+                      className={`min-w-0 truncate text-sm font-bold transition-colors ${notification.read ? 'text-white/55' : 'text-white'}`}
+                    >
+                      {notification.title}
+                    </h4>
+                    <time
+                      dateTime={notification.timestamp.toISOString()}
+                      className="shrink-0 text-[10px] font-medium text-white/30"
+                    >
+                      {formatTimeAgo(notification.timestamp)}
+                    </time>
+                  </div>
+                  <p
+                    className={`line-clamp-2 text-xs leading-relaxed transition-colors ${notification.read ? 'text-white/35' : 'text-white/65'}`}
                   >
-                    <span className="text-xl">{getNotificationIcon(notification.type)}</span>
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-0.5 flex items-center justify-between gap-2">
-                      <h4 className={`truncate text-sm font-bold transition-colors ${notification.read ? 'text-white/40' : 'text-white'}`}>
-                        {notification.title}
-                      </h4>
-                      <span className="shrink-0 text-[10px] font-medium text-white/20">
-                        {formatTimeAgo(notification.timestamp)}
-                      </span>
-                    </div>
-                    <p className={`line-clamp-2 text-xs leading-relaxed transition-colors ${notification.read ? 'text-white/20' : 'text-white/60'}`}>
-                      {notification.message}
-                    </p>
-
-                    {!notification.read && (
-                      <div className="mt-2 h-0.5 w-8 rounded-full bg-primary-500/40" />
-                    )}
-                  </div>
+                    {notification.message}
+                  </p>
                 </div>
-              </GlassCard>
-            </motion.div>
+
+                {!notification.read ? (
+                  <span
+                    className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary-400"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </button>
+            </motion.li>
           ))}
-        </div>
+        </ul>
       )}
-    </div>
+    </section>
+  );
+}
+
+function NotificationAvatar({ notification }: { notification: NotificationRow }) {
+  if (notification.avatarUrl) {
+    return (
+      <img
+        src={notification.avatarUrl}
+        alt=""
+        className="h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-white/[0.08]"
+      />
+    );
+  }
+
+  const Icon = getNotificationIcon(notification.type);
+
+  return (
+    <span
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 ${
+        notification.read
+          ? 'border-transparent bg-[var(--token-bg-secondary)] text-white/30'
+          : 'border-primary-500/20 bg-primary-500/10 text-primary-300 shadow-[0_4px_12px_rgba(0,0,0,0.22)]'
+      }`}
+      aria-hidden="true"
+    >
+      <Icon className="h-5 w-5" />
+    </span>
   );
 }

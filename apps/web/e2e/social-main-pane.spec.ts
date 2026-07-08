@@ -599,7 +599,12 @@ test.describe('Social hub main pane', () => {
 
     await page.goto('/social/notifications');
     await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible();
-    await page.locator('main').getByRole('button', { name: /mention in social systems/i }).click();
+    await page
+      .locator('main')
+      .getByRole('button', {
+        name: /mention in social systems open the exact group channel route/i,
+      })
+      .click();
     await expect
       .poll(() => readNotifications, { message: 'notification read endpoint was called' })
       .toContain(NOTIFICATION_ID);

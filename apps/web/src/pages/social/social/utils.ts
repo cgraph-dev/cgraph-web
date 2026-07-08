@@ -2,53 +2,8 @@
  * Social Hub - Utility Functions
  */
 
-// NOTIFICATION HELPERS
-
-/**
- */
-/**
- * Retrieves notification icon.
- *
- * @param type - The type.
- * @returns The notification icon.
- */
-export function getNotificationIcon(type: string): string {
-  switch (type) {
-    case 'friend_request':
-    case 'friend_accepted':
-      return '👥';
-    case 'message':
-      return '💬';
-    case 'group_invite':
-    case 'group_mention':
-    case 'channel_mention':
-      return '👥';
-    case 'forum_reply':
-    case 'forum_mention':
-    case 'post_reply':
-      return '📝';
-    case 'achievement':
-    case 'level_up':
-    case 'quest_completed':
-      return '🏆';
-    case 'streak_reminder':
-      return '🔥';
-    case 'gift_received':
-      return '🎁';
-    case 'event_reminder':
-    case 'event_invite':
-      return '📅';
-    case 'mention':
-      return '📢';
-    default:
-      return '🔔';
-  }
-}
-
 // SEARCH HELPERS
 
-/**
- */
 /**
  * Retrieves search result icon.
  *
@@ -70,8 +25,6 @@ export function getSearchResultIcon(type: string): string {
 
 // TIME FORMATTING
 
-/**
- */
 /**
  * Formats time ago.
  *
