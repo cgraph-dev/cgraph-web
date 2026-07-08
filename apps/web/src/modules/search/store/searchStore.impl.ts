@@ -17,11 +17,27 @@ import type {
   SearchPost,
   SearchMessage,
   SearchResult as ApiSearchResult,
+  GlobalSearchResponse,
+  GlobalSearchPageInfo,
+  GlobalSearchPageInfoByType,
 } from '@cgraph-dev/api-client';
 
 export type { SearchUser, SearchGroup, SearchForum, SearchPost, SearchMessage };
 
 export type SearchCategory = 'all' | 'users' | 'groups' | 'forums' | 'posts' | 'messages';
+export type SearchResultCategory = Exclude<SearchCategory, 'all'>;
+
+export interface SearchPageInfo {
+  count: number;
+  total: number;
+  limit: number;
+  has_more: boolean;
+  end_reached: boolean;
+  start_cursor: string | null;
+  end_cursor: string | null;
+}
+
+export type SearchPageInfoByCategory = Partial<Record<SearchResultCategory, SearchPageInfo>>;
 
 export interface SearchState {
   query: string;
@@ -35,6 +51,8 @@ export interface SearchState {
   error: string | null;
   hasSearched: boolean;
   activeRequestId: number | null;
+  pageInfo: SearchPageInfoByCategory;
+  hasMore: boolean;
 
   // Actions
   setQuery: (query: string) => void;
@@ -55,7 +73,9 @@ const MAX_SEARCH_FORUMS = 50;
 const MAX_SEARCH_POSTS = 100;
 const MAX_SEARCH_MESSAGES = 100;
 const MAX_GLOBAL_SEARCH_RESULTS = 50;
+const DEFAULT_TYPED_SEARCH_LIMIT = 20;
 const SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
+const SEARCH_RESULT_CATEGORIES = ['users', 'groups', 'forums', 'posts', 'messages'] as const;
 
 type SearchBuckets = Pick<SearchState, 'users' | 'groups' | 'forums' | 'posts' | 'messages'>;
 
@@ -152,6 +172,10 @@ function emptyBuckets(): SearchBuckets {
     posts: [],
     messages: [],
   };
+}
+
+function emptyPageInfo(): SearchPageInfoByCategory {
+  return {};
 }
 
 function getSearchCooldownMessage(): string | null {
@@ -258,6 +282,125 @@ function normalizeGlobalResults(results: readonly ApiSearchResult[]): SearchBuck
   };
 }
 
+function trimBuckets(buckets: SearchBuckets): SearchBuckets {
+  return {
+    users: buckets.users.slice(0, MAX_SEARCH_USERS),
+    groups: buckets.groups.slice(0, MAX_SEARCH_GROUPS),
+    forums: buckets.forums.slice(0, MAX_SEARCH_FORUMS),
+    posts: buckets.posts.slice(0, MAX_SEARCH_POSTS),
+    messages: buckets.messages.slice(0, MAX_SEARCH_MESSAGES),
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function numberFromRecord(record: Record<string, unknown>, key: string): number | undefined {
+  const value = record[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function booleanFromRecord(record: Record<string, unknown>, key: string): boolean | undefined {
+  const value = record[key];
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function stringOrNullFromRecord(record: Record<string, unknown>, key: string): string | null {
+  const value = record[key];
+  return typeof value === 'string' || value === null ? value : null;
+}
+
+function normalizePageInfoFields(
+  raw: GlobalSearchPageInfo | Record<string, unknown> | undefined,
+  resultCount: number,
+  requestedLimit: number
+): SearchPageInfo {
+  const info = isRecord(raw) ? raw : {};
+  const limit = numberFromRecord(info, 'limit') ?? requestedLimit;
+  const count = numberFromRecord(info, 'count') ?? resultCount;
+  const total = numberFromRecord(info, 'total') ?? numberFromRecord(info, 'total_count') ?? count;
+  const explicitEndReached = booleanFromRecord(info, 'end_reached');
+  const hasMore =
+    booleanFromRecord(info, 'has_more') ??
+    booleanFromRecord(info, 'has_next_page') ??
+    (explicitEndReached !== undefined ? !explicitEndReached : count >= limit);
+
+  return {
+    count,
+    total,
+    limit,
+    has_more: hasMore,
+    end_reached: explicitEndReached ?? !hasMore,
+    start_cursor: stringOrNullFromRecord(info, 'start_cursor'),
+    end_cursor: stringOrNullFromRecord(info, 'end_cursor'),
+  };
+}
+
+function normalizeGlobalPageInfo(
+  pageInfo: GlobalSearchPageInfoByType | undefined,
+  buckets: SearchBuckets,
+  requestedLimit: number
+): SearchPageInfoByCategory {
+  const normalized: SearchPageInfoByCategory = {};
+
+  for (const category of SEARCH_RESULT_CATEGORIES) {
+    const results = buckets[category];
+    const info = pageInfo?.[category];
+    if (info || results.length > 0) {
+      normalized[category] = normalizePageInfoFields(info, results.length, requestedLimit);
+    }
+  }
+
+  return normalized;
+}
+
+function hasMoreFromPageInfo(pageInfo: SearchPageInfoByCategory): boolean {
+  return Object.values(pageInfo).some((info) => info?.has_more === true);
+}
+
+function normalizeTypedPageInfo(
+  rawPageInfo: unknown,
+  category: SearchResultCategory,
+  resultCount: number,
+  requestedLimit = DEFAULT_TYPED_SEARCH_LIMIT
+): SearchPageInfoByCategory {
+  return {
+    [category]: normalizePageInfoFields(
+      isRecord(rawPageInfo) ? rawPageInfo : undefined,
+      resultCount,
+      requestedLimit
+    ),
+  };
+}
+
+function normalizeGlobalResponse(response: GlobalSearchResponse): {
+  buckets: SearchBuckets;
+  pageInfo: SearchPageInfoByCategory;
+} {
+  const bucketed = trimBuckets({
+    users: response.users,
+    groups: response.groups,
+    forums: response.forums,
+    posts: response.posts,
+    messages: response.messages,
+  });
+
+  const buckets =
+    bucketed.users.length > 0 ||
+    bucketed.groups.length > 0 ||
+    bucketed.forums.length > 0 ||
+    bucketed.posts.length > 0 ||
+    bucketed.messages.length > 0
+      ? bucketed
+      : normalizeGlobalResults(response.results);
+
+  return {
+    buckets,
+    pageInfo: normalizeGlobalPageInfo(response.page_info, buckets, MAX_GLOBAL_SEARCH_RESULTS),
+  };
+}
+
 export const useSearchStore = create<SearchState>()((set, get) => ({
   query: '',
   category: 'all',
@@ -270,6 +413,8 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
   error: null,
   hasSearched: false,
   activeRequestId: null,
+  pageInfo: {},
+  hasMore: false,
 
   setQuery: (query) => set({ query }),
 
@@ -287,6 +432,8 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         forums: [],
         posts: [],
         messages: [],
+        pageInfo: emptyPageInfo(),
+        hasMore: false,
         isLoading: false,
         hasSearched: false,
         activeRequestId: null,
@@ -300,6 +447,8 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
     if (cooldownMessage) {
       set({
         ...emptyBuckets(),
+        pageInfo: emptyPageInfo(),
+        hasMore: false,
         error: cooldownMessage,
         isLoading: false,
         hasSearched: true,
@@ -315,8 +464,13 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         const result = await apiClient.search.global(query, { limit: MAX_GLOBAL_SEARCH_RESULTS });
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
         if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+        const normalized = result.ok
+          ? normalizeGlobalResponse(result.data)
+          : { buckets: emptyBuckets(), pageInfo: emptyPageInfo() };
         set({
-          ...(result.ok ? normalizeGlobalResults(result.data.results) : emptyBuckets()),
+          ...normalized.buckets,
+          pageInfo: normalized.pageInfo,
+          hasMore: hasMoreFromPageInfo(normalized.pageInfo),
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
@@ -329,8 +483,14 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         const result = await apiClient.search.searchUsers(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
         if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+        const users = result.ok ? result.data.slice(0, MAX_SEARCH_USERS) : [];
+        const pageInfo = result.ok
+          ? normalizeTypedPageInfo(result.pageInfo, 'users', users.length)
+          : emptyPageInfo();
         set({
-          users: result.ok ? result.data.slice(0, MAX_SEARCH_USERS) : [],
+          users,
+          pageInfo,
+          hasMore: hasMoreFromPageInfo(pageInfo),
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
@@ -343,8 +503,14 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         const result = await apiClient.search.searchMessages(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
         if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+        const messages = result.ok ? result.data.slice(0, MAX_SEARCH_MESSAGES) : [];
+        const pageInfo = result.ok
+          ? normalizeTypedPageInfo(result.pageInfo, 'messages', messages.length)
+          : emptyPageInfo();
         set({
-          messages: result.ok ? result.data.slice(0, MAX_SEARCH_MESSAGES) : [],
+          messages,
+          pageInfo,
+          hasMore: hasMoreFromPageInfo(pageInfo),
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
@@ -357,8 +523,14 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         const result = await apiClient.search.searchPosts(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
         if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+        const posts = result.ok ? result.data.slice(0, MAX_SEARCH_POSTS) : [];
+        const pageInfo = result.ok
+          ? normalizeTypedPageInfo(result.pageInfo, 'posts', posts.length)
+          : emptyPageInfo();
         set({
-          posts: result.ok ? result.data.slice(0, MAX_SEARCH_POSTS) : [],
+          posts,
+          pageInfo,
+          hasMore: hasMoreFromPageInfo(pageInfo),
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
@@ -371,8 +543,14 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         const result = await apiClient.search.searchGroups(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
         if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+        const groups = result.ok ? result.data.slice(0, MAX_SEARCH_GROUPS) : [];
+        const pageInfo = result.ok
+          ? normalizeTypedPageInfo(result.pageInfo, 'groups', groups.length)
+          : emptyPageInfo();
         set({
-          groups: result.ok ? result.data.slice(0, MAX_SEARCH_GROUPS) : [],
+          groups,
+          pageInfo,
+          hasMore: hasMoreFromPageInfo(pageInfo),
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
@@ -385,8 +563,14 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         const result = await apiClient.search.searchForums(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
         if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+        const forums = result.ok ? result.data.slice(0, MAX_SEARCH_FORUMS) : [];
+        const pageInfo = result.ok
+          ? normalizeTypedPageInfo(result.pageInfo, 'forums', forums.length)
+          : emptyPageInfo();
         set({
-          forums: result.ok ? result.data.slice(0, MAX_SEARCH_FORUMS) : [],
+          forums,
+          pageInfo,
+          hasMore: hasMoreFromPageInfo(pageInfo),
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
@@ -396,12 +580,14 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       }
 
       if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
-      set({ isLoading: false, hasSearched: true, activeRequestId: null });
+      set({ isLoading: false, hasSearched: true, activeRequestId: null, hasMore: false });
     } catch (error: unknown) {
       const rateLimitMessage = rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, error);
       if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
       set({
         error: rateLimitMessage ?? extractErrorMessage(error, 'Search failed'),
+        pageInfo: emptyPageInfo(),
+        hasMore: false,
         isLoading: false,
         hasSearched: true,
         activeRequestId: null,
@@ -439,6 +625,8 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       forums: [],
       posts: [],
       messages: [],
+      pageInfo: emptyPageInfo(),
+      hasMore: false,
       query: '',
       isLoading: false,
       hasSearched: false,
@@ -458,6 +646,8 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       forums: [],
       posts: [],
       messages: [],
+      pageInfo: emptyPageInfo(),
+      hasMore: false,
       isLoading: false,
       error: null,
       hasSearched: false,

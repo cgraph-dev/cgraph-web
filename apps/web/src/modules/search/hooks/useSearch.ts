@@ -23,6 +23,8 @@ export function useSearch() {
     isLoading,
     error,
     hasSearched,
+    pageInfo,
+    hasMore,
     setQuery,
     setCategory,
     search,
@@ -41,16 +43,16 @@ export function useSearch() {
   };
 
   async function handleSearch(searchQuery?: string) {
-      await search(searchQuery);
-    }
+    await search(searchQuery);
+  }
 
   function handleSetQuery(newQuery: string) {
-      setQuery(newQuery);
-    }
+    setQuery(newQuery);
+  }
 
   function handleSetCategory(newCategory: SearchCategory) {
-      setCategory(newCategory);
-    }
+    setCategory(newCategory);
+  }
 
   function clear() {
     clearResults();
@@ -71,6 +73,8 @@ export function useSearch() {
     isLoading,
     error,
     hasSearched,
+    pageInfo,
+    hasMore,
     setQuery: handleSetQuery,
     setCategory: handleSetCategory,
     search: handleSearch,

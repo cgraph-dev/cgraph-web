@@ -16,6 +16,7 @@ import type {
   SearchMessage,
   SearchCategory,
 } from '@/modules/search/store';
+import type { GlobalSearchResponse } from '@cgraph-dev/api-client';
 
 // Mock the raw api module (used only by searchById)
 vi.mock('@/lib/api', () => ({
@@ -150,6 +151,15 @@ const mockGlobalResults = [
 // Helpers
 
 const okResult = <T>(data: T) => ({ ok: true as const, data });
+const globalResponse = (overrides: Partial<GlobalSearchResponse> = {}): GlobalSearchResponse => ({
+  users: [],
+  groups: [],
+  forums: [],
+  posts: [],
+  messages: [],
+  results: [],
+  ...overrides,
+});
 const errResult = () => ({
   ok: false as const,
   error: { code: 'error', message: 'failed' },
@@ -168,11 +178,13 @@ const getInitialState = () => ({
   error: null as string | null,
   hasSearched: false,
   activeRequestId: null as number | null,
+  pageInfo: {},
+  hasMore: false,
 });
 
 // Default: all search mocks return empty ok results
 function setupEmptyMocks() {
-  mockedSearch.global.mockResolvedValue(okResult({ results: [] }));
+  mockedSearch.global.mockResolvedValue(okResult(globalResponse()));
   mockedSearch.searchUsers.mockResolvedValue(okResult([]));
   mockedSearch.searchGroups.mockResolvedValue(okResult([]));
   mockedSearch.searchForums.mockResolvedValue(okResult([]));
@@ -276,7 +288,7 @@ describe('Search Store', () => {
 
     it('should set isLoading while searching', async () => {
       mockedSearch.global.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(okResult({ results: [] })), 50))
+        () => new Promise((resolve) => setTimeout(() => resolve(okResult(globalResponse())), 50))
       );
 
       useSearchStore.getState().setQuery('test');
@@ -300,7 +312,7 @@ describe('Search Store', () => {
     });
 
     it('should populate result arrays from the global API response', async () => {
-      mockedSearch.global.mockResolvedValue(okResult({ results: mockGlobalResults }));
+      mockedSearch.global.mockResolvedValue(okResult(globalResponse({ results: mockGlobalResults })));
 
       useSearchStore.getState().setQuery('test');
       await useSearchStore.getState().search();
@@ -312,6 +324,62 @@ describe('Search Store', () => {
       expect(s.posts).toHaveLength(1);
       expect(s.messages).toHaveLength(1);
       expect(s.hasSearched).toBe(true);
+    });
+
+    it('should populate buckets and page info from the backend global response', async () => {
+      mockedSearch.global.mockResolvedValue(
+        okResult(globalResponse({
+          query: 'test',
+          users: [mockUser],
+          groups: [mockGroup],
+          forums: [],
+          posts: [mockPost],
+          messages: [mockMessage],
+          results: [],
+          page_info: {
+            users: {
+              count: 1,
+              total: 3,
+              limit: 1,
+              has_more: true,
+              end_reached: false,
+              start_cursor: null,
+              end_cursor: 'users-cursor',
+            },
+            posts: {
+              count: 1,
+              total: 1,
+              limit: 1,
+              has_more: false,
+              end_reached: true,
+              start_cursor: null,
+              end_cursor: null,
+            },
+          },
+        }))
+      );
+
+      useSearchStore.getState().setQuery('test');
+      await useSearchStore.getState().search();
+
+      const s = useSearchStore.getState();
+      expect(s.users).toEqual([mockUser]);
+      expect(s.groups).toEqual([mockGroup]);
+      expect(s.posts).toEqual([mockPost]);
+      expect(s.messages).toEqual([mockMessage]);
+      expect(s.pageInfo.users).toMatchObject({
+        count: 1,
+        total: 3,
+        limit: 1,
+        has_more: true,
+        end_reached: false,
+        end_cursor: 'users-cursor',
+      });
+      expect(s.pageInfo.posts).toMatchObject({
+        has_more: false,
+        end_reached: true,
+      });
+      expect(s.hasMore).toBe(true);
     });
 
     it('should set hasSearched to true after search completes', async () => {
@@ -329,6 +397,8 @@ describe('Search Store', () => {
       const s = useSearchStore.getState();
       expect(s.users).toEqual([]);
       expect(s.hasSearched).toBe(false);
+      expect(s.pageInfo).toEqual({});
+      expect(s.hasMore).toBe(false);
     });
 
     it('should use empty arrays when the global result is not ok', async () => {
@@ -339,6 +409,8 @@ describe('Search Store', () => {
 
       expect(useSearchStore.getState().users).toEqual([]);
       expect(useSearchStore.getState().groups).toEqual([]);
+      expect(useSearchStore.getState().pageInfo).toEqual({});
+      expect(useSearchStore.getState().hasMore).toBe(false);
     });
 
     it('should skip global search while the user API cooldown is active', async () => {
@@ -390,8 +462,8 @@ describe('Search Store', () => {
     });
 
     it('should ignore stale global responses after a newer search completes', async () => {
-      const stale = deferred<ReturnType<typeof okResult<{ results: typeof mockGlobalResults }>>>();
-      const fresh = deferred<ReturnType<typeof okResult<{ results: typeof mockGlobalResults }>>>();
+      const stale = deferred<ReturnType<typeof okResult<GlobalSearchResponse>>>();
+      const fresh = deferred<ReturnType<typeof okResult<GlobalSearchResponse>>>();
       const staleResult = {
         id: 'u-stale',
         type: 'user',
@@ -415,13 +487,13 @@ describe('Search Store', () => {
       useSearchStore.getState().setQuery('bob');
       const freshSearch = useSearchStore.getState().search();
 
-      fresh.resolve(okResult({ results: [freshResult] }));
+      fresh.resolve(okResult(globalResponse({ results: [freshResult] })));
       await freshSearch;
 
       expect(useSearchStore.getState().users[0]?.id).toBe('u-fresh');
       expect(useSearchStore.getState().activeRequestId).toBeNull();
 
-      stale.resolve(okResult({ results: [staleResult] }));
+      stale.resolve(okResult(globalResponse({ results: [staleResult] })));
       await staleSearch;
 
       expect(useSearchStore.getState().users[0]?.id).toBe('u-fresh');
@@ -429,7 +501,7 @@ describe('Search Store', () => {
     });
 
     it('should ignore a global response after results are cleared', async () => {
-      const pending = deferred<ReturnType<typeof okResult<{ results: typeof mockGlobalResults }>>>();
+      const pending = deferred<ReturnType<typeof okResult<GlobalSearchResponse>>>();
       mockedSearch.global.mockReturnValueOnce(pending.promise);
 
       useSearchStore.getState().setQuery('alice');
@@ -441,7 +513,7 @@ describe('Search Store', () => {
       useSearchStore.getState().clearResults();
 
       pending.resolve(
-        okResult({
+        okResult(globalResponse({
           results: [
             {
               id: 'u-cleared',
@@ -451,7 +523,7 @@ describe('Search Store', () => {
               metadata: { status: 'online' },
             },
           ],
-        })
+        }))
       );
       await search;
 
@@ -461,6 +533,8 @@ describe('Search Store', () => {
       expect(s.isLoading).toBe(false);
       expect(s.hasSearched).toBe(false);
       expect(s.activeRequestId).toBeNull();
+      expect(s.pageInfo).toEqual({});
+      expect(s.hasMore).toBe(false);
     });
   });
 
@@ -478,6 +552,35 @@ describe('Search Store', () => {
       expect(mockedSearch.searchForums).not.toHaveBeenCalled();
       expect(mockedSearch.searchPosts).not.toHaveBeenCalled();
       expect(mockedSearch.searchMessages).not.toHaveBeenCalled();
+    });
+
+    it('stores typed endpoint cursor page info', async () => {
+      mockedSearch.searchUsers.mockResolvedValue({
+        ok: true,
+        data: [mockUser],
+        pageInfo: {
+          has_next_page: true,
+          has_previous_page: false,
+          start_cursor: 'users-start',
+          end_cursor: 'users-end',
+          total_count: 7,
+        },
+      });
+      useSearchStore.setState({ category: 'users' });
+      useSearchStore.getState().setQuery('alice');
+
+      await useSearchStore.getState().search();
+
+      expect(useSearchStore.getState().pageInfo.users).toMatchObject({
+        count: 1,
+        total: 7,
+        limit: 20,
+        has_more: true,
+        end_reached: false,
+        start_cursor: 'users-start',
+        end_cursor: 'users-end',
+      });
+      expect(useSearchStore.getState().hasMore).toBe(true);
     });
 
     it('should only search groups when category is "groups"', async () => {

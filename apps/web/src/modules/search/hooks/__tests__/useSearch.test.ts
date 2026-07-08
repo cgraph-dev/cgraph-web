@@ -25,6 +25,8 @@ const mockSearchState: Record<string, unknown> = {
   isLoading: false,
   error: null,
   hasSearched: false,
+  pageInfo: {},
+  hasMore: false,
   setQuery: vi.fn(),
   setCategory: vi.fn(),
   search: vi.fn().mockResolvedValue(undefined),
@@ -51,6 +53,8 @@ describe('useSearch', () => {
       isLoading: false,
       error: null,
       hasSearched: false,
+      pageInfo: {},
+      hasMore: false,
     });
   });
 
@@ -135,6 +139,26 @@ describe('useSearch', () => {
     const { result } = renderHook(() => useSearch());
     expect(result.current.isLoading).toBe(true);
     expect(result.current.error).toBe('Something went wrong');
+  });
+
+  it('exposes page info and hasMore state', () => {
+    mockSearchState.pageInfo = {
+      users: {
+        count: 1,
+        total: 3,
+        limit: 1,
+        has_more: true,
+        end_reached: false,
+        start_cursor: null,
+        end_cursor: 'cursor-users',
+      },
+    };
+    mockSearchState.hasMore = true;
+
+    const { result } = renderHook(() => useSearch());
+
+    expect(result.current.pageInfo).toEqual(mockSearchState.pageInfo);
+    expect(result.current.hasMore).toBe(true);
   });
 });
 
