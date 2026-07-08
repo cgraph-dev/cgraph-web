@@ -34,6 +34,7 @@ export interface SearchState {
   isLoading: boolean;
   error: string | null;
   hasSearched: boolean;
+  activeRequestId: number | null;
 
   // Actions
   setQuery: (query: string) => void;
@@ -57,6 +58,21 @@ const MAX_GLOBAL_SEARCH_RESULTS = 50;
 const SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
 
 type SearchBuckets = Pick<SearchState, 'users' | 'groups' | 'forums' | 'posts' | 'messages'>;
+
+let latestSearchRequestId = 0;
+
+function nextSearchRequestId(): number {
+  latestSearchRequestId += 1;
+  return latestSearchRequestId;
+}
+
+function cancelSearchRequest(): void {
+  latestSearchRequestId += 1;
+}
+
+function isCurrentSearchRequest(requestId: number, activeRequestId: number | null): boolean {
+  return activeRequestId === requestId && latestSearchRequestId === requestId;
+}
 
 function toStringValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
@@ -253,6 +269,7 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
   isLoading: false,
   error: null,
   hasSearched: false,
+  activeRequestId: null,
 
   setQuery: (query) => set({ query }),
 
@@ -263,16 +280,21 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
     const query = queryOverride ?? stateQuery;
 
     if (!query.trim()) {
+      cancelSearchRequest();
       set({
         users: [],
         groups: [],
         forums: [],
         posts: [],
         messages: [],
+        isLoading: false,
         hasSearched: false,
+        activeRequestId: null,
       });
       return;
     }
+
+    const requestId = nextSearchRequestId();
 
     const cooldownMessage = getSearchCooldownMessage();
     if (cooldownMessage) {
@@ -281,21 +303,24 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         error: cooldownMessage,
         isLoading: false,
         hasSearched: true,
+        activeRequestId: null,
       });
       return;
     }
 
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, activeRequestId: requestId });
 
     try {
       if (category === 'all') {
         const result = await apiClient.search.global(query, { limit: MAX_GLOBAL_SEARCH_RESULTS });
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
         set({
           ...(result.ok ? normalizeGlobalResults(result.data.results) : emptyBuckets()),
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
+          activeRequestId: null,
         });
         return;
       }
@@ -303,11 +328,13 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       if (category === 'users') {
         const result = await apiClient.search.searchUsers(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
         set({
           users: result.ok ? result.data.slice(0, MAX_SEARCH_USERS) : [],
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
+          activeRequestId: null,
         });
         return;
       }
@@ -315,11 +342,13 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       if (category === 'messages') {
         const result = await apiClient.search.searchMessages(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
         set({
           messages: result.ok ? result.data.slice(0, MAX_SEARCH_MESSAGES) : [],
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
+          activeRequestId: null,
         });
         return;
       }
@@ -327,11 +356,13 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       if (category === 'posts') {
         const result = await apiClient.search.searchPosts(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
         set({
           posts: result.ok ? result.data.slice(0, MAX_SEARCH_POSTS) : [],
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
+          activeRequestId: null,
         });
         return;
       }
@@ -339,11 +370,13 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       if (category === 'groups') {
         const result = await apiClient.search.searchGroups(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
         set({
           groups: result.ok ? result.data.slice(0, MAX_SEARCH_GROUPS) : [],
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
+          activeRequestId: null,
         });
         return;
       }
@@ -351,22 +384,27 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       if (category === 'forums') {
         const result = await apiClient.search.searchForums(query);
         const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+        if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
         set({
           forums: result.ok ? result.data.slice(0, MAX_SEARCH_FORUMS) : [],
           error: rateLimitMessage,
           isLoading: false,
           hasSearched: true,
+          activeRequestId: null,
         });
         return;
       }
 
-      set({ isLoading: false, hasSearched: true });
+      if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+      set({ isLoading: false, hasSearched: true, activeRequestId: null });
     } catch (error: unknown) {
       const rateLimitMessage = rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, error);
+      if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
       set({
         error: rateLimitMessage ?? extractErrorMessage(error, 'Search failed'),
         isLoading: false,
         hasSearched: true,
+        activeRequestId: null,
       });
     }
   },
@@ -393,7 +431,8 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
     }
   },
 
-  clearResults: () =>
+  clearResults: () => {
+    cancelSearchRequest();
     set({
       users: [],
       groups: [],
@@ -401,12 +440,16 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       posts: [],
       messages: [],
       query: '',
+      isLoading: false,
       hasSearched: false,
-    }),
+      activeRequestId: null,
+    });
+  },
 
   clearError: () => set({ error: null }),
 
-  reset: () =>
+  reset: () => {
+    cancelSearchRequest();
     set({
       query: '',
       category: 'all',
@@ -418,5 +461,7 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       isLoading: false,
       error: null,
       hasSearched: false,
-    }),
+      activeRequestId: null,
+    });
+  },
 }));

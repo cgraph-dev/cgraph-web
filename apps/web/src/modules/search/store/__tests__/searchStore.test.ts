@@ -167,6 +167,7 @@ const getInitialState = () => ({
   isLoading: false,
   error: null as string | null,
   hasSearched: false,
+  activeRequestId: null as number | null,
 });
 
 // Default: all search mocks return empty ok results
@@ -177,6 +178,14 @@ function setupEmptyMocks() {
   mockedSearch.searchForums.mockResolvedValue(okResult([]));
   mockedSearch.searchPosts.mockResolvedValue(okResult([]));
   mockedSearch.searchMessages.mockResolvedValue(okResult([]));
+}
+
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
 }
 
 // Tests
@@ -221,6 +230,10 @@ describe('Search Store', () => {
 
     it('should have hasSearched as false', () => {
       expect(useSearchStore.getState().hasSearched).toBe(false);
+    });
+
+    it('should have no active search request', () => {
+      expect(useSearchStore.getState().activeRequestId).toBeNull();
     });
   });
 
@@ -374,6 +387,80 @@ describe('Search Store', () => {
 
       expect(mockedSearch.global).not.toHaveBeenCalled();
       expect(useSearchStore.getState().error).toContain('Too many requests');
+    });
+
+    it('should ignore stale global responses after a newer search completes', async () => {
+      const stale = deferred<ReturnType<typeof okResult<{ results: typeof mockGlobalResults }>>>();
+      const fresh = deferred<ReturnType<typeof okResult<{ results: typeof mockGlobalResults }>>>();
+      const staleResult = {
+        id: 'u-stale',
+        type: 'user',
+        username: 'alice',
+        name: 'Alice',
+        metadata: { status: 'offline' },
+      };
+      const freshResult = {
+        id: 'u-fresh',
+        type: 'user',
+        username: 'bob',
+        name: 'Bob',
+        metadata: { status: 'online' },
+      };
+
+      mockedSearch.global.mockReturnValueOnce(stale.promise).mockReturnValueOnce(fresh.promise);
+
+      useSearchStore.getState().setQuery('alice');
+      const staleSearch = useSearchStore.getState().search();
+
+      useSearchStore.getState().setQuery('bob');
+      const freshSearch = useSearchStore.getState().search();
+
+      fresh.resolve(okResult({ results: [freshResult] }));
+      await freshSearch;
+
+      expect(useSearchStore.getState().users[0]?.id).toBe('u-fresh');
+      expect(useSearchStore.getState().activeRequestId).toBeNull();
+
+      stale.resolve(okResult({ results: [staleResult] }));
+      await staleSearch;
+
+      expect(useSearchStore.getState().users[0]?.id).toBe('u-fresh');
+      expect(useSearchStore.getState().users).toHaveLength(1);
+    });
+
+    it('should ignore a global response after results are cleared', async () => {
+      const pending = deferred<ReturnType<typeof okResult<{ results: typeof mockGlobalResults }>>>();
+      mockedSearch.global.mockReturnValueOnce(pending.promise);
+
+      useSearchStore.getState().setQuery('alice');
+      const search = useSearchStore.getState().search();
+
+      expect(useSearchStore.getState().isLoading).toBe(true);
+      expect(useSearchStore.getState().activeRequestId).not.toBeNull();
+
+      useSearchStore.getState().clearResults();
+
+      pending.resolve(
+        okResult({
+          results: [
+            {
+              id: 'u-cleared',
+              type: 'user',
+              username: 'cleared',
+              name: 'Cleared',
+              metadata: { status: 'online' },
+            },
+          ],
+        })
+      );
+      await search;
+
+      const s = useSearchStore.getState();
+      expect(s.users).toEqual([]);
+      expect(s.query).toBe('');
+      expect(s.isLoading).toBe(false);
+      expect(s.hasSearched).toBe(false);
+      expect(s.activeRequestId).toBeNull();
     });
   });
 
