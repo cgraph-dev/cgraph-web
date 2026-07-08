@@ -1,6 +1,6 @@
 const LEGACY_BACKEND_API_URL = 'https://cgraph-backend.fly.dev';
 const LEGACY_BACKEND_WS_URL = 'wss://cgraph-backend.fly.dev/socket';
-const PROD_BACKEND_API_URL = 'https://cgraph-backend-prod-v2.fly.dev';
+const PROD_BACKEND_API_URL = 'https://cgraph-backend-prod-v3.fly.dev';
 
 function shouldUseSameOriginApiProxy(): boolean {
   return !import.meta.env.PROD;

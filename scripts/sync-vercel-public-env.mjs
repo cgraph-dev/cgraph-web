@@ -3,8 +3,8 @@ import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-const PROD_API_TARGET = 'https://cgraph-backend-prod-v2.fly.dev';
-const PROD_WS_TARGET = 'wss://cgraph-backend-prod-v2.fly.dev';
+const PROD_API_TARGET = 'https://cgraph-backend-prod-v3.fly.dev';
+const PROD_WS_TARGET = 'wss://cgraph-backend-prod-v3.fly.dev';
 
 const rootDir = process.cwd();
 const sourcePath = path.join(rootDir, '.vercel', '.env.production.local');

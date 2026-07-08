@@ -68,7 +68,7 @@ const TRUSTED_REDIRECT_DOMAINS = [
   'checkout.stripe.com',
   'billing.stripe.com',
   'cgraph.org',
-  'cgraph-backend-prod-v2.fly.dev',
+  'cgraph-backend-prod-v3.fly.dev',
 ];
 
 /**

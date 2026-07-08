@@ -8,8 +8,8 @@ const NODE_MODULES_SEGMENT = '/node_modules/';
 const CSP_EXTRA_CONNECT_SOURCES_MARKER = '__CGRAPH_CSP_EXTRA_CONNECT_SOURCES__';
 const DEV_TURNSTILE_BYPASS_HEADER = 'x-cgraph-dev-turnstile-bypass';
 const BASE_CONNECT_SOURCES = new Set([
-  'https://cgraph-backend-prod-v2.fly.dev',
-  'wss://cgraph-backend-prod-v2.fly.dev',
+  'https://cgraph-backend-prod-v3.fly.dev',
+  'wss://cgraph-backend-prod-v3.fly.dev',
 ]);
 
 function normalizeModuleId(id) {
@@ -151,13 +151,13 @@ export default defineConfig(({ mode }) => {
     allowedHosts: ['web.cgraph.org'],
     proxy: {
       '/api': {
-        target: env.VITE_DEV_API_TARGET || 'https://cgraph-backend-prod-v2.fly.dev',
+        target: env.VITE_DEV_API_TARGET || 'https://cgraph-backend-prod-v3.fly.dev',
         changeOrigin: true,
         secure: true,
         configure: (proxy) => configureApiProxy(proxy, env),
       },
       '/socket': {
-        target: env.VITE_DEV_WS_TARGET || 'wss://cgraph-backend-prod-v2.fly.dev',
+        target: env.VITE_DEV_WS_TARGET || 'wss://cgraph-backend-prod-v3.fly.dev',
         ws: true,
         changeOrigin: true,
         secure: true,

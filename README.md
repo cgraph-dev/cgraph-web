@@ -61,7 +61,7 @@ pnpm dev
 
 `pnpm dev:production-backend` runs the env sync and then starts Vite. Local API
 and socket requests stay same-origin (`/api`, `/socket`) and Vite proxies them
-to `cgraph-backend-prod-v2.fly.dev`, which keeps the browser flow close to
+to `cgraph-backend-prod-v3.fly.dev`, which keeps the browser flow close to
 production while still using localhost.
 
 When Turnstile blocks local frontend work, use the local-only no-captcha dev

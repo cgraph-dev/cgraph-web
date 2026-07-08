@@ -173,6 +173,17 @@ describe('safeRedirect', () => {
     safeRedirect('https://cgraph.org/callback');
     expect(window.location.href).toBe('https://cgraph.org/callback');
   });
+
+  it('should allow trusted current backend redirect', () => {
+    Object.defineProperty(window, 'location', {
+      value: { href: '' },
+      writable: true,
+    });
+    safeRedirect('https://cgraph-backend-prod-v3.fly.dev/api/v1/billing/checkout');
+    expect(window.location.href).toBe(
+      'https://cgraph-backend-prod-v3.fly.dev/api/v1/billing/checkout'
+    );
+  });
 });
 
 // CSRF Protection

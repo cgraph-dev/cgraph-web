@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 
 const baseUrl = process.env.SMOKE_BASE_URL ?? 'https://web.cgraph.org';
-const apiOrigin = process.env.SMOKE_API_ORIGIN ?? 'https://cgraph-backend-prod-v2.fly.dev';
+const apiOrigin = process.env.SMOKE_API_ORIGIN ?? 'https://cgraph-backend-prod-v3.fly.dev';
 const expectTurnstile = process.env.SMOKE_EXPECT_TURNSTILE !== 'false';
 
 function systemChromePath() {
