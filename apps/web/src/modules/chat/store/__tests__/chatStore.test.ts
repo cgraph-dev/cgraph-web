@@ -22,11 +22,59 @@ vi.mock('@/lib/api-utils', () => ({
     if (_d && typeof _d === 'object') {
       const entry = Object.entries(_d).find(([k]) => k === key);
       if (entry) return entry[1];
+      const dataEntry = Object.entries(_d).find(([k]) => k === 'data');
+      if (dataEntry && dataEntry[1] && typeof dataEntry[1] === 'object') return dataEntry[1];
     }
     return _d;
   },
   normalizeMessage: (m: unknown) => m,
-  normalizeConversations: (c: unknown) => c,
+  normalizeConversations: (items: unknown) => {
+    const toRecord = (value: unknown): Record<string, unknown> =>
+      value && typeof value === 'object' ? Object.fromEntries(Object.entries(value)) : {};
+    const normalizeUser = (value: unknown) => {
+      const raw = toRecord(value);
+      return {
+        ...raw,
+        displayName: raw.displayName ?? raw.display_name,
+        avatarUrl: raw.avatarUrl ?? raw.avatar_url ?? null,
+      };
+    };
+    const normalizeParticipant = (value: unknown) => {
+      const raw = toRecord(value);
+      return {
+        ...raw,
+        userId: raw.userId ?? raw.user_id,
+        isMuted: raw.isMuted ?? raw.is_muted ?? false,
+        mutedUntil: raw.mutedUntil ?? raw.muted_until ?? null,
+        messageRequestStatus: raw.messageRequestStatus ?? raw.message_request_status ?? null,
+        joinedAt: raw.joinedAt ?? raw.joined_at,
+        user: normalizeUser(raw.user),
+      };
+    };
+
+    if (!Array.isArray(items)) return [];
+
+    return items.map((value) => {
+      const raw = toRecord(value);
+      return {
+        ...raw,
+        conversationType: raw.conversationType ?? raw.conversation_type,
+        avatarUrl: raw.avatarUrl ?? raw.avatar_url ?? null,
+        participants: Array.isArray(raw.participants)
+          ? raw.participants.map(normalizeParticipant)
+          : [],
+        lastMessage: raw.lastMessage ?? raw.last_message ?? null,
+        unreadCount: raw.unreadCount ?? raw.unread_count ?? 0,
+        isMuted: raw.isMuted ?? raw.is_muted ?? false,
+        mutedUntil: raw.mutedUntil ?? raw.muted_until ?? null,
+        isArchived: raw.isArchived ?? raw.is_archived ?? false,
+        isPinned: raw.isPinned ?? raw.is_pinned ?? false,
+        isNoteToSelf: raw.isNoteToSelf ?? raw.is_note_to_self ?? false,
+        createdAt: raw.createdAt ?? raw.created_at,
+        updatedAt: raw.updatedAt ?? raw.updated_at,
+      };
+    });
+  },
 }));
 
 import { api } from '@/lib/api';
@@ -473,6 +521,84 @@ describe('conversation management', () => {
     expect(useChatStore.getState().conversations).toHaveLength(1);
   });
 
+  it('normalizes backend-wrapped create payloads before storing them', async () => {
+    mockApi.post.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'conv-created',
+          type: 'direct',
+          conversation_type: 'cloud',
+          name: null,
+          avatar_url: null,
+          participants: [
+            {
+              id: 'participant-current',
+              user_id: 'me',
+              nickname: null,
+              is_muted: false,
+              muted_until: null,
+              message_request_status: 'accepted',
+              joined_at: '2026-07-03T00:00:00Z',
+              user: {
+                id: 'me',
+                username: 'me',
+                display_name: 'Me',
+                avatar_url: null,
+                status: 'online',
+              },
+            },
+            {
+              id: 'participant-peer',
+              user_id: 'user-2',
+              nickname: null,
+              is_muted: true,
+              muted_until: '2026-07-04T00:00:00Z',
+              message_request_status: 'accepted',
+              joined_at: '2026-07-03T00:00:00Z',
+              user: {
+                id: 'user-2',
+                username: 'bob',
+                display_name: 'Bob Acceptance',
+                avatar_url: null,
+                status: 'online',
+              },
+            },
+          ],
+          unread_count: 4,
+          is_muted: true,
+          muted_until: '2026-07-05T00:00:00Z',
+          is_archived: false,
+          is_pinned: true,
+          is_note_to_self: false,
+          created_at: '2026-07-03T00:00:00Z',
+          updated_at: '2026-07-03T00:00:01Z',
+        },
+      },
+    });
+
+    const result = await useChatStore.getState().createConversation(['user-2']);
+
+    expect(result).toMatchObject({
+      id: 'conv-created',
+      conversationType: 'cloud',
+      unreadCount: 4,
+      isMuted: true,
+      isPinned: true,
+    });
+    expect(result.participants[1]).toMatchObject({
+      userId: 'user-2',
+      isMuted: true,
+      mutedUntil: '2026-07-04T00:00:00Z',
+      messageRequestStatus: 'accepted',
+      user: {
+        id: 'user-2',
+        username: 'bob',
+        displayName: 'Bob Acceptance',
+      },
+    });
+    expect(useChatStore.getState().conversations[0]).toEqual(result);
+  });
+
   it('preserves explicit secret conversation requests for capable callers', async () => {
     const conv = makeConv({ conversationType: 'secret' });
     mockApi.post.mockResolvedValueOnce({ data: { conversation: conv } });
@@ -495,7 +621,9 @@ describe('conversation management', () => {
 
     expect(mockApi.post).toHaveBeenCalledTimes(1);
     expect(firstResult).toBe(secondResult);
-    expect(useChatStore.getState().conversations).toEqual([conv]);
+    expect(useChatStore.getState().conversations.map((conversation) => conversation.id)).toEqual([
+      conv.id,
+    ]);
   });
 
   it('allows retry after a failed conversation create settles', async () => {
@@ -507,7 +635,9 @@ describe('conversation management', () => {
     await expect(useChatStore.getState().createConversation(['user-2'])).rejects.toThrow(
       'Network error'
     );
-    await expect(useChatStore.getState().createConversation(['user-2'])).resolves.toBe(conv);
+    await expect(useChatStore.getState().createConversation(['user-2'])).resolves.toMatchObject({
+      id: conv.id,
+    });
 
     expect(mockApi.post).toHaveBeenCalledTimes(2);
   });

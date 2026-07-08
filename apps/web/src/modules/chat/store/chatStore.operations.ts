@@ -8,12 +8,13 @@
  */
 
 import { http } from '@/lib/api-client';
-import { ensureObject } from '@/lib/api-utils';
+import { ensureObject, normalizeConversations } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('ChatStoreOperations');
 import { createMessageOpsActions } from './chatStore.message-ops';
 import { useAuthStore } from '@/modules/auth/store';
+import { toTypedConversation } from './chatStore.normalizers';
 import type { Conversation, ChatState } from './chatStore.types';
 
 function updateConversationState(
@@ -250,10 +251,17 @@ export function createOperationsActions(set: Set, get: Get) {
       const request = http
         .post('/api/v1/conversations', body)
         .then((response) => {
-          const conversation = ensureObject<Conversation>(response.data, 'conversation');
-          if (!conversation) {
+          const rawConversation = ensureObject<Record<string, unknown>>(
+            response.data,
+            'conversation'
+          );
+          const normalizedConversation = rawConversation
+            ? normalizeConversations([rawConversation])[0]
+            : null;
+          if (!normalizedConversation) {
             throw new Error('Failed to create conversation');
           }
+          const conversation = toTypedConversation(normalizedConversation);
 
           set((state) => ({
             conversations: [

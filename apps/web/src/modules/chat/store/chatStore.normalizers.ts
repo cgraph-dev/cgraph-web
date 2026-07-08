@@ -7,7 +7,12 @@
  * without using `as` type assertions.
  */
 
-import type { Message, MessageMetadata } from './chatStore.types';
+import type {
+  Conversation,
+  ConversationParticipant,
+  Message,
+  MessageMetadata,
+} from './chatStore.types';
 import { normalizeMessage } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
 
@@ -219,4 +224,74 @@ export function toTypedMessage(raw: Record<string, unknown>): Message {
  */
 export function normalizeToMessage(raw: Record<string, unknown>): Message {
   return toTypedMessage(normalizeMessage(raw));
+}
+
+/**
+ * Converts a normalized conversation payload into a typed Conversation domain object.
+ */
+export function toTypedConversation(raw: Record<string, unknown>): Conversation {
+  const participants: ConversationParticipant[] = Array.isArray(raw.participants)
+    ? raw.participants.map((p: unknown): ConversationParticipant => {
+        const pr = p instanceof Object ? Object.fromEntries(Object.entries(p)) : {};
+        const userRaw =
+          pr.user instanceof Object ? Object.fromEntries(Object.entries(pr.user)) : {};
+        const identity = identityFieldsFromApi(userRaw);
+        return {
+          id: typeof pr.id === 'string' ? pr.id : '',
+          userId: typeof pr.userId === 'string' ? pr.userId : '',
+          nickname: typeof pr.nickname === 'string' ? pr.nickname : null,
+          isMuted: pr.isMuted === true,
+          mutedUntil: typeof pr.mutedUntil === 'string' ? pr.mutedUntil : null,
+          messageRequestStatus:
+            pr.messageRequestStatus === 'pending' ||
+            pr.messageRequestStatus === 'accepted' ||
+            pr.messageRequestStatus === 'rejected' ||
+            pr.messageRequestStatus === 'blocked'
+              ? pr.messageRequestStatus
+              : null,
+          joinedAt: typeof pr.joinedAt === 'string' ? pr.joinedAt : '',
+          user: {
+            id: identity.id,
+            username: identity.username,
+            displayName: identity.displayName,
+            avatarUrl: identity.avatarUrl,
+            avatarBorderId: identity.avatarBorderId,
+            equippedTitleId: identity.equippedTitleId,
+            equippedBadgeIds: identity.equippedBadgeIds,
+            equippedNameplateId: identity.equippedNameplateId,
+            profileTheme: identity.profileTheme,
+            chatTheme: identity.chatTheme,
+            displayNameFont: identity.displayNameFont,
+            displayNameEffect: identity.displayNameEffect,
+            displayNameColor: identity.displayNameColor,
+            displayNameSecondaryColor: identity.displayNameSecondaryColor,
+            status: identity.status,
+          },
+        };
+      })
+    : [];
+  const conversationType =
+    raw.conversationType === 'secret' || raw.conversationType === 'cloud'
+      ? raw.conversationType
+      : undefined;
+  return {
+    id: typeof raw.id === 'string' ? raw.id : String(raw.id ?? ''),
+    type: raw.type === 'group' ? 'group' : 'direct',
+    conversationType,
+    name: typeof raw.name === 'string' ? raw.name : null,
+    avatarUrl: typeof raw.avatarUrl === 'string' ? raw.avatarUrl : null,
+    participants,
+    lastMessage:
+      raw.lastMessage instanceof Object
+        ? toTypedMessage(Object.fromEntries(Object.entries(raw.lastMessage)))
+        : null,
+    unreadCount: typeof raw.unreadCount === 'number' ? raw.unreadCount : 0,
+    isMuted: raw.isMuted === true,
+    mutedUntil: typeof raw.mutedUntil === 'string' ? raw.mutedUntil : null,
+    isArchived: raw.isArchived === true,
+    isPinned: raw.isPinned === true,
+    isNoteToSelf: raw.isNoteToSelf === true,
+    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
+  };
 }

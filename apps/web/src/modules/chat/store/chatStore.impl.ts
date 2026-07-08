@@ -11,17 +11,15 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { apiClient, http } from '@/lib/api-client';
 import { ensureArray, normalizeMessage, normalizeConversations } from '@/lib/api-utils';
-import { identityFieldsFromApi } from '@/lib/identity';
 import type {
   Message,
   Conversation,
   ChatState,
-  ConversationParticipant,
   ChatIdentityPatch,
 } from './chatStore.types';
 import { createMessagingActions } from './chatStore.messaging';
 import { createOperationsActions } from './chatStore.operations';
-import { toTypedMessage } from './chatStore.normalizers';
+import { toTypedConversation, toTypedMessage } from './chatStore.normalizers';
 
 /**
  * Upper bound for the in-memory conversation list. The server paginates the
@@ -93,76 +91,7 @@ function patchConversationIdentity(
   };
 }
 
-/**
- * Converts a raw normalized conversation payload (plain Record) into a
- * typed `Conversation` domain object. Exported for unit testing.
- */
-export function toConversation(raw: Record<string, unknown>): Conversation {
-  const participants: ConversationParticipant[] = Array.isArray(raw.participants)
-    ? raw.participants.map((p: unknown): ConversationParticipant => {
-        const pr = p instanceof Object ? Object.fromEntries(Object.entries(p)) : {};
-        const userRaw =
-          pr.user instanceof Object ? Object.fromEntries(Object.entries(pr.user)) : {};
-        const identity = identityFieldsFromApi(userRaw);
-        return {
-          id: typeof pr.id === 'string' ? pr.id : '',
-          userId: typeof pr.userId === 'string' ? pr.userId : '',
-          nickname: typeof pr.nickname === 'string' ? pr.nickname : null,
-          isMuted: pr.isMuted === true,
-          mutedUntil: typeof pr.mutedUntil === 'string' ? pr.mutedUntil : null,
-          messageRequestStatus:
-            pr.messageRequestStatus === 'pending' ||
-            pr.messageRequestStatus === 'accepted' ||
-            pr.messageRequestStatus === 'rejected' ||
-            pr.messageRequestStatus === 'blocked'
-              ? pr.messageRequestStatus
-              : null,
-          joinedAt: typeof pr.joinedAt === 'string' ? pr.joinedAt : '',
-          user: {
-            id: identity.id,
-            username: identity.username,
-            displayName: identity.displayName,
-            avatarUrl: identity.avatarUrl,
-            avatarBorderId: identity.avatarBorderId,
-            equippedTitleId: identity.equippedTitleId,
-            equippedBadgeIds: identity.equippedBadgeIds,
-            equippedNameplateId: identity.equippedNameplateId,
-            profileTheme: identity.profileTheme,
-            chatTheme: identity.chatTheme,
-            displayNameFont: identity.displayNameFont,
-            displayNameEffect: identity.displayNameEffect,
-            displayNameColor: identity.displayNameColor,
-            displayNameSecondaryColor: identity.displayNameSecondaryColor,
-            status: identity.status,
-          },
-        };
-      })
-    : [];
-  const conversationType =
-    raw.conversationType === 'secret' || raw.conversationType === 'cloud'
-      ? raw.conversationType
-      : undefined;
-  return {
-    id: typeof raw.id === 'string' ? raw.id : String(raw.id ?? ''),
-    type: raw.type === 'group' ? 'group' : 'direct',
-    conversationType,
-    name: typeof raw.name === 'string' ? raw.name : null,
-    avatarUrl: typeof raw.avatarUrl === 'string' ? raw.avatarUrl : null,
-    participants,
-    lastMessage:
-      raw.lastMessage instanceof Object
-        ? toTypedMessage(Object.fromEntries(Object.entries(raw.lastMessage)))
-        : null,
-    unreadCount: typeof raw.unreadCount === 'number' ? raw.unreadCount : 0,
-    isMuted: raw.isMuted === true,
-    mutedUntil: typeof raw.mutedUntil === 'string' ? raw.mutedUntil : null,
-    isArchived: raw.isArchived === true,
-    isPinned: raw.isPinned === true,
-    isNoteToSelf: raw.isNoteToSelf === true,
-    createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
-    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
-  };
-}
+export const toConversation = toTypedConversation;
 
 // Re-export all types for backward compatibility
 export type {
@@ -227,7 +156,7 @@ export const useChatStore = create<ChatState>()(
           const rawConversations: Record<string, unknown>[] = ensureArray(result.data);
 
           const normalizedConversations: Conversation[] = normalizeConversations(rawConversations)
-            .map(toConversation)
+            .map(toTypedConversation)
             .slice(0, MAX_CONVERSATIONS);
           set({
             conversations: normalizedConversations,

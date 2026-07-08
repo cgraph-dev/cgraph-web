@@ -97,6 +97,46 @@ function conversationFixture(peerUser: AcceptanceUser = friendUser) {
   };
 }
 
+function conversationCreateApiFixture(peerUser: AcceptanceUser = friendUser) {
+  const fixture = conversationFixture(peerUser);
+
+  return {
+    id: fixture.id,
+    type: fixture.type,
+    conversation_type: fixture.conversationType,
+    name: fixture.name,
+    avatar_url: fixture.avatarUrl,
+    participants: fixture.participants.map((participant) => ({
+      id: participant.id,
+      user_id: participant.userId,
+      nickname: participant.nickname,
+      is_muted: participant.isMuted,
+      muted_until: participant.mutedUntil,
+      message_request_status: participant.messageRequestStatus,
+      joined_at: participant.joinedAt,
+      user: {
+        id: participant.user.id,
+        username: participant.user.username,
+        display_name: participant.user.displayName,
+        avatar_url: participant.user.avatarUrl,
+        status: participant.user.status,
+      },
+    })),
+    last_message: null,
+    last_message_at: fixture.lastMessageAt,
+    unread_count: fixture.unreadCount,
+    muted: fixture.muted,
+    pinned: fixture.pinned,
+    is_muted: fixture.isMuted,
+    muted_until: fixture.mutedUntil,
+    is_archived: fixture.isArchived,
+    is_pinned: fixture.isPinned,
+    is_note_to_self: fixture.isNoteToSelf,
+    created_at: fixture.createdAt,
+    updated_at: fixture.updatedAt,
+  };
+}
+
 function messageFixture(overrides: Record<string, unknown>, peerUser: AcceptanceUser = friendUser) {
   return {
     id: 'message-existing-cloud',
@@ -196,7 +236,7 @@ async function installPostRegistrationMocks(page: Page): Promise<{
       conversationPeerUser = peerUserById(peerId);
       messages.length = 0;
       conversationCreated = true;
-      await fulfillJson(route, { data: conversationFixture(conversationPeerUser) }, 201);
+      await fulfillJson(route, { data: conversationCreateApiFixture(conversationPeerUser) }, 201);
       return;
     }
 
