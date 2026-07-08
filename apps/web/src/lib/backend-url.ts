@@ -1,5 +1,8 @@
 const LEGACY_BACKEND_API_URL = 'https://cgraph-backend.fly.dev';
 const LEGACY_BACKEND_WS_URL = 'wss://cgraph-backend.fly.dev/socket';
+const RETIRED_BACKEND_API_URL = 'https://cgraph-backend-prod-v2.fly.dev';
+const RETIRED_BACKEND_WS_URL = 'wss://cgraph-backend-prod-v2.fly.dev';
+const RETIRED_BACKEND_SOCKET_URL = `${RETIRED_BACKEND_WS_URL}/socket`;
 const PROD_BACKEND_API_URL = 'https://cgraph-backend-prod-v3.fly.dev';
 
 function shouldUseSameOriginApiProxy(): boolean {
@@ -10,22 +13,52 @@ function isTestRuntime(): boolean {
   return import.meta.env.MODE === 'test';
 }
 
-function isLegacyApiUrl(url: string | undefined): boolean {
-  return url === LEGACY_BACKEND_API_URL || url === '/api';
+function stripTrailingSlash(url: string): string {
+  return url.endsWith('/') ? url.slice(0, -1) : url;
 }
 
-function isLegacySocketUrl(url: string | undefined): boolean {
-  return url === LEGACY_BACKEND_WS_URL;
+function isRetiredApiUrl(url: string): boolean {
+  return url === LEGACY_BACKEND_API_URL || url === RETIRED_BACKEND_API_URL || url === '/api';
+}
+
+function isRetiredSocketUrl(url: string): boolean {
+  return (
+    url === LEGACY_BACKEND_WS_URL ||
+    url === RETIRED_BACKEND_WS_URL ||
+    url === RETIRED_BACKEND_SOCKET_URL
+  );
 }
 
 function normalizeBackendBaseUrl(url: string | undefined): string | null {
   const trimmedUrl = url?.trim();
 
-  if (!trimmedUrl || isLegacyApiUrl(trimmedUrl)) {
+  if (!trimmedUrl) {
     return null;
   }
 
-  return trimmedUrl.endsWith('/') ? trimmedUrl.slice(0, -1) : trimmedUrl;
+  const normalizedUrl = stripTrailingSlash(trimmedUrl);
+
+  if (isRetiredApiUrl(normalizedUrl)) {
+    return null;
+  }
+
+  return normalizedUrl;
+}
+
+function normalizeSocketUrl(url: string | undefined): string | null {
+  const trimmedUrl = url?.trim();
+
+  if (!trimmedUrl) {
+    return null;
+  }
+
+  const normalizedUrl = stripTrailingSlash(trimmedUrl);
+
+  if (isRetiredSocketUrl(normalizedUrl)) {
+    return null;
+  }
+
+  return normalizedUrl;
 }
 
 /** Resolve the API base URL for the current runtime. */
@@ -60,9 +93,11 @@ export function getMediaBaseUrl(): string {
 
 /** Resolve the Phoenix socket URL for the current runtime. */
 export function getSocketUrl(): string {
-  const envUrl = import.meta.env.VITE_SOCKET_URL ?? import.meta.env.VITE_WS_URL;
+  const envUrl =
+    normalizeSocketUrl(import.meta.env.VITE_SOCKET_URL) ??
+    normalizeSocketUrl(import.meta.env.VITE_WS_URL);
 
-  if (envUrl !== undefined && envUrl !== '' && !isLegacySocketUrl(envUrl)) {
+  if (envUrl) {
     return envUrl;
   }
 

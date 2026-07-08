@@ -11,6 +11,10 @@ const BASE_CONNECT_SOURCES = new Set([
   'https://cgraph-backend-prod-v3.fly.dev',
   'wss://cgraph-backend-prod-v3.fly.dev',
 ]);
+const RETIRED_CONNECT_SOURCES = new Set([
+  'https://cgraph-backend-prod-v2.fly.dev',
+  'wss://cgraph-backend-prod-v2.fly.dev',
+]);
 
 function normalizeModuleId(id) {
   return id.replace(/\\/g, '/');
@@ -39,6 +43,7 @@ function getCspExtraConnectSources(env) {
     .map(getAbsoluteUrlOrigin)
     .filter(Boolean)
     .filter((origin) => !BASE_CONNECT_SOURCES.has(origin))
+    .filter((origin) => !RETIRED_CONNECT_SOURCES.has(origin))
     .filter((origin, index, origins) => origins.indexOf(origin) === index)
     .join(' ');
 }
