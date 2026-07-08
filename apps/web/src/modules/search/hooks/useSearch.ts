@@ -25,9 +25,11 @@ export function useSearch() {
     hasSearched,
     pageInfo,
     hasMore,
+    isLoadingMore,
     setQuery,
     setCategory,
     search,
+    loadMore,
     clearResults,
     clearError,
   } = useSearchStore();
@@ -71,6 +73,7 @@ export function useSearch() {
     totalResults,
     resultsByCategory,
     isLoading,
+    isLoadingMore,
     error,
     hasSearched,
     pageInfo,
@@ -78,6 +81,7 @@ export function useSearch() {
     setQuery: handleSetQuery,
     setCategory: handleSetCategory,
     search: handleSearch,
+    loadMore,
     clear,
     clearError,
   };

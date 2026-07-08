@@ -48,6 +48,7 @@ export interface SearchState {
   posts: SearchPost[];
   messages: SearchMessage[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
   hasSearched: boolean;
   activeRequestId: number | null;
@@ -58,6 +59,7 @@ export interface SearchState {
   setQuery: (query: string) => void;
   setCategory: (category: SearchCategory) => void;
   search: (query?: string) => Promise<void>;
+  loadMore: (category?: SearchResultCategory) => Promise<void>;
   searchById: (
     type: 'user' | 'group' | 'forum',
     id: string
@@ -76,8 +78,18 @@ const MAX_GLOBAL_SEARCH_RESULTS = 50;
 const DEFAULT_TYPED_SEARCH_LIMIT = 20;
 const SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
 const SEARCH_RESULT_CATEGORIES = ['users', 'groups', 'forums', 'posts', 'messages'] as const;
+const SEARCH_RESULT_LIMITS: Record<SearchResultCategory, number> = {
+  users: MAX_SEARCH_USERS,
+  groups: MAX_SEARCH_GROUPS,
+  forums: MAX_SEARCH_FORUMS,
+  posts: MAX_SEARCH_POSTS,
+  messages: MAX_SEARCH_MESSAGES,
+};
+const GLOBAL_LOAD_MORE_CATEGORIES = ['users', 'groups', 'posts', 'messages'] as const;
 
 type SearchBuckets = Pick<SearchState, 'users' | 'groups' | 'forums' | 'posts' | 'messages'>;
+type GlobalLoadMoreCategory = (typeof GLOBAL_LOAD_MORE_CATEGORIES)[number];
+type GlobalLoadMoreCursors = Partial<Record<GlobalLoadMoreCategory, string>>;
 
 let latestSearchRequestId = 0;
 
@@ -359,6 +371,85 @@ function hasMoreFromPageInfo(pageInfo: SearchPageInfoByCategory): boolean {
   return Object.values(pageInfo).some((info) => info?.has_more === true);
 }
 
+function isGlobalLoadMoreCategory(category: SearchResultCategory): category is GlobalLoadMoreCategory {
+  return GLOBAL_LOAD_MORE_CATEGORIES.includes(category as GlobalLoadMoreCategory);
+}
+
+function globalLoadMoreCursors(
+  pageInfo: SearchPageInfoByCategory,
+  category?: SearchResultCategory
+): GlobalLoadMoreCursors {
+  const categories = category ? [category] : GLOBAL_LOAD_MORE_CATEGORIES;
+  const cursors: GlobalLoadMoreCursors = {};
+
+  for (const resultCategory of categories) {
+    if (!isGlobalLoadMoreCategory(resultCategory)) continue;
+
+    const info = pageInfo[resultCategory];
+    if (info?.has_more && info.end_cursor) {
+      cursors[resultCategory] = info.end_cursor;
+    }
+  }
+
+  return cursors;
+}
+
+function globalLoadMoreTypes(cursors: GlobalLoadMoreCursors): GlobalLoadMoreCategory[] {
+  return GLOBAL_LOAD_MORE_CATEGORIES.filter((category) => Boolean(cursors[category]));
+}
+
+function appendUniqueById<T extends { id: string }>(
+  current: readonly T[],
+  next: readonly T[],
+  maxItems: number
+): T[] {
+  const seen = new Set(current.map((item) => item.id));
+  const merged = [...current];
+
+  for (const item of next) {
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
+      merged.push(item);
+    }
+  }
+
+  return merged.slice(0, maxItems);
+}
+
+function mergeBuckets(current: SearchBuckets, next: SearchBuckets): SearchBuckets {
+  return {
+    users: appendUniqueById(current.users, next.users, MAX_SEARCH_USERS),
+    groups: appendUniqueById(current.groups, next.groups, MAX_SEARCH_GROUPS),
+    forums: appendUniqueById(current.forums, next.forums, MAX_SEARCH_FORUMS),
+    posts: appendUniqueById(current.posts, next.posts, MAX_SEARCH_POSTS),
+    messages: appendUniqueById(current.messages, next.messages, MAX_SEARCH_MESSAGES),
+  };
+}
+
+function mergePageInfo(
+  current: SearchPageInfoByCategory,
+  next: SearchPageInfoByCategory,
+  buckets: SearchBuckets
+): SearchPageInfoByCategory {
+  const merged = { ...current, ...next };
+
+  for (const category of SEARCH_RESULT_CATEGORIES) {
+    const info = merged[category];
+    if (info) {
+      const reachedClientLimit = buckets[category].length >= SEARCH_RESULT_LIMITS[category];
+      merged[category] = {
+        ...info,
+        count: buckets[category].length,
+        has_more: reachedClientLimit ? false : info.has_more,
+        end_reached: reachedClientLimit ? true : info.end_reached,
+        end_cursor: reachedClientLimit ? null : info.end_cursor,
+      };
+    }
+  }
+
+  return merged;
+}
+
 function normalizeTypedPageInfo(
   rawPageInfo: unknown,
   category: SearchResultCategory,
@@ -410,6 +501,7 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
   posts: [],
   messages: [],
   isLoading: false,
+  isLoadingMore: false,
   error: null,
   hasSearched: false,
   activeRequestId: null,
@@ -435,6 +527,7 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         pageInfo: emptyPageInfo(),
         hasMore: false,
         isLoading: false,
+        isLoadingMore: false,
         hasSearched: false,
         activeRequestId: null,
       });
@@ -451,13 +544,14 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         hasMore: false,
         error: cooldownMessage,
         isLoading: false,
+        isLoadingMore: false,
         hasSearched: true,
         activeRequestId: null,
       });
       return;
     }
 
-    set({ isLoading: true, error: null, activeRequestId: requestId });
+    set({ isLoading: true, isLoadingMore: false, error: null, activeRequestId: requestId });
 
     try {
       if (category === 'all') {
@@ -589,7 +683,78 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
         pageInfo: emptyPageInfo(),
         hasMore: false,
         isLoading: false,
+        isLoadingMore: false,
         hasSearched: true,
+        activeRequestId: null,
+      });
+    }
+  },
+
+  loadMore: async (category) => {
+    const state = get();
+    const query = state.query.trim();
+
+    if (
+      !query ||
+      state.category !== 'all' ||
+      state.isLoading ||
+      state.isLoadingMore ||
+      !state.hasMore
+    ) {
+      return;
+    }
+
+    const cursors = globalLoadMoreCursors(state.pageInfo, category);
+    const types = globalLoadMoreTypes(cursors);
+    if (types.length === 0) return;
+
+    const cooldownMessage = getSearchCooldownMessage();
+    if (cooldownMessage) {
+      set({ error: cooldownMessage, isLoadingMore: false, activeRequestId: null });
+      return;
+    }
+
+    const requestId = nextSearchRequestId();
+    set({ isLoadingMore: true, error: null, activeRequestId: requestId });
+
+    try {
+      const result = await apiClient.search.global(query, {
+        limit: MAX_GLOBAL_SEARCH_RESULTS,
+        types,
+        cursors,
+      });
+      const rateLimitMessage = result.ok ? null : rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, result);
+      if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+
+      if (!result.ok) {
+        set({
+          error: rateLimitMessage ?? extractErrorMessage(result, 'Search failed'),
+          isLoadingMore: false,
+          activeRequestId: null,
+        });
+        return;
+      }
+
+      const normalized = normalizeGlobalResponse(result.data);
+      const current = get();
+      const buckets = mergeBuckets(current, normalized.buckets);
+      const pageInfo = mergePageInfo(current.pageInfo, normalized.pageInfo, buckets);
+
+      set({
+        ...buckets,
+        pageInfo,
+        hasMore: hasMoreFromPageInfo(pageInfo),
+        error: rateLimitMessage,
+        isLoadingMore: false,
+        hasSearched: true,
+        activeRequestId: null,
+      });
+    } catch (error: unknown) {
+      const rateLimitMessage = rememberRateLimit(SEARCH_RATE_LIMIT_SCOPES, error);
+      if (!isCurrentSearchRequest(requestId, get().activeRequestId)) return;
+      set({
+        error: rateLimitMessage ?? extractErrorMessage(error, 'Search failed'),
+        isLoadingMore: false,
         activeRequestId: null,
       });
     }
@@ -629,6 +794,7 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       hasMore: false,
       query: '',
       isLoading: false,
+      isLoadingMore: false,
       hasSearched: false,
       activeRequestId: null,
     });
@@ -649,6 +815,7 @@ export const useSearchStore = create<SearchState>()((set, get) => ({
       pageInfo: emptyPageInfo(),
       hasMore: false,
       isLoading: false,
+      isLoadingMore: false,
       error: null,
       hasSearched: false,
       activeRequestId: null,

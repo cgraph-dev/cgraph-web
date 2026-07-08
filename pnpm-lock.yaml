@@ -37,8 +37,8 @@ importers:
         specifier: 1.3.1
         version: 1.3.1
       '@cgraph-dev/api-client':
-        specifier: 1.3.2
-        version: 1.3.2(axios@1.16.1)
+        specifier: 1.3.3
+        version: 1.3.3(axios@1.16.1)
       '@cgraph-dev/design-tokens':
         specifier: 1.1.0
         version: 1.1.0
@@ -468,8 +468,8 @@ packages:
   '@cgraph-dev/animation-constants@1.3.1':
     resolution: {integrity: sha512-n6gAA8LGkF24T58O9+1arrLbUwGXJA+RETQlWtC7tzGix+LHXTVrJ0vhVVPCh+w5yrjzDP4IdVmHeY8iupbOcQ==}
 
-  '@cgraph-dev/api-client@1.3.2':
-    resolution: {integrity: sha512-rWCcQNhSdYCpwO6JjHYyKmLBvn/pEIHxeeprE7CU2hdS/JuA6qJ5wqL+LlLPt/jvNQn0UvZ2tTjPJZezFZ/Tcw==}
+  '@cgraph-dev/api-client@1.3.3':
+    resolution: {integrity: sha512-2u+uRe804RzykDBd93Bn02z921ZDinM1pPa/bspZIlLbLzjyBos38EKtAy7btm9m8ZTyM1yz4RQn8lMZXwmAeg==}
     peerDependencies:
       axios: 1.16.1
 
@@ -6131,7 +6131,7 @@ snapshots:
 
   '@cgraph-dev/animation-constants@1.3.1': {}
 
-  '@cgraph-dev/api-client@1.3.2(axios@1.16.1)':
+  '@cgraph-dev/api-client@1.3.3(axios@1.16.1)':
     dependencies:
       '@cgraph-dev/shared-types': 1.6.0
       axios: 1.16.1

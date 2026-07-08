@@ -74,7 +74,10 @@ export interface NotificationsTabProps {
 export interface DiscoverTabProps {
   searchQuery: string;
   searchResults: SearchResult[];
+  hasMore: boolean;
+  isLoadingMore: boolean;
   onSearchChange: (query: string) => void;
+  onLoadMore: () => void;
   onJoinGroup: (result: SearchResult) => Promise<void>;
   joiningGroupId: string | null;
 }

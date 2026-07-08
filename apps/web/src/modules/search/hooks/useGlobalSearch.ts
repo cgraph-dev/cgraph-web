@@ -13,8 +13,19 @@ import { useSearchStore } from '../store';
  */
 export function useGlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
-  const { search, clearResults, query, setQuery, isLoading, users, groups, forums } =
-    useSearchStore();
+  const {
+    search,
+    loadMore,
+    clearResults,
+    query,
+    setQuery,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    users,
+    groups,
+    forums,
+  } = useSearchStore();
 
   const open = useCallback(() => {
     setIsOpen(true);
@@ -60,5 +71,8 @@ export function useGlobalSearch() {
     toggle,
     setQuery,
     search,
+    loadMore,
+    hasMore,
+    isLoadingMore,
   };
 }

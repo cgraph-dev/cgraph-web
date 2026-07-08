@@ -23,6 +23,7 @@ const mockSearchState: Record<string, unknown> = {
   posts: [],
   messages: [],
   isLoading: false,
+  isLoadingMore: false,
   error: null,
   hasSearched: false,
   pageInfo: {},
@@ -30,6 +31,7 @@ const mockSearchState: Record<string, unknown> = {
   setQuery: vi.fn(),
   setCategory: vi.fn(),
   search: vi.fn().mockResolvedValue(undefined),
+  loadMore: vi.fn().mockResolvedValue(undefined),
   clearResults: vi.fn(),
   clearError: vi.fn(),
 };
@@ -51,6 +53,7 @@ describe('useSearch', () => {
       posts: [],
       messages: [],
       isLoading: false,
+      isLoadingMore: false,
       error: null,
       hasSearched: false,
       pageInfo: {},
@@ -159,6 +162,16 @@ describe('useSearch', () => {
 
     expect(result.current.pageInfo).toEqual(mockSearchState.pageInfo);
     expect(result.current.hasMore).toBe(true);
+  });
+
+  it('delegates loadMore to store', async () => {
+    const { result } = renderHook(() => useSearch());
+
+    await act(async () => {
+      await result.current.loadMore('users');
+    });
+
+    expect(mockSearchState.loadMore).toHaveBeenCalledWith('users');
   });
 });
 

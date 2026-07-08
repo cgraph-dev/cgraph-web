@@ -242,7 +242,10 @@ export function Social() {
     groups: searchGroups,
     forums: searchForums,
     isLoading: _isSearching,
+    isLoadingMore: isSearchLoadingMore,
+    hasMore: hasMoreSearchResults,
     search: performSearch,
+    loadMore: loadMoreSearchResults,
     setQuery: setSearchStoreQuery,
   } = useSearchStore();
   const { joinPublicGroup } = useGroupStore();
@@ -326,6 +329,10 @@ export function Social() {
     if (query.length >= 2) {
       performSearch(query);
     }
+  }
+
+  function handleLoadMoreSearchResults() {
+    void loadMoreSearchResults();
   }
 
   function handleMarkAsRead(notificationId: string) {
@@ -480,7 +487,10 @@ export function Social() {
                 <DiscoverTab
                   searchQuery={searchQuery}
                   searchResults={searchResults}
+                  hasMore={hasMoreSearchResults}
+                  isLoadingMore={isSearchLoadingMore}
                   onSearchChange={handleSearch}
+                  onLoadMore={handleLoadMoreSearchResults}
                   onJoinGroup={handleJoinGroupResult}
                   joiningGroupId={joiningGroupId}
                 />

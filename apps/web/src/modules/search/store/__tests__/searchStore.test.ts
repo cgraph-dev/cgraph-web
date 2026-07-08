@@ -175,6 +175,7 @@ const getInitialState = () => ({
   posts: [] as SearchPost[],
   messages: [] as SearchMessage[],
   isLoading: false,
+  isLoadingMore: false,
   error: null as string | null,
   hasSearched: false,
   activeRequestId: null as number | null,
@@ -234,6 +235,10 @@ describe('Search Store', () => {
 
     it('should not be loading', () => {
       expect(useSearchStore.getState().isLoading).toBe(false);
+    });
+
+    it('should not be loading more', () => {
+      expect(useSearchStore.getState().isLoadingMore).toBe(false);
     });
 
     it('should have no error', () => {
@@ -535,6 +540,141 @@ describe('Search Store', () => {
       expect(s.activeRequestId).toBeNull();
       expect(s.pageInfo).toEqual({});
       expect(s.hasMore).toBe(false);
+    });
+
+    it('loads more global results from the returned bucket cursor', async () => {
+      const nextUser: SearchUser = {
+        id: 'u2',
+        username: 'brenda',
+        display_name: 'Brenda',
+      };
+
+      mockedSearch.global.mockResolvedValue(
+        okResult(globalResponse({
+          query: 'alice',
+          users: [nextUser, mockUser],
+          page_info: {
+            users: {
+              count: 2,
+              total: 2,
+              limit: 1,
+              has_more: false,
+              end_reached: true,
+              start_cursor: 'users-start-2',
+              end_cursor: null,
+            },
+          },
+        }))
+      );
+
+      useSearchStore.setState({
+        category: 'all',
+        query: 'alice',
+        users: [mockUser],
+        pageInfo: {
+          users: {
+            count: 1,
+            total: 2,
+            limit: 1,
+            has_more: true,
+            end_reached: false,
+            start_cursor: 'users-start-1',
+            end_cursor: 'users-next',
+          },
+        },
+        hasMore: true,
+        hasSearched: true,
+      });
+
+      const loadMore = useSearchStore.getState().loadMore('users');
+
+      expect(useSearchStore.getState().isLoadingMore).toBe(true);
+
+      await loadMore;
+
+      expect(mockedSearch.global).toHaveBeenCalledWith('alice', {
+        limit: 50,
+        types: ['users'],
+        cursors: { users: 'users-next' },
+      });
+      expect(useSearchStore.getState().users.map((user) => user.id)).toEqual(['u1', 'u2']);
+      expect(useSearchStore.getState().pageInfo.users).toMatchObject({
+        count: 2,
+        total: 2,
+        has_more: false,
+        end_reached: true,
+      });
+      expect(useSearchStore.getState().hasMore).toBe(false);
+      expect(useSearchStore.getState().isLoadingMore).toBe(false);
+    });
+
+    it('stops global load more when the local bucket cap is reached', async () => {
+      const currentUsers: SearchUser[] = Array.from({ length: 99 }, (_, index) => ({
+        id: `u${index}`,
+        username: `user-${index}`,
+        display_name: `User ${index}`,
+      }));
+      const nextUsers: SearchUser[] = [
+        {
+          id: 'u99',
+          username: 'user-99',
+          display_name: 'User 99',
+        },
+        {
+          id: 'u100',
+          username: 'user-100',
+          display_name: 'User 100',
+        },
+      ];
+
+      mockedSearch.global.mockResolvedValue(
+        okResult(globalResponse({
+          query: 'user',
+          users: nextUsers,
+          page_info: {
+            users: {
+              count: 2,
+              total: 150,
+              limit: 50,
+              has_more: true,
+              end_reached: false,
+              start_cursor: 'users-start-cap',
+              end_cursor: 'users-more-after-cap',
+            },
+          },
+        }))
+      );
+
+      useSearchStore.setState({
+        category: 'all',
+        query: 'user',
+        users: currentUsers,
+        pageInfo: {
+          users: {
+            count: currentUsers.length,
+            total: 150,
+            limit: 50,
+            has_more: true,
+            end_reached: false,
+            start_cursor: 'users-start',
+            end_cursor: 'users-next-cap',
+          },
+        },
+        hasMore: true,
+        hasSearched: true,
+      });
+
+      await useSearchStore.getState().loadMore('users');
+
+      expect(useSearchStore.getState().users).toHaveLength(100);
+      expect(useSearchStore.getState().users.at(-1)?.id).toBe('u99');
+      expect(useSearchStore.getState().pageInfo.users).toMatchObject({
+        count: 100,
+        has_more: false,
+        end_reached: true,
+        end_cursor: null,
+      });
+      expect(useSearchStore.getState().hasMore).toBe(false);
     });
   });
 

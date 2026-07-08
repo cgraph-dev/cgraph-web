@@ -61,7 +61,10 @@ describe('DiscoverTab', () => {
       <DiscoverTab
         searchQuery="design"
         searchResults={[groupResult]}
+        hasMore={false}
+        isLoadingMore={false}
         onSearchChange={vi.fn()}
+        onLoadMore={vi.fn()}
         onJoinGroup={onJoinGroup}
         joiningGroupId={null}
       />
@@ -80,7 +83,10 @@ describe('DiscoverTab', () => {
       <DiscoverTab
         searchQuery="design"
         searchResults={[{ ...groupResult, isJoined: true }]}
+        hasMore={false}
+        isLoadingMore={false}
         onSearchChange={vi.fn()}
+        onLoadMore={vi.fn()}
         onJoinGroup={onJoinGroup}
         joiningGroupId={null}
       />
@@ -90,5 +96,26 @@ describe('DiscoverTab', () => {
 
     expect(onJoinGroup).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith('/groups/group-1/channels/channel-1');
+  });
+
+  it('loads more discover results through the provided search action', () => {
+    const onLoadMore = vi.fn();
+
+    render(
+      <DiscoverTab
+        searchQuery="design"
+        searchResults={[groupResult]}
+        hasMore
+        isLoadingMore={false}
+        onSearchChange={vi.fn()}
+        onLoadMore={onLoadMore}
+        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
+        joiningGroupId={null}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 });

@@ -25,7 +25,10 @@ import { loop, tweens } from '@/lib/animation-presets';
 export function DiscoverTab({
   searchQuery,
   searchResults,
+  hasMore,
+  isLoadingMore,
   onSearchChange,
+  onLoadMore,
   onJoinGroup,
   joiningGroupId,
 }: DiscoverTabProps) {
@@ -162,6 +165,16 @@ export function DiscoverTab({
               </GlassCard>
             </motion.div>
           ))}
+          {hasMore && (
+            <button
+              type="button"
+              onClick={onLoadMore}
+              disabled={isLoadingMore}
+              className="mt-4 flex h-10 w-full items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-[11px] font-black uppercase tracking-widest text-primary-300 transition-colors hover:bg-[var(--token-card-bg)] disabled:cursor-wait disabled:text-white/25"
+            >
+              {isLoadingMore ? 'Loading' : 'Load more'}
+            </button>
+          )}
         </div>
       )}
     </div>
