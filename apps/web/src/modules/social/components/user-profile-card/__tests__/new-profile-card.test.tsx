@@ -233,6 +233,26 @@ describe('NewProfileCard', () => {
     expect(onAddFriend).not.toHaveBeenCalled();
   });
 
+  it('shows shared sending state while a neutral profile-card request is in flight', () => {
+    const onAddFriend = vi.fn();
+    render(
+      <NewProfileCard
+        user={user}
+        mode="popout"
+        variant="mini"
+        friendshipStatus="none"
+        isFriendActionPending
+        onAddFriend={onAddFriend}
+      />
+    );
+
+    const sendingButton = screen.getByRole('button', { name: 'Sending' });
+    fireEvent.click(sendingButton);
+
+    expect(sendingButton).toBeDisabled();
+    expect(onAddFriend).not.toHaveBeenCalled();
+  });
+
   it('keeps the mini avatar skeleton fixed across theme changes and avatar borders', () => {
     const { container, rerender } = render(
       <NewProfileCard

@@ -1,6 +1,10 @@
 import { memo } from 'react';
 
 import { cn } from '@/lib/utils';
+import {
+  friendshipActionLabel,
+  isRelationshipActionDisabled,
+} from '@/modules/social/friendship-status';
 
 import type { ActionButtonsProps, ProfileCardFriendshipStatus } from './types';
 const GLASS_BASE =
@@ -78,32 +82,8 @@ function relationshipLabel(
   friendshipStatus: ProfileCardFriendshipStatus,
   isPending: boolean
 ): string {
-  if (isPending && friendshipStatus === 'none') return 'Sending';
-
-  switch (friendshipStatus) {
-    case 'friends':
-      return 'Friends';
-    case 'pending_sent':
-      return 'Pending';
-    case 'pending_received':
-      return 'Review';
-    case 'blocked':
-      return 'Blocked';
-    case 'none':
-      return 'Add Friend';
-  }
-}
-
-function relationshipDisabled(
-  friendshipStatus: ProfileCardFriendshipStatus,
-  isPending: boolean
-): boolean {
-  return (
-    isPending ||
-    friendshipStatus === 'friends' ||
-    friendshipStatus === 'pending_sent' ||
-    friendshipStatus === 'blocked'
-  );
+  if (!isPending && friendshipStatus === 'none') return 'Add Friend';
+  return friendshipActionLabel(friendshipStatus, isPending);
 }
 
 function relationshipClickHandler(
@@ -131,7 +111,10 @@ export const ActionButtons = memo(function ActionButtons({
   const accentText = `color-mix(in srgb, ${accentColor} 60%, #edf0f8 40%)`;
   const accentBloom = `radial-gradient(ellipse at 50% 100%, color-mix(in srgb, ${accentColor} 28%, transparent) 0%, rgba(255,255,255,0.03) 70%)`;
   const actionLabel = relationshipLabel(friendshipStatus, isFriendActionPending);
-  const isRelationshipDisabled = relationshipDisabled(friendshipStatus, isFriendActionPending);
+  const isRelationshipDisabled = isRelationshipActionDisabled(
+    friendshipStatus,
+    isFriendActionPending
+  );
   const handleRelationshipClick = relationshipClickHandler(
     friendshipStatus,
     onAddFriend,
@@ -139,7 +122,7 @@ export const ActionButtons = memo(function ActionButtons({
   );
   const compactPrimaryIsMessage = friendshipStatus === 'friends';
   const compactPrimaryDisabled =
-    !compactPrimaryIsMessage && relationshipDisabled(friendshipStatus, isFriendActionPending);
+    !compactPrimaryIsMessage && isRelationshipDisabled;
   const compactPrimaryLabel = compactPrimaryIsMessage ? 'Message' : actionLabel;
   const handleCompactPrimaryClick = compactPrimaryIsMessage ? onMessage : handleRelationshipClick;
 
