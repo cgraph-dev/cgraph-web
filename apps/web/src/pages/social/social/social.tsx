@@ -56,10 +56,6 @@ function toNotificationType(value: string): NotificationType {
   return isNotificationType(value) ? value : 'system';
 }
 
-function searchUserField(user: object, key: string): unknown {
-  return Object.prototype.hasOwnProperty.call(user, key) ? Reflect.get(user, key) : undefined;
-}
-
 interface SocialMainPaneProps {
   tab: SocialTab;
   friends: readonly Friend[];
@@ -303,11 +299,11 @@ export function Social() {
         username: user.username,
         avatarUrl: user.avatar_url ?? undefined,
         canonicalUrl: user.canonical_url ?? undefined,
-        friendshipStatus: normalizeFriendshipStatus(searchUserField(user, 'friendship_status')),
-        isFriend: searchUserField(user, 'is_friend') === true,
-        isBlocked: searchUserField(user, 'is_blocked') === true,
-        friendRequestSent: searchUserField(user, 'friend_request_sent') === true,
-        friendRequestReceived: searchUserField(user, 'friend_request_received') === true,
+        friendshipStatus: normalizeFriendshipStatus(user.friendship_status),
+        isFriend: user.is_friend === true,
+        isBlocked: user.is_blocked === true,
+        friendRequestSent: user.friend_request_sent === true,
+        friendRequestReceived: user.friend_request_received === true,
       });
     }
     for (const group of searchGroups) {

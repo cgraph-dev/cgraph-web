@@ -372,7 +372,7 @@ function hasMoreFromPageInfo(pageInfo: SearchPageInfoByCategory): boolean {
 }
 
 function isGlobalLoadMoreCategory(category: SearchResultCategory): category is GlobalLoadMoreCategory {
-  return GLOBAL_LOAD_MORE_CATEGORIES.includes(category as GlobalLoadMoreCategory);
+  return GLOBAL_LOAD_MORE_CATEGORIES.some((loadMoreCategory) => loadMoreCategory === category);
 }
 
 function globalLoadMoreCursors(

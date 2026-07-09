@@ -168,6 +168,26 @@ describe('DiscoverTab', () => {
     expect(sendRequest).not.toHaveBeenCalled();
   });
 
+  it('routes backend incoming user status to the request center', () => {
+    render(
+      <DiscoverTab
+        searchQuery="alice"
+        searchResults={[{ ...userResult, friendshipStatus: 'pending_received' }]}
+        hasMore={false}
+        isLoadingMore={false}
+        onSearchChange={vi.fn()}
+        onLoadMore={vi.fn()}
+        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
+        joiningGroupId={null}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Review' }));
+
+    expect(navigate).toHaveBeenCalledWith('/social/friends');
+    expect(sendRequest).not.toHaveBeenCalled();
+  });
+
   it('keeps outgoing user requests as disabled Pending actions', () => {
     friendStoreState.sentRequests = [
       {
@@ -182,6 +202,23 @@ describe('DiscoverTab', () => {
       <DiscoverTab
         searchQuery="alice"
         searchResults={[userResult]}
+        hasMore={false}
+        isLoadingMore={false}
+        onSearchChange={vi.fn()}
+        onLoadMore={vi.fn()}
+        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
+        joiningGroupId={null}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Pending' })).toBeDisabled();
+  });
+
+  it('keeps backend outgoing user status as a disabled Pending action', () => {
+    render(
+      <DiscoverTab
+        searchQuery="alice"
+        searchResults={[{ ...userResult, friendRequestSent: true }]}
         hasMore={false}
         isLoadingMore={false}
         onSearchChange={vi.fn()}

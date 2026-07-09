@@ -73,6 +73,18 @@ const mockUser: SearchUser = {
   status: 'online',
 };
 
+const relatedUser: SearchUser = {
+  id: 'u-related',
+  username: 'brenda',
+  display_name: 'Brenda',
+  avatar_url: null,
+  friendship_status: 'pending_received',
+  is_friend: false,
+  is_blocked: false,
+  friend_request_sent: false,
+  friend_request_received: true,
+};
+
 const mockGroup: SearchGroup = {
   id: 'g1',
   name: 'Developers',
@@ -385,6 +397,28 @@ describe('Search Store', () => {
         end_reached: true,
       });
       expect(s.hasMore).toBe(true);
+    });
+
+    it('preserves friendship context from typed global user buckets', async () => {
+      mockedSearch.global.mockResolvedValue(
+        okResult(globalResponse({
+          query: 'brenda',
+          users: [relatedUser],
+          results: [],
+        }))
+      );
+
+      useSearchStore.getState().setQuery('brenda');
+      await useSearchStore.getState().search();
+
+      expect(useSearchStore.getState().users[0]).toMatchObject({
+        id: 'u-related',
+        friendship_status: 'pending_received',
+        is_friend: false,
+        is_blocked: false,
+        friend_request_sent: false,
+        friend_request_received: true,
+      });
     });
 
     it('should set hasSearched to true after search completes', async () => {
@@ -756,6 +790,23 @@ describe('Search Store', () => {
       expect(mockedSearch.searchForums).not.toHaveBeenCalled();
       expect(mockedSearch.searchPosts).not.toHaveBeenCalled();
       expect(mockedSearch.searchMessages).not.toHaveBeenCalled();
+    });
+
+    it('preserves friendship context from typed user search results', async () => {
+      mockedSearch.searchUsers.mockResolvedValue(okResult([relatedUser]));
+      useSearchStore.setState({ category: 'users' });
+      useSearchStore.getState().setQuery('brenda');
+
+      await useSearchStore.getState().search();
+
+      expect(useSearchStore.getState().users[0]).toMatchObject({
+        id: 'u-related',
+        friendship_status: 'pending_received',
+        is_friend: false,
+        is_blocked: false,
+        friend_request_sent: false,
+        friend_request_received: true,
+      });
     });
 
     it('stores typed endpoint cursor page info', async () => {
