@@ -32,19 +32,6 @@ export interface ProfileBannerProps {
 }
 
 /**
- * Props for ProfileHeader component
- */
-export interface ProfileHeaderProps {
-  profile: UserProfileData;
-  isOwnProfile: boolean;
-  editMode: boolean;
-  isUploadingAvatar: boolean;
-  avatarInputRef: React.RefObject<HTMLInputElement | null>;
-  onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onAvatarClick: () => void;
-}
-
-/**
  * Props for FriendshipActions component
  */
 export interface FriendshipActionsProps {
