@@ -7,6 +7,7 @@
 
 // Main component
 export { UserProfile } from './user-profile';
+export { UserProfile as default } from './user-profile';
 
 // Sub-components
 export { ProfileBanner } from './profile-banner';
