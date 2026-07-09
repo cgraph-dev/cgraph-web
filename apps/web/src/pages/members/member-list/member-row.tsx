@@ -10,7 +10,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
-import OnlineStatusIndicator from '@/modules/social/components/common/online-status-indicator';
+import OnlineStatusIndicator from '@/modules/social/components/common/online-status';
 import UserStars from '@/modules/social/components/common/user-stars';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { formatDate, formatRelativeTime } from './utils';

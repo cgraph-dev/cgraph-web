@@ -11,7 +11,7 @@ import {
   ComputerDesktopIcon,
   DevicePhoneMobileIcon,
 } from '@heroicons/react/24/outline';
-import OnlineStatusIndicator from '@/modules/social/components/common/online-status-indicator';
+import OnlineStatusIndicator from '@/modules/social/components/common/online-status';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { OnlineUserListProps, OnlineUser } from './types';
 import { publicProfilePath } from '@/lib/profile-route';
