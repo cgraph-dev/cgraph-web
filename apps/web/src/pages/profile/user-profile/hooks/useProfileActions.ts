@@ -14,6 +14,7 @@ import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 import { toast } from '@/shared/components/ui';
 import { useFriendStore } from '@/modules/social/store';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
 import type { Friend, FriendRequest } from '@/modules/social/store';
 
@@ -29,6 +30,17 @@ function sentRequestForProfile(profileId: string): FriendRequest | undefined {
 
 function friendForProfile(profileId: string): Friend | undefined {
   return useFriendStore.getState().friends.find((friend) => friend.id === profileId);
+}
+
+function friendshipStatusForProfile(
+  profileId: string,
+  fallbackStatus: FriendshipStatus
+): FriendshipStatus {
+  const { friends, pendingRequests, sentRequests } = useFriendStore.getState();
+  return resolveFriendshipStatus(
+    { id: profileId, friendship_status: fallbackStatus },
+    { friends, pendingRequests, sentRequests }
+  );
 }
 
 interface UseProfileActionsParams {
@@ -66,6 +78,11 @@ export function useProfileActions({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  function syncFriendshipStatus(fallbackStatus: FriendshipStatus) {
+    if (!profile) return;
+    setFriendshipStatus(friendshipStatusForProfile(profile.id, fallbackStatus));
+  }
 
   // Initialize edited bio when profile loads
   useEffect(() => {
@@ -153,7 +170,7 @@ export function useProfileActions({
     setIsActioning(true);
     try {
       await sendRequest(profile.username);
-      setFriendshipStatus('pending_sent');
+      syncFriendshipStatus('pending_sent');
     } catch (error) {
       logger.warn('Profile action failed', error);
     } finally {
@@ -175,7 +192,7 @@ export function useProfileActions({
         return;
       }
       await acceptRequest(pendingReq.id);
-      setFriendshipStatus('friends');
+      syncFriendshipStatus('friends');
     } catch (error) {
       logger.warn('Profile action failed', error);
     } finally {
@@ -197,7 +214,7 @@ export function useProfileActions({
         return;
       }
       await declineRequest(pendingReq.id);
-      setFriendshipStatus('none');
+      syncFriendshipStatus('none');
     } catch (error) {
       logger.warn('Profile action failed', error);
     } finally {
@@ -220,7 +237,7 @@ export function useProfileActions({
       }
       await cancelRequest(sentReq.id);
       await fetchSentRequests();
-      setFriendshipStatus('none');
+      syncFriendshipStatus('none');
     } catch (error) {
       logger.warn('Profile action failed', error);
     } finally {
@@ -242,7 +259,7 @@ export function useProfileActions({
         return;
       }
       await removeFriend(friend.friendshipId);
-      setFriendshipStatus('none');
+      syncFriendshipStatus('none');
     } catch (error) {
       logger.warn('Profile action failed', error);
     } finally {
@@ -255,7 +272,7 @@ export function useProfileActions({
     setIsActioning(true);
     try {
       await blockUser(profile.id);
-      setFriendshipStatus('blocked');
+      syncFriendshipStatus('blocked');
     } catch (error) {
       logger.warn('Profile action failed', error);
     } finally {

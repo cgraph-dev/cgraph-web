@@ -116,15 +116,40 @@ describe('useProfileActions', () => {
     friendState.friends = [];
     friendState.pendingRequests = [];
     friendState.sentRequests = [];
+    friendState.sendRequest.mockResolvedValue(undefined);
+    friendState.acceptRequest.mockResolvedValue(undefined);
+    friendState.declineRequest.mockResolvedValue(undefined);
+    friendState.cancelRequest.mockResolvedValue(undefined);
+    friendState.removeFriend.mockResolvedValue(undefined);
+    friendState.blockUser.mockResolvedValue(undefined);
     friendState.fetchFriends.mockResolvedValue(undefined);
     friendState.fetchSentRequests.mockResolvedValue(undefined);
     friendState.fetchPendingRequests.mockResolvedValue(undefined);
+  });
+
+  it('resolves sent request state from the friend store after sending', async () => {
+    const setFriendshipStatus = vi.fn();
+    friendState.sendRequest.mockImplementationOnce(async () => {
+      friendState.sentRequests = [request('sent-1', 'outgoing')];
+    });
+    const { result } = renderActions(setFriendshipStatus);
+
+    await act(async () => {
+      await result.current.handleSendRequest();
+    });
+
+    expect(friendState.sendRequest).toHaveBeenCalledWith('profileuser');
+    expect(setFriendshipStatus).toHaveBeenCalledWith('pending_sent');
   });
 
   it('refreshes pending requests before accepting when profile loaded first', async () => {
     const setFriendshipStatus = vi.fn();
     friendState.fetchPendingRequests.mockImplementationOnce(async () => {
       friendState.pendingRequests = [request('incoming-1', 'incoming')];
+    });
+    friendState.acceptRequest.mockImplementationOnce(async () => {
+      friendState.pendingRequests = [];
+      friendState.friends = [friend()];
     });
     const { result } = renderActions(setFriendshipStatus);
 
@@ -138,10 +163,30 @@ describe('useProfileActions', () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
+  it('keeps friend state when declining a stale incoming request after friendship exists', async () => {
+    const setFriendshipStatus = vi.fn();
+    friendState.pendingRequests = [request('incoming-1', 'incoming')];
+    friendState.friends = [friend()];
+    friendState.declineRequest.mockImplementationOnce(async () => {
+      friendState.pendingRequests = [];
+    });
+    const { result } = renderActions(setFriendshipStatus);
+
+    await act(async () => {
+      await result.current.handleDeclineRequest();
+    });
+
+    expect(friendState.declineRequest).toHaveBeenCalledWith('incoming-1');
+    expect(setFriendshipStatus).toHaveBeenCalledWith('friends');
+  });
+
   it('refreshes sent requests before canceling when profile loaded first', async () => {
     const setFriendshipStatus = vi.fn();
     friendState.fetchSentRequests.mockImplementationOnce(async () => {
       friendState.sentRequests = [request('sent-1', 'outgoing')];
+    });
+    friendState.cancelRequest.mockImplementationOnce(async () => {
+      friendState.sentRequests = [];
     });
     const { result } = renderActions(setFriendshipStatus);
 
@@ -161,6 +206,9 @@ describe('useProfileActions', () => {
     friendState.fetchFriends.mockImplementationOnce(async () => {
       friendState.friends = [friend()];
     });
+    friendState.removeFriend.mockImplementationOnce(async () => {
+      friendState.friends = [];
+    });
     const { result } = renderActions(setFriendshipStatus);
 
     await act(async () => {
@@ -171,5 +219,25 @@ describe('useProfileActions', () => {
     expect(friendState.removeFriend).toHaveBeenCalledWith('friendship-1');
     expect(setFriendshipStatus).toHaveBeenCalledWith('none');
     expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('keeps blocked as the terminal profile status after block removes normal lists', async () => {
+    const setFriendshipStatus = vi.fn();
+    friendState.friends = [friend()];
+    friendState.pendingRequests = [request('incoming-1', 'incoming')];
+    friendState.sentRequests = [request('sent-1', 'outgoing')];
+    friendState.blockUser.mockImplementationOnce(async () => {
+      friendState.friends = [];
+      friendState.pendingRequests = [];
+      friendState.sentRequests = [];
+    });
+    const { result } = renderActions(setFriendshipStatus);
+
+    await act(async () => {
+      await result.current.handleBlockUser();
+    });
+
+    expect(friendState.blockUser).toHaveBeenCalledWith('profile-user');
+    expect(setFriendshipStatus).toHaveBeenCalledWith('blocked');
   });
 });
