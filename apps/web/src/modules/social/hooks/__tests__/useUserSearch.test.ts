@@ -139,6 +139,78 @@ describe('useUserSearch', () => {
     });
   });
 
+  it('resolves blocked relationship state above stale friend search metadata', async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        users: [
+          {
+            id: 'u-blocked',
+            username: 'blocked',
+            display_name: 'Blocked User',
+            avatar_url: null,
+            status: 'offline',
+            friendship_status: 'friends',
+            is_friend: true,
+            is_blocked: true,
+          },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() => useUserSearch('bl'));
+
+    await waitFor(() => {
+      expect(result.current.results[0]).toMatchObject({
+        id: 'u-blocked',
+        friendship_status: 'blocked',
+        is_friend: true,
+        is_blocked: true,
+      });
+    });
+  });
+
+  it('resolves request booleans when user search omits explicit status', async () => {
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        users: [
+          {
+            id: 'u-incoming',
+            username: 'incoming',
+            display_name: 'Incoming User',
+            avatar_url: null,
+            status: 'online',
+            friend_request_received: true,
+          },
+          {
+            id: 'u-outgoing',
+            username: 'outgoing',
+            display_name: 'Outgoing User',
+            avatar_url: null,
+            status: 'away',
+            friend_request_sent: true,
+          },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() => useUserSearch('request'));
+
+    await waitFor(() => {
+      expect(result.current.results).toMatchObject([
+        {
+          id: 'u-incoming',
+          friendship_status: 'pending_received',
+          friend_request_received: true,
+        },
+        {
+          id: 'u-outgoing',
+          friendship_status: 'pending_sent',
+          friend_request_sent: true,
+        },
+      ]);
+    });
+  });
+
   it('sets error on API failure', async () => {
     mockApi.get.mockRejectedValueOnce(new Error('Network error'));
 

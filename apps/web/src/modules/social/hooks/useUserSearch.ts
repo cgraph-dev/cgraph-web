@@ -11,7 +11,7 @@ import {
   rememberRateLimit,
   USER_API_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
-import { normalizeFriendshipStatus } from '@/modules/social/friendship-status';
+import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 import type { FriendshipStatus } from '@/modules/social/types';
 
 const logger = createLogger('useUserSearch');
@@ -73,8 +73,6 @@ function toUserSearchResult(value: unknown): UserSearchResult | null {
     avatar_url: typeof record.avatar_url === 'string' ? record.avatar_url : null,
     status: typeof record.status === 'string' ? record.status : 'offline',
   };
-  const friendshipStatus = normalizeFriendshipStatus(record.friendship_status);
-  if (friendshipStatus) result.friendship_status = friendshipStatus;
   if (typeof record.is_friend === 'boolean') result.is_friend = record.is_friend;
   if (typeof record.is_blocked === 'boolean') result.is_blocked = record.is_blocked;
   if (typeof record.friend_request_sent === 'boolean') {
@@ -82,6 +80,20 @@ function toUserSearchResult(value: unknown): UserSearchResult | null {
   }
   if (typeof record.friend_request_received === 'boolean') {
     result.friend_request_received = record.friend_request_received;
+  }
+  const friendshipStatus = resolveFriendshipStatus(
+    {
+      id,
+      friendship_status: record.friendship_status,
+      is_blocked: result.is_blocked,
+      is_friend: result.is_friend,
+      friend_request_received: result.friend_request_received,
+      friend_request_sent: result.friend_request_sent,
+    },
+    {}
+  );
+  if (friendshipStatus !== 'none' || record.friendship_status === 'none') {
+    result.friendship_status = friendshipStatus;
   }
 
   return result;
