@@ -27,11 +27,6 @@ export type ActivityType =
   | 'custom';
 
 /**
- * Relationship type
- */
-export type RelationshipType = 'friend' | 'follower' | 'following' | 'blocked';
-
-/**
  * Friend request
  */
 export interface FriendRequest {
@@ -65,25 +60,6 @@ export interface UserProfile {
   badges: string[];
   createdAt: string;
   lastSeen?: string;
-}
-
-/**
- * Extended user profile
- */
-export interface ExtendedUserProfile extends UserProfile {
-  pronouns?: string;
-  location?: string;
-  website?: string;
-  socialLinks?: SocialLink[];
-  mutualFriendsCount: number;
-  friendsCount: number;
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
-  groupsCount: number;
-  friendshipStatus: FriendshipStatus;
-  isFollowing: boolean;
-  isBlocked: boolean;
 }
 
 /**
@@ -256,17 +232,6 @@ export interface SocialStats {
   blockedCount: number;
   pendingRequestsCount: number;
   mutualFriendsWithUser?: number;
-}
-
-/**
- * Relationship
- */
-export interface Relationship {
-  userId: string;
-  targetUserId: string;
-  type: RelationshipType;
-  nickname?: string;
-  createdAt: string;
 }
 
 /**
