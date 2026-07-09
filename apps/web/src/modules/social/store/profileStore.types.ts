@@ -12,6 +12,8 @@
  */
 
 // MyBB-style user signature
+import type { FriendshipStatus } from '@/modules/social/types';
+
 export interface UserSignature {
   enabled: boolean;
   content: string; // BBCode/HTML signature
@@ -133,7 +135,7 @@ export interface ExtendedProfile {
   // Relationships
   isFriend: boolean;
   isBlocked: boolean;
-  friendshipStatus: 'none' | 'pending_sent' | 'pending_received' | 'friends';
+  friendshipStatus: FriendshipStatus;
 }
 
 // User in ignore/block list

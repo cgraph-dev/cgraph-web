@@ -11,6 +11,7 @@ import {
 } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
 import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
+import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 import type { UserBadge, ExtendedProfile } from './profileStore.types';
 /** Safely extract a string or null from an unknown value */
 function asNullableString(v: unknown): string | null {
@@ -32,7 +33,6 @@ function asOneOf<T extends string>(v: unknown, allowed: readonly T[], fallback: 
 const TITLE_TYPES = ['system', 'custom', 'earned'] as const;
 const BADGE_RARITIES = ['common', 'rare', 'epic', 'legendary', 'mythic'] as const;
 const STATUS_VALUES = ['online', 'away', 'busy', 'dnd', 'offline'] as const;
-const FRIENDSHIP_VALUES = ['none', 'pending_sent', 'pending_received', 'friends'] as const;
 function mapBadge(b: Record<string, unknown>): UserBadge {
   return {
     id: asString(b.id),
@@ -193,6 +193,16 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
 
     isBlocked: asBool(user.is_blocked),
 
-    friendshipStatus: asOneOf(user.friendship_status, FRIENDSHIP_VALUES, 'none'),
+    friendshipStatus: resolveFriendshipStatus(
+      {
+        id: identity.id,
+        friendship_status: user.friendship_status,
+        is_blocked: user.is_blocked,
+        is_friend: user.is_friend,
+        friend_request_received: user.friend_request_received,
+        friend_request_sent: user.friend_request_sent,
+      },
+      {}
+    ),
   };
 }

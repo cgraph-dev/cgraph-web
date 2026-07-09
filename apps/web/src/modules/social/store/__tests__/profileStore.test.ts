@@ -272,6 +272,51 @@ describe('Social profileStore', () => {
       expect(profile?.displayName).toBe('Alice');
     });
 
+    it('should hydrate blocked relationship state above stale friend fields', async () => {
+      mockedApi.get.mockResolvedValue({
+        data: {
+          ...mockApiResponse.data,
+          friendship_status: 'friends',
+          is_friend: true,
+          is_blocked: true,
+        },
+      });
+
+      await useProfileStore.getState().fetchProfile('user-1');
+
+      const profile = useProfileStore.getState().currentProfile;
+      expect(profile?.friendshipStatus).toBe('blocked');
+      expect(profile?.isBlocked).toBe(true);
+    });
+
+    it('should hydrate incoming request booleans when explicit status is absent or stale', async () => {
+      mockedApi.get.mockResolvedValue({
+        data: {
+          ...mockApiResponse.data,
+          friendship_status: 'unknown',
+          friend_request_received: true,
+        },
+      });
+
+      await useProfileStore.getState().fetchProfile('user-1');
+
+      expect(useProfileStore.getState().currentProfile?.friendshipStatus).toBe('pending_received');
+    });
+
+    it('should hydrate outgoing request booleans', async () => {
+      mockedApi.get.mockResolvedValue({
+        data: {
+          ...mockApiResponse.data,
+          friendship_status: null,
+          friend_request_sent: true,
+        },
+      });
+
+      await useProfileStore.getState().fetchProfile('user-1');
+
+      expect(useProfileStore.getState().currentProfile?.friendshipStatus).toBe('pending_sent');
+    });
+
     it('should call the correct API endpoint', async () => {
       mockedApi.get.mockResolvedValue(mockApiResponse);
       await useProfileStore.getState().fetchProfile('abc-789');
