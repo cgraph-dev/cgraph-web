@@ -214,11 +214,11 @@ describe('DiscoverTab', () => {
     expect(screen.getByRole('button', { name: 'Pending' })).toBeDisabled();
   });
 
-  it('keeps backend outgoing user status as a disabled Pending action', () => {
+  it('keeps resolved outgoing user status as a disabled Pending action', () => {
     render(
       <DiscoverTab
         searchQuery="alice"
-        searchResults={[{ ...userResult, friendRequestSent: true }]}
+        searchResults={[{ ...userResult, friendshipStatus: 'pending_sent' }]}
         hasMore={false}
         isLoadingMore={false}
         onSearchChange={vi.fn()}

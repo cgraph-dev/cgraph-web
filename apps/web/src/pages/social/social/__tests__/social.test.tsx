@@ -194,9 +194,9 @@ describe('Social', () => {
     expect(screen.getByTestId('result-incoming-user')).toHaveTextContent('pending_received');
     expect(screen.getByTestId('result-outgoing-user')).toHaveTextContent('pending_sent');
     expect(discoverTabState.latestProps?.searchResults).toMatchObject([
-      { id: 'blocked-user', friendshipStatus: 'blocked', isBlocked: true },
-      { id: 'incoming-user', friendshipStatus: 'pending_received', friendRequestReceived: true },
-      { id: 'outgoing-user', friendshipStatus: 'pending_sent', friendRequestSent: true },
+      { id: 'blocked-user', friendshipStatus: 'blocked' },
+      { id: 'incoming-user', friendshipStatus: 'pending_received' },
+      { id: 'outgoing-user', friendshipStatus: 'pending_sent' },
     ]);
   });
 });

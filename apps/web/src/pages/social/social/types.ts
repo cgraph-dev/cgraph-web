@@ -60,10 +60,6 @@ export interface SearchResult {
   memberCount?: number;
   isJoined?: boolean;
   friendshipStatus?: FriendshipStatus | null;
-  isFriend?: boolean;
-  isBlocked?: boolean;
-  friendRequestSent?: boolean;
-  friendRequestReceived?: boolean;
 }
 
 // TAB PROPS

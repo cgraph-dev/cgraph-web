@@ -310,10 +310,6 @@ export function Social() {
           },
           {}
         ),
-        isFriend: user.is_friend === true,
-        isBlocked: user.is_blocked === true,
-        friendRequestSent: user.friend_request_sent === true,
-        friendRequestReceived: user.friend_request_received === true,
       });
     }
     for (const group of searchGroups) {
