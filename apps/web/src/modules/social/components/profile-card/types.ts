@@ -4,6 +4,7 @@
 
 import type { Achievement } from '@cgraph-dev/shared-types';
 
+import type { FriendshipStatus } from '@/modules/social/types';
 import type {
   ProfileTheme,
   ProfileCardConfig,
@@ -66,12 +67,7 @@ export interface ProfileCardUser {
   display_name_secondary_color?: string;
 }
 
-export type ProfileCardFriendshipStatus =
-  | 'none'
-  | 'pending_sent'
-  | 'pending_received'
-  | 'friends'
-  | 'blocked';
+export type ProfileCardFriendshipStatus = FriendshipStatus;
 
 // COMPONENT PROPS
 

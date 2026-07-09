@@ -160,6 +160,88 @@ describe('UserProfileCard', () => {
     );
   });
 
+  it('normalizes backend incoming request flags for profile-card actions', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'user-6',
+          username: 'incoming',
+          display_name: 'Incoming User',
+          friend_request_received: true,
+          avatar_url: null,
+        },
+      },
+    });
+
+    render(
+      <UserProfileCard userId="user-6" trigger="click">
+        <button type="button">Open incoming</button>
+      </UserProfileCard>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open incoming' }));
+
+    expect(await screen.findByTestId('new-profile-card')).toHaveAttribute(
+      'data-friendship-status',
+      'pending_received'
+    );
+  });
+
+  it('normalizes backend outgoing request flags for profile-card actions', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'user-7',
+          username: 'outgoing',
+          display_name: 'Outgoing User',
+          friend_request_sent: true,
+          avatar_url: null,
+        },
+      },
+    });
+
+    render(
+      <UserProfileCard userId="user-7" trigger="click">
+        <button type="button">Open outgoing</button>
+      </UserProfileCard>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open outgoing' }));
+
+    expect(await screen.findByTestId('new-profile-card')).toHaveAttribute(
+      'data-friendship-status',
+      'pending_sent'
+    );
+  });
+
+  it('keeps blocked profile-card state above stale local friend rows', async () => {
+    friendStoreState.friends = [{ id: 'user-8' }];
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'user-8',
+          username: 'blocked',
+          display_name: 'Blocked User',
+          is_blocked: true,
+          avatar_url: null,
+        },
+      },
+    });
+
+    render(
+      <UserProfileCard userId="user-8" trigger="click">
+        <button type="button">Open blocked</button>
+      </UserProfileCard>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open blocked' }));
+
+    expect(await screen.findByTestId('new-profile-card')).toHaveAttribute(
+      'data-friendship-status',
+      'blocked'
+    );
+  });
+
   it('lets the friend store override profile-card actions after local request updates', async () => {
     friendStoreState.pendingRequests = [{ user: { id: 'user-4' } }];
     const user: ProfileCardUser = {

@@ -25,6 +25,10 @@ import type {
 } from './types';
 import { springs } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
+import {
+  resolveFriendshipStatus,
+  type FriendshipCollections,
+} from '@/modules/social/friendship-status';
 import { useFriendStore } from '@/modules/social/store';
 import { http } from '@/lib/api-client';
 import { asBool, asNumber, asString, isRecord } from '@/lib/api-utils';
@@ -96,28 +100,18 @@ function profileBadgesFromApi(
   return equippedBadgeIds.map(badgeAchievementFromId);
 }
 
-const PROFILE_CARD_FRIENDSHIP_STATUSES = [
-  'none',
-  'pending_sent',
-  'pending_received',
-  'friends',
-  'blocked',
-] as const;
-
-function isProfileCardFriendshipStatus(value: string): value is ProfileCardFriendshipStatus {
-  return PROFILE_CARD_FRIENDSHIP_STATUSES.some((status) => status === value);
-}
-
 function friendshipStatusFromApi(userData: Record<string, unknown>): ProfileCardFriendshipStatus {
-  const explicitStatus = asString(userData.friendship_status);
-  if (isProfileCardFriendshipStatus(explicitStatus)) return explicitStatus;
-
-  if (asBool(userData.is_blocked)) return 'blocked';
-  if (asBool(userData.is_friend)) return 'friends';
-  if (asBool(userData.friend_request_received)) return 'pending_received';
-  if (asBool(userData.friend_request_sent)) return 'pending_sent';
-
-  return 'none';
+  return resolveFriendshipStatus(
+    {
+      id: asString(userData.id) || 'profile-card-user',
+      friendship_status: userData.friendship_status,
+      is_blocked: userData.is_blocked,
+      is_friend: userData.is_friend,
+      friend_request_received: userData.friend_request_received,
+      friend_request_sent: userData.friend_request_sent,
+    },
+    {}
+  );
 }
 
 function titleFromApi(
@@ -228,26 +222,19 @@ function ProfileCardStatus({ variant, message }: { variant: 'mini' | 'full'; mes
 function resolveProfileFriendshipStatus(
   userId: string,
   profileUser: ProfileCardUser | null,
-  friendState: {
-    friends?: readonly { id: string }[];
-    pendingRequests?: readonly { user: { id: string } }[];
-    sentRequests?: readonly { user: { id: string } }[];
-  }
+  friendState: FriendshipCollections
 ): ProfileCardFriendshipStatus {
-  if (profileUser?.isBlocked || profileUser?.friendshipStatus === 'blocked') return 'blocked';
-  if (friendState.friends?.some((friend) => friend.id === userId)) return 'friends';
-  if (friendState.pendingRequests?.some((request) => request.user.id === userId)) {
-    return 'pending_received';
-  }
-  if (friendState.sentRequests?.some((request) => request.user.id === userId)) {
-    return 'pending_sent';
-  }
-  if (profileUser?.friendshipStatus && profileUser.friendshipStatus !== 'none') {
-    return profileUser.friendshipStatus;
-  }
-  if (profileUser?.isFriend) return 'friends';
-
-  return 'none';
+  return resolveFriendshipStatus(
+    profileUser
+      ? {
+          id: userId,
+          friendshipStatus: profileUser.friendshipStatus,
+          isFriend: profileUser.isFriend,
+          isBlocked: profileUser.isBlocked,
+        }
+      : { id: userId },
+    friendState
+  );
 }
 
 /** Profile popup card with hover (mini) and click (full) variants. */
