@@ -5,6 +5,7 @@
  */
 
 // Main component
+export { default } from './user-profile-card';
 export { default as UserProfileCard } from './user-profile-card';
 
 // V2 profile card
