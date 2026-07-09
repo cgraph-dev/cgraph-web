@@ -289,6 +289,42 @@ describe('Social profileStore', () => {
       expect(profile?.isBlocked).toBe(true);
     });
 
+    it('should derive relationship booleans from the normalized friendship status', async () => {
+      mockedApi.get.mockResolvedValueOnce({
+        data: {
+          ...mockApiResponse.data,
+          friendship_status: 'friends',
+          is_friend: false,
+          is_blocked: false,
+        },
+      });
+
+      await useProfileStore.getState().fetchProfile('user-1');
+
+      expect(useProfileStore.getState().currentProfile).toMatchObject({
+        friendshipStatus: 'friends',
+        isFriend: true,
+        isBlocked: false,
+      });
+
+      mockedApi.get.mockResolvedValueOnce({
+        data: {
+          ...mockApiResponse.data,
+          friendship_status: 'blocked',
+          is_friend: true,
+          is_blocked: false,
+        },
+      });
+
+      await useProfileStore.getState().fetchProfile('user-1');
+
+      expect(useProfileStore.getState().currentProfile).toMatchObject({
+        friendshipStatus: 'blocked',
+        isFriend: false,
+        isBlocked: true,
+      });
+    });
+
     it('should hydrate incoming request booleans when explicit status is absent or stale', async () => {
       mockedApi.get.mockResolvedValue({
         data: {

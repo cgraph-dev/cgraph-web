@@ -55,6 +55,18 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
   const currentTitleObj: Record<string, unknown> | null = isRecord(user.current_title)
     ? user.current_title
     : null;
+  const friendshipStatus = resolveFriendshipStatus(
+    {
+      id: identity.id,
+      friendship_status: user.friendship_status,
+      is_blocked: user.is_blocked,
+      is_friend: user.is_friend,
+      friend_request_received: user.friend_request_received,
+      friend_request_sent: user.friend_request_sent,
+    },
+    {}
+  );
+
   return {
     id: identity.id,
 
@@ -189,20 +201,10 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
 
     statusMessage: asNullableString(user.status_message) || asNullableString(user.custom_status),
 
-    isFriend: asBool(user.is_friend),
+    isFriend: friendshipStatus === 'friends',
 
-    isBlocked: asBool(user.is_blocked),
+    isBlocked: friendshipStatus === 'blocked',
 
-    friendshipStatus: resolveFriendshipStatus(
-      {
-        id: identity.id,
-        friendship_status: user.friendship_status,
-        is_blocked: user.is_blocked,
-        is_friend: user.is_friend,
-        friend_request_received: user.friend_request_received,
-        friend_request_sent: user.friend_request_sent,
-      },
-      {}
-    ),
+    friendshipStatus,
   };
 }
