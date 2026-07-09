@@ -1,6 +1,8 @@
 /**
  * User profile type definitions.
  */
+import type { FriendshipStatus as SocialFriendshipStatus } from '@/modules/social/types';
+
 // Profile types and constants
 export interface UserProfileData {
   id: string;
@@ -41,7 +43,7 @@ export interface UserProfileData {
   displayNameSecondaryColor?: string | null;
 }
 
-export type FriendshipStatus = 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'blocked';
+export type FriendshipStatus = SocialFriendshipStatus;
 
 // Default rarity color for fallback
 export const defaultRarityColor = {

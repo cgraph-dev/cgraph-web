@@ -8,6 +8,7 @@ import { http } from '@/lib/api-client';
 import { identityFieldsFromApi } from '@/lib/identity';
 import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
 import { profileApiPathForHandle, type ProfileLookupMode } from '@/lib/profile-route';
+import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 import type { Achievement } from '@cgraph-dev/shared-types';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
 
@@ -176,18 +177,19 @@ export function useProfileData({
             null,
         });
 
-        // Backend returns is_friend/friend_request_sent/friend_request_received booleans
-        // Derive friendship status string from them
-        const derivedStatus: FriendshipStatus = userData.friendship_status
-          ? userData.friendship_status
-          : userData.is_friend
-            ? 'friends'
-            : userData.friend_request_received
-              ? 'pending_received'
-              : userData.friend_request_sent
-                ? 'pending_sent'
-                : 'none';
-        setFriendshipStatus(derivedStatus);
+        setFriendshipStatus(
+          resolveFriendshipStatus(
+            {
+              id: identity.id || (typeof userData.id === 'string' ? userData.id : handle),
+              friendship_status: userData.friendship_status,
+              is_blocked: userData.is_blocked,
+              is_friend: userData.is_friend,
+              friend_request_received: userData.friend_request_received,
+              friend_request_sent: userData.friend_request_sent,
+            },
+            {}
+          )
+        );
       } catch (err) {
         if (controller.signal.aborted) return;
         if (err instanceof Error && err.name === 'AbortError') return;
