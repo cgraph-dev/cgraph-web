@@ -12,18 +12,41 @@ import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { containerVariants, itemVariants } from './animations';
 import { useUserSearch } from '@/modules/social/hooks/useUserSearch';
+import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 import { useFriendStore } from '@/modules/social/store';
 import { useAuthStore } from '@/modules/auth/store';
 import { createLogger } from '@/lib/logger';
+import type { FriendshipStatus } from '@/modules/social/types';
 
 const logger = createLogger('FindFriendsStep');
+
+function onboardingFriendshipLabel(
+  friendshipStatus: FriendshipStatus,
+  isSelf: boolean,
+  isSending: boolean
+): string {
+  if (isSelf) return 'You';
+  if (isSending) return 'Sending…';
+
+  switch (friendshipStatus) {
+    case 'friends':
+      return 'Connected';
+    case 'pending_received':
+      return 'Request Received';
+    case 'pending_sent':
+      return 'Request Sent';
+    case 'blocked':
+      return 'Blocked';
+    case 'none':
+      return 'Add Friend';
+  }
+}
 
 /**
  * Find Friends onboarding step with debounced user search.
  */
 export function FindFriendsStep() {
   const [query, setQuery] = useState('');
-  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
   const { results, isLoading, error: searchError } = useUserSearch(query);
@@ -45,14 +68,16 @@ export function FindFriendsStep() {
     });
   }, [fetchFriends, fetchPendingRequests, fetchSentRequests]);
 
-  async function handleAddFriend(userId: string): Promise<void> {
-    if (sentRequests.has(userId) || sendingId === userId) return;
+  async function handleAddFriend(
+    userId: string,
+    friendshipStatus: FriendshipStatus
+  ): Promise<void> {
+    if (friendshipStatus !== 'none' || sendingId === userId) return;
 
     setSendingId(userId);
     setRequestError(null);
     try {
       await sendRequest(userId);
-      setSentRequests((prev) => new Set(prev).add(userId));
     } catch (error) {
       logger.error('Failed to send friend request', error);
       setRequestError(error instanceof Error ? error.message : 'Failed to send friend request');
@@ -121,26 +146,18 @@ export function FindFriendsStep() {
 
         {results.map((user) => {
           const isSelf = user.id === currentUserId;
-          const isFriend = friends.some((friend) => friend.id === user.id);
-          const hasIncomingRequest = pendingRequests.some(
-            (request) => request.user.id === user.id
-          );
-          const isSent =
-            sentRequests.has(user.id) ||
-            storedSentRequests.some((request) => request.user.id === user.id);
+          const friendshipStatus = resolveFriendshipStatus(user, {
+            friends,
+            pendingRequests,
+            sentRequests: storedSentRequests,
+          });
           const isSending = sendingId === user.id;
-          const isUnavailable = isSelf || isFriend || hasIncomingRequest || isSent || isSending;
-          const buttonLabel = isSelf
-            ? 'You'
-            : isFriend
-              ? 'Connected'
-              : hasIncomingRequest
-                ? 'Request Received'
-                : isSent
-                  ? 'Request Sent'
-                  : isSending
-                    ? 'Sending…'
-                    : 'Add Friend';
+          const isUnavailable = isSelf || friendshipStatus !== 'none' || isSending;
+          const buttonLabel = onboardingFriendshipLabel(
+            friendshipStatus,
+            isSelf,
+            isSending
+          );
 
           return (
             <motion.div
@@ -175,7 +192,7 @@ export function FindFriendsStep() {
               <button
                 type="button"
                 disabled={isUnavailable}
-                onClick={() => handleAddFriend(user.id)}
+                onClick={() => handleAddFriend(user.id, friendshipStatus)}
                 className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                   isUnavailable
                     ? 'bg-[var(--token-card-bg)] text-gray-400'

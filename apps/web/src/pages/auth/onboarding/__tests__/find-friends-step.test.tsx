@@ -83,6 +83,9 @@ describe('FindFriendsStep', () => {
 
   it('hydrates friendship state and sends a discovered UUID through the friend store', async () => {
     mocks.results = [alice];
+    mocks.sendRequest.mockImplementationOnce(async () => {
+      mocks.sentRequests = [requestFrom(alice)];
+    });
     const user = userEvent.setup();
 
     render(<FindFriendsStep />);
@@ -120,12 +123,19 @@ describe('FindFriendsStep', () => {
     expect(screen.getByPlaceholderText('Search by username or name…')).toBeEnabled();
   });
 
-  it('renders self, connected, incoming, and outgoing states without duplicate writes', () => {
+  it('renders self, connected, incoming, outgoing, and blocked states without duplicate writes', () => {
     const self = { ...alice, id: 'self-user', username: 'self' };
     const connected = { ...alice, id: 'connected-user', username: 'connected' };
     const incoming = { ...alice, id: 'incoming-user', username: 'incoming' };
     const outgoing = { ...alice, id: 'outgoing-user', username: 'outgoing' };
-    mocks.results = [self, connected, incoming, outgoing];
+    const blocked = {
+      ...alice,
+      id: 'blocked-user',
+      username: 'blocked',
+      friendship_status: 'friends',
+      is_blocked: true,
+    } satisfies UserSearchResult;
+    mocks.results = [self, connected, incoming, outgoing, blocked];
     mocks.friends = [friendFrom(connected)];
     mocks.pendingRequests = [requestFrom(incoming)];
     mocks.sentRequests = [requestFrom(outgoing)];
@@ -136,6 +146,7 @@ describe('FindFriendsStep', () => {
     expect(screen.getByRole('button', { name: 'Connected' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Request Received' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Request Sent' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Blocked' })).toBeDisabled();
     expect(mocks.sendRequest).not.toHaveBeenCalled();
   });
 });
