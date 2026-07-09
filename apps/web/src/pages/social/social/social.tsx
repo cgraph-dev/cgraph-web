@@ -27,7 +27,7 @@ import { getGroupRoute } from '@/modules/groups/routing';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { captureError } from '@/lib/error-tracking';
 import { tweens } from '@/lib/animation-presets';
-import { normalizeFriendshipStatus } from '@/modules/social/friendship-status';
+import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 
 function isNotificationType(value: string): value is NotificationType {
   return (
@@ -299,7 +299,17 @@ export function Social() {
         username: user.username,
         avatarUrl: user.avatar_url ?? undefined,
         canonicalUrl: user.canonical_url ?? undefined,
-        friendshipStatus: normalizeFriendshipStatus(user.friendship_status),
+        friendshipStatus: resolveFriendshipStatus(
+          {
+            id: user.id,
+            friendship_status: user.friendship_status,
+            is_blocked: user.is_blocked,
+            is_friend: user.is_friend,
+            friend_request_received: user.friend_request_received,
+            friend_request_sent: user.friend_request_sent,
+          },
+          {}
+        ),
         isFriend: user.is_friend === true,
         isBlocked: user.is_blocked === true,
         friendRequestSent: user.friend_request_sent === true,
