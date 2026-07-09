@@ -55,7 +55,14 @@ export function createBlockUser(set: Set, get: Get) {
       // Update current profile if viewing blocked user
       const current = get().currentProfile;
       if (current?.id === userId) {
-        set({ currentProfile: { ...current, isBlocked: true } });
+        set({
+          currentProfile: {
+            ...current,
+            isFriend: false,
+            isBlocked: true,
+            friendshipStatus: 'blocked',
+          },
+        });
       }
 
       // Remove blocked user from friend store (friends list + pending requests + presence)
@@ -78,7 +85,14 @@ export function createUnblockUser(set: Set, get: Get) {
       // Update current profile if viewing unblocked user
       const current = get().currentProfile;
       if (current?.id === userId) {
-        set({ currentProfile: { ...current, isBlocked: false } });
+        set({
+          currentProfile: {
+            ...current,
+            isFriend: false,
+            isBlocked: false,
+            friendshipStatus: 'none',
+          },
+        });
       }
     } catch (error) {
       logger.error('Failed to unblock user:', error);

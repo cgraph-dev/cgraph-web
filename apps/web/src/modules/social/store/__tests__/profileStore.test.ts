@@ -664,12 +664,22 @@ describe('Social profileStore', () => {
 
     it('should set currentProfile.isBlocked when blocking viewed user', async () => {
       useProfileStore.setState({
-        currentProfile: { ...mockProfile, id: 'u-99', isBlocked: false },
+        currentProfile: {
+          ...mockProfile,
+          id: 'u-99',
+          isFriend: true,
+          isBlocked: false,
+          friendshipStatus: 'friends',
+        },
       });
       mockedApi.post.mockResolvedValue({ data: {} });
 
       await useProfileStore.getState().blockUser('u-99');
-      expect(useProfileStore.getState().currentProfile?.isBlocked).toBe(true);
+      expect(useProfileStore.getState().currentProfile).toMatchObject({
+        isFriend: false,
+        isBlocked: true,
+        friendshipStatus: 'blocked',
+      });
     });
   });
 
@@ -694,13 +704,23 @@ describe('Social profileStore', () => {
 
     it('should set currentProfile.isBlocked to false when unblocking viewed user', async () => {
       useProfileStore.setState({
-        currentProfile: { ...mockProfile, id: 'blocked-1', isBlocked: true },
+        currentProfile: {
+          ...mockProfile,
+          id: 'blocked-1',
+          isFriend: false,
+          isBlocked: true,
+          friendshipStatus: 'blocked',
+        },
         blockedUsers: [mockBlockedUser],
       });
       mockedApi.delete.mockResolvedValue({ data: {} });
 
       await useProfileStore.getState().unblockUser('blocked-1');
-      expect(useProfileStore.getState().currentProfile?.isBlocked).toBe(false);
+      expect(useProfileStore.getState().currentProfile).toMatchObject({
+        isFriend: false,
+        isBlocked: false,
+        friendshipStatus: 'none',
+      });
     });
   });
 

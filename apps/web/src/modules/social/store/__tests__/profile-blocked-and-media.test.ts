@@ -162,7 +162,13 @@ describe('createBlockUser', () => {
     get.mockReturnValue({
       ...get(),
       fetchBlockedUsers,
-      currentProfile: { id: 'u-target', username: 'target', isBlocked: false },
+      currentProfile: {
+        id: 'u-target',
+        username: 'target',
+        isFriend: true,
+        isBlocked: false,
+        friendshipStatus: 'friends',
+      },
     } as never);
 
     const blockUser = createBlockUser(set, get as unknown as () => ProfileState);
@@ -173,9 +179,16 @@ describe('createBlockUser', () => {
     const profileUpdate = set.mock.calls.find(
       (c) =>
         (c[0] as Record<string, unknown>)?.currentProfile &&
-        (c[0] as Record<string, Record<string, unknown>>).currentProfile?.isBlocked === true
+        (c[0] as Record<string, Record<string, unknown>>).currentProfile?.friendshipStatus ===
+          'blocked'
     );
-    expect(profileUpdate).toBeTruthy();
+    expect(profileUpdate?.[0]).toMatchObject({
+      currentProfile: {
+        isFriend: false,
+        isBlocked: true,
+        friendshipStatus: 'blocked',
+      },
+    });
   });
 
   it('rethrows on API failure', async () => {
@@ -210,7 +223,13 @@ describe('createUnblockUser', () => {
     const { set, get } = createMockStore();
     get.mockReturnValue({
       blockedUsers: [{ id: 'u-1' }],
-      currentProfile: { id: 'u-1', username: 'target', isBlocked: true },
+      currentProfile: {
+        id: 'u-1',
+        username: 'target',
+        isFriend: false,
+        isBlocked: true,
+        friendshipStatus: 'blocked',
+      },
     } as never);
 
     const unblockUser = createUnblockUser(set, get as unknown as () => ProfileState);
@@ -221,9 +240,16 @@ describe('createUnblockUser', () => {
     const profileUpdate = set.mock.calls.find(
       (c) =>
         (c[0] as Record<string, unknown>)?.currentProfile &&
-        (c[0] as Record<string, Record<string, unknown>>).currentProfile?.isBlocked === false
+        (c[0] as Record<string, Record<string, unknown>>).currentProfile?.friendshipStatus ===
+          'none'
     );
-    expect(profileUpdate).toBeTruthy();
+    expect(profileUpdate?.[0]).toMatchObject({
+      currentProfile: {
+        isFriend: false,
+        isBlocked: false,
+        friendshipStatus: 'none',
+      },
+    });
   });
 
   it('rethrows on API failure', async () => {
