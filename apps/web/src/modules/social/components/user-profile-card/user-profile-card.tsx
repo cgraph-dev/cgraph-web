@@ -186,8 +186,6 @@ function profileCardUserFromApi(userData: Record<string, unknown>): ProfileCardU
     postCount: asNumber(userData.post_count) || asNumber(userData.posts_created),
     friendCount: asNumber(userData.friend_count) || asNumber(userData.friends_count),
     friendshipStatus: friendshipStatusFromApi(userData),
-    isFriend: asBool(userData.is_friend),
-    isBlocked: asBool(userData.is_blocked),
     isOnline: identity.status === 'online' || asBool(userData.is_online),
     lastSeen: asString(userData.last_seen_at) || asString(userData.last_active_at),
     pronouns: asString(userData.pronouns),
@@ -229,8 +227,6 @@ function resolveProfileFriendshipStatus(
       ? {
           id: userId,
           friendshipStatus: profileUser.friendshipStatus,
-          isFriend: profileUser.isFriend,
-          isBlocked: profileUser.isBlocked,
         }
       : { id: userId },
     friendState

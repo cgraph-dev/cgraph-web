@@ -160,6 +160,33 @@ describe('UserProfileCard', () => {
     );
   });
 
+  it('normalizes backend friend flags without duplicate card relationship fields', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'user-9',
+          username: 'friendflag',
+          display_name: 'Friend Flag',
+          is_friend: true,
+          avatar_url: null,
+        },
+      },
+    });
+
+    render(
+      <UserProfileCard userId="user-9" trigger="click">
+        <button type="button">Open friend flag</button>
+      </UserProfileCard>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open friend flag' }));
+
+    expect(await screen.findByTestId('new-profile-card')).toHaveAttribute(
+      'data-friendship-status',
+      'friends'
+    );
+  });
+
   it('normalizes backend incoming request flags for profile-card actions', async () => {
     mockedGet.mockResolvedValueOnce({
       data: {

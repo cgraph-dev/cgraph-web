@@ -50,8 +50,6 @@ export interface ProfileCardUser {
   recentActivity?: { type: string; description: string; timestamp: string }[];
   socialLinks?: { platform: string; url: string }[];
   friendshipStatus?: ProfileCardFriendshipStatus;
-  isFriend?: boolean;
-  isBlocked?: boolean;
   // Pulse
   topCommunities?: { forumId: string; forumName: string; score: number; tier: string }[];
   // Status
