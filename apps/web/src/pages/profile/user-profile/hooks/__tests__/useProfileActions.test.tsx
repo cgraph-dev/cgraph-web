@@ -18,6 +18,7 @@ const { friendState, toast, navigate } = vi.hoisted(() => ({
     sendRequest: vi.fn(() => Promise.resolve()),
     acceptRequest: vi.fn(() => Promise.resolve()),
     declineRequest: vi.fn(() => Promise.resolve()),
+    cancelRequest: vi.fn(() => Promise.resolve()),
     removeFriend: vi.fn(() => Promise.resolve()),
     blockUser: vi.fn(() => Promise.resolve()),
     fetchFriends: vi.fn(() => Promise.resolve()),
@@ -149,7 +150,8 @@ describe('useProfileActions', () => {
     });
 
     expect(friendState.fetchSentRequests).toHaveBeenCalled();
-    expect(friendState.removeFriend).toHaveBeenCalledWith('sent-1');
+    expect(friendState.cancelRequest).toHaveBeenCalledWith('sent-1');
+    expect(friendState.removeFriend).not.toHaveBeenCalled();
     expect(setFriendshipStatus).toHaveBeenCalledWith('none');
     expect(toast.error).not.toHaveBeenCalled();
   });

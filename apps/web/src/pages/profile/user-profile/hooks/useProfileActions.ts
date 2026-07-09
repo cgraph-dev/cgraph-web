@@ -52,6 +52,7 @@ export function useProfileActions({
     sendRequest,
     acceptRequest,
     declineRequest,
+    cancelRequest,
     removeFriend,
     blockUser,
     fetchFriends,
@@ -217,7 +218,7 @@ export function useProfileActions({
         toast.error('Sent request not found. Try refreshing the page.');
         return;
       }
-      await removeFriend(sentReq.id);
+      await cancelRequest(sentReq.id);
       await fetchSentRequests();
       setFriendshipStatus('none');
     } catch (error) {
