@@ -5,7 +5,6 @@
  */
 
 export { useProfileActions } from './useProfileActions';
-export { useProfileData } from './useProfileData';
 
 export { usePresence } from './usePresence';
 export { useUserSearch, type UserSearchResult, type UseUserSearchReturn } from './useUserSearch';

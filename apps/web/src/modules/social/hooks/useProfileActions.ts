@@ -5,9 +5,6 @@ import { useState} from 'react';
 import { useFriendStore } from '@/modules/social/store';
 import type { UserProfileData, FriendshipStatus } from '@/types/profile.types';
 
-// Re-export submodule hooks
-export { useProfileData } from './useProfileData';
-export type { UseProfileDataReturn } from './useProfileData';
 // Profile Actions Hook (Friend requests, messaging, etc.)
 
 interface UseProfileActionsReturn {

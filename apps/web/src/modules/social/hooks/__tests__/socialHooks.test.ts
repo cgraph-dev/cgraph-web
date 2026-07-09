@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 const { mockFriendStore, mockAuthStore, mockApi, mockUnsubscribe } = vi.hoisted(() => ({
   mockFriendStore: {
     sendRequest: vi.fn(),
@@ -50,7 +50,6 @@ vi.mock('@/data/achievements', () => ({
 }));
 
 import { useProfileActions } from '../useProfileActions';
-import { useProfileData } from '../useProfileData';
 // NOTE: useProfileEdit removed — useProfileEdit.ts archived in batch 2
 // NOTE: usePresence, useUserOnline removed — usePresence.ts archived in batch 2
 import type { UserProfileData } from '@/types/profile.types';
@@ -156,75 +155,6 @@ describe('useProfileActions', () => {
     expect(result.current.isActioning).toBe(false);
   });
 });
-describe('useProfileData', () => {
-  const ownStats = { level: 5, totalXP: 500, loginStreak: 3, totalUnlocked: 2 };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should start with loading state', () => {
-    mockApi.get.mockReturnValue(new Promise(() => {})); // never resolves
-    const { result } = renderHook(() => useProfileData('user-1', false, ownStats));
-
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.profile).toBeNull();
-    expect(result.current.error).toBeNull();
-  });
-
-  it('should load profile data from API', async () => {
-    mockApi.get.mockResolvedValueOnce({
-      data: {
-        user: {
-          id: 'user-1',
-          username: 'bob',
-          display_name: 'Bob',
-          avatar_url: null,
-          banner_url: null,
-          bio: 'Hi',
-          status: 'online',
-          custom_status: null,
-          is_verified: true,
-          is_premium: false,
-          inserted_at: '2025-01-01',
-          friendship_status: 'friends',
-        },
-      },
-    });
-
-    const { result } = renderHook(() => useProfileData('user-1', false, ownStats));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.profile).not.toBeNull();
-    expect(result.current.profile!.username).toBe('bob');
-    expect(result.current.profile!.isVerified).toBe(true);
-    expect(result.current.friendshipStatus).toBe('friends');
-  });
-
-  it('should set error when API fails', async () => {
-    mockApi.get.mockRejectedValueOnce(new Error('Not found'));
-
-    const { result } = renderHook(() => useProfileData('user-1', false, ownStats));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.error).toBe('Failed to load user profile');
-    expect(result.current.profile).toBeNull();
-  });
-
-  it('should not fetch if userId is undefined', () => {
-    const { result: _result } = renderHook(() => useProfileData(undefined, false, ownStats));
-
-    // fetchProfile early-returns without calling the API
-    expect(mockApi.get).not.toHaveBeenCalled();
-  });
-});
-
 // NOTE: useProfileEdit describe block removed — useProfileEdit.ts archived in batch 2
 // NOTE: usePresence describe block removed — usePresence.ts archived in batch 2
 // NOTE: useUserOnline describe block removed — usePresence.ts archived in batch 2
