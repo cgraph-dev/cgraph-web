@@ -13,7 +13,10 @@ import type {
 } from '@cgraph-dev/shared-types';
 import type {
   ChatThemeBase,
+  ChatThemeConversationColor,
   ChatThemeConversationOverride,
+  ChatThemeCustomColor,
+  ChatThemeCustomColorData,
   ChatThemeCustomColorStore,
   ChatThemeDefaultConversationColor,
   ChatThemeSettings,
@@ -203,6 +206,21 @@ export interface CustomizationActions {
   toggleTimestamps: () => void;
   toggleCompactMode: () => void;
   setChatThemePreset: (base: ChatThemeBase, presetId: string) => void;
+  setDefaultConversationColor: (
+    color: ChatThemeConversationColor,
+    customColorData?: ChatThemeCustomColorData,
+  ) => void;
+  setConversationChatThemeColor: (
+    conversationId: string,
+    color: ChatThemeConversationColor,
+    customColorData?: ChatThemeCustomColorData,
+  ) => void;
+  addCustomChatColor: (color: ChatThemeCustomColor, conversationId?: string) => string;
+  editCustomChatColor: (colorId: string, color: ChatThemeCustomColor) => void;
+  removeCustomChatColor: (colorId: string) => void;
+  resetDefaultConversationColor: () => void;
+  resetConversationChatThemeColor: (conversationId: string) => void;
+  resetAllConversationChatThemeColors: () => void;
 
   // Profile actions
   setProfileCardStyle: (style: ProfileCardStyle) => void;

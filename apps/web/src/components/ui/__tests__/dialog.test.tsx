@@ -151,6 +151,19 @@ describe('DialogContent', () => {
     expect(el.className).toContain('custom-class');
   });
 
+  it('exposes an accessible modal dialog name when provided', () => {
+    render(
+      <Dialog open={true} onOpenChange={() => {}}>
+        <DialogContent ariaLabel="Conversation color">Content</DialogContent>
+      </Dialog>
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Conversation color' })).toHaveAttribute(
+      'aria-modal',
+      'true',
+    );
+  });
+
   it('stops click propagation (does not close dialog)', () => {
     const onOpenChange = vi.fn();
     render(

@@ -26,6 +26,7 @@ import {
   type ChatThemeBase,
 } from "./chat-panel.constants";
 import { ChatBubbleDemo } from "./chat-bubble-demo";
+import { ChatColorPicker } from "./chat-color-picker";
 
 // CHAT PANEL COMPONENT
 
@@ -168,6 +169,8 @@ export const ChatPanel = memo(function ChatPanel() {
           </div>
         </div>
       </section>
+
+      <ChatColorPicker />
 
       {/* Live Chat Preview */}
       <section>

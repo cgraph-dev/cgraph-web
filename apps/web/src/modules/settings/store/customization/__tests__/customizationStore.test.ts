@@ -416,6 +416,123 @@ describe('fetchCustomizations', () => {
     });
   });
 
+  it('sets global and per-conversation named chat colors through one persisted state owner', () => {
+    useCustomizationStore.getState().setDefaultConversationColor('crimson');
+    useCustomizationStore.getState().setConversationChatThemeColor('conversation-1', 'teal');
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      defaultConversationColor: { color: 'crimson' },
+      conversationChatThemeOverrides: {
+        'conversation-1': { conversationColor: 'teal' },
+      },
+      isDirty: true,
+    });
+  });
+
+  it('creates and edits a custom color while updating every active reference', () => {
+    const originalColor = { start: { hue: 220, saturation: 84 }, deg: 180 };
+    const colorId = useCustomizationStore.getState().addCustomChatColor(originalColor);
+    const updatedColor = {
+      start: { hue: 120, saturation: 70 },
+      end: { hue: 180, saturation: 80 },
+      deg: 270,
+    };
+
+    useCustomizationStore
+      .getState()
+      .setConversationChatThemeColor('conversation-1', 'custom', {
+        id: colorId,
+        value: originalColor,
+      });
+    useCustomizationStore.getState().editCustomChatColor(colorId, updatedColor);
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      defaultConversationColor: {
+        color: 'custom',
+        customColorData: { id: colorId, value: updatedColor },
+      },
+      customChatColors: {
+        colors: { [colorId]: updatedColor },
+        order: [colorId],
+      },
+      conversationChatThemeOverrides: {
+        'conversation-1': {
+          conversationColor: 'custom',
+          customColorId: colorId,
+          customColor: updatedColor,
+        },
+      },
+    });
+  });
+
+  it('removes a custom color and resets every default or conversation reference atomically', () => {
+    const removedColor = { start: { hue: 220, saturation: 84 }, deg: 180 };
+    const keptColor = { start: { hue: 40, saturation: 70 } };
+
+    useCustomizationStore.setState({
+      ...DEFAULT_STATE,
+      defaultConversationColor: {
+        color: 'custom',
+        customColorData: { id: 'remove', value: removedColor },
+      },
+      customChatColors: {
+        colors: { remove: removedColor, keep: keptColor },
+        version: 1,
+        order: ['remove', 'keep'],
+      },
+      conversationChatThemeOverrides: {
+        affected: {
+          conversationColor: 'custom',
+          customColorId: 'remove',
+          customColor: removedColor,
+        },
+        unaffected: { conversationColor: 'teal' },
+      },
+    });
+
+    useCustomizationStore.getState().removeCustomChatColor('remove');
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      defaultConversationColor: { color: 'ultramarine' },
+      customChatColors: {
+        colors: { keep: keptColor },
+        order: ['keep'],
+      },
+      conversationChatThemeOverrides: {
+        affected: {},
+        unaffected: { conversationColor: 'teal' },
+      },
+    });
+  });
+
+  it('resets a single conversation independently from the global default and other overrides', () => {
+    useCustomizationStore.setState({
+      ...DEFAULT_STATE,
+      defaultConversationColor: { color: 'crimson' },
+      conversationChatThemeOverrides: {
+        first: { conversationColor: 'teal' },
+        second: { conversationColor: 'violet' },
+      },
+    });
+
+    useCustomizationStore.getState().resetConversationChatThemeColor('first');
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      defaultConversationColor: { color: 'crimson' },
+      conversationChatThemeOverrides: {
+        second: { conversationColor: 'violet' },
+      },
+    });
+
+    useCustomizationStore.getState().resetAllConversationChatThemeColors();
+    useCustomizationStore.getState().resetDefaultConversationColor();
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      defaultConversationColor: { color: 'ultramarine' },
+      conversationChatThemeOverrides: {},
+    });
+  });
+
   it('uses server-cleared identity cosmetics over stale custom_config values', async () => {
     mockedApi.get.mockResolvedValueOnce({
       data: {

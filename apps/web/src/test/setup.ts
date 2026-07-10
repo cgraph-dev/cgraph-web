@@ -66,6 +66,7 @@ vi.mock('@/lib/animation-presets', () => {
       grid: { staggerChildren: 0.03, delayChildren: 0.05 },
     },
     entranceVariants: emptyVariants,
+    durationsSec: { fast: 0.15, normal: 0.25, slow: 0.4 },
     chatBubbleAnimations: {},
     hoverAnimations: emptyVariants,
     createPulseAnimation: noop,

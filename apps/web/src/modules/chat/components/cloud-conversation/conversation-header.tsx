@@ -9,10 +9,19 @@ import {
   ShieldCheckIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import { Palette } from 'lucide-react';
 import { GlassCardNeon } from '@/shared/components/ui';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ConnectionStatus } from '@/shared/components/connection-status';
+import { ChatColorPicker } from '@/modules/settings/components/customize/panels/chat-color-picker';
 import type { ConversationHeaderProps } from './types';
 import { tweens, loop } from '@/lib/animation-presets';
+import { useState } from 'react';
 
 /**
  */
@@ -20,6 +29,7 @@ import { tweens, loop } from '@/lib/animation-presets';
  * Conversation Header component.
  */
 export function ConversationHeader({
+  conversationId,
   conversationName,
   isTyping,
   canStartCall = false,
@@ -29,6 +39,8 @@ export function ConversationHeader({
   onStartVoiceCall,
   onStartVideoCall,
 }: ConversationHeaderProps) {
+  const [showColorPicker, setShowColorPicker] = useState(false);
+
   return (
     <GlassCardNeon className="border-primary-500/20 flex h-16 flex-shrink-0 items-center justify-between rounded-none border-b px-4">
       <motion.div
@@ -126,8 +138,29 @@ export function ConversationHeader({
           </>
         )}
 
+        {conversationId ? (
+          <motion.button
+            type="button"
+            onClick={() => setShowColorPicker(true)}
+            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+            whileTap={{ scale: 0.88 }}
+            aria-label="Change conversation color"
+            title="Conversation color"
+          >
+            <Palette className="h-5 w-5" aria-hidden="true" />
+          </motion.button>
+        ) : null}
+
         <ConnectionStatus />
       </motion.div>
+      <Dialog open={showColorPicker} onOpenChange={setShowColorPicker}>
+        <DialogContent ariaLabel="Conversation color" className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Conversation Color</DialogTitle>
+          </DialogHeader>
+          {conversationId ? <ChatColorPicker conversationId={conversationId} /> : null}
+        </DialogContent>
+      </Dialog>
     </GlassCardNeon>
   );
 }

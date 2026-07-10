@@ -33,6 +33,7 @@ export interface EnhancedMessageBubbleProps {
 }
 
 export interface ConversationHeaderProps {
+  conversationId?: string;
   conversationName: string;
   isTyping: boolean;
   canStartCall?: boolean;

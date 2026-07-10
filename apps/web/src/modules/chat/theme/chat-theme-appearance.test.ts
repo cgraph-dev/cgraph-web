@@ -69,4 +69,20 @@ describe('chat theme appearance', () => {
       color: '#ffffff',
     });
   });
+
+  it('uses an explicit CGraph conversation color over the T3G baseline bundle', () => {
+    const appearance = chatThemeSettingsToAppearance(
+      {
+        base: 'day',
+        accentColor: 0x0088ff,
+        messageColors: [0x0088ff, 0xff53f4],
+      },
+      { conversationColor: 'crimson' },
+    );
+
+    expect(appearance.outgoingBubbleStyle).toEqual({
+      background: '#d61f45',
+      color: '#ffffff',
+    });
+  });
 });

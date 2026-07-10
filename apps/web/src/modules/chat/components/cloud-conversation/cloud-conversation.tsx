@@ -101,7 +101,8 @@ export default function CloudConversation() {
     (state) => state.defaultConversationColor,
   );
   const conversationChatThemeOverride = useCustomizationStore(
-    (state) => state.conversationChatThemeOverrides[conversationId],
+    (state) =>
+      conversationId ? state.conversationChatThemeOverrides[conversationId] : undefined,
   );
   const chatThemeAppearance = useMemo(
     () =>
@@ -241,6 +242,7 @@ export default function CloudConversation() {
     <ConversationSurface
       header={
         <ConversationHeader
+          conversationId={conversationId}
           conversationName={conversation.name || 'Conversation'}
           isTyping={typing.length > 0}
           canStartCall={Boolean(callRecipientId)}

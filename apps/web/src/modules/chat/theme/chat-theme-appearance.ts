@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import {
+  DEFAULT_CHAT_THEME_CONVERSATION_COLOR,
   getChatThemeCustomColorStyle,
   resolveChatThemeConversationColor,
   chatThemePresetId,
@@ -10,6 +11,7 @@ import {
   type ChatThemeSettings,
   type ChatThemeWallpaperPreset,
 } from '@cgraph-dev/shared-types/chat-theme';
+import { getConversationColorSwatch } from './conversation-color-palette';
 
 export interface ChatThemeAppearance {
   readonly base: ChatThemeBase;
@@ -54,6 +56,8 @@ export function chatThemeSettingsToAppearance(
   const ownTailBackground = rgbIntToHex(
     settings.messageColors[settings.messageColors.length - 1] ?? settings.accentColor,
   );
+  const effectiveDefaultConversationColor =
+    defaultConversationColor ?? DEFAULT_CHAT_THEME_CONVERSATION_COLOR;
   const isDark = settings.base === 'night' || settings.base === 'tinted';
   const incomingBackground = isDark
     ? 'rgba(255, 255, 255, 0.12)'
@@ -63,13 +67,21 @@ export function chatThemeSettingsToAppearance(
     : defaultSurfaceBackground(settings.base);
   const resolvedConversationColor = resolveChatThemeConversationColor(
     conversationOverride,
-    defaultConversationColor,
+    effectiveDefaultConversationColor,
   );
   const customColorStyle = getChatThemeCustomColorStyle(
     resolvedConversationColor.customColor,
   );
   const ownTextColor = isDark ? '#f8fafc' : '#ffffff';
   const incomingTextColor = isDark ? '#f8fafc' : '#111827';
+  const shouldApplyConversationColor =
+    Object.keys(conversationOverride).length > 0 ||
+    Boolean(effectiveDefaultConversationColor.customColorData) ||
+    effectiveDefaultConversationColor.color !== DEFAULT_CHAT_THEME_CONVERSATION_COLOR.color;
+  const namedConversationSwatch =
+    shouldApplyConversationColor && resolvedConversationColor.conversationColor !== 'custom'
+      ? getConversationColorSwatch(resolvedConversationColor.conversationColor)
+      : undefined;
 
   return {
     base: settings.base,
@@ -86,6 +98,11 @@ export function chatThemeSettingsToAppearance(
     surfaceStyle: { background: previewBackground },
     outgoingBubbleStyle: customColorStyle
       ? { ...customColorStyle, color: ownTextColor }
+      : namedConversationSwatch
+        ? {
+            background: namedConversationSwatch.background,
+            color: namedConversationSwatch.foreground,
+          }
       : { background: ownBackground, color: ownTextColor },
     incomingBubbleStyle: {
       background: incomingBackground,
