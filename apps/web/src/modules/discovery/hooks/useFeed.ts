@@ -25,7 +25,7 @@ export interface FeedThread {
   hot_score: number;
   weighted_resonates: number;
   author: { id: string; username: string } | null;
-  board: { id: string; name: string; slug?: string } | null;
+  board: { id: string; forum_id: string; name: string; slug?: string } | null;
   created_at: string;
   updated_at: string;
 }

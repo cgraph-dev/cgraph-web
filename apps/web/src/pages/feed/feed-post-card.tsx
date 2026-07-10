@@ -111,7 +111,7 @@ export function FeedPostCard({ thread, className }: FeedPostCardProps) {
               contentId={thread.id}
               contentType="thread"
               authorId={thread.author.id}
-              forumId={thread.board.id}
+              forumId={thread.board.forum_id}
             />
           </div>
         )}
