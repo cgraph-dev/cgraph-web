@@ -9,7 +9,7 @@ import { ToggleRow, SectionHeader, OptionButton, PremiumBadge } from '../customi
 import { useCustomizationStore } from '@/modules/settings/store/customization';
 import { THEME_COLORS as themeColors } from '@/stores/theme';
 import { profileStyles } from './profile-panel.constants';
-import { ProfileCardPreviewLarge } from './profile-card-preview';
+import { ProfileCardPreview } from '../live-preview-panel/profile-card-preview';
 
 // PROFILE PANEL COMPONENT
 
@@ -35,7 +35,7 @@ export const ProfilePanel = memo(function ProfilePanel() {
           subtitle="See how your profile card looks"
           icon={<span className="text-lg">👤</span>}
         />
-        <ProfileCardPreviewLarge />
+        <ProfileCardPreview widthClassName="w-[320px]" />
       </section>
 
       {/* Card Style */}

@@ -9,7 +9,13 @@ import { useAuthStore } from '@/modules/auth/store';
 import { NewProfileCard, useProfileCardData } from '@/modules/social/components/user-profile-card';
 import type { ProfileCardUser } from '@/modules/social/components/user-profile-card';
 
-export const ProfileCardPreview = memo(function ProfileCardPreview() {
+interface ProfileCardPreviewProps {
+  widthClassName?: string;
+}
+
+export const ProfileCardPreview = memo(function ProfileCardPreview({
+  widthClassName = 'w-[288px]',
+}: ProfileCardPreviewProps) {
   const user = useAuthStore((s) => s.user);
 
   const profileUser: ProfileCardUser = {
@@ -42,7 +48,7 @@ export const ProfileCardPreview = memo(function ProfileCardPreview() {
         user={enrichedUser}
         mode="preview"
         variant="mini"
-        className="w-[288px] max-w-full"
+        className={`${widthClassName} max-w-full`}
       />
     </div>
   );
