@@ -1,7 +1,7 @@
 /** @module user-profile-card tests */
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import type { ProfileCardUser } from '../../profile-card/types';
+import type { ProfileCardUser } from '../types';
 import { http } from '@/lib/api-client';
 import UserProfileCard from '../user-profile-card';
 

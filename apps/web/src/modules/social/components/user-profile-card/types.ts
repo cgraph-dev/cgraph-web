@@ -2,16 +2,57 @@
  * User Profile Card Types
  *
  * Type definitions for the user profile card module.
- * Includes legacy types + new V2 profile card system types.
  */
 
-import type { ProfileCardFriendshipStatus, ProfileCardUser } from '../profile-card';
 import type { ProfileThemeId } from '@/data/profileThemes';
-import type { ProfileThemeAssetManifest } from '@cgraph-dev/shared-types';
+import type { FriendshipStatus } from '@/modules/social/types';
+import type { Achievement, ProfileThemeAssetManifest } from '@cgraph-dev/shared-types';
 
-export type { ProfileCardFriendshipStatus, ProfileCardUser };
+export interface ProfileCardUser {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string;
+  avatarBorderId?: string;
+  bio?: string;
+  level: number;
+  xp: number;
+  xpToNextLevel: number;
+  pulse: number;
+  streak: number;
+  equippedTitle?: {
+    id: string;
+    name: string;
+    rarity: string;
+    animation: { type: string; speed: number; intensity: number };
+    color: string;
+    gradient?: string;
+    lottieUrl?: string;
+    imageUrl?: string;
+  };
+  equippedBadges?: Achievement[];
+  messageCount?: number;
+  postCount?: number;
+  friendCount?: number;
+  forumCount?: number;
+  mutualFriends?: { id: string; username: string; avatarUrl: string }[];
+  forumsInCommon?: { id: string; name: string }[];
+  recentActivity?: { type: string; description: string; timestamp: string }[];
+  socialLinks?: { platform: string; url: string }[];
+  friendshipStatus?: ProfileCardFriendshipStatus;
+  topCommunities?: { forumId: string; forumName: string; score: number; tier: string }[];
+  isOnline: boolean;
+  lastSeen?: string;
+  pronouns?: string;
+  profile_theme?: string;
+  equipped_nameplate?: string;
+  display_name_font?: string;
+  display_name_effect?: string;
+  display_name_color?: string;
+  display_name_secondary_color?: string;
+}
 
-// LEGACY TYPES (preserved for backward compatibility)
+export type ProfileCardFriendshipStatus = FriendshipStatus;
 
 export interface UserProfileCardProps {
   userId: string;
@@ -67,7 +108,7 @@ export interface ProfileBadge {
 
 /**
  * Extended user type for the new profile card.
- * Inherits legacy xp/level fields from ProfileCardUser but does NOT
+ * Inherits base xp/level fields from ProfileCardUser but does NOT
  * add any new XP-related display fields.
  */
 export interface ProfileCardUserV2 extends ProfileCardUser {

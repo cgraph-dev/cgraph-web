@@ -18,9 +18,9 @@ import type {
   BadgeDisplayTier,
   NameplateVariant,
   ProfileBadge,
+  ProfileCardUser,
   ProfileCardUserV2,
 } from './types';
-import type { ProfileCardUser } from '../profile-card';
 const GENERIC_BADGE_LOTTIE_URL = '/lottie/effects/placeholder.json';
 
 const NAMEPLATE_MAP: Record<string, NameplateVariant> = {
