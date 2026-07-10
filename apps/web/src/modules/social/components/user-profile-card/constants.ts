@@ -34,10 +34,6 @@ export const DEFAULT_PLACEHOLDER_USER = {
   isOnline: false,
 } as const;
 
-export const MAX_MUTUAL_FRIENDS_DISPLAY = 5;
-export const MAX_BADGES_DISPLAY = 3;
-export const MAX_SHARED_FORUMS_DISPLAY = 3;
-
 // V2 ACCENT THEME PRESETS
 
 interface AccentTheme {

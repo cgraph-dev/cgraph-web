@@ -29,20 +29,6 @@ export interface MiniProfileCardProps {
   onMessage: () => void;
 }
 
-export interface FullProfileCardProps {
-  readonly user: ProfileCardUser;
-  readonly mutualFriends: MutualFriend[];
-  readonly onClose: () => void;
-  readonly onAddFriend?: () => void;
-  readonly onBlockUser?: () => void;
-}
-
-export interface MutualFriend {
-  id: string;
-  username: string;
-  avatarUrl?: string;
-}
-
 export interface CardPosition {
   top: number;
   left: number;
