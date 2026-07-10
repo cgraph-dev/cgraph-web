@@ -10,10 +10,11 @@
  * - Activity summary
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import type React from 'react';
+import type { Achievement } from '@cgraph-dev/shared-types';
 
 import {
   PaintBrushIcon,
@@ -23,6 +24,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { getAchievement } from '@/data/achievements';
+import { getBadgeById } from '@/data/badgesCollection';
 import { getProfileThemeOrDefault, type ProfileThemeConfig } from '@/data/profileThemes';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
@@ -50,12 +53,40 @@ import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { isCanonicalUsername, isValidProfileHandle, publicProfilePath } from '@/lib/profile-route';
 
-/** Stable empty array for stub achievements */
-const EMPTY_ACHIEVEMENTS: never[] = [];
-
 interface ProfileThemePageStyle extends React.CSSProperties {
   '--profile-theme-accent': string;
   '--profile-theme-accent-secondary': string;
+}
+
+const EMPTY_EQUIPPED_BADGE_IDS: readonly string[] = [];
+
+function titleFromBadgeId(id: string): string {
+  return id.replace(/[-_]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function achievementFromEquippedBadgeId(id: string): Achievement {
+  const achievement = getAchievement(id);
+
+  if (achievement) {
+    return {
+      ...achievement,
+      unlocked: true,
+    };
+  }
+
+  const badge = getBadgeById(id);
+
+  return {
+    id,
+    title: badge?.name ?? titleFromBadgeId(id),
+    description: badge?.description ?? 'Equipped profile badge',
+    category: 'social',
+    rarity: badge?.rarity ?? 'common',
+    icon: badge?.icon ?? '◇',
+    maxProgress: 1,
+    isHidden: false,
+    unlocked: true,
+  };
 }
 
 function getProfileThemePageStyle(theme: ProfileThemeConfig): ProfileThemePageStyle {
@@ -151,7 +182,8 @@ export function UserProfile() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user: currentUser } = useAuthStore();
-  const equippedBadges = useCustomizationStore((s) => s.equippedBadges) ?? [];
+  const equippedBadges =
+    useCustomizationStore((s) => s.equippedBadges) ?? EMPTY_EQUIPPED_BADGE_IDS;
   const selectedProfileThemeId = useCustomizationStore((s) => s.selectedProfileThemeId);
 
   const profileHandle = username ?? userId;
@@ -180,6 +212,10 @@ export function UserProfile() {
     isOwnProfile,
     setFriendshipStatus,
   });
+  const equippedBadgeAchievements = useMemo(
+    () => equippedBadges.map(achievementFromEquippedBadgeId),
+    [equippedBadges]
+  );
 
   useEffect(() => {
     if (username || !userId || currentUser?.id !== userId) return;
@@ -318,7 +354,7 @@ export function UserProfile() {
 
             <EquippedBadgesShowcase
               equippedBadges={equippedBadges}
-              achievements={EMPTY_ACHIEVEMENTS}
+              achievements={equippedBadgeAchievements}
               editMode={isOwnProfile && actions.editMode}
             />
 
