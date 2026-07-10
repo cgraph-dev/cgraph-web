@@ -233,4 +233,48 @@ describe('user-profile useProfileData', () => {
 
     expect(result.current.profile?.website).toBeUndefined();
   });
+
+  it('normalizes identity text and boolean fallbacks before rendering', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: profilePayload({
+          id: 42,
+          username: { invalid: true },
+          display_name: { invalid: true },
+          banner_url: { invalid: true },
+          bio: ['not bio'],
+          custom_status: 123,
+          status_message: { text: 'busy' },
+          is_verified: 'false',
+          is_premium: 'true',
+          display_name_font: 12,
+          display_name_effect: { name: 'spark' },
+          display_name_color: '',
+          display_name_secondary_color: ['#fff'],
+        }),
+      },
+    });
+
+    const { result } = renderProfileData();
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.profile).toMatchObject({
+      id: 'profileuser',
+      username: 'profileuser',
+      displayName: null,
+      avatarUrl: null,
+      bannerUrl: null,
+      bio: null,
+      statusMessage: null,
+      isVerified: false,
+      isPremium: false,
+      displayNameFont: null,
+      displayNameEffect: null,
+      displayNameColor: null,
+      displayNameSecondaryColor: null,
+    });
+  });
 });

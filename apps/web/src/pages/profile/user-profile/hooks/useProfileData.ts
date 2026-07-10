@@ -7,7 +7,7 @@ import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
 import { asStringOrNull, isRecord } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
-import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
+import { resolveAvatarUrl, resolveAvatarUrlFromRecord, resolveMediaUrl } from '@/lib/media-url';
 import { profileApiPathForHandle, type ProfileLookupMode } from '@/lib/profile-route';
 import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 import type { Achievement } from '@cgraph-dev/shared-types';
@@ -123,6 +123,14 @@ function firstProfileNumber(values: unknown[], fallback: number): number {
   }
 
   return fallback;
+}
+
+function profileBooleanFromApi(...values: unknown[]): boolean {
+  for (const value of values) {
+    if (typeof value === 'boolean') return value;
+  }
+
+  return false;
 }
 
 function profileWebsiteFromApi(value: unknown): string | undefined {
@@ -241,17 +249,29 @@ export function useProfileData({
         const identity = identityFieldsFromApi(userData);
 
         setProfile({
-          id: identity.id || userData.id,
-          username: identity.username || userData.username,
-          displayName: identity.displayName ?? userData.display_name,
+          id: firstProfileString(identity.id, userData.id) ?? handle,
+          username: firstProfileString(identity.username, userData.username) ?? handle,
+          displayName: firstProfileString(
+            identity.displayName,
+            userData.displayName,
+            userData.display_name
+          ),
           avatarUrl:
             resolveAvatarUrl(identity.avatarUrl) ?? resolveAvatarUrlFromRecord(userData),
-          bannerUrl: identity.bannerUrl ?? userData.banner_url,
-          bio: userData.bio,
+          bannerUrl:
+            resolveMediaUrl(identity.bannerUrl) ??
+            resolveMediaUrl(profileStringFromApi(userData.banner_url)) ??
+            null,
+          bio: profileStringFromApi(userData.bio),
           status: profileStatusFromIdentity(identity.status || userData.status),
-          statusMessage: identity.statusMessage ?? userData.custom_status ?? userData.status_message,
-          isVerified: userData.is_verified || false,
-          isPremium: userData.is_premium || false,
+          statusMessage: firstProfileString(
+            identity.statusMessage,
+            userData.statusMessage,
+            userData.custom_status,
+            userData.status_message
+          ),
+          isVerified: profileBooleanFromApi(userData.isVerified, userData.is_verified),
+          isPremium: profileBooleanFromApi(userData.isPremium, userData.is_premium),
           createdAt: profileDateFromApi(userData.inserted_at, userData.created_at),
           topCommunities: topCommunitiesFromApi(userData.topCommunities ?? userData.top_communities),
           mutualFriends: optionalProfileNumber(userData.mutual_friends_count),
@@ -303,20 +323,26 @@ export function useProfileData({
             userData.equipped_nameplate,
             userData.nameplate
           ),
-          displayNameFont:
-            identity.displayNameFont ?? userData.displayNameFont ?? userData.display_name_font ?? null,
-          displayNameEffect:
-            identity.displayNameEffect ??
-            userData.displayNameEffect ??
-            userData.display_name_effect ??
-            null,
-          displayNameColor:
-            identity.displayNameColor ?? userData.displayNameColor ?? userData.display_name_color ?? null,
-          displayNameSecondaryColor:
-            identity.displayNameSecondaryColor ??
-            userData.displayNameSecondaryColor ??
-            userData.display_name_secondary_color ??
-            null,
+          displayNameFont: firstProfileString(
+            identity.displayNameFont,
+            userData.displayNameFont,
+            userData.display_name_font
+          ),
+          displayNameEffect: firstProfileString(
+            identity.displayNameEffect,
+            userData.displayNameEffect,
+            userData.display_name_effect
+          ),
+          displayNameColor: firstProfileString(
+            identity.displayNameColor,
+            userData.displayNameColor,
+            userData.display_name_color
+          ),
+          displayNameSecondaryColor: firstProfileString(
+            identity.displayNameSecondaryColor,
+            userData.displayNameSecondaryColor,
+            userData.display_name_secondary_color
+          ),
         });
 
         setFriendshipStatus(
