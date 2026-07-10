@@ -75,7 +75,7 @@ const routeChunkRules = [
   },
   {
     label: 'profile route lazy chunk',
-    pattern: /^user-profile-.*\.js$/,
+    sourceMapModuleSuffix: 'src/pages/profile/user-profile/user-profile.tsx',
   },
   {
     label: 'admin route lazy chunk',
@@ -98,6 +98,28 @@ function readJsAssetSizes(directory) {
     });
 
   return files;
+}
+
+function findAssetsWithSourceMapModule(directory, assets, moduleSuffix) {
+  const assetByName = new Map(assets.map((asset) => [asset.name, asset]));
+  const matches = [];
+
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.js.map')) continue;
+
+    const asset = assetByName.get(entry.name.slice(0, -4));
+    if (!asset) continue;
+
+    const sourceMapPath = path.join(directory, entry.name);
+    const sourceMap = JSON.parse(readTextFile(sourceMapPath));
+    const sources = Array.isArray(sourceMap.sources) ? sourceMap.sources : [];
+
+    if (sources.some((source) => source.endsWith(moduleSuffix))) {
+      matches.push(asset);
+    }
+  }
+
+  return matches;
 }
 
 function findLargest(files) {
@@ -233,11 +255,16 @@ for (const rule of budgetRules) {
 }
 
 for (const rule of routeChunkRules) {
-  const matching = jsAssets.filter((asset) => rule.pattern.test(asset.name));
+  const matching = rule.sourceMapModuleSuffix
+    ? findAssetsWithSourceMapModule(assetsDir, jsAssets, rule.sourceMapModuleSuffix)
+    : jsAssets.filter((asset) => rule.pattern.test(asset.name));
+  const matcher = rule.sourceMapModuleSuffix
+    ? `source map module ${rule.sourceMapModuleSuffix}`
+    : `pattern ${rule.pattern}`;
 
   if (matching.length === 0) {
     hasFailures = true;
-    console.error(`FAIL: ${rule.label} not found for pattern ${rule.pattern}`);
+    console.error(`FAIL: ${rule.label} not found for ${matcher}`);
     continue;
   }
 
