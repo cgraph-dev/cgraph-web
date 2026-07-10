@@ -3,40 +3,22 @@ import { render, screen } from '@testing-library/react';
 
 import BubblesCustomization from './bubbles-customization';
 
-vi.mock('@/stores/theme', () => ({
-  useThemeStore: () => ({
-    theme: {
-      chatBubbleStyle: 'default',
-      chatBubbleColor: 'emerald',
-      bubbleBorderRadius: 16,
-      bubbleShadowIntensity: 30,
-      bubbleGlassEffect: true,
-      bubbleShowTail: true,
-      bubbleHoverEffect: true,
-      bubbleEntranceAnimation: 'fade',
-    },
-    setChatBubbleStyle: vi.fn(),
-    updateTheme: vi.fn(),
-  }),
-}));
+vi.mock('@/components/theme/theme-customizer/bubbles-tab', () => {
+  throw new Error('BubblesCustomization must not import the legacy BubblesTab.');
+});
 
-vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
-  useCustomizationStore: () => vi.fn(),
-}));
+vi.mock('@/stores/theme', () => {
+  throw new Error('BubblesCustomization must not import the legacy theme store.');
+});
 
-vi.mock('@/components/theme/theme-customizer/bubbles-tab', () => ({
-  BubblesTab: () => <div data-testid="legacy-bubbles-tab" />,
-}));
-
-vi.mock('@/modules/settings/components/customize/panels/chat-color-picker', () => ({
-  ChatColorPicker: () => <div data-testid="chat-color-picker" />,
+vi.mock('@/modules/settings/components/customize/panels/chat-panel', () => ({
+  ChatPanel: () => <div data-testid="chat-theme-panel" />,
 }));
 
 describe('BubblesCustomization', () => {
-  it('mounts the global chat color picker on the routed Bubbles surface', () => {
+  it('mounts the persisted chat-theme surface without the legacy BubblesTab', () => {
     render(<BubblesCustomization />);
 
-    expect(screen.getByTestId('chat-color-picker')).toBeInTheDocument();
-    expect(screen.getByTestId('legacy-bubbles-tab')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-theme-panel')).toBeInTheDocument();
   });
 });

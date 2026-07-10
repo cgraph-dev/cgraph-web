@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CHAT_UI_MESSAGE_ENTRANCE_ANIMATIONS } from "@cgraph-dev/shared-types";
-
 import {
   CHAT_THEME_BASES,
-  bubbleAnimations,
   chatThemeBaseTabs,
   chatThemePresetId,
   deriveDarkChatThemeMessageColors,
@@ -14,20 +11,6 @@ import {
 } from "../chat-panel.constants";
 
 describe("chat panel constants", () => {
-  it("uses the shared package entrance animation set", () => {
-    expect(bubbleAnimations.map((animation) => animation.id)).toEqual(
-      CHAT_UI_MESSAGE_ENTRANCE_ANIMATIONS,
-    );
-    expect(bubbleAnimations.map((animation) => animation.id)).toEqual([
-      "none",
-      "slide",
-      "fade",
-      "scale",
-      "bounce",
-      "flip",
-    ]);
-  });
-
   it("keeps the source-first T3G base order and preset counts", () => {
     expect(CHAT_THEME_BASES).toEqual(["classic", "day", "night", "tinted"]);
     expect(chatThemeBaseTabs.map((tab) => tab.id)).toEqual(CHAT_THEME_BASES);

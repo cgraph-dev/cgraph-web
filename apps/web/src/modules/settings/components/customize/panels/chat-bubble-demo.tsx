@@ -1,17 +1,10 @@
-/**
- * Chat bubble preview demo component.
- */
-import { memo } from "react";
-import { motion } from "motion/react";
-import { springs } from "@/lib/animation-presets";
-import { useCustomizationStore } from "@/modules/settings/store/customization";
-import { THEME_COLORS as themeColors } from "@/stores/theme";
-import type { ChatThemePreviewStyle } from "./chat-panel.constants";
+import { memo } from 'react';
+import type { ChatThemePreviewStyle } from './chat-panel.constants';
 
 interface ChatBubbleDemoProps {
-  isOwn: boolean;
-  message: string;
-  themePreview?: ChatThemePreviewStyle;
+  readonly isOwn: boolean;
+  readonly message: string;
+  readonly themePreview: ChatThemePreviewStyle;
 }
 
 export const ChatBubbleDemo = memo(function ChatBubbleDemo({
@@ -19,105 +12,21 @@ export const ChatBubbleDemo = memo(function ChatBubbleDemo({
   message,
   themePreview,
 }: ChatBubbleDemoProps) {
-  const {
-    chatBubbleColor,
-    bubbleBorderRadius,
-    bubbleShadowIntensity,
-    bubbleGlassEffect,
-    bubbleShowTail,
-    bubbleEntranceAnimation,
-  } = useCustomizationStore();
-
-  const colors = themeColors[chatBubbleColor];
-  const background = themePreview
-    ? isOwn
-      ? themePreview.ownBackground
-      : themePreview.incomingBackground
-    : isOwn
-      ? bubbleGlassEffect
-        ? `linear-gradient(135deg, ${colors.primary}90, ${colors.secondary}70)`
-        : `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`
-      : bubbleGlassEffect
-        ? "rgba(255, 255, 255, 0.1)"
-        : "rgba(255, 255, 255, 0.15)";
-  const tailBackground = themePreview
-    ? isOwn
-      ? themePreview.ownTailBackground
-      : themePreview.incomingBackground
-    : isOwn
-      ? bubbleGlassEffect
-        ? `${colors.secondary}70`
-        : colors.secondary
-      : bubbleGlassEffect
-        ? "rgba(255, 255, 255, 0.1)"
-        : "rgba(255, 255, 255, 0.15)";
-  const textColor = themePreview
-    ? isOwn
-      ? themePreview.ownTextColor
-      : themePreview.incomingTextColor
-    : undefined;
-
-  const getAnimationVariants = () => {
-    switch (bubbleEntranceAnimation) {
-      case "slide":
-        return {
-          initial: { x: isOwn ? 50 : -50, opacity: 0 },
-          animate: { x: 0, opacity: 1 },
-        };
-      case "fade":
-        return { initial: { opacity: 0 }, animate: { opacity: 1 } };
-      case "scale":
-        return {
-          initial: { scale: 0.5, opacity: 0 },
-          animate: { scale: 1, opacity: 1 },
-        };
-      case "bounce":
-        return {
-          initial: { y: 30, opacity: 0 },
-          animate: { y: 0, opacity: 1 },
-        };
-      case "flip":
-        return {
-          initial: { rotateX: 90, opacity: 0 },
-          animate: { rotateX: 0, opacity: 1 },
-        };
-      default:
-        return { initial: { opacity: 1 }, animate: { opacity: 1 } };
-    }
-  };
-
-  const variants = getAnimationVariants();
+  const bubbleStyle = isOwn
+    ? themePreview.outgoingBubbleStyle
+    : themePreview.incomingBubbleStyle;
 
   return (
-    <motion.div
+    <div
       className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
-      initial={variants.initial}
-      animate={variants.animate}
-      transition={springs.stiff}
     >
       <div
-        className={`relative max-w-[80%] px-4 py-2.5 ${isOwn ? "text-white" : "text-white/90"}`}
-        style={{
-          borderRadius: bubbleBorderRadius,
-          boxShadow: `0 4px ${bubbleShadowIntensity / 4}px rgba(0, 0, 0, ${bubbleShadowIntensity / 100})`,
-          background,
-          backdropFilter: bubbleGlassEffect ? "blur(10px)" : "none",
-          color: textColor,
-        }}
+        className="max-w-[80%] rounded-2xl px-4 py-2.5 text-sm"
+        data-chat-theme-preview-bubble={isOwn ? 'outgoing' : 'incoming'}
+        style={bubbleStyle}
       >
-        <p className="text-sm">{message}</p>
-
-        {bubbleShowTail && (
-          <div
-            className={`absolute bottom-0 h-3 w-3 ${isOwn ? "-right-1" : "-left-1"}`}
-            style={{
-              background: tailBackground,
-              borderRadius: isOwn ? "0 0 0 8px" : "0 0 8px 0",
-              transform: isOwn ? "skewX(-15deg)" : "skewX(15deg)",
-            }}
-          />
-        )}
+        {message}
       </div>
-    </motion.div>
+    </div>
   );
 });
