@@ -1,6 +1,6 @@
 /** @module conversation-page tests */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 vi.mock('@/modules/chat/components/cloud-conversation', () => ({
@@ -14,6 +14,7 @@ vi.mock('@/components/mobile-only-feature', () => ({
 }));
 
 const useChatStoreMock = vi.fn();
+const fetchConversations = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/modules/chat/store/chatStore.impl', () => ({
   useChatStore: (selector?: (state: unknown) => unknown) => useChatStoreMock(selector),
 }));
@@ -23,7 +24,11 @@ import type { Conversation as ConversationType } from '@/modules/chat/store/chat
 
 function setConversations(convs: readonly ConversationType[]): void {
   useChatStoreMock.mockImplementation((selector?: (state: unknown) => unknown) => {
-    const state = { conversations: convs };
+    const state = {
+      conversations: convs,
+      isLoadingConversations: false,
+      fetchConversations,
+    };
     return selector ? selector(state) : state;
   });
 }
@@ -56,6 +61,7 @@ function makeConv(overrides: Partial<ConversationType> = {}): ConversationType {
 describe('ConversationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    fetchConversations.mockResolvedValue(undefined);
   });
 
   it('renders cloud UI when conversationType is cloud', () => {
@@ -77,9 +83,11 @@ describe('ConversationPage', () => {
     expect(getByTestId('mobile-only')).toBeInTheDocument();
   });
 
-  it('renders MobileOnlyFeature when conversation is not loaded yet', () => {
+  it('loads the conversation list before applying the unknown-tier gate', async () => {
     setConversations([]);
-    const { getByTestId } = renderAt('c1');
-    expect(getByTestId('mobile-only')).toBeInTheDocument();
+    renderAt('c1');
+
+    expect(screen.getByRole('status', { name: 'Loading conversation' })).toBeInTheDocument();
+    await waitFor(() => expect(fetchConversations).toHaveBeenCalledOnce());
   });
 });

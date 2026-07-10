@@ -315,6 +315,33 @@ describe('createMessageOpsActions', () => {
     });
   });
 
+  describe('addMessage', () => {
+    it('hydrates a blank Cloud replay when conversation history provides display plaintext', async () => {
+      const replayedMessage = makeMsg({
+        id: 'cloud-message-1',
+        content: '',
+        isEncrypted: true,
+        requiresMobile: undefined,
+      });
+      const hydratedMessage = makeMsg({
+        id: 'cloud-message-1',
+        content: 'Cloud message from conversation history',
+        isEncrypted: true,
+        requiresMobile: false,
+      });
+      const { set, get, state } = createMockSetGet();
+      const actions = createMessageOpsActions(set as never, get as never);
+
+      actions.addMessage(replayedMessage);
+      await Promise.resolve();
+      actions.addMessage(hydratedMessage);
+      await Promise.resolve();
+
+      expect(state.messages?.['conv-1']).toEqual([hydratedMessage]);
+      expect(state.messageIdSets?.['conv-1']).toEqual(new Set(['cloud-message-1']));
+    });
+  });
+
   describe('removeMessage', () => {
     it('filters out the message and cleans id set', () => {
       const msg = makeMsg();

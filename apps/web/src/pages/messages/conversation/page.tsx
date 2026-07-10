@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { MobileOnlyFeature } from '@/components/mobile-only-feature';
 import { CloudConversation } from '@/modules/chat/components/cloud-conversation';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
+import { LoadingSpinner } from '@/pages/messages/messages/empty-states';
 
 /**
  * Direct-message conversation route.
@@ -18,6 +19,41 @@ export default function Conversation(): ReactNode {
   const conversation = useChatStore((state) =>
     state.conversations.find((c) => c.id === conversationId)
   );
+  const isLoadingConversations = useChatStore((state) => state.isLoadingConversations);
+  const fetchConversations = useChatStore((state) => state.fetchConversations);
+  const [resolvedConversationId, setResolvedConversationId] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    if (conversation) {
+      setResolvedConversationId(conversationId);
+      return;
+    }
+
+    let active = true;
+    void fetchConversations()
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setResolvedConversationId(conversationId);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [conversation, conversationId, fetchConversations]);
+
+  if (!conversation && (conversationId !== resolvedConversationId || isLoadingConversations)) {
+    return (
+      <div
+        className="flex h-full flex-1 items-center justify-center"
+        role="status"
+        aria-label="Loading conversation"
+      >
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   if (conversation?.conversationType === 'cloud') {
     return <CloudConversation />;

@@ -34,6 +34,21 @@ function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+function historyFrameIncludes(frame: string, text: string): boolean {
+  try {
+    const decoded: unknown = JSON.parse(frame);
+    if (!Array.isArray(decoded) || decoded[3] !== 'message_history') return false;
+
+    const payload = decoded[4];
+    if (!payload || typeof payload !== 'object' || !('messages' in payload)) return false;
+
+    const messages = payload.messages;
+    return Array.isArray(messages) && messages.some((message) => JSON.stringify(message).includes(text));
+  } catch {
+    return false;
+  }
+}
+
 function sqlLiteral(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
 }
@@ -219,6 +234,12 @@ test.describe('Post-registration Cloud DM live web acceptance', () => {
     const bob = await registerLiveAccount(request, 'bob');
     const alicePage = await newSignedInPage(browser, alice);
     const bobPage = await newSignedInPage(browser, bob);
+    const bobSocketFrames: string[] = [];
+    bobPage.on('websocket', (socket) => {
+      socket.on('framereceived', (event) => {
+        bobSocketFrames.push(event.payload);
+      });
+    });
     const aliceText = `alice live cloud proof ${Date.now()}`;
     const bobText = `bob live cloud proof ${Date.now()}`;
 
@@ -236,6 +257,9 @@ test.describe('Post-registration Cloud DM live web acceptance', () => {
 
       await openFriends(bobPage);
       await openFriendDm(bobPage, alice.username);
+      await expect.poll(() => bobSocketFrames.some((frame) => historyFrameIncludes(frame, aliceText))).toBe(
+        true
+      );
       await expect(bobPage.getByLabel('Conversation messages')).toContainText(aliceText);
       await sendMessage(bobPage, bobText);
 

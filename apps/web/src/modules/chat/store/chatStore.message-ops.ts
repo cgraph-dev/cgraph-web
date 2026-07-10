@@ -52,6 +52,19 @@ function compareMessages(left: Message, right: Message): number {
   return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
 }
 
+function shouldHydrateCloudDisplayMessage(existing: Message, incoming: Message): boolean {
+  return (
+    existing.isEncrypted &&
+    incoming.isEncrypted &&
+    existing.deletedAt === null &&
+    incoming.deletedAt === null &&
+    existing.content.length === 0 &&
+    incoming.content.length > 0 &&
+    incoming.requiresMobile === false &&
+    incoming.decryptionFailed !== true
+  );
+}
+
 function isReactionSummary(reaction: Reaction): boolean {
   return (
     typeof reaction.count === 'number' ||
@@ -311,6 +324,29 @@ export function createMessageOpsActions(set: Set, get: Get) {
 
           // O(1) deduplication check
           if (idSet.has(normalizedMessage.id)) {
+            const existingMessage = conversationMessages.find(
+              (candidate) => candidate.id === normalizedMessage.id
+            );
+
+            if (existingMessage && shouldHydrateCloudDisplayMessage(existingMessage, normalizedMessage)) {
+              const hydratedMessage = { ...existingMessage, ...normalizedMessage };
+
+              return {
+                messages: {
+                  ...state.messages,
+                  [normalizedMessage.conversationId]: conversationMessages.map((candidate) =>
+                    candidate.id === normalizedMessage.id ? hydratedMessage : candidate
+                  ),
+                },
+                conversations: state.conversations.map((conversation) =>
+                  conversation.id === normalizedMessage.conversationId &&
+                  conversation.lastMessage?.id === normalizedMessage.id
+                    ? { ...conversation, lastMessage: hydratedMessage }
+                    : conversation
+                ),
+              };
+            }
+
             return state;
           }
 
