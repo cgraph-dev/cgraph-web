@@ -18,14 +18,3 @@ export { FriendshipActions } from './friendship-actions';
 
 // Hooks
 export { useProfileData } from './hooks/useProfileData';
-
-// Types
-export type {
-  ProfileEditState,
-  FileUploadState,
-  ProfileBannerProps,
-  ProfileAvatarProps,
-  ProfileNameSectionProps,
-  ProfileAboutProps,
-  FriendshipActionsProps,
-} from './types';
