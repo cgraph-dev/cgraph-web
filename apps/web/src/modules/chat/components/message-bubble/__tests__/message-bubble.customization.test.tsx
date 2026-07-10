@@ -10,6 +10,7 @@ import type { Message } from '@/modules/chat/store/chatStore.impl';
 import type { UIPreferences } from '../preferences';
 import { DEFAULT_UI_PREFERENCES } from '../preferences';
 import { areMessageBubblePropsEqual } from '../utils';
+import { chatThemeSettingsToAppearance } from '@/modules/chat/theme/chat-theme-appearance';
 
 // Mock framer-motion to prevent layout animation infinite loops in jsdom
 // Proxy defined inline because vi.mock factories are hoisted above variable declarations
@@ -164,6 +165,30 @@ describe('MessageBubble Customization', () => {
     render(<MessageBubble {...defaultProps} message={ownMsg} isOwn={true} />);
     // Should render with 'neon' style from mocked store
     expect(screen.getByText('Hello world')).toBeTruthy();
+  });
+
+  it('uses the Cloud Conversation chat appearance for outgoing bubbles', () => {
+    const ownMessage = createMessage({
+      senderId: 'user-1',
+      sender: { id: 'user-1', username: 'me', displayName: 'Me', avatarUrl: null },
+    });
+    const appearance = chatThemeSettingsToAppearance({
+      base: 'classic',
+      accentColor: 0x3390ec,
+      messageColors: [0x123456],
+    });
+    const { container } = render(
+      <MessageBubble
+        {...defaultProps}
+        message={ownMessage}
+        isOwn={true}
+        chatThemeAppearance={appearance}
+      />,
+    );
+
+    const bubble = container.querySelector('[data-chat-theme-bubble="outgoing"]');
+    expect(bubble).toBeTruthy();
+    expect(bubble).toHaveStyle({ background: '#123456', color: '#ffffff' });
   });
 
   it('renders sender title when available', () => {

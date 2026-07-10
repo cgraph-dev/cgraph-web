@@ -17,6 +17,7 @@ import { AnimatedReactionBubble } from './animated-reaction-bubble';
 import { TypingIndicator } from './typing-indicator';
 import { MessageBubble, type UIPreferences } from './message-bubble';
 import { MediaAlbum } from './media-album';
+import type { ChatThemeAppearance } from '@/modules/chat/theme/chat-theme-appearance';
 import type { MediaAlbumItem } from '@cgraph-dev/shared-types';
 /** Album group: consecutive messages sharing the same albumId. */
 interface AlbumGroup {
@@ -120,6 +121,7 @@ interface MessageListProps {
   selectedMessageIds?: ReadonlySet<string>;
   onToggleSelect?: (messageId: string) => void;
   onEnterSelectMode?: (messageId: string) => void;
+  chatThemeAppearance?: ChatThemeAppearance;
 }
 
 // Flat row type for virtualizer
@@ -160,6 +162,7 @@ export function MessageList({
   selectedMessageIds = EMPTY_SELECTION,
   onToggleSelect,
   onEnterSelectMode,
+  chatThemeAppearance,
 }: MessageListProps) {
   const navigate = useNavigate();
   const fallbackRef = useRef<HTMLDivElement>(null);
@@ -398,6 +401,7 @@ export function MessageList({
               onEditContentChange={onEditContentChange}
               onSaveEdit={onSaveEdit}
               onCancelEdit={onCancelEdit}
+              chatThemeAppearance={chatThemeAppearance}
             />
             {message.reactions && message.reactions.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">

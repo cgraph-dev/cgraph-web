@@ -171,6 +171,7 @@ export const MessageBubble = memo(function MessageBubble({
   onEditContentChange,
   onSaveEdit,
   onCancelEdit,
+  chatThemeAppearance,
 }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false);
   const [showEditHistory, setShowEditHistory] = useState(false);
@@ -209,8 +210,17 @@ export const MessageBubble = memo(function MessageBubble({
     onToggleMenu && (onSelect || onEdit || onPin || onForward || onDelete)
   );
 
-  const bubbleInlineStyle: React.CSSProperties = { ...(nameplateBubble?.style ?? {}) };
-  if (bubbleColor && !nameplateBubble) bubbleInlineStyle.backgroundColor = bubbleColor;
+  const bubbleInlineStyle: React.CSSProperties = {
+    ...(nameplateBubble?.style ?? {}),
+    ...(chatThemeAppearance
+      ? isOwn
+        ? chatThemeAppearance.outgoingBubbleStyle
+        : chatThemeAppearance.incomingBubbleStyle
+      : {}),
+  };
+  if (!chatThemeAppearance && bubbleColor && !nameplateBubble) {
+    bubbleInlineStyle.backgroundColor = bubbleColor;
+  }
   if (bubbleRadius != null) bubbleInlineStyle.borderRadius = `${bubbleRadius}px`;
 
   const bubbleVariants = {
@@ -331,7 +341,8 @@ export const MessageBubble = memo(function MessageBubble({
               nameplateBubble?.className,
               isOwn ? 'is-own text-white' : 'text-white',
               // Fallback Tailwind classes only when no custom bubble CSS class applies
-              !bubbleColor &&
+              !chatThemeAppearance &&
+                !bubbleColor &&
                 !nameplateBubble &&
                 bubbleStyle === 'default' &&
                 (isOwn
@@ -339,6 +350,9 @@ export const MessageBubble = memo(function MessageBubble({
                   : 'rounded-2xl rounded-bl-md border border-transparent bg-[var(--token-card-bg)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:bg-[var(--token-card-bg)] dark:border-[var(--token-border-muted)] dark:bg-[var(--token-card-bg)] dark:hover:bg-[var(--token-card-bg)]')
             )}
             style={bubbleInlineStyle}
+            data-chat-theme-bubble={
+              chatThemeAppearance ? (isOwn ? 'outgoing' : 'incoming') : undefined
+            }
             data-nameplate-bubble-id={nameplateBubble?.entry.id}
           >
             {message.isPinned && (

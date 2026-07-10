@@ -5,6 +5,7 @@
  */
 
 import type { Message } from '@/modules/chat/store/chatStore.impl';
+import type { ChatThemeAppearance } from '@/modules/chat/theme/chat-theme-appearance';
 import type { UIPreferences } from './preferences';
 
 /**
@@ -34,6 +35,7 @@ export interface MessageBubbleProps {
   onEditContentChange?: (content: string) => void;
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
+  chatThemeAppearance?: ChatThemeAppearance;
 }
 
 /**

@@ -2,6 +2,7 @@ import type { ReactNode, RefObject, UIEventHandler } from 'react';
 import { motion } from 'motion/react';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
+import type { ChatThemeAppearance } from '@/modules/chat/theme/chat-theme-appearance';
 
 export interface ConversationSurfaceProps {
   readonly header: ReactNode;
@@ -13,6 +14,7 @@ export interface ConversationSurfaceProps {
   readonly requestBanner?: ReactNode;
   readonly scrollControl?: ReactNode;
   readonly modalLayer?: ReactNode;
+  readonly chatThemeAppearance?: ChatThemeAppearance;
 }
 
 /**
@@ -30,6 +32,7 @@ export function ConversationSurface({
   requestBanner,
   scrollControl,
   modalLayer,
+  chatThemeAppearance,
 }: ConversationSurfaceProps) {
   return (
     <motion.div
@@ -46,6 +49,9 @@ export function ConversationSurface({
         onScroll={onMessagesScroll}
         className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6"
         aria-label="Conversation messages"
+        data-chat-theme-base={chatThemeAppearance?.base}
+        data-chat-conversation-color={chatThemeAppearance?.conversationColor}
+        style={chatThemeAppearance?.surfaceStyle}
       >
         {messages}
       </div>

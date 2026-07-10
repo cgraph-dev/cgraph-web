@@ -16,6 +16,8 @@ import { NewMessagesBar } from '@/modules/chat/components/new-messages-bar';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
 import { useBatchSelect } from '@/modules/chat/hooks/use-batch-select';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
+import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { chatThemeSettingsToAppearance } from '@/modules/chat/theme/chat-theme-appearance';
 import { toast } from '@/components/feedback/toast';
 
 async function writeClipboardText(text: string): Promise<void> {
@@ -94,6 +96,22 @@ export default function CloudConversation() {
     handleMessageRequestDeleted,
     messageActions,
   } = useCloudConversationController();
+  const chatThemeSettings = useCustomizationStore((state) => state.chatThemeSettings);
+  const defaultConversationColor = useCustomizationStore(
+    (state) => state.defaultConversationColor,
+  );
+  const conversationChatThemeOverride = useCustomizationStore(
+    (state) => state.conversationChatThemeOverrides[conversationId],
+  );
+  const chatThemeAppearance = useMemo(
+    () =>
+      chatThemeSettingsToAppearance(
+        chatThemeSettings,
+        conversationChatThemeOverride,
+        defaultConversationColor,
+      ),
+    [chatThemeSettings, conversationChatThemeOverride, defaultConversationColor],
+  );
 
   const pinnedMessages = conversationMessages.filter(
     (message) => message.isPinned && !message.deletedAt
@@ -277,6 +295,7 @@ export default function CloudConversation() {
       }
       messagesScrollRef={messagesScrollRef}
       onMessagesScroll={handleMessagesScroll}
+      chatThemeAppearance={chatThemeAppearance}
       messages={
         <>
           {newMessagesBelow > 0 ? (
@@ -309,6 +328,7 @@ export default function CloudConversation() {
             selectedMessageIds={batchSelect.selectedMessageIds}
             onToggleSelect={batchSelect.toggleSelect}
             onEnterSelectMode={handleEnterSelectMode}
+            chatThemeAppearance={chatThemeAppearance}
           />
           <BatchActionBar
             isSelecting={batchSelect.isSelecting}
