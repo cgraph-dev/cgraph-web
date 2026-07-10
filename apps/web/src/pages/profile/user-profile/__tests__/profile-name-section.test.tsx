@@ -79,6 +79,21 @@ describe('ProfileNameSection', () => {
     expect(screen.getByText('AFK')).toBeTruthy();
   });
 
+  it('uses the canonical backend tier when displaying top-community Pulse', () => {
+    render(
+      <ProfileNameSection
+        profile={makeProfile({
+          topCommunities: [
+            { forumId: 'forum-1', forumName: 'Community', score: 49, tier: 'active' },
+            { forumId: 'forum-2', forumName: 'CGraph', score: 50, tier: 'trusted' },
+          ],
+        })}
+      />
+    );
+
+    expect(screen.getByLabelText('Pulse score: 99 (Trusted)')).toBeInTheDocument();
+  });
+
   it('hides status message when absent', () => {
     render(<ProfileNameSection profile={makeProfile()} />);
     // No extra text beyond name/username

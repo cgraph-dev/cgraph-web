@@ -13,7 +13,8 @@ export const PulseDots = memo(function PulseDots({
   prefersReducedMotion,
   compact = false,
 }: PulseDotsProps) {
-  const isDim = tier === 'Newcomer';
+  const isDim = tier === 'newcomer';
+  const tierLabel = `${tier.slice(0, 1).toUpperCase()}${tier.slice(1)}`;
 
   return (
     <div
@@ -71,7 +72,7 @@ export const PulseDots = memo(function PulseDots({
           )}
           style={{ fontFamily: "'Inter', system-ui" }}
         >
-          {tier}
+          {tierLabel}
         </div>
         <div
           className={cn(

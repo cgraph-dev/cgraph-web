@@ -6,7 +6,10 @@
  * exposed per-forum (community-scoped) plus a global tier label.
  */
 
-export type PulseTier = 'bronze' | 'silver' | 'gold' | 'platinum';
+import { isPulseTier } from '@cgraph-dev/shared-types';
+import type { PulseTier } from '@cgraph-dev/shared-types';
+
+export type { PulseTier } from '@cgraph-dev/shared-types';
 
 export type PulseEntryValue = 1 | 0 | -1;
 
@@ -47,8 +50,6 @@ export interface PulseLeaderEntry {
   readonly tier: string;
 }
 
-const PULSE_TIERS: readonly PulseTier[] = ['bronze', 'silver', 'gold', 'platinum'];
-
 function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
@@ -59,11 +60,6 @@ function isStringOrNull(value: unknown): value is string | null {
 
 function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isPulseTier(value: unknown): value is PulseTier {
-  if (!isString(value)) return false;
-  return PULSE_TIERS.some((t) => t === value);
 }
 
 function isPulseEntryValue(value: unknown): value is PulseEntryValue {

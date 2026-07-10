@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import { pulseTierForScore } from '@cgraph-dev/shared-types';
 
 import { getBadgeById } from '@/data/badgesCollection';
 import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
@@ -8,10 +9,9 @@ import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 
 import {
-  getPulseFilled,
-  getPulseTier,
   mapRarityToDisplayTier,
   normalizeAccentThemeId,
+  pulseDotCountForTier,
 } from './constants';
 import type {
   AccentThemeId,
@@ -177,6 +177,7 @@ export function useProfileCardData(
 
     const energyRingTier = getHighestRarity(profileBadges);
     const pulseScore = user.pulse ?? 0;
+    const pulseTier = pulseTierForScore(pulseScore);
 
     const bannerType =
       energyRingTier === 'legendary' || energyRingTier === 'epic'
@@ -194,8 +195,8 @@ export function useProfileCardData(
       profileBadges,
       bannerType,
       energyRingTier,
-      pulseTier: getPulseTier(pulseScore),
-      pulseFilled: getPulseFilled(pulseScore),
+      pulseTier,
+      pulseFilled: pulseDotCountForTier(pulseTier),
       avatarBorderId: isOwnProfile
         ? (ownCustomization?.borderId ?? undefined)
         : (user.avatarBorderId ?? undefined),

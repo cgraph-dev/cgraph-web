@@ -14,19 +14,14 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { TrophyIcon } from '@heroicons/react/24/outline';
+import { isPulseTier, type PulseTier } from '@cgraph-dev/shared-types';
 import { publicProfilePath } from '@/lib/profile-route';
 import { usePulseStore } from '@/modules/pulse/store/pulseStore';
 import { PulseBadge } from '@/modules/pulse/components/pulse-badge';
-import type { PulseLeaderEntry, PulseTier } from '@/modules/pulse/types';
+import type { PulseLeaderEntry } from '@/modules/pulse/types';
 
 const ROW_HEIGHT = 72;
 const HEADER_HEIGHT = 56;
-
-const KNOWN_TIERS: readonly PulseTier[] = ['bronze', 'silver', 'gold', 'platinum'];
-
-function isPulseTier(value: string): value is PulseTier {
-  return KNOWN_TIERS.some((tier) => tier === value);
-}
 
 interface PulseLeaderboardPageProps {
   readonly forumId?: string | null;

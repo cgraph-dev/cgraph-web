@@ -13,9 +13,10 @@ import {
 } from '@/data/profileThemes';
 import {
   getProfileThemeAssetManifestOrDefault,
+  type PulseTier,
   type ProfileThemeAssetManifestSet,
 } from '@cgraph-dev/shared-types';
-import type { AccentThemeId, BadgeDisplayTier, NameplateVariant, PulseTier } from './types';
+import type { AccentThemeId, BadgeDisplayTier, NameplateVariant } from './types';
 
 // Hover behavior
 
@@ -209,50 +210,18 @@ export const BADGE_RARITY_CONFIG: Record<BadgeDisplayTier, BadgeRarityConfig> = 
   },
 };
 
-// V2 PULSE TIER SYSTEM
+/** Presentation-only dot count for the canonical Pulse tier. */
+const PULSE_DOT_COUNTS: Record<PulseTier, number> = {
+  newcomer: 0,
+  active: 1,
+  trusted: 2,
+  expert: 3,
+  authority: 4,
+  legend: 5,
+};
 
-export const PULSE_TIERS: { min: number; tier: PulseTier }[] = [
-  { min: 0, tier: 'Newcomer' },
-  { min: 20, tier: 'Beginner' },
-  { min: 50, tier: 'Intermediate' },
-  { min: 100, tier: 'Advanced' },
-  { min: 200, tier: 'Expert' },
-  { min: 500, tier: 'Master' },
-  { min: 1000, tier: 'Legend' },
-];
-
-/** Derive pulse tier from a raw score */
-export function getPulseTier(score: number): PulseTier {
-  let result: PulseTier = 'Newcomer';
-  for (const entry of PULSE_TIERS) {
-    if (score >= entry.min) {
-      result = entry.tier;
-    }
-  }
-  return result;
-}
-
-/** Derive filled dots (0–5) from score within current tier */
-export function getPulseFilled(score: number): number {
-  let currentMin = 0;
-  let nextMin = 20;
-
-  for (let i = 0; i < PULSE_TIERS.length; i++) {
-    const entry = PULSE_TIERS[i];
-    if (entry && score >= entry.min) {
-      currentMin = entry.min;
-      const next = PULSE_TIERS[i + 1];
-      nextMin = next?.min ?? currentMin + 500;
-    }
-  }
-
-  const lastTier = PULSE_TIERS[PULSE_TIERS.length - 1];
-  if (lastTier && score >= lastTier.min) {
-    return 5;
-  }
-
-  const progress = (score - currentMin) / (nextMin - currentMin);
-  return Math.min(5, Math.floor(progress * 5));
+export function pulseDotCountForTier(tier: PulseTier): number {
+  return PULSE_DOT_COUNTS[tier];
 }
 
 /**

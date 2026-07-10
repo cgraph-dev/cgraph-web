@@ -6,7 +6,9 @@
 
 import type { ProfileThemeId } from '@/data/profileThemes';
 import type { FriendshipStatus } from '@/modules/social/types';
-import type { Achievement, ProfileThemeAssetManifest } from '@cgraph-dev/shared-types';
+import type { Achievement, ProfileThemeAssetManifest, PulseTier } from '@cgraph-dev/shared-types';
+
+export type { PulseTier } from '@cgraph-dev/shared-types';
 
 export interface ProfileCardUser {
   id: string;
@@ -83,16 +85,6 @@ export type BadgeDisplayTier = 'legendary' | 'epic' | 'rare' | 'dim';
 
 /** Per-user accent theme (cosmetic choice, separate from app theme) */
 export type AccentThemeId = ProfileThemeId;
-
-/** Pulse tier derived from pulse score */
-export type PulseTier =
-  | 'Newcomer'
-  | 'Beginner'
-  | 'Intermediate'
-  | 'Advanced'
-  | 'Expert'
-  | 'Master'
-  | 'Legend';
 
 /** Badge with rarity info for the crystal gem display */
 export interface ProfileBadge {

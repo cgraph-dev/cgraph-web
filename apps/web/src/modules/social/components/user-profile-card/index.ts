@@ -54,9 +54,7 @@ export {
   ACCENT_THEMES,
   NAMEPLATE_STYLES,
   BADGE_RARITY_CONFIG,
-  PULSE_TIERS,
   normalizeAccentThemeId,
-  getPulseTier,
-  getPulseFilled,
+  pulseDotCountForTier,
   mapRarityToDisplayTier,
 } from './constants';

@@ -3,14 +3,13 @@
  *
  * Small rounded pill that surfaces a user's Pulse score with a tier accent.
  * Mounted next to a username on profile cards, mention popovers, and the
- * leaderboard. The accent colours are constrained to four tiers because
- * forum tiers (newcomer / active / trusted / ...) are a different concept
- * surfaced by `PulseDots`.
+ * leaderboard. Tier semantics come from the shared backend-aligned contract;
+ * this component owns only its local visual treatment.
  */
 
 import { memo } from 'react';
+import { pulseTierForScore, type PulseTier } from '@cgraph-dev/shared-types';
 import { cn } from '@/lib/utils';
-import type { PulseTier } from '@/modules/pulse/types';
 
 export interface PulseBadgeProps {
   readonly score: number;
@@ -25,38 +24,42 @@ interface TierStyle {
   readonly label: string;
 }
 
-// Tier accent colours match the spec for plan item #24:
-//   bronze   -> rgb(205, 127, 50)  (#cd7f32)
-//   silver   -> rgb(192, 192, 192) (#c0c0c0)
-//   gold     -> rgb(255, 215, 0)   (#ffd700)
-//   platinum -> rgb(229, 228, 226) (#e5e4e2)
-// rgb() form is used over hex literals so the no-hardcoded-hex eslint rule
-// stays clean. These will graduate to design tokens once the design system
-// adds tier-aware Pulse tokens.
 const TIER_STYLES: Record<PulseTier, TierStyle> = {
-  bronze: {
-    background: 'rgba(205, 127, 50, 0.15)',
-    border: 'rgba(205, 127, 50, 0.45)',
-    foreground: 'rgb(205, 127, 50)',
-    label: 'Bronze',
+  newcomer: {
+    background: 'rgba(156, 163, 175, 0.15)',
+    border: 'rgba(156, 163, 175, 0.45)',
+    foreground: 'rgb(156, 163, 175)',
+    label: 'Newcomer',
   },
-  silver: {
-    background: 'rgba(192, 192, 192, 0.15)',
-    border: 'rgba(192, 192, 192, 0.45)',
-    foreground: 'rgb(192, 192, 192)',
-    label: 'Silver',
+  active: {
+    background: 'rgba(96, 165, 250, 0.15)',
+    border: 'rgba(96, 165, 250, 0.45)',
+    foreground: 'rgb(96, 165, 250)',
+    label: 'Active',
   },
-  gold: {
-    background: 'rgba(255, 215, 0, 0.15)',
-    border: 'rgba(255, 215, 0, 0.5)',
-    foreground: 'rgb(255, 215, 0)',
-    label: 'Gold',
+  trusted: {
+    background: 'rgba(74, 222, 128, 0.15)',
+    border: 'rgba(74, 222, 128, 0.45)',
+    foreground: 'rgb(74, 222, 128)',
+    label: 'Trusted',
   },
-  platinum: {
-    background: 'rgba(229, 228, 226, 0.18)',
-    border: 'rgba(229, 228, 226, 0.55)',
-    foreground: 'rgb(229, 228, 226)',
-    label: 'Platinum',
+  expert: {
+    background: 'rgba(192, 132, 252, 0.15)',
+    border: 'rgba(192, 132, 252, 0.45)',
+    foreground: 'rgb(192, 132, 252)',
+    label: 'Expert',
+  },
+  authority: {
+    background: 'rgba(251, 191, 36, 0.15)',
+    border: 'rgba(251, 191, 36, 0.45)',
+    foreground: 'rgb(251, 191, 36)',
+    label: 'Authority',
+  },
+  legend: {
+    background: 'rgba(253, 224, 71, 0.18)',
+    border: 'rgba(253, 224, 71, 0.55)',
+    foreground: 'rgb(253, 224, 71)',
+    label: 'Legend',
   },
 };
 
@@ -80,18 +83,11 @@ export function formatPulseScore(score: number): string {
   return PLAIN_FORMATTER.format(score);
 }
 
-function inferTier(score: number): PulseTier {
-  if (score >= 5000) return 'platinum';
-  if (score >= 1000) return 'gold';
-  if (score >= 100) return 'silver';
-  return 'bronze';
-}
-
 /**
  * Inline Pulse score badge.
  */
 export const PulseBadge = memo(function PulseBadge({ score, tier, className }: PulseBadgeProps) {
-  const resolvedTier: PulseTier = tier ?? inferTier(score);
+  const resolvedTier: PulseTier = tier ?? pulseTierForScore(score);
   const style = TIER_STYLES[resolvedTier];
   const formatted = formatPulseScore(score);
 

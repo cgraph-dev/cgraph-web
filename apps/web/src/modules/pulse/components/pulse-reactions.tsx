@@ -4,6 +4,7 @@
  */
 
 import { memo, useState } from 'react';
+import { canFadeWithPulseScore, PULSE_FADE_MINIMUM_SCORE } from '@cgraph-dev/shared-types';
 import { cn } from '@/lib/utils';
 import { http } from '@/lib/api-client';
 
@@ -29,7 +30,7 @@ export const PulseReactions = memo(function PulseReactions({
   const [activeVote, setActiveVote] = useState<VoteType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const canFade = userPulse >= 50;
+  const canFade = canFadeWithPulseScore(userPulse);
 
   async function handleVote(voteType: VoteType) {
     if (isLoading) return;
@@ -74,7 +75,9 @@ export const PulseReactions = memo(function PulseReactions({
         type="button"
         onClick={() => handleVote('fade')}
         disabled={isLoading || activeVote !== null || !canFade}
-        title={canFade ? 'Fade this content' : 'Pulse ≥ 50 required to Fade'}
+        title={
+          canFade ? 'Fade this content' : `Pulse >= ${PULSE_FADE_MINIMUM_SCORE} required to Fade`
+        }
         className={cn(
           'rounded-full px-3 py-1 text-xs font-medium transition-colors',
           !canFade && 'cursor-not-allowed opacity-30',

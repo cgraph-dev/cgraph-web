@@ -153,7 +153,7 @@ export const NewProfileCard = memo(function NewProfileCard({
 
           <PulseDots
             filled={user.pulseFilled ?? 0}
-            tier={user.pulseTier ?? 'Newcomer'}
+            tier={user.pulseTier ?? 'newcomer'}
             score={user.pulse ?? 0}
             prefersReducedMotion={true}
             compact={isMini}

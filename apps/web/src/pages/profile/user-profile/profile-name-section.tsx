@@ -4,22 +4,15 @@
 
 import { motion } from 'motion/react';
 import { ShieldCheckIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
+import { isPulseTier, type PulseTier } from '@cgraph-dev/shared-types';
 import type { UserProfileData } from '@/types/profile.types';
 import { InlineTitle } from '@/shared/components/ui';
 import { springs } from '@/lib/animation-presets';
 import { PulseBadge } from '@/modules/pulse/components';
 import { Nameplate } from '@/modules/social/components/user-profile-card/nameplate';
-import type { PulseTier } from '@/modules/pulse/types';
 
 interface ProfileNameSectionProps {
   profile: UserProfileData;
-}
-
-const PULSE_TIERS: readonly PulseTier[] = ['bronze', 'silver', 'gold', 'platinum'];
-
-function isPulseTier(value: string | undefined): value is PulseTier {
-  if (value === undefined) return false;
-  return PULSE_TIERS.some((t) => t === value);
 }
 
 interface AggregatedPulse {
