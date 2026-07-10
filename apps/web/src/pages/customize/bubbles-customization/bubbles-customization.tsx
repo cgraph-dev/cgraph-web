@@ -14,6 +14,7 @@ import { useThemeStore } from '@/stores/theme';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { BubblesTab } from '@/components/theme/theme-customizer/bubbles-tab';
+import { ChatColorPicker } from '@/modules/settings/components/customize/panels/chat-color-picker';
 import type { ChatBubbleStylePreset, ThemeColorPreset } from '@/stores';
 import type { ThemePreset } from '@/modules/settings/store/customization/customizationStore.types';
 
@@ -66,20 +67,23 @@ export default function BubblesCustomization() {
   }
 
   return (
-    <BubblesTab
-      selectedStyle={theme.chatBubbleStyle}
-      selectedColor={theme.chatBubbleColor}
-      bubbleSettings={{
-        radius: theme.bubbleBorderRadius,
-        shadow: theme.bubbleShadowIntensity,
-        glass: theme.bubbleGlassEffect,
-        tail: theme.bubbleShowTail ?? true,
-        hover: theme.bubbleHoverEffect ?? true,
-        entrance: theme.bubbleEntranceAnimation ?? 'slide',
-      }}
-      onSelectStyle={handleSelectStyle}
-      onSelectColor={handleSelectColor}
-      onUpdateSettings={handleUpdateSettings}
-    />
+    <div className="space-y-8">
+      <ChatColorPicker />
+      <BubblesTab
+        selectedStyle={theme.chatBubbleStyle}
+        selectedColor={theme.chatBubbleColor}
+        bubbleSettings={{
+          radius: theme.bubbleBorderRadius,
+          shadow: theme.bubbleShadowIntensity,
+          glass: theme.bubbleGlassEffect,
+          tail: theme.bubbleShowTail ?? true,
+          hover: theme.bubbleHoverEffect ?? true,
+          entrance: theme.bubbleEntranceAnimation ?? 'slide',
+        }}
+        onSelectStyle={handleSelectStyle}
+        onSelectColor={handleSelectColor}
+        onUpdateSettings={handleUpdateSettings}
+      />
+    </div>
   );
 }
