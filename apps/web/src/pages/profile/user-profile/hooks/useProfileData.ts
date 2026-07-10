@@ -5,6 +5,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createLogger } from '@/lib/logger';
 import { http } from '@/lib/api-client';
+import { asStringOrNull, isRecord } from '@/lib/api-utils';
 import { identityFieldsFromApi } from '@/lib/identity';
 import { resolveAvatarUrl, resolveAvatarUrlFromRecord } from '@/lib/media-url';
 import { profileApiPathForHandle, type ProfileLookupMode } from '@/lib/profile-route';
@@ -16,6 +17,22 @@ const logger = createLogger('useProfileData');
 
 /** Stable empty array for stub achievements (avoids new reference each render) */
 const EMPTY_ACHIEVEMENTS: Achievement[] = [];
+const COSMETIC_ID_KEYS = [
+  'id',
+  'itemId',
+  'item_id',
+  'titleId',
+  'title_id',
+  'nameplateId',
+  'nameplate_id',
+  'profileTheme',
+  'profile_theme',
+  'profileThemeId',
+  'profile_theme_id',
+  'avatarBorderId',
+  'avatar_border_id',
+] as const;
+
 interface UseProfileDataOptions {
   profileHandle: string | undefined;
   lookupMode: ProfileLookupMode;
@@ -45,6 +62,28 @@ function profileStatusFromIdentity(status: unknown): UserProfileData['status'] {
     default:
       return 'offline';
   }
+}
+
+function cosmeticIdFromApi(value: unknown): string | null {
+  const direct = asStringOrNull(value);
+  if (direct !== null) return direct;
+  if (!isRecord(value)) return null;
+
+  for (const key of COSMETIC_ID_KEYS) {
+    const nested = asStringOrNull(value[key]);
+    if (nested !== null) return nested;
+  }
+
+  return null;
+}
+
+function firstCosmeticId(...values: unknown[]): string | null {
+  for (const value of values) {
+    const id = cosmeticIdFromApi(value);
+    if (id !== null) return id;
+  }
+
+  return null;
 }
 
 /**
@@ -146,21 +185,31 @@ export function useProfileData({
           postsCreated: userData.posts_created || 0,
           friendsCount: userData.friends_count || 0,
           // Title system - equipped title ID
-          equippedTitle:
+          equippedTitle: firstCosmeticId(
             identity.equippedTitleId ??
-            userData.equipped_title ??
-            userData.equipped_title_id ??
-            userData.title_id ??
-            null,
-          profileTheme: identity.profileTheme ?? userData.profileTheme ?? userData.profile_theme ?? null,
-          avatarBorderId:
-            identity.avatarBorderId ?? userData.avatarBorderId ?? userData.avatar_border_id ?? null,
-          equippedNameplateId:
+              userData.equippedTitleId ??
+              userData.equipped_title_id ??
+              userData.title_id,
+            userData.equipped_title,
+            userData.current_title
+          ),
+          profileTheme: firstCosmeticId(
+            identity.profileTheme ?? userData.profileTheme ?? userData.profile_theme_id,
+            userData.profile_theme
+          ),
+          avatarBorderId: firstCosmeticId(
+            identity.avatarBorderId ?? userData.avatarBorderId ?? userData.avatar_border_id,
+            userData.avatar_border
+          ),
+          equippedNameplateId: firstCosmeticId(
             identity.equippedNameplateId ??
-            userData.equippedNameplateId ??
-            userData.equipped_nameplate_id ??
-            userData.equipped_nameplate ??
-            null,
+              userData.equippedNameplateId ??
+              userData.equipped_nameplate_id ??
+              userData.nameplateId ??
+              userData.nameplate_id,
+            userData.equipped_nameplate,
+            userData.nameplate
+          ),
           displayNameFont:
             identity.displayNameFont ?? userData.displayNameFont ?? userData.display_name_font ?? null,
           displayNameEffect:

@@ -111,4 +111,48 @@ describe('user-profile useProfileData', () => {
 
     expect(result.current.friendshipStatus).toBe('pending_sent');
   });
+
+  it('normalizes nested cosmetic records into profile renderer ids', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: profilePayload({
+          equipped_title: { id: 'title-founder', name: 'Founder' },
+          equipped_nameplate: { id: 'plate_gilded_sapphire_loop_01', name: 'Gilded' },
+          profile_theme: { id: 'aurora-glass', name: 'Aurora Glass' },
+          avatar_border: { id: 'border_cyberpunk_common_01', name: 'Cyberpunk' },
+        }),
+      },
+    });
+
+    const { result } = renderProfileData();
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.profile).toMatchObject({
+      equippedTitle: 'title-founder',
+      equippedNameplateId: 'plate_gilded_sapphire_loop_01',
+      profileTheme: 'aurora-glass',
+      avatarBorderId: 'border_cyberpunk_common_01',
+    });
+  });
+
+  it('uses current title object id when no equipped title id is present', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: profilePayload({
+          current_title: { id: 'title-current', name: 'Current Title' },
+        }),
+      },
+    });
+
+    const { result } = renderProfileData();
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.profile?.equippedTitle).toBe('title-current');
+  });
 });
