@@ -182,25 +182,42 @@ export const MessageBubble = memo(function MessageBubble({
     setShowEditHistory((prev) => !prev);
   }
 
-  const ownBubbleStyle = useCustomizationStore((s) => s.chatBubbleStyle);
-  const ownBubbleRadius = useCustomizationStore((s) => s.bubbleBorderRadius);
-  const ownMessageEffect = useCustomizationStore((s) => s.messageEffect);
+  const usesLegacyBubbleAppearance = !chatThemeAppearance;
+  const ownBubbleStyle = useCustomizationStore((s) =>
+    usesLegacyBubbleAppearance ? s.chatBubbleStyle : undefined,
+  );
+  const ownBubbleRadius = useCustomizationStore((s) =>
+    usesLegacyBubbleAppearance ? s.bubbleBorderRadius : undefined,
+  );
+  const ownMessageEffect = useCustomizationStore((s) =>
+    usesLegacyBubbleAppearance ? s.messageEffect : undefined,
+  );
   const ownEquippedTitle = useCustomizationStore((s) => s.equippedTitle);
   const ownEquippedNameplate = useCustomizationStore((s) => s.equippedNameplate);
 
-  const bubbleStyle = isOwn ? ownBubbleStyle : (message.sender?.bubbleStyle ?? 'default');
-  const bubbleColor = isOwn ? null : (message.sender?.bubbleColor ?? null);
-  const bubbleRadius = isOwn ? ownBubbleRadius : (message.sender?.bubbleRadius ?? null);
-  const messageEffect = isOwn
-    ? (ownMessageEffect ?? 'none')
-    : (message.sender?.messageEffect ?? 'none');
+  const bubbleStyle = usesLegacyBubbleAppearance
+    ? isOwn
+      ? ownBubbleStyle
+      : (message.sender?.bubbleStyle ?? 'default')
+    : undefined;
+  const bubbleColor = usesLegacyBubbleAppearance && !isOwn ? (message.sender?.bubbleColor ?? null) : null;
+  const bubbleRadius = usesLegacyBubbleAppearance
+    ? isOwn
+      ? ownBubbleRadius
+      : (message.sender?.bubbleRadius ?? null)
+    : null;
+  const messageEffect = usesLegacyBubbleAppearance
+    ? isOwn
+      ? (ownMessageEffect ?? 'none')
+      : (message.sender?.messageEffect ?? 'none')
+    : 'none';
   const equippedTitleId = isOwn ? ownEquippedTitle : (message.sender?.equippedTitleId ?? null);
   const equippedNameplateId = isOwn
     ? (ownEquippedNameplate ?? authEquippedNameplateId)
     : (message.sender?.equippedNameplateId ?? null);
   const senderProfileUser = message.sender ? profileCardUserFromSender(message.sender) : undefined;
 
-  const bubbleCssClass = getMessageBubbleClass(bubbleStyle);
+  const bubbleCssClass = bubbleStyle ? getMessageBubbleClass(bubbleStyle) : undefined;
   const nameplateBubble = getNameplateBubbleStyle(equippedNameplateId, {
     isOwn,
     surface: 'message',
@@ -218,10 +235,12 @@ export const MessageBubble = memo(function MessageBubble({
         : chatThemeAppearance.incomingBubbleStyle
       : {}),
   };
-  if (!chatThemeAppearance && bubbleColor && !nameplateBubble) {
+  if (usesLegacyBubbleAppearance && bubbleColor && !nameplateBubble) {
     bubbleInlineStyle.backgroundColor = bubbleColor;
   }
-  if (bubbleRadius != null) bubbleInlineStyle.borderRadius = `${bubbleRadius}px`;
+  if (usesLegacyBubbleAppearance && bubbleRadius != null) {
+    bubbleInlineStyle.borderRadius = `${bubbleRadius}px`;
+  }
 
   const bubbleVariants = {
     initial: { opacity: 0, x: isOwn ? 16 : -16, y: 8, scale: 0.97 },

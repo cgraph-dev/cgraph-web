@@ -22,8 +22,8 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
       const state = {
         chatBubbleStyle: 'neon',
         chatBubbleColor: 'emerald',
-        bubbleBorderRadius: 'lg',
-        messageEffect: 'none',
+        bubbleBorderRadius: 48,
+        messageEffect: 'sparkle',
         equippedTitle: { id: 'title-1', name: 'Legend', color: '#fbbf24' },
         equippedNameplate: null,
       };
@@ -32,8 +32,8 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
     {
       getState: () => ({
         chatBubbleStyle: 'neon',
-        bubbleBorderRadius: 'lg',
-        messageEffect: 'none',
+        bubbleBorderRadius: 48,
+        messageEffect: 'sparkle',
         equippedTitle: null,
         equippedNameplate: null,
       }),
@@ -162,9 +162,9 @@ describe('MessageBubble Customization', () => {
       senderId: 'user-1',
       sender: { id: 'user-1', username: 'me', displayName: 'Me', avatarUrl: null },
     });
-    render(<MessageBubble {...defaultProps} message={ownMsg} isOwn={true} />);
-    // Should render with 'neon' style from mocked store
-    expect(screen.getByText('Hello world')).toBeTruthy();
+    const { container } = render(<MessageBubble {...defaultProps} message={ownMsg} isOwn={true} />);
+
+    expect(container.querySelector('.bubble-neon')).toBeTruthy();
   });
 
   it('uses the Cloud Conversation chat appearance for outgoing bubbles', () => {
@@ -189,6 +189,40 @@ describe('MessageBubble Customization', () => {
     const bubble = container.querySelector('[data-chat-theme-bubble="outgoing"]');
     expect(bubble).toBeTruthy();
     expect(bubble).toHaveStyle({ background: '#123456', color: '#ffffff' });
+    expect(bubble).not.toHaveClass('bubble-neon');
+    expect(bubble).not.toHaveStyle({ borderRadius: '48px' });
+    expect(container.querySelector('.message-effect-sparkle')).toBeNull();
+  });
+
+  it('does not layer a sender legacy bubble preference over an incoming chat appearance', () => {
+    const incomingMessage = createMessage({
+      sender: {
+        ...createMessage().sender,
+        bubbleStyle: 'glass',
+        bubbleColor: '#ef4444',
+        bubbleRadius: 48,
+        messageEffect: 'sparkle',
+      },
+    });
+    const appearance = chatThemeSettingsToAppearance({
+      base: 'night',
+      accentColor: 0x3390ec,
+      messageColors: [0x123456],
+    });
+    const { container } = render(
+      <MessageBubble
+        {...defaultProps}
+        message={incomingMessage}
+        isOwn={false}
+        chatThemeAppearance={appearance}
+      />,
+    );
+
+    const bubble = container.querySelector('[data-chat-theme-bubble="incoming"]');
+    expect(bubble).toBeTruthy();
+    expect(bubble).not.toHaveClass('bubble-glass');
+    expect(bubble).not.toHaveStyle({ borderRadius: '48px' });
+    expect(container.querySelector('.message-effect-sparkle')).toBeNull();
   });
 
   it('renders sender title when available', () => {
