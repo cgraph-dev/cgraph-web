@@ -12,7 +12,6 @@ export { default as UserProfileCard } from './user-profile-card';
 export { NewProfileCard } from './new-profile-card';
 
 // Sub-components
-export { MiniProfileCard } from './mini-profile-card';
 export { CardShell } from './profile-card-shell';
 export { BannerCanvas } from './banner-canvas';
 export { AvatarZone } from './avatar-zone';
@@ -25,7 +24,6 @@ export { ActionButtons } from './action-buttons';
 // Types
 export type {
   UserProfileCardProps,
-  MiniProfileCardProps,
   CardPosition,
   ProfileCardUser,
   // V2 types
@@ -52,7 +50,6 @@ export { useProfileCardData } from './use-profile-card-data';
 // Constants
 export {
   HOVER_DELAY_MS,
-  DEFAULT_PLACEHOLDER_USER,
   // V2 constants
   ACCENT_THEMES,
   NAMEPLATE_STYLES,

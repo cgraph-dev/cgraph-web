@@ -17,22 +17,9 @@ import {
 } from '@cgraph-dev/shared-types';
 import type { AccentThemeId, BadgeDisplayTier, NameplateVariant, PulseTier } from './types';
 
-// LEGACY CONSTANTS (preserved)
+// Hover behavior
 
 export const HOVER_DELAY_MS = 500;
-
-export const DEFAULT_PLACEHOLDER_USER = {
-  id: '',
-  username: 'Loading...',
-  displayName: 'Loading...',
-  avatarUrl: '',
-  level: 0,
-  xp: 0,
-  xpToNextLevel: 100,
-  pulse: 0,
-  streak: 0,
-  isOnline: false,
-} as const;
 
 // V2 ACCENT THEME PRESETS
 

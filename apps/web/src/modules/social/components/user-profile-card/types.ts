@@ -23,12 +23,6 @@ export interface UserProfileCardProps {
   className?: string;
 }
 
-export interface MiniProfileCardProps {
-  user: ProfileCardUser;
-  onViewProfile: () => void;
-  onMessage: () => void;
-}
-
 export interface CardPosition {
   top: number;
   left: number;
