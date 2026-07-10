@@ -155,4 +155,82 @@ describe('user-profile useProfileData', () => {
 
     expect(result.current.profile?.equippedTitle).toBe('title-current');
   });
+
+  it('normalizes raw stats, community rows, links, and profile dates before rendering', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: profilePayload({
+          inserted_at: { invalid: true },
+          created_at: '2026-07-08T12:30:00.000Z',
+          top_communities: [
+            {
+              forum_id: 'nodes',
+              forum_name: 'Nodes',
+              score: '1250',
+              tier: 'trusted',
+            },
+            {
+              forum_id: 'missing-name',
+              score: 50,
+              tier: 'active',
+            },
+            'not-a-community',
+          ],
+          mutual_friends_count: '3',
+          location: 42,
+          website: 'cgraph.org/profile',
+          level: '7',
+          total_xp: '12345',
+          current_xp: '345',
+          login_streak: '6',
+          achievement_count: '2',
+          total_achievements: '9',
+          messages_sent: '101',
+          posts_created: '12',
+          friends_count: '8',
+        }),
+      },
+    });
+
+    const { result } = renderProfileData();
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.profile).toMatchObject({
+      createdAt: '2026-07-08T12:30:00.000Z',
+      topCommunities: [{ forumId: 'nodes', forumName: 'Nodes', score: 1250, tier: 'trusted' }],
+      mutualFriends: 3,
+      website: 'https://cgraph.org/profile',
+      level: 7,
+      totalXP: 12345,
+      currentXP: 345,
+      loginStreak: 6,
+      achievementCount: 2,
+      totalAchievements: 9,
+      messagesSent: 101,
+      postsCreated: 12,
+      friendsCount: 8,
+    });
+    expect(result.current.profile?.location).toBeUndefined();
+  });
+
+  it('drops unsafe profile website protocols', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: profilePayload({
+          website: 'javascript:alert(1)',
+        }),
+      },
+    });
+
+    const { result } = renderProfileData();
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.profile?.website).toBeUndefined();
+  });
 });

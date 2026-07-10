@@ -33,6 +33,8 @@ const COSMETIC_ID_KEYS = [
   'avatar_border_id',
 ] as const;
 
+type ProfileTopCommunity = NonNullable<UserProfileData['topCommunities']>[number];
+
 interface UseProfileDataOptions {
   profileHandle: string | undefined;
   lookupMode: ProfileLookupMode;
@@ -84,6 +86,91 @@ function firstCosmeticId(...values: unknown[]): string | null {
   }
 
   return null;
+}
+
+function profileStringFromApi(value: unknown): string | null {
+  const text = asStringOrNull(value);
+  if (text === null) return null;
+
+  const trimmed = text.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function firstProfileString(...values: unknown[]): string | null {
+  for (const value of values) {
+    const text = profileStringFromApi(value);
+    if (text !== null) return text;
+  }
+
+  return null;
+}
+
+function optionalProfileNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value !== 'string') return undefined;
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function firstProfileNumber(values: unknown[], fallback: number): number {
+  for (const value of values) {
+    const numberValue = optionalProfileNumber(value);
+    if (numberValue !== undefined) return numberValue;
+  }
+
+  return fallback;
+}
+
+function profileWebsiteFromApi(value: unknown): string | undefined {
+  const website = profileStringFromApi(value);
+  if (website === null) return undefined;
+
+  const hasProtocol = /^[a-z][a-z0-9+.-]*:/i.test(website);
+  if (hasProtocol && !/^https?:\/\//i.test(website)) return undefined;
+
+  const href = hasProtocol ? website : `https://${website}`;
+  try {
+    const url = new URL(href);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function profileDateFromApi(...values: unknown[]): string {
+  for (const value of values) {
+    const date = profileStringFromApi(value);
+    if (date !== null && Number.isFinite(Date.parse(date))) return date;
+  }
+
+  return new Date().toISOString();
+}
+
+function topCommunitiesFromApi(value: unknown): ProfileTopCommunity[] {
+  if (!Array.isArray(value)) return [];
+
+  const communities: ProfileTopCommunity[] = [];
+
+  for (const item of value) {
+    if (!isRecord(item)) continue;
+
+    const forumId = firstProfileString(item.forumId, item.forum_id);
+    const forumName = firstProfileString(item.forumName, item.forum_name);
+    if (forumId === null || forumName === null) continue;
+
+    communities.push({
+      forumId,
+      forumName,
+      score: firstProfileNumber([item.score], 0),
+      tier: profileStringFromApi(item.tier) ?? 'newcomer',
+    });
+  }
+
+  return communities;
 }
 
 /**
@@ -165,25 +252,31 @@ export function useProfileData({
           statusMessage: identity.statusMessage ?? userData.custom_status ?? userData.status_message,
           isVerified: userData.is_verified || false,
           isPremium: userData.is_premium || false,
-          createdAt: userData.inserted_at || userData.created_at,
-          topCommunities: userData.top_communities || [],
-          mutualFriends: userData.mutual_friends_count,
-          location: userData.location,
-          website: userData.website,
+          createdAt: profileDateFromApi(userData.inserted_at, userData.created_at),
+          topCommunities: topCommunitiesFromApi(userData.topCommunities ?? userData.top_communities),
+          mutualFriends: optionalProfileNumber(userData.mutual_friends_count),
+          location: profileStringFromApi(userData.location) ?? undefined,
+          website: profileWebsiteFromApi(userData.website),
           // Gamification stats (from API or own data if own profile)
-          level: userData.level || (isOwnProfile ? myLevelRef.current : 1),
-          totalXP: userData.total_xp || userData.xp || (isOwnProfile ? myTotalXPRef.current : 0),
-          currentXP: userData.current_xp || 0,
-          loginStreak:
-            userData.login_streak ||
-            userData.streak_days ||
-            (isOwnProfile ? myStreakRef.current : 0),
+          level: firstProfileNumber([userData.level], isOwnProfile ? myLevelRef.current : 1),
+          totalXP: firstProfileNumber(
+            [userData.total_xp, userData.xp],
+            isOwnProfile ? myTotalXPRef.current : 0
+          ),
+          currentXP: firstProfileNumber([userData.current_xp], 0),
+          loginStreak: firstProfileNumber(
+            [userData.login_streak, userData.streak_days],
+            isOwnProfile ? myStreakRef.current : 0
+          ),
           achievementCount:
-            userData.achievement_count || (isOwnProfile ? totalUnlockedRef.current : 0),
-          totalAchievements: userData.total_achievements || achievements.length,
-          messagesSent: userData.messages_sent || 0,
-          postsCreated: userData.posts_created || 0,
-          friendsCount: userData.friends_count || 0,
+            firstProfileNumber(
+              [userData.achievement_count],
+              isOwnProfile ? totalUnlockedRef.current : 0
+            ),
+          totalAchievements: firstProfileNumber([userData.total_achievements], achievements.length),
+          messagesSent: firstProfileNumber([userData.messages_sent], 0),
+          postsCreated: firstProfileNumber([userData.posts_created], 0),
+          friendsCount: firstProfileNumber([userData.friends_count], 0),
           // Title system - equipped title ID
           equippedTitle: firstCosmeticId(
             identity.equippedTitleId ??
