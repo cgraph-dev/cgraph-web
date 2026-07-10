@@ -172,7 +172,8 @@ export default defineConfig(({ mode }) => {
     build: {
     outDir: 'dist',
     sourcemap: true,
-    chunkSizeWarningLimit: 500,
+    // Vite measures this threshold in decimal kB; the release gate enforces 500 KiB.
+    chunkSizeWarningLimit: 512,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -194,18 +195,10 @@ export default defineConfig(({ mode }) => {
             return 'animation-constants';
           }
 
-          // Conversation-heavy UI slices.
-          if (normalizedId.includes('/src/modules/chat/components/message-bubble/')) {
-            return 'chat-message-bubble';
-          }
+          // Keep the mutually dependent conversation and animation modules with their importers.
+          // Forcing them into named chunks creates an ESM initialization cycle in production.
           if (normalizedId.includes('/src/modules/chat/components/chat-info-panel/')) {
             return 'chat-info-panel';
-          }
-          if (normalizedId.includes('/src/modules/chat/components/audio/')) {
-            return 'chat-audio';
-          }
-          if (normalizedId.includes('/src/modules/chat/components/rich-media-embed')) {
-            return 'chat-media-embed';
           }
           if (normalizedId.includes('/src/modules/') && normalizedId.includes('/store/')) {
             return 'app-runtime';
@@ -237,9 +230,6 @@ export default defineConfig(({ mode }) => {
             normalizedId.includes('/src/data/avatar-borders')
           ) {
             return 'profile-catalogs';
-          }
-          if (normalizedId.includes('/src/lib/animation-presets/')) {
-            return 'animation-presets';
           }
           if (normalizedId.includes('/src/lib/animations/animation-engine')) {
             return 'animation-engine';
