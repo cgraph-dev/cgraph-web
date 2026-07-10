@@ -1,7 +1,3 @@
-/**
- * Profile loading and error state components.
- */
-import { durations } from '@cgraph-dev/animation-constants';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/ui/button';
@@ -9,52 +5,12 @@ import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { tweens, loop } from '@/lib/animation-presets';
 
-interface AmbientParticlesProps {
-  count?: number;
-}
-
-/**
- */
-/**
- * Ambient Particles component.
- */
-export function AmbientParticles({ count = 10 }: AmbientParticlesProps) {
-  return (
-    <>
-      {[...Array(count)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="pointer-events-none absolute h-0.5 w-0.5 rounded-full bg-primary-400"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.1, 0.4, 0.1],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: durations.epic.ms / 1000 + Math.random() * 3,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-/**
- */
 /**
  * Profile Loading State — loading placeholder.
  */
 export function ProfileLoadingState() {
   return (
     <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
-      <AmbientParticles count={10} />
       <div className="relative">
         <motion.div
           className="h-8 w-8 rounded-full border-2 border-primary-500 border-t-transparent"
@@ -76,8 +32,6 @@ interface ProfileErrorStateProps {
 }
 
 /**
- */
-/**
  * Profile Error State — fallback UI for error states.
  */
 export function ProfileErrorState({ error }: ProfileErrorStateProps) {
@@ -85,7 +39,6 @@ export function ProfileErrorState({ error }: ProfileErrorStateProps) {
 
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center gap-4 overflow-hidden bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
-      <AmbientParticles count={10} />
       <GlassCard variant="holographic" className="relative z-10 p-8">
         <p className="mb-4 text-gray-400">{error || 'User not found'}</p>
         <motion.div whileHover={{ opacity: 0.9 }} whileTap={{ scale: 0.95 }}>
@@ -108,8 +61,6 @@ interface ProfileInvalidUserProps {
   onGoBack: () => void;
 }
 
-/**
- */
 /**
  * Profile Invalid User component.
  */
