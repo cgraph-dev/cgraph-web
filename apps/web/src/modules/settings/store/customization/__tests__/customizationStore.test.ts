@@ -321,20 +321,6 @@ describe('batch and legacy actions', () => {
     expect(useCustomizationStore.getState().profileTheme).toBeNull();
   });
 
-  it('updateChatStyle sets a key', () => {
-    useCustomizationStore.getState().updateChatStyle('chatBubbleStyle', 'cloud');
-    expect(useCustomizationStore.getState().chatBubbleStyle).toBe('cloud');
-  });
-
-  it('legacy identity updates reject stale profile theme IDs', () => {
-    useCustomizationStore
-      .getState()
-      .updateIdentity('selectedProfileThemeId', 'classic-purple');
-
-    expect(useCustomizationStore.getState().selectedProfileThemeId).toBeNull();
-    expect(useCustomizationStore.getState().profileTheme).toBeNull();
-  });
-
   it('resetToDefaults restores defaults and marks dirty', () => {
     useCustomizationStore.getState().setTheme('pink');
     useCustomizationStore.getState().resetToDefaults();

@@ -259,12 +259,6 @@ export interface CustomizationActions {
     accent: string | null
   ) => void;
 
-  // Legacy batch update methods
-  updateChatStyle: (key: string, value: unknown) => void;
-  updateEffects: (key: string, value: unknown) => void;
-  updateIdentity: (key: string, value: unknown) => void;
-  updateTheme: (key: string, value: unknown) => void;
-
   // Sync actions
   fetchCustomizations: (userId?: string) => Promise<void>;
   saveCustomizations: (userId?: string) => Promise<void>;

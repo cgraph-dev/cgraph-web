@@ -794,12 +794,6 @@ export const useCustomizationStore = create<CustomizationStore>()(
             profileThemeAccent: accent,
           }),
 
-        // === Legacy Batch Update Methods ===
-        updateChatStyle: (key, value) => setAndSave({ [key]: value }),
-        updateEffects: (key, value) => setAndSave({ [key]: value }),
-        updateIdentity: (key, value) => setAndSave({ [key]: value }),
-        updateTheme: (key, value) => setAndSave({ [key]: value }),
-
         // === Sync Actions ===
         fetchCustomizations: async (_userId?: string) => {
           set({ isLoading: true, error: null });
