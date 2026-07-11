@@ -136,8 +136,3 @@ export const MePage = lazyRetry(() => import('@/pages/me/me-page'));
 export const AdminDashboard = lazyRetry(() => import('@/pages/admin/admin-dashboard'));
 
 export const NotFound = lazyRetry(() => import('@/pages/not-found'));
-
-// ARCHIVED: MatrixTest, EnhancedDemo moved to .archived/
-export const ThemeApplicationTest = lazyRetry(
-  () => import('@/__dev__/test/theme-application-test')
-);

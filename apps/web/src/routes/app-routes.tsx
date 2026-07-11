@@ -10,7 +10,7 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import AppLayout from '@/layouts/app-layout';
 import { ProtectedRoute, AdminRoute } from './guards';
-import { DevRoutes, AuthRoutes, ForumRoutes, SettingsRoutes, MeRoutes } from './route-groups';
+import { AuthRoutes, ForumRoutes, SettingsRoutes, MeRoutes } from './route-groups';
 import {
   // Core
   Messages,
@@ -94,9 +94,6 @@ function LegacyConversationRedirect(): React.ReactNode {
 export function AppRoutes() {
   return (
     <Routes>
-      {/* ── Dev/Test ───────────────────────────────────────────────── */}
-      {DevRoutes()}
-
       {/* ── Auth routes ───────────────────────────────────────────── */}
       {AuthRoutes()}
 
