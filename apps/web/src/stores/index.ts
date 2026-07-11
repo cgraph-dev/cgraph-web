@@ -26,7 +26,6 @@ export type { Friend, FriendRequest } from '../modules/social/store';
 // Chat Domain (Messages, Conversations, Effects)
 export {
   useChatStore,
-  useChatBubbleStore,
   type Message,
   type MessageMetadata,
   type Conversation,

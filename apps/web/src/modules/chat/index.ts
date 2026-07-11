@@ -3,7 +3,7 @@
  *
  * Consolidated chat functionality including:
  * - Components (34 components from chat/, conversation/, messages/, messaging/)
- * - Store (chatStore, chatEffectsStore, chatBubbleStore)
+ * - Store (chatStore)
  * - Hooks (conversation, message, E2EE hooks)
  * - Types
  * - API

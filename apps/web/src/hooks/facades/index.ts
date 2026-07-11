@@ -27,7 +27,6 @@
  * | Facade | Stores Composed |
  * |--------|----------------|
  * | `useAuthFacade` | authStore |
- * | `useChatFacade` | chatStore, chatEffectsStore, chatBubbleStore |
  * | `useCommunityFacade` | forumStore, groupStore, announcementStore, moderationStore |
  * | `useSettingsFacade` | settingsStore, customizationStore, themeStore |
  * | `useUIFacade` | notificationStore, searchStore |
@@ -35,7 +34,6 @@
  */
 
 export { useAuthFacade, type AuthFacade } from './useAuthFacade';
-export { useChatFacade, type ChatFacade } from './useChatFacade';
 export { useCommunityFacade, type CommunityFacade } from './useCommunityFacade';
 export { useSettingsFacade, type SettingsFacade } from './useSettingsFacade';
 export { useUIFacade, type UIFacade } from './useUIFacade';

@@ -1,7 +1,7 @@
 /**
  * Unified Theme System
  *
- * Consolidates: themeStore, profileThemeStore, forumThemeStore, chatBubbleStore
+ * Consolidates: themeStore, profileThemeStore, forumThemeStore
  *
  * This module provides a single, composable theme system that manages:
  * - Global color themes
