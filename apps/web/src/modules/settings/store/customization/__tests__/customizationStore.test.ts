@@ -173,7 +173,7 @@ describe('chat actions', () => {
     expect(useCustomizationStore.getState().compactMode).toBe(true);
   });
 
-  it('setChatThemePreset applies the shared T3G preset settings', () => {
+  it('setChatThemePreset applies the shared persisted preset settings', () => {
     useCustomizationStore.getState().setChatThemePreset('tinted', 'preset:10');
 
     expect(useCustomizationStore.getState().chatThemeSettings).toMatchObject({

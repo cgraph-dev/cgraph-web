@@ -4,7 +4,7 @@ import { chatThemeSettingsToAppearance } from './chat-theme-appearance';
 import { CGRAPH_CHAT_WALLPAPERS } from './cgraph-chat-wallpapers';
 
 describe('chat theme appearance', () => {
-  it('uses the persisted T3G theme bundle for the live surface and bubbles', () => {
+  it('uses persisted chat-theme settings for the live surface and bubbles', () => {
     const appearance = chatThemeSettingsToAppearance({
       base: 'tinted',
       presetId: 'preset:10',
@@ -40,7 +40,7 @@ describe('chat theme appearance', () => {
     });
   });
 
-  it('resolves a per-conversation S1G custom color before the global default', () => {
+  it('resolves a per-conversation custom color before the global default', () => {
     const appearance = chatThemeSettingsToAppearance(
       {
         base: 'classic',
@@ -71,7 +71,7 @@ describe('chat theme appearance', () => {
     });
   });
 
-  it('uses an explicit CGraph conversation color over the T3G baseline bundle', () => {
+  it('uses an explicit conversation color over persisted message colors', () => {
     const appearance = chatThemeSettingsToAppearance(
       {
         base: 'day',
