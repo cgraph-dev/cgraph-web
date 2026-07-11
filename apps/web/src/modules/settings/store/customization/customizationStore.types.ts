@@ -190,7 +190,6 @@ export interface CustomizationActions {
   toggleAnimatedBackground: () => void;
 
   // Avatar actions
-  setAvatarBorder: (type: AvatarBorderType) => void;
   setAvatarBorderColor: (color: ThemePreset) => void;
   setAvatarSize: (size: 'small' | 'medium' | 'large') => void;
   selectBorderTheme: (theme: string | null) => void;

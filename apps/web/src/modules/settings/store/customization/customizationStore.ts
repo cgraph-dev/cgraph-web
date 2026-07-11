@@ -36,6 +36,7 @@ import {
   type ChatThemeWallpaperPreset,
 } from '@cgraph-dev/shared-types/chat-theme';
 import { DEFAULT_CGRAPH_CHAT_WALLPAPER } from '@/modules/chat/theme/cgraph-chat-wallpapers';
+import { getAvatarBorderDisplayTypeById } from '@/data/avatar-borders';
 import { isProfileThemeId, type ProfileThemeId } from '@/data/profileThemes';
 import { http } from '@/lib/api-client';
 import { safeLocalStorage } from '@/lib/safeStorage';
@@ -425,6 +426,21 @@ function mapServerCustomizationPatch(
 ): CustomizationServerPatch {
   const mappedUpdates = apiSchemaMapper.fromApi(updates, current);
   const next: CustomizationServerPatch = { ...withCanonicalAliases(mappedUpdates) };
+  const rawAvatarBorderId =
+    updates.avatar_border_id !== undefined ? updates.avatar_border_id : updates.avatarBorderId;
+
+  if (rawAvatarBorderId !== undefined) {
+    const selectedBorderId =
+      typeof rawAvatarBorderId === 'string' && rawAvatarBorderId.length > 0
+        ? rawAvatarBorderId
+        : null;
+    const avatarBorderType = getAvatarBorderDisplayTypeById(selectedBorderId);
+
+    next.selectedBorderId = selectedBorderId;
+    next.avatarBorderType = avatarBorderType;
+    next.avatarBorder = avatarBorderType;
+  }
+
   const chatThemeSettings =
     updates.chat_theme_settings ?? updates.chatThemeSettings ?? mappedUpdates.chatThemeSettings;
   const defaultConversationColor =
@@ -560,7 +576,6 @@ export const useCustomizationStore = create<CustomizationStore>()(
         toggleAnimatedBackground: createAutoSaveToggle('animatedBackground'),
 
         // === Avatar Actions ===
-        setAvatarBorder: (type) => setAndSave({ avatarBorderType: type, avatarBorder: type }),
         setAvatarBorderColor: (color) => setAndSave({ avatarBorderColor: color }),
         setAvatarSize: (size) => setAndSave({ avatarSize: size }),
         selectBorderTheme: (theme) => setAndSave({ selectedBorderTheme: theme }),

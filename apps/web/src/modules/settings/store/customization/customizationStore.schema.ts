@@ -35,7 +35,6 @@ export const apiSchemaMapper = createSchemaMapper<CustomizationState>({
   animatedBackground: 'animated_background',
 
   // Avatar
-  avatarBorderType: 'border_style',
   avatarBorderColor: 'avatar_border_color',
   avatarSize: 'avatar_size',
   selectedBorderTheme: 'selected_border_theme',
@@ -297,6 +296,8 @@ export function sanitizeCustomizationStateForAccess(
 export async function persistCustomizationState(state: CustomizationState): Promise<unknown> {
   const premiumAccess = currentUserHasPremiumAccess();
   const mappedPayload = normalizeCustomizationPayloadForApi(apiSchemaMapper.toApi(state));
+  delete mappedPayload.avatar_border;
+  delete mappedPayload.avatar_border_type;
   const payload =
     premiumAccess === null
       ? mappedPayload

@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NAMEPLATE_REGISTRY } from '@cgraph-dev/animation-constants';
-import { getFreeBorders, getPremiumBorders } from '@/data/avatar-borders';
+import {
+  getAvatarBorderDisplayTypeById,
+  getFreeBorders,
+  getPremiumBorders,
+} from '@/data/avatar-borders';
 import { ALL_BADGES } from '@/data/badgesCollection';
 import { ALL_PROFILE_THEMES, DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
 import { getPremiumTitles } from '@/data/titlesCollection';
@@ -110,18 +114,6 @@ describe('theme actions', () => {
 // Avatar Actions
 
 describe('avatar actions', () => {
-  it('setAvatarBorder sets both type and alias', () => {
-    useCustomizationStore.getState().setAvatarBorder('fire');
-    expect(useCustomizationStore.getState().avatarBorderType).toBe('fire');
-    expect(useCustomizationStore.getState().avatarBorder).toBe('fire');
-  });
-
-  it('setAvatarBorder accepts shared Lottie border display type', () => {
-    useCustomizationStore.getState().setAvatarBorder('lottie');
-    expect(useCustomizationStore.getState().avatarBorderType).toBe('lottie');
-    expect(useCustomizationStore.getState().avatarBorder).toBe('lottie');
-  });
-
   it('setAvatarBorderColor', () => {
     useCustomizationStore.getState().setAvatarBorderColor('purple');
     expect(useCustomizationStore.getState().avatarBorderColor).toBe('purple');
@@ -270,6 +262,7 @@ describe('batch and legacy actions', () => {
       background_effect: 'neon',
       chat_theme: 'cyan',
       avatar_border_id: freeBorder!.id,
+      border_style: 'legacy-chat-style',
     });
 
     expect(useCustomizationStore.getState()).toMatchObject({
@@ -279,9 +272,31 @@ describe('batch and legacy actions', () => {
       chatBubbleColor: 'cyan',
       chatTheme: 'cyan',
       selectedBorderId: freeBorder!.id,
+      avatarBorderType: getAvatarBorderDisplayTypeById(freeBorder!.id),
+      avatarBorder: getAvatarBorderDisplayTypeById(freeBorder!.id),
       isDirty: false,
     });
     expect(useCustomizationStore.getState().lastSyncedAt).toEqual(expect.any(Number));
+  });
+
+  it('clears the derived avatar border type when the server clears its canonical ID', () => {
+    useCustomizationStore.setState({
+      ...DEFAULT_STATE,
+      selectedBorderId: 'border-stone',
+      avatarBorderType: 'fire',
+      avatarBorder: 'fire',
+    });
+
+    useCustomizationStore.getState().applyServerSettings({
+      avatar_border_id: null,
+      border_style: 'legacy-chat-style',
+    });
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      selectedBorderId: null,
+      avatarBorderType: 'none',
+      avatarBorder: 'none',
+    });
   });
 
   it('applyServerSettings rejects stale profile-card layout IDs', () => {
@@ -779,6 +794,12 @@ describe('persistCustomizationState', () => {
     expect(payload.conversation_chat_theme_overrides['conversation-1']).not.toHaveProperty(
       'preset_id',
     );
+    expect(payload).not.toHaveProperty('border_style');
+    expect(payload).not.toHaveProperty('avatar_border');
+    expect(payload).not.toHaveProperty('avatar_border_type');
+    expect(payload.custom_config).not.toHaveProperty('border_style');
+    expect(payload.custom_config).not.toHaveProperty('avatar_border');
+    expect(payload.custom_config).not.toHaveProperty('avatar_border_type');
   });
 });
 
