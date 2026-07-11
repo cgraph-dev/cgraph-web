@@ -301,11 +301,13 @@ function normalizeConversationChatThemeOverride(
   );
   const customColor = normalizeChatThemeCustomColor(value.customColor ?? value.custom_color);
   const customColorId = value.customColorId ?? value.custom_color_id;
+  const wallpaper = normalizeChatThemeWallpaper(value.wallpaper);
 
   return {
     ...(conversationColor ? { conversationColor } : {}),
     ...(customColor ? { customColor } : {}),
     ...(typeof customColorId === 'string' ? { customColorId } : {}),
+    ...(wallpaper ? { wallpaper } : {}),
   };
 }
 
@@ -608,7 +610,20 @@ export const useCustomizationStore = create<CustomizationStore>()(
           setAndSave({
             conversationChatThemeOverrides: {
               ...get().conversationChatThemeOverrides,
-              [conversationId]: conversationColorUpdate(color, customColorData),
+              [conversationId]: {
+                ...get().conversationChatThemeOverrides[conversationId],
+                ...conversationColorUpdate(color, customColorData),
+              },
+            },
+          }),
+        setConversationChatThemeWallpaper: (conversationId, wallpaper) =>
+          setAndSave({
+            conversationChatThemeOverrides: {
+              ...get().conversationChatThemeOverrides,
+              [conversationId]: {
+                ...get().conversationChatThemeOverrides[conversationId],
+                wallpaper,
+              },
             },
           }),
         addCustomChatColor: (color, conversationId) => {
@@ -626,7 +641,10 @@ export const useCustomizationStore = create<CustomizationStore>()(
               ? {
                   conversationChatThemeOverrides: {
                     ...current.conversationChatThemeOverrides,
-                    [conversationId]: conversationColorUpdate('custom', customColorData),
+                    [conversationId]: {
+                      ...current.conversationChatThemeOverrides[conversationId],
+                      ...conversationColorUpdate('custom', customColorData),
+                    },
                   },
                 }
               : {
@@ -693,13 +711,56 @@ export const useCustomizationStore = create<CustomizationStore>()(
           setAndSave({ defaultConversationColor: DEFAULT_CHAT_THEME_CONVERSATION_COLOR }),
         resetConversationChatThemeColor: (conversationId) => {
           const current = get();
-          const { [conversationId]: _removed, ...conversationChatThemeOverrides } =
+          const override = current.conversationChatThemeOverrides[conversationId];
+          if (!override) return;
+          const {
+            conversationColor: _conversationColor,
+            customColor: _customColor,
+            customColorId: _customColorId,
+            ...remainingOverride
+          } = override;
+          const { [conversationId]: _removed, ...remainingOverrides } =
             current.conversationChatThemeOverrides;
+          const conversationChatThemeOverrides =
+            Object.keys(remainingOverride).length > 0
+              ? { ...remainingOverrides, [conversationId]: remainingOverride }
+              : remainingOverrides;
 
           setAndSave({ conversationChatThemeOverrides });
         },
-        resetAllConversationChatThemeColors: () =>
-          setAndSave({ conversationChatThemeOverrides: {} }),
+        resetConversationChatThemeWallpaper: (conversationId) => {
+          const current = get();
+          const override = current.conversationChatThemeOverrides[conversationId];
+          if (!override?.wallpaper) return;
+          const { wallpaper: _wallpaper, ...remainingOverride } = override;
+          const { [conversationId]: _removed, ...remainingOverrides } =
+            current.conversationChatThemeOverrides;
+          const conversationChatThemeOverrides =
+            Object.keys(remainingOverride).length > 0
+              ? { ...remainingOverrides, [conversationId]: remainingOverride }
+              : remainingOverrides;
+
+          setAndSave({ conversationChatThemeOverrides });
+        },
+        resetAllConversationChatThemeColors: () => {
+          const current = get();
+          const conversationChatThemeOverrides = Object.fromEntries(
+            Object.entries(current.conversationChatThemeOverrides).flatMap(([conversationId, override]) => {
+              const {
+                conversationColor: _conversationColor,
+                customColor: _customColor,
+                customColorId: _customColorId,
+                ...remainingOverride
+              } = override;
+
+              return Object.keys(remainingOverride).length > 0
+                ? [[conversationId, remainingOverride]]
+                : [];
+            })
+          );
+
+          setAndSave({ conversationChatThemeOverrides });
+        },
 
         // === Profile Actions ===
         setProfileCardStyle: (style) =>

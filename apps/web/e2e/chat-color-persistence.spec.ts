@@ -1,5 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 
+const CONVERSATION_ID = 'e2e-chat-wallpaper-conversation';
+
 const currentUser = {
   id: 'e2e-chat-color-user',
   uid: '1000000001',
@@ -9,6 +11,50 @@ const currentUser = {
   onboarding_completed: true,
   email_verified_at: '2026-01-01T00:00:00.000Z',
   created_at: '2026-01-01T00:00:00.000Z',
+};
+
+const conversation = {
+  id: CONVERSATION_ID,
+  type: 'direct',
+  conversationType: 'cloud',
+  name: 'Wallpaper Proof Chat',
+  avatarUrl: null,
+  participants: [
+    {
+      id: 'e2e-current-user-participant',
+      userId: currentUser.id,
+      nickname: null,
+      isMuted: false,
+      mutedUntil: null,
+      joinedAt: '2026-01-01T00:00:00.000Z',
+      user: {
+        id: currentUser.id,
+        username: currentUser.username,
+        displayName: currentUser.display_name,
+        avatarUrl: null,
+        status: 'online',
+      },
+    },
+    {
+      id: 'e2e-peer-user-participant',
+      userId: 'e2e-chat-wallpaper-peer',
+      nickname: null,
+      isMuted: false,
+      mutedUntil: null,
+      joinedAt: '2026-01-01T00:00:00.000Z',
+      user: {
+        id: 'e2e-chat-wallpaper-peer',
+        username: 'wallpaper-peer',
+        displayName: 'Wallpaper Peer',
+        avatarUrl: null,
+        status: 'online',
+      },
+    },
+  ],
+  lastMessage: null,
+  unreadCount: 0,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -31,7 +77,6 @@ function defaultCustomizations(): JsonRecord {
   const defaultConversationColor = { color: 'ultramarine' };
   const customChatColors = { colors: {}, version: 1, order: [] };
   const conversationChatThemeOverrides = {};
-
   return {
     chat_theme_settings: chatThemeSettings,
     default_conversation_color: defaultConversationColor,
@@ -62,11 +107,16 @@ async function fulfillJson(route: Route, body: unknown): Promise<void> {
 async function installChatColorApi(page: Page) {
   let customizations = defaultCustomizations();
   let reads = 0;
+  let completedReads = 0;
   const updates: JsonRecord[] = [];
 
   await page.addInitScript(() => {
+    const initializedKey = 'cgraph-e2e-chat-color-persistence-initialized';
+    if (sessionStorage.getItem(initializedKey) === 'true') return;
+
     localStorage.clear();
     sessionStorage.clear();
+    sessionStorage.setItem(initializedKey, 'true');
   });
 
   await page.route('**/api/v1/**', async (route) => {
@@ -82,6 +132,7 @@ async function installChatColorApi(page: Page) {
     if (path === '/api/v1/me/customizations' && method === 'GET') {
       reads += 1;
       await fulfillJson(route, { data: customizations });
+      completedReads += 1;
       return;
     }
 
@@ -118,7 +169,33 @@ async function installChatColorApi(page: Page) {
       return;
     }
 
-    if (path === '/api/v1/conversations' || path === '/api/v1/friends') {
+    if (
+      path === `/api/v1/conversations/${CONVERSATION_ID}/messages` &&
+      method === 'GET'
+    ) {
+      await fulfillJson(route, {
+        data: [],
+        meta: { page: 1, total: 0, hasMore: false },
+      });
+      return;
+    }
+
+    if (path === `/api/v1/conversations/${CONVERSATION_ID}/read` && method === 'POST') {
+      await fulfillJson(route, { data: {} });
+      return;
+    }
+
+    if (path === `/api/v1/message-requests/${CONVERSATION_ID}` && method === 'GET') {
+      await fulfillJson(route, { data: { status: 'accepted', conversation_id: CONVERSATION_ID } });
+      return;
+    }
+
+    if (path === '/api/v1/conversations' && method === 'GET') {
+      await fulfillJson(route, { data: [conversation], meta: { page: 1, total: 1 } });
+      return;
+    }
+
+    if (path === '/api/v1/friends' && method === 'GET') {
       await fulfillJson(route, { data: [] });
       return;
     }
@@ -126,7 +203,15 @@ async function installChatColorApi(page: Page) {
     await fulfillJson(route, { data: {} });
   });
 
-  return { get reads() { return reads; }, updates };
+  return {
+    get reads() {
+      return reads;
+    },
+    get completedReads() {
+      return completedReads;
+    },
+    updates,
+  };
 }
 
 async function hydrateThenReturnToBubbles(
@@ -138,6 +223,18 @@ async function hydrateThenReturnToBubbles(
   await expect.poll(getReads).toBeGreaterThan(readsBeforeHydration);
   await page.getByRole('button', { name: /Chat Bubbles/ }).click();
   await expect(page.getByRole('listbox', { name: 'Chat colors' })).toBeVisible();
+}
+
+async function hydrateConversation(
+  page: Page,
+  getReads: () => number,
+  readsBeforeHydration: number,
+): Promise<void> {
+  await hydrateThenReturnToBubbles(page, getReads, readsBeforeHydration);
+  await page.goto(`/messages/${CONVERSATION_ID}`);
+  await expect(
+    page.getByRole('button', { name: 'Change conversation appearance' }),
+  ).toBeVisible();
 }
 
 test('persists and resets the routed global chat color across reloads', async ({ page }) => {
@@ -228,6 +325,72 @@ test('persists and resets the routed CGraph chat wallpaper across reloads', asyn
   await page.reload();
   await hydrateThenReturnToBubbles(page, () => api.reads, readsBeforeResetWallpaperReload);
   await expect(page.getByRole('button', { name: 'Lattice' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+});
+
+test('persists a conversation wallpaper without replacing its color override', async ({ page }) => {
+  const api = await installChatColorApi(page);
+
+  await hydrateConversation(page, () => api.completedReads, 0);
+  await page.getByRole('button', { name: 'Change conversation appearance' }).click();
+  await page.getByRole('option', { name: 'crimson' }).click();
+
+  await expect.poll(() => api.updates.length).toBe(1);
+  expect(api.updates[0]).toMatchObject({
+    custom_config: {
+      conversation_chat_theme_overrides: {
+        [CONVERSATION_ID]: { conversation_color: 'crimson' },
+      },
+    },
+  });
+
+  await page.getByRole('button', { name: 'Current', exact: true }).click();
+
+  await expect.poll(() => api.updates.length).toBe(2);
+  expect(api.updates[1]).toMatchObject({
+    custom_config: {
+      conversation_chat_theme_overrides: {
+        [CONVERSATION_ID]: {
+          conversation_color: 'crimson',
+          wallpaper: {
+            intensity: 36,
+            background_color: 0x192436,
+            second_background_color: 0x284b5c,
+            third_background_color: 0x263848,
+            fourth_background_color: 0x131b2a,
+            dark: true,
+          },
+        },
+      },
+    },
+  });
+
+  const readsBeforeSelectedWallpaperReload = api.completedReads;
+  await page.reload();
+  await hydrateConversation(page, () => api.completedReads, readsBeforeSelectedWallpaperReload);
+  await page.getByRole('button', { name: 'Change conversation appearance' }).click();
+  await expect(page.getByRole('button', { name: 'Current', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await page.getByRole('button', { name: 'Reset conversation wallpaper' }).click();
+  await expect.poll(() => api.updates.length).toBe(3);
+  expect(api.updates[2]).toMatchObject({
+    custom_config: {
+      conversation_chat_theme_overrides: {
+        [CONVERSATION_ID]: { conversation_color: 'crimson' },
+      },
+    },
+  });
+
+  const readsBeforeResetWallpaperReload = api.completedReads;
+  await page.reload();
+  await hydrateConversation(page, () => api.completedReads, readsBeforeResetWallpaperReload);
+  await page.getByRole('button', { name: 'Change conversation appearance' }).click();
+  await expect(page.getByRole('button', { name: 'Lattice', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   );

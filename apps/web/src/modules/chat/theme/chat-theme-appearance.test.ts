@@ -87,6 +87,27 @@ describe('chat theme appearance', () => {
     });
   });
 
+  it('uses a per-conversation wallpaper without replacing the established message colors', () => {
+    const appearance = chatThemeSettingsToAppearance(
+      {
+        base: 'classic',
+        accentColor: 0x3390ec,
+        messageColors: [0x5ca853],
+        wallpaper: CGRAPH_CHAT_WALLPAPERS[0].wallpaper,
+      },
+      { wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper },
+    );
+
+    expect(appearance.surfaceStyle).toMatchObject({
+      backgroundColor: '#192436',
+      backgroundImage: expect.stringContaining('repeating-linear-gradient'),
+    });
+    expect(appearance.outgoingBubbleStyle).toEqual({
+      background: '#5ca853',
+      color: '#ffffff',
+    });
+  });
+
   it('renders the selected CGraph wallpaper pattern on the live surface', () => {
     const appearance = chatThemeSettingsToAppearance({
       base: 'classic',

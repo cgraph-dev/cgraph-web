@@ -9,7 +9,8 @@ import {
   ShieldCheckIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
-import { Palette } from 'lucide-react';
+import { Palette, RotateCcw } from 'lucide-react';
+import { resolveChatThemeConversationWallpaper } from '@cgraph-dev/shared-types/chat-theme';
 import { GlassCardNeon } from '@/shared/components/ui';
 import {
   Dialog,
@@ -19,6 +20,8 @@ import {
 } from '@/components/ui/dialog';
 import { ConnectionStatus } from '@/shared/components/connection-status';
 import { ChatColorPicker } from '@/modules/settings/components/customize/panels/chat-color-picker';
+import { ChatWallpaperGrid } from '@/modules/chat/theme/chat-wallpaper-grid';
+import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import type { ConversationHeaderProps } from './types';
 import { tweens, loop } from '@/lib/animation-presets';
 import { useState } from 'react';
@@ -39,7 +42,20 @@ export function ConversationHeader({
   onStartVoiceCall,
   onStartVideoCall,
 }: ConversationHeaderProps) {
-  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showAppearancePicker, setShowAppearancePicker] = useState(false);
+  const globalWallpaper = useCustomizationStore((state) => state.chatThemeSettings.wallpaper);
+  const conversationWallpaperOverride = useCustomizationStore((state) =>
+    conversationId ? state.conversationChatThemeOverrides[conversationId]?.wallpaper : undefined,
+  );
+  const conversationWallpaper = resolveChatThemeConversationWallpaper(globalWallpaper, {
+    ...(conversationWallpaperOverride ? { wallpaper: conversationWallpaperOverride } : {}),
+  });
+  const setConversationChatThemeWallpaper = useCustomizationStore(
+    (state) => state.setConversationChatThemeWallpaper,
+  );
+  const resetConversationChatThemeWallpaper = useCustomizationStore(
+    (state) => state.resetConversationChatThemeWallpaper,
+  );
 
   return (
     <GlassCardNeon className="border-primary-500/20 flex h-16 flex-shrink-0 items-center justify-between rounded-none border-b px-4">
@@ -141,11 +157,11 @@ export function ConversationHeader({
         {conversationId ? (
           <motion.button
             type="button"
-            onClick={() => setShowColorPicker(true)}
+            onClick={() => setShowAppearancePicker(true)}
             className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
             whileTap={{ scale: 0.88 }}
-            aria-label="Change conversation color"
-            title="Conversation color"
+            aria-label="Change conversation appearance"
+            title="Conversation appearance"
           >
             <Palette className="h-5 w-5" aria-hidden="true" />
           </motion.button>
@@ -153,12 +169,38 @@ export function ConversationHeader({
 
         <ConnectionStatus />
       </motion.div>
-      <Dialog open={showColorPicker} onOpenChange={setShowColorPicker}>
-        <DialogContent ariaLabel="Conversation color" className="max-w-xl">
+      <Dialog open={showAppearancePicker} onOpenChange={setShowAppearancePicker}>
+        <DialogContent ariaLabel="Conversation appearance" className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Conversation Color</DialogTitle>
+            <DialogTitle>Conversation Appearance</DialogTitle>
           </DialogHeader>
-          {conversationId ? <ChatColorPicker conversationId={conversationId} /> : null}
+          {conversationId ? (
+            <div className="space-y-6">
+              <ChatColorPicker conversationId={conversationId} />
+              <section className="space-y-4" aria-label="Conversation wallpaper settings">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold text-white">Conversation Background</span>
+                  <button
+                    type="button"
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/15 text-white/70 transition hover:border-white/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="Reset conversation wallpaper"
+                    title="Reset conversation wallpaper"
+                    disabled={!conversationWallpaperOverride}
+                    onClick={() => resetConversationChatThemeWallpaper(conversationId)}
+                  >
+                    <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+                <ChatWallpaperGrid
+                  wallpaper={conversationWallpaper}
+                  onSelect={(wallpaper) =>
+                    setConversationChatThemeWallpaper(conversationId, wallpaper)
+                  }
+                  ariaLabel="Conversation wallpaper"
+                />
+              </section>
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
     </GlassCardNeon>

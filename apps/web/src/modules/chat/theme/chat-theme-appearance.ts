@@ -3,6 +3,7 @@ import {
   DEFAULT_CHAT_THEME_CONVERSATION_COLOR,
   getChatThemeCustomColorStyle,
   resolveChatThemeConversationColor,
+  resolveChatThemeConversationWallpaper,
   chatThemePresetId,
   type ChatThemeAccentPreset,
   type ChatThemeBase,
@@ -53,6 +54,10 @@ export function chatThemeSettingsToAppearance(
   conversationOverride: ChatThemeConversationOverride = {},
   defaultConversationColor?: ChatThemeDefaultConversationColor,
 ): ChatThemeAppearance {
+  const wallpaper = resolveChatThemeConversationWallpaper(
+    settings.wallpaper,
+    conversationOverride,
+  );
   const ownBackground = colorStopsToGradient(settings.messageColors);
   const ownTailBackground = rgbIntToHex(
     settings.messageColors[settings.messageColors.length - 1] ?? settings.accentColor,
@@ -63,10 +68,10 @@ export function chatThemeSettingsToAppearance(
   const incomingBackground = isDark
     ? 'rgba(255, 255, 255, 0.12)'
     : 'rgba(255, 255, 255, 0.82)';
-  const previewBackground = settings.wallpaper
-    ? colorStopsToGradient(wallpaperToStops(settings.wallpaper), 145)
+  const previewBackground = wallpaper
+    ? colorStopsToGradient(wallpaperToStops(wallpaper), 145)
     : defaultSurfaceBackground(settings.base);
-  const wallpaperSurfaceStyle = getCGraphChatWallpaperStyle(settings.wallpaper);
+  const wallpaperSurfaceStyle = getCGraphChatWallpaperStyle(wallpaper);
   const resolvedConversationColor = resolveChatThemeConversationColor(
     conversationOverride,
     effectiveDefaultConversationColor,
@@ -77,7 +82,7 @@ export function chatThemeSettingsToAppearance(
   const ownTextColor = isDark ? '#f8fafc' : '#ffffff';
   const incomingTextColor = isDark ? '#f8fafc' : '#111827';
   const shouldApplyConversationColor =
-    Object.keys(conversationOverride).length > 0 ||
+    Boolean(conversationOverride.conversationColor) ||
     Boolean(effectiveDefaultConversationColor.customColorData) ||
     effectiveDefaultConversationColor.color !== DEFAULT_CHAT_THEME_CONVERSATION_COLOR.color;
   const namedConversationSwatch =

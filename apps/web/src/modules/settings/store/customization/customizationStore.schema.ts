@@ -139,12 +139,15 @@ function defaultConversationColorToApi(value: unknown): unknown {
 function conversationChatThemeOverrideToApi(value: unknown): unknown {
   if (!isRecord(value)) return value;
 
+  const wallpaper = value.wallpaper;
+
   return compactRecord({
     conversation_color: value.conversationColor ?? value.conversation_color,
     custom_color: value.customColor ?? value.custom_color,
     custom_color_id: value.customColorId ?? value.custom_color_id,
     base: value.base,
     preset_id: value.presetId ?? value.preset_id,
+    ...(wallpaper === undefined ? {} : { wallpaper: chatThemeWallpaperToApi(wallpaper) }),
   });
 }
 

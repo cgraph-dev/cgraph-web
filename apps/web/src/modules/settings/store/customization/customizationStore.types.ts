@@ -220,6 +220,11 @@ export interface CustomizationActions {
     color: ChatThemeConversationColor,
     customColorData?: ChatThemeCustomColorData,
   ) => void;
+  setConversationChatThemeWallpaper: (
+    conversationId: string,
+    wallpaper: ChatThemeWallpaperPreset,
+  ) => void;
+  resetConversationChatThemeWallpaper: (conversationId: string) => void;
   addCustomChatColor: (color: ChatThemeCustomColor, conversationId?: string) => string;
   editCustomChatColor: (colorId: string, color: ChatThemeCustomColor) => void;
   removeCustomChatColor: (colorId: string) => void;

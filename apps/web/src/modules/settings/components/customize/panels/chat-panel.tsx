@@ -2,11 +2,7 @@ import { memo, useMemo } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { SectionHeader } from '../customization-ui';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import {
-  CGRAPH_CHAT_WALLPAPERS,
-  getCGraphChatWallpaper,
-  getCGraphChatWallpaperStyle,
-} from '@/modules/chat/theme/cgraph-chat-wallpapers';
+import { ChatWallpaperGrid } from '@/modules/chat/theme/chat-wallpaper-grid';
 import {
   chatThemeBaseTabs,
   chatThemeSettingsToPreviewStyle,
@@ -35,7 +31,6 @@ export const ChatPanel = memo(function ChatPanel() {
     () => chatThemeSettingsToPreviewStyle(chatThemeSettings),
     [chatThemeSettings],
   );
-  const selectedWallpaperId = getCGraphChatWallpaper(chatThemeSettings.wallpaper)?.id;
   const selectChatThemeBase = (base: ChatThemeBase) => {
     setChatThemePreset(base, getDefaultChatThemePresetId(base));
   };
@@ -146,36 +141,11 @@ export const ChatPanel = memo(function ChatPanel() {
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
-        <div
-          className="aurora-section-card grid grid-cols-2 gap-3 rounded-xl p-4"
-          role="group"
-          aria-label="Chat wallpaper"
-        >
-          {CGRAPH_CHAT_WALLPAPERS.map((wallpaper) => {
-            const selected = selectedWallpaperId === wallpaper.id;
-
-            return (
-              <button
-                key={wallpaper.id}
-                type="button"
-                aria-label={wallpaper.label}
-                aria-pressed={selected}
-                title={wallpaper.label}
-                className={`relative h-24 overflow-hidden rounded-md border p-3 text-left text-xs font-medium transition ${
-                  selected
-                    ? "border-white ring-2 ring-white/35"
-                    : "border-white/15 hover:border-white/45"
-                } ${wallpaper.wallpaper.dark ? "text-white" : "text-slate-950"}`}
-                style={getCGraphChatWallpaperStyle(wallpaper.wallpaper)}
-                onClick={() => setChatWallpaper(wallpaper.wallpaper)}
-              >
-                <span className="absolute inset-x-3 bottom-3 rounded bg-black/15 px-2 py-1 backdrop-blur-sm">
-                  {wallpaper.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <ChatWallpaperGrid
+          wallpaper={chatThemeSettings.wallpaper}
+          onSelect={setChatWallpaper}
+          ariaLabel="Chat wallpaper"
+        />
       </section>
 
       <ChatColorPicker />

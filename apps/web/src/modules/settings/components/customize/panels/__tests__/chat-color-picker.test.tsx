@@ -104,4 +104,23 @@ describe('ChatColorPicker', () => {
     );
     expect(store.state.resetConversationChatThemeColor).toHaveBeenCalledWith('conversation-1');
   });
+
+  it('does not expose a color reset when the conversation only overrides wallpaper', () => {
+    store.state.conversationChatThemeOverrides = {
+      'conversation-1': {
+        wallpaper: {
+          intensity: 36,
+          backgroundColor: 0x192436,
+          secondBackgroundColor: 0x284b5c,
+          thirdBackgroundColor: 0x263848,
+          fourthBackgroundColor: 0x131b2a,
+          dark: true,
+        },
+      },
+    };
+
+    render(<ChatColorPicker conversationId="conversation-1" />);
+
+    expect(screen.queryByRole('button', { name: 'Reset conversation color' })).not.toBeInTheDocument();
+  });
 });

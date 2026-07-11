@@ -77,7 +77,9 @@ export function ChatColorPicker({ conversationId }: ChatColorPickerProps) {
     const color = customChatColors.colors[selectedColor.customColorId];
     return color ? { id: selectedColor.customColorId, color } : undefined;
   }, [customChatColors.colors, selectedColor]);
-  const hasConversationOverride = Boolean(conversationId && conversationOverride);
+  const hasConversationColorOverride = Boolean(
+    conversationId && conversationOverride?.conversationColor,
+  );
 
   function selectNamedColor(color: (typeof CONVERSATION_COLOR_IDS)[number]) {
     if (conversationId) {
@@ -116,7 +118,7 @@ export function ChatColorPicker({ conversationId }: ChatColorPickerProps) {
           <Palette className="h-4 w-4 text-primary-300" aria-hidden="true" />
           <span>{conversationId ? 'Conversation Color' : 'Default Conversation Color'}</span>
         </div>
-        {conversationId && hasConversationOverride ? (
+        {conversationId && hasConversationColorOverride ? (
           <IconButton
             label="Reset conversation color"
             onClick={() => resetConversationChatThemeColor(conversationId)}

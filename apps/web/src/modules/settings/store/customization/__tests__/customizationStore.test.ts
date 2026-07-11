@@ -399,6 +399,31 @@ describe('fetchCustomizations', () => {
               conversation_color: 'custom',
               custom_color_id: 'custom-blue',
               custom_color: customColor,
+              wallpaper: {
+                intensity: 36,
+                background_color: 0x192436,
+                second_background_color: 0x284b5c,
+                third_background_color: 0x263848,
+                fourth_background_color: 0x131b2a,
+                dark: true,
+              },
+            },
+          },
+          custom_config: {
+            conversation_chat_theme_overrides: {
+              'conversation-1': {
+                conversation_color: 'custom',
+                custom_color_id: 'custom-blue',
+                custom_color: customColor,
+                wallpaper: {
+                  intensity: 36,
+                  background_color: 0x192436,
+                  second_background_color: 0x284b5c,
+                  third_background_color: 0x263848,
+                  fourth_background_color: 0x131b2a,
+                  dark: true,
+                },
+              },
             },
           },
         },
@@ -435,6 +460,14 @@ describe('fetchCustomizations', () => {
         conversationColor: 'custom',
         customColorId: 'custom-blue',
         customColor,
+        wallpaper: {
+          intensity: 36,
+          backgroundColor: 0x192436,
+          secondBackgroundColor: 0x284b5c,
+          thirdBackgroundColor: 0x263848,
+          fourthBackgroundColor: 0x131b2a,
+          dark: true,
+        },
       },
     });
   });
@@ -449,6 +482,39 @@ describe('fetchCustomizations', () => {
         'conversation-1': { conversationColor: 'teal' },
       },
       isDirty: true,
+    });
+  });
+
+  it('keeps per-conversation wallpaper and color overrides independently resettable', () => {
+    const store = useCustomizationStore.getState();
+
+    store.setConversationChatThemeColor('conversation-1', 'teal');
+    store.setConversationChatThemeWallpaper(
+      'conversation-1',
+      CGRAPH_CHAT_WALLPAPERS[3].wallpaper,
+    );
+
+    expect(useCustomizationStore.getState().conversationChatThemeOverrides).toEqual({
+      'conversation-1': {
+        conversationColor: 'teal',
+        wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper,
+      },
+    });
+
+    useCustomizationStore.getState().resetConversationChatThemeColor('conversation-1');
+    expect(useCustomizationStore.getState().conversationChatThemeOverrides).toEqual({
+      'conversation-1': { wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper },
+    });
+
+    useCustomizationStore.getState().setConversationChatThemeColor('conversation-1', 'violet');
+    useCustomizationStore.getState().resetConversationChatThemeWallpaper('conversation-1');
+    useCustomizationStore
+      .getState()
+      .setConversationChatThemeWallpaper('conversation-2', CGRAPH_CHAT_WALLPAPERS[1].wallpaper);
+    useCustomizationStore.getState().resetAllConversationChatThemeColors();
+
+    expect(useCustomizationStore.getState().conversationChatThemeOverrides).toEqual({
+      'conversation-2': { wallpaper: CGRAPH_CHAT_WALLPAPERS[1].wallpaper },
     });
   });
 
@@ -508,6 +574,7 @@ describe('fetchCustomizations', () => {
           conversationColor: 'custom',
           customColorId: 'remove',
           customColor: removedColor,
+          wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper,
         },
         unaffected: { conversationColor: 'teal' },
       },
@@ -522,7 +589,7 @@ describe('fetchCustomizations', () => {
         order: ['keep'],
       },
       conversationChatThemeOverrides: {
-        affected: {},
+        affected: { wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper },
         unaffected: { conversationColor: 'teal' },
       },
     });
@@ -666,6 +733,7 @@ describe('persistCustomizationState', () => {
           conversationColor: 'custom',
           customColorId: 'custom-blue',
           customColor,
+          wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper,
         },
       },
     });
@@ -701,6 +769,14 @@ describe('persistCustomizationState', () => {
           conversation_color: 'custom',
           custom_color_id: 'custom-blue',
           custom_color: customColor,
+          wallpaper: {
+            intensity: 36,
+            background_color: 0x192436,
+            second_background_color: 0x284b5c,
+            third_background_color: 0x263848,
+            fourth_background_color: 0x131b2a,
+            dark: true,
+          },
         },
       },
     });
