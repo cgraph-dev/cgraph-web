@@ -4,7 +4,7 @@ import { useAuthStore } from '@/modules/auth/store';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { useGroupStore } from '@/modules/groups/store';
 import { useNotificationStore } from '@/modules/social/store';
-import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
+import { useThemeEnhanced } from '@/providers/theme-enhanced';
 import { socketManager } from '@/lib/socket';
 import { captureError } from '@/lib/error-tracking';
 

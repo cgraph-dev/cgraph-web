@@ -4,7 +4,7 @@
 import { Outlet } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { FADE_IN } from '@/lib/animations/transitions';
-import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
+import { useThemeEnhanced } from '@/providers/theme-enhanced';
 
 /**
  * CustomizeLayout Component

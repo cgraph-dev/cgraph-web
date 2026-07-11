@@ -241,7 +241,7 @@ vi.mock('@/components/shaders/shader-background', () => ({
   default: () => <div data-testid="shader-background" />,
 }));
 
-vi.mock('@/providers/theme-context-enhanced', () => ({
+vi.mock('@/providers/theme-enhanced', () => ({
   useThemeEnhanced: () => ({
     theme: {
       category: 'dark',

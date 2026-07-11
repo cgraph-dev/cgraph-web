@@ -4,7 +4,7 @@ import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } fr
 import { cn } from '@/lib/utils';
 import { useThrottledCallback, usePrefersReducedMotion } from '@/hooks';
 import { springs } from '@/lib/animation-presets';
-import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
+import { useThemeEnhanced } from '@/providers/theme-enhanced';
 import type { ThemeVariant } from '@/lib/theme/types';
 import type { GlassCardProps } from './glass-card.types';
 import { themeVariantStyles, themeBehavior } from './glass-card.constants';

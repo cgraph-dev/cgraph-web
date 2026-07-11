@@ -18,7 +18,7 @@ import {
 } from '@/modules/social/components/user-profile-card';
 import type { NavItem } from './constants';
 import { loop } from '@/lib/animation-presets';
-import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
+import { useThemeEnhanced } from '@/providers/theme-enhanced';
 import { publicProfilePath } from '@/lib/profile-route';
 type FeatureGateKey = string;
 type IconComponent = (props: { className?: string }) => ReactNode;

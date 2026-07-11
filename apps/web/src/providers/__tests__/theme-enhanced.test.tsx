@@ -7,8 +7,8 @@ import {
   useThemeColors,
   useIsSpecialTheme,
   useReducedMotion,
-} from '../theme-context-enhanced';
-import * as themeContextEnhanced from '../theme-context-enhanced';
+} from '../theme-enhanced';
+import * as themeEnhanced from '../theme-enhanced';
 import { ThemeProvider } from '../theme-context';
 
 // Shared theme fixtures (used inside and outside the factory)
@@ -166,8 +166,8 @@ describe('ThemeProvider enhanced API', () => {
     expect(screen.getByTestId('b')).toBeInTheDocument();
   });
 
-  it('does not export a second enhanced provider from the compatibility barrel', () => {
-    expect('ThemeProviderEnhanced' in themeContextEnhanced).toBe(false);
+  it('does not export a second enhanced provider from the canonical barrel', () => {
+    expect('ThemeProviderEnhanced' in themeEnhanced).toBe(false);
   });
 
   // --- Context values ---

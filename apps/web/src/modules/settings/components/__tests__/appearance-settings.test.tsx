@@ -207,7 +207,7 @@ const mockThemeContext = {
   deleteCustomTheme: vi.fn(),
 };
 
-vi.mock('@/providers/theme-context-enhanced', () => ({
+vi.mock('@/providers/theme-enhanced', () => ({
   useThemeEnhanced: () => mockThemeContext,
 }));
 

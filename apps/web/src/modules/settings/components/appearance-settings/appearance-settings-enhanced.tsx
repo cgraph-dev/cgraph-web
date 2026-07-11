@@ -9,7 +9,7 @@
  *
  */
 
-import { useThemeEnhanced } from '@/providers/theme-context-enhanced';
+import { useThemeEnhanced } from '@/providers/theme-enhanced';
 
 import { ThemeSelection } from './theme-selection';
 import { DisplayOptions } from './display-options';
