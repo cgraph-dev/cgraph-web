@@ -698,6 +698,14 @@ describe('persistCustomizationState', () => {
       end: { hue: 260, saturation: 76, lightness: 0.36 },
       deg: 42,
     };
+    const legacyConversationOverride = {
+      conversationColor: 'custom' as const,
+      customColorId: 'custom-blue',
+      customColor,
+      wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper,
+      base: 'night',
+      presetId: 'preset:102',
+    } as unknown as (typeof DEFAULT_STATE.conversationChatThemeOverrides)[string];
 
     mockedApi.patch.mockResolvedValueOnce({
       data: { data: {} },
@@ -729,12 +737,7 @@ describe('persistCustomizationState', () => {
         order: ['custom-blue'],
       },
       conversationChatThemeOverrides: {
-        'conversation-1': {
-          conversationColor: 'custom',
-          customColorId: 'custom-blue',
-          customColor,
-          wallpaper: CGRAPH_CHAT_WALLPAPERS[3].wallpaper,
-        },
+        'conversation-1': legacyConversationOverride,
       },
     });
 
@@ -786,6 +789,10 @@ describe('persistCustomizationState', () => {
       custom_chat_colors: payload.custom_chat_colors,
       conversation_chat_theme_overrides: payload.conversation_chat_theme_overrides,
     });
+    expect(payload.conversation_chat_theme_overrides['conversation-1']).not.toHaveProperty('base');
+    expect(payload.conversation_chat_theme_overrides['conversation-1']).not.toHaveProperty(
+      'preset_id',
+    );
   });
 });
 
