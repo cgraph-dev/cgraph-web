@@ -76,6 +76,9 @@ for (const [key, value] of example.entries()) {
   publicViteEntries.set(key, value);
 }
 
+// The bundle version comes from apps/web/package.json at compile time.
+publicViteEntries.delete('VITE_APP_VERSION');
+
 if (!publicViteEntries.get('VITE_TURNSTILE_SITE_KEY')) {
   console.error('VITE_TURNSTILE_SITE_KEY is missing from the pulled Vercel env.');
   process.exit(1);
@@ -97,7 +100,6 @@ const devTurnstileBypassToken =
 
 const preferredOrder = [
   'VITE_APP_NAME',
-  'VITE_APP_VERSION',
   'VITE_TURNSTILE_SITE_KEY',
   'VITE_VAPID_PUBLIC_KEY',
   'VITE_SENTRY_DSN',

@@ -4,7 +4,6 @@ interface ImportMetaEnv {
   readonly VITE_API_URL: string;
   readonly VITE_WS_URL: string;
   readonly VITE_SOCKET_URL: string;
-  readonly VITE_APP_VERSION?: string;
   readonly VITE_ENABLE_LOGGING?: string;
   readonly VITE_ENABLE_QR_LOGIN?: string;
   readonly VITE_LIVEKIT_URL?: string;
@@ -27,6 +26,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare const __CGRAPH_WEB_VERSION__: string;
 
 // Ethereum/Web3 types for wallet integration
 interface EthereumProvider {

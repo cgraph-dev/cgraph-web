@@ -12,8 +12,7 @@
  * (CLAUDE.md: "NEVER use fixed setInterval -- use adaptive polling or WebSocket push").
  */
 import { logger } from '@/lib/logger';
-
-const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.0.0';
+import { APP_VERSION } from './app-version';
 
 let visibilityHandler: (() => void) | null = null;
 
@@ -29,11 +28,16 @@ interface VersionCheckResult {
  * Check the current app version against server requirements.
  *
  * Calls GET /api/v1/app/version and compares the response against
- * the compiled-in VITE_APP_VERSION.
+ * the compiled-in web package version.
  */
 async function checkVersion(): Promise<VersionCheckResult> {
   try {
-    const response = await fetch('/api/v1/app/version?platform=web');
+    const response = await fetch('/api/v1/app/version?platform=web', {
+      headers: {
+        'X-Client-Version': APP_VERSION,
+        'X-Client-Platform': 'web',
+      },
+    });
     const json = await response.json();
     const info = json.data;
 

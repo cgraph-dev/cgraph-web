@@ -1,4 +1,5 @@
 /// <reference types="vitest" />
+import { readFileSync } from 'node:fs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
@@ -15,6 +16,9 @@ const RETIRED_CONNECT_SOURCES = new Set([
   'https://cgraph-backend-prod-v2.fly.dev',
   'wss://cgraph-backend-prod-v2.fly.dev',
 ]);
+const WEB_PACKAGE_VERSION = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8')
+).version;
 
 function normalizeModuleId(id) {
   return id.replace(/\\/g, '/');
@@ -102,6 +106,9 @@ export default defineConfig(({ mode }) => {
   const coverageMinimum = Number(env.WEB_COVERAGE_MIN ?? 65);
 
   return {
+    define: {
+      __CGRAPH_WEB_VERSION__: JSON.stringify(WEB_PACKAGE_VERSION),
+    },
     plugins: [
       cspConnectSourcesPlugin(env),
     react(),

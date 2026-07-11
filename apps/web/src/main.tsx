@@ -55,6 +55,7 @@ import { ThemeProvider } from './providers/theme-context';
 import { NotificationProvider } from './providers/notification-provider';
 import { WalletProvider } from './lib/wallet';
 import { logger } from './lib/logger';
+import { APP_VERSION } from './lib/app-version';
 import './i18n'; // i18n initialization (must be before App)
 import './index.css';
 
@@ -117,7 +118,7 @@ persistQueryClient({
   queryClient,
   persister: localStoragePersister,
   maxAge: 1000 * 60 * 60 * 24,
-  buster: 'v0.9.31-web', // Must match package.json version for cache invalidation
+  buster: `v${APP_VERSION}-web`,
 });
 
 // Track online/offline status for offline-first behavior

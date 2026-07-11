@@ -9,6 +9,7 @@ import {
   triggerLogout,
 } from './tokenService';
 import { getApiBaseUrl } from './backend-url';
+import { APP_VERSION } from './app-version';
 import { reconnectSocketWithFreshToken } from './socket-token-reconnect';
 import { createLogger } from '@/lib/logger';
 import {
@@ -63,6 +64,10 @@ async function reconnectSocket(): Promise<void> {
 export const api = createHttpClient({
   baseURL: API_URL,
   timeoutMs: 30000,
+  defaultHeaders: {
+    'X-Client-Version': APP_VERSION,
+    'X-Client-Platform': 'web',
+  },
   withCredentials: true,
   getAccessToken: () => getAccessToken(),
   getRefreshToken: () => getRefreshToken(),

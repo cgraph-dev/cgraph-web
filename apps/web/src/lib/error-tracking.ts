@@ -21,9 +21,11 @@
 // that causes a TDZ crash (ReferenceError: Cannot access 'Xe' before initialization).
 // Use console directly in this file — it's the lowest-level error infrastructure.
 
+import { APP_VERSION } from './app-version';
+
 const SENTRY_DSN: string | undefined = import.meta.env.VITE_SENTRY_DSN; // type-cast: Vite env vars may be undefined at runtime
 const ENVIRONMENT = import.meta.env.MODE || 'development';
-const RELEASE = import.meta.env.VITE_APP_VERSION || '0.9.31';
+const RELEASE = APP_VERSION;
 
 // Track initialization state
 let isInitialized = false;
