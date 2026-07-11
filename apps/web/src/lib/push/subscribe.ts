@@ -17,8 +17,7 @@ const SUBSCRIPTIONS_ENDPOINT = '/api/v1/me/push-subscriptions';
 
 /**
  * Decode a base64url-encoded VAPID public key into the `Uint8Array` shape the
- * `PushManager.subscribe` API expects. Implemented inline so this module has
- * no cross-package dependency on the legacy `services/web-push` helpers.
+ * `PushManager.subscribe` API expects.
  */
 export function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

@@ -13,9 +13,10 @@
  *
  */
 
-import { useState, useEffect} from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BellAlertIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { getVapidPublicKey, requestPushPermission, subscribeToPush } from '@/lib/push';
 import { useAuthStore } from '@/modules/auth/store';
 
 const DISMISS_KEY = 'cgraph:push-prompt-dismissed';
@@ -47,9 +48,14 @@ export function PushNotificationPrompt() {
   async function handleEnable(): Promise<void> {
     setLoading(true);
     try {
-      const webPush = await import('@/services/webPushService');
-      const result = await webPush.registerForPushNotifications();
-      if (result.success) {
+      const permission = await requestPushPermission();
+      const vapidPublicKey = await getVapidPublicKey();
+      const subscription =
+        permission === 'granted' && vapidPublicKey
+          ? await subscribeToPush(vapidPublicKey)
+          : null;
+
+      if (subscription) {
         setVisible(false);
       } else {
         // Permission denied — don't re-prompt

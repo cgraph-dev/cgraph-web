@@ -15,3 +15,4 @@ export {
 export { registerServiceWorker } from './register-sw';
 export { subscribeToPush, urlBase64ToUint8Array } from './subscribe';
 export { unsubscribeFromPush } from './unsubscribe';
+export { getVapidPublicKey } from './vapid';
