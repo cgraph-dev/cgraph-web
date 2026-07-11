@@ -17,9 +17,11 @@ import { ReconnectBanner } from '@/components/socket/reconnect-banner';
 import { useGroupStore } from '@/modules/groups/store';
 import { initErrorTracking, reportWebVitals } from '@/lib/error-tracking';
 import { startAutoSync, stopAutoSync } from '@/lib/offline/sync-service';
+import { startPeriodicCheck, stopPeriodicCheck } from '@/lib/client-version-check';
 import { useAuthStore } from '@/modules/auth/store';
 import { useDesktopInit } from '@/lib/desktop/use-desktop-init';
 import { applyOtherUserIdentityPayload } from '@/lib/identity/otherIdentitySync';
+import { VersionUpdateGate } from '@/shared/components/version-update-gate';
 import {
   applyCustomizationPreferenceSync,
   applySettingsPreferenceSync,
@@ -117,6 +119,7 @@ function getStringFromPayload(
  */
 export default function App() {
   const [quickSwitcherOpen, setQuickSwitcherOpen] = useState(false);
+  const [versionUpdateRequired, setVersionUpdateRequired] = useState(false);
   const justJoinedGroupName = useGroupStore((s) => s.justJoinedGroupName);
   const clearJoinCelebration = useGroupStore((s) => s.clearJoinCelebration);
   const token = useAuthStore((s) => s.token);
@@ -126,6 +129,11 @@ export default function App() {
   useDesktopInit();
 
   useEffect(() => startPreferenceSyncBus(), []);
+
+  useEffect(() => {
+    startPeriodicCheck(() => setVersionUpdateRequired(true));
+    return stopPeriodicCheck;
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -240,6 +248,7 @@ export default function App() {
           </Suspense>
         </PageTransition>
       </AnimatePresence>
+      {versionUpdateRequired && <VersionUpdateGate onReload={() => window.location.reload()} />}
     </AuthInitializer>
   );
 }
