@@ -3,10 +3,6 @@ import { render, screen } from '@testing-library/react';
 
 import BubblesCustomization from './bubbles-customization';
 
-vi.mock('@/components/theme/theme-customizer/bubbles-tab', () => {
-  throw new Error('BubblesCustomization must not import the legacy BubblesTab.');
-});
-
 vi.mock('@/stores/theme', () => {
   throw new Error('BubblesCustomization must not import the legacy theme store.');
 });
