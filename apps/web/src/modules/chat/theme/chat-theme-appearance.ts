@@ -12,6 +12,7 @@ import {
   type ChatThemeWallpaperPreset,
 } from '@cgraph-dev/shared-types/chat-theme';
 import { getConversationColorSwatch } from './conversation-color-palette';
+import { getCGraphChatWallpaperStyle } from './cgraph-chat-wallpapers';
 
 export interface ChatThemeAppearance {
   readonly base: ChatThemeBase;
@@ -65,6 +66,7 @@ export function chatThemeSettingsToAppearance(
   const previewBackground = settings.wallpaper
     ? colorStopsToGradient(wallpaperToStops(settings.wallpaper), 145)
     : defaultSurfaceBackground(settings.base);
+  const wallpaperSurfaceStyle = getCGraphChatWallpaperStyle(settings.wallpaper);
   const resolvedConversationColor = resolveChatThemeConversationColor(
     conversationOverride,
     effectiveDefaultConversationColor,
@@ -95,7 +97,7 @@ export function chatThemeSettingsToAppearance(
     incomingTextColor,
     previewBackground,
     previewBorderColor: rgbIntToHex(settings.accentColor),
-    surfaceStyle: { background: previewBackground },
+    surfaceStyle: wallpaperSurfaceStyle ?? { background: previewBackground },
     outgoingBubbleStyle: customColorStyle
       ? { ...customColorStyle, color: ownTextColor }
       : namedConversationSwatch

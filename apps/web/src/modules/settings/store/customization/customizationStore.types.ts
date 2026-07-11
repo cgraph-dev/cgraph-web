@@ -20,12 +20,14 @@ import type {
   ChatThemeCustomColorStore,
   ChatThemeDefaultConversationColor,
   ChatThemeSettings,
+  ChatThemeWallpaperPreset,
 } from '@cgraph-dev/shared-types/chat-theme';
 import {
   DEFAULT_CHAT_THEME_CONVERSATION_COLOR,
   DEFAULT_CHAT_THEME_CUSTOM_COLORS,
 } from '@cgraph-dev/shared-types/chat-theme';
 import type { AvatarBorderType as SharedAvatarBorderType } from '@cgraph-dev/animation-constants';
+import { DEFAULT_CGRAPH_CHAT_WALLPAPER } from '@/modules/chat/theme/cgraph-chat-wallpapers';
 import { COLORS as THEME_COLOR_CATALOG } from '@/stores/theme/presets';
 import type { ColorDefinition } from '@/stores/theme/types';
 
@@ -77,6 +79,7 @@ export const DEFAULT_CHAT_THEME_SETTINGS: CustomizationChatThemeSettings = {
   presetId: null,
   accentColor: 0x3390ec,
   messageColors: [0x5ca853],
+  wallpaper: DEFAULT_CGRAPH_CHAT_WALLPAPER,
 };
 
 // STATE INTERFACE
@@ -206,6 +209,8 @@ export interface CustomizationActions {
   toggleTimestamps: () => void;
   toggleCompactMode: () => void;
   setChatThemePreset: (base: ChatThemeBase, presetId: string) => void;
+  setChatWallpaper: (wallpaper: ChatThemeWallpaperPreset) => void;
+  resetChatWallpaper: () => void;
   setDefaultConversationColor: (
     color: ChatThemeConversationColor,
     customColorData?: ChatThemeCustomColorData,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { chatThemeSettingsToAppearance } from './chat-theme-appearance';
+import { CGRAPH_CHAT_WALLPAPERS } from './cgraph-chat-wallpapers';
 
 describe('chat theme appearance', () => {
   it('uses the persisted T3G theme bundle for the live surface and bubbles', () => {
@@ -83,6 +84,21 @@ describe('chat theme appearance', () => {
     expect(appearance.outgoingBubbleStyle).toEqual({
       background: '#d61f45',
       color: '#ffffff',
+    });
+  });
+
+  it('renders the selected CGraph wallpaper pattern on the live surface', () => {
+    const appearance = chatThemeSettingsToAppearance({
+      base: 'classic',
+      accentColor: 0x3390ec,
+      messageColors: [0x5ca853],
+      wallpaper: CGRAPH_CHAT_WALLPAPERS[0].wallpaper,
+    });
+
+    expect(appearance.surfaceStyle).toMatchObject({
+      backgroundColor: '#e5f1fa',
+      backgroundImage: expect.stringContaining('linear-gradient'),
+      backgroundSize: '100% 100%, 28px 28px, 28px 28px',
     });
   });
 });

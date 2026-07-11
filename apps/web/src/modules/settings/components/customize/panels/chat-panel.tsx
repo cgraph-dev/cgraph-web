@@ -1,6 +1,12 @@
 import { memo, useMemo } from 'react';
+import { RotateCcw } from 'lucide-react';
 import { SectionHeader } from '../customization-ui';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import {
+  CGRAPH_CHAT_WALLPAPERS,
+  getCGraphChatWallpaper,
+  getCGraphChatWallpaperStyle,
+} from '@/modules/chat/theme/cgraph-chat-wallpapers';
 import {
   chatThemeBaseTabs,
   chatThemeSettingsToPreviewStyle,
@@ -16,6 +22,8 @@ import { ChatColorPicker } from './chat-color-picker';
 export const ChatPanel = memo(function ChatPanel() {
   const chatThemeSettings = useCustomizationStore((state) => state.chatThemeSettings);
   const setChatThemePreset = useCustomizationStore((state) => state.setChatThemePreset);
+  const setChatWallpaper = useCustomizationStore((state) => state.setChatWallpaper);
+  const resetChatWallpaper = useCustomizationStore((state) => state.resetChatWallpaper);
 
   const selectedChatThemeBase = chatThemeSettings.base;
   const selectedChatThemePresetId = chatThemeSettings.presetId;
@@ -27,6 +35,7 @@ export const ChatPanel = memo(function ChatPanel() {
     () => chatThemeSettingsToPreviewStyle(chatThemeSettings),
     [chatThemeSettings],
   );
+  const selectedWallpaperId = getCGraphChatWallpaper(chatThemeSettings.wallpaper)?.id;
   const selectChatThemeBase = (base: ChatThemeBase) => {
     setChatThemePreset(base, getDefaultChatThemePresetId(base));
   };
@@ -99,7 +108,7 @@ export const ChatPanel = memo(function ChatPanel() {
             aria-label="Chat theme preview"
             role="region"
             style={{
-              background: chatThemePreview.previewBackground,
+              ...chatThemePreview.surfaceStyle,
               borderColor: `${chatThemePreview.previewBorderColor}80`,
             }}
           >
@@ -121,6 +130,51 @@ export const ChatPanel = memo(function ChatPanel() {
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <SectionHeader title="Chat Background" subtitle="" />
+          <button
+            type="button"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/15 text-white/70 transition hover:border-white/40 hover:text-white"
+            aria-label="Reset chat wallpaper"
+            title="Reset chat wallpaper"
+            onClick={resetChatWallpaper}
+          >
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+        <div
+          className="aurora-section-card grid grid-cols-2 gap-3 rounded-xl p-4"
+          role="group"
+          aria-label="Chat wallpaper"
+        >
+          {CGRAPH_CHAT_WALLPAPERS.map((wallpaper) => {
+            const selected = selectedWallpaperId === wallpaper.id;
+
+            return (
+              <button
+                key={wallpaper.id}
+                type="button"
+                aria-label={wallpaper.label}
+                aria-pressed={selected}
+                title={wallpaper.label}
+                className={`relative h-24 overflow-hidden rounded-md border p-3 text-left text-xs font-medium transition ${
+                  selected
+                    ? "border-white ring-2 ring-white/35"
+                    : "border-white/15 hover:border-white/45"
+                } ${wallpaper.wallpaper.dark ? "text-white" : "text-slate-950"}`}
+                style={getCGraphChatWallpaperStyle(wallpaper.wallpaper)}
+                onClick={() => setChatWallpaper(wallpaper.wallpaper)}
+              >
+                <span className="absolute inset-x-3 bottom-3 rounded bg-black/15 px-2 py-1 backdrop-blur-sm">
+                  {wallpaper.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
 

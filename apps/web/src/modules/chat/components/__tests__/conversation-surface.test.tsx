@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { ConversationSurface } from '../conversation-surface';
 import { chatThemeSettingsToAppearance } from '@/modules/chat/theme/chat-theme-appearance';
+import { CGRAPH_CHAT_WALLPAPERS } from '@/modules/chat/theme/cgraph-chat-wallpapers';
 
 describe('ConversationSurface', () => {
   it('owns the shared conversation shell slots and scroll contract', () => {
@@ -43,6 +44,7 @@ describe('ConversationSurface', () => {
       base: 'day',
       accentColor: 0x0088ff,
       messageColors: [0x0088ff],
+      wallpaper: CGRAPH_CHAT_WALLPAPERS[2].wallpaper,
     });
 
     render(
@@ -59,6 +61,7 @@ describe('ConversationSurface', () => {
     const messagesRegion = screen.getByLabelText('Conversation messages');
     expect(messagesRegion).toHaveAttribute('data-chat-theme-base', 'day');
     expect(messagesRegion).toHaveAttribute('data-chat-conversation-color', 'ultramarine');
-    expect(messagesRegion.getAttribute('style')).toContain('background');
+    expect(messagesRegion.getAttribute('style')).toContain('background-image');
+    expect(messagesRegion.getAttribute('style')).toContain('repeating-linear-gradient');
   });
 });

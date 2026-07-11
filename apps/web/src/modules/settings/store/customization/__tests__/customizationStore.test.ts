@@ -5,6 +5,10 @@ import { ALL_BADGES } from '@/data/badgesCollection';
 import { ALL_PROFILE_THEMES, DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
 import { getPremiumTitles } from '@/data/titlesCollection';
 import {
+  CGRAPH_CHAT_WALLPAPERS,
+  DEFAULT_CGRAPH_CHAT_WALLPAPER,
+} from '@/modules/chat/theme/cgraph-chat-wallpapers';
+import {
   useCustomizationStore,
   DEFAULT_STATE,
   THEME_COLORS,
@@ -187,6 +191,25 @@ describe('chat actions', () => {
       },
     });
     expect(useCustomizationStore.getState().isDirty).toBe(true);
+  });
+
+  it('persists a selected CGraph wallpaper and resets only the wallpaper', () => {
+    useCustomizationStore
+      .getState()
+      .setChatWallpaper(CGRAPH_CHAT_WALLPAPERS[3].wallpaper);
+
+    expect(
+      useCustomizationStore.getState().chatThemeSettings.wallpaper,
+    ).toEqual(CGRAPH_CHAT_WALLPAPERS[3].wallpaper);
+
+    useCustomizationStore.getState().resetChatWallpaper();
+
+    expect(
+      useCustomizationStore.getState().chatThemeSettings.wallpaper,
+    ).toEqual(DEFAULT_CGRAPH_CHAT_WALLPAPER);
+    expect(useCustomizationStore.getState().chatThemeSettings.base).toBe(
+      'classic',
+    );
   });
 });
 

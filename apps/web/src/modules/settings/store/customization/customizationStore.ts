@@ -35,6 +35,7 @@ import {
   type ChatThemeDefaultConversationColor,
   type ChatThemeWallpaperPreset,
 } from '@cgraph-dev/shared-types/chat-theme';
+import { DEFAULT_CGRAPH_CHAT_WALLPAPER } from '@/modules/chat/theme/cgraph-chat-wallpapers';
 import { isProfileThemeId, type ProfileThemeId } from '@/data/profileThemes';
 import { http } from '@/lib/api-client';
 import { safeLocalStorage } from '@/lib/safeStorage';
@@ -582,6 +583,20 @@ export const useCustomizationStore = create<CustomizationStore>()(
             setAndSave({ chatThemeSettings: settings });
           }
         },
+        setChatWallpaper: (wallpaper) =>
+          setAndSave({
+            chatThemeSettings: {
+              ...get().chatThemeSettings,
+              wallpaper,
+            },
+          }),
+        resetChatWallpaper: () =>
+          setAndSave({
+            chatThemeSettings: {
+              ...get().chatThemeSettings,
+              wallpaper: DEFAULT_CGRAPH_CHAT_WALLPAPER,
+            },
+          }),
         setDefaultConversationColor: (color, customColorData) =>
           setAndSave({
             defaultConversationColor: {

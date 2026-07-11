@@ -20,11 +20,11 @@ function defaultCustomizations(): JsonRecord {
     accent_color: 0x3390ec,
     message_colors: [0x5ca853],
     wallpaper: {
-      intensity: 50,
-      background_color: 0xdbddbb,
-      second_background_color: 0x6ba587,
-      third_background_color: 0xd5d88d,
-      fourth_background_color: 0x88b884,
+      intensity: 44,
+      background_color: 0xe5f1fa,
+      second_background_color: 0xc4dfef,
+      third_background_color: 0xe8eaf9,
+      fourth_background_color: 0xdfeff0,
       dark: false,
     },
   };
@@ -170,6 +170,65 @@ test('persists and resets the routed global chat color across reloads', async ({
   await hydrateThenReturnToBubbles(page, () => api.reads, readsBeforeResetColorReload);
   await expect(page.getByRole('option', { name: 'ultramarine' })).toHaveAttribute(
     'aria-selected',
+    'true',
+  );
+});
+
+test('persists and resets the routed CGraph chat wallpaper across reloads', async ({ page }) => {
+  const api = await installChatColorApi(page);
+
+  await page.goto('/me/appearance/bubbles');
+  await expect(page.getByRole('group', { name: 'Chat wallpaper' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Current', exact: true }).click();
+
+  await expect.poll(() => api.updates.length).toBe(1);
+  expect(api.updates[0]).toMatchObject({
+    custom_config: {
+      chat_theme_settings: {
+        wallpaper: {
+          intensity: 36,
+          background_color: 0x192436,
+          second_background_color: 0x284b5c,
+          third_background_color: 0x263848,
+          fourth_background_color: 0x131b2a,
+          dark: true,
+        },
+      },
+    },
+  });
+
+  const readsBeforeSelectedWallpaperReload = api.reads;
+  await page.reload();
+  await hydrateThenReturnToBubbles(page, () => api.reads, readsBeforeSelectedWallpaperReload);
+  await expect(page.getByRole('button', { name: 'Current', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await page.getByRole('button', { name: 'Reset chat wallpaper' }).click();
+
+  await expect.poll(() => api.updates.length).toBe(2);
+  expect(api.updates[1]).toMatchObject({
+    custom_config: {
+      chat_theme_settings: {
+        wallpaper: {
+          intensity: 44,
+          background_color: 0xe5f1fa,
+          second_background_color: 0xc4dfef,
+          third_background_color: 0xe8eaf9,
+          fourth_background_color: 0xdfeff0,
+          dark: false,
+        },
+      },
+    },
+  });
+
+  const readsBeforeResetWallpaperReload = api.reads;
+  await page.reload();
+  await hydrateThenReturnToBubbles(page, () => api.reads, readsBeforeResetWallpaperReload);
+  await expect(page.getByRole('button', { name: 'Lattice' })).toHaveAttribute(
+    'aria-pressed',
     'true',
   );
 });
