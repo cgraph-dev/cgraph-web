@@ -8,6 +8,7 @@ import { useThemeCustomization } from './hooks';
 import { SearchBar } from './search-bar';
 import { ProfileThemePicker } from './profile-theme-picker';
 import { SaveButton } from '@/modules/settings/components/customize/ui/save-button';
+import { ThemePanel } from '@/modules/settings/components/customize';
 
 /**
  * Theme customization page component.
@@ -28,6 +29,8 @@ export default function ThemeCustomization() {
 
   return (
     <div className="space-y-8">
+      <ThemePanel />
+
       <section aria-labelledby="profile-theme-heading" className="space-y-3">
         <div>
           <h2

@@ -35,6 +35,8 @@ export const ColorPickerGrid = memo(function ColorPickerGrid({
             whileTap={{ scale: 1 }}
             onClick={() => onSelect(preset)}
             title={colors.name}
+            aria-label={`Select ${colors.name} profile color`}
+            aria-pressed={isSelected}
           />
         );
       })}

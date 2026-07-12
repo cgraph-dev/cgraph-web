@@ -228,7 +228,85 @@ async function expectOrderedMessages(page: Page, first: string, second: string):
   await expect(messages.getByText(second, { exact: true })).toHaveCount(1);
 }
 
+function responseData(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return {};
+
+  const record = body as Record<string, unknown>;
+  const data = record.data;
+  return data && typeof data === 'object' && !Array.isArray(data)
+    ? (data as Record<string, unknown>)
+    : record;
+}
+
 test.describe('Post-registration Cloud DM live web acceptance', () => {
+  test('new account saves a profile color without replacing the app theme', async ({
+    browser,
+    request,
+  }) => {
+    const account = await registerLiveAccount(request, 'profilecolor');
+    const page = await newSignedInPage(browser, account);
+
+    try {
+      const initialCustomizationResponse = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          url.pathname === '/api/v1/me/customizations' &&
+          response.request().method() === 'GET'
+        );
+      });
+
+      await page.goto('/me/appearance/themes');
+      const initialCustomization = responseData(await (await initialCustomizationResponse).json());
+      const initialAppTheme = initialCustomization.app_theme;
+
+      expect(typeof initialAppTheme).toBe('string');
+      await expect(page.getByRole('heading', { name: 'Profile Color' })).toBeVisible();
+
+      const saveResponse = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          url.pathname === '/api/v1/me/customizations' &&
+          response.request().method() === 'PATCH'
+        );
+      });
+
+      await page.getByRole('button', { name: 'Select Gold profile color' }).click();
+
+      const response = await saveResponse;
+      expect(response.status()).toBe(200);
+
+      const payload = response.request().postDataJSON() as Record<string, unknown>;
+      const customConfig = payload.custom_config as Record<string, unknown>;
+      expect(payload.profile_color).toBe('gold');
+      expect(payload.app_theme).toBe(initialAppTheme);
+      expect(customConfig.profile_color).toBe('gold');
+      expect(customConfig.app_theme).toBe(initialAppTheme);
+      expect(responseData(await response.json())).toMatchObject({
+        profile_color: 'gold',
+        app_theme: initialAppTheme,
+      });
+
+      const reloadedCustomizationResponse = page.waitForResponse((reloadResponse) => {
+        const url = new URL(reloadResponse.url());
+        return (
+          url.pathname === '/api/v1/me/customizations' &&
+          reloadResponse.request().method() === 'GET'
+        );
+      });
+
+      await page.reload();
+
+      expect(responseData(await (await reloadedCustomizationResponse).json())).toMatchObject({
+        profile_color: 'gold',
+        app_theme: initialAppTheme,
+      });
+      await expect(page.getByText('Currently: Gold')).toBeVisible();
+      await expect(page.locator('[data-profile-color="gold"]').first()).toBeVisible();
+    } finally {
+      await page.context().close();
+    }
+  });
+
   test('new accounts can friend, message, refresh, and retain order', async ({ browser, request }) => {
     const alice = await registerLiveAccount(request, 'alice');
     const bob = await registerLiveAccount(request, 'bob');
