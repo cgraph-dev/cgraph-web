@@ -365,6 +365,36 @@ describe('createRegisterAction', () => {
       expect.objectContaining({ isAuthenticated: true, isLoading: false })
     );
   });
+
+  it('retains structured validation details from a rejected registration', async () => {
+    const { set, get } = createMockSetGet();
+    const register = createRegisterAction(set as never, get as never);
+    const error = new AxiosError('Request failed with status code 422');
+
+    error.response = {
+      data: {
+        error: {
+          code: 'validation_error',
+          message: 'Validation failed',
+          details: { username: ['has already been taken'] },
+        },
+      },
+      status: 422,
+    } as AxiosResponse;
+
+    mockedApi.post.mockRejectedValueOnce(error);
+
+    await expect(register('new@test.com', 'newuser', 'Pass123!')).rejects.toThrow(
+      'Request failed with status code 422'
+    );
+
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: 'username: has already been taken',
+        isLoading: false,
+      })
+    );
+  });
 });
 
 describe('createLogoutAction', () => {

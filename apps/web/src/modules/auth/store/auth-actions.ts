@@ -4,7 +4,7 @@ import { useCustomizationStore } from '@/modules/settings/store/customization/cu
 import { AxiosError } from 'axios';
 
 import type { User, WalletChallenge, AuthState, TwoFactorRequired } from './authStore.types';
-import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
+import { getApiErrorMessage, getApiResultErrorMessage, mapUserFromApi } from './authStore.utils';
 
 function getResponseStatus(error: unknown): number | null {
   if (error instanceof AxiosError && typeof error.response?.status === 'number') {
@@ -278,7 +278,7 @@ export function createRegisterAction(set: Set, _get: Get) {
         turnstileToken
       );
       if (!result.ok) {
-        throw new Error(result.error.message);
+        throw new Error(getApiResultErrorMessage(result.error, 'Registration failed'));
       }
       const { user, tokens } = result.data;
       set({

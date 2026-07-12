@@ -543,6 +543,41 @@ test.describe('auth and account lifecycle routes', () => {
     });
   });
 
+  test('keeps backend validation details visible for correction', async ({ page }) => {
+    await installAuthRouteMocks(page, {
+      registerResponses: [
+        mockResponse(
+          {
+            error: {
+              code: 'validation_error',
+              message: 'Validation failed',
+              details: {
+                username: ['has already been taken'],
+              },
+            },
+          },
+          422
+        ),
+      ],
+    });
+
+    await page.goto('/register');
+    await page.locator('#email').fill('new-owner@cgraph.dev');
+    await page.locator('#username').fill('new_owner');
+    await page.locator('#password').fill(strongPassword);
+    await page.locator('#confirmPassword').fill(strongPassword);
+    await page.getByLabel(/agree to the terms/i).check();
+    await page.getByRole('button', { name: /create account/i }).click();
+
+    await expect(page).toHaveURL(/\/register$/);
+    await expect(page.getByRole('alert')).toContainText('username: has already been taken');
+    await expect(page.locator('#email')).toHaveValue('new-owner@cgraph.dev');
+    await expect(page.locator('#username')).toHaveValue('new_owner');
+
+    await page.waitForTimeout(5100);
+    await expect(page.getByRole('alert')).toContainText('username: has already been taken');
+  });
+
   test('submits forgot-password, reset-password, and verify-email routes', async ({ page }) => {
     const requests = await installAuthRouteMocks(page);
 

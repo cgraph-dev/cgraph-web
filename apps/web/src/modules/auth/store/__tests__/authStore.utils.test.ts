@@ -23,7 +23,12 @@ vi.mock('@/lib/logger', () => ({
   },
 }));
 
-import { getApiErrorMessage, mapUserFromApi, createSecureStorage } from '../authStore.utils';
+import {
+  createSecureStorage,
+  getApiErrorMessage,
+  getApiResultErrorMessage,
+  mapUserFromApi,
+} from '../authStore.utils';
 describe('getApiErrorMessage', () => {
   it('extracts error field from AxiosError response data', () => {
     const err = new AxiosError('fail');
@@ -90,6 +95,25 @@ describe('getApiErrorMessage', () => {
     expect(getApiErrorMessage(42, 'default')).toBe('default');
     expect(getApiErrorMessage(null, 'default')).toBe('default');
     expect(getApiErrorMessage(undefined, 'default')).toBe('default');
+  });
+});
+
+describe('getApiResultErrorMessage', () => {
+  it('formats backend validation details before the generic message', () => {
+    expect(
+      getApiResultErrorMessage(
+        {
+          message: 'Validation failed',
+          details: {
+            password: ['must contain at least one special character'],
+            username: ['has already been taken'],
+          },
+        },
+        'Registration failed'
+      )
+    ).toBe(
+      'password: must contain at least one special character. username: has already been taken'
+    );
   });
 });
 describe('mapUserFromApi', () => {

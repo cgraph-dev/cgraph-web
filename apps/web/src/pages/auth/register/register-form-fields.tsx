@@ -25,6 +25,10 @@ interface RegisterFormFieldsProps {
   setShowPassword: (v: boolean) => void;
   showConfirmPassword: boolean;
   setShowConfirmPassword: (v: boolean) => void;
+  email: string;
+  setEmail: (value: string) => void;
+  username: string;
+  setUsername: (value: string) => void;
   isLoading: boolean;
   isSubmitDisabled?: boolean;
   captcha?: ReactNode;
@@ -50,6 +54,8 @@ export function RegisterFormFields(props: RegisterFormFieldsProps) {
           type="email"
           required
           autoComplete="email"
+          value={props.email}
+          onChange={(event) => props.setEmail(event.target.value)}
           className="matrix-input focus:border-primary-500/50 focus:ring-primary-500/50 w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-4 py-3 text-white placeholder-white/30 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--color-brand-purple)_25%,transparent)] focus:outline-none focus:ring-2"
           placeholder="you@example.com"
         />
@@ -68,6 +74,8 @@ export function RegisterFormFields(props: RegisterFormFieldsProps) {
           minLength={3}
           maxLength={30}
           pattern="[a-zA-Z0-9_]+"
+          value={props.username}
+          onChange={(event) => props.setUsername(event.target.value)}
           className="matrix-input focus:border-primary-500/50 focus:ring-primary-500/50 w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-4 py-3 text-white placeholder-white/30 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--color-brand-purple)_25%,transparent)] focus:outline-none focus:ring-2"
           placeholder="johndoe"
         />

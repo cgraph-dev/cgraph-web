@@ -34,9 +34,28 @@ function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
 function messageFromApiErrorField(error: ApiErrorResponse['error']): string | null {
   if (typeof error === 'string') return error;
   if (typeof error === 'object' && error !== null && typeof error.message === 'string') {
-    return error.message;
+    return messageFromValidationDetails(error.details) || error.message;
   }
   return null;
+}
+
+function messageFromValidationDetails(details: unknown): string | null {
+  if (typeof details !== 'object' || details === null || Array.isArray(details)) return null;
+
+  const messages = Object.entries(details).flatMap(([field, value]) => {
+    if (typeof value === 'string' && value.length > 0) {
+      return [`${field}: ${value}`];
+    }
+
+    if (Array.isArray(value)) {
+      const fieldMessages = value.filter((message): message is string => typeof message === 'string');
+      return fieldMessages.length > 0 ? [`${field}: ${fieldMessages.join(', ')}`] : [];
+    }
+
+    return [];
+  });
+
+  return messages.length > 0 ? messages.join('. ') : null;
 }
 
 function messageFromApiErrors(errors: ApiErrorResponse['errors']): string | null {
@@ -53,6 +72,17 @@ function messageFromApiErrors(errors: ApiErrorResponse['errors']): string | null
   }
 
   return null;
+}
+
+/** Extracts actionable validation text from a typed API-client error result. */
+export function getApiResultErrorMessage(
+  error: { readonly message?: unknown; readonly details?: unknown },
+  fallback: string
+): string {
+  return (
+    messageFromValidationDetails(error.details) ||
+    (typeof error.message === 'string' && error.message.length > 0 ? error.message : fallback)
+  );
 }
 
 type UserStatus = 'online' | 'idle' | 'dnd' | 'offline';

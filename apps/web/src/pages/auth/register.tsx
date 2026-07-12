@@ -85,6 +85,10 @@ export default function Register() {
           setShowPassword={form.setShowPassword}
           showConfirmPassword={form.showConfirmPassword}
           setShowConfirmPassword={form.setShowConfirmPassword}
+          email={form.email}
+          setEmail={form.setEmail}
+          username={form.username}
+          setUsername={form.setUsername}
           isLoading={form.isLoading}
           isSubmitDisabled={captchaRequired && !form.turnstileToken}
           captcha={

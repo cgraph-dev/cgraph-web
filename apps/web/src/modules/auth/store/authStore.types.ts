@@ -2,7 +2,7 @@ import type { ProfileColorId } from '@cgraph-dev/shared-types';
 
 // Type for API error responses
 export interface ApiErrorResponse {
-  error?: string | { message?: string; code?: string };
+  error?: string | { message?: string; code?: string; details?: unknown };
   message?: string;
   errors?: Record<string, string | string[]>;
 }
