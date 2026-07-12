@@ -49,6 +49,7 @@ interface AuthRouteMockOptions {
   readonly registerResponses?: readonly MockJsonResponse[];
   readonly resetPasswordResponses?: readonly MockJsonResponse[];
   readonly twoFactorResponses?: readonly MockJsonResponse[];
+  readonly verifyEmailResponses?: readonly MockJsonResponse[];
 }
 
 function mockResponse(body: unknown, status = 200): MockJsonResponse {
@@ -206,13 +207,21 @@ async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions =
 
     if (path === '/api/v1/auth/verify-email') {
       const body = readJsonRequest(route);
+      const attempt = requests.verifyEmail.length;
       requests.verifyEmail.push(body);
 
-      await fulfillJson(route, {
-        email_verified: true,
-        message: 'Email verified',
-        user: authUser(),
-      });
+      await fulfillMockResponse(
+        route,
+        selectMockResponse(
+          options.verifyEmailResponses,
+          attempt,
+          mockResponse({
+            email_verified: true,
+            message: 'Email verified',
+            user: authUser(),
+          })
+        )
+      );
       return;
     }
 
@@ -562,6 +571,23 @@ test.describe('auth and account lifecycle routes', () => {
     await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible();
     await page.getByRole('button', { name: /resend verification email/i }).click();
     await expect(page.getByText(/new verification email sent/i)).toBeVisible();
+    expect(requests.resendVerification[0]).toMatchObject({ email: 'owner-uat@cgraph.dev' });
+  });
+
+  test('keeps a replaced verification link on the resend recovery route', async ({ page }) => {
+    const requests = await installAuthRouteMocks(page, {
+      verifyEmailResponses: [mockResponse({ error: 'Invalid verification token' }, 400)],
+    });
+
+    await page.goto('/verify-email?token=replaced-token-uat');
+    await expect(page.getByRole('heading', { name: /link expired/i })).toBeVisible();
+    await expect(page.getByText(/use only the newest link/i)).toBeVisible();
+
+    await page.locator('#email').fill('owner-uat@cgraph.dev');
+    await page.getByRole('button', { name: /resend verification email/i }).click();
+
+    await expect(page.getByText(/new verification email sent/i)).toBeVisible();
+    expect(requests.verifyEmail[0]).toMatchObject({ token: 'replaced-token-uat' });
     expect(requests.resendVerification[0]).toMatchObject({ email: 'owner-uat@cgraph.dev' });
   });
 

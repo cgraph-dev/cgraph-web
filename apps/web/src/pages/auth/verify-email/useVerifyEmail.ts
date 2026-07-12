@@ -36,9 +36,11 @@ function getResponseStatus(error: unknown): number | undefined {
   return typeof response.status === 'number' ? response.status : undefined;
 }
 
-function isExpiredVerificationError(error: unknown): boolean {
+function isRecoverableVerificationError(error: unknown): boolean {
   const message = getErrorMessage(error).toLowerCase();
-  return getResponseStatus(error) === 410 || message.includes('expired');
+  const status = getResponseStatus(error);
+
+  return status === 400 || status === 410 || message.includes('expired');
 }
 
 function getResendErrorMessage(error: unknown): string {
@@ -80,7 +82,7 @@ export function useVerifyEmail() {
           await checkAuth?.();
         }
       } catch (error: unknown) {
-        if (isExpiredVerificationError(error)) {
+        if (isRecoverableVerificationError(error)) {
           setState('expired');
         } else {
           setState('error');

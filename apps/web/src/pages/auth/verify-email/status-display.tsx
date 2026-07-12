@@ -130,7 +130,8 @@ function ExpiredView({
   onResendEmailChange,
   onResend,
   title = 'Link Expired',
-  description = 'This verification link has expired. Request a new one to verify your email.',
+  description =
+    'This verification link has expired or was replaced. Request a new one and use only the newest link.',
   backLinkLabel = 'Back to Login',
 }: {
   isResending: boolean;
