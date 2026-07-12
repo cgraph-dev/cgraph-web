@@ -128,7 +128,7 @@ describe('backend sync', () => {
     }
   });
 
-  it('applyServerTheme routes explicit app-shell theme fields through the theme engine', () => {
+  it('applyServerTheme ignores explicit app-shell aliases while applying profile fields', () => {
     act(() => useThemeStore.getState().setColorPreset('cyan'));
 
     const setThemeSpy = vi.spyOn(themeEngine, 'setTheme').mockImplementation(() => {});
@@ -138,11 +138,12 @@ describe('backend sync', () => {
         useThemeStore.getState().applyServerTheme({
           app_theme: 'bubble',
           app_theme_explicit: true,
+          colorPreset: 'gold',
         })
       );
 
-      expect(setThemeSpy).toHaveBeenCalledWith('bubble');
-      expect(useThemeStore.getState().colorPreset).toBe('cyan');
+      expect(setThemeSpy).not.toHaveBeenCalled();
+      expect(useThemeStore.getState().colorPreset).toBe('gold');
     } finally {
       setThemeSpy.mockRestore();
     }
