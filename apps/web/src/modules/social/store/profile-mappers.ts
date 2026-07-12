@@ -147,6 +147,8 @@ export function mapProfileFromApi(data: Record<string, unknown>): ExtendedProfil
 
     equippedNameplateId: identity.equippedNameplateId,
 
+    profileColor: identity.profileColor,
+
     profileTheme: identity.profileTheme,
 
     chatTheme: identity.chatTheme,

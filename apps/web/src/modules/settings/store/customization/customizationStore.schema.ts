@@ -58,6 +58,7 @@ export const apiSchemaMapper = createSchemaMapper<CustomizationState>({
   conversationChatThemeOverrides: 'conversation_chat_theme_overrides',
 
   // Profile
+  profileColor: 'profile_color',
   profileCardStyle: 'profile_layout',
   selectedProfileThemeId: 'profile_theme',
   showBadges: 'show_badges',
@@ -352,6 +353,7 @@ export const PERSIST_PARTIALIZE = (state: CustomizationStore) => ({
   defaultConversationColor: state.defaultConversationColor,
   customChatColors: state.customChatColors,
   conversationChatThemeOverrides: state.conversationChatThemeOverrides,
+  profileColor: state.profileColor,
   profileCardStyle: state.profileCardStyle,
   selectedProfileThemeId: state.selectedProfileThemeId,
   showBadges: state.showBadges,

@@ -30,11 +30,14 @@ export const ProfileCardPreview = memo(function ProfileCardPreview({
     pulse: user?.pulse ?? 0,
     streak: user?.streak ?? 0,
     isOnline: true,
+    profileColor: user?.profileColor ?? undefined,
+    profile_color: user?.profileColor ?? undefined,
   };
 
   const enrichedUser = useProfileCardData(profileUser, 'preview');
   const previewKey = [
     enrichedUser.accentTheme ?? enrichedUser.profile_theme ?? 'theme',
+    enrichedUser.profileColor ?? enrichedUser.profile_color ?? 'profile-color',
     enrichedUser.avatarUrl ?? 'avatar',
     enrichedUser.avatarBorderId ?? 'border',
     enrichedUser.nameplateId ?? enrichedUser.equipped_nameplate ?? 'nameplate',

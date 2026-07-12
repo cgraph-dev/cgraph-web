@@ -8,12 +8,14 @@ describe('otherUserIdentityPatchFromPayload', () => {
       customization: {
         equipped_badges: ['badge-founder'],
         equipped_nameplate: 'plate_gilded_sapphire_loop_01',
+        profile_color: 'cyan',
       },
     });
 
     expect(patch).toMatchObject({
       equippedBadgeIds: ['badge-founder'],
       equippedNameplateId: 'plate_gilded_sapphire_loop_01',
+      profileColor: 'cyan',
     });
   });
 });

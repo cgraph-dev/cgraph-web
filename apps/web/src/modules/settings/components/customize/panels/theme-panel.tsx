@@ -12,20 +12,20 @@ import { THEME_COLORS as themeColors } from '@/stores/theme';
 // THEME PANEL COMPONENT
 
 export const ThemePanel = memo(function ThemePanel() {
-  const { themePreset, setTheme } = useCustomizationStore();
+  const { profileColor, setProfileColor } = useCustomizationStore();
 
-  const colors = themeColors[themePreset];
+  const colors = themeColors[profileColor];
 
   return (
     <div className="space-y-8">
       {/* Color Theme */}
       <section>
         <SectionHeader
-          title="Color Theme"
-          subtitle="Choose your primary color palette"
+          title="Profile Color"
+          subtitle="Choose the accent shown on your profile"
           icon={<span className="text-lg">🎨</span>}
         />
-        <ColorPickerGrid selected={themePreset} onSelect={setTheme} size="lg" />
+        <ColorPickerGrid selected={profileColor} onSelect={setProfileColor} size="lg" />
         <p className="mt-2 text-xs text-[var(--token-text-muted)]">
           Currently: <span style={{ color: colors.primary }}>{colors.name}</span>
         </p>

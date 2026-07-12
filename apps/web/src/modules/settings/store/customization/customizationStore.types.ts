@@ -6,10 +6,13 @@
  *
  */
 import type { ChatBubblePresetId } from '@cgraph-dev/design-tokens';
-import type {
-  ChatUiMessageEntranceAnimation,
-  ProfileCardLayoutId,
-  ProfileThemeId,
+import {
+  DEFAULT_PROFILE_COLOR_ID,
+  PROFILE_COLOR_IDS,
+  type ChatUiMessageEntranceAnimation,
+  type ProfileCardLayoutId,
+  type ProfileColorId,
+  type ProfileThemeId,
 } from '@cgraph-dev/shared-types';
 import type {
   ChatThemeBase,
@@ -33,18 +36,10 @@ import type { ColorDefinition } from '@/stores/theme/types';
 
 // TYPES
 
-export const CUSTOMIZATION_THEME_PRESETS = [
-  'emerald',
-  'purple',
-  'cyan',
-  'orange',
-  'pink',
-  'gold',
-  'crimson',
-  'arctic',
-] as const satisfies readonly (keyof typeof THEME_COLOR_CATALOG)[];
+export const CUSTOMIZATION_THEME_PRESETS =
+  PROFILE_COLOR_IDS satisfies readonly (keyof typeof THEME_COLOR_CATALOG)[];
 
-export type ThemePreset = (typeof CUSTOMIZATION_THEME_PRESETS)[number];
+export type ThemePreset = ProfileColorId;
 
 export type EffectPreset =
   | 'glassmorphism'
@@ -119,6 +114,7 @@ export interface CustomizationState {
   readonly conversationChatThemeOverrides: ConversationChatThemeOverrides;
 
   // === Profile Settings ===
+  readonly profileColor: ProfileColorId;
   readonly profileCardStyle: ProfileCardStyle;
   readonly selectedProfileThemeId: ProfileThemeId | null;
   readonly showBadges: boolean;
@@ -232,6 +228,7 @@ export interface CustomizationActions {
   resetAllConversationChatThemeColors: () => void;
 
   // Profile actions
+  setProfileColor: (color: ProfileColorId) => void;
   setProfileCardStyle: (style: ProfileCardStyle) => void;
   setProfileTheme: (themeId: ProfileThemeId | null) => void;
   toggleBadges: () => void;
@@ -316,6 +313,7 @@ export const DEFAULT_STATE: CustomizationState = {
   conversationChatThemeOverrides: {},
 
   // Profile
+  profileColor: DEFAULT_PROFILE_COLOR_ID,
   profileCardStyle: 'default',
   selectedProfileThemeId: null,
   showBadges: true,

@@ -1,4 +1,5 @@
 import { useAuthStore, type User } from '@/modules/auth/store';
+import type { ProfileColorId } from '@cgraph-dev/shared-types';
 import {
   DEFAULT_STATE,
   THEME_COLORS,
@@ -17,6 +18,7 @@ export interface OwnIdentityPatch {
   equippedTitleId?: string | null;
   equippedBadgeIds?: readonly string[];
   equippedNameplateId?: string | null;
+  profileColor?: ProfileColorId | null;
   profileTheme?: string | null;
   chatTheme?: string | null;
   displayNameFont?: string | null;
@@ -75,6 +77,7 @@ export function applyOwnIdentityPatch(patch: OwnIdentityPatch): void {
   setDefined(userUpdates, 'equippedTitleId', patch.equippedTitleId);
   setDefined(userUpdates, 'equippedBadgeIds', patch.equippedBadgeIds);
   setDefined(userUpdates, 'equippedNameplateId', patch.equippedNameplateId);
+  setDefined(userUpdates, 'profileColor', patch.profileColor);
   setDefined(userUpdates, 'profileTheme', patch.profileTheme);
   setDefined(userUpdates, 'chatTheme', patch.chatTheme);
   setDefined(userUpdates, 'displayNameFont', patch.displayNameFont);
@@ -99,6 +102,11 @@ export function applyOwnIdentityPatch(patch: OwnIdentityPatch): void {
     customizationUpdates.equippedBadges = patch.equippedBadgeIds;
   if (patch.equippedNameplateId !== undefined) {
     customizationUpdates.equippedNameplate = patch.equippedNameplateId;
+  }
+  if (patch.profileColor !== undefined) {
+    customizationUpdates.profileColor = isThemePreset(patch.profileColor)
+      ? patch.profileColor
+      : DEFAULT_STATE.profileColor;
   }
   if (patch.profileTheme !== undefined) {
     customizationUpdates.selectedProfileThemeId = isProfileThemeId(patch.profileTheme)
@@ -155,6 +163,9 @@ export function applyOwnProfileUpdate(raw: Record<string, unknown>): void {
     hasKey(raw, ['equippedNameplateId', 'equipped_nameplate_id', 'nameplateId', 'nameplate_id'])
   ) {
     patch.equippedNameplateId = identity.equippedNameplateId;
+  }
+  if (hasKey(raw, ['profileColor', 'profile_color'])) {
+    patch.profileColor = identity.profileColor;
   }
   if (hasKey(raw, ['profileTheme', 'profile_theme'])) patch.profileTheme = identity.profileTheme;
   if (hasKey(raw, ['chatTheme', 'chat_theme'])) patch.chatTheme = identity.chatTheme;

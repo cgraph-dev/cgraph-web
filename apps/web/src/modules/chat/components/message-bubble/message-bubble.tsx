@@ -144,6 +144,8 @@ function profileCardUserFromSender(sender: SenderIdentity): ProfileCardUserV2 {
     equippedBadges: equippedBadgeIds.map(badgeAchievementFromId),
     profileBadges: equippedBadgeIds.map(profileBadgeFromId),
     isOnline: false,
+    profileColor: sender.profileColor ?? undefined,
+    profile_color: sender.profileColor ?? undefined,
     profile_theme: sender.profileTheme ?? sender.theme ?? undefined,
     equipped_nameplate: sender.equippedNameplateId ?? undefined,
     display_name_font: sender.displayNameFont ?? undefined,

@@ -29,6 +29,7 @@ export const useAvatarSize = () => useCustomizationStore((s) => s.avatarSize);
 // Avatar selectors (Chat selectors archived)
 
 // Profile selectors
+export const useProfileColor = () => useCustomizationStore((s) => s.profileColor);
 export const useProfileCardStyle = () => useCustomizationStore((s) => s.profileCardStyle);
 export const useShowBadges = () => useCustomizationStore((s) => s.showBadges);
 export const useShowBio = () => useCustomizationStore((s) => s.showBio);

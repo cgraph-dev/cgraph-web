@@ -13,6 +13,7 @@
 
 // MyBB-style user signature
 import type { FriendshipStatus } from '@/modules/social/types';
+import type { ProfileColorId } from '@cgraph-dev/shared-types';
 
 export interface UserSignature {
   enabled: boolean;
@@ -98,6 +99,7 @@ export interface ExtendedProfile {
   equippedBadges: UserBadge[];
   equippedBadgeIds?: readonly string[];
   equippedNameplateId?: string | null;
+  profileColor?: ProfileColorId | null;
   profileTheme?: string | null;
   chatTheme?: string | null;
   displayNameFont?: string | null;

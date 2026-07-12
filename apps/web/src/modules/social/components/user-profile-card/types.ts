@@ -6,7 +6,12 @@
 
 import type { ProfileThemeId } from '@/data/profileThemes';
 import type { FriendshipStatus } from '@/modules/social/types';
-import type { Achievement, ProfileThemeAssetManifest, PulseTier } from '@cgraph-dev/shared-types';
+import type {
+  Achievement,
+  ProfileColorId,
+  ProfileThemeAssetManifest,
+  PulseTier,
+} from '@cgraph-dev/shared-types';
 
 export type { PulseTier } from '@cgraph-dev/shared-types';
 
@@ -46,6 +51,8 @@ export interface ProfileCardUser {
   isOnline: boolean;
   lastSeen?: string;
   pronouns?: string;
+  profileColor?: ProfileColorId | null;
+  profile_color?: ProfileColorId;
   profile_theme?: string;
   equipped_nameplate?: string;
   display_name_font?: string;
@@ -124,6 +131,7 @@ export interface CardShellProps {
   children: React.ReactNode;
   accentColor: string;
   className?: string;
+  profileColor?: ProfileColorId;
   profileThemeId?: string;
   backgroundImage?: string | null;
   backgroundAsset?: ProfileThemeAssetManifest | null;

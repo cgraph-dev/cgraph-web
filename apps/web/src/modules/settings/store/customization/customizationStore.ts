@@ -466,6 +466,11 @@ function mapServerCustomizationPatch(
     next.chatTheme = chatTheme;
   }
 
+  const profileColor = getStringPatchValue(updates, ['profile_color', 'profileColor']);
+  if (isThemePreset(profileColor)) {
+    next.profileColor = profileColor;
+  }
+
   const profileTheme = getStringPatchValue(updates, [
     'profile_theme',
     'profileTheme',
@@ -778,6 +783,7 @@ export const useCustomizationStore = create<CustomizationStore>()(
         },
 
         // === Profile Actions ===
+        setProfileColor: (color) => setAndSave({ profileColor: color }),
         setProfileCardStyle: (style) =>
           setAndSave({ profileCardStyle: style, profileLayout: style }),
         setProfileTheme: (themeId) => {

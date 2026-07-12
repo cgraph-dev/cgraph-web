@@ -55,6 +55,7 @@ describe('NewProfileCard', () => {
     friendCount: 42,
     isOnline: true,
     accentTheme: 'signal-noir',
+    profileColor: 'crimson',
     profileBadges: [],
   };
 
@@ -78,6 +79,7 @@ describe('NewProfileCard', () => {
     expect(avatarZone?.dataset.avatarLayoutAnchor).toBe('fixed');
     expect(avatarZone?.dataset.avatarAnchorY).toBe(String(MINI_PROFILE_ANCHOR.anchorY));
     expect(cardShell?.dataset.profileCardBackgroundImage).toContain('/mini-profile-background/');
+    expect(cardShell?.parentElement?.dataset.profileColor).toBe('crimson');
     expect(cardShell?.dataset.profileCardAssetSurface).toBe('mini-profile-background');
     expect(cardShell?.dataset.profileCardAssetAspectRatio).toBe(
       String(SIGNAL_NOIR_ASSET_MANIFEST.miniProfileBackground.intrinsic.aspectRatio)

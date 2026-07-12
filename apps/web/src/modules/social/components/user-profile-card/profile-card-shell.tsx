@@ -16,6 +16,7 @@ export const CardShell = memo(function CardShell({
   children,
   accentColor,
   className,
+  profileColor,
   profileThemeId,
   backgroundImage,
   backgroundAsset,
@@ -28,6 +29,7 @@ export const CardShell = memo(function CardShell({
   return (
     <div
       className={cn('relative rounded-[22px] p-px', className)}
+      data-profile-color={profileColor}
       data-profile-theme-id={profileThemeId}
       style={{
         background: `linear-gradient(148deg, color-mix(in srgb, ${accentColor} 52%, transparent) 0%, color-mix(in srgb, ${accentColor} 10%, transparent) 28%, rgba(255,255,255,0.04) 52%, transparent 100%)`,

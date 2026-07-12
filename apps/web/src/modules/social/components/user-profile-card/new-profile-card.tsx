@@ -1,7 +1,9 @@
 import { memo } from 'react';
 import { X } from 'lucide-react';
+import { DEFAULT_PROFILE_COLOR_ID, isProfileColorId } from '@cgraph-dev/shared-types';
 
 import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
+import { COLORS } from '@/stores/theme/presets';
 
 import { ActionButtons } from './action-buttons';
 import { AvatarZone } from './avatar-zone';
@@ -33,7 +35,11 @@ export const NewProfileCard = memo(function NewProfileCard({
 }: NewProfileCardProps) {
   const themeId = user.accentTheme ?? normalizeAccentThemeId(user.profile_theme) ?? DEFAULT_PROFILE_THEME_ID;
   const theme = ACCENT_THEMES[themeId] ?? ACCENT_THEMES[DEFAULT_PROFILE_THEME_ID];
-  const accentColor = theme.accent;
+  const requestedProfileColor = user.profileColor ?? user.profile_color;
+  const profileColor = isProfileColorId(requestedProfileColor)
+    ? requestedProfileColor
+    : DEFAULT_PROFILE_COLOR_ID;
+  const accentColor = COLORS[profileColor].primary;
   const isMini = variant === 'mini';
   const isPreview = mode === 'preview';
   const nameplateId = user.nameplateId ?? user.equipped_nameplate;
@@ -69,6 +75,7 @@ export const NewProfileCard = memo(function NewProfileCard({
       backgroundImage={cardBackgroundImage}
       backgroundAsset={cardBackgroundAsset}
       className={className}
+      profileColor={profileColor}
       profileThemeId={themeId}
     >
       {showCloseButton && (

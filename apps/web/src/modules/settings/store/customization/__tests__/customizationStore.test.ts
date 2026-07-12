@@ -208,6 +208,16 @@ describe('chat actions', () => {
 // Profile Actions
 
 describe('profile actions', () => {
+  it('setProfileColor uses the dedicated profile field', () => {
+    useCustomizationStore.getState().setProfileColor('gold');
+
+    expect(useCustomizationStore.getState()).toMatchObject({
+      profileColor: 'gold',
+      themePreset: DEFAULT_STATE.themePreset,
+      isDirty: true,
+    });
+  });
+
   it('setProfileCardStyle sets both style and alias', () => {
     useCustomizationStore.getState().setProfileCardStyle('compact');
     expect(useCustomizationStore.getState().profileCardStyle).toBe('compact');
@@ -259,6 +269,7 @@ describe('batch and legacy actions', () => {
 
     useCustomizationStore.getState().applyServerSettings({
       app_theme: 'emerald',
+      profile_color: 'gold',
       background_effect: 'neon',
       chat_theme: 'cyan',
       avatar_border_id: freeBorder!.id,
@@ -268,6 +279,7 @@ describe('batch and legacy actions', () => {
     expect(useCustomizationStore.getState()).toMatchObject({
       themePreset: 'emerald',
       appTheme: 'emerald',
+      profileColor: 'gold',
       effectPreset: 'neon',
       chatBubbleColor: 'cyan',
       chatTheme: 'cyan',
@@ -714,6 +726,7 @@ describe('persistCustomizationState', () => {
 
     await persistCustomizationState({
       ...DEFAULT_STATE,
+      profileColor: 'gold',
       chatThemeSettings: {
         base: 'tinted',
         presetId: 'preset:10',
@@ -745,6 +758,8 @@ describe('persistCustomizationState', () => {
     const payload = mockedApi.patch.mock.calls[0]?.[1];
 
     expect(payload).toMatchObject({
+      app_theme: DEFAULT_STATE.themePreset,
+      profile_color: 'gold',
       chat_theme_settings: {
         base: 'tinted',
         preset_id: 'preset:10',
@@ -785,6 +800,8 @@ describe('persistCustomizationState', () => {
       },
     });
     expect(payload.custom_config).toMatchObject({
+      app_theme: DEFAULT_STATE.themePreset,
+      profile_color: 'gold',
       chat_theme_settings: payload.chat_theme_settings,
       default_conversation_color: payload.default_conversation_color,
       custom_chat_colors: payload.custom_chat_colors,

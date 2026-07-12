@@ -19,7 +19,7 @@ import { useAuthStore } from '@/modules/auth/store';
 // AVATAR PANEL COMPONENT
 
 export const AvatarPanel = memo(function AvatarPanel() {
-  const { avatarSize, selectedBorderId, setAvatarSize, themePreset } = useCustomizationStore();
+  const { avatarSize, selectedBorderId, setAvatarSize, profileColor } = useCustomizationStore();
 
   const user = useAuthStore((s) => s.user);
   const borderDef = selectedBorderId ? getBorderById(selectedBorderId) : undefined;
@@ -94,7 +94,7 @@ export const AvatarPanel = memo(function AvatarPanel() {
           icon={<span className="text-lg">📐</span>}
         />
         <div className="flex items-center gap-4">
-          <SizeSelector value={avatarSize} onChange={setAvatarSize} colorPreset={themePreset} />
+          <SizeSelector value={avatarSize} onChange={setAvatarSize} colorPreset={profileColor} />
           <span className="text-sm text-white/50">
             {avatarSize === 'small' ? '48px' : avatarSize === 'medium' ? '64px' : '80px'}
           </span>

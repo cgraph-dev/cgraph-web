@@ -1,3 +1,5 @@
+import type { ProfileColorId } from '@cgraph-dev/shared-types';
+
 // Type for API error responses
 export interface ApiErrorResponse {
   error?: string | { message?: string; code?: string };
@@ -18,6 +20,7 @@ export interface User {
   equippedTitleId?: string | null;
   equippedBadgeIds?: readonly string[];
   equippedNameplateId?: string | null;
+  profileColor?: ProfileColorId | null;
   profileTheme?: string | null;
   chatTheme?: string | null;
   displayNameFont?: string | null;

@@ -83,6 +83,9 @@ export function otherUserIdentityPatchFromPayload(
   ) {
     patch.equippedNameplateId = identity.equippedNameplateId;
   }
+  if (hasKey(records, ['profileColor', 'profile_color'])) {
+    patch.profileColor = identity.profileColor;
+  }
   if (hasKey(records, ['profileTheme', 'profile_theme'])) {
     patch.profileTheme = identity.profileTheme;
   }

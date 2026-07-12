@@ -19,7 +19,7 @@ export const ProfilePanel = memo(function ProfilePanel() {
     showBadges,
     showBio,
     showStatus,
-    themePreset,
+    profileColor,
     setProfileCardStyle,
     toggleBadges,
     toggleBio,
@@ -53,7 +53,7 @@ export const ProfilePanel = memo(function ProfilePanel() {
                 onClick={() => setProfileCardStyle(style.id)}
                 icon={<span className="text-xl">{style.icon}</span>}
                 label={style.name}
-                colorPreset={themePreset}
+                colorPreset={profileColor}
               />
               {style.premium && <PremiumBadge className="absolute -right-2 -top-2" />}
             </div>
@@ -75,7 +75,7 @@ export const ProfilePanel = memo(function ProfilePanel() {
             icon="🏅"
             enabled={showBadges}
             onToggle={toggleBadges}
-            colorPreset={themePreset}
+            colorPreset={profileColor}
           />
           <div className="aurora-divider my-2 border-t" />
           <ToggleRow
@@ -84,7 +84,7 @@ export const ProfilePanel = memo(function ProfilePanel() {
             icon="📝"
             enabled={showBio}
             onToggle={toggleBio}
-            colorPreset={themePreset}
+            colorPreset={profileColor}
           />
           <div className="aurora-divider my-2 border-t" />
           <ToggleRow
@@ -93,16 +93,16 @@ export const ProfilePanel = memo(function ProfilePanel() {
             icon="🟢"
             enabled={showStatus}
             onToggle={toggleStatus}
-            colorPreset={themePreset}
+            colorPreset={profileColor}
           />
         </div>
       </section>
 
-      {/* Theme Connection */}
+      {/* Profile Color */}
       <section>
         <SectionHeader
-          title="Theme Connection"
-          subtitle="Your profile inherits the active theme"
+          title="Profile Color"
+          subtitle="Your profile accent is separate from app appearance"
           icon={<span className="text-lg">🔗</span>}
         />
         <div className="aurora-section-card rounded-xl bg-gradient-to-br from-white/5 to-transparent p-4">
@@ -110,16 +110,16 @@ export const ProfilePanel = memo(function ProfilePanel() {
             <div
               className="h-12 w-12 rounded-xl"
               style={{
-                background: `linear-gradient(135deg, ${themeColors[themePreset].primary}, ${themeColors[themePreset].secondary})`,
+                background: `linear-gradient(135deg, ${themeColors[profileColor].primary}, ${themeColors[profileColor].secondary})`,
               }}
             />
             <div>
-              <h4 className="font-medium capitalize text-[var(--token-text-primary)]">{themePreset} Theme</h4>
-              <p className="text-sm text-[var(--token-text-muted)]">Profile colors match your selected theme</p>
+              <h4 className="font-medium capitalize text-[var(--token-text-primary)]">{profileColor} Profile Color</h4>
+              <p className="text-sm text-[var(--token-text-muted)]">Profile cards and actions use this accent</p>
             </div>
           </div>
           <p className="mt-3 text-xs text-[var(--token-text-muted)]">
-            💡 Tip: Change your theme in the Theme tab to update profile colors
+            💡 Tip: Change your profile color in the Color tab
           </p>
         </div>
       </section>

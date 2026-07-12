@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useShallow } from 'zustand/react/shallow';
 import { useCustomizationStore } from '@/modules/settings/store/customization';
 import { THEME_COLORS as themeColors } from '@/stores/theme';
-import { getThemeById } from '@/data/profileThemes';
 import { ProfileCardPreview } from './profile-card-preview';
 import { tweens, loop } from '@/lib/animation-presets';
 import { FADE_IN } from '@/lib/animations/transitions';
@@ -19,20 +18,15 @@ export const LivePreviewPanel = memo(function LivePreviewPanel() {
   // Get store states with shallow comparison
   const settings = useCustomizationStore(
     useShallow((state) => ({
-      themePreset: state.themePreset,
+      profileColor: state.profileColor,
       isSaving: state.isSaving,
       isDirty: state.isDirty,
-      profileTheme: state.profileTheme,
     }))
   );
 
   const { isSaving, isDirty } = settings;
 
-  const appThemeColors = themeColors[settings.themePreset];
-  const profileTheme = getThemeById(settings.profileTheme);
-  const activeThemeName = profileTheme?.name ?? appThemeColors.name;
-  const activeThemeColor = profileTheme?.accentPrimary ?? appThemeColors.primary;
-  const activeThemeGlow = profileTheme?.glowColor ?? appThemeColors.glow;
+  const profileColors = themeColors[settings.profileColor];
 
   return (
     <div className="flex h-full flex-col">
@@ -93,12 +87,12 @@ export const LivePreviewPanel = memo(function LivePreviewPanel() {
       {/* Quick Stats */}
       <div className="mt-4 rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] p-4 shadow-[0_4px_16px_rgba(0,0,0,0.4),rgba(255,255,255,0.02)_0px_1px_1px_inset] backdrop-blur-3xl">
         <div className="flex items-center justify-between text-[11px] font-medium">
-          <span className="text-white/40">Active Theme</span>
+          <span className="text-white/40">Profile Color</span>
           <span
             className="rounded bg-[var(--token-bg-secondary)] px-2 py-0.5"
-            style={{ color: activeThemeColor, textShadow: `0 0 10px ${activeThemeGlow}` }}
+            style={{ color: profileColors.primary, textShadow: `0 0 10px ${profileColors.glow}` }}
           >
-            {activeThemeName}
+            {profileColors.name}
           </span>
         </div>
       </div>

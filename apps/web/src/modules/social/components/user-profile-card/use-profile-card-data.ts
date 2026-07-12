@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { pulseTierForScore } from '@cgraph-dev/shared-types';
+import {
+  DEFAULT_PROFILE_COLOR_ID,
+  isProfileColorId,
+  pulseTierForScore,
+  type ProfileColorId,
+} from '@cgraph-dev/shared-types';
 
 import { getBadgeById } from '@/data/badgesCollection';
 import { DEFAULT_PROFILE_THEME_ID } from '@/data/profileThemes';
@@ -38,6 +43,10 @@ const RARITY_RANK: Record<BadgeDisplayTier, number> = {
 
 function toAccentThemeId(value: string | null | undefined): AccentThemeId {
   return normalizeAccentThemeId(value) ?? DEFAULT_PROFILE_THEME_ID;
+}
+
+function toProfileColorId(value: string | null | undefined): ProfileColorId {
+  return isProfileColorId(value) ? value : DEFAULT_PROFILE_COLOR_ID;
 }
 
 /** Map badge IDs from store → ProfileBadge[] for the card display */
@@ -141,6 +150,7 @@ export function useProfileCardData(
             accentTheme: toAccentThemeId(
               s.selectedProfileThemeId ?? s.profileThemePresetId ?? DEFAULT_PROFILE_THEME_ID
             ),
+            profileColor: s.profileColor,
             nameplate: s.equippedNameplate,
             borderId: s.selectedBorderId,
             titleId: s.equippedTitle,
@@ -158,6 +168,9 @@ export function useProfileCardData(
     const accentTheme: AccentThemeId = isOwnProfile
       ? (ownCustomization?.accentTheme ?? DEFAULT_PROFILE_THEME_ID)
       : toAccentThemeId(user.profile_theme ?? DEFAULT_PROFILE_THEME_ID);
+    const profileColor = isOwnProfile
+      ? (ownCustomization?.profileColor ?? DEFAULT_PROFILE_COLOR_ID)
+      : toProfileColorId(user.profileColor ?? user.profile_color);
 
     const nameplateVariant: NameplateVariant = isOwnProfile
       ? (NAMEPLATE_MAP[ownCustomization?.nameplate ?? ''] ?? 'none')
@@ -188,6 +201,7 @@ export function useProfileCardData(
       ...user,
       equippedTitle,
       accentTheme,
+      profileColor,
       nameplateVariant,
       nameplateId: isOwnProfile
         ? (ownCustomization?.nameplate ?? null)

@@ -101,6 +101,7 @@ export function mapUserFromApi(apiUser: Record<string, unknown>): User {
     equippedTitleId: identity.equippedTitleId,
     equippedBadgeIds: identity.equippedBadgeIds,
     equippedNameplateId: identity.equippedNameplateId,
+    profileColor: identity.profileColor,
     profileTheme: identity.profileTheme,
     chatTheme: identity.chatTheme,
     displayNameFont: identity.displayNameFont,

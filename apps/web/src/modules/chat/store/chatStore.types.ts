@@ -6,7 +6,7 @@
  * and scheduling types.
  *
  */
-import type { MessageRequestStatus } from '@cgraph-dev/shared-types';
+import type { MessageRequestStatus, ProfileColorId } from '@cgraph-dev/shared-types';
 
 export interface Message {
   id: string;
@@ -46,6 +46,7 @@ export interface Message {
     equippedTitleId?: string | null;
     equippedBadgeIds?: readonly string[];
     equippedNameplateId?: string | null;
+    profileColor?: ProfileColorId | null;
     bubbleStyle?: string | null;
     bubbleColor?: string | null;
     bubbleRadius?: number | null;
@@ -206,6 +207,7 @@ export interface ConversationParticipant {
     equippedTitleId?: string | null;
     equippedBadgeIds?: readonly string[];
     equippedNameplateId?: string | null;
+    profileColor?: ProfileColorId | null;
     profileTheme?: string | null;
     chatTheme?: string | null;
     displayNameFont?: string | null;
@@ -238,6 +240,7 @@ export interface ChatIdentityPatch {
   equippedTitleId?: string | null;
   equippedBadgeIds?: readonly string[];
   equippedNameplateId?: string | null;
+  profileColor?: ProfileColorId | null;
   profileTheme?: string | null;
   chatTheme?: string | null;
   displayNameFont?: string | null;

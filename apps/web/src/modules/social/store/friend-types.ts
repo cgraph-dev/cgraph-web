@@ -5,6 +5,8 @@
  *
  */
 
+import type { ProfileColorId } from '@cgraph-dev/shared-types';
+
 export interface Friend {
   id: string;
   username: string;
@@ -15,6 +17,7 @@ export interface Friend {
   equippedTitleId?: string | null;
   equippedBadgeIds?: readonly string[];
   equippedNameplateId?: string | null;
+  profileColor?: ProfileColorId | null;
   profileTheme?: string | null;
   chatTheme?: string | null;
   displayNameFont?: string | null;
@@ -40,6 +43,7 @@ export interface FriendRequest {
     equippedTitleId?: string | null;
     equippedBadgeIds?: readonly string[];
     equippedNameplateId?: string | null;
+    profileColor?: ProfileColorId | null;
     profileTheme?: string | null;
     chatTheme?: string | null;
     displayNameFont?: string | null;
@@ -62,6 +66,7 @@ export interface FriendIdentityPatch {
   equippedTitleId?: string | null;
   equippedBadgeIds?: readonly string[];
   equippedNameplateId?: string | null;
+  profileColor?: ProfileColorId | null;
   profileTheme?: string | null;
   chatTheme?: string | null;
   displayNameFont?: string | null;
