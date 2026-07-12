@@ -3,7 +3,6 @@ import { http } from '@/lib/api-client';
 import { isPreferenceBootstrapReady, usePreferenceOrchestrator } from '../preferenceOrchestrator';
 import { useSettingsStore } from '../settingsStore';
 import { useCustomizationStore, DEFAULT_STATE } from '../customization/customizationStore';
-import { useThemeStore } from '@/stores/theme/store';
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -24,8 +23,6 @@ function mockPreferenceGets() {
         return { data: { data: { theme: 'dark', push_notifications: false } } };
       case '/api/v1/me/customizations':
         return { data: { data: { theme_preset: 'pink', effect_preset: 'neon' } } };
-      case '/api/v1/me/theme':
-        return { data: { data: { color_preset: 'cyan', effect_preset: 'minimal' } } };
       default:
         return { data: { data: {} } };
     }
@@ -37,52 +34,44 @@ describe('preferenceOrchestrator', () => {
     vi.clearAllMocks();
     useSettingsStore.getState().reset();
     useCustomizationStore.setState({ ...DEFAULT_STATE });
-    useThemeStore.getState().reset();
     usePreferenceOrchestrator.getState().reset();
     mockPreferenceGets();
   });
 
-  it('bootstraps settings, customization, and theme through one owner', async () => {
-    const result = await usePreferenceOrchestrator
-      .getState()
-      .bootstrapPreferences({ userId: 'user-1', includeTheme: true });
+  it('bootstraps settings and customization without the legacy app-theme endpoint', async () => {
+    const result = await usePreferenceOrchestrator.getState().bootstrapPreferences({ userId: 'user-1' });
 
     expect(result).toEqual({
       settings: 'fulfilled',
       customization: 'fulfilled',
-      theme: 'fulfilled',
     });
     expect(mockedGet).toHaveBeenCalledWith('/api/v1/settings');
     expect(mockedGet).toHaveBeenCalledWith('/api/v1/me/customizations');
-    expect(mockedGet).toHaveBeenCalledWith('/api/v1/me/theme');
+    expect(mockedGet).not.toHaveBeenCalledWith('/api/v1/me/theme');
     expect(usePreferenceOrchestrator.getState().lastBootstrappedUserId).toBe('user-1');
     expect(usePreferenceOrchestrator.getState().error).toBeNull();
   });
 
-  it('skips theme sync until auth has a user id', async () => {
+  it('does not fetch the legacy app-theme endpoint without a user id', async () => {
     const result = await usePreferenceOrchestrator.getState().bootstrapPreferences();
 
-    expect(result.theme).toBe('skipped');
+    expect(result).toEqual({ settings: 'fulfilled', customization: 'fulfilled' });
     expect(mockedGet).toHaveBeenCalledWith('/api/v1/settings');
     expect(mockedGet).toHaveBeenCalledWith('/api/v1/me/customizations');
     expect(mockedGet).not.toHaveBeenCalledWith('/api/v1/me/theme');
   });
 
   it('reuses a fulfilled bootstrap for the same user unless forced', async () => {
-    await usePreferenceOrchestrator
-      .getState()
-      .bootstrapPreferences({ userId: 'user-1', includeTheme: true });
-    await usePreferenceOrchestrator
-      .getState()
-      .bootstrapPreferences({ userId: 'user-1', includeTheme: true });
+    await usePreferenceOrchestrator.getState().bootstrapPreferences({ userId: 'user-1' });
+    await usePreferenceOrchestrator.getState().bootstrapPreferences({ userId: 'user-1' });
 
-    expect(mockedGet).toHaveBeenCalledTimes(3);
+    expect(mockedGet).toHaveBeenCalledTimes(2);
 
     await usePreferenceOrchestrator
       .getState()
-      .bootstrapPreferences({ userId: 'user-1', includeTheme: true, force: true });
+      .bootstrapPreferences({ userId: 'user-1', force: true });
 
-    expect(mockedGet).toHaveBeenCalledTimes(6);
+    expect(mockedGet).toHaveBeenCalledTimes(4);
   });
 
   it('marks the bootstrap rejected when a surface stores an error', async () => {
@@ -95,7 +84,7 @@ describe('preferenceOrchestrator', () => {
 
     const result = await usePreferenceOrchestrator
       .getState()
-      .bootstrapPreferences({ userId: 'user-1', includeTheme: true });
+      .bootstrapPreferences({ userId: 'user-1' });
 
     expect(result.customization).toBe('rejected');
     expect(usePreferenceOrchestrator.getState().error).toBe(
@@ -116,9 +105,8 @@ describe('preferenceOrchestrator', () => {
       isPreferenceBootstrapReady({
         isAuthenticated: true,
         userId: 'user-1',
-        includeTheme: true,
         lastBootstrappedUserId: 'user-1',
-        result: { settings: 'fulfilled', customization: 'fulfilled', theme: 'fulfilled' },
+        result: { settings: 'fulfilled', customization: 'fulfilled' },
       })
     ).toBe(true);
 
@@ -126,9 +114,8 @@ describe('preferenceOrchestrator', () => {
       isPreferenceBootstrapReady({
         isAuthenticated: true,
         userId: 'user-1',
-        includeTheme: true,
         lastBootstrappedUserId: 'user-1',
-        result: { settings: 'fulfilled', customization: 'fulfilled', theme: 'rejected' },
+        result: { settings: 'fulfilled', customization: 'rejected' },
       })
     ).toBe(false);
   });

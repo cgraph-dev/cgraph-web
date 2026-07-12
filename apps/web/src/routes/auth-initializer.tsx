@@ -13,8 +13,6 @@ import { useAuthStore } from '@/modules/auth/store';
 import type { User } from '@/modules/auth/store';
 import { useThemeStore, THEME_COLORS } from '@/stores/theme';
 import { bootstrapUserPreferences } from '@/modules/settings/store/preferenceOrchestrator';
-import { themeEngine } from '@/lib/theme/theme-engine';
-import { STORAGE_KEY as THEME_PREFERENCES_KEY } from '@/lib/theme/preferences';
 import { useCustomizationApplication } from '@/modules/settings/hooks/useCustomizationApplication';
 import { authLogger, themeLogger } from '@/lib/logger';
 import { socketManager } from '@/lib/socket';
@@ -144,7 +142,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     }
 
     if (isAuthenticated) {
-      bootstrapUserPreferences({ userId, includeTheme: Boolean(userId) }).catch((error) => {
+      bootstrapUserPreferences({ userId }).catch((error) => {
         authLogger.error('Preference initialization failed:', error);
       });
     }
@@ -213,12 +211,6 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, isAuthLoading, token, userId]);
 
   useEffect(() => {
-    const hasProfessionalThemePreferences = Boolean(localStorage.getItem(THEME_PREFERENCES_KEY));
-    const appThemeId = hasProfessionalThemePreferences
-      ? themeEngine.getCurrentTheme().id
-      : 'aurora';
-    themeEngine.setTheme(appThemeId);
-
     const colors = THEME_COLORS[colorPreset];
     if (colors) {
       const root = document.documentElement;
@@ -228,7 +220,6 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       root.style.setProperty('--user-theme-gradient', colors.gradient);
       themeLogger.debug('Applied user customizations:', colorPreset, colors);
     }
-    themeLogger.debug('Applied app theme:', appThemeId);
   }, [colorPreset]);
 
   return <>{children}</>;

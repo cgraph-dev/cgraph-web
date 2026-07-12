@@ -563,7 +563,7 @@ export function createSettingsActions(
       if (theme === 'system') {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
-      return theme;
+      return theme === 'light' ? 'light' : 'dark';
     },
 
     // Helper: Check if motion should be reduced

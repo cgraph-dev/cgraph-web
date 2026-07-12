@@ -501,7 +501,7 @@ describe('settingsStore (modules)', () => {
       await useSettingsStore.getState().resetToDefaults();
 
       const { settings } = useSettingsStore.getState();
-      expect(settings.appearance.theme).toBe('system');
+      expect(settings.appearance.theme).toBe('aurora');
       expect(settings.locale.language).toBe('en');
     });
 
@@ -610,16 +610,19 @@ describe('settingsStore (modules)', () => {
       expect(useSettingsStore.getState().getTheme()).toBe('light');
     });
 
-    it('should return "dark" when theme is set to dark', () => {
-      useSettingsStore.setState({
-        settings: {
-          ...DEFAULT_SETTINGS,
-          appearance: { ...DEFAULT_SETTINGS.appearance, theme: 'dark' },
-        },
-      });
+    it.each(['aurora', 'dark', 'bubble'] as const)(
+      'should resolve the %s app theme to dark',
+      (theme) => {
+        useSettingsStore.setState({
+          settings: {
+            ...DEFAULT_SETTINGS,
+            appearance: { ...DEFAULT_SETTINGS.appearance, theme },
+          },
+        });
 
-      expect(useSettingsStore.getState().getTheme()).toBe('dark');
-    });
+        expect(useSettingsStore.getState().getTheme()).toBe('dark');
+      }
+    );
 
     it('should resolve "system" theme based on matchMedia', () => {
       // jsdom matchMedia defaults to not matching, so "system" → light

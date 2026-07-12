@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-const { mockThemeEngine, getState, setState } = vi.hoisted(() => {
+const { mockThemeEngine, mockSettingsStore, setState } = vi.hoisted(() => {
   let _currentThemeId = 'dark';
+  let _appTheme: 'aurora' | 'dark' | 'light' | 'bubble' | 'system' = 'aurora';
   let _subscribers: ((theme: Record<string, unknown>) => void)[] = [];
   let _preferences = {
     themeId: 'dark',
@@ -18,6 +19,23 @@ const { mockThemeEngine, getState, setState } = vi.hoisted(() => {
     },
   };
 
+  const createTheme = (id: string) => ({
+    id,
+    name: id,
+    category: id === 'light' ? 'light' : 'dark',
+    colors: {},
+    isBuiltIn: true,
+  });
+
+  const applyTheme = (theme: Record<string, unknown>) => {
+    const id = String(theme.id);
+    _currentThemeId = id;
+    document.documentElement.classList.remove('light', 'dark');
+    const category = id === 'light' ? 'light' : 'dark';
+    document.documentElement.classList.add(category);
+    _subscribers.forEach((fn) => fn(createTheme(id)));
+  };
+
   const engine = {
     getCurrentTheme: vi.fn(() => ({
       id: _currentThemeId,
@@ -28,22 +46,11 @@ const { mockThemeEngine, getState, setState } = vi.hoisted(() => {
     })),
     getPreferences: vi.fn(() => _preferences),
     setTheme: vi.fn((id: string) => {
-      _currentThemeId = id;
       _preferences = { ..._preferences, themeId: id };
-      document.documentElement.classList.remove('light', 'dark');
-      const category = id === 'light' ? 'light' : 'dark';
-      document.documentElement.classList.add(category);
       localStorage.setItem('cgraph-theme', id);
-      _subscribers.forEach((fn) =>
-        fn({
-          id,
-          name: id,
-          category,
-          colors: {},
-          isBuiltIn: true,
-        })
-      );
+      applyTheme(createTheme(id));
     }),
+    applyTheme: vi.fn(applyTheme),
     subscribe: vi.fn((fn: (theme: Record<string, unknown>) => void) => {
       _subscribers.push(fn);
       return () => {
@@ -60,15 +67,25 @@ const { mockThemeEngine, getState, setState } = vi.hoisted(() => {
     deleteCustomTheme: vi.fn(),
   };
 
+  const updateAppearanceSettings = vi.fn(() => Promise.resolve());
+  const settingsStore = {
+    get settings() {
+      return { appearance: { theme: _appTheme } };
+    },
+    updateAppearanceSettings,
+  };
+
   return {
     mockThemeEngine: engine,
-    getState: () => ({ _currentThemeId, _subscribers, _preferences }),
+    mockSettingsStore: settingsStore,
     setState: (patch: {
       themeId?: string;
+      appTheme?: typeof _appTheme;
       preferences?: typeof _preferences;
       subscribers?: ((theme: Record<string, unknown>) => void)[];
     }) => {
       if (patch.themeId !== undefined) _currentThemeId = patch.themeId;
+      if (patch.appTheme !== undefined) _appTheme = patch.appTheme;
       if (patch.preferences !== undefined) _preferences = patch.preferences;
       if (patch.subscribers !== undefined) _subscribers = patch.subscribers;
     },
@@ -77,8 +94,18 @@ const { mockThemeEngine, getState, setState } = vi.hoisted(() => {
 
 vi.mock('@/lib/theme/theme-engine', () => ({
   themeEngine: mockThemeEngine,
-  getAllThemes: vi.fn(() => []),
-  THEME_REGISTRY: {},
+  getAllThemes: vi.fn(() => ['aurora', 'dark', 'light', 'bubble'].map((id) => ({ id }))),
+  THEME_REGISTRY: {
+    aurora: { id: 'aurora' },
+    dark: { id: 'dark' },
+    light: { id: 'light' },
+    bubble: { id: 'bubble' },
+  },
+}));
+
+vi.mock('@/modules/settings/store', () => ({
+  useSettingsStore: (selector: (state: typeof mockSettingsStore) => unknown) =>
+    selector(mockSettingsStore),
 }));
 
 vi.mock('@/lib/theme/tokens', () => ({
@@ -87,14 +114,16 @@ vi.mock('@/lib/theme/tokens', () => ({
 
 import { ThemeProvider, useTheme } from '../theme-context';
 let matchMediaMatches = false;
-// Captured from matchMedia mock for potential test use
-const changeHandlerRef: { current: ((e: MediaQueryListEvent) => void) | null } = { current: null };
+const colorSchemeChangeHandlerRef: { current: ((e: MediaQueryListEvent) => void) | null } = {
+  current: null,
+};
 
 beforeEach(() => {
   matchMediaMatches = false;
-  changeHandlerRef.current = null;
+  colorSchemeChangeHandlerRef.current = null;
   setState({
     themeId: 'dark',
+    appTheme: 'aurora',
     subscribers: [],
     preferences: {
       themeId: 'dark',
@@ -115,10 +144,14 @@ beforeEach(() => {
 
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn(() => ({
-      matches: matchMediaMatches,
-      addEventListener: vi.fn((_: string, handler: EventListener) => {
-        changeHandlerRef.current = handler;
+    value: vi.fn((query: string) => ({
+      get matches() {
+        return matchMediaMatches;
+      },
+      addEventListener: vi.fn((_: string, handler: (event: MediaQueryListEvent) => void) => {
+        if (query === '(prefers-color-scheme: dark)') {
+          colorSchemeChangeHandlerRef.current = handler;
+        }
       }),
       removeEventListener: vi.fn(),
     })),
@@ -139,22 +172,15 @@ describe('ThemeContext', () => {
       expect(screen.getByTestId('child')).toHaveTextContent('Hello');
     });
 
-    it('defaults to dark theme when no stored theme', () => {
+    it('applies the Settings default instead of a local app-theme preference', () => {
       const { result } = renderHook(() => useTheme(), { wrapper });
-      expect(result.current.theme).toBe('dark');
+      expect(result.current.theme).toBe('aurora');
       expect(result.current.resolvedTheme).toBe('dark');
+      expect(mockThemeEngine.applyTheme).toHaveBeenCalledWith({ id: 'aurora' });
     });
 
-    it('restores theme from localStorage', () => {
-      // Simulate engine starting with light theme
-      setState({ themeId: 'light', preferences: { ...getState()._preferences, themeId: 'light' } });
-      mockThemeEngine.getCurrentTheme.mockReturnValueOnce({
-        id: 'light',
-        name: 'light',
-        category: 'light',
-        colors: {},
-        isBuiltIn: true,
-      });
+    it('resolves a persisted light Settings intent', () => {
+      setState({ appTheme: 'light' });
       const { result } = renderHook(() => useTheme(), { wrapper });
       expect(result.current.resolvedTheme).toBe('light');
     });
@@ -170,57 +196,49 @@ describe('ThemeContext', () => {
       expect(document.documentElement.classList.contains('dark')).toBe(true);
     });
 
-    it('switches from dark to light and updates class', () => {
+    it('writes an explicit app theme through the Settings action', () => {
       const { result } = renderHook(() => useTheme(), { wrapper });
 
       act(() => {
         result.current.setTheme('light');
       });
 
-      expect(result.current.resolvedTheme).toBe('light');
-      expect(document.documentElement.classList.contains('light')).toBe(true);
-      expect(document.documentElement.classList.contains('dark')).toBe(false);
-      expect(mockThemeEngine.setTheme).toHaveBeenCalledWith('light');
+      expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'light' });
+      expect(mockThemeEngine.setTheme).not.toHaveBeenCalled();
     });
 
-    it('system theme resolves to system preference', () => {
-      matchMediaMatches = true; // system prefers dark
+    it('resolves system intent to Aurora for a dark operating system', () => {
+      matchMediaMatches = true;
+      setState({ appTheme: 'system' });
       const { result } = renderHook(() => useTheme(), { wrapper });
-
-      act(() => {
-        result.current.setTheme('system');
-      });
-
       expect(result.current.theme).toBe('system');
       expect(result.current.resolvedTheme).toBe('dark');
+      expect(mockThemeEngine.applyTheme).toHaveBeenCalledWith({ id: 'aurora' });
     });
 
-    it('system theme resolves to light when system prefers light', () => {
-      matchMediaMatches = false; // system prefers light
+    it('reapplies system intent when the operating-system theme changes', () => {
+      setState({ appTheme: 'system' });
       const { result } = renderHook(() => useTheme(), { wrapper });
 
-      act(() => {
-        result.current.setTheme('system');
-      });
-
-      expect(result.current.theme).toBe('system');
       expect(result.current.resolvedTheme).toBe('light');
-    });
-
-    it('persists theme to localStorage on setTheme', () => {
-      const { result } = renderHook(() => useTheme(), { wrapper });
 
       act(() => {
-        result.current.setTheme('light');
+        matchMediaMatches = true;
+        colorSchemeChangeHandlerRef.current?.(new Event('change') as MediaQueryListEvent);
       });
 
-      expect(mockThemeEngine.setTheme).toHaveBeenCalledWith('light');
+      expect(mockThemeEngine.applyTheme).toHaveBeenLastCalledWith({ id: 'aurora' });
+    });
+
+    it('writes system intent through Settings without changing local preference flags', () => {
+      const { result } = renderHook(() => useTheme(), { wrapper });
 
       act(() => {
         result.current.setTheme('system');
       });
 
-      expect(mockThemeEngine.updateSettings).toHaveBeenCalledWith({
+      expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'system' });
+      expect(mockThemeEngine.updateSettings).not.toHaveBeenCalledWith({
         respectSystemPreference: true,
       });
     });

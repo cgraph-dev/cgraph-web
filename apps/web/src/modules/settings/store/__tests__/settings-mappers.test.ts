@@ -124,7 +124,7 @@ describe('mapSettingsFromApi', () => {
     expect(result.privacy.profileVisibility).toBe('public');
 
     // Appearance defaults
-    expect(result.appearance.theme).toBe('system');
+    expect(result.appearance.theme).toBe('aurora');
     expect(result.appearance.compactMode).toBe(false);
 
     // Locale defaults

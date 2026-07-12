@@ -19,6 +19,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useSettingsStore } from '@/modules/settings/store';
 import {
   type Theme as FullTheme,
   type ThemePreferences,
@@ -32,7 +33,7 @@ import { ThemeContextEnhanced } from '@/providers/theme-enhanced/hooks';
 
 // Simple theme context (backward-compat API)
 
-type SimpleTheme = 'dark' | 'light' | 'system';
+type SimpleTheme = 'aurora' | 'dark' | 'light' | 'bubble' | 'system';
 
 interface SimpleThemeContextType {
   theme: SimpleTheme;
@@ -46,8 +47,21 @@ const SimpleThemeContext = createContext<SimpleThemeContextType | undefined>(und
 
 interface ThemeProviderProps {
   children: ReactNode;
-  /** Optional initial theme ID */
-  initialTheme?: string;
+}
+
+function isAppTheme(value: string): value is SimpleTheme {
+  return (
+    value === 'aurora' ||
+    value === 'dark' ||
+    value === 'light' ||
+    value === 'bubble' ||
+    value === 'system'
+  );
+}
+
+function resolveAppTheme(theme: SimpleTheme, prefersDark: boolean): Exclude<SimpleTheme, 'system'> {
+  if (theme !== 'system') return theme;
+  return prefersDark ? 'aurora' : 'light';
 }
 
 /**
@@ -60,12 +74,14 @@ interface ThemeProviderProps {
  *
  * Additionally injects semantic design tokens from tokens.ts.
  */
-export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
+export function ThemeProvider({ children }: ThemeProviderProps) {
   // --- Enhanced state (from ThemeEngine) ---
   const [theme, setThemeState] = useState<FullTheme>(() => themeEngine.getCurrentTheme());
   const [preferences, setPreferences] = useState<ThemePreferences>(() =>
     themeEngine.getPreferences()
   );
+  const appTheme = useSettingsStore((state) => state.settings.appearance.theme);
+  const updateAppearanceSettings = useSettingsStore((state) => state.updateAppearanceSettings);
 
   // Subscribe to theme engine changes
   useEffect(
@@ -77,36 +93,27 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
     []
   );
 
-  // Apply initial theme if provided
-  useEffect(() => {
-    if (initialTheme && THEME_REGISTRY[initialTheme]) {
-      themeEngine.setTheme(initialTheme);
-    }
-  }, [initialTheme]);
-
   // Inject semantic design tokens whenever theme changes
   useEffect(() => {
     injectSemanticTokens(theme.id);
   }, [theme.id]);
 
-  // --- System preference listener ---
   useEffect(() => {
-    if (!preferences.settings.respectSystemPreference) return;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      const prefs = themeEngine.getPreferences();
-      if (prefs.settings.respectSystemPreference) {
-        // System dark → aurora (CGraph default dark), system light → light.
-        // applyTheme() does NOT set _userExplicitlyChose (only setTheme does),
-        // so future system-preference changes still apply correctly.
-        const systemThemeId = mediaQuery.matches ? 'aurora' : 'light';
-        const resolved = THEME_REGISTRY[systemThemeId];
-        if (resolved) themeEngine.applyTheme(resolved);
-      }
+
+    const applyAppTheme = () => {
+      const themeId = resolveAppTheme(appTheme, mediaQuery.matches);
+      const resolved = THEME_REGISTRY[themeId];
+      if (resolved) themeEngine.applyTheme(resolved);
     };
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [preferences.settings.respectSystemPreference]);
+
+    applyAppTheme();
+
+    if (appTheme !== 'system') return;
+
+    mediaQuery.addEventListener('change', applyAppTheme);
+    return () => mediaQuery.removeEventListener('change', applyAppTheme);
+  }, [appTheme]);
 
   // --- Reduced motion listener ---
   useEffect(() => {
@@ -121,7 +128,8 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
 
   // --- Enhanced API callbacks ---
   function setTheme(themeId: string) {
-    themeEngine.setTheme(themeId);
+    if (!isAppTheme(themeId)) return;
+    void updateAppearanceSettings({ theme: themeId }).catch(() => undefined);
   }
 
   function updateSettings(settings: Partial<ThemePreferences['settings']>) {
@@ -130,13 +138,17 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
   }
 
   /**
-   * Cycle through themes: aurora → dark → light → aurora.
-   * Named `toggleDarkMode` for backward-compat; actually cycles all 3 built-in themes.
+   * Cycle the durable CGraph app-theme setting.
    */
   function toggleDarkMode() {
-    const cycle: Record<string, string> = { aurora: 'dark', dark: 'light', light: 'aurora' };
-    const nextId = cycle[theme.id] ?? 'aurora';
-    themeEngine.setTheme(nextId);
+    const cycle: Record<SimpleTheme, SimpleTheme> = {
+      aurora: 'dark',
+      dark: 'light',
+      light: 'bubble',
+      bubble: 'aurora',
+      system: 'aurora',
+    };
+    setTheme(cycle[appTheme]);
   }
 
   function setFontScale(scale: number) {
@@ -160,7 +172,7 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
   }
 
   function toggleSystemPreference() {
-    updateSettings({ respectSystemPreference: !preferences.settings.respectSystemPreference });
+    setTheme(appTheme === 'system' ? 'aurora' : 'system');
   }
 
   function createCustomTheme(newTheme: Omit<FullTheme, 'isBuiltIn'>): FullTheme {
@@ -175,7 +187,7 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
     return result;
   }
 
-  const isSystemPreference = preferences.settings.respectSystemPreference;
+  const isSystemPreference = appTheme === 'system';
   const resolvedBaseTheme: 'dark' | 'light' = theme.category === 'light' ? 'light' : 'dark';
   const availableThemes = getAllThemes();
 
@@ -200,17 +212,10 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
   };
 
   // --- Simple context value (backward-compat) ---
-  const simpleTheme: SimpleTheme = isSystemPreference ? 'system' : resolvedBaseTheme;
+  const simpleTheme: SimpleTheme = appTheme;
 
   function setSimpleTheme(t: SimpleTheme) {
-    if (t === 'system') {
-      updateSettings({ respectSystemPreference: true });
-      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'aurora' : 'light';
-      themeEngine.setTheme(sys);
-    } else {
-      updateSettings({ respectSystemPreference: false });
-      themeEngine.setTheme(t === 'dark' ? 'aurora' : t);
-    }
+    setTheme(t);
   }
 
   const simpleValue: SimpleThemeContextType = {

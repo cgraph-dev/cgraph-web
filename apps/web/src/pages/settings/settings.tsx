@@ -199,20 +199,19 @@ export default function Settings() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      void bootstrapPreferences({ userId, includeTheme: Boolean(userId) });
+      void bootstrapPreferences({ userId });
     }
   }, [bootstrapPreferences, isAuthenticated, userId]);
 
   const preferencesReady = isPreferenceBootstrapReady({
     isAuthenticated,
     userId,
-    includeTheme: Boolean(userId),
     lastBootstrappedUserId,
     result: preferenceResult,
   });
 
   const retryPreferenceBootstrap = () => {
-    void bootstrapPreferences({ userId, includeTheme: Boolean(userId), force: true });
+    void bootstrapPreferences({ userId, force: true });
   };
 
   const filteredSections = useMemo(() => {

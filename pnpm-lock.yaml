@@ -43,8 +43,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@cgraph-dev/shared-types':
-        specifier: 1.8.2
-        version: 1.8.2
+        specifier: 1.8.3
+        version: 1.8.3
       '@cgraph-dev/utils':
         specifier: 1.0.2
         version: 1.0.2
@@ -476,8 +476,8 @@ packages:
   '@cgraph-dev/design-tokens@1.1.0':
     resolution: {integrity: sha512-sIXW06LW5+dM+R3JOCxHqVJzj4r3sJOFebOVLLWMJPAWfVZNcI+j76+z29z9xEdpmKGYIcnRjhH5WJ3OGFsi0A==}
 
-  '@cgraph-dev/shared-types@1.8.2':
-    resolution: {integrity: sha512-WtYcSiHabEnofk4y4BFllmbRBV3wF7/AspLvtZpjqLCx9d8NFBpm+tnEU05ereZidOFvmD2iOB0UB32kKXPDrA==}
+  '@cgraph-dev/shared-types@1.8.3':
+    resolution: {integrity: sha512-WrGhFJADMvqklX/hIXFIMeke9glhrZaeiRJFNuANCUZYsNA9rVdJ6Z+RFVFDeB7VZg12JerMbIK5vf1n5pIK8g==}
 
   '@cgraph-dev/utils@1.0.2':
     resolution: {integrity: sha512-x+4KWnsNwroo1c5z9+5K8v0AudR5Het50PhIci39a/3tNEA3SoxWtJ2XPwBOhxOzq9k84okNdzT6jaDUy4OLjg==}
@@ -6133,13 +6133,13 @@ snapshots:
 
   '@cgraph-dev/api-client@1.7.0(axios@1.16.1)':
     dependencies:
-      '@cgraph-dev/shared-types': 1.8.2
+      '@cgraph-dev/shared-types': 1.8.3
       axios: 1.16.1
       zod: 3.25.76
 
   '@cgraph-dev/design-tokens@1.1.0': {}
 
-  '@cgraph-dev/shared-types@1.8.2': {}
+  '@cgraph-dev/shared-types@1.8.3': {}
 
   '@cgraph-dev/utils@1.0.2':
     dependencies:
