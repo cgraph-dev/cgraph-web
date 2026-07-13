@@ -9,10 +9,13 @@ import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import {
   ChatBubbleLeftRightIcon,
   FolderIcon,
+  PencilSquareIcon,
   PlusIcon,
   SparklesIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { motion } from 'motion/react';
+import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import { http } from '@/lib/api-client';
 import { ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
@@ -59,6 +62,17 @@ function spacePayload(form: NewSpaceFormState): Record<string, unknown> {
   };
 }
 
+function formFromSpace(space: Space): NewSpaceFormState {
+  return {
+    name: space.name,
+    emoji: space.emoji,
+    includeAllIndividual: space.includeAllIndividual,
+    includeAllGroups: space.includeAllGroups,
+    showOnlyUnread: space.showOnlyUnread,
+    showMuted: space.showMuted,
+  };
+}
+
 /**
  * First-class Spaces route.
  */
@@ -69,8 +83,11 @@ export default function SpacesPage() {
   const { conversations, fetchConversations } = useChatStore();
   const [spaces, setSpaces] = useState<readonly Space[]>([]);
   const [form, setForm] = useState<NewSpaceFormState>(DEFAULT_FORM);
+  const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
+  const [spacePendingDelete, setSpacePendingDelete] = useState<Space | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadSpaces = useCallback(async () => {
@@ -111,6 +128,17 @@ export default function SpacesPage() {
     () => spaces.find((space) => space.id === spaceId) ?? null,
     [spaceId, spaces]
   );
+  const editingSpace = useMemo(
+    () => spaces.find((space) => space.id === editingSpaceId) ?? null,
+    [editingSpaceId, spaces]
+  );
+
+  useEffect(() => {
+    if (editingSpaceId && selectedSpace?.id !== editingSpaceId) {
+      setEditingSpaceId(null);
+      setForm(DEFAULT_FORM);
+    }
+  }, [editingSpaceId, selectedSpace?.id]);
 
   const visibleConversations = useMemo(() => {
     if (!selectedSpace) return conversations;
@@ -119,7 +147,18 @@ export default function SpacesPage() {
     );
   }, [conversations, selectedSpace]);
 
-  async function handleCreateSpace(event: FormEvent<HTMLFormElement>): Promise<void> {
+  function startEditingSpace(space: Space): void {
+    setError(null);
+    setForm(formFromSpace(space));
+    setEditingSpaceId(space.id);
+  }
+
+  function cancelEditingSpace(): void {
+    setEditingSpaceId(null);
+    setForm(DEFAULT_FORM);
+  }
+
+  async function handleSaveSpace(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (!form.name.trim() || isSaving) return;
 
@@ -127,17 +166,46 @@ export default function SpacesPage() {
     setError(null);
 
     try {
-      const response = await http.post('/api/v1/spaces', spacePayload(form));
-      const created = readConversationSpace(response.data);
-      if (!created) throw new Error('Space response did not include a Space');
-      setSpaces((current) => [...current, created].sort((a, b) => a.position - b.position));
+      const response = editingSpace
+        ? await http.patch(`/api/v1/spaces/${editingSpace.id}`, spacePayload(form))
+        : await http.post('/api/v1/spaces', spacePayload(form));
+      const saved = readConversationSpace(response.data);
+      if (!saved) throw new Error('Space response did not include a Space');
+
+      setSpaces((current) => {
+        const next = editingSpace
+          ? current.map((space) => (space.id === saved.id ? saved : space))
+          : [...current, saved];
+        return [...next].sort((a, b) => a.position - b.position);
+      });
       setForm(DEFAULT_FORM);
-      navigate(`/spaces/${created.id}`);
-    } catch (createError) {
-      logger.error('Failed to create Space:', createError);
-      setError('Space could not be created.');
+      setEditingSpaceId(null);
+      navigate(`/spaces/${saved.id}`);
+    } catch (saveError) {
+      logger.error('Failed to save Space:', saveError);
+      setError('Space could not be saved.');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function deleteSpace(): Promise<void> {
+    if (!spacePendingDelete || isDeleting) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      await http.delete(`/api/v1/spaces/${spacePendingDelete.id}`);
+      setSpaces((current) => current.filter((space) => space.id !== spacePendingDelete.id));
+      if (editingSpaceId === spacePendingDelete.id) cancelEditingSpace();
+      setSpacePendingDelete(null);
+      navigate('/spaces');
+    } catch (deleteError) {
+      logger.error('Failed to delete Space:', deleteError);
+      setError('Space could not be deleted.');
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -189,13 +257,17 @@ export default function SpacesPage() {
         </nav>
 
         <form
-          onSubmit={handleCreateSpace}
+          onSubmit={handleSaveSpace}
           className="border-t border-[var(--token-card-border)] p-4"
-          aria-label="Create Space"
+          aria-label={editingSpace ? 'Edit Space' : 'Create Space'}
         >
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
-            <PlusIcon className="h-4 w-4 text-primary-300" />
-            New Space
+            {editingSpace ? (
+              <PencilSquareIcon className="h-4 w-4 text-primary-300" />
+            ) : (
+              <PlusIcon className="h-4 w-4 text-primary-300" />
+            )}
+            {editingSpace ? 'Edit Space' : 'New Space'}
           </div>
           <div className="flex gap-2">
             <input
@@ -250,14 +322,30 @@ export default function SpacesPage() {
             </label>
           </div>
 
-          <button
-            type="submit"
-            disabled={!form.name.trim() || isSaving}
-            className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary-500 px-3 text-sm font-semibold text-dark-950 transition-colors hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <PlusIcon className="h-4 w-4" />
-            Create Space
-          </button>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="submit"
+              disabled={!form.name.trim() || isSaving}
+              className="col-span-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary-500 px-3 text-sm font-semibold text-dark-950 transition-colors hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {editingSpace ? (
+                <PencilSquareIcon className="h-4 w-4" />
+              ) : (
+                <PlusIcon className="h-4 w-4" />
+              )}
+              {editingSpace ? 'Save changes' : 'Create Space'}
+            </button>
+            {editingSpace && (
+              <button
+                type="button"
+                onClick={cancelEditingSpace}
+                disabled={isSaving}
+                className="col-span-2 h-9 rounded-md border border-white/10 px-3 text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
       </aside>
 
@@ -275,6 +363,28 @@ export default function SpacesPage() {
               ? 'This routed Space applies its server-owned filter rules to your conversation list.'
               : 'Pick or create a Space to focus the conversation list.'}
           </p>
+          {selectedSpace && (
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => startEditingSpace(selectedSpace)}
+                className="grid h-9 w-9 place-items-center rounded-md border border-white/10 text-white/70 transition-colors hover:border-primary-400/60 hover:bg-primary-500/10 hover:text-white"
+                aria-label={`Edit ${selectedSpace.name}`}
+                title="Edit Space"
+              >
+                <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSpacePendingDelete(selectedSpace)}
+                className="grid h-9 w-9 place-items-center rounded-md border border-white/10 text-white/70 transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-200"
+                aria-label={`Delete ${selectedSpace.name}`}
+                title="Delete Space"
+              >
+                <TrashIcon className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {error && (
@@ -317,6 +427,40 @@ export default function SpacesPage() {
           </motion.div>
         )}
       </section>
+
+      <Dialog
+        open={Boolean(spacePendingDelete)}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setSpacePendingDelete(null);
+        }}
+      >
+        <DialogContent ariaLabel="Delete Space">
+          <h2 className="text-lg font-semibold text-[var(--token-text-primary)]">Delete Space?</h2>
+          <p className="mt-2 text-sm text-[var(--token-text-muted)]">
+            {spacePendingDelete
+              ? `${spacePendingDelete.name} will be removed from your Spaces.`
+              : ''}
+          </p>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setSpacePendingDelete(null)}
+              disabled={isDeleting}
+              className="rounded-lg border border-[var(--token-border-subtle)] px-3 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition hover:bg-[var(--token-bg-secondary)] disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void deleteSpace()}
+              disabled={isDeleting}
+              className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-400 disabled:opacity-50"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Space'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
