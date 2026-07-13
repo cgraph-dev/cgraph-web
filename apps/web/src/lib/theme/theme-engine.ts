@@ -70,6 +70,7 @@ export const prefersReducedMotion =
 class ThemeEngineImpl {
   private currentTheme: Theme = THEME_AURORA;
   private preferences: ThemePreferences;
+  private runtimeSettings: ThemePreferences['settings'] | null = null;
   private broadcastChannel: BroadcastChannel | null = null;
   private listeners: Set<(theme: Theme) => void> = new Set();
   /** True once the user explicitly picks a theme via setTheme(). */
@@ -146,11 +147,7 @@ class ThemeEngineImpl {
   applyTheme(theme: Theme, broadcast = true): void {
     this.currentTheme = theme;
     this.preferences.activeThemeId = theme.id;
-
-    if (typeof document !== 'undefined') {
-      injectCSSVariables(theme, this.preferences.settings);
-      updateDocumentClasses(theme, this.preferences.settings);
-    }
+    this.renderTheme(theme, this.runtimeSettings ?? this.preferences.settings);
 
     savePreferences(this.preferences);
 
@@ -159,6 +156,30 @@ class ThemeEngineImpl {
     }
 
     this.notifyListeners(theme);
+  }
+
+  /**
+   * Apply the durable Settings owner without changing legacy browser preferences.
+   */
+  applyRuntimeTheme(theme: Theme): void {
+    this.currentTheme = theme;
+    this.renderTheme(theme, this.runtimeSettings ?? this.preferences.settings);
+    this.notifyListeners(theme);
+  }
+
+  /**
+   * Apply runtime accessibility derived from durable Settings and the operating system.
+   */
+  updateRuntimeSettings(settings: Partial<ThemePreferences['settings']>): void {
+    this.runtimeSettings = { ...(this.runtimeSettings ?? this.preferences.settings), ...settings };
+    this.applyRuntimeTheme(this.currentTheme);
+  }
+
+  private renderTheme(theme: Theme, settings: ThemePreferences['settings']): void {
+    if (typeof document !== 'undefined') {
+      injectCSSVariables(theme, settings);
+      updateDocumentClasses(theme, settings);
+    }
   }
 
   /**
@@ -248,7 +269,10 @@ class ThemeEngineImpl {
 
   /** Get current preferences. */
   getPreferences(): ThemePreferences {
-    return { ...this.preferences };
+    return {
+      ...this.preferences,
+      settings: { ...(this.runtimeSettings ?? this.preferences.settings) },
+    };
   }
 
   /** Subscribe to theme changes. */

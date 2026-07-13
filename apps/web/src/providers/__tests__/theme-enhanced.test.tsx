@@ -120,7 +120,14 @@ vi.mock('@/lib/theme/theme-engine', () => {
       getPreferences: vi.fn(() => prefs),
       setTheme: vi.fn(),
       applyTheme: vi.fn(),
+      applyRuntimeTheme: vi.fn(),
       updateSettings: vi.fn((settings: Record<string, unknown>) => {
+        prefs = {
+          ...prefs,
+          settings: { ...prefs.settings, ...settings },
+        };
+      }),
+      updateRuntimeSettings: vi.fn((settings: Record<string, unknown>) => {
         prefs = {
           ...prefs,
           settings: { ...prefs.settings, ...settings },
@@ -150,7 +157,9 @@ const mockEngine = themeEngine as unknown as {
   getCurrentTheme: ReturnType<typeof vi.fn>;
   getPreferences: ReturnType<typeof vi.fn>;
   setTheme: ReturnType<typeof vi.fn>;
+  applyRuntimeTheme: ReturnType<typeof vi.fn>;
   updateSettings: ReturnType<typeof vi.fn>;
+  updateRuntimeSettings: ReturnType<typeof vi.fn>;
   subscribe: ReturnType<typeof vi.fn>;
   createCustomTheme: ReturnType<typeof vi.fn>;
   deleteCustomTheme: ReturnType<typeof vi.fn>;

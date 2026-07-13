@@ -51,6 +51,7 @@ const { mockThemeEngine, mockSettingsStore, setState } = vi.hoisted(() => {
       applyTheme(createTheme(id));
     }),
     applyTheme: vi.fn(applyTheme),
+    applyRuntimeTheme: vi.fn(applyTheme),
     subscribe: vi.fn((fn: (theme: Record<string, unknown>) => void) => {
       _subscribers.push(fn);
       return () => {
@@ -62,6 +63,13 @@ const { mockThemeEngine, mockSettingsStore, setState } = vi.hoisted(() => {
         ..._preferences,
         settings: { ..._preferences.settings, ...settings },
       };
+    }),
+    updateRuntimeSettings: vi.fn((settings: Record<string, unknown>) => {
+      _preferences = {
+        ..._preferences,
+        settings: { ..._preferences.settings, ...settings },
+      };
+      applyTheme(createTheme(_currentThemeId));
     }),
     createCustomTheme: vi.fn(),
     deleteCustomTheme: vi.fn(),
@@ -183,7 +191,7 @@ describe('ThemeContext', () => {
       const { result } = renderHook(() => useTheme(), { wrapper });
       expect(result.current.theme).toBe('aurora');
       expect(result.current.resolvedTheme).toBe('dark');
-      expect(mockThemeEngine.applyTheme).toHaveBeenCalledWith({ id: 'aurora' });
+      expect(mockThemeEngine.applyRuntimeTheme).toHaveBeenCalledWith({ id: 'aurora' });
     });
 
     it('resolves a persisted light Settings intent', () => {
@@ -220,7 +228,7 @@ describe('ThemeContext', () => {
       const { result } = renderHook(() => useTheme(), { wrapper });
       expect(result.current.theme).toBe('system');
       expect(result.current.resolvedTheme).toBe('dark');
-      expect(mockThemeEngine.applyTheme).toHaveBeenCalledWith({ id: 'aurora' });
+      expect(mockThemeEngine.applyRuntimeTheme).toHaveBeenCalledWith({ id: 'aurora' });
     });
 
     it('reapplies system intent when the operating-system theme changes', () => {
@@ -234,7 +242,7 @@ describe('ThemeContext', () => {
         colorSchemeChangeHandlerRef.current?.(new Event('change') as MediaQueryListEvent);
       });
 
-      expect(mockThemeEngine.applyTheme).toHaveBeenLastCalledWith({ id: 'aurora' });
+      expect(mockThemeEngine.applyRuntimeTheme).toHaveBeenLastCalledWith({ id: 'aurora' });
     });
 
     it('writes system intent through Settings without changing local preference flags', () => {
@@ -270,7 +278,7 @@ describe('ThemeContext', () => {
       matchMediaMatches = true;
       renderHook(() => useTheme(), { wrapper });
 
-      expect(mockThemeEngine.updateSettings).toHaveBeenCalledWith({
+      expect(mockThemeEngine.updateRuntimeSettings).toHaveBeenCalledWith({
         reduceMotion: true,
         highContrast: false,
       });

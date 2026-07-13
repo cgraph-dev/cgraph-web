@@ -108,7 +108,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const applyAppTheme = () => {
       const themeId = resolveAppTheme(appTheme, mediaQuery.matches);
       const resolved = THEME_REGISTRY[themeId];
-      if (resolved) themeEngine.applyTheme(resolved);
+      if (resolved) themeEngine.applyRuntimeTheme(resolved);
     };
 
     applyAppTheme();
@@ -123,7 +123,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const applyAccessibility = () => {
-      themeEngine.updateSettings({
+      themeEngine.updateRuntimeSettings({
         reduceMotion: appearance.reduceMotion || mediaQuery.matches,
         highContrast: appearance.highContrast,
       });

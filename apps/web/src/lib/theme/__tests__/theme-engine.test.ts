@@ -117,6 +117,8 @@ beforeEach(() => {
 // We need to import dynamically after mocks are set up
 let themeEngine: {
   setTheme: (id: string) => void;
+  applyRuntimeTheme: (theme: Theme) => void;
+  updateRuntimeSettings: (settings: Record<string, unknown>) => void;
   getCurrentTheme: () => Theme;
   getAllThemes: () => Theme[];
   getPreferences: () => { activeThemeId: string; customThemes: Theme[]; settings: Record<string, unknown> };
@@ -212,6 +214,22 @@ describe('ThemeEngine', () => {
     it('should apply CSS variables when switching themes', () => {
       themeEngine.setTheme('aurora');
       expect(mockDocument.documentElement.style.setProperty).toHaveBeenCalled();
+    });
+
+    it('applies runtime settings without persisting browser preferences', () => {
+      const lightTheme = themeEngine.getAllThemes().find((theme) => theme.id === 'light');
+      expect(lightTheme).toBeDefined();
+
+      localStorageMock.setItem.mockClear();
+      themeEngine.applyRuntimeTheme(lightTheme!);
+      themeEngine.updateRuntimeSettings({ reduceMotion: true, highContrast: true });
+
+      expect(themeEngine.getCurrentTheme().id).toBe('light');
+      expect(themeEngine.getPreferences().settings).toMatchObject({
+        reduceMotion: true,
+        highContrast: true,
+      });
+      expect(localStorageMock.setItem).not.toHaveBeenCalled();
     });
   });
 
