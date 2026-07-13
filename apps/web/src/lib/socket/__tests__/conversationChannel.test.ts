@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { joinConversation, leaveConversation, _gapRepairInFlightHas } from '../conversationChannel';
 
 // Mocks
-const { MockPresence, mockChatStore, mockHttpGet } = vi.hoisted(() => {
+const { MockPresence, mockChatStore, mockHttpGet, mockSettingsStore } = vi.hoisted(() => {
   const MockPresence = vi.fn();
   MockPresence.prototype.onSync = vi.fn();
   MockPresence.prototype.onJoin = vi.fn();
@@ -28,7 +28,10 @@ const { MockPresence, mockChatStore, mockHttpGet } = vi.hoisted(() => {
     addReadReceipt: vi.fn(),
     markMessageDeleted: vi.fn(),
   };
-  return { MockPresence, mockChatStore, mockHttpGet: vi.fn() };
+  const mockSettingsStore = {
+    settings: { privacy: { showTypingIndicators: true } },
+  };
+  return { MockPresence, mockChatStore, mockHttpGet: vi.fn(), mockSettingsStore };
 });
 
 vi.mock('phoenix', () => ({
@@ -46,6 +49,12 @@ vi.mock('@/modules/auth/store', () => ({
     getState: vi.fn(() => ({
       user: { id: 'current-user' },
     })),
+  },
+}));
+
+vi.mock('@/modules/settings/store', () => ({
+  useSettingsStore: {
+    getState: vi.fn(() => mockSettingsStore),
   },
 }));
 
@@ -147,6 +156,7 @@ describe('joinConversation', () => {
     vi.clearAllMocks();
     args = makeArgs();
     mockChatStore.messages = {};
+    mockSettingsStore.settings.privacy.showTypingIndicators = true;
   });
 
   it('returns null when socket is null (triggers connectFn)', () => {
@@ -294,6 +304,62 @@ describe('joinConversation', () => {
     expect(events).toContain('reaction_removed');
     expect(events).toContain('presence_state');
     expect(events).toContain('presence_diff');
+  });
+
+  it('forwards incoming typing when typing indicators are enabled', () => {
+    const socket = createMockSocket();
+
+    joinConversation(
+      socket as never,
+      'conv1',
+      args.channels as never,
+      args.presences as never,
+      args.onlineUsers,
+      args.channelHandlersSetUp,
+      args.lastJoinAttempts,
+      args.joinDebounceMs,
+      args.notifyStatusChange,
+      args.connectFn
+    );
+
+    socket._lastChannel._trigger('typing', {
+      user_id: 'user-2',
+      is_typing: true,
+      started_at: '2026-07-13T00:00:00Z',
+    });
+
+    expect(mockChatStore.setTypingUser).toHaveBeenCalledWith(
+      'conv1',
+      'user-2',
+      true,
+      '2026-07-13T00:00:00Z'
+    );
+  });
+
+  it('ignores incoming typing when typing indicators are disabled', () => {
+    mockSettingsStore.settings.privacy.showTypingIndicators = false;
+    const socket = createMockSocket();
+
+    joinConversation(
+      socket as never,
+      'conv1',
+      args.channels as never,
+      args.presences as never,
+      args.onlineUsers,
+      args.channelHandlersSetUp,
+      args.lastJoinAttempts,
+      args.joinDebounceMs,
+      args.notifyStatusChange,
+      args.connectFn
+    );
+
+    socket._lastChannel._trigger('typing', {
+      user_id: 'user-2',
+      is_typing: true,
+      started_at: '2026-07-13T00:00:00Z',
+    });
+
+    expect(mockChatStore.setTypingUser).not.toHaveBeenCalled();
   });
 
   it('only sets up handlers once (idempotent)', () => {

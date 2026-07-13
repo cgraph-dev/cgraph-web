@@ -10,6 +10,7 @@ import type { Socket, Channel } from 'phoenix';
 import { Presence } from 'phoenix';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
 import { useAuthStore } from '@/modules/auth/store';
+import { useSettingsStore } from '@/modules/settings/store';
 import { normalizeMessageReactions } from '@/modules/chat/store/chatStore.normalizers';
 import { http } from '../api-client';
 import { socketLogger as logger } from '../logger';
@@ -568,6 +569,7 @@ export function joinConversation(
 
     channel.on('typing', (payload) => {
       if (!isTypingPayload(payload)) return;
+      if (!useSettingsStore.getState().settings.privacy.showTypingIndicators) return;
       useChatStore
         .getState()
         .setTypingUser(conversationId, payload.user_id, payload.is_typing, payload.started_at);

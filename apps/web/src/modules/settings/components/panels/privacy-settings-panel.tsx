@@ -31,6 +31,18 @@ export function PrivacySettingsPanel() {
     }
   }
 
+  async function toggleTypingIndicators() {
+    try {
+      await updatePrivacySettings({
+        showTypingIndicators: !settings.privacy.showTypingIndicators,
+      });
+      toast.success('Typing indicators updated');
+    } catch (error) {
+      logger.error('Failed to update typing indicators settings', error);
+      toast.error('Failed to update settings');
+    }
+  }
+
   return (
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} transition={tweens.standard}>
       <div className="mb-6 flex items-start gap-3">
@@ -45,7 +57,7 @@ export function PrivacySettingsPanel() {
             Privacy
           </h1>
           <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
-            Manage blocked people and read receipt visibility.
+            Manage blocked people, read receipt visibility, and typing indicators.
           </p>
         </div>
       </div>
@@ -60,6 +72,16 @@ export function PrivacySettingsPanel() {
             checked={settings.privacy.showReadReceipts}
             disabled={isSaving}
             onToggle={() => void toggleReadReceipts()}
+          />
+        </GlassCard>
+
+        <GlassCard variant="default" className="aurora-social-panel p-4">
+          <PrivacyToggle
+            label="Typing Indicators"
+            description="Show when you are typing in a direct message"
+            checked={settings.privacy.showTypingIndicators}
+            disabled={isSaving}
+            onToggle={() => void toggleTypingIndicators()}
           />
         </GlassCard>
       </div>

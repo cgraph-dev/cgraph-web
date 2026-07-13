@@ -27,6 +27,7 @@ vi.mock('@/modules/settings/store', () => ({
         allowFriendRequests: true,
         showInSearch: true,
         showReadReceipts: true,
+        showTypingIndicators: true,
         showPhone: false,
         showForwardedFrom: true,
         allowCalls: true,
@@ -77,6 +78,7 @@ describe('PrivacySettingsPanel', () => {
     render(<PrivacySettingsPanel />);
     expect(screen.getByTestId('blocked-users-settings')).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Read Receipts' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Typing Indicators' })).toBeInTheDocument();
     expect(screen.queryByText(/Who can send you direct messages/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Vanish Messages Default/i)).not.toBeInTheDocument();
   });
@@ -88,6 +90,16 @@ describe('PrivacySettingsPanel', () => {
 
     await waitFor(() => {
       expect(mockUpdatePrivacySettings).toHaveBeenCalledWith({ showReadReceipts: false });
+    });
+  });
+
+  it('uses the settings owner for typing indicator changes', async () => {
+    render(<PrivacySettingsPanel />);
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Typing Indicators' }));
+
+    await waitFor(() => {
+      expect(mockUpdatePrivacySettings).toHaveBeenCalledWith({ showTypingIndicators: false });
     });
   });
 });
