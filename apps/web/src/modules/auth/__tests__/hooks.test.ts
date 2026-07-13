@@ -15,6 +15,7 @@ vi.mock('@/lib/api', () => ({
     post: vi.fn(),
     delete: vi.fn(),
   },
+  getErrorMessage: (error: Error) => error.message,
 }));
 
 describe('Auth Hooks', () => {
@@ -143,21 +144,11 @@ describe('Auth Hooks', () => {
   });
 
   describe('useTwoFactor', () => {
-    it('should return 2FA disabled state by default', () => {
+    it('should wait for backend status instead of trusting cached user state', () => {
       const { result } = renderHook(() => useTwoFactor());
 
-      expect(result.current.isEnabled).toBe(false);
-    });
-
-    it('should return 2FA enabled state when user has it enabled', () => {
-      vi.mocked(useAuthStore).mockReturnValue({
-        ...mockAuthStore,
-        user: { ...mockUser, twoFactorEnabled: true },
-      } as unknown as ReturnType<typeof useAuthStore>);
-
-      const { result } = renderHook(() => useTwoFactor());
-
-      expect(result.current.isEnabled).toBe(true);
+      expect(result.current.status).toBeNull();
+      expect(typeof result.current.refreshStatus).toBe('function');
     });
   });
 

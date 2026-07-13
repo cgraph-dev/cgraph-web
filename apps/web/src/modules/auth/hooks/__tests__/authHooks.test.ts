@@ -16,12 +16,15 @@ vi.mock('@/modules/auth/store', () => ({
   useAuthStore: vi.fn(() => mockAuthStore),
 }));
 
-const mockApi = {
+const mockApi = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   delete: vi.fn(),
-};
-vi.mock('@/lib/api', () => ({ api: mockApi }));
+}));
+vi.mock('@/lib/api', () => ({
+  api: mockApi,
+  getErrorMessage: (error: Error) => error.message,
+}));
 
 import { useAuth, useTwoFactor, useSessions } from '../index';
 
@@ -70,100 +73,116 @@ describe('Auth Hooks — Extended Coverage', () => {
       expect(result.current.error).toBe('Something went wrong');
     });
   });
-  describe('useTwoFactor – enable', () => {
-    it('should call the setup endpoint and return secret + qr_code on success', async () => {
-      mockAuthStore.user = { id: 'u1', twoFactorEnabled: false };
-      mockApi.post.mockResolvedValueOnce({
-        data: { secret: 'ABCDEF', qr_code: 'data:image/png;base64,...' },
+  describe('useTwoFactor', () => {
+    const setup = {
+      secret: 'ABCDEF',
+      qrCodeUri: 'otpauth://totp/CGraph:test@example.com?secret=ABCDEF',
+      backupCodes: ['ABCD-1234'],
+    };
+
+    it('loads authoritative status and updates cached user state after the response', async () => {
+      mockApi.get.mockResolvedValueOnce({
+        data: {
+          enabled: true,
+          enabled_at: '2026-07-13T12:00:00Z',
+          backup_codes_remaining: 6,
+        },
       });
 
       const { result } = renderHook(() => useTwoFactor());
 
-      let setupResult: { secret: string; qr_code: string } | null = null;
+      let status: unknown;
       await act(async () => {
-        setupResult = await result.current.enable();
+        status = await result.current.refreshStatus();
       });
 
-      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/auth/totp/setup');
-      expect(setupResult).toEqual({ secret: 'ABCDEF', qr_code: 'data:image/png;base64,...' });
-    });
-
-    it('should return null when enable fails', async () => {
-      mockAuthStore.user = { id: 'u1', twoFactorEnabled: false };
-      mockApi.post.mockRejectedValueOnce(new Error('Server error'));
-
-      const { result } = renderHook(() => useTwoFactor());
-
-      let setupResult: unknown = 'initial';
-      await act(async () => {
-        setupResult = await result.current.enable();
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/auth/2fa/status');
+      expect(status).toEqual({
+        enabled: true,
+        enabledAt: '2026-07-13T12:00:00Z',
+        backupCodesRemaining: 6,
       });
-
-      expect(setupResult).toBeNull();
-    });
-  });
-
-  describe('useTwoFactor – verify', () => {
-    it('should call enable endpoint and update user on success', async () => {
-      mockAuthStore.user = { id: 'u1', twoFactorEnabled: false };
-      mockApi.post.mockResolvedValueOnce({ data: {} });
-
-      const { result } = renderHook(() => useTwoFactor());
-
-      let verifyResult: boolean | undefined;
-      await act(async () => {
-        verifyResult = await result.current.verify('123456');
-      });
-
-      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/auth/totp/enable', { code: '123456' });
       expect(mockAuthStore.updateUser).toHaveBeenCalledWith({ twoFactorEnabled: true });
-      expect(verifyResult).toBe(true);
     });
 
-    it('should return false when verify fails', async () => {
-      mockAuthStore.user = { id: 'u1', twoFactorEnabled: false };
-      mockApi.post.mockRejectedValueOnce(new Error('Invalid code'));
+    it('starts setup with the backend contract and maps its response', async () => {
+      mockApi.post.mockResolvedValueOnce({
+        data: {
+          secret: setup.secret,
+          qr_code_uri: setup.qrCodeUri,
+          backup_codes: setup.backupCodes,
+        },
+      });
 
       const { result } = renderHook(() => useTwoFactor());
 
-      let verifyResult: boolean | undefined;
+      let setupResult: unknown;
       await act(async () => {
-        verifyResult = await result.current.verify('000000');
+        setupResult = await result.current.startSetup();
       });
 
-      expect(verifyResult).toBe(false);
+      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/auth/2fa/setup');
+      expect(setupResult).toEqual(setup);
     });
-  });
 
-  describe('useTwoFactor – disable', () => {
-    it('should call disable endpoint and update user on success', async () => {
-      mockAuthStore.user = { id: 'u1', twoFactorEnabled: true };
-      mockApi.post.mockResolvedValueOnce({ data: {} });
+    it('enables only through the backend then reloads authoritative status', async () => {
+      mockApi.post.mockResolvedValueOnce({ data: { enabled: true } });
+      mockApi.get.mockResolvedValueOnce({
+        data: { enabled: true, enabled_at: '2026-07-13T12:00:00Z', backup_codes_remaining: 6 },
+      });
 
       const { result } = renderHook(() => useTwoFactor());
 
-      let disableResult: boolean | undefined;
+      let enabled: boolean | undefined;
       await act(async () => {
-        disableResult = await result.current.disable('654321');
+        enabled = await result.current.enable(setup, '123456');
       });
 
-      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/auth/totp/disable', { code: '654321' });
+      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/auth/2fa/enable', {
+        code: '123456',
+        secret: setup.secret,
+        backup_codes: setup.backupCodes,
+      });
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/auth/2fa/status');
+      expect(mockAuthStore.updateUser).toHaveBeenCalledWith({ twoFactorEnabled: true });
+      expect(enabled).toBe(true);
+    });
+
+    it('keeps state unchanged when enable is rejected', async () => {
+      mockApi.post.mockRejectedValueOnce(new Error('Invalid verification code'));
+
+      const { result } = renderHook(() => useTwoFactor());
+
+      let enabled: boolean | undefined;
+      await act(async () => {
+        enabled = await result.current.enable(setup, '000000');
+      });
+
+      expect(mockApi.get).not.toHaveBeenCalled();
+      expect(mockAuthStore.updateUser).not.toHaveBeenCalled();
+      expect(enabled).toBe(false);
+      expect(result.current.error).toBe('Invalid verification code');
+    });
+
+    it('disables through the backend then reloads authoritative status', async () => {
+      mockApi.post.mockResolvedValueOnce({ data: { enabled: false } });
+      mockApi.get.mockResolvedValueOnce({
+        data: { enabled: false, enabled_at: null, backup_codes_remaining: 0 },
+      });
+
+      const { result } = renderHook(() => useTwoFactor());
+
+      let disabled: boolean | undefined;
+      await act(async () => {
+        disabled = await result.current.disable('ABCD-1234');
+      });
+
+      expect(mockApi.post).toHaveBeenCalledWith('/api/v1/auth/2fa/disable', {
+        code: 'ABCD-1234',
+      });
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/auth/2fa/status');
       expect(mockAuthStore.updateUser).toHaveBeenCalledWith({ twoFactorEnabled: false });
-      expect(disableResult).toBe(true);
-    });
-
-    it('should return false when disable fails', async () => {
-      mockAuthStore.user = { id: 'u1', twoFactorEnabled: true };
-      mockApi.post.mockRejectedValueOnce(new Error('Bad code'));
-
-      const { result } = renderHook(() => useTwoFactor());
-
-      let disableResult: boolean | undefined;
-      await act(async () => {
-        disableResult = await result.current.disable('000000');
-      });
-
-      expect(disableResult).toBe(false);
+      expect(disabled).toBe(true);
     });
   });
   describe('useSessions – getSessions', () => {
