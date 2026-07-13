@@ -1,9 +1,8 @@
 import { durations } from '@cgraph-dev/animation-constants';
-import { useRef, useState } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate } from 'motion/react';
+import { useState } from 'react';
+import { motion, useMotionValue, useMotionTemplate } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useThrottledCallback, usePrefersReducedMotion } from '@/hooks';
-import { springs } from '@/lib/animation-presets';
 import { useThemeEnhanced } from '@/providers/theme-enhanced';
 import type { ThemeVariant } from '@/lib/theme/types';
 import type { GlassCardProps } from './glass-card.types';
@@ -15,14 +14,13 @@ export type { GlassCardProps } from './glass-card.types';
 function resolveThemeVariant(theme: { variant?: ThemeVariant }): ThemeVariant {
   return theme.variant ?? 'aurora';
 }
-/** Glassmorphism card with optional 3D hover, glow, and theme-aware styling. */
+/** Glassmorphism card with optional glow and theme-aware styling. */
 export default function GlassCard({
   children,
   variant = 'default',
   intensity: _intensity = 'medium',
   glow = false,
   glowColor: glowColorProp,
-  hover3D = true,
   shimmer: _shimmer = false,
   borderGradient = false,
   particles = false,
@@ -31,7 +29,6 @@ export default function GlassCard({
   className,
   ...props
 }: GlassCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
 
@@ -52,47 +49,20 @@ export default function GlassCard({
   const resolvedStyles = themeVariantStyles[activeVariant][variant];
 
   // --- Feature gating per theme + reduced motion ---
-  const effectiveHover3D = hover3D && behavior.hover3D && !prefersReducedMotion;
   const effectiveSpotlight = spotlight && behavior.spotlight && !prefersReducedMotion;
   const effectiveParticles = particles && behavior.particles && !prefersReducedMotion;
-
-  // Motion values for 3D tilt effect
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
 
   // Pixel-space mouse position for spotlight
   const spotlightX = useMotionValue(0);
   const spotlightY = useMotionValue(0);
-
-  const maxTilt = behavior.maxTiltDeg;
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [maxTilt, -maxTilt]), {
-    stiffness: 200,
-    damping: 20,
-  });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-maxTilt, maxTilt]), {
-    stiffness: 200,
-    damping: 20,
-  });
 
   // Spotlight remains opt-in. Profile/theme surfaces must never receive a
   // synthetic moving reflection on top of user-selected artwork.
   const spotlightBackground = useMotionTemplate`radial-gradient(300px circle at ${spotlightX}px ${spotlightY}px, ${behavior.spotlightColor}, transparent 70%)`;
 
   const handleMouseMoveInternal = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    if (effectiveHover3D) {
-      const percentX = (e.clientX - centerX) / (rect.width / 2);
-      const percentY = (e.clientY - centerY) / (rect.height / 2);
-      mouseX.set(percentX);
-      mouseY.set(percentY);
-    }
-
     if (effectiveSpotlight) {
+      const rect = e.currentTarget.getBoundingClientRect();
       spotlightX.set(e.clientX - rect.left);
       spotlightY.set(e.clientY - rect.top);
     }
@@ -105,8 +75,6 @@ export default function GlassCard({
   );
 
   const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
     setIsHovered(false);
   };
 
@@ -128,7 +96,6 @@ export default function GlassCard({
 
   return (
     <motion.div
-      ref={cardRef}
       className={cn(
         'glass-card-container relative overflow-hidden rounded-2xl',
         // Only add transition classes for compositor-friendly props
@@ -137,20 +104,12 @@ export default function GlassCard({
       )}
       style={{
         boxShadow: composedBoxShadow,
-        rotateX: effectiveHover3D ? rotateX : 0,
-        rotateY: effectiveHover3D ? rotateY : 0,
-        transformStyle: effectiveHover3D ? 'preserve-3d' : undefined,
-        perspective: effectiveHover3D ? 1000 : undefined,
-        // GPU layer promotion for better performance — only when animating
-        willChange: effectiveHover3D ? 'transform' : 'auto',
         // Container query support
         containerType: 'inline-size',
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
-      whileHover={effectiveHover3D ? { scale: 1, z: 50 } : {}}
-      transition={springs.stiff}
       {...props}
     >
       {/* Background with blur */}
@@ -218,7 +177,7 @@ export default function GlassCard({
           className="absolute inset-0 -z-10 opacity-30"
           style={{
             background: `linear-gradient(
-              ${mouseX.get() * 180 + 135}deg,
+              135deg,
               color-mix(in srgb, var(--color-brand-purple) 20%, transparent),
               rgba(59, 130, 246, 0.16),
               color-mix(in srgb, var(--color-brand-purple) 14%, transparent)
@@ -251,12 +210,12 @@ export default function GlassCard({
         {children}
       </div>
 
-      {/* Inner glow highlight — aurora/dark only */}
+      {/* Inner glow highlight — aurora/dark only, without pointer motion. */}
       {isHovered && glow && activeVariant !== 'light' && (
         <div
           className="pointer-events-none absolute inset-0 rounded-2xl"
           style={{
-            background: `radial-gradient(circle at ${mouseX.get() * 50 + 50}% ${mouseY.get() * 50 + 50}%, ${glowColor}, transparent 70%)`,
+            background: `radial-gradient(circle at 50% 50%, ${glowColor}, transparent 70%)`,
             opacity: 0.2,
           }}
         />

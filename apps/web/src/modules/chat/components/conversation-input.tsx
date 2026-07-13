@@ -159,7 +159,6 @@ function ConversationInputComponent({
               if (uiPreferences.enableHaptic) HapticFeedback.light();
             }}
             className="hover:bg-primary-500/20 group rounded-xl p-2.5 text-gray-400 transition-all hover:text-primary-400"
-            whileHover={{ rotate: -15 }}
             whileTap={{ scale: 0.88 }}
             title="Attach file"
           >
@@ -194,7 +193,6 @@ function ConversationInputComponent({
                 ? 'bg-primary-500/20 text-primary-400'
                 : 'hover:bg-primary-500/20 text-gray-400 hover:text-primary-400'
             }`}
-            whileHover={{ rotate: -10 }}
             whileTap={{ scale: 0.88 }}
             title="Add emoji"
           >
@@ -213,7 +211,6 @@ function ConversationInputComponent({
                 ? 'bg-primary-500/20 text-primary-400'
                 : 'hover:bg-primary-500/20 text-gray-400 hover:text-primary-400'
             }`}
-            whileHover={{ rotate: -15 }}
             whileTap={{ scale: 0.88 }}
             title="Send GIF"
           >
@@ -228,7 +225,6 @@ function ConversationInputComponent({
                 if (uiPreferences.enableHaptic) HapticFeedback.medium();
               }}
               className="hover:bg-purple-500/20 group rounded-xl p-2.5 text-gray-400 transition-all hover:text-purple-400"
-              whileHover={{ rotate: -10 }}
               whileTap={{ scale: 0.88 }}
               title="Schedule message"
             >

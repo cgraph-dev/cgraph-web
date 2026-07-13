@@ -248,7 +248,6 @@ export default function MessageReactions({
                     <motion.button
                       key={emoji}
                       type="button"
-                      whileHover={{ rotate: 5 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleReaction(emoji)}
                       aria-label={`React with ${emoji}`}
@@ -291,7 +290,6 @@ export default function MessageReactions({
                   <motion.button
                     key={emoji}
                     type="button"
-                    whileHover={{ rotate: 5 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleReaction(emoji)}
                     aria-label={`React with ${emoji}`}

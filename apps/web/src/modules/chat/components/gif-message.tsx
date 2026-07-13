@@ -201,7 +201,6 @@ export function GifMessage({
               <motion.button
                 onClick={() => setShowFullscreen(false)}
                 className="absolute -right-4 -top-4 rounded-full bg-red-500 p-2 text-white shadow-lg transition-transform hover:scale-110"
-                whileHover={{ rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <XMarkIcon className="h-6 w-6" />

@@ -99,11 +99,7 @@ export function ProfileSidebar({ profile, isOwnProfile }: ProfileSidebarProps) {
     <div className="space-y-6">
       <GlassCard variant="holographic" glow glowColor="rgba(16, 185, 129, 0.3)" className="p-6">
         <div className="mb-4 flex items-center gap-3">
-          <motion.div
-            className="bg-primary-500/20 rounded-lg p-2"
-            whileHover={{ rotate: 5 }}
-            transition={springs.bouncy}
-          >
+          <motion.div className="bg-primary-500/20 rounded-lg p-2" transition={springs.bouncy}>
             <SparklesIcon className="h-6 w-6 text-primary-400" />
           </motion.div>
           <div>

@@ -139,7 +139,6 @@ export default function ChatInfoPanel({
           aria-label="Close user info panel"
           onClick={onClose}
           className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-          whileHover={{ rotate: 90 }}
           whileTap={{ scale: 0.9 }}
         >
           <XMarkIcon className="h-5 w-5" />

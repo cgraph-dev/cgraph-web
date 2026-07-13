@@ -28,10 +28,7 @@ export default function TierBadge({ theme }: TierBadgeProps) {
       </motion.div>
 
       {/* Category icon */}
-      <motion.div
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-lg backdrop-blur-sm"
-        whileHover={{ rotate: 10 }}
-      >
+      <motion.div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-lg backdrop-blur-sm">
         {CATEGORY_ICONS[theme.category] ?? ''}
       </motion.div>
     </div>

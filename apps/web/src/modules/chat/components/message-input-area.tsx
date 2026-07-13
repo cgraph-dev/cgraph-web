@@ -118,7 +118,6 @@ export function MessageInputArea({
                   if (uiPreferences.enableHaptic) HapticFeedback.light();
                 }}
                 className="group flex-shrink-0 rounded-lg p-2 text-gray-500 transition-all hover:bg-[var(--token-card-bg)/0.6] hover:text-primary-400"
-                whileHover={{ rotate: -15 }}
                 whileTap={{ scale: 0.88 }}
                 title="Attach file"
               >
@@ -155,7 +154,6 @@ export function MessageInputArea({
                       ? 'bg-primary-500/20 text-primary-400'
                       : 'text-gray-500 hover:bg-[var(--token-card-bg)/0.6] hover:text-primary-400'
                   }`}
-                  whileHover={{ rotate: -10 }}
                   whileTap={{ scale: 0.88 }}
                   title="Add emoji"
                 >
@@ -174,7 +172,6 @@ export function MessageInputArea({
                       ? 'bg-primary-500/20 text-primary-400'
                       : 'text-gray-500 hover:bg-[var(--token-card-bg)/0.6] hover:text-primary-400'
                   }`}
-                  whileHover={{ rotate: -15 }}
                   whileTap={{ scale: 0.88 }}
                   title="Send GIF"
                 >
@@ -189,7 +186,6 @@ export function MessageInputArea({
                       if (uiPreferences.enableHaptic) HapticFeedback.light();
                     }}
                     className="group rounded-lg p-2 text-gray-500 transition-all hover:bg-[var(--token-card-bg)/0.6] hover:text-purple-400"
-                    whileHover={{ rotate: -10 }}
                     whileTap={{ scale: 0.88 }}
                     title="Schedule message"
                   >

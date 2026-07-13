@@ -7,7 +7,6 @@ import { ShieldCheckIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
 import { isPulseTier, type PulseTier } from '@cgraph-dev/shared-types';
 import type { UserProfileData } from '@/types/profile.types';
 import { InlineTitle } from '@/shared/components/ui';
-import { springs } from '@/lib/animation-presets';
 import { PulseBadge } from '@/modules/pulse/components';
 import { Nameplate } from '@/modules/social/components/user-profile-card/nameplate';
 
@@ -39,9 +38,9 @@ function aggregatePulse(profile: UserProfileData): AggregatedPulse | null {
 function hasDisplayNameCosmetics(profile: UserProfileData): boolean {
   return Boolean(
     profile.equippedNameplateId ||
-      profile.displayNameFont ||
-      profile.displayNameEffect ||
-      profile.displayNameColor
+    profile.displayNameFont ||
+    profile.displayNameEffect ||
+    profile.displayNameColor
   );
 }
 
@@ -76,12 +75,12 @@ export function ProfileNameSection({ profile }: ProfileNameSectionProps) {
           </h1>
         )}
         {profile.isVerified && (
-          <motion.div whileHover={{ rotate: 360 }} transition={springs.bouncy}>
+          <motion.div>
             <CheckBadgeIcon className="h-6 w-6 text-primary-500" />
           </motion.div>
         )}
         {profile.isPremium && (
-          <motion.div whileHover={{ rotate: 360 }} transition={springs.bouncy}>
+          <motion.div>
             <ShieldCheckIcon className="h-5 w-5 text-yellow-500" />
           </motion.div>
         )}

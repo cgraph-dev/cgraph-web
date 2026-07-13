@@ -346,7 +346,6 @@
 
   .matrix-button:hover {
     box-shadow: none;
-    transform: translateY(-2px);
   }
 
   .matrix-button:active {
@@ -381,7 +380,6 @@
   }
 
   .auth-cta-button:hover {
-    transform: translateY(-1px) !important;
     box-shadow: none !important;
     opacity: 1 !important;
     animation: auth-btn-border-flow 1.5s ease-in-out infinite;
@@ -464,7 +462,6 @@
   .oauth-button-matrix:hover {
     border-color: rgba(16, 185, 129, 0.4);
     box-shadow: none;
-    transform: translateY(-2px);
   }
 
   .oauth-button-matrix:active {
@@ -769,7 +766,6 @@
 
   .card-interactive:hover {
     @apply border-[var(--token-card-border)] shadow-lg shadow-black/20;
-    transform: translateY(-1px);
   }
 
   /* Stagger animation for lists */
@@ -891,7 +887,6 @@
 }
 
 .smooth-hover:hover {
-  transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);  /* shadow — theme-independent */
 }
 
@@ -1030,7 +1025,6 @@
     0 8px 24px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 0 40px color-mix(in srgb, var(--color-brand-purple, #8b5cf6) 5%, transparent);
-  transform: translateY(-2px);
 }
 
 /* Smooth slider thumb — uses theme-scoped brand color */
@@ -1602,9 +1596,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
   --bubble-border-strong: 1.5px solid rgba(255, 255, 255, 0.22);
   --bubble-border-subtle: 1px solid rgba(255, 255, 255, 0.10);
 
-  /* 3D perspective for parent containers */
-  --bubble-perspective: 1200px;
-
   /* Global system overrides */
   --glass-bg:        rgba(255, 255, 255, 0.03);
   --glass-border:    rgba(255, 255, 255, 0.12);
@@ -1663,14 +1654,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
 }
 
 /* ══════════════════════════════════════════════════
-   3D PERSPECTIVE CONTAINER — enables the droplet
-   perspective transform on all child glass elements.
-   ══════════════════════════════════════════════════ */
-.theme-bubble body {
-  perspective: var(--bubble-perspective);
-}
-
-/* ══════════════════════════════════════════════════
    SIDEBAR — Frosted glass panel with convex bulge
    ══════════════════════════════════════════════════ */
 .theme-bubble aside[role="navigation"] {
@@ -1703,7 +1686,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.14),
     inset 0 2px 0 rgba(255, 255, 255, 0.18);
-  transform: scale(1.05);
 }
 
 .theme-bubble aside[role="navigation"] .rounded-xl:active {
@@ -1788,17 +1770,16 @@ a, button, [role='button'], input, select, textarea, label, summary,
 }
 
 /* ══════════════════════════════════════════════════
-   BUTTONS — 3D floating glass DROPLETS
+   BUTTONS — glass surfaces
    Convex bulge with specular highlight blob at
    top-left, rim light on right, offset drop shadow.
-   Hover: scale + tilt + brighter glow.
+   Hover: brighter glow without movement.
    ══════════════════════════════════════════════════ */
 .theme-bubble button {
   position: relative;
   overflow: hidden;
   border-radius: 18px;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transform-style: preserve-3d;
 }
 
 /* Icon buttons — glass water droplet */
@@ -1821,7 +1802,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.14),
     inset 0 2px 0 rgba(255, 255, 255, 0.18);
-  transform: translateY(-2px) scale(1.05);
 }
 
 .theme-bubble button[class*="p-2"]:active,
@@ -1882,7 +1862,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
     rgba(139, 92, 246, 0.22) !important;
   backdrop-filter: blur(30px) saturate(2.0) brightness(1.12);
   -webkit-backdrop-filter: blur(30px) saturate(2.0) brightness(1.12);
-  transform: translateY(-2px) scale(1.03);
   border-color: rgba(255, 255, 255, 0.30) !important;
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.18),
@@ -1923,7 +1902,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
   background:
     radial-gradient(ellipse at 28% 22%, rgba(255, 255, 255, 0.22) 0%, transparent 55%),
     rgba(239, 68, 68, 0.20) !important;
-  transform: translateY(-2px) scale(1.03);
   border-color: rgba(255, 255, 255, 0.28) !important;
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.18),
@@ -1942,7 +1920,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.14),
     inset 0 2px 0 rgba(255, 255, 255, 0.18);
-  transform: scale(1.03);
 }
 
 /* ══════════════════════════════════════════════════
@@ -2076,7 +2053,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
     0 8px 24px rgba(0, 0, 0, 0.14),
     inset 0 2px 0 rgba(255, 255, 255, 0.20),
     inset 0 -3px 8px rgba(0, 0, 0, 0.10);
-  transform: scale(1.05);
 }
 
 /* Toggle knob — 3D glass sphere with specular blob */
@@ -2142,7 +2118,6 @@ a, button, [role='button'], input, select, textarea, label, summary,
     radial-gradient(ellipse at 30% 25%, rgba(255, 255, 255, 0.10) 0%, transparent 55%),
     rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.14);
-  transform: scale(1.03);
 }
 
 .theme-bubble [role="tab"][aria-selected="true"] {

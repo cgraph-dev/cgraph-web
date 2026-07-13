@@ -172,11 +172,6 @@ describe('hoverAnimations (extended)', () => {
     const scaleScale = (hoverAnimations.scale.whileHover as { scale: number }).scale;
     expect(popScale).toBeGreaterThan(scaleScale);
   });
-
-  it('tilt rotates', () => {
-    const tilt = hoverAnimations.tilt.whileHover as { rotate: number };
-    expect(tilt.rotate).toBeDefined();
-  });
 });
 
 // CHAT BUBBLE ANIMATIONS — EDGE CASES

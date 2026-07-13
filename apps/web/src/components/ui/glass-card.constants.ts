@@ -164,10 +164,6 @@ export const variantStyles = auroraVariantStyles;
 
 /** Per-theme behavior flags */
 interface ThemeBehavior {
-  /** Whether 3D tilt on hover is allowed */
-  hover3D: boolean;
-  /** Maximum tilt angle in degrees */
-  maxTiltDeg: number;
   /** Whether spotlight effect is allowed */
   spotlight: boolean;
   /** Whether shimmer effect is allowed */
@@ -184,8 +180,6 @@ interface ThemeBehavior {
 
 export const themeBehavior: Record<ThemeVariant, ThemeBehavior> = {
   aurora: {
-    hover3D: true,
-    maxTiltDeg: 4,
     spotlight: true,
     shimmer: true,
     particles: true,
@@ -195,8 +189,6 @@ export const themeBehavior: Record<ThemeVariant, ThemeBehavior> = {
       '0 18px 40px rgba(5, 8, 20, 0.32), 0 0 0 1px rgba(139, 92, 246, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
   },
   dark: {
-    hover3D: true,
-    maxTiltDeg: 2,
     spotlight: true,
     shimmer: false,
     particles: false,
@@ -205,8 +197,6 @@ export const themeBehavior: Record<ThemeVariant, ThemeBehavior> = {
     hoverBoxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 4px 16px rgba(0, 0, 0, 0.3)',
   },
   light: {
-    hover3D: false,
-    maxTiltDeg: 0,
     spotlight: false,
     shimmer: false,
     particles: false,
@@ -215,8 +205,6 @@ export const themeBehavior: Record<ThemeVariant, ThemeBehavior> = {
     hoverBoxShadow: '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)',
   },
   bubble: {
-    hover3D: false,
-    maxTiltDeg: 0,
     spotlight: true,
     shimmer: true,
     particles: false,

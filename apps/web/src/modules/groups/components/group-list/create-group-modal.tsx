@@ -99,7 +99,6 @@ export function CreateGroupModal({ isOpen, onClose, onSubmit }: CreateGroupModal
 
             <GlassCard
               variant="default"
-              hover3D={false}
               className="relative z-10 !rounded-[24.5px] border-none bg-[var(--token-bg-primary)] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.6)]"
             >
               <div className="mb-6 text-center">

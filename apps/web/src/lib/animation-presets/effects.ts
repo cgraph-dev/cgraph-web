@@ -27,9 +27,6 @@ export const hoverAnimations = {
       transition: springs.snappy,
     },
   }),
-  tilt: {
-    whileHover: { rotate: 2, scale: 1.02, transition: springs.wobbly },
-  },
   pop: {
     whileHover: { scale: 1.1, y: -2, transition: springs.superBouncy },
     whileTap: { scale: 0.9 },

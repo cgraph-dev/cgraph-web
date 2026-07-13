@@ -126,13 +126,13 @@ export default function InviteFriendsPage() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 gap-4">
-        <GlassCard variant="frosted" hover3D={false}>
+        <GlassCard variant="frosted">
           <div className="p-4 text-center">
             <p className="text-3xl font-bold text-primary-400">{stats.total_referrals}</p>
             <p className="mt-1 text-sm text-foreground-muted">Friends Invited</p>
           </div>
         </GlassCard>
-        <GlassCard variant="frosted" hover3D={false}>
+        <GlassCard variant="frosted">
           <div className="p-4 text-center">
             <p className="text-3xl font-bold text-primary-400">{stats.total_nodes_earned}</p>
             <p className="mt-1 text-sm text-foreground-muted">Nodes Earned</p>
@@ -158,7 +158,7 @@ export default function InviteFriendsPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
         </div>
       ) : invites.length === 0 ? (
-        <GlassCard variant="frosted" hover3D={false}>
+        <GlassCard variant="frosted">
           <div className="p-8 text-center">
             <p className="text-foreground-muted">
               No invites yet. Create one to start inviting friends!

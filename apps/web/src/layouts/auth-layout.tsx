@@ -9,7 +9,6 @@ import {
   MorphingBlob,
   FloatingIcons,
   CursorGlow,
-  TiltCard,
   ScanLines,
   ParticleField,
   AuroraGlow,
@@ -21,7 +20,7 @@ interface AuthLayoutProps {
   children: ReactNode;
 }
 
-// Feature card component with 3D tilt effect and decrypting text
+// Feature card component with entry animation and stable hover states.
 const FeatureCard = memo(function FeatureCard({
   title,
   subtitle,
@@ -34,7 +33,7 @@ const FeatureCard = memo(function FeatureCard({
   const reduced = prefersReducedMotion();
 
   return (
-    <TiltCard className="auth-feature-card from-violet-500/10 hover:from-violet-500/15 group rounded-xl border border-white/10 bg-gradient-to-br to-[color-mix(in_srgb,var(--color-brand-purple)_5%,transparent)] p-4 text-center backdrop-blur-md transition-all duration-300 hover:border-[color-mix(in_srgb,var(--color-brand-purple)_30%,transparent)] hover:bg-gradient-to-br hover:to-[color-mix(in_srgb,var(--color-brand-purple)_10%,transparent)]">
+    <div className="auth-feature-card from-violet-500/10 hover:from-violet-500/15 group rounded-xl border border-white/10 bg-gradient-to-br to-[color-mix(in_srgb,var(--color-brand-purple)_5%,transparent)] p-4 text-center backdrop-blur-md transition-all duration-300 hover:border-[color-mix(in_srgb,var(--color-brand-purple)_30%,transparent)] hover:bg-gradient-to-br hover:to-[color-mix(in_srgb,var(--color-brand-purple)_10%,transparent)]">
       <motion.div
         initial={reduced ? {} : { y: 20 }}
         animate={{ y: 0 }}
@@ -45,7 +44,7 @@ const FeatureCard = memo(function FeatureCard({
         </div>
         <div className="auth-feature-card-subtitle mt-1 text-sm">{subtitle}</div>
       </motion.div>
-    </TiltCard>
+    </div>
   );
 });
 
@@ -215,7 +214,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             <span className="font-medium text-[var(--color-brand-purple)]">community forums</span>.
           </motion.p>
 
-          {/* Feature cards with 3D tilt + staggered animation */}
+          {/* Feature cards with staggered entry animation */}
           <motion.div
             className="grid grid-cols-3 gap-4 pt-6"
             initial={reduced ? {} : { y: 30 }}
@@ -242,12 +241,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ ...tweens.dramatic, delay: 0.3 }}
         >
-          <TiltCard
-            className="auth-card-surface auth-card-border auth-card-glow relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#111827]/90 via-[#0a0f1a]/85 to-[#0d1117]/90 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:shadow-[0_12px_40px_rgba(0,0,0,0.5),0_0_60px_color-mix(in_srgb,var(--color-brand-purple)_6%,transparent),inset_0_1px_0_rgba(255,255,255,0.06)]"
-            maxTilt={5}
-          >
+          <div className="auth-card-surface auth-card-border auth-card-glow relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#111827]/90 via-[#0a0f1a]/85 to-[#0d1117]/90 p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:shadow-[0_12px_40px_rgba(0,0,0,0.5),0_0_60px_color-mix(in_srgb,var(--color-brand-purple)_6%,transparent),inset_0_1px_0_rgba(255,255,255,0.06)]">
             {children}
-          </TiltCard>
+          </div>
         </motion.div>
       </main>
     </div>

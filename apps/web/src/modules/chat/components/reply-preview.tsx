@@ -61,7 +61,6 @@ export function ReplyPreview({ replyTo, uiPreferences, onClear }: ReplyPreviewPr
             if (uiPreferences.enableHaptic) HapticFeedback.light();
           }}
           className="group rounded-xl p-2 text-gray-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
-          whileHover={{ rotate: 90 }}
           whileTap={{ scale: 0.9 }}
         >
           <svg

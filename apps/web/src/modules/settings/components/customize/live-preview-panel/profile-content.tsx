@@ -168,7 +168,6 @@ export function ProfileContent({
                       }
                     : undefined
                 }
-                whileHover={{ rotate: 5 }}
                 transition={{
                   ...springs.bouncy,
                   duration: durations.loop.ms / 1000,

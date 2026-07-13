@@ -12,15 +12,12 @@ interface BadgeGemProps {
 }
 
 const HOVER_BY_RARITY: Record<string, string> = {
-  legendary: 'hover:scale-[1.14] hover:-translate-y-[5px] hover:rotate-[5deg]',
+  legendary: 'hover:scale-[1.14] hover:-translate-y-[5px]',
   epic: 'hover:scale-[1.14] hover:-translate-y-1',
-  rare: 'hover:scale-[1.14] hover:-translate-y-1 hover:-rotate-[4deg]',
+  rare: 'hover:scale-[1.14] hover:-translate-y-1',
 };
 
-function getFaceAnimation(
-  rarity: string,
-  noAnim: boolean,
-): string | undefined {
+function getFaceAnimation(rarity: string, noAnim: boolean): string | undefined {
   if (noAnim) return undefined;
   switch (rarity) {
     case 'legendary':
@@ -34,10 +31,7 @@ function getFaceAnimation(
   }
 }
 
-export const BadgeGem = memo(function BadgeGem({
-  badge,
-  prefersReducedMotion,
-}: BadgeGemProps) {
+export const BadgeGem = memo(function BadgeGem({ badge, prefersReducedMotion }: BadgeGemProps) {
   const config = BADGE_RARITY_CONFIG[badge.rarity];
   const isDim = badge.rarity === 'dim';
   const isLegendary = badge.rarity === 'legendary';
@@ -48,11 +42,7 @@ export const BadgeGem = memo(function BadgeGem({
     <div
       className={cn('group/gem relative', isDim && 'opacity-[0.16]')}
       data-badge-id={badge.id}
-      style={
-        !noAnim && config.animation
-          ? { animation: config.animation }
-          : undefined
-      }
+      style={!noAnim && config.animation ? { animation: config.animation } : undefined}
       title={badge.tooltipLabel ?? badge.name}
     >
       {/* Crystal face */}
@@ -60,7 +50,7 @@ export const BadgeGem = memo(function BadgeGem({
         className={cn(
           'relative flex h-[46px] w-[46px] items-center justify-center overflow-hidden rounded-xl border',
           'transition-transform duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-          HOVER_BY_RARITY[badge.rarity],
+          HOVER_BY_RARITY[badge.rarity]
         )}
         style={{
           background: config.faceBg,
@@ -73,8 +63,7 @@ export const BadgeGem = memo(function BadgeGem({
           <div
             className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[52%]"
             style={{
-              background:
-                'linear-gradient(to bottom, rgba(255,255,255,0.06), transparent)',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.06), transparent)',
               borderRadius: '12px 12px 50% 50%',
             }}
           />

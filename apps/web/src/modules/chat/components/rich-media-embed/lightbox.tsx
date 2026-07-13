@@ -34,7 +34,6 @@ export default function Lightbox({ lightboxMedia, setLightboxMedia }: LightboxPr
         >
           <motion.button
             className="bg-[var(--token-card-bg)/0.4]/80 absolute right-4 top-4 rounded-full p-2 text-white transition-colors hover:bg-[var(--token-card-bg)]"
-            whileHover={{ rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={(e) => {
               e.stopPropagation();

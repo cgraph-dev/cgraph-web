@@ -88,12 +88,7 @@ export default function Customize() {
 
           {/* Content Area - Renders category-specific components */}
           <motion.div key={activeCategory} {...FADE_IN} transition={{ duration: 0.15 }}>
-            {/* IMPORTANT: hover3D disabled to prevent performance issues with particle animations */}
-            <GlassCard
-              variant="frosted"
-              hover3D={false}
-              className="aurora-content-panel overflow-visible p-8"
-            >
+            <GlassCard variant="frosted" className="aurora-content-panel overflow-visible p-8">
               <Suspense fallback={<LoadingSkeleton />}>
                 {activeCategory === 'identity' && <IdentityCustomization />}
                 {activeCategory === 'themes' && <ThemeCustomization />}

@@ -16,7 +16,6 @@ export interface GlassCardProps extends Omit<
   readonly intensity?: 'subtle' | 'medium' | 'strong';
   readonly glow?: boolean;
   readonly glowColor?: string;
-  readonly hover3D?: boolean;
   readonly shimmer?: boolean;
   readonly borderGradient?: boolean;
   readonly particles?: boolean;

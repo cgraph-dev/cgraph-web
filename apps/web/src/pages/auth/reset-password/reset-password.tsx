@@ -137,7 +137,7 @@ export default function ResetPassword() {
         <div className="bg-gradient-radial from-purple-500/10 absolute -bottom-1/2 -left-1/2 h-full w-full rounded-full to-transparent" />
       </div>
 
-      <GlassCard variant="frosted" className="relative z-10 w-full max-w-md" hover3D={false}>
+      <GlassCard variant="frosted" className="relative z-10 w-full max-w-md">
         <div className="p-8">{renderContent()}</div>
       </GlassCard>
     </div>

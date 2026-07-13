@@ -183,11 +183,10 @@ describe('chatBubbleAnimations', () => {
 // EFFECTS & UTILITIES
 
 describe('hoverAnimations', () => {
-  it('should define lift, scale, glow, tilt, pop presets', () => {
+  it('should define lift, scale, glow, and pop presets', () => {
     expect(hoverAnimations.lift).toHaveProperty('whileHover');
     expect(hoverAnimations.scale).toHaveProperty('whileHover');
     expect(typeof hoverAnimations.glow).toBe('function');
-    expect(hoverAnimations.tilt).toHaveProperty('whileHover');
     expect(hoverAnimations.pop).toHaveProperty('whileHover');
   });
 

@@ -88,11 +88,7 @@ function NameplateRow({
       <div className="flex items-center gap-4">
         {/* Live nameplate preview */}
         <div className="flex w-48 shrink-0 items-center justify-center">
-          <NameplateRenderer
-            nameplate={plate}
-            username={previewName}
-            size="md"
-          />
+          <NameplateRenderer nameplate={plate} username={previewName} size="md" />
         </div>
 
         {/* Info */}
@@ -211,7 +207,7 @@ export function NameplatesSection({
                 : 'aurora-social-button-muted text-white/72 hover:scale-[1.05] hover:text-white'
             }`}
           >
-            <span className="mr-2 text-lg leading-none transition-transform group-hover:rotate-12 group-hover:scale-125">
+            <span className="mr-2 text-lg leading-none transition-transform group-hover:scale-125">
               {CATEGORY_ICONS[cat] ?? '•'}
             </span>
             <span className="font-bold capitalize tracking-tight">{cat}</span>

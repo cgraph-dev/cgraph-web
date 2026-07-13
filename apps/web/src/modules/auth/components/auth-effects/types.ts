@@ -1,8 +1,6 @@
 /**
  * Type definitions for authentication visual effects.
  */
-import type { ReactNode } from 'react';
-
 /**
  * Common props for color customization
  */
@@ -37,15 +35,6 @@ export type FloatingIconsProps = ColorProps;
  */
 export interface CursorGlowProps extends ColorProps {
   size?: number;
-}
-
-/**
- * TiltCard component props
- */
-export interface TiltCardProps {
-  children: ReactNode;
-  className?: string;
-  maxTilt?: number;
 }
 
 /**

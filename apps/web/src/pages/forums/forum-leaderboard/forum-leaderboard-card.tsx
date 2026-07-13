@@ -141,7 +141,6 @@ export function ForumLeaderboardCard({
           <motion.div
             className={`h-10 w-10 rounded-full ${badge.bg} flex items-center justify-center`}
             style={{ boxShadow: badge.glow }}
-            whileHover={{ rotate: 5 }}
             transition={springs.snappy}
           >
             {badge.emoji ? (

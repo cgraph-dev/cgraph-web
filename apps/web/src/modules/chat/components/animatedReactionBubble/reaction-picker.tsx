@@ -50,7 +50,6 @@ export function ReactionPicker({ onSelect, onClose }: ReactionPickerProps) {
       <motion.button
         className="ml-2 p-2 text-gray-400 transition-colors hover:text-white"
         onClick={onClose}
-        whileHover={{ rotate: 90 }}
         whileTap={{ scale: 0.9 }}
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

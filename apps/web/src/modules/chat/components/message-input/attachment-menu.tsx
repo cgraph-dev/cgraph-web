@@ -42,7 +42,6 @@ export function AttachmentMenu({
   return (
     <div className="relative">
       <motion.button
-        whileHover={{ rotate: 90 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => onToggle('file')}
         className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white"

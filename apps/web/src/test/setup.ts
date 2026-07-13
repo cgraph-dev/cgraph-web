@@ -120,7 +120,6 @@ const createUIStub = () => {
     'borderGradient',
     'glow',
     'glowColor',
-    'hover3D',
     'intensity',
     'particles',
     'secondaryColor',
@@ -162,7 +161,6 @@ const createUIStub = () => {
     GlassCardNeon: comp('GlassCardNeon'),
     GlowText: comp('GlowText'),
     InlineTitle: comp('InlineTitle'),
-    TiltCard: comp('TiltCard'),
     toast: toastFn,
     ToastContainer: comp('ToastContainer'),
     // useAvatarStyle removed — CSS border system deleted
@@ -180,7 +178,6 @@ vi.mock('@/components/ui', () => createUIStub());
 vi.mock('@/shared/components/ui', () => createUIStub());
 vi.mock('@/components/ui/glass-card', () => createUIStub());
 vi.mock('@/components/ui/animated-avatar', () => createUIStub());
-vi.mock('@/components/ui/tilt-card', () => createUIStub());
 vi.mock('@/components/ui/glow-text', () => createUIStub());
 vi.mock('@/components/ui/animated-border', () => createUIStub());
 

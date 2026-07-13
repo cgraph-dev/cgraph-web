@@ -91,7 +91,6 @@ export function ToastItem({ notification, index: _index, onDismiss }: ToastItemP
             <motion.button
               onClick={onDismiss}
               className="flex-shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white"
-              whileHover={{ rotate: 90 }}
               whileTap={{ scale: 0.88 }}
             >
               <XMarkIcon className="h-5 w-5" />
