@@ -1,7 +1,7 @@
 /**
  * Active sessions management panel.
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   DevicePhoneMobileIcon,
@@ -9,30 +9,25 @@ import {
   DeviceTabletIcon,
   GlobeAltIcon,
 } from '@heroicons/react/24/outline';
-import { http } from '@/lib/api-client';
-import { asString, asBool } from '@/lib/api-utils';
-import { createLogger } from '@/lib/logger';
-import { toast } from '@/shared/components/ui';
-import { GlassCard } from '@/shared/components/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  GlassCard,
+} from '@/shared/components/ui';
+import { useSessions } from '@/modules/auth/hooks';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
-const logger = createLogger('SessionsSettings');
-
-interface Session {
-  id: string;
-  device: string;
-  location: string;
-  lastActive: string;
-  current: boolean;
-  ipAddress: string;
-  browser: string;
-}
-
 // Helper functions
-function formatLastActive(dateString: string): string {
+function formatLastActive(dateString: string | null): string {
   if (!dateString) return 'Unknown';
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return 'Unknown';
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -49,7 +44,7 @@ function formatLastActive(dateString: string): string {
   return date.toLocaleDateString();
 }
 
-function parseBrowser(userAgent: string): string {
+function parseBrowser(userAgent: string | null): string {
   if (!userAgent) return 'Unknown Browser';
   if (userAgent.includes('Chrome')) return 'Chrome';
   if (userAgent.includes('Firefox')) return 'Firefox';
@@ -59,8 +54,8 @@ function parseBrowser(userAgent: string): string {
   return 'Unknown Browser';
 }
 
-function getDeviceIcon(device: string) {
-  const d = device.toLowerCase();
+function getDeviceIcon(userAgent: string | null) {
+  const d = userAgent?.toLowerCase() ?? '';
   if (d.includes('iphone') || d.includes('android') || d.includes('mobile'))
     return DevicePhoneMobileIcon;
   if (d.includes('ipad') || d.includes('tablet')) return DeviceTabletIcon;
@@ -70,74 +65,34 @@ function getDeviceIcon(device: string) {
 }
 
 /**
- */
-/**
  * Sessions Settings Panel component.
  */
 export function SessionsSettingsPanel() {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRevoking, setIsRevoking] = useState<string | null>(null);
-
-  const fetchSessions = useCallback(async () => {
-    try {
-      const response = await http.get('/api/v1/me/sessions');
-      const data = response.data?.data || response.data?.sessions || [];
-
-      const mappedSessions: Session[] = data.map((s: Record<string, unknown>) => ({
-        id: asString(s.id),
-        device: asString(s.device) || asString(s.user_agent) || 'Unknown Device',
-        location: asString(s.location) || asString(s.ip_location) || 'Unknown Location',
-        lastActive: formatLastActive(asString(s.last_seen_at) || asString(s.inserted_at)),
-        current: asBool(s.current),
-        ipAddress: asString(s.ip_address),
-        browser: parseBrowser(asString(s.user_agent)),
-      }));
-
-      setSessions(mappedSessions);
-    } catch (error) {
-      logger.error('Failed to fetch sessions:', error);
-      toast.error('Failed to load sessions');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { sessions, isLoading, isMutating, error, getSessions, revokeSession, revokeAllOtherSessions } =
+    useSessions();
+  const [pendingRevocation, setPendingRevocation] = useState<string | 'all' | null>(null);
 
   useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+    void getSessions();
+  }, [getSessions]);
 
-  const revokeSession = async (sessionId: string) => {
-    setIsRevoking(sessionId);
-    try {
-      await http.delete(`/api/v1/me/sessions/${sessionId}`);
-      setSessions(sessions.filter((s) => s.id !== sessionId));
-      toast.success('Session revoked');
-    } catch (error) {
-      logger.error('Failed to revoke session', error);
-      toast.error('Failed to revoke session');
-    } finally {
-      setIsRevoking(null);
+  const confirmRevocation = async () => {
+    if (!pendingRevocation) return;
+
+    const revoked =
+      pendingRevocation === 'all'
+        ? await revokeAllOtherSessions()
+        : await revokeSession(pendingRevocation);
+
+    if (revoked) {
+      setPendingRevocation(null);
     }
   };
 
-  const revokeAllOtherSessions = async () => {
-    setIsRevoking('all');
-    try {
-      // Revoke all non-current sessions
-      const otherSessions = sessions.filter((s) => !s.current);
-      await Promise.all(otherSessions.map((s) => http.delete(`/api/v1/me/sessions/${s.id}`)));
-      setSessions(sessions.filter((s) => s.current));
-      toast.success('All other sessions revoked');
-    } catch (error) {
-      logger.error('Failed to revoke all other sessions', error);
-      toast.error('Failed to revoke sessions');
-    } finally {
-      setIsRevoking(null);
-    }
-  };
+  const isBulkRevocation = pendingRevocation === 'all';
+  const otherSessions = sessions.filter((session) => !session.current);
 
-  if (isLoading) {
+  if (isLoading && sessions.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
@@ -150,6 +105,12 @@ export function SessionsSettingsPanel() {
       <h1 className="mb-6 bg-gradient-to-r from-[var(--token-text-primary)] via-primary-500 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
         Active Sessions
       </h1>
+
+      {error && (
+        <p className="mb-4 text-sm text-red-300" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="space-y-4">
         {sessions.length === 0 ? (
@@ -166,7 +127,7 @@ export function SessionsSettingsPanel() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   {(() => {
-                    const DeviceIcon = getDeviceIcon(session.device);
+                    const DeviceIcon = getDeviceIcon(session.user_agent);
                     return (
                       <DeviceIcon
                         className={`h-8 w-8 ${session.current ? 'text-primary-500' : 'text-[var(--token-text-muted)]'}`}
@@ -175,7 +136,7 @@ export function SessionsSettingsPanel() {
                   })()}
                   <div>
                     <h3 className="font-medium text-[var(--token-text-primary)]">
-                      {session.browser || session.device}
+                      {parseBrowser(session.user_agent)}
                       {session.current && (
                         <span className="ml-2 text-xs font-semibold text-primary-300">
                           (Current)
@@ -183,11 +144,12 @@ export function SessionsSettingsPanel() {
                       )}
                     </h3>
                     <p className="text-sm text-[var(--token-text-muted)]">
-                      {session.location} • {session.lastActive}
+                      {session.location ?? 'Unknown location'} •{' '}
+                      {formatLastActive(session.last_active_at ?? session.created_at)}
                     </p>
-                    {session.ipAddress && (
+                    {session.ip && (
                       <p className="font-mono text-xs text-[var(--token-text-muted)]">
-                        {session.ipAddress}
+                        {session.ip}
                       </p>
                     )}
                   </div>
@@ -195,11 +157,11 @@ export function SessionsSettingsPanel() {
                 {!session.current && (
                   <motion.button
                     whileTap={{ scale: 0.88 }}
-                    onClick={() => revokeSession(session.id)}
-                    disabled={isRevoking === session.id}
+                    onClick={() => setPendingRevocation(session.id)}
+                    disabled={isMutating}
                     className="rounded-lg bg-red-600/20 px-3 py-1.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-600/30 disabled:opacity-50"
                   >
-                    {isRevoking === session.id ? 'Revoking...' : 'Revoke'}
+                    Revoke
                   </motion.button>
                 )}
               </div>
@@ -208,16 +170,49 @@ export function SessionsSettingsPanel() {
         )}
       </div>
 
-      {sessions.filter((s) => !s.current).length > 0 && (
+      {otherSessions.length > 0 && (
         <motion.button
           whileTap={{ scale: 0.88 }}
-          onClick={revokeAllOtherSessions}
-          disabled={isRevoking === 'all'}
+          onClick={() => setPendingRevocation('all')}
+          disabled={isMutating}
           className="mt-6 rounded-lg bg-red-600/20 px-4 py-2 font-medium text-red-400 transition-colors hover:bg-red-600/30 disabled:opacity-50"
         >
-          {isRevoking === 'all' ? 'Revoking All...' : 'Revoke All Other Sessions'}
+          Revoke All Other Sessions
         </motion.button>
       )}
+
+      <Dialog
+        open={pendingRevocation !== null}
+        onOpenChange={(open) => {
+          if (!open && !isMutating) setPendingRevocation(null);
+        }}
+      >
+        <DialogContent ariaLabel="Confirm session revocation">
+          <DialogHeader>
+            <DialogTitle>
+              {isBulkRevocation ? 'Revoke all other sessions?' : 'Revoke this session?'}
+            </DialogTitle>
+            <DialogDescription>
+              {isBulkRevocation
+                ? 'All sessions except this device will be signed out.'
+                : 'This device will be signed out immediately.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setPendingRevocation(null)}
+              disabled={isMutating}
+            >
+              Cancel
+            </Button>
+            <Button type="button" variant="danger" onClick={confirmRevocation} isLoading={isMutating}>
+              {isBulkRevocation ? 'Revoke other sessions' : 'Revoke session'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

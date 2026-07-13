@@ -27,6 +27,18 @@ vi.mock('@/lib/api', () => ({
   getErrorMessage: (error: Error) => error.message,
 }));
 
+const mockApiClient = vi.hoisted(() => ({
+  profile: {
+    getSessions: vi.fn(),
+    revokeSession: vi.fn(),
+    revokeOtherSessions: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/api-client', () => ({
+  apiClient: mockApiClient,
+}));
+
 import { useAuth, usePasswordChange, useTwoFactor, useSessions } from '../index';
 
 // NOTE: The existing test at modules/auth/__tests__/hooks.test.ts covers:
@@ -235,20 +247,27 @@ describe('Auth Hooks — Extended Coverage', () => {
 
   describe('useSessions – getSessions', () => {
     it('should fetch sessions and populate state', async () => {
-      const sessionsData = {
-        sessions: [
-          { id: 's1', device: 'Chrome', ip: '1.2.3.4', lastActive: '2025-12-01', isCurrent: true },
-          {
-            id: 's2',
-            device: 'Firefox',
-            ip: '5.6.7.8',
-            lastActive: '2025-11-30',
-            isCurrent: false,
-          },
-        ],
-        current_session_id: 's1',
-      };
-      mockApi.get.mockResolvedValueOnce({ data: sessionsData });
+      const sessionsData = [
+        {
+          id: 's1',
+          ip: '1.2.3.4',
+          user_agent: 'Chrome',
+          location: 'Bucharest',
+          current: true,
+          last_active_at: '2025-12-01T00:00:00Z',
+          created_at: '2025-12-01T00:00:00Z',
+        },
+        {
+          id: 's2',
+          ip: '5.6.7.8',
+          user_agent: 'Firefox',
+          location: 'Bucharest',
+          current: false,
+          last_active_at: '2025-11-30T00:00:00Z',
+          created_at: '2025-11-30T00:00:00Z',
+        },
+      ];
+      mockApiClient.profile.getSessions.mockResolvedValueOnce({ ok: true, data: sessionsData });
 
       const { result } = renderHook(() => useSessions());
 
@@ -257,14 +276,18 @@ describe('Auth Hooks — Extended Coverage', () => {
         fetched = await result.current.getSessions();
       });
 
-      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/auth/sessions');
+      expect(mockApiClient.profile.getSessions).toHaveBeenCalledTimes(1);
       expect(result.current.sessions).toHaveLength(2);
       expect(result.current.currentSessionId).toBe('s1');
-      expect(fetched).toEqual(sessionsData.sessions);
+      expect(fetched).toEqual(sessionsData);
     });
 
     it('should return empty array when getSessions fails', async () => {
-      mockApi.get.mockRejectedValueOnce(new Error('Unauthorized'));
+      mockApiClient.profile.getSessions.mockResolvedValueOnce({
+        ok: false,
+        error: { code: 'unauthorized', message: 'Unauthorized' },
+        status: 401,
+      });
 
       const { result } = renderHook(() => useSessions());
 
@@ -275,27 +298,40 @@ describe('Auth Hooks — Extended Coverage', () => {
 
       expect(fetched).toEqual([]);
       expect(result.current.sessions).toEqual([]);
+      expect(result.current.error).toBe('Unauthorized');
     });
   });
 
   describe('useSessions – revokeSession', () => {
     it('should delete session and remove from state', async () => {
       // Populate sessions first
-      const sessionsData = {
-        sessions: [
-          { id: 's1', device: 'Chrome', ip: '1.2.3.4', lastActive: '2025-12-01', isCurrent: true },
-          {
-            id: 's2',
-            device: 'Firefox',
-            ip: '5.6.7.8',
-            lastActive: '2025-11-30',
-            isCurrent: false,
-          },
-        ],
-        current_session_id: 's1',
-      };
-      mockApi.get.mockResolvedValueOnce({ data: sessionsData });
-      mockApi.delete.mockResolvedValueOnce({ data: {} });
+      const sessionsData = [
+        {
+          id: 's1',
+          ip: '1.2.3.4',
+          user_agent: 'Chrome',
+          location: 'Bucharest',
+          current: true,
+          last_active_at: '2025-12-01T00:00:00Z',
+          created_at: '2025-12-01T00:00:00Z',
+        },
+        {
+          id: 's2',
+          ip: '5.6.7.8',
+          user_agent: 'Firefox',
+          location: 'Bucharest',
+          current: false,
+          last_active_at: '2025-11-30T00:00:00Z',
+          created_at: '2025-11-30T00:00:00Z',
+        },
+      ];
+      mockApiClient.profile.getSessions
+        .mockResolvedValueOnce({ ok: true, data: sessionsData })
+        .mockResolvedValueOnce({ ok: true, data: [sessionsData[0]] });
+      mockApiClient.profile.revokeSession.mockResolvedValueOnce({
+        ok: true,
+        data: { message: 'Session revoked successfully' },
+      });
 
       const { result } = renderHook(() => useSessions());
 
@@ -309,7 +345,7 @@ describe('Auth Hooks — Extended Coverage', () => {
         revokeResult = await result.current.revokeSession('s2');
       });
 
-      expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/auth/sessions/s2');
+      expect(mockApiClient.profile.revokeSession).toHaveBeenCalledWith('s2');
       expect(revokeResult).toBe(true);
       expect(result.current.sessions).toHaveLength(1);
       expect(result.current.sessions[0]!.id).toBe('s1');
@@ -318,22 +354,42 @@ describe('Auth Hooks — Extended Coverage', () => {
 
   describe('useSessions – revokeAllOtherSessions', () => {
     it('should remove all non-current sessions', async () => {
-      const sessionsData = {
-        sessions: [
-          { id: 's1', device: 'Chrome', ip: '1.2.3.4', lastActive: '2025-12-01', isCurrent: true },
-          {
-            id: 's2',
-            device: 'Firefox',
-            ip: '5.6.7.8',
-            lastActive: '2025-11-30',
-            isCurrent: false,
-          },
-          { id: 's3', device: 'Safari', ip: '9.8.7.6', lastActive: '2025-11-29', isCurrent: false },
-        ],
-        current_session_id: 's1',
-      };
-      mockApi.get.mockResolvedValueOnce({ data: sessionsData });
-      mockApi.delete.mockResolvedValueOnce({ data: {} });
+      const sessionsData = [
+        {
+          id: 's1',
+          ip: '1.2.3.4',
+          user_agent: 'Chrome',
+          location: 'Bucharest',
+          current: true,
+          last_active_at: '2025-12-01T00:00:00Z',
+          created_at: '2025-12-01T00:00:00Z',
+        },
+        {
+          id: 's2',
+          ip: '5.6.7.8',
+          user_agent: 'Firefox',
+          location: 'Bucharest',
+          current: false,
+          last_active_at: '2025-11-30T00:00:00Z',
+          created_at: '2025-11-30T00:00:00Z',
+        },
+        {
+          id: 's3',
+          ip: '9.8.7.6',
+          user_agent: 'Safari',
+          location: 'Bucharest',
+          current: false,
+          last_active_at: '2025-11-29T00:00:00Z',
+          created_at: '2025-11-29T00:00:00Z',
+        },
+      ];
+      mockApiClient.profile.getSessions
+        .mockResolvedValueOnce({ ok: true, data: sessionsData })
+        .mockResolvedValueOnce({ ok: true, data: [sessionsData[0]] });
+      mockApiClient.profile.revokeOtherSessions.mockResolvedValueOnce({
+        ok: true,
+        data: { message: 'Other sessions revoked successfully' },
+      });
 
       const { result } = renderHook(() => useSessions());
 
@@ -347,10 +403,10 @@ describe('Auth Hooks — Extended Coverage', () => {
         revokeResult = await result.current.revokeAllOtherSessions();
       });
 
-      expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/auth/sessions');
+      expect(mockApiClient.profile.revokeOtherSessions).toHaveBeenCalledTimes(1);
       expect(revokeResult).toBe(true);
       expect(result.current.sessions).toHaveLength(1);
-      expect(result.current.sessions[0]!.isCurrent).toBe(true);
+      expect(result.current.sessions[0]!.current).toBe(true);
     });
   });
 });

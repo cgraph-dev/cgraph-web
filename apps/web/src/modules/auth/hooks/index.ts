@@ -6,9 +6,11 @@
  */
 
 import { useCallback, useState } from 'react';
+import type { ActiveSession } from '@cgraph-dev/api-client';
 import { useAuthStore } from '@/modules/auth/store';
 import { authLogger } from '@/lib/logger';
 import { api, getErrorMessage } from '@/lib/api';
+import { apiClient } from '@/lib/api-client';
 /**
  * Provides authentication state and login/logout/register actions from the auth store.
  */
@@ -255,62 +257,94 @@ export function useTwoFactor() {
   };
 }
 
-interface Session {
-  id: string;
-  device: string;
-  ip: string;
-  lastActive: string;
-  isCurrent: boolean;
-}
 /**
- * Provides session management: listing active sessions and revoking specific ones.
+ * Provides the Active Sessions lifecycle through the shared API-client contract.
  */
 export function useSessions() {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<ActiveSession[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMutating, setIsMutating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const getSessions = async () => {
+  const getSessions = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const { api: http } = await import('@/lib/api');
-      const response = await http.get<{ sessions: Session[]; current_session_id: string }>(
-        '/api/v1/auth/sessions'
-      );
-      setSessions(response.data.sessions);
-      setCurrentSessionId(response.data.current_session_id);
-      return response.data.sessions;
+      const result = await apiClient.profile.getSessions();
+
+      if (!result.ok) {
+        setError(result.error.message);
+        return [];
+      }
+
+      setSessions(result.data);
+      return result.data;
     } catch (error) {
       authLogger.error('Failed to fetch sessions', error);
+      setError('Failed to load active sessions. Please refresh and try again.');
       return [];
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  const revokeSession = async (sessionId: string) => {
-    try {
-      const { api: http } = await import('@/lib/api');
-      await http.delete(`/api/v1/auth/sessions/${sessionId}`);
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-      return true;
-    } catch (error) {
-      authLogger.error('Failed to revoke session', error);
-      return false;
-    }
-  };
+  const revokeSession = useCallback(
+    async (sessionId: string) => {
+      setIsMutating(true);
+      setError(null);
 
-  const revokeAllOtherSessions = async () => {
+      try {
+        const result = await apiClient.profile.revokeSession(sessionId);
+
+        if (!result.ok) {
+          setError(result.error.message);
+          return false;
+        }
+
+        await getSessions();
+        return true;
+      } catch (error) {
+        authLogger.error('Failed to revoke session', error);
+        setError('Failed to revoke the session. Please try again.');
+        return false;
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [getSessions]
+  );
+
+  const revokeAllOtherSessions = useCallback(async () => {
+    setIsMutating(true);
+    setError(null);
+
     try {
-      const { api: http } = await import('@/lib/api');
-      await http.delete('/api/v1/auth/sessions');
-      setSessions((prev) => prev.filter((s) => s.isCurrent));
+      const result = await apiClient.profile.revokeOtherSessions();
+
+      if (!result.ok) {
+        setError(result.error.message);
+        return false;
+      }
+
+      await getSessions();
       return true;
     } catch (error) {
       authLogger.error('Failed to revoke all other sessions', error);
+      setError('Failed to revoke other sessions. Please try again.');
       return false;
+    } finally {
+      setIsMutating(false);
     }
-  };
+  }, [getSessions]);
 
   return {
     sessions,
-    currentSessionId,
+    currentSessionId: sessions.find((session) => session.current)?.id ?? null,
+    isLoading,
+    isMutating,
+    error,
+    clearError: () => setError(null),
     getSessions,
     revokeSession,
     revokeAllOtherSessions,
