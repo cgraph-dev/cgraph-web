@@ -94,10 +94,18 @@ export function useVerifyEmail() {
   }, [token, checkAuth]);
 
   useEffect(() => {
-    if (!resendEmail && user?.email) {
+    if (user?.email && resendEmail !== user.email) {
       setResendEmail(user.email);
     }
   }, [resendEmail, user?.email]);
+
+  useEffect(() => {
+    if (user?.emailVerifiedAt) {
+      setState((currentState) =>
+        currentState === 'success' ? currentState : 'already-verified'
+      );
+    }
+  }, [user?.emailVerifiedAt]);
 
   // Resend verification email
   async function handleResend() {
@@ -128,6 +136,7 @@ export function useVerifyEmail() {
     resendSuccess,
     resendEmail,
     resendError,
+    isResendEmailEditable: !user,
     setResendEmail,
     handleResend,
   };

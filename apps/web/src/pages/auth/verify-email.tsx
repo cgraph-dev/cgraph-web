@@ -25,6 +25,7 @@ export default function VerifyEmail() {
     resendSuccess,
     resendEmail,
     resendError,
+    isResendEmailEditable,
     setResendEmail,
     handleResend,
   } = useVerifyEmail();
@@ -52,6 +53,7 @@ export default function VerifyEmail() {
             resendSuccess={resendSuccess}
             resendEmail={resendEmail}
             resendError={resendError}
+            isResendEmailEditable={isResendEmailEditable}
             onResendEmailChange={setResendEmail}
             onResend={handleResend}
             onNavigate={navigate}

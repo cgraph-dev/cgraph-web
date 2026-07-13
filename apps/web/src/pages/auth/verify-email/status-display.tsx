@@ -18,6 +18,7 @@ interface StatusDisplayProps {
   resendSuccess: boolean;
   resendEmail: string;
   resendError: string | null;
+  isResendEmailEditable: boolean;
   onResendEmailChange: (email: string) => void;
   onResend: () => void;
   onNavigate: (path: string) => void;
@@ -127,6 +128,7 @@ function ExpiredView({
   resendSuccess,
   resendEmail,
   resendError,
+  isResendEmailEditable,
   onResendEmailChange,
   onResend,
   title = 'Link Expired',
@@ -138,6 +140,7 @@ function ExpiredView({
   resendSuccess: boolean;
   resendEmail: string;
   resendError: string | null;
+  isResendEmailEditable: boolean;
   onResendEmailChange: (email: string) => void;
   onResend: () => void;
   title?: string;
@@ -190,21 +193,30 @@ function ExpiredView({
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              New verification email sent!
+              Verification request received
             </p>
-            <p className="mt-1 text-sm text-green-400/70">Check your inbox for the new link.</p>
+            <p className="mt-1 text-sm text-green-400/70">
+              If an unverified CGraph account matches this address, use the newest link we send.
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
             <label className="block text-left text-sm font-medium text-white/75" htmlFor="email">
-              Email address
+              {isResendEmailEditable ? 'Email address' : 'Verification email address'}
             </label>
+            {!isResendEmailEditable && (
+              <p className="text-left text-sm text-gray-400">
+                This is the email address for your signed-in account.
+              </p>
+            )}
             <input
               id="email"
               type="email"
               value={resendEmail}
               onChange={(event) => onResendEmailChange(event.target.value)}
               disabled={isResending}
+              readOnly={!isResendEmailEditable}
+              aria-readonly={!isResendEmailEditable}
               autoComplete="email"
               className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-primary-400 disabled:cursor-not-allowed disabled:opacity-60"
               placeholder="you@example.com"
@@ -310,6 +322,7 @@ export default function StatusDisplay({
   resendSuccess,
   resendEmail,
   resendError,
+  isResendEmailEditable,
   onResendEmailChange,
   onResend,
   onNavigate,
@@ -331,6 +344,7 @@ export default function StatusDisplay({
           resendSuccess={resendSuccess}
           resendEmail={resendEmail}
           resendError={resendError}
+          isResendEmailEditable={isResendEmailEditable}
           onResendEmailChange={onResendEmailChange}
           onResend={onResend}
         />
@@ -342,6 +356,7 @@ export default function StatusDisplay({
           resendSuccess={resendSuccess}
           resendEmail={resendEmail}
           resendError={resendError}
+          isResendEmailEditable={isResendEmailEditable}
           onResendEmailChange={onResendEmailChange}
           onResend={onResend}
         />
