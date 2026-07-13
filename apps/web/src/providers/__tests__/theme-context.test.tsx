@@ -70,7 +70,13 @@ const { mockThemeEngine, mockSettingsStore, setState } = vi.hoisted(() => {
   const updateAppearanceSettings = vi.fn(() => Promise.resolve());
   const settingsStore = {
     get settings() {
-      return { appearance: { theme: _appTheme } };
+      return {
+        appearance: {
+          theme: _appTheme,
+          reduceMotion: _preferences.settings.reduceMotion,
+          highContrast: _preferences.settings.highContrast,
+        },
+      };
     },
     updateAppearanceSettings,
   };
@@ -113,6 +119,7 @@ vi.mock('@/lib/theme/tokens', () => ({
 }));
 
 import { ThemeProvider, useTheme } from '../theme-context';
+import { useThemeEnhanced } from '../theme-enhanced';
 let matchMediaMatches = false;
 const colorSchemeChangeHandlerRef: { current: ((e: MediaQueryListEvent) => void) | null } = {
   current: null,
@@ -240,6 +247,35 @@ describe('ThemeContext', () => {
       expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'system' });
       expect(mockThemeEngine.updateSettings).not.toHaveBeenCalledWith({
         respectSystemPreference: true,
+      });
+    });
+
+    it('writes accessibility choices through the durable Settings owner', () => {
+      const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
+
+      act(() => {
+        result.current.toggleReduceMotion();
+        result.current.toggleHighContrast();
+      });
+
+      expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({
+        reduceMotion: true,
+      });
+      expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({
+        highContrast: true,
+      });
+    });
+
+    it('applies operating-system reduced motion without changing durable settings', () => {
+      matchMediaMatches = true;
+      renderHook(() => useTheme(), { wrapper });
+
+      expect(mockThemeEngine.updateSettings).toHaveBeenCalledWith({
+        reduceMotion: true,
+        highContrast: false,
+      });
+      expect(mockSettingsStore.updateAppearanceSettings).not.toHaveBeenCalledWith({
+        reduceMotion: true,
       });
     });
   });

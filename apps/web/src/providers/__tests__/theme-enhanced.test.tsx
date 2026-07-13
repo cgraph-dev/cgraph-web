@@ -52,6 +52,30 @@ const DEFAULT_PREFS = {
   customThemes: [],
 };
 
+const { mockSettingsStore, setAppearance } = vi.hoisted(() => {
+  let appearance = {
+    theme: 'aurora',
+    reduceMotion: false,
+    highContrast: false,
+  };
+  const updateAppearanceSettings = vi.fn((patch: Partial<typeof appearance>) => {
+    appearance = { ...appearance, ...patch };
+    return Promise.resolve();
+  });
+
+  return {
+    mockSettingsStore: {
+      get settings() {
+        return { appearance };
+      },
+      updateAppearanceSettings,
+    },
+    setAppearance: (patch: Partial<typeof appearance>) => {
+      appearance = { ...appearance, ...patch };
+    },
+  };
+});
+
 // vi.mock – factory must be self-contained (hoisted above all declarations)
 
 vi.mock('@/lib/theme/theme-engine', () => {
@@ -78,7 +102,7 @@ vi.mock('@/lib/theme/theme-engine', () => {
     },
   };
   const light = { ...dark, id: 'light', name: 'Light', category: 'light' };
-  const prefs = {
+  let prefs = {
     activeThemeId: 'dark',
     settings: {
       fontScale: 1,
@@ -95,7 +119,13 @@ vi.mock('@/lib/theme/theme-engine', () => {
       getCurrentTheme: vi.fn(() => dark),
       getPreferences: vi.fn(() => prefs),
       setTheme: vi.fn(),
-      updateSettings: vi.fn(),
+      applyTheme: vi.fn(),
+      updateSettings: vi.fn((settings: Record<string, unknown>) => {
+        prefs = {
+          ...prefs,
+          settings: { ...prefs.settings, ...settings },
+        };
+      }),
       subscribe: vi.fn(() => vi.fn()),
       createCustomTheme: vi.fn((t: Record<string, unknown>) => ({ ...t, isBuiltIn: false })),
       deleteCustomTheme: vi.fn(() => true),
@@ -107,6 +137,11 @@ vi.mock('@/lib/theme/theme-engine', () => {
 
 vi.mock('@/lib/theme/tokens', () => ({
   injectSemanticTokens: vi.fn(),
+}));
+
+vi.mock('@/modules/settings/store', () => ({
+  useSettingsStore: (selector: (state: typeof mockSettingsStore) => unknown) =>
+    selector(mockSettingsStore),
 }));
 
 // Re-import the mocked module so we can access the spies in tests
@@ -132,6 +167,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('ThemeProvider enhanced API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setAppearance({ theme: 'aurora', reduceMotion: false, highContrast: false });
     mockEngine.getCurrentTheme.mockReturnValue(DARK_THEME);
     mockEngine.getPreferences.mockReturnValue(DEFAULT_PREFS);
     Object.defineProperty(window, 'matchMedia', {
@@ -205,23 +241,24 @@ describe('ThemeProvider enhanced API', () => {
 
   // --- Theme switching ---
 
-  it('calls themeEngine.setTheme when setTheme is invoked', () => {
+  it('writes an explicit theme through the durable Settings owner', () => {
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.setTheme('light'));
-    expect(mockEngine.setTheme).toHaveBeenCalledWith('light');
+    expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'light' });
   });
 
   it('toggleDarkMode switches from dark to light', () => {
+    setAppearance({ theme: 'dark' });
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.toggleDarkMode());
-    expect(mockEngine.setTheme).toHaveBeenCalledWith('light');
+    expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'light' });
   });
 
-  it('toggleDarkMode switches from light to aurora', () => {
-    mockEngine.getCurrentTheme.mockReturnValue(LIGHT_THEME);
+  it('toggleDarkMode switches from light to Bubble', () => {
+    setAppearance({ theme: 'light' });
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.toggleDarkMode());
-    expect(mockEngine.setTheme).toHaveBeenCalledWith('aurora');
+    expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'bubble' });
   });
 
   // --- Settings ---
@@ -253,21 +290,23 @@ describe('ThemeProvider enhanced API', () => {
   it('toggleReduceMotion flips the current value', () => {
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.toggleReduceMotion());
-    expect(mockEngine.updateSettings).toHaveBeenCalledWith({ reduceMotion: true });
+    expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({
+      reduceMotion: true,
+    });
   });
 
   it('toggleHighContrast flips the current value', () => {
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.toggleHighContrast());
-    expect(mockEngine.updateSettings).toHaveBeenCalledWith({ highContrast: true });
+    expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({
+      highContrast: true,
+    });
   });
 
   it('toggleSystemPreference flips the current value', () => {
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.toggleSystemPreference());
-    expect(mockEngine.updateSettings).toHaveBeenCalledWith({
-      respectSystemPreference: true,
-    });
+    expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'system' });
   });
 
   // --- Custom themes ---
@@ -302,23 +341,6 @@ describe('ThemeProvider enhanced API', () => {
     expect(mockEngine.subscribe).toHaveBeenCalledTimes(1);
   });
 
-  // --- Initial theme ---
-
-  it('applies initialTheme when provided and in registry', () => {
-    function wrapperWithInitial({ children }: { children: React.ReactNode }) {
-      return <ThemeProvider initialTheme="light">{children}</ThemeProvider>;
-    }
-    renderHook(() => useThemeEnhanced(), { wrapper: wrapperWithInitial });
-    expect(mockEngine.setTheme).toHaveBeenCalledWith('light');
-  });
-
-  it('does not apply initialTheme when ID is not in registry', () => {
-    function wrapperBad({ children }: { children: React.ReactNode }) {
-      return <ThemeProvider initialTheme="nonexistent">{children}</ThemeProvider>;
-    }
-    renderHook(() => useThemeEnhanced(), { wrapper: wrapperBad });
-    expect(mockEngine.setTheme).not.toHaveBeenCalled();
-  });
 });
 
 // Hook error boundary

@@ -28,8 +28,11 @@ import {
   THEME_REGISTRY,
 } from '@/lib/theme/theme-engine';
 import { injectSemanticTokens } from '@/lib/theme/tokens';
+import { createLogger } from '@/lib/logger';
 import type { ThemeContextValue } from '@/providers/theme-enhanced/types';
 import { ThemeContextEnhanced } from '@/providers/theme-enhanced/hooks';
+
+const logger = createLogger('ThemeProvider');
 
 // Simple theme context (backward-compat API)
 
@@ -80,7 +83,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [preferences, setPreferences] = useState<ThemePreferences>(() =>
     themeEngine.getPreferences()
   );
-  const appTheme = useSettingsStore((state) => state.settings.appearance.theme);
+  const appearance = useSettingsStore((state) => state.settings.appearance);
+  const appTheme = appearance.theme;
   const updateAppearanceSettings = useSettingsStore((state) => state.updateAppearanceSettings);
 
   // Subscribe to theme engine changes
@@ -115,21 +119,28 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return () => mediaQuery.removeEventListener('change', applyAppTheme);
   }, [appTheme]);
 
-  // --- Reduced motion listener ---
+  // Keep runtime accessibility in sync without persisting an OS-only preference.
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handleChange = () => {
-      if (mediaQuery.matches) themeEngine.updateSettings({ reduceMotion: true });
+    const applyAccessibility = () => {
+      themeEngine.updateSettings({
+        reduceMotion: appearance.reduceMotion || mediaQuery.matches,
+        highContrast: appearance.highContrast,
+      });
+      setPreferences(themeEngine.getPreferences());
     };
-    if (mediaQuery.matches) handleChange();
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+
+    applyAccessibility();
+    mediaQuery.addEventListener('change', applyAccessibility);
+    return () => mediaQuery.removeEventListener('change', applyAccessibility);
+  }, [appearance.highContrast, appearance.reduceMotion]);
 
   // --- Enhanced API callbacks ---
   function setTheme(themeId: string) {
     if (!isAppTheme(themeId)) return;
-    void updateAppearanceSettings({ theme: themeId }).catch(() => undefined);
+    void updateAppearanceSettings({ theme: themeId }).catch((error: unknown) => {
+      logger.error('Failed to save app theme', error);
+    });
   }
 
   function updateSettings(settings: Partial<ThemePreferences['settings']>) {
@@ -164,11 +175,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }
 
   function toggleReduceMotion() {
-    updateSettings({ reduceMotion: !preferences.settings.reduceMotion });
+    void updateAppearanceSettings({ reduceMotion: !appearance.reduceMotion }).catch((error: unknown) => {
+      logger.error('Failed to save reduced-motion preference', error);
+    });
   }
 
   function toggleHighContrast() {
-    updateSettings({ highContrast: !preferences.settings.highContrast });
+    void updateAppearanceSettings({ highContrast: !appearance.highContrast }).catch((error: unknown) => {
+      logger.error('Failed to save high-contrast preference', error);
+    });
   }
 
   function toggleSystemPreference() {

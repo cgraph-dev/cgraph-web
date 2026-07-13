@@ -20,15 +20,18 @@ interface ThemePickerProps {
 
 /** Theme Picker. */
 export function ThemePicker({ placement = 'settings' }: ThemePickerProps): React.ReactElement {
-  const { theme: activeTheme, setTheme, preferences, toggleSystemPreference } = useThemeEnhanced();
+  const {
+    theme: activeTheme,
+    setTheme,
+    preferences,
+    isSystemPreference,
+    toggleSystemPreference,
+  } = useThemeEnhanced();
 
-  const { respectSystemPreference: isAutoMode, reduceMotion } = preferences.settings;
+  const { reduceMotion } = preferences.settings;
+  const isAutoMode = isSystemPreference;
 
   function handleSelect(themeId: string) {
-    // Disable auto mode when user manually picks a theme
-    if (isAutoMode) {
-      toggleSystemPreference();
-    }
     transitionTheme(() => setTheme(themeId), reduceMotion);
   }
 
@@ -40,9 +43,6 @@ export function ThemePicker({ placement = 'settings' }: ThemePickerProps): React
         const currentIndex = THEME_CYCLE.findIndex((id) => id === activeTheme.id);
         const nextIndex = (currentIndex + 1) % THEME_CYCLE.length;
         const nextThemeId = THEME_CYCLE[nextIndex]!;
-        if (isAutoMode) {
-          toggleSystemPreference();
-        }
         transitionTheme(() => setTheme(nextThemeId), reduceMotion);
       }
     }
@@ -55,9 +55,9 @@ export function ThemePicker({ placement = 'settings' }: ThemePickerProps): React
   return (
     <div className={isCompact ? 'p-3' : 'w-full'}>
       {!isCompact && (
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[var(--token-text-secondary)]">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[var(--token-text-secondary)]">
           Choose Your Theme
-        </h3>
+        </h2>
       )}
 
       <div className={isCompact ? 'flex gap-2' : 'grid grid-cols-3 gap-4'}>

@@ -56,6 +56,11 @@ describe('Toggle', () => {
     expect(screen.getByText('Dark Mode')).toBeInTheDocument();
   });
 
+  it('exposes the visible label as the switch name', () => {
+    render(<Toggle {...defaultProps} />);
+    expect(screen.getByRole('switch', { name: 'Dark Mode' })).toBeInTheDocument();
+  });
+
   it('renders description when provided', () => {
     render(<Toggle {...defaultProps} description="Enable dark theme" />);
     expect(screen.getByText('Enable dark theme')).toBeInTheDocument();

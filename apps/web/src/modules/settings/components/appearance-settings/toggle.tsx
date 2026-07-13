@@ -38,6 +38,7 @@ export function Toggle({ enabled, onChange, label, description, icon, disabled }
         type="button"
         role="switch"
         aria-checked={enabled}
+        aria-label={label}
         onClick={onChange}
         disabled={disabled}
         whileTap={{ scale: 0.95 }}
