@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { useSettingsStore } from './settingsStore';
 import { useCustomizationStore } from './customization/customizationStore';
 
-export type PreferenceSyncStatus = 'fulfilled' | 'rejected' | 'skipped';
+export type PreferenceSyncStatus = 'pending' | 'fulfilled' | 'rejected' | 'skipped';
 
 export interface PreferenceBootstrapResult {
   readonly settings: PreferenceSyncStatus;
@@ -54,7 +54,7 @@ function canReuseBootstrap(state: PreferenceOrchestratorState, userId: string | 
   );
 }
 
-/** Returns whether route-owned preference surfaces are ready to render for the current user. */
+/** Returns whether the Settings route can render its durable settings owner for the current user. */
 export function isPreferenceBootstrapReady(input: PreferenceBootstrapReadinessInput): boolean {
   if (!input.isAuthenticated) return true;
 
@@ -62,8 +62,7 @@ export function isPreferenceBootstrapReady(input: PreferenceBootstrapReadinessIn
   return Boolean(
     input.result &&
     input.lastBootstrappedUserId === userId &&
-    input.result.settings === 'fulfilled' &&
-    input.result.customization === 'fulfilled'
+    input.result.settings === 'fulfilled'
   );
 }
 
@@ -82,12 +81,46 @@ export const usePreferenceOrchestrator = create<PreferenceOrchestratorState>()((
       return current.result;
     }
 
-    set({ isBootstrapping: true, error: null });
+    set({
+      isBootstrapping: true,
+      lastBootstrappedUserId: userId,
+      result: { settings: 'pending', customization: 'pending' },
+      error: null,
+    });
 
     const settingsPromise = useSettingsStore.getState().fetchSettings();
     const customizationPromise = useCustomizationStore
       .getState()
       .fetchCustomizations(userId ?? undefined);
+
+    const updateSurfaceStatus = (surface: keyof PreferenceBootstrapResult, status: PreferenceSyncStatus) => {
+      set((state) => {
+        if (state.lastBootstrappedUserId !== userId || !state.result) return state;
+
+        const result = { ...state.result, [surface]: status };
+        return {
+          result,
+          error: hasRejectedSurface(result) ? 'One or more preference surfaces failed to sync' : null,
+        };
+      });
+    };
+
+    void settingsPromise.then(
+      () =>
+        updateSurfaceStatus(
+          'settings',
+          statusFrom({ status: 'fulfilled', value: undefined }, useSettingsStore.getState().error)
+        ),
+      () => updateSurfaceStatus('settings', 'rejected')
+    );
+    void customizationPromise.then(
+      () =>
+        updateSurfaceStatus(
+          'customization',
+          statusFrom({ status: 'fulfilled', value: undefined }, useCustomizationStore.getState().error)
+        ),
+      () => updateSurfaceStatus('customization', 'rejected')
+    );
 
     const [settingsSettled, customizationSettled] = await Promise.allSettled([
       settingsPromise,

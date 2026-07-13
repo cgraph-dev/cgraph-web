@@ -92,7 +92,65 @@ describe('preferenceOrchestrator', () => {
     );
   });
 
-  it('reports readiness only after the required preference surfaces are fulfilled', () => {
+  it('keeps Settings blocked when its durable response fails', async () => {
+    mockedGet.mockImplementation(async (url) => {
+      if (url === '/api/v1/settings') {
+        throw new Error('Settings offline');
+      }
+      return { data: { data: {} } };
+    });
+
+    const result = await usePreferenceOrchestrator
+      .getState()
+      .bootstrapPreferences({ userId: 'user-1' });
+
+    expect(result.settings).toBe('rejected');
+    expect(
+      isPreferenceBootstrapReady({
+        isAuthenticated: true,
+        userId: 'user-1',
+        lastBootstrappedUserId: 'user-1',
+        result,
+      })
+    ).toBe(false);
+  });
+
+  it('makes Settings ready after its durable response even while customization is pending', async () => {
+    let resolveCustomization: (() => void) | undefined;
+    mockedGet.mockImplementation((url) => {
+      if (url === '/api/v1/me/customizations') {
+        return new Promise((resolve) => {
+          resolveCustomization = () => resolve({ data: { data: {} } });
+        });
+      }
+      return Promise.resolve({ data: { data: {} } });
+    });
+
+    const bootstrap = usePreferenceOrchestrator
+      .getState()
+      .bootstrapPreferences({ userId: 'user-1' });
+
+    await vi.waitFor(() => {
+      expect(usePreferenceOrchestrator.getState().result).toEqual({
+        settings: 'fulfilled',
+        customization: 'pending',
+      });
+    });
+
+    expect(
+      isPreferenceBootstrapReady({
+        isAuthenticated: true,
+        userId: 'user-1',
+        lastBootstrappedUserId: 'user-1',
+        result: usePreferenceOrchestrator.getState().result,
+      })
+    ).toBe(true);
+
+    resolveCustomization?.();
+    await bootstrap;
+  });
+
+  it('reports Settings readiness from the durable settings surface only', () => {
     expect(
       isPreferenceBootstrapReady({
         isAuthenticated: false,
@@ -116,6 +174,15 @@ describe('preferenceOrchestrator', () => {
         userId: 'user-1',
         lastBootstrappedUserId: 'user-1',
         result: { settings: 'fulfilled', customization: 'rejected' },
+      })
+    ).toBe(true);
+
+    expect(
+      isPreferenceBootstrapReady({
+        isAuthenticated: true,
+        userId: 'user-1',
+        lastBootstrappedUserId: 'user-1',
+        result: { settings: 'rejected', customization: 'fulfilled' },
       })
     ).toBe(false);
   });
