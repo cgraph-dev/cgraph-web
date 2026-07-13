@@ -120,9 +120,7 @@ describe('useVerifyEmail', () => {
     });
 
     expect(result.current.isResendEmailEditable).toBe(false);
-    expect(mocks.post).toHaveBeenCalledWith('/api/v1/auth/resend-verification', {
-      email: 'member@example.com',
-    });
+    expect(mocks.post).toHaveBeenCalledWith('/api/v1/auth/resend-verification', undefined);
     expect(result.current.resendCooldownSeconds).toBeGreaterThan(0);
 
     await act(async () => {

@@ -404,9 +404,12 @@ export function SecuritySettingsPanel() {
             </p>
           </div>
           {!user?.emailVerifiedAt && (
-            <button className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98]">
+            <Link
+              to="/verify-email"
+              className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98]"
+            >
               Verify
-            </button>
+            </Link>
           )}
           {user?.emailVerifiedAt && (
             <span className="text-sm font-bold text-primary-400">✓ Verified</span>

@@ -323,12 +323,12 @@ describe('SecuritySettingsPanel', () => {
     });
   });
 
-  it('renders email unverified state with Verify button', () => {
+  it('routes an unverified account to its authenticated verification flow', () => {
     renderPanel();
 
     expect(screen.getByText('Email Verification')).toBeInTheDocument();
     expect(screen.getByText('Verify your email address')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Verify' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Verify' })).toHaveAttribute('href', '/verify-email');
   });
 
   it('renders email verified state with checkmark', () => {
@@ -338,7 +338,7 @@ describe('SecuritySettingsPanel', () => {
 
     expect(screen.getByText('Your email is verified')).toBeInTheDocument();
     expect(screen.getByText('✓ Verified')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Verify' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Verify' })).not.toBeInTheDocument();
   });
 
   it('renders Active Sessions section with its owned route', () => {

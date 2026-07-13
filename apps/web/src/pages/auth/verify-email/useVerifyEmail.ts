@@ -185,9 +185,10 @@ export function useVerifyEmail() {
     setIsResending(true);
     setResendError(null);
     try {
-      const response = await http.post('/api/v1/auth/resend-verification', {
-        email,
-      });
+      const response = await http.post(
+        '/api/v1/auth/resend-verification',
+        user ? undefined : { email }
+      );
 
       const retryAfterSeconds = getRetryAfterSeconds(response);
       if (retryAfterSeconds !== null) {
