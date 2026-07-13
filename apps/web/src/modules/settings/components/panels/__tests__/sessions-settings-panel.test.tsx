@@ -116,6 +116,7 @@ describe('SessionsSettingsPanel', () => {
       expect(sessionsHook.revokeAllOtherSessions).toHaveBeenCalledTimes(1);
     });
     expect(sessionsHook.revokeSession).not.toHaveBeenCalled();
+    expect(await screen.findByRole('status')).toHaveTextContent('Other active sessions were revoked.');
   });
 
   it('keeps destructive controls disabled while a revocation is in flight', () => {

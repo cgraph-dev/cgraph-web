@@ -71,6 +71,7 @@ export function SessionsSettingsPanel() {
   const { sessions, isLoading, isMutating, error, getSessions, revokeSession, revokeAllOtherSessions } =
     useSessions();
   const [pendingRevocation, setPendingRevocation] = useState<string | 'all' | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     void getSessions();
@@ -79,12 +80,19 @@ export function SessionsSettingsPanel() {
   const confirmRevocation = async () => {
     if (!pendingRevocation) return;
 
+    setSuccessMessage(null);
+
     const revoked =
       pendingRevocation === 'all'
         ? await revokeAllOtherSessions()
         : await revokeSession(pendingRevocation);
 
     if (revoked) {
+      setSuccessMessage(
+        pendingRevocation === 'all'
+          ? 'Other active sessions were revoked.'
+          : 'The selected session was revoked.'
+      );
       setPendingRevocation(null);
     }
   };
@@ -109,6 +117,12 @@ export function SessionsSettingsPanel() {
       {error && (
         <p className="mb-4 text-sm text-red-300" role="alert">
           {error}
+        </p>
+      )}
+
+      {successMessage && (
+        <p className="mb-4 text-sm text-emerald-300" role="status">
+          {successMessage}
         </p>
       )}
 
@@ -157,7 +171,10 @@ export function SessionsSettingsPanel() {
                 {!session.current && (
                   <motion.button
                     whileTap={{ scale: 0.88 }}
-                    onClick={() => setPendingRevocation(session.id)}
+                    onClick={() => {
+                      setSuccessMessage(null);
+                      setPendingRevocation(session.id);
+                    }}
                     disabled={isMutating}
                     className="rounded-lg bg-red-600/20 px-3 py-1.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-600/30 disabled:opacity-50"
                   >
@@ -173,7 +190,10 @@ export function SessionsSettingsPanel() {
       {otherSessions.length > 0 && (
         <motion.button
           whileTap={{ scale: 0.88 }}
-          onClick={() => setPendingRevocation('all')}
+          onClick={() => {
+            setSuccessMessage(null);
+            setPendingRevocation('all');
+          }}
           disabled={isMutating}
           className="mt-6 rounded-lg bg-red-600/20 px-4 py-2 font-medium text-red-400 transition-colors hover:bg-red-600/30 disabled:opacity-50"
         >
