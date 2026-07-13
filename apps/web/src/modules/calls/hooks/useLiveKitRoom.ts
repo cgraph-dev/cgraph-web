@@ -14,6 +14,7 @@ import type { LiveKitParticipant } from '@/lib/webrtc/livekitService';
 import { decodeRoomKey } from '@/lib/webrtc/callEncryption';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { useSettingsStore } from '@/modules/settings/store';
 
 const logger = createLogger('useLiveKitRoom');
 // Types
@@ -86,6 +87,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
   const [isE2EEEnabled, setIsE2EEEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
+  const callSettings = useSettingsStore((state) => state.settings.calls);
 
   const cleanupRef = useRef<(() => void) | null>(null);
   const roomRef = useRef<Room | null>(null);
@@ -132,7 +134,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
       setConnectionState(ConnectionState.Connecting);
 
       const { token, url, e2ee_key, e2ee_enabled } = await fetchToken();
-      const lkRoom = await LiveKitService.connect(url, token);
+      const lkRoom = await LiveKitService.connect(url, token, undefined, callSettings);
 
       roomRef.current = lkRoom;
       setRoom(lkRoom);
@@ -153,7 +155,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
       await LiveKitService.publishLocalTracks(lkRoom, {
         audio: audioEnabled,
         video: videoEnabled,
-      });
+      }, callSettings);
 
       // Set up event handlers
       const cleanup = LiveKitService.attachEventHandlers(lkRoom, {
@@ -195,7 +197,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions): UseLiveKitRoomRe
       setError(message);
       setConnectionState(ConnectionState.Disconnected);
     }
-  }, [audioEnabled, fetchToken, updateParticipants, videoEnabled]);
+  }, [audioEnabled, callSettings, fetchToken, updateParticipants, videoEnabled]);
   // Media controls
   const toggleMute = async () => {
     const lkRoom = roomRef.current;

@@ -5,6 +5,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
+const { callsSettings } = vi.hoisted(() => ({
+  callsSettings: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+    defaultVideoResolution: '1080p' as const,
+  },
+}));
+
 // Mock LiveKit service
 const mockLiveKitConnect = vi.fn();
 const mockLiveKitDisconnect = vi.fn().mockResolvedValue(undefined);
@@ -41,6 +50,15 @@ vi.mock('@/lib/logger', () => ({
     error: vi.fn(),
     debug: vi.fn(),
   }),
+}));
+
+vi.mock('@/modules/settings/store', () => ({
+  useSettingsStore: (selector: (state: { settings: { calls: object } }) => unknown) =>
+    selector({
+      settings: {
+        calls: callsSettings,
+      },
+    }),
 }));
 
 vi.mock('livekit-client', () => ({
@@ -117,7 +135,12 @@ describe('useLiveKitRoom', () => {
       room_name: 'my-room',
       channel_id: 'ch-1',
     });
-    expect(mockLiveKitConnect).toHaveBeenCalledWith('wss://test.livekit.io', 'test-token');
+    expect(mockLiveKitConnect).toHaveBeenCalledWith(
+      'wss://test.livekit.io',
+      'test-token',
+      undefined,
+      callsSettings
+    );
     expect(result.current.connectionState).toBe('connected');
     expect(result.current.room).toBe(mockRoom);
   });
@@ -147,7 +170,7 @@ describe('useLiveKitRoom', () => {
     expect(mockLiveKitPublishLocalTracks).toHaveBeenCalledWith(mockRoom, {
       audio: true,
       video: true,
-    });
+    }, callsSettings);
   });
 
   it('enables E2EE when backend provides key', async () => {

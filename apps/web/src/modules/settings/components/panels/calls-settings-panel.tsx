@@ -124,6 +124,7 @@ function ToggleRow({ label, description, checked, onChange }: ToggleRowProps): R
       </div>
       <input
         type="checkbox"
+        aria-label={label}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         className="mt-1 h-5 w-5 cursor-pointer accent-[var(--token-interactive-primary)]"

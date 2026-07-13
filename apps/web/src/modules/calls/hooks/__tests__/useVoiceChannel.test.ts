@@ -7,6 +7,15 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+const { callsSettings } = vi.hoisted(() => ({
+  callsSettings: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+    defaultVideoResolution: '1080p' as const,
+  },
+}));
+
 const mockVoiceState = {
   currentChannelId: null as string | null,
   isConnecting: false,
@@ -63,6 +72,14 @@ const mockSocket = {
 };
 
 const mockGetSocket = vi.fn((): typeof mockSocket | null => mockSocket);
+const mockLiveKitConnect = vi.fn().mockResolvedValue({
+  localParticipant: {
+    setMicrophoneEnabled: vi.fn(),
+    setCameraEnabled: vi.fn(),
+  },
+});
+const mockLiveKitDisconnect = vi.fn().mockResolvedValue(undefined);
+const mockLiveKitPublishLocalTracks = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/lib/socket', () => ({
   useSocket: vi.fn(() => ({
@@ -72,15 +89,19 @@ vi.mock('@/lib/socket', () => ({
 
 vi.mock('@/lib/webrtc/livekitService', () => ({
   LiveKitService: {
-    connect: vi.fn().mockResolvedValue({
-      localParticipant: {
-        setMicrophoneEnabled: vi.fn(),
-        setCameraEnabled: vi.fn(),
+    connect: (...args: unknown[]) => mockLiveKitConnect(...args),
+    disconnect: (...args: unknown[]) => mockLiveKitDisconnect(...args),
+    publishLocalTracks: (...args: unknown[]) => mockLiveKitPublishLocalTracks(...args),
+  },
+}));
+
+vi.mock('@/modules/settings/store', () => ({
+  useSettingsStore: (selector: (state: { settings: { calls: object } }) => unknown) =>
+    selector({
+      settings: {
+        calls: callsSettings,
       },
     }),
-    disconnect: vi.fn().mockResolvedValue(undefined),
-    publishLocalTracks: vi.fn().mockResolvedValue(undefined),
-  },
 }));
 
 import { useVoiceChannel } from '../useVoiceChannel';
@@ -118,6 +139,26 @@ describe('useVoiceChannel', () => {
   });
 
   describe('joinChannel', () => {
+    it('uses the saved Calls defaults for a newly joined voice channel', async () => {
+      const { result } = renderHook(() => useVoiceChannel());
+
+      await act(async () => {
+        await result.current.joinChannel('ch-1', 'group-1');
+      });
+
+      expect(mockLiveKitConnect).toHaveBeenCalledWith(
+        'ws://localhost:7880',
+        'lk-token',
+        undefined,
+        callsSettings
+      );
+      expect(mockLiveKitPublishLocalTracks).toHaveBeenCalledWith(
+        expect.anything(),
+        { audio: true, video: false },
+        callsSettings
+      );
+    });
+
     it('does nothing when already in the same channel', async () => {
       mockVoiceState.currentChannelId = 'ch-1';
 

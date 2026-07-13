@@ -11,6 +11,7 @@ import type { Channel } from 'phoenix';
 import { useVoiceStateStore } from '@/stores/voiceStateStore';
 import { LiveKitService } from '@/lib/webrtc/livekitService';
 import { useSocket } from '@/lib/socket';
+import { useSettingsStore } from '@/modules/settings/store';
 import type { Room } from 'livekit-client';
 /** Payload shape for voice channel events from Phoenix */
 interface VoiceEventPayload {
@@ -78,6 +79,7 @@ export interface UseVoiceChannelReturn {
 /** Hook for voice channel. */
 export function useVoiceChannel(): UseVoiceChannelReturn {
   const socketManager = useSocket();
+  const callSettings = useSettingsStore((state) => state.settings.calls);
   const channelRef = useRef<Channel | null>(null);
   const roomRef = useRef<Room | null>(null);
 
@@ -183,14 +185,14 @@ export function useVoiceChannel(): UseVoiceChannelReturn {
 
         // Connect to LiveKit using the token
         const wsUrl = import.meta.env.VITE_LIVEKIT_URL ?? 'ws://localhost:7880';
-        const lkRoom = await LiveKitService.connect(wsUrl, joinResult.token);
+        const lkRoom = await LiveKitService.connect(wsUrl, joinResult.token, undefined, callSettings);
         roomRef.current = lkRoom;
 
         // Publish local tracks
         await LiveKitService.publishLocalTracks(lkRoom, {
           audio: true,
           video: false,
-        });
+        }, callSettings);
 
         setConnected(channelId, groupId, joinResult.token, joinResult.room_name);
       } catch (err) {

@@ -20,6 +20,7 @@ import {
   type RoomOptions,
   VideoPresets,
 } from 'livekit-client';
+import { DEFAULT_CALLS_SETTINGS, type CallsSettings } from '@cgraph-dev/shared-types';
 import { setupE2EE, rotateKey, isEncrypted, cleanupE2EE } from './callEncryption';
 
 // Types
@@ -73,13 +74,17 @@ class LiveKitServiceImpl {
    * @param opts - Optional room configuration
    * @returns Connected Room instance
    */
-  async connect(url: string, token: string, opts?: Partial<RoomOptions>): Promise<Room> {
+  async connect(
+    url: string,
+    token: string,
+    opts?: Partial<RoomOptions>,
+    callSettings: CallsSettings = DEFAULT_CALLS_SETTINGS
+  ): Promise<Room> {
+    const resolution = getVideoResolution(callSettings.defaultVideoResolution);
     const room = new Room({
       adaptiveStream: true,
       dynacast: true,
-      videoCaptureDefaults: {
-        resolution: VideoPresets.h720.resolution,
-      },
+      ...(resolution === undefined ? {} : { videoCaptureDefaults: { resolution } }),
       ...opts,
     });
 
@@ -118,22 +123,24 @@ class LiveKitServiceImpl {
    */
   async publishLocalTracks(
     room: Room,
-    opts: { audio?: boolean; video?: boolean } = { audio: true, video: true }
+    opts: { audio?: boolean; video?: boolean } = { audio: true, video: true },
+    callSettings: CallsSettings = DEFAULT_CALLS_SETTINGS
   ): Promise<void> {
     const tracks = [];
 
     if (opts.audio !== false) {
       const audioTrack = await createLocalAudioTrack({
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
+        echoCancellation: callSettings.echoCancellation,
+        noiseSuppression: callSettings.noiseSuppression,
+        autoGainControl: callSettings.autoGainControl,
       });
       tracks.push(audioTrack);
     }
 
     if (opts.video !== false) {
+      const resolution = getVideoResolution(callSettings.defaultVideoResolution);
       const videoTrack = await createLocalVideoTrack({
-        resolution: VideoPresets.h720.resolution,
+        ...(resolution === undefined ? {} : { resolution }),
       });
       tracks.push(videoTrack);
     }
@@ -243,6 +250,19 @@ class LiveKitServiceImpl {
 }
 
 // Helpers
+
+function getVideoResolution(
+  preference: CallsSettings['defaultVideoResolution']
+): typeof VideoPresets.h720.resolution | undefined {
+  switch (preference) {
+    case '720p':
+      return VideoPresets.h720.resolution;
+    case '1080p':
+      return VideoPresets.h1080.resolution;
+    case 'auto':
+      return undefined;
+  }
+}
 
 function mapParticipant(participant: RemoteParticipant): LiveKitParticipant {
   return {
