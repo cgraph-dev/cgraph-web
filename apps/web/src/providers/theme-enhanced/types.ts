@@ -22,20 +22,8 @@ export interface ThemeContextValue {
   /** Set active theme by ID */
   setTheme: (themeId: string) => void;
 
-  /** Update theme settings */
-  updateSettings: (settings: Partial<ThemePreferences['settings']>) => void;
-
   /** Toggle between dark and light themes */
   toggleDarkMode: () => void;
-
-  /** Set font scale (0.8 - 1.4) */
-  setFontScale: (scale: number) => void;
-
-  /** Set message display mode */
-  setMessageDisplay: (mode: 'cozy' | 'compact') => void;
-
-  /** Set message spacing (0.5 - 2) */
-  setMessageSpacing: (spacing: number) => void;
 
   /** Toggle reduced motion */
   toggleReduceMotion: () => void;

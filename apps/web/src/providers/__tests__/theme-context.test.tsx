@@ -58,12 +58,6 @@ const { mockThemeEngine, mockSettingsStore, setState } = vi.hoisted(() => {
         _subscribers = _subscribers.filter((s) => s !== fn);
       };
     }),
-    updateSettings: vi.fn((settings: Record<string, unknown>) => {
-      _preferences = {
-        ..._preferences,
-        settings: { ..._preferences.settings, ...settings },
-      };
-    }),
     updateRuntimeSettings: vi.fn((settings: Record<string, unknown>) => {
       _preferences = {
         ..._preferences,
@@ -253,9 +247,6 @@ describe('ThemeContext', () => {
       });
 
       expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'system' });
-      expect(mockThemeEngine.updateSettings).not.toHaveBeenCalledWith({
-        respectSystemPreference: true,
-      });
     });
 
     it('writes accessibility choices through the durable Settings owner', () => {

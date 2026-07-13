@@ -121,12 +121,6 @@ vi.mock('@/lib/theme/theme-engine', () => {
       setTheme: vi.fn(),
       applyTheme: vi.fn(),
       applyRuntimeTheme: vi.fn(),
-      updateSettings: vi.fn((settings: Record<string, unknown>) => {
-        prefs = {
-          ...prefs,
-          settings: { ...prefs.settings, ...settings },
-        };
-      }),
       updateRuntimeSettings: vi.fn((settings: Record<string, unknown>) => {
         prefs = {
           ...prefs,
@@ -158,7 +152,6 @@ const mockEngine = themeEngine as unknown as {
   getPreferences: ReturnType<typeof vi.fn>;
   setTheme: ReturnType<typeof vi.fn>;
   applyRuntimeTheme: ReturnType<typeof vi.fn>;
-  updateSettings: ReturnType<typeof vi.fn>;
   updateRuntimeSettings: ReturnType<typeof vi.fn>;
   subscribe: ReturnType<typeof vi.fn>;
   createCustomTheme: ReturnType<typeof vi.fn>;
@@ -268,32 +261,6 @@ describe('ThemeProvider enhanced API', () => {
     const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
     act(() => result.current.toggleDarkMode());
     expect(mockSettingsStore.updateAppearanceSettings).toHaveBeenCalledWith({ theme: 'bubble' });
-  });
-
-  // --- Settings ---
-
-  it('setFontScale clamps upper bound to 1.4', () => {
-    const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
-    act(() => result.current.setFontScale(2.0));
-    expect(mockEngine.updateSettings).toHaveBeenCalledWith({ fontScale: 1.4 });
-  });
-
-  it('setFontScale clamps lower bound to 0.8', () => {
-    const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
-    act(() => result.current.setFontScale(0.3));
-    expect(mockEngine.updateSettings).toHaveBeenCalledWith({ fontScale: 0.8 });
-  });
-
-  it('setMessageDisplay updates display mode', () => {
-    const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
-    act(() => result.current.setMessageDisplay('compact'));
-    expect(mockEngine.updateSettings).toHaveBeenCalledWith({ messageDisplay: 'compact' });
-  });
-
-  it('setMessageSpacing clamps value to max 2', () => {
-    const { result } = renderHook(() => useThemeEnhanced(), { wrapper });
-    act(() => result.current.setMessageSpacing(5));
-    expect(mockEngine.updateSettings).toHaveBeenCalledWith({ messageSpacing: 2 });
   });
 
   it('toggleReduceMotion flips the current value', () => {

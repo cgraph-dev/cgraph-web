@@ -143,11 +143,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     });
   }
 
-  function updateSettings(settings: Partial<ThemePreferences['settings']>) {
-    themeEngine.updateSettings(settings);
-    setPreferences(themeEngine.getPreferences());
-  }
-
   /**
    * Cycle the durable CGraph app-theme setting.
    */
@@ -160,18 +155,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       system: 'aurora',
     };
     setTheme(cycle[appTheme]);
-  }
-
-  function setFontScale(scale: number) {
-    updateSettings({ fontScale: Math.max(0.8, Math.min(1.4, scale)) });
-  }
-
-  function setMessageDisplay(mode: 'cozy' | 'compact') {
-    updateSettings({ messageDisplay: mode });
-  }
-
-  function setMessageSpacing(spacing: number) {
-    updateSettings({ messageSpacing: Math.max(0.5, Math.min(2, spacing)) });
   }
 
   function toggleReduceMotion() {
@@ -214,11 +197,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     isSystemPreference,
     resolvedBaseTheme,
     setTheme,
-    updateSettings,
     toggleDarkMode,
-    setFontScale,
-    setMessageDisplay,
-    setMessageSpacing,
     toggleReduceMotion,
     toggleHighContrast,
     toggleSystemPreference,
