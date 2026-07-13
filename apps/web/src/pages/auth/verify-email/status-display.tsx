@@ -6,6 +6,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { FormEvent } from 'react';
 import type { VerificationState } from '@/pages/auth/verify-email/useVerifyEmail';
@@ -15,12 +16,14 @@ import { springs } from '@/lib/animation-presets';
 interface StatusDisplayProps {
   state: VerificationState;
   isResending: boolean;
+  isCheckingVerificationStatus: boolean;
   resendSuccess: boolean;
   resendEmail: string;
   resendError: string | null;
   resendCooldownSeconds: number;
   isResendEmailEditable: boolean;
   onResendEmailChange: (email: string) => void;
+  onCheckVerificationStatus: () => void;
   onResend: () => void;
   onNavigate: (path: string) => void;
 }
@@ -132,26 +135,32 @@ function AlreadyVerifiedView({ onNavigate }: { onNavigate: (path: string) => voi
 
 function ExpiredView({
   isResending,
+  isCheckingVerificationStatus,
   resendSuccess,
   resendEmail,
   resendError,
   resendCooldownSeconds,
   isResendEmailEditable,
   onResendEmailChange,
+  onCheckVerificationStatus,
   onResend,
+  showVerificationStatusCheck = false,
   title = 'Link Expired',
   description =
     'This verification link has expired or was replaced. Request a new one and use only the newest link.',
   backLinkLabel = 'Back to Login',
 }: {
   isResending: boolean;
+  isCheckingVerificationStatus: boolean;
   resendSuccess: boolean;
   resendEmail: string;
   resendError: string | null;
   resendCooldownSeconds: number;
   isResendEmailEditable: boolean;
   onResendEmailChange: (email: string) => void;
+  onCheckVerificationStatus: () => void;
   onResend: () => void;
+  showVerificationStatusCheck?: boolean;
   title?: string;
   description?: string;
   backLinkLabel?: string;
@@ -191,6 +200,29 @@ function ExpiredView({
       </motion.p>
 
       <motion.div variants={itemVariants} className="space-y-3">
+        {showVerificationStatusCheck && (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={onCheckVerificationStatus}
+              disabled={isCheckingVerificationStatus}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isCheckingVerificationStatus ? 'animate-spin' : ''}`}
+                aria-hidden="true"
+              />
+              {isCheckingVerificationStatus
+                ? 'Checking verification status'
+                : 'Check verification status'}
+            </button>
+            {isCheckingVerificationStatus && (
+              <p className="text-sm text-gray-400" role="status" aria-live="polite">
+                Checking your account status.
+              </p>
+            )}
+          </div>
+        )}
         {resendSuccess ? (
           <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-green-400">
             <p className="flex items-center justify-center gap-2">
@@ -340,12 +372,14 @@ function ErrorView() {
 export default function StatusDisplay({
   state,
   isResending,
+  isCheckingVerificationStatus,
   resendSuccess,
   resendEmail,
   resendError,
   resendCooldownSeconds,
   isResendEmailEditable,
   onResendEmailChange,
+  onCheckVerificationStatus,
   onResend,
   onNavigate,
 }: StatusDisplayProps) {
@@ -363,25 +397,30 @@ export default function StatusDisplay({
           description="Verify your email before entering the app. You can request a fresh verification link here."
           backLinkLabel="Use a different account"
           isResending={isResending}
+          isCheckingVerificationStatus={isCheckingVerificationStatus}
           resendSuccess={resendSuccess}
           resendEmail={resendEmail}
           resendError={resendError}
           resendCooldownSeconds={resendCooldownSeconds}
           isResendEmailEditable={isResendEmailEditable}
           onResendEmailChange={onResendEmailChange}
+          onCheckVerificationStatus={onCheckVerificationStatus}
           onResend={onResend}
+          showVerificationStatusCheck={!isResendEmailEditable}
         />
       );
     case 'expired':
       return (
         <ExpiredView
           isResending={isResending}
+          isCheckingVerificationStatus={isCheckingVerificationStatus}
           resendSuccess={resendSuccess}
           resendEmail={resendEmail}
           resendError={resendError}
           resendCooldownSeconds={resendCooldownSeconds}
           isResendEmailEditable={isResendEmailEditable}
           onResendEmailChange={onResendEmailChange}
+          onCheckVerificationStatus={onCheckVerificationStatus}
           onResend={onResend}
         />
       );

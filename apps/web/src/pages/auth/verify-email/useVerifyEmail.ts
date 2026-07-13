@@ -83,6 +83,7 @@ export function useVerifyEmail() {
 
   const [state, setState] = useState<VerificationState>('verifying');
   const [isResending, setIsResending] = useState(false);
+  const [isCheckingVerificationStatus, setIsCheckingVerificationStatus] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendEmail, setResendEmail] = useState(searchParams.get('email') ?? user?.email ?? '');
   const [resendError, setResendError] = useState<string | null>(null);
@@ -142,11 +143,13 @@ export function useVerifyEmail() {
   useEffect(() => {
     if (!resendCooldownUntil) return undefined;
 
+    const cooldownUntil = resendCooldownUntil;
+
     function updateCooldown() {
       const now = Date.now();
       setCurrentTime(now);
 
-      if (now >= resendCooldownUntil) {
+      if (now >= cooldownUntil) {
         setResendCooldownUntil(null);
       }
     }
@@ -155,6 +158,19 @@ export function useVerifyEmail() {
     const interval = window.setInterval(updateCooldown, 1000);
     return () => window.clearInterval(interval);
   }, [resendCooldownUntil]);
+
+  async function handleVerificationStatusCheck() {
+    if (!user || isCheckingVerificationStatus) return;
+
+    setIsCheckingVerificationStatus(true);
+    try {
+      await checkAuth();
+    } catch (error: unknown) {
+      logger.warn('Failed to refresh verification status', error);
+    } finally {
+      setIsCheckingVerificationStatus(false);
+    }
+  }
 
   // Resend verification email
   async function handleResend() {
@@ -197,12 +213,14 @@ export function useVerifyEmail() {
   return {
     state,
     isResending,
+    isCheckingVerificationStatus,
     resendSuccess,
     resendEmail,
     resendError,
     resendCooldownSeconds,
     isResendEmailEditable: !user,
     setResendEmail,
+    handleVerificationStatusCheck,
     handleResend,
   };
 }

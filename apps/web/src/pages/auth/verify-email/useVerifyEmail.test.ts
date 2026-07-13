@@ -49,6 +49,46 @@ describe('useVerifyEmail', () => {
     await waitFor(() => expect(result.current.state).toBe('already-verified'));
   });
 
+  it('rechecks the signed-in account through the existing auth owner', async () => {
+    mocks.user = { email: 'member@example.com', emailVerifiedAt: null };
+
+    let resolveCheck: (() => void) | undefined;
+    mocks.checkAuth.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveCheck = resolve;
+        })
+    );
+
+    const { result, rerender } = renderHook(() => useVerifyEmail());
+
+    await waitFor(() => expect(result.current.state).toBe('pending'));
+
+    act(() => {
+      void result.current.handleVerificationStatusCheck();
+    });
+
+    expect(mocks.checkAuth).toHaveBeenCalledTimes(1);
+    expect(result.current.isCheckingVerificationStatus).toBe(true);
+
+    act(() => {
+      void result.current.handleVerificationStatusCheck();
+    });
+
+    expect(mocks.checkAuth).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveCheck?.();
+    });
+
+    expect(result.current.isCheckingVerificationStatus).toBe(false);
+
+    mocks.user = { email: 'member@example.com', emailVerifiedAt: '2026-07-13T13:00:00Z' };
+    rerender();
+
+    await waitFor(() => expect(result.current.state).toBe('already-verified'));
+  });
+
   it('uses the entered address only when no signed-in account owns the resend request', async () => {
     mocks.searchParams = new URLSearchParams('email=recovery@example.com');
     mocks.post.mockResolvedValue({ data: { message: 'Verification request received' } });

@@ -22,12 +22,14 @@ export default function VerifyEmail() {
   const {
     state,
     isResending,
+    isCheckingVerificationStatus,
     resendSuccess,
     resendEmail,
     resendError,
     resendCooldownSeconds,
     isResendEmailEditable,
     setResendEmail,
+    handleVerificationStatusCheck,
     handleResend,
   } = useVerifyEmail();
 
@@ -51,12 +53,14 @@ export default function VerifyEmail() {
           <StatusDisplay
             state={state}
             isResending={isResending}
+            isCheckingVerificationStatus={isCheckingVerificationStatus}
             resendSuccess={resendSuccess}
             resendEmail={resendEmail}
             resendError={resendError}
             resendCooldownSeconds={resendCooldownSeconds}
             isResendEmailEditable={isResendEmailEditable}
             onResendEmailChange={setResendEmail}
+            onCheckVerificationStatus={handleVerificationStatusCheck}
             onResend={handleResend}
             onNavigate={navigate}
           />
