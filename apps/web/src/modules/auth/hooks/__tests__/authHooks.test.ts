@@ -19,6 +19,7 @@ vi.mock('@/modules/auth/store', () => ({
 const mockApi = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
+  put: vi.fn(),
   delete: vi.fn(),
 }));
 vi.mock('@/lib/api', () => ({
@@ -26,7 +27,7 @@ vi.mock('@/lib/api', () => ({
   getErrorMessage: (error: Error) => error.message,
 }));
 
-import { useAuth, useTwoFactor, useSessions } from '../index';
+import { useAuth, usePasswordChange, useTwoFactor, useSessions } from '../index';
 
 // NOTE: The existing test at modules/auth/__tests__/hooks.test.ts covers:
 //  - useAuth: state, login success/fail, logout, register success/fail
@@ -41,6 +42,7 @@ describe('Auth Hooks — Extended Coverage', () => {
     mockAuthStore.user = null;
     mockAuthStore.isLoading = false;
     mockAuthStore.error = null;
+    mockAuthStore.logout.mockResolvedValue(undefined);
   });
   describe('useAuth – clearError', () => {
     it('should expose clearError from the store', () => {
@@ -185,6 +187,52 @@ describe('Auth Hooks — Extended Coverage', () => {
       expect(disabled).toBe(true);
     });
   });
+
+  describe('usePasswordChange', () => {
+    it('submits the committed backend contract then clears the authenticated state', async () => {
+      mockApi.put.mockResolvedValueOnce({ data: { message: 'Password changed successfully' } });
+
+      const { result } = renderHook(() => usePasswordChange());
+
+      let changed: boolean | undefined;
+      await act(async () => {
+        changed = await result.current.changePassword({
+          currentPassword: 'CurrentPassword123!',
+          password: 'NewPassword123!',
+          passwordConfirmation: 'NewPassword123!',
+        });
+      });
+
+      expect(mockApi.put).toHaveBeenCalledWith('/api/v1/auth/password', {
+        current_password: 'CurrentPassword123!',
+        password: 'NewPassword123!',
+        password_confirmation: 'NewPassword123!',
+      });
+      expect(mockAuthStore.logout).toHaveBeenCalledTimes(1);
+      expect(changed).toBe(true);
+      expect(result.current.error).toBeNull();
+    });
+
+    it('keeps the authenticated state when the backend rejects the change', async () => {
+      mockApi.put.mockRejectedValueOnce(new Error('Current password is incorrect'));
+
+      const { result } = renderHook(() => usePasswordChange());
+
+      let changed: boolean | undefined;
+      await act(async () => {
+        changed = await result.current.changePassword({
+          currentPassword: 'WrongPassword123!',
+          password: 'NewPassword123!',
+          passwordConfirmation: 'NewPassword123!',
+        });
+      });
+
+      expect(mockAuthStore.logout).not.toHaveBeenCalled();
+      expect(changed).toBe(false);
+      expect(result.current.error).toBe('Current password is incorrect');
+    });
+  });
+
   describe('useSessions – getSessions', () => {
     it('should fetch sessions and populate state', async () => {
       const sessionsData = {

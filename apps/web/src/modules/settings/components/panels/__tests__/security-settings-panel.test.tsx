@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const { mockUser, twoFactor } = vi.hoisted(() => ({
+const { mockUser, passwordChange, twoFactor } = vi.hoisted(() => ({
   mockUser: {
     id: 'user-1',
     username: 'testuser',
@@ -23,6 +23,12 @@ const { mockUser, twoFactor } = vi.hoisted(() => ({
     disable: vi.fn(),
     clearError: vi.fn(),
   },
+  passwordChange: {
+    error: null as string | null,
+    isChanging: false,
+    clearError: vi.fn(),
+    changePassword: vi.fn(),
+  },
 }));
 
 vi.mock('@/modules/auth/store', () => ({
@@ -30,6 +36,7 @@ vi.mock('@/modules/auth/store', () => ({
 }));
 
 vi.mock('@/modules/auth/hooks', () => ({
+  usePasswordChange: vi.fn(() => passwordChange),
   useTwoFactor: vi.fn(() => twoFactor),
 }));
 
@@ -105,6 +112,8 @@ describe('SecuritySettingsPanel', () => {
     twoFactor.error = null;
     twoFactor.isLoadingStatus = false;
     twoFactor.isMutating = false;
+    passwordChange.error = null;
+    passwordChange.isChanging = false;
   });
 
   it('loads the authoritative two-factor status on mount', async () => {
@@ -121,6 +130,80 @@ describe('SecuritySettingsPanel', () => {
     expect(screen.getByRole('heading', { name: 'Security' })).toBeInTheDocument();
     expect(screen.getByText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Change' })).toBeInTheDocument();
+  });
+
+  it('submits the password contract only after confirmation matches', async () => {
+    passwordChange.changePassword.mockResolvedValueOnce(true);
+    renderPanel();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+    await screen.findByRole('dialog');
+
+    fireEvent.change(screen.getByLabelText('Current password'), {
+      target: { value: 'CurrentPassword123!' },
+    });
+    fireEvent.change(screen.getByLabelText('New password'), {
+      target: { value: 'NewPassword123!' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirm new password'), {
+      target: { value: 'NewPassword123!' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Change password' }));
+
+    await waitFor(() => {
+      expect(passwordChange.changePassword).toHaveBeenCalledWith({
+        currentPassword: 'CurrentPassword123!',
+        password: 'NewPassword123!',
+        passwordConfirmation: 'NewPassword123!',
+      });
+    });
+  });
+
+  it('does not submit mismatched new passwords', async () => {
+    renderPanel();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+    await screen.findByRole('dialog');
+
+    fireEvent.change(screen.getByLabelText('Current password'), {
+      target: { value: 'CurrentPassword123!' },
+    });
+    fireEvent.change(screen.getByLabelText('New password'), {
+      target: { value: 'NewPassword123!' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirm new password'), {
+      target: { value: 'DifferentPassword123!' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Change password' }));
+
+    expect(passwordChange.changePassword).not.toHaveBeenCalled();
+    expect(screen.getByText('New passwords do not match.')).toBeInTheDocument();
+  });
+
+  it('keeps the dialog open and presents a backend password error', async () => {
+    passwordChange.error = 'Current password is incorrect';
+    passwordChange.changePassword.mockResolvedValueOnce(false);
+    renderPanel();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+    await screen.findByRole('dialog');
+
+    fireEvent.change(screen.getByLabelText('Current password'), {
+      target: { value: 'WrongPassword123!' },
+    });
+    fireEvent.change(screen.getByLabelText('New password'), {
+      target: { value: 'NewPassword123!' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirm new password/), {
+      target: { value: 'NewPassword123!' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Change password' }));
+
+    await waitFor(() => {
+      expect(passwordChange.changePassword).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText('Current password is incorrect')).toBeInTheDocument();
   });
 
   it('renders enabled two-factor state from the server status, not cached user data', () => {

@@ -59,6 +59,56 @@ export function useAuth() {
     clearError,
   };
 }
+
+export interface PasswordChangeInput {
+  readonly currentPassword: string;
+  readonly password: string;
+  readonly passwordConfirmation: string;
+}
+
+/**
+ * Owns the web-side transition for the backend-authenticated password change.
+ * The backend verifies, hashes, and revokes sessions; successful changes clear
+ * this browser's authentication state through the established logout owner.
+ */
+export function usePasswordChange() {
+  const { logout } = useAuthStore();
+  const [error, setError] = useState<string | null>(null);
+  const [isChanging, setIsChanging] = useState(false);
+
+  const changePassword = useCallback(
+    async ({ currentPassword, password, passwordConfirmation }: PasswordChangeInput) => {
+      setIsChanging(true);
+      setError(null);
+
+      try {
+        await api.put('/api/v1/auth/password', {
+          current_password: currentPassword,
+          password,
+          password_confirmation: passwordConfirmation,
+        });
+
+        await logout();
+        return true;
+      } catch (error) {
+        authLogger.error('Password change failed', error);
+        setError(getErrorMessage(error));
+        return false;
+      } finally {
+        setIsChanging(false);
+      }
+    },
+    [logout]
+  );
+
+  return {
+    error,
+    isChanging,
+    clearError: () => setError(null),
+    changePassword,
+  };
+}
+
 export interface TwoFactorStatus {
   readonly enabled: boolean;
   readonly enabledAt: string | null;

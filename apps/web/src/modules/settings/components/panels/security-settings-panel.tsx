@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { QRCodeSVG } from 'qrcode.react';
-import { useTwoFactor, type TwoFactorSetup } from '@/modules/auth/hooks';
+import { usePasswordChange, useTwoFactor, type TwoFactorSetup } from '@/modules/auth/hooks';
 import { useAuthStore } from '@/modules/auth/store';
 import {
   Button,
@@ -32,6 +32,12 @@ type TwoFactorDialog = 'setup' | 'disable' | null;
 export function SecuritySettingsPanel() {
   const { user } = useAuthStore();
   const {
+    error: passwordChangeError,
+    isChanging: isChangingPassword,
+    clearError: clearPasswordChangeError,
+    changePassword,
+  } = usePasswordChange();
+  const {
     status: twoFactorStatus,
     error: twoFactorError,
     clearError: clearTwoFactorError,
@@ -46,6 +52,11 @@ export function SecuritySettingsPanel() {
   const [setup, setSetup] = useState<TwoFactorSetup | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [passwordFormError, setPasswordFormError] = useState<string | null>(null);
 
   useEffect(() => {
     void refreshStatus();
@@ -59,6 +70,44 @@ export function SecuritySettingsPanel() {
     setSetup(null);
     setVerificationCode('');
     setFormError(null);
+  };
+
+  const openPasswordDialog = () => {
+    clearPasswordChangeError();
+    setCurrentPassword('');
+    setNewPassword('');
+    setPasswordConfirmation('');
+    setPasswordFormError(null);
+    setIsPasswordDialogOpen(true);
+  };
+
+  const closePasswordDialog = () => {
+    if (isChangingPassword) return;
+
+    clearPasswordChangeError();
+    setPasswordFormError(null);
+    setIsPasswordDialogOpen(false);
+  };
+
+  const submitPasswordChange = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!currentPassword) {
+      setPasswordFormError('Enter your current password.');
+      return;
+    }
+
+    if (newPassword !== passwordConfirmation) {
+      setPasswordFormError('New passwords do not match.');
+      return;
+    }
+
+    setPasswordFormError(null);
+    await changePassword({
+      currentPassword,
+      password: newPassword,
+      passwordConfirmation,
+    });
   };
 
   const startTwoFactorAction = async () => {
@@ -148,11 +197,73 @@ export function SecuritySettingsPanel() {
             <h3 className="font-medium text-[var(--token-text-primary)]">Password</h3>
             <p className="mt-1 text-sm text-[var(--token-text-muted)]">Change your password</p>
           </div>
-          <button className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98]">
+          <button
+            type="button"
+            className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={openPasswordDialog}
+            disabled={isChangingPassword}
+          >
             Change
           </button>
         </div>
       </GlassCard>
+
+      <Dialog open={isPasswordDialogOpen} onOpenChange={closePasswordDialog}>
+        <DialogContent ariaLabel="Change password">
+          <DialogHeader>
+            <DialogTitle>Change password</DialogTitle>
+            <DialogDescription>
+              Confirm your current password, then choose a new one. You will be signed out after
+              the change is complete.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={submitPasswordChange} className="space-y-4">
+            <Input
+              id="current-password"
+              label="Current password"
+              type="password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+            <Input
+              id="new-password"
+              label="New password"
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+            <Input
+              id="confirm-new-password"
+              label="Confirm new password"
+              type="password"
+              value={passwordConfirmation}
+              onChange={(event) => setPasswordConfirmation(event.target.value)}
+              autoComplete="new-password"
+              error={passwordFormError ?? passwordChangeError ?? undefined}
+              required
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={closePasswordDialog}
+                disabled={isChangingPassword}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" isLoading={isChangingPassword}>
+                Change password
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* 2FA */}
       <GlassCard variant="default" className="aurora-social-panel mb-4 p-6">
