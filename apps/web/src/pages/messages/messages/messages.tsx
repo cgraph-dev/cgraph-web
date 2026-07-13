@@ -34,7 +34,7 @@ const logger = createLogger('Messages');
  */
 export default function Messages() {
   const { conversationId } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const {
@@ -57,8 +57,8 @@ export default function Messages() {
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatusMap>({});
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
   const [spaces, setSpaces] = useState<readonly ConversationSpace[]>([]);
+  const showArchived = searchParams.get('view') === 'archived';
 
   // Handle search result click - navigate to conversation and scroll to message
   function handleSearchResultClick(convId: string, messageId: string) {
@@ -201,6 +201,20 @@ export default function Messages() {
     }
   }
 
+  function handleShowArchivedChange(nextShowArchived: boolean) {
+    setSearchParams((currentSearchParams) => {
+      const nextSearchParams = new URLSearchParams(currentSearchParams);
+
+      if (nextShowArchived) {
+        nextSearchParams.set('view', 'archived');
+      } else {
+        nextSearchParams.delete('view');
+      }
+
+      return nextSearchParams;
+    });
+  }
+
   async function handlePinConversation(convId: string, pinned: boolean) {
     try {
       await pinConversation(convId, pinned);
@@ -294,7 +308,7 @@ export default function Messages() {
         spaces={spaces}
         onToggleSpace={handleToggleConversationSpace}
         showArchived={showArchived}
-        onShowArchivedChange={setShowArchived}
+        onShowArchivedChange={handleShowArchivedChange}
       />
 
       {/* Conversation Content */}
