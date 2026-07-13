@@ -20,6 +20,7 @@ describe('PrivacyToggle', () => {
   it('renders the label', () => {
     render(<PrivacyToggle {...defaultProps} />);
     expect(screen.getByText('Online Status')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Online Status' })).toBeInTheDocument();
   });
 
   it('renders the description', () => {

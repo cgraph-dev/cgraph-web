@@ -27,6 +27,7 @@ export function PrivacyToggle({
       <button
         type="button"
         role="switch"
+        aria-label={label}
         aria-checked={checked}
         onClick={onToggle}
         disabled={disabled}

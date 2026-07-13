@@ -62,30 +62,6 @@ vi.mock('@/shared/components/ui', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock('../../privacy-field-config', () => ({
-  PROFILE_FIELD_VISIBILITY_OPTIONS: [
-    { key: 'showEmail', label: 'Email' },
-    { key: 'showBio', label: 'Bio' },
-  ],
-}));
-
-vi.mock('../../privacy-toggle', () => ({
-  PrivacyToggle: ({
-    label,
-    settingKey,
-    value,
-  }: {
-    label: string;
-    settingKey: string;
-    value: boolean;
-  }) => (
-    <div data-testid={`privacy-toggle-${settingKey}`}>
-      <span>{label}</span>
-      <span>{value ? 'On' : 'Off'}</span>
-    </div>
-  ),
-}));
-
 vi.mock('../blocked-users-settings', () => ({
   BlockedUsersSettings: () => <div data-testid="blocked-users-settings">Blocked users</div>,
 }));
@@ -97,51 +73,21 @@ describe('PrivacySettingsPanel', () => {
     vi.clearAllMocks();
   });
 
-  it('renders DM permissions select', () => {
-    render(<PrivacySettingsPanel />);
-    expect(screen.getByText(/Direct Message/i)).toBeInTheDocument();
-  });
-
-  it('renders online status select', () => {
-    render(<PrivacySettingsPanel />);
-    expect(screen.getByText(/Online Status/i)).toBeInTheDocument();
-  });
-
-  it('renders group invites select', () => {
-    render(<PrivacySettingsPanel />);
-    expect(screen.getByText(/Who can add you to groups/i)).toBeInTheDocument();
-  });
-
-  it('renders profile visibility select', () => {
-    render(<PrivacySettingsPanel />);
-    expect(screen.getByText(/Profile Visibility/i)).toBeInTheDocument();
-  });
-
-  it('renders privacy toggles for friend requests and search', () => {
-    render(<PrivacySettingsPanel />);
-    expect(screen.getByText(/Allow Friend Requests/i)).toBeInTheDocument();
-    expect(screen.getByText(/Show in Search/i)).toBeInTheDocument();
-  });
-
-  it('renders the blocked users Privacy destination', () => {
+  it('renders only backed privacy controls', () => {
     render(<PrivacySettingsPanel />);
     expect(screen.getByTestId('blocked-users-settings')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Read Receipts' })).toBeInTheDocument();
+    expect(screen.queryByText(/Who can send you direct messages/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vanish Messages Default/i)).not.toBeInTheDocument();
   });
 
-  it('calls updatePrivacySettings on select change', async () => {
+  it('uses the settings owner for read receipt changes', async () => {
     render(<PrivacySettingsPanel />);
-    const selects = screen.getAllByRole('combobox');
-    if (selects.length > 0) {
-      fireEvent.change(selects[0]!, { target: { value: 'contacts' } });
-      await waitFor(() => {
-        expect(mockUpdatePrivacySettings).toHaveBeenCalledWith(
-          expect.objectContaining({
-            selectivePrivacy: expect.objectContaining({
-              messageRequests: expect.objectContaining({ mode: 'contacts' }),
-            }),
-          })
-        );
-      });
-    }
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Read Receipts' }));
+
+    await waitFor(() => {
+      expect(mockUpdatePrivacySettings).toHaveBeenCalledWith({ showReadReceipts: false });
+    });
   });
 });
