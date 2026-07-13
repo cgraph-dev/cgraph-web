@@ -57,7 +57,7 @@ export const navItems = [
     activeIcon: NewspaperIconSolid,
   },
   {
-    path: '/me',
+    path: '/me/settings',
     label: 'Settings',
     icon: Cog6ToothIcon,
     activeIcon: Cog6ToothIconSolid,

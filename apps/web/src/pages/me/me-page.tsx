@@ -95,11 +95,9 @@ const ME_NAV_SECTIONS: readonly MeNavSection[] = [
 export default function MePage(): React.ReactNode {
   const location = useLocation();
 
-  // Redirect bare /me to appearance so Settings gear opens the customization hub
-  // (themes, avatar borders, name plates). Previously bounced to /me/profile
-  // which itself redirects to /user/{id}, kicking users out of the hub entirely.
+  // Keep the bare legacy entry aligned with the primary Settings navigation target.
   if (location.pathname === '/me') {
-    return <Navigate to="/me/appearance/identity" replace />;
+    return <Navigate to="/me/settings" replace />;
   }
 
   return (
