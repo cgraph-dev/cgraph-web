@@ -43,6 +43,18 @@ export function PrivacySettingsPanel() {
     }
   }
 
+  async function toggleFriendRequests() {
+    try {
+      await updatePrivacySettings({
+        allowFriendRequests: !settings.privacy.allowFriendRequests,
+      });
+      toast.success('Friend requests updated');
+    } catch (error) {
+      logger.error('Failed to update friend request settings', error);
+      toast.error('Failed to update settings');
+    }
+  }
+
   return (
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} transition={tweens.standard}>
       <div className="mb-6 flex items-start gap-3">
@@ -57,13 +69,23 @@ export function PrivacySettingsPanel() {
             Privacy
           </h1>
           <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
-            Manage blocked people, read receipt visibility, and typing indicators.
+            Manage blocked people, friend requests, read receipt visibility, and typing indicators.
           </p>
         </div>
       </div>
 
       <div className="space-y-4">
         <BlockedUsersSettings />
+
+        <GlassCard variant="default" className="aurora-social-panel p-4">
+          <PrivacyToggle
+            label="Friend Requests"
+            description="Let people send you friend requests"
+            checked={settings.privacy.allowFriendRequests}
+            disabled={isSaving}
+            onToggle={() => void toggleFriendRequests()}
+          />
+        </GlassCard>
 
         <GlassCard variant="default" className="aurora-social-panel p-4">
           <PrivacyToggle

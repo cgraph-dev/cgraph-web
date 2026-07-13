@@ -77,6 +77,7 @@ describe('PrivacySettingsPanel', () => {
   it('renders only backed privacy controls', () => {
     render(<PrivacySettingsPanel />);
     expect(screen.getByTestId('blocked-users-settings')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Friend Requests' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Read Receipts' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Typing Indicators' })).toBeInTheDocument();
     expect(screen.queryByText(/Who can send you direct messages/i)).not.toBeInTheDocument();
@@ -90,6 +91,16 @@ describe('PrivacySettingsPanel', () => {
 
     await waitFor(() => {
       expect(mockUpdatePrivacySettings).toHaveBeenCalledWith({ showReadReceipts: false });
+    });
+  });
+
+  it('uses the settings owner for friend request changes', async () => {
+    render(<PrivacySettingsPanel />);
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Friend Requests' }));
+
+    await waitFor(() => {
+      expect(mockUpdatePrivacySettings).toHaveBeenCalledWith({ allowFriendRequests: false });
     });
   });
 
