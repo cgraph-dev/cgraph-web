@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   updateUser: vi.fn(),
   httpPost: vi.fn(),
   httpPut: vi.fn(),
+  updateSettingsCategory: vi.fn(),
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -25,6 +26,11 @@ vi.mock('@/modules/auth/store', () => ({
 }));
 
 vi.mock('@/lib/api-client', () => ({
+  apiClient: {
+    settings: {
+      updateCategory: mocks.updateSettingsCategory,
+    },
+  },
   http: {
     post: mocks.httpPost,
     put: mocks.httpPut,
@@ -42,6 +48,7 @@ import { useOnboarding } from '../useOnboarding';
 describe('useOnboarding', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.updateSettingsCategory.mockResolvedValue({ ok: true, data: {} });
   });
 
   it('marks onboarding skipped before leaving the route', async () => {
@@ -82,7 +89,7 @@ describe('useOnboarding', () => {
         avatar_url: null,
       },
     });
-    expect(mocks.httpPut).toHaveBeenNthCalledWith(2, '/api/v1/settings/notifications', {
+    expect(mocks.updateSettingsCategory).toHaveBeenCalledWith('notifications', {
       notify_messages: true,
       notify_mentions: true,
       notify_friend_requests: true,

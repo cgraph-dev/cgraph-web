@@ -616,21 +616,29 @@ const friendHandlers = [
 
 const settingsHandlers = [
   // Get user settings
-  http.get(`${API_BASE}/api/v1/users/me/settings`, () => {
+  http.get(`${API_BASE}/api/v1/settings`, () => {
     return HttpResponse.json({
       data: {
-        notifications: { email: true, push: true, desktop: true },
-        privacy: { showOnline: true, showLastSeen: true },
+        notifications: { email_enabled: true, push_enabled: true },
+        privacy: { online_status_visible: true, read_receipts_enabled: true },
         appearance: { theme: 'system', fontSize: 'medium' },
       },
     });
   }),
 
-  // Update user settings
-  http.patch(`${API_BASE}/api/v1/users/me/settings`, async ({ request }) => {
+  // Update all user settings
+  http.put(`${API_BASE}/api/v1/settings`, async ({ request }) => {
     const body = await request.json();
     return HttpResponse.json({ data: body });
   }),
+
+  // Update a server-defined settings section
+  http.put(`${API_BASE}/api/v1/settings/:section`, async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({ data: body });
+  }),
+
+  http.post(`${API_BASE}/api/v1/settings/reset`, () => HttpResponse.json({ data: {} })),
 ];
 
 // Onboarding Handlers

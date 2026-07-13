@@ -381,7 +381,7 @@ async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions =
       return;
     }
 
-    if (path === '/api/v1/users/me/settings') {
+    if (path === '/api/v1/settings' || path.startsWith('/api/v1/settings/')) {
       await fulfillJson(route, {});
       return;
     }

@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
-import { http } from '@/lib/api-client';
+import { apiClient, http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import type { CroppedAvatarPayload } from '@/components/avatar/avatar-upload-cropper';
 import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
@@ -79,11 +79,12 @@ export function useOnboarding() {
         });
 
         // Update notification preferences
-        await http.put('/api/v1/settings/notifications', {
+        const settingsResult = await apiClient.settings.updateCategory('notifications', {
           notify_messages: profileData.notifyMessages,
           notify_mentions: profileData.notifyMentions,
           notify_friend_requests: profileData.notifyFriendRequests,
         });
+        if (!settingsResult.ok) throw new Error(settingsResult.error.message);
 
         // Mark onboarding complete
         await http.post('/api/v1/me/onboarding/complete');

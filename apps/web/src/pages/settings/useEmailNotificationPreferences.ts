@@ -5,7 +5,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/modules/auth/store';
-import { http } from '@/lib/api-client';
+import { apiClient, http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import {
   DEFAULT_EMAIL_PREFERENCES,
@@ -61,13 +61,14 @@ export function useEmailNotificationPreferences() {
     try {
       setSaving(true);
 
-      await http.put('/api/v1/settings/notifications', {
+      const settingsResult = await apiClient.settings.updateCategory('notifications', {
         email_notifications: preferences.emailNotificationsEnabled,
         notify_messages: preferences.emailOnNewMessage,
         notify_friend_requests: preferences.emailOnFriendRequest,
         notify_mentions: preferences.emailOnMention,
         notify_forum_replies: preferences.emailOnReply,
       });
+      if (!settingsResult.ok) throw new Error(settingsResult.error.message);
       await http.put('/api/v1/me', {
         user: {
           email_notifications_enabled: preferences.emailNotificationsEnabled,

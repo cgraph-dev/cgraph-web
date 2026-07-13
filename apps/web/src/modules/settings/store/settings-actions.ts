@@ -6,8 +6,9 @@
  *
  */
 
-import { http } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import { getSystemReducedMotionPreference } from '@/lib/motion/reduced-motion';
+import type { ApiResult } from '@cgraph-dev/api-client';
 import { AxiosError } from 'axios';
 import type {
   UserSettings,
@@ -27,6 +28,35 @@ type Set = (
   partial: Partial<SettingsState> | ((state: SettingsState) => Partial<SettingsState>)
 ) => void;
 type Get = () => SettingsState;
+
+class SettingsRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SettingsRequestError';
+  }
+}
+
+function readSettingsResult<T>(result: ApiResult<T>): T {
+  if (result.ok) return result.data;
+
+  if (result.error.code === 'network_error') {
+    throw new Error(result.error.message);
+  }
+
+  throw new SettingsRequestError(result.error.message);
+}
+
+function getSettingsErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof SettingsRequestError) {
+    return error.message && error.message !== 'Request failed' ? error.message : fallback;
+  }
+
+  if (error instanceof AxiosError) {
+    return error.response?.data?.error?.message || fallback;
+  }
+
+  return fallback;
+}
 
 /**
  */
@@ -65,8 +95,7 @@ export function createSettingsActions(
     fetchSettings: async () => {
       set({ isLoading: true, error: null });
       try {
-        const response = await http.get('/api/v1/settings');
-        const data = response.data?.data || response.data;
+        const data = readSettingsResult(await apiClient.settings.getAll());
         const settings = mapSettingsFromApi(data);
         set({
           settings,
@@ -74,10 +103,7 @@ export function createSettingsActions(
           lastSyncedAt: Date.now(),
         });
       } catch (error) {
-        const message =
-          error instanceof AxiosError
-            ? error.response?.data?.error?.message || 'Failed to load settings'
-            : 'Failed to load settings';
+        const message = getSettingsErrorMessage(error, 'Failed to load settings');
         set({ isLoading: false, error: message });
         // Don't throw - use cached settings on failure
       }
@@ -97,11 +123,13 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put(
-          '/api/v1/settings/notifications',
-          mapSettingsToApi({
-            notifications: { ...previousSettings.notifications, ...notificationSettings },
-          })
+        readSettingsResult(
+          await apiClient.settings.updateCategory(
+            'notifications',
+            mapSettingsToApi({
+              notifications: { ...previousSettings.notifications, ...notificationSettings },
+            })
+          )
         );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
@@ -109,10 +137,7 @@ export function createSettingsActions(
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save notification settings'
-              : 'Failed to save notification settings',
+          error: getSettingsErrorMessage(error, 'Failed to save notification settings'),
         });
         throw error;
       }
@@ -131,21 +156,20 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put(
-          '/api/v1/settings/privacy',
-          mapSettingsToApi({
-            privacy: { ...previousSettings.privacy, ...privacySettings },
-          })
+        readSettingsResult(
+          await apiClient.settings.updateCategory(
+            'privacy',
+            mapSettingsToApi({
+              privacy: { ...previousSettings.privacy, ...privacySettings },
+            })
+          )
         );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save privacy settings'
-              : 'Failed to save privacy settings',
+          error: getSettingsErrorMessage(error, 'Failed to save privacy settings'),
         });
         throw error;
       }
@@ -164,21 +188,20 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put(
-          '/api/v1/settings/appearance',
-          mapSettingsToApi({
-            appearance: { ...previousSettings.appearance, ...appearanceSettings },
-          })
+        readSettingsResult(
+          await apiClient.settings.updateCategory(
+            'appearance',
+            mapSettingsToApi({
+              appearance: { ...previousSettings.appearance, ...appearanceSettings },
+            })
+          )
         );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save appearance settings'
-              : 'Failed to save appearance settings',
+          error: getSettingsErrorMessage(error, 'Failed to save appearance settings'),
         });
         throw error;
       }
@@ -197,21 +220,20 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put(
-          '/api/v1/settings/locale',
-          mapSettingsToApi({
-            locale: { ...previousSettings.locale, ...localeSettings },
-          })
+        readSettingsResult(
+          await apiClient.settings.updateCategory(
+            'locale',
+            mapSettingsToApi({
+              locale: { ...previousSettings.locale, ...localeSettings },
+            })
+          )
         );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save locale settings'
-              : 'Failed to save locale settings',
+          error: getSettingsErrorMessage(error, 'Failed to save locale settings'),
         });
         throw error;
       }
@@ -230,21 +252,19 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put(
-          '/api/v1/settings',
-          mapSettingsToApi({
-            keyboard: { ...previousSettings.keyboard, ...keyboardSettings },
-          })
+        readSettingsResult(
+          await apiClient.settings.updateAll(
+            mapSettingsToApi({
+              keyboard: { ...previousSettings.keyboard, ...keyboardSettings },
+            })
+          )
         );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save keyboard settings'
-              : 'Failed to save keyboard settings',
+          error: getSettingsErrorMessage(error, 'Failed to save keyboard settings'),
         });
         throw error;
       }
@@ -263,21 +283,19 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put(
-          '/api/v1/settings',
-          mapSettingsToApi({
-            media: { ...previousSettings.media, ...mediaSettings },
-          })
+        readSettingsResult(
+          await apiClient.settings.updateAll(
+            mapSettingsToApi({
+              media: { ...previousSettings.media, ...mediaSettings },
+            })
+          )
         );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save data & storage settings'
-              : 'Failed to save data & storage settings',
+          error: getSettingsErrorMessage(error, 'Failed to save data & storage settings'),
         });
         throw error;
       }
@@ -294,15 +312,14 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put('/api/v1/settings', mapSettingsToApi({ stickersEmoji: next }));
+        readSettingsResult(
+          await apiClient.settings.updateAll(mapSettingsToApi({ stickersEmoji: next }))
+        );
         set({ lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: prev,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save sticker settings'
-              : 'Failed to save sticker settings',
+          error: getSettingsErrorMessage(error, 'Failed to save sticker settings'),
         });
         throw error;
       }
@@ -322,15 +339,14 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put('/api/v1/settings', mapSettingsToApi({ stickersEmoji: next }));
+        readSettingsResult(
+          await apiClient.settings.updateAll(mapSettingsToApi({ stickersEmoji: next }))
+        );
         set({ lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: prev,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to remove sticker pack'
-              : 'Failed to remove sticker pack',
+          error: getSettingsErrorMessage(error, 'Failed to remove sticker pack'),
         });
         throw error;
       }
@@ -347,15 +363,12 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put('/api/v1/settings', mapSettingsToApi({ calls: next }));
+        readSettingsResult(await apiClient.settings.updateAll(mapSettingsToApi({ calls: next })));
         set({ lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: prev,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save call settings'
-              : 'Failed to save call settings',
+          error: getSettingsErrorMessage(error, 'Failed to save call settings'),
         });
         throw error;
       }
@@ -378,16 +391,13 @@ export function createSettingsActions(
       set({ isSaving: true, error: null, settings: mergedSettings });
 
       try {
-        await http.put('/api/v1/settings', mapSettingsToApi(mergedSettings));
+        readSettingsResult(await apiClient.settings.updateAll(mapSettingsToApi(mergedSettings)));
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to save settings'
-              : 'Failed to save settings',
+          error: getSettingsErrorMessage(error, 'Failed to save settings'),
         });
         throw error;
       }
@@ -399,16 +409,13 @@ export function createSettingsActions(
       set({ isSaving: true, error: null, settings: DEFAULT_SETTINGS });
 
       try {
-        await http.post('/api/v1/settings/reset');
+        readSettingsResult(await apiClient.settings.resetToDefaults());
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to reset settings'
-              : 'Failed to reset settings',
+          error: getSettingsErrorMessage(error, 'Failed to reset settings'),
         });
         throw error;
       }
@@ -429,22 +436,20 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put(
-          '/api/v1/settings',
-          mapSettingsToApi({
-            stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
-            calls: DEFAULT_CALLS_SETTINGS,
-          })
+        readSettingsResult(
+          await apiClient.settings.updateAll(
+            mapSettingsToApi({
+              stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
+              calls: DEFAULT_CALLS_SETTINGS,
+            })
+          )
         );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to reset preferences'
-              : 'Failed to reset preferences',
+          error: getSettingsErrorMessage(error, 'Failed to reset preferences'),
         });
         throw error;
       }
@@ -460,16 +465,15 @@ export function createSettingsActions(
       });
 
       try {
-        await http.put('/api/v1/settings', mapSettingsToApi({ media: DEFAULT_MEDIA_SETTINGS }));
+        readSettingsResult(
+          await apiClient.settings.updateAll(mapSettingsToApi({ media: DEFAULT_MEDIA_SETTINGS }))
+        );
         set({ isSaving: false, lastSyncedAt: Date.now() });
       } catch (error) {
         set({
           settings: previousSettings,
           isSaving: false,
-          error:
-            error instanceof AxiosError
-              ? error.response?.data?.error?.message || 'Failed to reset data & storage settings'
-              : 'Failed to reset data & storage settings',
+          error: getSettingsErrorMessage(error, 'Failed to reset data & storage settings'),
         });
         throw error;
       }

@@ -125,10 +125,8 @@ export function createUpdatePrivacySettings(set: Set) {
       if (data.showOnlineStatus !== undefined) payload.show_online_status = data.showOnlineStatus;
       if (data.showLastActive !== undefined) payload.show_last_active = data.showLastActive;
 
-      // Privacy lives on the unified SettingsController at
-      // /api/v1/settings/privacy (PUT). Backend expects the privacy
-      // payload at the top level, not nested under `privacy`.
-      await http.put('/api/v1/settings/privacy', payload);
+      const result = await apiClient.settings.updateCategory('privacy', payload);
+      if (!result.ok) throw new Error(result.error.message);
       set((state) => ({
         myProfile: state.myProfile
           ? {
