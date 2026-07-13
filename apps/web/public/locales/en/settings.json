@@ -72,11 +72,5 @@
     "to_confirm": "to confirm",
     "deleting": "Deleting...",
     "delete_my_account": "Delete My Account"
-  },
-  "data_export": {
-    "title": "Data Export",
-    "description": "Download a copy of your data",
-    "request_export": "Request Export",
-    "processing": "Processing..."
   }
 }
