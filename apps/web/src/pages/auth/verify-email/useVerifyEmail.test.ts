@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearRateLimitScopes } from '@/lib/api-rate-limit';
 
 const mocks = vi.hoisted(() => ({
   user: null as { email: string; emailVerifiedAt: string | null } | null,
@@ -28,6 +29,7 @@ import { useVerifyEmail } from './useVerifyEmail';
 
 describe('useVerifyEmail', () => {
   beforeEach(() => {
+    clearRateLimitScopes(['auth:verification-resend']);
     mocks.user = null;
     mocks.searchParams = new URLSearchParams();
     mocks.checkAuth.mockReset();
@@ -67,7 +69,7 @@ describe('useVerifyEmail', () => {
   it('locks resend to the signed-in account email', async () => {
     mocks.user = { email: 'member@example.com', emailVerifiedAt: null };
     mocks.searchParams = new URLSearchParams('email=other@example.com');
-    mocks.post.mockResolvedValue({ data: { message: 'Verification email sent' } });
+    mocks.post.mockResolvedValue({ data: { data: { retry_after: 300 } } });
 
     const { result } = renderHook(() => useVerifyEmail());
 
@@ -81,5 +83,32 @@ describe('useVerifyEmail', () => {
     expect(mocks.post).toHaveBeenCalledWith('/api/v1/auth/resend-verification', {
       email: 'member@example.com',
     });
+    expect(result.current.resendCooldownSeconds).toBeGreaterThan(0);
+
+    await act(async () => {
+      await result.current.handleResend();
+    });
+
+    expect(mocks.post).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the server retry window after an authenticated resend is rate limited', async () => {
+    mocks.user = { email: 'member@example.com', emailVerifiedAt: null };
+    mocks.post.mockRejectedValue({
+      response: {
+        status: 429,
+        headers: { 'retry-after': '120' },
+        data: { error: 'Please wait before requesting another verification email' },
+      },
+    });
+
+    const { result } = renderHook(() => useVerifyEmail());
+
+    await act(async () => {
+      await result.current.handleResend();
+    });
+
+    expect(result.current.resendCooldownSeconds).toBeGreaterThanOrEqual(119);
+    expect(result.current.resendError).toContain('Please wait');
   });
 });

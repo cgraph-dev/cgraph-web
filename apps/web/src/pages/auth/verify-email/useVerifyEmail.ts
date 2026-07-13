@@ -9,10 +9,12 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { http } from '@/lib/api-client';
 import { getErrorMessage } from '@/lib/api';
+import { getRateLimitRemainingMs, rememberRateLimit } from '@/lib/api-rate-limit';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
 
 const logger = createLogger('VerifyEmail');
+const VERIFICATION_RESEND_RATE_LIMIT_SCOPE = 'auth:verification-resend';
 
 export type VerificationState =
   | 'verifying'
@@ -48,6 +50,27 @@ function getResendErrorMessage(error: unknown): string {
   return message || 'Could not send a new verification email. Please try again.';
 }
 
+function getRetryAfterSeconds(response: unknown): number | null {
+  if (!(typeof response === 'object' && response !== null && 'data' in response)) {
+    return null;
+  }
+
+  const data = response.data;
+  if (!(typeof data === 'object' && data !== null && 'data' in data)) {
+    return null;
+  }
+
+  const payload = data.data;
+  if (!(typeof payload === 'object' && payload !== null && 'retry_after' in payload)) {
+    return null;
+  }
+
+  const retryAfter = payload.retry_after;
+  return typeof retryAfter === 'number' && Number.isFinite(retryAfter) && retryAfter > 0
+    ? Math.ceil(retryAfter)
+    : null;
+}
+
 /**
  */
 /**
@@ -63,6 +86,15 @@ export function useVerifyEmail() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendEmail, setResendEmail] = useState(searchParams.get('email') ?? user?.email ?? '');
   const [resendError, setResendError] = useState<string | null>(null);
+  const [resendCooldownUntil, setResendCooldownUntil] = useState(() => {
+    const remainingMs = getRateLimitRemainingMs(VERIFICATION_RESEND_RATE_LIMIT_SCOPE);
+    return remainingMs > 0 ? Date.now() + remainingMs : null;
+  });
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  const resendCooldownSeconds = resendCooldownUntil
+    ? Math.max(0, Math.ceil((resendCooldownUntil - currentTime) / 1000))
+    : 0;
 
   // Verify token on mount
   useEffect(() => {
@@ -107,8 +139,27 @@ export function useVerifyEmail() {
     }
   }, [user?.emailVerifiedAt]);
 
+  useEffect(() => {
+    if (!resendCooldownUntil) return undefined;
+
+    function updateCooldown() {
+      const now = Date.now();
+      setCurrentTime(now);
+
+      if (now >= resendCooldownUntil) {
+        setResendCooldownUntil(null);
+      }
+    }
+
+    updateCooldown();
+    const interval = window.setInterval(updateCooldown, 1000);
+    return () => window.clearInterval(interval);
+  }, [resendCooldownUntil]);
+
   // Resend verification email
   async function handleResend() {
+    if (resendCooldownSeconds > 0) return;
+
     const email = (user?.email ?? resendEmail).trim();
     if (!email) {
       setResendError('Enter the email address for this account.');
@@ -118,13 +169,26 @@ export function useVerifyEmail() {
     setIsResending(true);
     setResendError(null);
     try {
-      await http.post('/api/v1/auth/resend-verification', {
+      const response = await http.post('/api/v1/auth/resend-verification', {
         email,
       });
+
+      const retryAfterSeconds = getRetryAfterSeconds(response);
+      if (retryAfterSeconds !== null) {
+        setResendCooldownUntil(Date.now() + retryAfterSeconds * 1000);
+      }
+
       setResendSuccess(true);
     } catch (error: unknown) {
       logger.warn('Failed to resend verification email', error);
-      setResendError(getResendErrorMessage(error));
+      const rateLimitMessage = rememberRateLimit([VERIFICATION_RESEND_RATE_LIMIT_SCOPE], error);
+      const remainingMs = getRateLimitRemainingMs(VERIFICATION_RESEND_RATE_LIMIT_SCOPE);
+
+      if (remainingMs > 0) {
+        setResendCooldownUntil(Date.now() + remainingMs);
+      }
+
+      setResendError(rateLimitMessage ?? getResendErrorMessage(error));
     } finally {
       setIsResending(false);
     }
@@ -136,6 +200,7 @@ export function useVerifyEmail() {
     resendSuccess,
     resendEmail,
     resendError,
+    resendCooldownSeconds,
     isResendEmailEditable: !user,
     setResendEmail,
     handleResend,

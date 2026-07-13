@@ -18,6 +18,7 @@ interface StatusDisplayProps {
   resendSuccess: boolean;
   resendEmail: string;
   resendError: string | null;
+  resendCooldownSeconds: number;
   isResendEmailEditable: boolean;
   onResendEmailChange: (email: string) => void;
   onResend: () => void;
@@ -82,6 +83,12 @@ function SuccessView({ onNavigate }: { onNavigate: (path: string) => void }) {
   );
 }
 
+function formatResendCooldown(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
 function AlreadyVerifiedView({ onNavigate }: { onNavigate: (path: string) => void }) {
   return (
     <motion.div
@@ -128,6 +135,7 @@ function ExpiredView({
   resendSuccess,
   resendEmail,
   resendError,
+  resendCooldownSeconds,
   isResendEmailEditable,
   onResendEmailChange,
   onResend,
@@ -140,6 +148,7 @@ function ExpiredView({
   resendSuccess: boolean;
   resendEmail: string;
   resendError: string | null;
+  resendCooldownSeconds: number;
   isResendEmailEditable: boolean;
   onResendEmailChange: (email: string) => void;
   onResend: () => void;
@@ -198,6 +207,11 @@ function ExpiredView({
             <p className="mt-1 text-sm text-green-400/70">
               If an unverified CGraph account matches this address, use the newest link we send.
             </p>
+            {resendCooldownSeconds > 0 && (
+              <p className="mt-2 text-sm text-green-400/70" role="status" aria-live="polite">
+                Another verification request is available in {formatResendCooldown(resendCooldownSeconds)}.
+              </p>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -214,7 +228,7 @@ function ExpiredView({
               type="email"
               value={resendEmail}
               onChange={(event) => onResendEmailChange(event.target.value)}
-              disabled={isResending}
+              disabled={isResending || resendCooldownSeconds > 0}
               readOnly={!isResendEmailEditable}
               aria-readonly={!isResendEmailEditable}
               autoComplete="email"
@@ -222,9 +236,14 @@ function ExpiredView({
               placeholder="you@example.com"
             />
             {resendError && <p className="text-left text-sm text-red-300">{resendError}</p>}
+            {resendCooldownSeconds > 0 && (
+              <p className="text-left text-sm text-gray-400" role="status" aria-live="polite">
+                Another verification request is available in {formatResendCooldown(resendCooldownSeconds)}.
+              </p>
+            )}
             <button
               type="submit"
-              disabled={isResending}
+              disabled={isResending || resendCooldownSeconds > 0}
               className="shadow-primary-500/25 hover:shadow-primary-500/40 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 py-3 font-medium text-white shadow-lg transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isResending ? (
@@ -256,7 +275,9 @@ function ExpiredView({
                       d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                  Resend Verification Email
+                  {resendCooldownSeconds > 0
+                    ? `Resend available in ${formatResendCooldown(resendCooldownSeconds)}`
+                    : 'Resend Verification Email'}
                 </>
               )}
             </button>
@@ -322,6 +343,7 @@ export default function StatusDisplay({
   resendSuccess,
   resendEmail,
   resendError,
+  resendCooldownSeconds,
   isResendEmailEditable,
   onResendEmailChange,
   onResend,
@@ -344,6 +366,7 @@ export default function StatusDisplay({
           resendSuccess={resendSuccess}
           resendEmail={resendEmail}
           resendError={resendError}
+          resendCooldownSeconds={resendCooldownSeconds}
           isResendEmailEditable={isResendEmailEditable}
           onResendEmailChange={onResendEmailChange}
           onResend={onResend}
@@ -356,6 +379,7 @@ export default function StatusDisplay({
           resendSuccess={resendSuccess}
           resendEmail={resendEmail}
           resendError={resendError}
+          resendCooldownSeconds={resendCooldownSeconds}
           isResendEmailEditable={isResendEmailEditable}
           onResendEmailChange={onResendEmailChange}
           onResend={onResend}
