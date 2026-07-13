@@ -1,9 +1,8 @@
 /**
  * Data & Storage settings panel.
  *
- * Mirrors Telegram's `DataAndStorageController.swift` — the user can inspect
- * and clear local cache, choose per-network auto-download policies for media
- * groups, toggle bandwidth-saver mode, and reset everything to defaults.
+ * Lets the user inspect and clear CGraph's browser cache and choose the
+ * incoming media categories that can begin loading automatically.
  */
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -11,7 +10,11 @@ import { motion } from 'motion/react';
 import { CircleStackIcon, TrashIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { GlassCard, toast } from '@/shared/components/ui';
 import { useSettingsStore } from '@/modules/settings/store';
-import type { AutoDownloadPolicy, MediaSettings } from '@/modules/settings/store';
+import {
+  DEFAULT_MEDIA_SETTINGS,
+  type AutoDownloadPolicy,
+  type MediaSettings,
+} from '@/modules/settings/store';
 import { clearOfflineData } from '@/lib/offline/indexeddb-cache';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
@@ -34,7 +37,7 @@ interface CacheReport {
 }
 
 interface AutoDownloadGroup {
-  readonly key: 'autoDownloadPhotos' | 'autoDownloadVideos' | 'autoDownloadFiles';
+  readonly key: 'autoDownloadPhotos' | 'autoDownloadVideos';
   readonly label: string;
   readonly description: string;
 }
@@ -43,17 +46,12 @@ const AUTO_DOWNLOAD_GROUPS: readonly AutoDownloadGroup[] = [
   {
     key: 'autoDownloadPhotos',
     label: 'Photos',
-    description: 'Download photos automatically',
+    description: 'Load incoming photo attachments automatically',
   },
   {
     key: 'autoDownloadVideos',
     label: 'Videos',
-    description: 'Download videos automatically',
-  },
-  {
-    key: 'autoDownloadFiles',
-    label: 'Files',
-    description: 'Download other attachments automatically',
+    description: 'Load incoming video controls automatically',
   },
 ] as const;
 
@@ -196,10 +194,7 @@ function AutoDownloadRow(props: AutoDownloadRowProps): ReactNode {
   );
 }
 
-interface PendingChange {
-  readonly key: AutoDownloadGroup['key'];
-  readonly value: AutoDownloadPolicy;
-}
+type PendingChanges = Partial<Pick<MediaSettings, AutoDownloadGroup['key']>>;
 
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -207,8 +202,7 @@ const SAVE_DEBOUNCE_MS = 500;
  * Data & Storage settings panel.
  */
 export function DataStoragePanel(): ReactNode {
-  const { settings, updateMediaSettings, resetMediaSettings, isSaving, fetchSettings } =
-    useSettingsStore();
+  const { settings, updateMediaSettings, isSaving, fetchSettings } = useSettingsStore();
   const [cache, setCache] = useState<CacheReport>({ used: 0, quota: 0, hasEstimate: false });
   const [isClearing, setIsClearing] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -221,22 +215,21 @@ export function DataStoragePanel(): ReactNode {
 
   // Debounce per-group radio changes so rapid clicks coalesce into one PATCH,
   // mirroring the existing notification/privacy panel save cadence.
-  const [pending, setPending] = useState<PendingChange | null>(null);
+  const [pending, setPending] = useState<PendingChanges>({});
   useEffect(() => {
-    if (pending === null) return;
+    if (Object.keys(pending).length === 0) return;
     const handle = window.setTimeout(() => {
-      const patch: Partial<MediaSettings> = { [pending.key]: pending.value };
-      updateMediaSettings(patch).catch((error: unknown) => {
+      updateMediaSettings(pending).catch((error: unknown) => {
         logger.error('Failed to save auto-download policy', error);
         toast.error('Failed to save data & storage settings');
       });
-      setPending(null);
+      setPending({});
     }, SAVE_DEBOUNCE_MS);
     return () => window.clearTimeout(handle);
   }, [pending, updateMediaSettings]);
 
   function handleAutoDownloadChange(key: AutoDownloadGroup['key'], value: AutoDownloadPolicy): void {
-    setPending({ key, value });
+    setPending((current) => ({ ...current, [key]: value }));
   }
 
   async function handleClearCache(): Promise<void> {
@@ -258,22 +251,14 @@ export function DataStoragePanel(): ReactNode {
   async function handleResetMedia(): Promise<void> {
     setShowResetConfirm(false);
     try {
-      await resetMediaSettings();
+      await updateMediaSettings({
+        autoDownloadPhotos: DEFAULT_MEDIA_SETTINGS.autoDownloadPhotos,
+        autoDownloadVideos: DEFAULT_MEDIA_SETTINGS.autoDownloadVideos,
+      });
       toast.success('Data & storage settings reset');
     } catch (error) {
       logger.error('Failed to reset data & storage settings', error);
       toast.error('Failed to reset settings');
-    }
-  }
-
-  async function handleDataSaverToggle(): Promise<void> {
-    const next = !settings.media.dataSaverMode;
-    try {
-      await updateMediaSettings({ dataSaverMode: next });
-      toast.success(next ? 'Bandwidth-saver enabled' : 'Bandwidth-saver disabled');
-    } catch (error) {
-      logger.error('Failed to toggle bandwidth-saver', error);
-      toast.error('Failed to save data & storage settings');
     }
   }
 
@@ -294,7 +279,7 @@ export function DataStoragePanel(): ReactNode {
             Data & Storage
           </h1>
           <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
-            Control on-device caches and how media downloads on this network.
+            Control on-device caches and how incoming media loads.
           </p>
         </div>
       </div>
@@ -336,7 +321,8 @@ export function DataStoragePanel(): ReactNode {
               Auto-download media
             </h2>
             <p className="text-sm text-[var(--token-text-secondary)]">
-              Choose which networks may download incoming media automatically.
+              Choose when CGraph may start loading incoming photos and videos. Manual loading is
+              always available.
             </p>
           </div>
           <div className="space-y-5">
@@ -344,37 +330,15 @@ export function DataStoragePanel(): ReactNode {
               <AutoDownloadRow
                 key={group.key}
                 group={group}
-                value={settings.media[group.key]}
+                value={pending[group.key] ?? settings.media[group.key]}
                 disabled={isSaving}
                 onChange={(value) => handleAutoDownloadChange(group.key, value)}
               />
             ))}
           </div>
-        </GlassCard>
-
-        {/* Network usage / bandwidth-saver */}
-        <GlassCard variant="default" className="aurora-social-panel p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-[var(--token-text-primary)]">Bandwidth-saver mode</h3>
-              <p className="text-sm text-[var(--token-text-secondary)]">
-                Lower image quality and disable autoplay to use less data.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={settings.media.dataSaverMode}
-              onClick={handleDataSaverToggle}
-              disabled={isSaving}
-              data-checked={settings.media.dataSaverMode}
-              className={`aurora-social-toggle relative h-6 w-11 rounded-full ${
-                isSaving ? 'cursor-wait opacity-50' : ''
-              }`}
-            >
-              <span className="aurora-social-toggle-thumb absolute left-1 top-1 h-4 w-4 rounded-full" />
-            </button>
-          </div>
+          <p className="mt-4 text-xs text-[var(--token-text-secondary)]">
+            Wi-Fi only asks before loading when this browser cannot identify the active network.
+          </p>
         </GlassCard>
 
         {/* Reset */}
@@ -385,7 +349,7 @@ export function DataStoragePanel(): ReactNode {
                 Reset data & storage settings
               </h3>
               <p className="text-sm text-[var(--token-text-secondary)]">
-                Restore auto-download and bandwidth defaults.
+                Restore photo and video loading defaults.
               </p>
             </div>
             <button
@@ -414,7 +378,7 @@ export function DataStoragePanel(): ReactNode {
       {showResetConfirm && (
         <ConfirmDialog
           title="Reset data & storage?"
-          message="Auto-download policies and bandwidth-saver mode will return to their defaults."
+          message="Photo and video loading policies will return to their defaults."
           confirmLabel="Reset"
           onConfirm={handleResetMedia}
           onClose={() => setShowResetConfirm(false)}

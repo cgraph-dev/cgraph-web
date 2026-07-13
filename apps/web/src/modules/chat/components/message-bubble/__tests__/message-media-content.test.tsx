@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MessageMediaContent } from '../message-media-content';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
+import { DEFAULT_SETTINGS, useSettingsStore } from '@/modules/settings/store';
 
 const { mockNavigate, mockUnlockFile, mockToastError, mockToastSuccess } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -92,6 +93,18 @@ describe('MessageMediaContent', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+    Object.defineProperty(navigator, 'connection', { configurable: true, value: undefined });
+    useSettingsStore.setState({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        media: {
+          ...DEFAULT_SETTINGS.media,
+          autoDownloadPhotos: 'always',
+          autoDownloadVideos: 'always',
+        },
+      },
+    });
   });
 
   it('returns null for text messages', () => {
@@ -121,6 +134,93 @@ describe('MessageMediaContent', () => {
     const video = container.querySelector('video');
     expect(video).toBeInTheDocument();
     expect(video).toHaveAttribute('src', 'https://example.com/vid.mp4');
+    expect(video).toHaveAttribute('preload', 'metadata');
+  });
+
+  it('requires an explicit action when photos are set to never', () => {
+    useSettingsStore.setState((state) => ({
+      settings: {
+        ...state.settings,
+        media: { ...state.settings.media, autoDownloadPhotos: 'never' },
+      },
+    }));
+    const msg = {
+      ...baseMessage,
+      messageType: 'image' as const,
+      metadata: { url: 'https://example.com/private.jpg' },
+    };
+
+    render(<MessageMediaContent {...defaultProps} message={msg} />);
+    expect(screen.queryByAltText('Shared image')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load image' }));
+    expect(screen.getByAltText('Shared image')).toHaveAttribute(
+      'src',
+      'https://example.com/private.jpg'
+    );
+  });
+
+  it('requires an explicit action for Wi-Fi only when the browser cannot identify Wi-Fi', () => {
+    useSettingsStore.setState((state) => ({
+      settings: {
+        ...state.settings,
+        media: { ...state.settings.media, autoDownloadVideos: 'wifi' },
+      },
+    }));
+    const msg = {
+      ...baseMessage,
+      messageType: 'video' as const,
+      metadata: { url: 'https://example.com/wifi.mp4' },
+    };
+
+    render(<MessageMediaContent {...defaultProps} message={msg} />);
+    expect(screen.queryByRole('video')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Load video' })).toBeInTheDocument();
+  });
+
+  it('renders Wi-Fi only media when the browser exposes Wi-Fi', () => {
+    Object.defineProperty(navigator, 'connection', {
+      configurable: true,
+      value: {
+        type: 'wifi',
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      },
+    });
+    useSettingsStore.setState((state) => ({
+      settings: {
+        ...state.settings,
+        media: { ...state.settings.media, autoDownloadPhotos: 'wifi' },
+      },
+    }));
+    const msg = {
+      ...baseMessage,
+      messageType: 'image' as const,
+      metadata: { url: 'https://example.com/wifi.jpg' },
+    };
+
+    render(<MessageMediaContent {...defaultProps} message={msg} />);
+    expect(screen.getByAltText('Shared image')).toHaveAttribute('src', 'https://example.com/wifi.jpg');
+  });
+
+  it('keeps a sender\'s own media visible when automatic photos are disabled', () => {
+    useSettingsStore.setState((state) => ({
+      settings: {
+        ...state.settings,
+        media: { ...state.settings.media, autoDownloadPhotos: 'never' },
+      },
+    }));
+    const msg = {
+      ...baseMessage,
+      messageType: 'image' as const,
+      metadata: { url: 'https://example.com/outgoing.jpg' },
+    };
+
+    render(<MessageMediaContent {...defaultProps} message={msg} isOwn />);
+    expect(screen.getByAltText('Shared image')).toHaveAttribute(
+      'src',
+      'https://example.com/outgoing.jpg'
+    );
   });
 
   it('renders file link and FileMessage for file messages', () => {

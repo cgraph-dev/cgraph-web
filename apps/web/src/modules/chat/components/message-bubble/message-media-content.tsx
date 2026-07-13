@@ -21,6 +21,12 @@ import { apiClient } from '@/lib/api-client';
 import { LockClosedIcon, CurrencyDollarIcon } from '@heroicons/react/24/solid';
 import { useNavigate } from 'react-router-dom';
 import { getNodesActionFeedback } from '@/modules/nodes/utils/nodes-error-feedback';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { useSettingsStore } from '@/modules/settings/store';
+import {
+  shouldAutoDownloadIncomingMedia,
+  useBrowserMediaNetwork,
+} from '@/modules/chat/media/auto-download-policy';
 
 import { ContactCardMessage } from '@/modules/chat/components/contact-card-message';
 import type { ContactCardData } from '@cgraph-dev/shared-types';
@@ -264,6 +270,25 @@ function StickerMediaContent({ message }: Pick<MessageMediaContentProps, 'messag
   );
 }
 
+interface ManualMediaLoadProps {
+  readonly label: 'image' | 'video';
+  readonly onLoad: () => void;
+}
+
+/** Shows an explicit media action when the persisted policy blocks an automatic fetch. */
+function ManualMediaLoad({ label, onLoad }: ManualMediaLoadProps) {
+  return (
+    <button
+      type="button"
+      onClick={onLoad}
+      className="mb-2 inline-flex items-center gap-2 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-3 py-2 text-sm font-medium text-[var(--token-text-primary)] transition-colors hover:bg-[var(--token-bg-secondary)]"
+    >
+      <ArrowDownTrayIcon className="h-4 w-4" aria-hidden="true" />
+      Load {label}
+    </button>
+  );
+}
+
 /**
  * Render the media body of a message based on its type.
  */
@@ -273,24 +298,39 @@ export function MessageMediaContent({
   voiceVisualizerTheme,
 }: MessageMediaContentProps) {
   const metaUrl = metaString(message.metadata?.url);
+  const mediaSettings = useSettingsStore((state) => state.settings.media);
+  const network = useBrowserMediaNetwork();
+  const [manuallyLoaded, setManuallyLoaded] = useState(false);
+
+  const canAutoLoad = (policy: typeof mediaSettings.autoDownloadPhotos): boolean =>
+    isOwn || manuallyLoaded || shouldAutoDownloadIncomingMedia(policy, network);
 
   if (!isOwn && isFileLocked(message)) {
     return <LockedFileOverlay message={message} nodesPrice={getNodesPrice(message)} />;
   }
 
   if (message.messageType === 'image' && metaUrl !== undefined) {
+    if (!canAutoLoad(mediaSettings.autoDownloadPhotos)) {
+      return <ManualMediaLoad label="image" onLoad={() => setManuallyLoaded(true)} />;
+    }
+
     return (
       <img
         src={metaUrl}
         alt="Shared image"
         className="mb-2 max-w-xs cursor-pointer rounded-lg transition-opacity hover:opacity-90"
+        loading="lazy"
         onClick={() => window.open(metaUrl, '_blank')}
       />
     );
   }
 
   if (message.messageType === 'video' && metaUrl !== undefined) {
-    return <video src={metaUrl} controls className="mb-2 max-w-xs rounded-lg" />;
+    if (!canAutoLoad(mediaSettings.autoDownloadVideos)) {
+      return <ManualMediaLoad label="video" onLoad={() => setManuallyLoaded(true)} />;
+    }
+
+    return <video src={metaUrl} controls preload="metadata" className="mb-2 max-w-xs rounded-lg" />;
   }
 
   if (message.messageType === 'file' && metaUrl !== undefined) {

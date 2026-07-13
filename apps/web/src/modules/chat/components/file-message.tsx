@@ -123,7 +123,6 @@ export function FileMessage({ message, isOwnMessage, className = '' }: FileMessa
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
             <motion.button
               whileHover={{ opacity: 0.9 }}
-              whileTap={{ scale: 0.9 }}
               onClick={handleDownload}
               className="rounded-full bg-white/20 p-3 backdrop-blur-sm hover:bg-white/30"
             >
@@ -135,7 +134,7 @@ export function FileMessage({ message, isOwnMessage, className = '' }: FileMessa
         /* Generic File Card */
         <motion.div
           {...SCALE_IN}
-          className={`group relative flex min-w-[280px] max-w-sm items-center gap-3 rounded-xl border p-4 transition-all hover:scale-[1.02] ${
+          className={`group relative flex min-w-[280px] max-w-sm items-center gap-3 rounded-xl border p-4 transition-colors ${
             isOwnMessage
               ? 'border-primary-500/30 bg-primary-500/10 hover:border-primary-500/50'
               : 'border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] hover:border-[var(--token-card-border)]'
@@ -177,7 +176,6 @@ export function FileMessage({ message, isOwnMessage, className = '' }: FileMessa
           {/* Download Button */}
           <motion.button
             whileHover={{ opacity: 0.9 }}
-            whileTap={{ scale: 0.9 }}
             onClick={handleDownload}
             className={`flex-shrink-0 rounded-lg p-2 transition-colors ${
               isOwnMessage

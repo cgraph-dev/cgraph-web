@@ -211,6 +211,23 @@ describe('settingsStore (modules)', () => {
       expect(settings.appearance.fontSize).toBe('large');
     });
 
+    it('should map persisted media settings from the API response', async () => {
+      mockedApi.get.mockResolvedValue({
+        data: {
+          data: {
+            auto_download_photos: 'never',
+            auto_download_videos: 'always',
+          },
+        },
+      });
+
+      await useSettingsStore.getState().fetchSettings();
+
+      const { media } = useSettingsStore.getState().settings;
+      expect(media.autoDownloadPhotos).toBe('never');
+      expect(media.autoDownloadVideos).toBe('always');
+    });
+
     it('should update lastSyncedAt on success', async () => {
       mockedApi.get.mockResolvedValue({ data: { data: {} } });
 
@@ -416,6 +433,31 @@ describe('settingsStore (modules)', () => {
       ).rejects.toThrow();
 
       expect(useSettingsStore.getState().settings.keyboard.keyboardShortcutsEnabled).toBe(true);
+    });
+  });
+
+  describe('updateMediaSettings', () => {
+    it('persists and exposes a media policy update', async () => {
+      mockedApi.put.mockResolvedValue({});
+
+      await useSettingsStore.getState().updateMediaSettings({ autoDownloadPhotos: 'never' });
+
+      expect(useSettingsStore.getState().settings.media.autoDownloadPhotos).toBe('never');
+      expect(mockedApi.put).toHaveBeenCalledWith(
+        '/api/v1/settings',
+        expect.objectContaining({ auto_download_photos: 'never' })
+      );
+    });
+
+    it('rolls back a rejected media policy update', async () => {
+      mockedApi.put.mockRejectedValue(new Error('fail'));
+
+      await expect(
+        useSettingsStore.getState().updateMediaSettings({ autoDownloadVideos: 'always' })
+      ).rejects.toThrow();
+
+      expect(useSettingsStore.getState().settings.media.autoDownloadVideos).toBe('wifi');
+      expect(useSettingsStore.getState().error).toBe('Failed to save data & storage settings');
     });
   });
 

@@ -20,7 +20,6 @@ vi.mock('@/lib/offline/indexeddb-cache', () => ({
 
 vi.mock('@/modules/settings/store', () => {
   const updateMediaSettings = vi.fn().mockResolvedValue(undefined);
-  const resetMediaSettings = vi.fn().mockResolvedValue(undefined);
   const fetchSettings = vi.fn().mockResolvedValue(undefined);
   const useSettingsStore = vi.fn(() => ({
     settings: {
@@ -32,15 +31,19 @@ vi.mock('@/modules/settings/store', () => {
       },
     },
     updateMediaSettings,
-    resetMediaSettings,
     fetchSettings,
     isSaving: false,
   }));
   return {
     useSettingsStore,
+    DEFAULT_MEDIA_SETTINGS: {
+      autoDownloadPhotos: 'always',
+      autoDownloadVideos: 'wifi',
+      autoDownloadFiles: 'never',
+      dataSaverMode: false,
+    },
     // Re-export the inner spies so tests can assert on them.
     __mockUpdateMediaSettings: updateMediaSettings,
-    __mockResetMediaSettings: resetMediaSettings,
     __mockFetchSettings: fetchSettings,
   };
 });
@@ -61,7 +64,6 @@ const mockedClearOfflineData = vi.mocked(indexedDbCache.clearOfflineData);
 // module's public surface, but vi.mock has replaced the module entirely.
 interface MockedSettingsModule {
   readonly __mockUpdateMediaSettings: MockInstance;
-  readonly __mockResetMediaSettings: MockInstance;
   readonly __mockFetchSettings: MockInstance;
 }
 function getMockedStore(): MockedSettingsModule {
@@ -70,15 +72,13 @@ function getMockedStore(): MockedSettingsModule {
     typeof mod === 'object' &&
     mod !== null &&
     '__mockUpdateMediaSettings' in mod &&
-    '__mockResetMediaSettings' in mod &&
     '__mockFetchSettings' in mod
   ) {
     const record: Record<string, unknown> = mod;
     const u = record['__mockUpdateMediaSettings'];
-    const r = record['__mockResetMediaSettings'];
     const f = record['__mockFetchSettings'];
-    if (vi.isMockFunction(u) && vi.isMockFunction(r) && vi.isMockFunction(f)) {
-      return { __mockUpdateMediaSettings: u, __mockResetMediaSettings: r, __mockFetchSettings: f };
+    if (vi.isMockFunction(u) && vi.isMockFunction(f)) {
+      return { __mockUpdateMediaSettings: u, __mockFetchSettings: f };
     }
   }
   throw new Error('settings store mock missing test handles');
@@ -121,17 +121,17 @@ describe('DataStoragePanel', () => {
     expect(screen.getByText(/200\.0 MB/)).toBeInTheDocument();
   });
 
-  it('renders the three auto-download radio groups', async () => {
+  it('renders only the backed photo and video auto-download groups', async () => {
     renderPanel();
 
     await waitFor(() => {
       expect(screen.getByText('Photos')).toBeInTheDocument();
     });
     expect(screen.getByText('Videos')).toBeInTheDocument();
-    expect(screen.getByText('Files')).toBeInTheDocument();
+    expect(screen.queryByText('Files')).not.toBeInTheDocument();
 
     const groups = screen.getAllByRole('radiogroup');
-    expect(groups).toHaveLength(3);
+    expect(groups).toHaveLength(2);
   });
 
   it('confirmation dialog blocks immediate clear', async () => {
@@ -197,19 +197,26 @@ describe('DataStoragePanel', () => {
     });
   });
 
-  it('toggles bandwidth-saver mode', async () => {
+  it('resets only the visible media policies', async () => {
     renderPanel();
 
     await waitFor(() => {
-      expect(screen.getByText(/Bandwidth-saver mode/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Reset to defaults/i })).toBeInTheDocument();
     });
 
-    const toggle = screen.getByRole('switch');
-    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole('button', { name: /Reset to defaults/i }));
+    const dialog = screen.getByRole('dialog');
+    const buttons = dialog.querySelectorAll('button');
+    const resetButton = buttons[buttons.length - 1];
+    if (resetButton === undefined) throw new Error('reset button missing');
+    fireEvent.click(resetButton);
 
     const handles = getMockedStore();
     await waitFor(() => {
-      expect(handles.__mockUpdateMediaSettings).toHaveBeenCalledWith({ dataSaverMode: true });
+      expect(handles.__mockUpdateMediaSettings).toHaveBeenCalledWith({
+        autoDownloadPhotos: 'always',
+        autoDownloadVideos: 'wifi',
+      });
     });
   });
 });

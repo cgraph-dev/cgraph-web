@@ -120,4 +120,9 @@ describe('FileMessage', () => {
     expect(container.firstChild).toBeTruthy();
     expect((container.firstChild as HTMLElement).className).toContain('extra');
   });
+
+  it('keeps generic file cards stationary on hover', () => {
+    const { container } = render(<FileMessage message={makeMessage()} isOwnMessage={false} />);
+    expect(container.firstChild).not.toHaveClass('hover:scale-[1.02]');
+  });
 });

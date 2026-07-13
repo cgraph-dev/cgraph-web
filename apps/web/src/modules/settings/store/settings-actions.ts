@@ -18,7 +18,6 @@ import type {
 } from './settingsStore.types';
 import {
   DEFAULT_SETTINGS,
-  DEFAULT_MEDIA_SETTINGS,
   DEFAULT_STICKERS_EMOJI_SETTINGS,
   DEFAULT_CALLS_SETTINGS,
 } from './settingsStore.types';
@@ -84,7 +83,6 @@ export function createSettingsActions(
   | 'updateCallsSettings'
   | 'updateAllSettings'
   | 'resetToDefaults'
-  | 'resetMediaSettings'
   | 'resetAllPreferences'
   | 'clearError'
   | 'mergeSettingsFromSync'
@@ -450,30 +448,6 @@ export function createSettingsActions(
           settings: previousSettings,
           isSaving: false,
           error: getSettingsErrorMessage(error, 'Failed to reset preferences'),
-        });
-        throw error;
-      }
-    },
-
-    resetMediaSettings: async () => {
-      const previousSettings = get().settings;
-
-      set({
-        isSaving: true,
-        error: null,
-        settings: { ...previousSettings, media: DEFAULT_MEDIA_SETTINGS },
-      });
-
-      try {
-        readSettingsResult(
-          await apiClient.settings.updateAll(mapSettingsToApi({ media: DEFAULT_MEDIA_SETTINGS }))
-        );
-        set({ isSaving: false, lastSyncedAt: Date.now() });
-      } catch (error) {
-        set({
-          settings: previousSettings,
-          isSaving: false,
-          error: getSettingsErrorMessage(error, 'Failed to reset data & storage settings'),
         });
         throw error;
       }

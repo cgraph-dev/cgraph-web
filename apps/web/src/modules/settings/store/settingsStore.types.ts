@@ -75,7 +75,6 @@ export interface SettingsState {
   updateCallsSettings: (settings: Partial<CallsSettings>) => Promise<void>;
   updateAllSettings: (settings: Partial<UserSettings>) => Promise<void>;
   resetToDefaults: () => Promise<void>;
-  resetMediaSettings: () => Promise<void>;
   resetAllPreferences: () => Promise<void>;
   clearError: () => void;
 
