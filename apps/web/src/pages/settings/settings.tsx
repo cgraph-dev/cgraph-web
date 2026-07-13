@@ -10,7 +10,6 @@ import {
   ShieldCheckIcon,
   BellIcon,
   KeyIcon,
-  ArrowDownTrayIcon,
   TrashIcon,
   ComputerDesktopIcon,
   LanguageIcon,
@@ -30,7 +29,6 @@ import { AccountSettings } from '@/modules/settings/components/account-settings'
 import AppThemeSettings from '@/pages/settings/app-theme-settings';
 import { ConnectedAccounts } from '@/pages/settings/connected-accounts';
 import { default as DeleteAccount } from '@/pages/settings/delete-account';
-import { default as DataExport } from '@/pages/settings/data-export';
 import {
   SecuritySettingsPanel,
   NotificationSettingsPanel,
@@ -125,12 +123,6 @@ const settingsSections = [
     label: 'Advanced',
     icon: Cog6ToothIcon,
     description: 'Diagnostics, reset preferences',
-  },
-  {
-    id: 'data-export',
-    label: 'Data Export',
-    icon: ArrowDownTrayIcon,
-    description: 'Download your data (GDPR)',
   },
   {
     id: 'delete-account',
@@ -392,7 +384,6 @@ export default function Settings() {
                 {section === 'advanced' && <AdvancedSettingsPanel key="advanced" />}
                 {section === 'language' && <LanguageSettingsPanel key="language" />}
                 {section === 'sessions' && <SessionsSettingsPanel key="sessions" />}
-                {section === 'data-export' && <DataExport key="data-export" />}
                 {section === 'delete-account' && <DeleteAccount key="delete-account" />}
               </>
             )}

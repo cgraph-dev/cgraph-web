@@ -75,10 +75,6 @@ vi.mock('@/pages/settings/delete-account', () => ({
   default: () => <div>Delete account</div>,
 }));
 
-vi.mock('@/pages/settings/data-export', () => ({
-  default: () => <div>Data export</div>,
-}));
-
 vi.mock('@/modules/settings/components/panels', () => ({
   SecuritySettingsPanel: () => <div>Security settings</div>,
   NotificationSettingsPanel: () => <div>Notification settings</div>,
@@ -163,6 +159,17 @@ describe('Settings navigation', () => {
     renderSettingsRoute('/me/settings/legacy-theme-picker');
 
     expect(screen.getByTestId('settings-panel-account')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');
+    });
+  });
+
+  it('does not expose the retired data export route without a durable export lifecycle', async () => {
+    renderSettingsRoute('/me/settings/data-export');
+
+    expect(screen.getByTestId('settings-panel-account')).toBeInTheDocument();
+    expect(screen.queryByText('Data Export')).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');
