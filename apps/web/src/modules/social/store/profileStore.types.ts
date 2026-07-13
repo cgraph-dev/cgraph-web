@@ -150,6 +150,19 @@ export interface BlockedUser {
   reason?: string;
 }
 
+export interface FetchBlockedUsersOptions {
+  cursor?: string;
+  limit?: number;
+  append?: boolean;
+  includeTotal?: boolean;
+}
+
+export interface BlockedUsersPage {
+  endCursor: string | null;
+  hasNextPage: boolean;
+  totalCount: number | null;
+}
+
 // Profile update data
 export interface UpdateProfileData {
   displayName?: string;
@@ -210,7 +223,7 @@ export interface ProfileState {
   unequipBadge: (badgeId: string) => Promise<void>;
 
   // Block/ignore
-  fetchBlockedUsers: () => Promise<void>;
+  fetchBlockedUsers: (options?: FetchBlockedUsersOptions) => Promise<BlockedUsersPage>;
   blockUser: (userId: string, reason?: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   isUserBlocked: (userId: string) => boolean;

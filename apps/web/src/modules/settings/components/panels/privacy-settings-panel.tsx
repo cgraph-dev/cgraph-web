@@ -15,6 +15,7 @@ import { toast } from '@/shared/components/ui';
 import { GlassCard } from '@/shared/components/ui';
 import { PROFILE_FIELD_VISIBILITY_OPTIONS } from './privacy-field-config';
 import { PrivacyToggle } from './privacy-toggle';
+import { BlockedUsersSettings } from './blocked-users-settings';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
@@ -138,6 +139,8 @@ export function PrivacySettingsPanel() {
       </div>
 
       <div className="space-y-4">
+        <BlockedUsersSettings />
+
         <GlassCard variant="default" className="aurora-social-panel p-4">
           <h3 className="mb-2 font-medium text-[var(--token-text-primary)]">
             Who can send you direct messages

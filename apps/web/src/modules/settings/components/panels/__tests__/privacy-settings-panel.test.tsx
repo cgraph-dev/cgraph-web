@@ -86,6 +86,10 @@ vi.mock('../../privacy-toggle', () => ({
   ),
 }));
 
+vi.mock('../blocked-users-settings', () => ({
+  BlockedUsersSettings: () => <div data-testid="blocked-users-settings">Blocked users</div>,
+}));
+
 import { PrivacySettingsPanel } from '../privacy-settings-panel';
 
 describe('PrivacySettingsPanel', () => {
@@ -117,6 +121,11 @@ describe('PrivacySettingsPanel', () => {
     render(<PrivacySettingsPanel />);
     expect(screen.getByText(/Allow Friend Requests/i)).toBeInTheDocument();
     expect(screen.getByText(/Show in Search/i)).toBeInTheDocument();
+  });
+
+  it('renders the blocked users Privacy destination', () => {
+    render(<PrivacySettingsPanel />);
+    expect(screen.getByTestId('blocked-users-settings')).toBeInTheDocument();
   });
 
   it('calls updatePrivacySettings on select change', async () => {

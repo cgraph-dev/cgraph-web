@@ -12,6 +12,8 @@ export type {
   UserStars,
   ExtendedProfile,
   BlockedUser,
+  BlockedUsersPage,
+  FetchBlockedUsersOptions,
   UpdateProfileData,
   UpdateSignatureData,
   UpdatePrivacySettings,

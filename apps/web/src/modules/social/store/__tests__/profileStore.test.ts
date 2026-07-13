@@ -614,13 +614,18 @@ describe('Social profileStore', () => {
       const list = useProfileStore.getState().blockedUsers;
       expect(list).toHaveLength(1);
       expect(list[0]?.username).toBe('spammer');
-      expect(list[0]?.reason).toBe('Spam');
     });
 
     it('should call the correct endpoint', async () => {
       mockedApi.get.mockResolvedValue({ data: [] });
       await useProfileStore.getState().fetchBlockedUsers();
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked', {
+        params: {
+          cursor: undefined,
+          limit: 50,
+          include_total: undefined,
+        },
+      });
     });
 
     it('should stop loading on error', async () => {
@@ -659,7 +664,13 @@ describe('Social profileStore', () => {
     it('should refresh blocked list after blocking', async () => {
       mockedApi.post.mockResolvedValue({ data: {} });
       await useProfileStore.getState().blockUser('u-99');
-      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
+      expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked', {
+        params: {
+          cursor: undefined,
+          limit: 50,
+          include_total: true,
+        },
+      });
     });
 
     it('should set currentProfile.isBlocked when blocking viewed user', async () => {

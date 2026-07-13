@@ -26,7 +26,6 @@ vi.mock('@/lib/api-utils', () => ({
   isRecord: (v: unknown) => typeof v === 'object' && v !== null,
   asString: (v: unknown) => (typeof v === 'string' ? v : ''),
   asBool: (v: unknown, fallback = false) => (typeof v === 'boolean' ? v : fallback),
-  asOptionalString: (v: unknown) => (typeof v === 'string' ? v : undefined),
   asEnum: (v: unknown, valid: string[], fallback: string) =>
     valid.includes(typeof v === 'string' ? v : '') ? v : fallback,
 }));
@@ -91,34 +90,94 @@ beforeEach(() => {
 
 describe('createFetchBlockedUsers', () => {
   it('fetches and stores blocked users', async () => {
-    const { set } = createMockStore();
+    const { set, state } = createMockStore();
     const fetchBlockedUsers = createFetchBlockedUsers(set);
 
     mockedApi.get.mockResolvedValueOnce({
       data: {
-        blocked: [
+        data: [
           {
-            id: 'u-1',
-            username: 'baduser',
-            display_name: 'Bad User',
-            avatar_url: null,
+            id: 'block-1',
+            user: {
+              id: 'u-1',
+              username: 'baduser',
+              display_name: 'Bad User',
+              avatar_url: null,
+            },
             blocked_at: '2026-01-01T00:00:00Z',
-            reason: 'spam',
           },
         ],
+        page_info: {
+          has_next_page: true,
+          end_cursor: 'next-cursor',
+          total_count: 51,
+        },
       },
     });
 
+    const page = await fetchBlockedUsers({ includeTotal: true });
+
+    expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked', {
+      params: {
+        cursor: undefined,
+        limit: 50,
+        include_total: true,
+      },
+    });
+    expect(set).toHaveBeenCalledWith({ isLoadingBlocked: true });
+    expect(state().isLoadingBlocked).toBe(false);
+    expect(state().blockedUsers).toHaveLength(1);
+    expect(state().blockedUsers[0]!.id).toBe('u-1');
+    expect(page).toEqual({ endCursor: 'next-cursor', hasNextPage: true, totalCount: 51 });
+  });
+
+  it('appends a cursor page without duplicating earlier blocked users', async () => {
+    const { set, state } = createMockStore();
+    const fetchBlockedUsers = createFetchBlockedUsers(set);
+
+    mockedApi.get
+      .mockResolvedValueOnce({
+        data: {
+          data: [
+            {
+              id: 'block-1',
+              user: { id: 'u-1', username: 'first-user' },
+              blocked_at: '2026-01-01T00:00:00Z',
+            },
+          ],
+          page_info: { has_next_page: true, end_cursor: 'previous-cursor' },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: [
+            {
+              id: 'block-1-again',
+              user: { id: 'u-1', username: 'first-user' },
+              blocked_at: '2026-01-01T00:00:00Z',
+            },
+            {
+              id: 'block-2',
+              user: { id: 'u-2', username: 'next-user' },
+              blocked_at: '2026-01-02T00:00:00Z',
+            },
+          ],
+          page_info: { has_next_page: false, end_cursor: null },
+        },
+      });
+
     await fetchBlockedUsers();
 
-    expect(mockedApi.get).toHaveBeenCalledWith('/api/v1/friends/blocked');
-    expect(set).toHaveBeenCalledWith({ isLoadingBlocked: true });
-    // Last call should set blocked users and loading false
-    const lastCall = set.mock.calls[set.mock.calls.length - 1]![0] as Record<string, unknown>;
-    expect(lastCall.isLoadingBlocked).toBe(false);
-    expect(lastCall.blockedUsers).toHaveLength(1);
-    expect((lastCall.blockedUsers as Array<{ id: string }>)[0]!.id).toBe('u-1');
-    expect((lastCall.blockedUsers as Array<{ reason: string }>)[0]!.reason).toBe('spam');
+    await fetchBlockedUsers({ cursor: 'previous-cursor', append: true, limit: 50 });
+
+    expect(mockedApi.get).toHaveBeenLastCalledWith('/api/v1/friends/blocked', {
+      params: {
+        cursor: 'previous-cursor',
+        limit: 50,
+        include_total: undefined,
+      },
+    });
+    expect(state().blockedUsers.map((user) => user.id)).toEqual(['u-1', 'u-2']);
   });
 
   it('sets isLoadingBlocked false on error and rethrows', async () => {

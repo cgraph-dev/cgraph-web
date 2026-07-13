@@ -1,40 +1,77 @@
 /**
  * Profile blocked users and media store actions.
  */
-import { http } from '@/lib/api-client';
-import { ensureArray, isRecord, asString, asBool, asOptionalString, asEnum } from '@/lib/api-utils';
+import { apiClient, http } from '@/lib/api-client';
+import { ensureArray, isRecord, asString, asBool, asEnum } from '@/lib/api-utils';
 import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
 import { createLogger } from '@/lib/logger';
+import type { BlockedUser as ApiBlockedUser } from '@cgraph-dev/api-client';
 import type { StoreApi } from 'zustand';
 import { removeBlockedUserFromFriendCaches } from './friendStore.sync';
-import type { ProfileField, ProfileState } from './profileStore.types';
+import type {
+  BlockedUser,
+  BlockedUsersPage,
+  FetchBlockedUsersOptions,
+  ProfileField,
+  ProfileState,
+} from './profileStore.types';
 
 const logger = createLogger('profileStore');
 
 type Set = StoreApi<ProfileState>['setState'];
 type Get = () => ProfileState;
 
+const DEFAULT_BLOCKED_USER_PAGE_SIZE = 50;
+
+function toBlockedUser(entry: ApiBlockedUser): BlockedUser {
+  const user = entry.user;
+
+  return {
+    id: user?.id ?? entry.blocked_user_id ?? entry.id,
+    username: user?.username ?? entry.username ?? '',
+    displayName: user?.display_name ?? entry.display_name ?? null,
+    avatarUrl: user?.avatar_url ?? entry.avatar_url ?? null,
+    blockedAt: entry.blocked_at ?? entry.created_at ?? '',
+  };
+}
+
+function mergeBlockedUsers(current: BlockedUser[], next: BlockedUser[]): BlockedUser[] {
+  const existingIds = new Set(current.map((user) => user.id));
+  return current.concat(next.filter((user) => !existingIds.has(user.id)));
+}
+
+function blockedUsersError(result: { error: { message: string } }): Error {
+  return new Error(result.error.message || 'Failed to update blocked users');
+}
+
 /** Fetch the list of blocked users. */
 export function createFetchBlockedUsers(set: Set) {
-  return async () => {
+  return async (options: FetchBlockedUsersOptions = {}): Promise<BlockedUsersPage> => {
     set({ isLoadingBlocked: true });
+
     try {
-      const response = await http.get('/api/v1/friends/blocked');
-      const blockedUsers = ensureArray(response.data, 'blocked')
-        .filter(isRecord)
-        .map((entry) => {
-          const user = isRecord(entry.user) ? entry.user : entry;
-          return {
-            id: asString(user.id),
-            username: asString(user.username),
-            displayName: asString(user.display_name) || null,
-            avatarUrl: asString(user.avatar_url) || null,
-            blockedAt: asString(entry.blocked_at),
-            reason: asOptionalString(entry.reason),
-          };
-        });
-      set({ blockedUsers, isLoadingBlocked: false });
+      const result = await apiClient.friends.getBlockedUsers({
+        cursor: options.cursor,
+        limit: options.limit ?? DEFAULT_BLOCKED_USER_PAGE_SIZE,
+        include_total: options.includeTotal,
+      });
+
+      if (!result.ok) throw blockedUsersError(result);
+
+      const blockedUsers = result.data.map(toBlockedUser);
+      set((state) => ({
+        blockedUsers: options.append
+          ? mergeBlockedUsers(state.blockedUsers, blockedUsers)
+          : blockedUsers,
+        isLoadingBlocked: false,
+      }));
+
+      return {
+        endCursor: result.pageInfo?.end_cursor ?? null,
+        hasNextPage: result.pageInfo?.has_next_page ?? false,
+        totalCount: result.pageInfo?.total_count ?? null,
+      };
     } catch (error) {
       logger.error('Failed to fetch blocked users:', error);
       set({ isLoadingBlocked: false });
@@ -47,11 +84,11 @@ export function createFetchBlockedUsers(set: Set) {
 export function createBlockUser(set: Set, get: Get) {
   return async (userId: string, reason?: string) => {
     try {
-      await http.post(`/api/v1/friends/${userId}/block`, {
-        reason,
-      });
+      const result = await apiClient.friends.blockUser(userId, reason);
+      if (!result.ok) throw blockedUsersError(result);
+
       // Refresh blocked list
-      await get().fetchBlockedUsers();
+      await get().fetchBlockedUsers({ includeTotal: true });
       // Update current profile if viewing blocked user
       const current = get().currentProfile;
       if (current?.id === userId) {
@@ -78,7 +115,9 @@ export function createBlockUser(set: Set, get: Get) {
 export function createUnblockUser(set: Set, get: Get) {
   return async (userId: string) => {
     try {
-      await http.delete(`/api/v1/friends/${userId}/block`);
+      const result = await apiClient.friends.unblockUser(userId);
+      if (!result.ok) throw blockedUsersError(result);
+
       set((state) => ({
         blockedUsers: state.blockedUsers.filter((u) => u.id !== userId),
       }));
