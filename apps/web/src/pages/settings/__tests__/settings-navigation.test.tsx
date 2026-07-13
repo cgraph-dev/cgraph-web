@@ -87,6 +87,7 @@ vi.mock('@/modules/settings/components/panels', () => ({
   PrivacySettingsPanel: () => <div>Privacy settings</div>,
   DndSchedulePanel: () => <div>DND schedule</div>,
   DataStoragePanel: () => <div>Data storage</div>,
+  ChatSettingsPanel: () => <div data-testid="settings-panel-chats">Chat settings</div>,
 }));
 
 vi.mock('@/modules/settings/components/panels/advanced-settings-panel', () => ({
@@ -166,5 +167,18 @@ describe('Settings navigation', () => {
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');
     });
+  });
+
+  it('opens the global Chats settings panel from settings navigation', async () => {
+    renderSettingsRoute('/me/settings');
+    const user = userEvent.setup();
+
+    const chatsButton = screen.getByText('Themes, wallpaper, Spaces').closest('button');
+    expect(chatsButton).toBeTruthy();
+
+    await user.click(chatsButton!);
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/chats');
+    expect(screen.getByTestId('settings-panel-chats')).toBeInTheDocument();
   });
 });

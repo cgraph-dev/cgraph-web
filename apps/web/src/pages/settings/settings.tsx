@@ -19,6 +19,7 @@ import {
   FaceSmileIcon,
   PhoneIcon,
   ArrowPathIcon,
+  ChatBubbleLeftRightIcon,
   LinkIcon,
   PaintBrushIcon,
 } from '@heroicons/react/24/outline';
@@ -38,6 +39,7 @@ import {
   PrivacySettingsPanel,
   DndSchedulePanel,
   DataStoragePanel,
+  ChatSettingsPanel,
 } from '@/modules/settings/components/panels';
 import { AdvancedSettingsPanel } from '@/modules/settings/components/panels/advanced-settings-panel';
 import { StickersEmojiSettingsPanel } from '@/modules/settings/components/panels/stickers-emoji-settings-panel';
@@ -62,6 +64,12 @@ const settingsSections = [
     label: 'Appearance',
     icon: PaintBrushIcon,
     description: 'App theme and interface style',
+  },
+  {
+    id: 'chats',
+    label: 'Chats',
+    icon: ChatBubbleLeftRightIcon,
+    description: 'Themes, wallpaper, Spaces',
   },
   {
     id: 'connected-accounts',
@@ -362,6 +370,7 @@ export default function Settings() {
               <>
                 {section === 'account' && <AccountSettings key="account" />}
                 {section === 'appearance' && <AppThemeSettings key="appearance" />}
+                {section === 'chats' && <ChatSettingsPanel key="chats" />}
                 {section === 'connected-accounts' && (
                   <ConnectedAccounts key="connected-accounts" />
                 )}

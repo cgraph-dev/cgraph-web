@@ -15,3 +15,4 @@ export { NotificationProfilesMenu } from './notification-profiles-menu';
 export { RedirectToCustomize } from './redirect-to-customize';
 export { ManageSubscriptionPanel } from './manage-subscription-panel';
 export { DataStoragePanel } from './data-storage-panel';
+export { ChatSettingsPanel } from './chat-settings-panel';
