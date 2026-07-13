@@ -132,6 +132,20 @@ const settingsSections = [
   },
 ];
 
+const settingsSectionIds = new Set(settingsSections.map(({ id }) => id));
+
+function getSettingsSection(routeSection: string | undefined, detail: string | undefined): string {
+  if (!routeSection) return 'account';
+
+  const section = detail ? `${routeSection}/${detail}` : routeSection;
+
+  if (settingsSectionIds.has(section)) return section;
+  if (section === 'dnd-schedule' || section === 'notification-profiles') return section;
+  if (section.startsWith('notification-profiles/')) return section;
+
+  return 'account';
+}
+
 function SettingsBootstrapGate({
   hasError,
   isLoading,
@@ -186,8 +200,10 @@ function SettingsBootstrapGate({
  */
 export default function Settings() {
   const navigate = useNavigate();
-  const { section: routeSection = 'account', detail } = useParams();
-  const section = detail ? `${routeSection}/${detail}` : routeSection;
+  const { section: routeSection, detail } = useParams();
+  const section = getSettingsSection(routeSection, detail);
+  const requestedSection = detail ? `${routeSection}/${detail}` : routeSection;
+  const shouldRecoverRoute = Boolean(requestedSection && requestedSection !== section);
   const [searchQuery, setSearchQuery] = useState('');
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const userId = useAuthStore((state) => state.user?.id);
@@ -202,6 +218,12 @@ export default function Settings() {
       void bootstrapPreferences({ userId });
     }
   }, [bootstrapPreferences, isAuthenticated, userId]);
+
+  useEffect(() => {
+    if (shouldRecoverRoute) {
+      navigate('/me/settings/account', { replace: true });
+    }
+  }, [navigate, shouldRecoverRoute]);
 
   const preferencesReady = isPreferenceBootstrapReady({
     isAuthenticated,

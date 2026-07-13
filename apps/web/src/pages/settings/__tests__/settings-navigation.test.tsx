@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes, PropsWithChildren } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import Settings from '../settings';
@@ -142,16 +143,28 @@ function renderSettingsRoute(initialPath: string) {
 }
 
 describe('Settings navigation', () => {
-  it('opens app appearance settings from the base settings route', () => {
+  it('opens app appearance settings from the base settings route by keyboard', async () => {
     renderSettingsRoute('/me/settings');
+    const user = userEvent.setup();
 
     const appearanceButton = screen.getByText('App theme and interface style').closest('button');
     expect(appearanceButton).toBeTruthy();
 
-    fireEvent.click(appearanceButton!);
+    appearanceButton!.focus();
+    await user.keyboard('{Enter}');
 
     expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/appearance');
     expect(screen.getByTestId('settings-panel-app-theme')).toBeInTheDocument();
     expect(screen.queryByText('Profile cosmetics page')).not.toBeInTheDocument();
+  });
+
+  it('recovers an invalid settings section to the account panel', async () => {
+    renderSettingsRoute('/me/settings/legacy-theme-picker');
+
+    expect(screen.getByTestId('settings-panel-account')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');
+    });
   });
 });
