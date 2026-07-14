@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { useNodeWallet, useNodeTransactions } from '@/modules/nodes/hooks/useNodes';
 import { TransactionRow } from '@/modules/nodes/components/transaction-row';
 import { NodesErrorState } from '@/modules/nodes/components/nodes-error-state';
-import { resetApiCircuitBreaker } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { TransactionType } from '@/modules/nodes/types';
 
@@ -55,7 +54,6 @@ export function NodesWalletPage(): React.ReactElement {
           title="Wallet unavailable"
           error={walletError}
           onRetry={() => {
-            resetApiCircuitBreaker();
             void refetchWallet();
           }}
         />
@@ -133,7 +131,6 @@ export function NodesWalletPage(): React.ReactElement {
               title="Transaction history unavailable"
               error={transactionsError}
               onRetry={() => {
-                resetApiCircuitBreaker();
                 void refetchTransactions();
               }}
             />

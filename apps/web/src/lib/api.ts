@@ -1,7 +1,7 @@
 /**
  * API client configuration and base utilities.
  */
-import { createHttpClient, extractApiError, CircuitBreaker, CircuitOpenError } from '@cgraph-dev/utils';
+import { createHttpClient, extractApiError } from '@cgraph-dev/utils';
 import {
   getAccessToken,
   getRefreshToken,
@@ -142,55 +142,18 @@ export function getErrorMessage(error: unknown): string {
   return info.message;
 }
 
-// Circuit Breaker — fail-fast when backend is unhealthy
-
-/**
- * Shared circuit breaker instance for the API client.
- * Opens after 5 consecutive failures, resets after 30s.
- * Prevents thundering-herd on a downed backend.
- */
-const apiCircuitBreaker = new CircuitBreaker({
-  failureThreshold: 5,
-  successThreshold: 2,
-  resetTimeout: 30_000,
+// Keep API rate-limit cooldowns scoped to rate-limited reads. Backend and
+// provider failures must remain isolated so an auxiliary endpoint cannot block
+// a direct-message write.
+api.interceptors.response.use(undefined, (error) => {
+  const rateLimitMessage = rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], error);
+  if (rateLimitMessage) {
+    logger.warn('API rate limited:', rateLimitMessage);
+  }
+  return Promise.reject(error);
 });
 
-/** Reset the shared API circuit after an explicit user retry action. */
-export function resetApiCircuitBreaker(): void {
-  apiCircuitBreaker.reset();
-}
-
-// Axios response interceptor — feed circuit breaker
-api.interceptors.response.use(
-  (response) => {
-    apiCircuitBreaker.recordSuccess();
-    return response;
-  },
-  (error) => {
-    const rateLimitMessage = rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], error);
-    if (rateLimitMessage) {
-      logger.warn('API rate limited:', rateLimitMessage);
-    }
-
-    // Only trip breaker on server errors (5xx) or network failures
-    const status = error?.response?.status;
-    if (!status || status >= 500) {
-      apiCircuitBreaker.recordFailure();
-    }
-    return Promise.reject(error);
-  }
-);
-
-// Axios request interceptor — reject early if circuit is open
 api.interceptors.request.use((config) => {
-  if (!apiCircuitBreaker.isAllowed()) {
-    const err = new CircuitOpenError(
-      'API circuit breaker is open — backend appears unhealthy',
-      apiCircuitBreaker.getStats()
-    );
-    return Promise.reject(err);
-  }
-
   const method = (config.method ?? 'get').toLowerCase();
   if (RATE_LIMITED_READ_METHODS.has(method)) {
     const remainingMs = getRateLimitRemainingMs(USER_API_RATE_LIMIT_SCOPE);

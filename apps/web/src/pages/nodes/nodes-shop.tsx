@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { useNodeWallet, useNodeBundles, useCreateCheckout } from '@/modules/nodes/hooks/useNodes';
 import { BundleCard } from '@/modules/nodes/components/bundle-card';
 import { NodesErrorState } from '@/modules/nodes/components/nodes-error-state';
-import { resetApiCircuitBreaker } from '@/lib/api';
 
 /** Description. */
 /** Nodes Shop Page component. */
@@ -64,7 +63,6 @@ export function NodesShopPage(): React.ReactElement {
           error={walletError}
           className="py-3"
           onRetry={() => {
-            resetApiCircuitBreaker();
             void refetchWallet();
           }}
         />
@@ -83,7 +81,6 @@ export function NodesShopPage(): React.ReactElement {
           title="Shop unavailable"
           error={bundlesError}
           onRetry={() => {
-            resetApiCircuitBreaker();
             void refetchBundles();
           }}
         />
