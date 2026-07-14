@@ -41,15 +41,16 @@ export function AttachmentMenu({
 }: AttachmentMenuProps) {
   return (
     <div className="relative">
-      <motion.button
-        whileTap={{ scale: 0.9 }}
+      <button
+        type="button"
         onClick={() => onToggle('file')}
-        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white"
+        className="flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+        aria-pressed={attachmentMode === 'file'}
         aria-label="Attach file"
         title="Attach file"
       >
-        <PlusCircleIcon className="h-6 w-6" />
-      </motion.button>
+        <PlusCircleIcon className="h-5 w-5" />
+      </button>
 
       <AnimatePresence>
         {attachmentMode === 'file' && (
@@ -57,39 +58,41 @@ export function AttachmentMenu({
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-full left-0 mb-2 rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] p-2 shadow-xl"
+            role="menu"
+            aria-label="Attachment options"
+            className="absolute bottom-full left-0 mb-2 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] p-2 shadow-xl"
           >
             <div className="flex gap-2">
-              <motion.button
-                whileHover={{ opacity: 0.9 }}
-                whileTap={{ scale: 0.9 }}
+              <button
+                type="button"
+                role="menuitem"
                 onClick={onFileSelect}
-                className="rounded-xl bg-blue-500/20 p-3 text-blue-400 hover:bg-blue-500/30"
+                className="flex h-10 w-10 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
                 aria-label="Attach photo or video"
                 title="Photo or video"
               >
-                <PhotoIcon className="h-6 w-6" />
-              </motion.button>
-              <motion.button
-                whileHover={{ opacity: 0.9 }}
-                whileTap={{ scale: 0.9 }}
+                <PhotoIcon className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                role="menuitem"
                 onClick={onFileSelect}
-                className="rounded-xl bg-green-500/20 p-3 text-green-400 hover:bg-green-500/30"
+                className="flex h-10 w-10 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
                 aria-label="Attach document"
                 title="Document"
               >
-                <DocumentIcon className="h-6 w-6" />
-              </motion.button>
-              <motion.button
-                whileHover={{ opacity: 0.9 }}
-                whileTap={{ scale: 0.9 }}
+                <DocumentIcon className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                role="menuitem"
                 onClick={() => onToggle('gif')}
-                className="bg-purple-500/20 hover:bg-purple-500/30 rounded-xl p-3 text-purple-400"
+                className="flex h-10 w-10 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
                 aria-label="Open GIF picker"
                 title="GIF"
               >
-                <GifIcon className="h-6 w-6" />
-              </motion.button>
+                <GifIcon className="h-5 w-5" />
+              </button>
             </div>
 
             {/* Per-file Node pricing (visible when a file is attached) */}

@@ -26,6 +26,18 @@ vi.mock('@/shared/components/connection-status', () => ({
   ConnectionStatus: () => <div data-testid="connection-status" />,
 }));
 
+vi.mock('@/components/theme/themed-avatar', () => ({
+  ThemedAvatar: ({ src, alt, avatarBorderId }: Record<string, unknown>) => (
+    <div
+      data-testid="conversation-avatar"
+      data-src={String(src ?? '')}
+      data-border={String(avatarBorderId ?? '')}
+    >
+      {String(alt)}
+    </div>
+  ),
+}));
+
 vi.mock('@/modules/settings/components/customize/panels/chat-color-picker', () => ({
   ChatColorPicker: ({ conversationId }: { conversationId?: string }) => (
     <div data-testid="chat-color-picker">{conversationId}</div>
@@ -75,6 +87,31 @@ describe('Cloud ConversationHeader', () => {
       fourthBackgroundColor: 0xb0c9be,
       dark: false,
     });
+  });
+
+  it('shows resolved peer identity, truthful presence, and stable actions', () => {
+    render(
+      <ConversationHeader
+        conversationId="conversation-1"
+        conversationName="Ada Lovelace"
+        avatarUrl="https://cdn.example.test/ada.webp"
+        avatarBorderId="border-1"
+        isOnline
+        isTyping={false}
+        canStartCall
+      />
+    );
+
+    expect(screen.getByRole('heading', { name: 'Ada Lovelace' })).toBeInTheDocument();
+    expect(screen.getByText('Online')).toBeInTheDocument();
+    expect(screen.getByTestId('conversation-avatar')).toHaveAttribute(
+      'data-src',
+      'https://cdn.example.test/ada.webp'
+    );
+    expect(screen.getByTestId('conversation-avatar')).toHaveAttribute('data-border', 'border-1');
+    expect(screen.getByRole('toolbar', { name: 'Conversation actions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start voice call' })).toHaveClass('h-9', 'w-9');
+    expect(screen.getByRole('button', { name: 'Start video call' })).toHaveClass('h-9', 'w-9');
   });
 
   it('resets only a persisted conversation wallpaper from the live header', async () => {

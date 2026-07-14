@@ -17,8 +17,6 @@
 
 import { lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useThemeStore, THEME_COLORS } from '@/stores/theme';
-import { GlassCard } from '@/shared/components/ui';
 import { VoiceMessageRecorder } from '@/components/media/voice-message-recorder';
 import { VideoMessageRecorder } from '@/components/media/video-message-recorder';
 
@@ -68,9 +66,6 @@ export function MessageInput({
   // Channel-scoped composer features are not yet wired; draft autosave is
   // conversation-scoped (Signal parity) and uses `conversationId` only.
   void _channelId;
-
-  const { theme } = useThemeStore();
-  const colors = THEME_COLORS[theme.colorPreset];
 
   const {
     message,
@@ -127,66 +122,66 @@ export function MessageInput({
       {slowMode.cooldownActive && <SlowModePill remainingSeconds={slowMode.remainingSeconds} />}
 
       {/* Main Input Area */}
-      <GlassCard variant="frosted" className="p-2">
-        <div className="flex items-end gap-2">
-          <AttachmentMenu
-            attachmentMode={attachmentMode}
-            onToggle={toggleAttachmentMode}
-            onFileSelect={() => fileInputRef.current?.click()}
-            hasFile={attachments.length > 0}
-            nodesPrice={nodesPrice}
-            onNodesPriceChange={onNodesPriceChange}
+      <div
+        data-testid="message-composer"
+        className="flex min-h-12 flex-wrap items-end gap-1 rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-card-bg)]/95 p-1.5 shadow-sm"
+      >
+        <AttachmentMenu
+          attachmentMode={attachmentMode}
+          onToggle={toggleAttachmentMode}
+          onFileSelect={() => fileInputRef.current?.click()}
+          hasFile={attachments.length > 0}
+          nodesPrice={nodesPrice}
+          onNodesPriceChange={onNodesPriceChange}
+        />
+
+        {/* Text Input */}
+        <div className="relative min-w-32 flex-1">
+          <textarea
+            ref={inputRef}
+            data-testid="message-input"
+            value={message}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            disabled={disabled || isRecording || isVideoRecording}
+            rows={1}
+            className="min-h-9 w-full resize-none bg-transparent px-3 py-2 text-[15px] leading-5 text-white placeholder-white/35 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ maxHeight: '150px' }}
           />
 
-          {/* Text Input */}
-          <div className="relative flex-1">
-            <textarea
-              ref={inputRef}
-              data-testid="message-input"
-              value={message}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              disabled={disabled || isRecording || isVideoRecording}
-              rows={1}
-              className="focus:border-primary-500/50 w-full resize-none rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white placeholder-white/30 focus:outline-none"
-              style={{ maxHeight: '150px' }}
-            />
-
-            <AnimatePresence>
-              {showMentions && (
-                <MentionAutocomplete
-                  query={mentionQuery}
-                  onSelect={handleMentionSelect}
-                  onClose={() => setShowMentions(false)}
-                />
-              )}
-            </AnimatePresence>
-          </div>
-
-          <InputToolbar
-            attachmentMode={attachmentMode}
-            isRecording={isRecording}
-            isVideoRecording={isVideoRecording}
-            canSend={canSend}
-            disabled={disabled}
-            primaryColor={colors.primary}
-            isViewOnce={isViewOnce}
-            hasAttachments={attachments.length > 0}
-            onToggleMode={toggleAttachmentMode}
-            onToggleRecording={() => {
-              setIsVideoRecording(false);
-              setIsRecording(!isRecording);
-            }}
-            onToggleVideoRecording={() => {
-              setIsRecording(false);
-              setIsVideoRecording(!isVideoRecording);
-            }}
-            onToggleViewOnce={() => setIsViewOnce(!isViewOnce)}
-            onSend={handleSend}
-          />
+          <AnimatePresence>
+            {showMentions && (
+              <MentionAutocomplete
+                query={mentionQuery}
+                onSelect={handleMentionSelect}
+                onClose={() => setShowMentions(false)}
+              />
+            )}
+          </AnimatePresence>
         </div>
-      </GlassCard>
+
+        <InputToolbar
+          attachmentMode={attachmentMode}
+          isRecording={isRecording}
+          isVideoRecording={isVideoRecording}
+          canSend={canSend}
+          disabled={disabled}
+          isViewOnce={isViewOnce}
+          hasAttachments={attachments.length > 0}
+          onToggleMode={toggleAttachmentMode}
+          onToggleRecording={() => {
+            setIsVideoRecording(false);
+            setIsRecording(!isRecording);
+          }}
+          onToggleVideoRecording={() => {
+            setIsRecording(false);
+            setIsVideoRecording(!isVideoRecording);
+          }}
+          onToggleViewOnce={() => setIsViewOnce(!isViewOnce)}
+          onSend={handleSend}
+        />
+      </div>
 
       {/* Voice Recording UI */}
       <AnimatePresence>

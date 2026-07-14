@@ -11,10 +11,10 @@ import { Children, memo, type ReactNode } from 'react';
 import { EmojiTextRenderer } from '@/lib/lottie/emoji-text-renderer';
 
 /** Walk React children, replacing plain-text strings with animated emojis. */
-function processChildren(children: ReactNode): ReactNode {
+function processChildren(children: ReactNode, emojiSize: number): ReactNode {
   return Children.map(children, (child) => {
     if (typeof child === 'string') {
-      return <EmojiTextRenderer text={child} />;
+      return <EmojiTextRenderer text={child} emojiSize={emojiSize} />;
     }
     return child;
   });
@@ -23,17 +23,19 @@ function processChildren(children: ReactNode): ReactNode {
 interface MarkdownContentProps {
   content: string;
   className?: string;
+  emojiSize?: number;
 }
 
 export const MarkdownContent = memo(function MarkdownContent({
   content,
   className = '',
+  emojiSize = 20,
 }: MarkdownContentProps) {
   // Skip markdown parsing for very short messages or messages with no markdown syntax
   if (!content || !hasMarkdownSyntax(content)) {
     return (
       <p className={`whitespace-pre-wrap break-words ${className}`}>
-        <EmojiTextRenderer text={content} />
+        <EmojiTextRenderer text={content} emojiSize={emojiSize} />
       </p>
     );
   }
@@ -43,7 +45,9 @@ export const MarkdownContent = memo(function MarkdownContent({
       <ReactMarkdown
         components={{
           // Override default elements with styled versions
-          p: ({ children }) => <p className="mb-1 last:mb-0">{processChildren(children)}</p>,
+          p: ({ children }) => (
+            <p className="mb-1 last:mb-0">{processChildren(children, emojiSize)}</p>
+          ),
           strong: ({ children }) => <strong className="font-bold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
           del: ({ children }) => <del className="line-through opacity-60">{children}</del>,
@@ -91,7 +95,9 @@ export const MarkdownContent = memo(function MarkdownContent({
           ol: ({ children }) => (
             <ol className="my-1 list-inside list-decimal space-y-0.5 text-gray-300">{children}</ol>
           ),
-          li: ({ children }) => <li className="text-sm">{processChildren(children)}</li>,
+          li: ({ children }) => (
+            <li className="text-sm">{processChildren(children, emojiSize)}</li>
+          ),
           // Disable images and other potentially dangerous elements
           img: () => null,
           iframe: () => null,

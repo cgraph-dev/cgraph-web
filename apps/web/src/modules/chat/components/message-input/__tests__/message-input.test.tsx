@@ -292,6 +292,16 @@ describe('MessageInput', () => {
     expect(screen.getByTestId('input-toolbar')).toBeInTheDocument();
   });
 
+  it('uses one compact composer surface for input and tools', () => {
+    render(<MessageInput {...defaultProps} />);
+
+    const composer = screen.getByTestId('message-composer');
+    expect(composer).toHaveClass('min-h-12', 'rounded-lg', 'p-1.5');
+    expect(screen.getByTestId('message-input')).toHaveClass('bg-transparent', 'text-[15px]');
+    expect(composer).toContainElement(screen.getByTestId('attachment-menu'));
+    expect(composer).toContainElement(screen.getByTestId('input-toolbar'));
+  });
+
   it('renders attachments preview', () => {
     render(<MessageInput {...defaultProps} />);
     expect(screen.getByTestId('attachments-preview')).toBeInTheDocument();

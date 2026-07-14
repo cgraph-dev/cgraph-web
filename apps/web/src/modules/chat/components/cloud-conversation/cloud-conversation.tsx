@@ -18,6 +18,12 @@ import { useBatchSelect } from '@/modules/chat/hooks/use-batch-select';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { chatThemeSettingsToAppearance } from '@/modules/chat/theme/chat-theme-appearance';
+import {
+  getConversationAvatar,
+  getConversationAvatarBorderId,
+  getConversationName,
+  getConversationOnlineStatus,
+} from '@/modules/chat/components/conversation-list/utils';
 import { toast } from '@/components/feedback/toast';
 
 async function writeClipboardText(text: string): Promise<void> {
@@ -238,12 +244,20 @@ export default function CloudConversation() {
     return <LoadingSpinner />;
   }
 
+  const conversationName = getConversationName(conversation, user?.id);
+  const conversationAvatar = getConversationAvatar(conversation, user?.id);
+  const conversationAvatarBorderId = getConversationAvatarBorderId(conversation, user?.id);
+  const conversationIsOnline = getConversationOnlineStatus(conversation, user?.id);
+
   return (
     <ConversationSurface
       header={
         <ConversationHeader
           conversationId={conversationId}
-          conversationName={conversation.name || 'Conversation'}
+          conversationName={conversationName}
+          avatarUrl={conversationAvatar}
+          avatarBorderId={conversationAvatarBorderId}
+          isOnline={conversationIsOnline}
           isTyping={typing.length > 0}
           canStartCall={Boolean(callRecipientId)}
           pinnedCount={pinnedMessages.length}
@@ -331,6 +345,7 @@ export default function CloudConversation() {
             onToggleSelect={batchSelect.toggleSelect}
             onEnterSelectMode={handleEnterSelectMode}
             chatThemeAppearance={chatThemeAppearance}
+            showSenderIdentity={conversation.type === 'group' || conversation.isGroup === true}
           />
           <BatchActionBar
             isSelecting={batchSelect.isSelecting}

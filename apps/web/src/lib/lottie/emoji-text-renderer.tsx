@@ -32,6 +32,21 @@ function getEmojiRegex(): RegExp {
   return _emojiRegex;
 }
 
+/** Returns 1-3 when the complete message is supported animated emoji, otherwise 0. */
+export function countIsolatedAnimatedEmojis(text: string): number {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+
+  const regex = getEmojiRegex();
+  regex.lastIndex = 0;
+  const matches = trimmed.match(regex) ?? [];
+  regex.lastIndex = 0;
+  const remainder = trimmed.replace(regex, '').replace(/[\uFE0E\uFE0F]/g, '').trim();
+  regex.lastIndex = 0;
+
+  return remainder.length === 0 && matches.length <= 3 ? matches.length : 0;
+}
+
 export interface EmojiTextRendererProps {
   /** Text content that may contain emoji characters. */
   text: string;

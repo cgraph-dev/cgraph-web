@@ -1,17 +1,10 @@
-/**
- * ConversationHeader - glassmorphic header with user info and actions
- */
-
-import { motion } from 'motion/react';
 import {
   BookmarkIcon,
   PhoneIcon,
-  ShieldCheckIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
 import { Palette, RotateCcw } from 'lucide-react';
 import { resolveChatThemeConversationWallpaper } from '@cgraph-dev/shared-types/chat-theme';
-import { GlassCardNeon } from '@/shared/components/ui';
 import {
   Dialog,
   DialogContent,
@@ -22,18 +15,19 @@ import { ConnectionStatus } from '@/shared/components/connection-status';
 import { ChatColorPicker } from '@/modules/settings/components/customize/panels/chat-color-picker';
 import { ChatWallpaperGrid } from '@/modules/chat/theme/chat-wallpaper-grid';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
+import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { ConversationHeaderProps } from './types';
-import { tweens, loop } from '@/lib/animation-presets';
 import { useState } from 'react';
 
-/**
- */
 /**
  * Conversation Header component.
  */
 export function ConversationHeader({
   conversationId,
   conversationName,
+  avatarUrl,
+  avatarBorderId,
+  isOnline = false,
   isTyping,
   canStartCall = false,
   pinnedCount = 0,
@@ -58,117 +52,107 @@ export function ConversationHeader({
   );
 
   return (
-    <GlassCardNeon className="border-primary-500/20 flex h-16 flex-shrink-0 items-center justify-between rounded-none border-b px-4">
-      <motion.div
-        className="flex items-center gap-3"
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
+    <>
+      <header
+        data-testid="conversation-header"
+        className="relative z-20 flex h-16 flex-shrink-0 items-center justify-between gap-3 border-b border-[var(--token-card-border)] bg-[var(--token-bg-primary)]/95 px-4 backdrop-blur-xl"
       >
-        <div className="relative">
-          <motion.div
-            className="ring-primary-500/50 h-10 w-10 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-primary-700 ring-2"
-            whileTap={{ scale: 0.88 }}
-          >
-            <div className="flex h-full w-full items-center justify-center text-lg font-bold text-white">
-              {(conversationName || 'U').charAt(0).toUpperCase()}
-            </div>
-          </motion.div>
-          <motion.div
-            className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-dark-900 bg-green-500"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={loop(tweens.ambient)}
-          />
-        </div>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative shrink-0">
+            <ThemedAvatar
+              src={avatarUrl}
+              alt={conversationName || 'Conversation'}
+              size="small"
+              className="h-10 w-10"
+              avatarBorderId={avatarBorderId ?? undefined}
+            />
+            <span
+              className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[var(--token-bg-primary)] ${
+                isOnline ? 'bg-emerald-500' : 'bg-neutral-500'
+              }`}
+              aria-hidden="true"
+            />
+          </div>
 
-        <div>
-          <h2 className="font-semibold text-white">{conversationName || 'Conversation'}</h2>
-          <div className="flex items-center gap-1.5">
-            <ShieldCheckIcon className="h-3 w-3 text-green-400" />
-            <p className="text-xs text-gray-400">
-              {isTyping ? (
-                <motion.span
-                  className="text-primary-400"
-                  animate={{ opacity: [1, 0.5, 1] }}
-                  transition={loop(tweens.verySlow)}
-                >
-                  typing...
-                </motion.span>
-              ) : (
-                'Online'
-              )}
+          <div className="min-w-0">
+            <h2 className="truncate text-[15px] font-semibold text-[var(--token-text-primary)]">
+              {conversationName || 'Conversation'}
+            </h2>
+            <p
+              className={`truncate text-xs ${
+                isTyping ? 'text-primary-400' : 'text-[var(--token-text-muted)]'
+              }`}
+            >
+              {isTyping ? 'typing...' : isOnline ? 'Online' : 'Offline'}
             </p>
           </div>
         </div>
-      </motion.div>
 
-      <motion.div
-        className="flex items-center gap-2"
-        initial={{ x: 20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        {pinnedCount > 0 && onTogglePinnedMessages && (
-          <motion.button
-            type="button"
-            onClick={onTogglePinnedMessages}
-            className={`relative rounded-lg p-2 transition-colors ${
-              showPinnedMessages
-                ? 'bg-primary-500/20 text-primary-200'
-                : 'text-gray-400 hover:bg-white/10 hover:text-white'
-            }`}
-            whileTap={{ scale: 0.88 }}
-            aria-label={showPinnedMessages ? 'Close pinned messages' : 'Open pinned messages'}
-            title="Pinned messages"
-          >
-            <BookmarkIcon className="h-5 w-5" />
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-[10px] font-semibold text-dark-950">
-              {pinnedCount}
-            </span>
-          </motion.button>
-        )}
-
-        {canStartCall && (
-          <>
-            <motion.button
+        <div
+          className="flex shrink-0 items-center gap-1"
+          role="toolbar"
+          aria-label="Conversation actions"
+        >
+          {pinnedCount > 0 && onTogglePinnedMessages && (
+            <button
               type="button"
-              onClick={onStartVoiceCall}
-              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-              whileTap={{ scale: 0.88 }}
-              aria-label="Start voice call"
-              title="Start voice call"
+              onClick={onTogglePinnedMessages}
+              className={`relative grid h-9 w-9 place-items-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                showPinnedMessages
+                  ? 'bg-primary-500/15 text-primary-300'
+                  : 'text-[var(--token-text-muted)] hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)]'
+              }`}
+              aria-label={showPinnedMessages ? 'Close pinned messages' : 'Open pinned messages'}
+              title="Pinned messages"
             >
-              <PhoneIcon className="h-5 w-5" />
-            </motion.button>
+              <BookmarkIcon className="h-5 w-5" />
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-[10px] font-semibold text-white">
+                {pinnedCount}
+              </span>
+            </button>
+          )}
 
-            <motion.button
+          {canStartCall && (
+            <>
+              <button
+                type="button"
+                onClick={onStartVoiceCall}
+                className="grid h-9 w-9 place-items-center rounded-md text-[var(--token-text-muted)] transition-colors hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                aria-label="Start voice call"
+                title="Start voice call"
+              >
+                <PhoneIcon className="h-5 w-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={onStartVideoCall}
+                className="grid h-9 w-9 place-items-center rounded-md text-[var(--token-text-muted)] transition-colors hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                aria-label="Start video call"
+                title="Start video call"
+              >
+                <VideoCameraIcon className="h-5 w-5" />
+              </button>
+            </>
+          )}
+
+          {conversationId ? (
+            <button
               type="button"
-              onClick={onStartVideoCall}
-              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-              whileTap={{ scale: 0.88 }}
-              aria-label="Start video call"
-              title="Start video call"
+              onClick={() => setShowAppearancePicker(true)}
+              className="grid h-9 w-9 place-items-center rounded-md text-[var(--token-text-muted)] transition-colors hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              aria-label="Change conversation appearance"
+              title="Conversation appearance"
             >
-              <VideoCameraIcon className="h-5 w-5" />
-            </motion.button>
-          </>
-        )}
+              <Palette className="h-5 w-5" aria-hidden="true" />
+            </button>
+          ) : null}
 
-        {conversationId ? (
-          <motion.button
-            type="button"
-            onClick={() => setShowAppearancePicker(true)}
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-            whileTap={{ scale: 0.88 }}
-            aria-label="Change conversation appearance"
-            title="Conversation appearance"
-          >
-            <Palette className="h-5 w-5" aria-hidden="true" />
-          </motion.button>
-        ) : null}
-
-        <ConnectionStatus />
-      </motion.div>
+          <div className="ml-1 hidden sm:block">
+            <ConnectionStatus />
+          </div>
+        </div>
+      </header>
       <Dialog open={showAppearancePicker} onOpenChange={setShowAppearancePicker}>
         <DialogContent ariaLabel="Conversation appearance" className="max-w-xl">
           <DialogHeader>
@@ -203,6 +187,6 @@ export function ConversationHeader({
           ) : null}
         </DialogContent>
       </Dialog>
-    </GlassCardNeon>
+    </>
   );
 }

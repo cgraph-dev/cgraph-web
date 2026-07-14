@@ -2,7 +2,6 @@
  * InputToolbar component - emoji, sticker, voice, send buttons
  */
 
-import { motion } from 'motion/react';
 import {
   PaperAirplaneIcon,
   FaceSmileIcon,
@@ -10,6 +9,8 @@ import {
   GifIcon,
   VideoCameraIcon,
 } from '@heroicons/react/24/outline';
+import { Sticker } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { AttachmentMode } from './types';
 
 interface InputToolbarProps {
@@ -18,7 +19,6 @@ interface InputToolbarProps {
   isVideoRecording: boolean;
   canSend: boolean;
   disabled?: boolean;
-  primaryColor: string;
   isViewOnce: boolean;
   hasAttachments: boolean;
   onToggleMode: (mode: AttachmentMode) => void;
@@ -30,12 +30,11 @@ interface InputToolbarProps {
 
 /** Input Toolbar component with emoji, sticker, GIF, view-once, voice, and send buttons. */
 export function InputToolbar({
-  attachmentMode: _attachmentMode,
+  attachmentMode,
   isRecording,
   isVideoRecording,
   canSend,
   disabled = false,
-  primaryColor,
   isViewOnce,
   hasAttachments,
   onToggleMode,
@@ -44,44 +43,46 @@ export function InputToolbar({
   onToggleViewOnce,
   onSend,
 }: InputToolbarProps) {
+  const controlClass =
+    'flex h-9 w-9 flex-none items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-not-allowed disabled:opacity-40';
+
   return (
-    <>
+    <div role="toolbar" aria-label="Message tools" className="flex shrink-0 items-center gap-0.5">
       {/* Emoji Button */}
-      <motion.button
-        whileHover={{ opacity: 0.9 }}
-        whileTap={{ scale: 0.9 }}
+      <button
+        type="button"
         onClick={() => onToggleMode('emoji')}
-        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-yellow-400"
+        disabled={disabled}
+        className={cn(controlClass, attachmentMode === 'emoji' && 'bg-white/10 text-white')}
+        aria-pressed={attachmentMode === 'emoji'}
         aria-label="Open emoji picker"
         title="Emoji"
       >
-        <FaceSmileIcon className="h-6 w-6" />
-      </motion.button>
+        <FaceSmileIcon className="h-5 w-5" />
+      </button>
 
       {/* Sticker Button */}
-      <motion.button
-        whileHover={{ opacity: 0.9 }}
-        whileTap={{ scale: 0.9 }}
+      <button
+        type="button"
         onClick={() => onToggleMode('sticker')}
-        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-purple-400"
+        disabled={disabled}
+        className={cn(controlClass, attachmentMode === 'sticker' && 'bg-white/10 text-white')}
+        aria-pressed={attachmentMode === 'sticker'}
         aria-label="Open sticker picker"
         title="Sticker"
       >
-        <span className="text-lg">🎨</span>
-      </motion.button>
+        <Sticker className="h-5 w-5" />
+      </button>
 
       {/* View-once toggle — Signal: camera icon with "1" badge */}
       {hasAttachments && (
-        <motion.button
-          whileHover={{ opacity: 0.9 }}
-          whileTap={{ scale: 0.9 }}
+        <button
+          type="button"
           onClick={onToggleViewOnce}
-          className={`rounded-lg p-2 transition-colors ${
-            isViewOnce
-              ? 'bg-primary-600/20 text-primary-400'
-              : 'text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white'
-          }`}
+          disabled={disabled}
+          className={cn(controlClass, isViewOnce && 'bg-primary-600/20 text-primary-300')}
           title={isViewOnce ? 'View once enabled' : 'Enable view once'}
+          aria-label={isViewOnce ? 'Disable view once' : 'Enable view once'}
           aria-pressed={isViewOnce}
         >
           <svg
@@ -98,66 +99,64 @@ export function InputToolbar({
               1
             </text>
           </svg>
-        </motion.button>
+        </button>
       )}
 
       {/* GIF Button */}
-      <motion.button
-        whileHover={{ opacity: 0.9 }}
-        whileTap={{ scale: 0.9 }}
+      <button
+        type="button"
         onClick={() => onToggleMode('gif')}
-        className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-green-400"
+        disabled={disabled}
+        className={cn(controlClass, attachmentMode === 'gif' && 'bg-white/10 text-white')}
+        aria-pressed={attachmentMode === 'gif'}
         aria-label="Open GIF picker"
         title="GIF"
       >
-        <GifIcon className="h-6 w-6" />
-      </motion.button>
+        <GifIcon className="h-5 w-5" />
+      </button>
 
       {/* Voice Message Button */}
-      <motion.button
-        whileHover={{ opacity: 0.9 }}
-        whileTap={{ scale: 0.9 }}
+      <button
+        type="button"
         onClick={onToggleRecording}
-        className={`rounded-lg p-2 transition-colors ${
-          isRecording
-            ? 'bg-red-500 text-white'
-            : 'text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white'
-        }`}
+        disabled={disabled}
+        className={cn(controlClass, isRecording && 'bg-red-500 text-white')}
+        aria-pressed={isRecording}
         aria-label={isRecording ? 'Voice recorder active' : 'Record voice message'}
         title={isRecording ? 'Voice recorder active' : 'Record voice message'}
       >
-        <MicrophoneIcon className="h-6 w-6" />
-      </motion.button>
+        <MicrophoneIcon className="h-5 w-5" />
+      </button>
 
       {/* Video Note Button */}
-      <motion.button
-        whileHover={{ opacity: 0.9 }}
-        whileTap={{ scale: 0.9 }}
+      <button
+        type="button"
         onClick={onToggleVideoRecording}
-        className={`rounded-lg p-2 transition-colors ${
-          isVideoRecording
-            ? 'bg-red-500 text-white'
-            : 'text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white'
-        }`}
+        disabled={disabled}
+        className={cn(controlClass, isVideoRecording && 'bg-red-500 text-white')}
+        aria-pressed={isVideoRecording}
         aria-label={isVideoRecording ? 'Video note recorder active' : 'Record video note'}
         title={isVideoRecording ? 'Video note recorder active' : 'Record video note'}
       >
-        <VideoCameraIcon className="h-6 w-6" />
-      </motion.button>
+        <VideoCameraIcon className="h-5 w-5" />
+      </button>
 
       {/* Send Button */}
-      <motion.button
-        whileHover={{ opacity: 0.9 }}
-        whileTap={{ scale: 0.9 }}
+      <button
+        type="button"
         onClick={onSend}
         disabled={disabled || !canSend}
-        className="rounded-xl bg-primary-600 p-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-        style={{ backgroundColor: primaryColor }}
+        className={cn(
+          controlClass,
+          canSend && !disabled
+            ? 'bg-primary-600 text-white hover:bg-primary-500'
+            : 'bg-white/[0.04] text-gray-600'
+        )}
         aria-label="Send message"
         title="Send message"
       >
-        <PaperAirplaneIcon className="h-6 w-6" />
-      </motion.button>
-    </>
+        <PaperAirplaneIcon className="h-5 w-5" />
+      </button>
+    </div>
   );
 }

@@ -42,7 +42,7 @@ export function MessageInputArea({
   return (
     <div
       ref={inputContainerRef}
-      className="relative z-40 flex-shrink-0 border-t border-[var(--token-card-border)] p-4"
+      className="relative z-40 flex-shrink-0 border-t border-[var(--token-border-muted)] bg-[var(--token-bg-primary)]/95 px-3 py-3 sm:px-5"
     >
       <MessageInput
         conversationId={conversationId}
@@ -54,7 +54,7 @@ export function MessageInputArea({
         maxAttachments={1}
         nodesPrice={attachmentNodePrice}
         onNodesPriceChange={onAttachmentNodePriceChange}
-        className="mx-auto max-w-5xl"
+        className="mx-auto w-full max-w-5xl"
       />
     </div>
   );

@@ -4,16 +4,12 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
 import { getMessageSenderId } from '@/lib/api-utils';
 import { formatDateHeader, groupMessagesByDate } from '@/lib/chat/messageUtils';
-import { handleAddReaction } from '@/lib/chat/reactionUtils';
 import { publicProfilePath } from '@/lib/profile-route';
-import { GlassCard } from '@/shared/components/ui';
-import { springs } from '@/lib/animation-presets';
 import { AnimatedMessageWrapper } from './animated-message-wrapper';
-import { AnimatedReactionBubble } from './animated-reaction-bubble';
 import { TypingIndicator } from './typing-indicator';
 import { MessageBubble, type UIPreferences } from './message-bubble';
 import { MediaAlbum } from './media-album';
@@ -122,6 +118,7 @@ interface MessageListProps {
   onToggleSelect?: (messageId: string) => void;
   onEnterSelectMode?: (messageId: string) => void;
   chatThemeAppearance?: ChatThemeAppearance;
+  showSenderIdentity?: boolean;
 }
 
 // Flat row type for virtualizer
@@ -163,6 +160,7 @@ export function MessageList({
   onToggleSelect,
   onEnterSelectMode,
   chatThemeAppearance,
+  showSenderIdentity = true,
 }: MessageListProps) {
   const navigate = useNavigate();
   const fallbackRef = useRef<HTMLDivElement>(null);
@@ -310,23 +308,15 @@ export function MessageList({
 
     if (row.type === 'date-header') {
       return (
-        <motion.div
-          className="my-6 flex items-center justify-center"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={springs.gentle}
+        <div
+          className="my-4 flex items-center justify-center"
+          role="separator"
+          aria-label={formatDateHeader(row.date)}
         >
-          <GlassCard
-            variant={uiPreferences.glassEffect}
-            intensity="subtle"
-            glow={uiPreferences.enableGlow}
-            className="rounded-full px-4 py-2"
-          >
-            <span className="text-xs font-medium tracking-wide text-white">
-              {formatDateHeader(row.date)}
-            </span>
-          </GlassCard>
-        </motion.div>
+          <span className="rounded-full bg-black/45 px-3 py-1 text-[11px] font-medium text-white/90 backdrop-blur-sm">
+            {formatDateHeader(row.date)}
+          </span>
+        </div>
       );
     }
 
@@ -383,7 +373,7 @@ export function MessageList({
             <MessageBubble
               message={message}
               isOwn={isOwn}
-              showAvatar={showAvatar}
+              showAvatar={showSenderIdentity && showAvatar}
               onReply={() => onReply(message)}
               uiPreferences={uiPreferences}
               onAvatarClick={(avatarUserId) =>
@@ -403,28 +393,6 @@ export function MessageList({
               onCancelEdit={onCancelEdit}
               chatThemeAppearance={chatThemeAppearance}
             />
-            {message.reactions && message.reactions.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {Object.entries(
-                  message.reactions.reduce<Record<string, { count: number; hasReacted: boolean }>>(
-                    (acc, r) => {
-                      const entry = (acc[r.emoji] ??= { count: 0, hasReacted: false });
-                      entry.count++;
-                      if (userId && r.userId === userId) entry.hasReacted = true;
-                      return acc;
-                    },
-                    {}
-                  )
-                ).map(([emoji, { count, hasReacted }]) => (
-                  <AnimatedReactionBubble
-                    key={emoji}
-                    reaction={{ emoji, count, hasReacted }}
-                    isOwnMessage={isOwn}
-                    onPress={() => handleAddReaction(message.id, emoji)}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </AnimatedMessageWrapper>
@@ -432,9 +400,13 @@ export function MessageList({
   };
 
   return (
-    <>
+    <div
+      data-testid="message-list"
+      className="mx-auto flex min-h-full w-full max-w-5xl flex-col justify-end"
+    >
       {/* Virtualized message rows */}
       <div
+        data-testid="virtual-message-history"
         style={{
           height: `${virtualizer.getTotalSize()}px`,
           width: '100%',
@@ -479,7 +451,7 @@ export function MessageList({
         />
       </AnimatePresence>
 
-      <div ref={messagesEndRef} />
-    </>
+      <div ref={messagesEndRef} data-testid="messages-end" />
+    </div>
   );
 }

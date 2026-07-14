@@ -666,6 +666,103 @@ test.describe('DM media composer', () => {
     });
   }
 
+  test('keeps the active direct-message pane bounded and bottom anchored', async ({ page }, testInfo) => {
+    const incomingContent = 'A readable incoming message with enough text to prove the bubble cap.';
+    await installMessagingApiMocks(page, {
+      initialMessages: [
+        messageFixture({ content: incomingContent }),
+        messageFixture({
+          id: 'msg-own',
+          senderId: CURRENT_USER_ID,
+          sender: conversation.participants[0].user,
+          content: '😂',
+          createdAt: '2026-01-01T00:01:00.000Z',
+          updatedAt: '2026-01-01T00:01:00.000Z',
+        }),
+      ],
+    });
+
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(`/messages/${CONVERSATION_ID}`);
+
+    const messagesRegion = page.getByLabel('Conversation messages');
+    const composer = page.getByTestId('message-composer');
+    const normalBubble = messagesRegion.locator('[data-chat-theme-bubble="incoming"]');
+    const isolatedEmoji = messagesRegion.locator('[data-isolated-emoji-count="1"]');
+
+    await expect(page.getByRole('heading', { name: 'Friend' })).toBeVisible();
+    await expect(page.getByText('Online', { exact: true })).toBeVisible();
+    await expect(page.getByRole('toolbar', { name: 'Conversation actions' })).toBeVisible();
+    await expect(page.getByRole('toolbar', { name: 'Message tools' })).toBeVisible();
+    await expect(normalBubble).toContainText(incomingContent);
+    await expect(isolatedEmoji).toBeVisible();
+    await expect(isolatedEmoji.getByRole('img', { name: '😂' }).first()).toBeVisible();
+
+    const wideGeometry = await page.evaluate(() => {
+      const region = document.querySelector<HTMLElement>('[aria-label="Conversation messages"]');
+      const composerElement = document.querySelector<HTMLElement>('[data-testid="message-composer"]');
+      const bubble = document.querySelector<HTMLElement>('[data-chat-theme-bubble="incoming"]');
+      const emoji = document.querySelector<HTMLElement>('[data-isolated-emoji-count="1"]');
+      const messagesEnd = document.querySelector<HTMLElement>('[data-testid="messages-end"]');
+      const tool = document.querySelector<HTMLElement>('[aria-label="Open emoji picker"]');
+
+      if (!region || !composerElement || !bubble || !emoji || !messagesEnd || !tool) return null;
+
+      const bubbleRect = bubble.getBoundingClientRect();
+      const messagesEndRect = messagesEnd.getBoundingClientRect();
+      const composerRect = composerElement.getBoundingClientRect();
+      const bubbleStyle = getComputedStyle(bubble);
+      const emojiStyle = getComputedStyle(emoji);
+      const toolRect = tool.getBoundingClientRect();
+
+      return {
+        bubbleWidth: bubbleRect.width,
+        bubbleRadius: Number.parseFloat(bubbleStyle.borderTopLeftRadius),
+        emojiBackground: emojiStyle.backgroundColor,
+        bottomGap: composerRect.top - messagesEndRect.bottom,
+        toolWidth: toolRect.width,
+        toolHeight: toolRect.height,
+        regionWidth: region.getBoundingClientRect().width,
+        horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+
+    expect(wideGeometry).not.toBeNull();
+    expect(wideGeometry?.bubbleWidth).toBeLessThanOrEqual(430);
+    expect(wideGeometry?.bubbleRadius).toBeGreaterThanOrEqual(12);
+    expect(wideGeometry?.emojiBackground).toBe('rgba(0, 0, 0, 0)');
+    expect(wideGeometry?.bottomGap).toBeGreaterThanOrEqual(0);
+    expect(wideGeometry?.bottomGap).toBeLessThan(180);
+    expect(wideGeometry?.toolWidth).toBe(36);
+    expect(wideGeometry?.toolHeight).toBe(36);
+    expect(wideGeometry?.regionWidth).toBeGreaterThan(700);
+    expect(wideGeometry?.horizontalOverflow).toBeLessThanOrEqual(0);
+
+    await page.setViewportSize({ width: 960, height: 800 });
+    await expect(composer).toBeVisible();
+    await expect(page.getByRole('toolbar', { name: 'Message tools' })).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+        )
+      )
+      .toBeLessThanOrEqual(0);
+    await page.screenshot({
+      path: testInfo.outputPath('direct-message-pane-constrained.png'),
+    });
+
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await expect(normalBubble).toContainText(incomingContent);
+    await expect(composer).toBeVisible();
+    await expect(isolatedEmoji.getByRole('img', { name: '😂' }).first()).toBeVisible();
+    await page.waitForTimeout(300);
+    await page.screenshot({
+      path: testInfo.outputPath('direct-message-pane-wide.png'),
+    });
+  });
+
   test('attaches and sends a routed cloud-DM file in the browser', async ({ page }) => {
     const { attachmentUploads, sentMessages } = await installMessagingApiMocks(page);
 

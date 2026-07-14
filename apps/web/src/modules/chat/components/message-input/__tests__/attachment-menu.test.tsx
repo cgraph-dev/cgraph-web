@@ -259,12 +259,11 @@ describe('AttachmentMenu', () => {
     expect(onToggle).toHaveBeenCalledWith('gif');
   });
 
-  it('renders three action buttons in the dropdown', () => {
+  it('renders one toggle and three accessible menu actions', () => {
     render(
       <AttachmentMenu attachmentMode="file" onToggle={onToggle} onFileSelect={onFileSelect} />
     );
-    const buttons = screen.getAllByRole('button');
-    // toggle button + 3 attachment buttons
-    expect(buttons.length).toBe(4);
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getAllByRole('menuitem')).toHaveLength(3);
   });
 });

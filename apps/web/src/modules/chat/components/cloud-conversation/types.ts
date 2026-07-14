@@ -35,6 +35,9 @@ export interface EnhancedMessageBubbleProps {
 export interface ConversationHeaderProps {
   conversationId?: string;
   conversationName: string;
+  avatarUrl?: string | null;
+  avatarBorderId?: string | null;
+  isOnline?: boolean;
   isTyping: boolean;
   canStartCall?: boolean;
   pinnedCount?: number;

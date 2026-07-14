@@ -4,12 +4,12 @@ import { getAvatarBorderId } from '@/lib/utils';
 
 /** Get Conversation Name. */
 export function getConversationName(conversation: Conversation, currentUserId?: string): string {
-  if (conversation.name) {
-    return conversation.name;
+  if (conversation.type === 'group' || conversation.isGroup) {
+    return conversation.name || 'Group Chat';
   }
 
-  if (conversation.isGroup) {
-    return conversation.name || 'Group Chat';
+  if (conversation.isNoteToSelf) {
+    return conversation.name || 'Note to Self';
   }
 
   const otherParticipant = conversation.participants?.find((p) => p.userId !== currentUserId);
@@ -17,6 +17,7 @@ export function getConversationName(conversation: Conversation, currentUserId?: 
     otherParticipant?.nickname ||
     otherParticipant?.user?.displayName ||
     otherParticipant?.user?.username ||
+    conversation.name ||
     'Unknown'
   );
 }

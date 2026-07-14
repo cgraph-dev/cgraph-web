@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MessageBubble, type UIPreferences, type MessageBubbleProps } from '../message-bubble';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
+import { chatThemeSettingsToAppearance } from '@/modules/chat/theme/chat-theme-appearance';
 
 // Mock dependencies
 vi.mock('@/lib/chat', () => ({
@@ -65,7 +66,11 @@ vi.mock('@/modules/chat/components/rich-media-embed', () => ({
 }));
 
 vi.mock('@/modules/chat/components/markdown-content', () => ({
-  MarkdownContent: ({ content }: { content: string }) => <span>{content}</span>,
+  MarkdownContent: ({ content, emojiSize }: { content: string; emojiSize?: number }) => (
+    <span data-testid="markdown-content" data-emoji-size={emojiSize}>
+      {content}
+    </span>
+  ),
 }));
 
 vi.mock('@/modules/chat/components/gif-message', () => ({
@@ -294,6 +299,39 @@ describe('MessageBubble', () => {
 
       const bubble = container.querySelector('[class*="bg-[var(--token-card-bg)]"]');
       expect(bubble).toBeInTheDocument();
+    });
+
+    it('keeps source-sized rounded bubbles when a chat theme supplies colors', () => {
+      const message = createMockMessage();
+      const appearance = chatThemeSettingsToAppearance({
+        base: 'night',
+        accentColor: 0x7c3aed,
+        messageColors: [0x7c3aed],
+      });
+      const { container } = render(
+        <MessageBubble
+          {...defaultProps}
+          message={message}
+          isOwn={true}
+          chatThemeAppearance={appearance}
+        />
+      );
+
+      const bubble = container.querySelector('[data-chat-theme-bubble="outgoing"]');
+      expect(bubble).toHaveClass('max-w-full', 'min-w-40', 'rounded-2xl', 'rounded-br-md');
+      expect(bubble?.parentElement?.parentElement).toHaveClass('max-w-[min(430px,78%)]');
+    });
+
+    it('renders up to three supported emoji without a normal bubble background', () => {
+      const message = createMockMessage({ content: '😂' });
+      const { container } = render(
+        <MessageBubble {...defaultProps} message={message} isOwn={true} />
+      );
+
+      const bubble = container.querySelector('[data-isolated-emoji-count="1"]');
+      expect(bubble).toHaveClass('bg-transparent', 'px-0', 'py-0');
+      expect(bubble).not.toHaveClass('min-w-40');
+      expect(screen.getByTestId('markdown-content')).toHaveAttribute('data-emoji-size', '72');
     });
   });
 });

@@ -2,9 +2,9 @@
 
 import { useState, memo } from 'react';
 import type { Achievement, AchievementRarity } from '@cgraph-dev/shared-types';
-import { motion } from 'motion/react';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { Lock, ShieldAlert } from 'lucide-react';
+import { countIsolatedAnimatedEmojis } from '@/lib/lottie/emoji-text-renderer';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import MessageReactions from '@/modules/chat/components/message-reactions';
@@ -39,8 +39,6 @@ import { ReplyPreview } from './reply-preview';
 import { ForwardedBadge } from './forwarded-badge';
 import { getMessageBubbleClass, getMessageEffectClass } from './preferences';
 import { InlineTitle, DisplayName } from '@/shared/components/ui';
-import { springs, tweens } from '@/lib/animation-presets';
-import { FADE_IN } from '@/lib/animations/transitions';
 
 type SenderIdentity = MessageBubbleProps['message']['sender'];
 
@@ -228,6 +226,20 @@ export const MessageBubble = memo(function MessageBubble({
   const canShowActionMenu = Boolean(
     onToggleMenu && (onSelect || onEdit || onPin || onForward || onDelete)
   );
+  const rendersTextContent = Boolean(
+    message.content &&
+      message.messageType !== 'voice' &&
+      message.messageType !== 'audio' &&
+      message.messageType !== 'gif' &&
+      message.messageType !== 'sticker' &&
+      message.messageType !== 'file' &&
+      message.messageType !== 'contact'
+  );
+  const isolatedEmojiCount =
+    rendersTextContent && !isEditing && !message.decryptionFailed
+      ? countIsolatedAnimatedEmojis(message.content)
+      : 0;
+  const isolatedEmojiSize = isolatedEmojiCount === 1 ? 72 : isolatedEmojiCount === 2 ? 56 : 48;
 
   const bubbleInlineStyle: React.CSSProperties = {
     ...(nameplateBubble?.style ?? {}),
@@ -244,36 +256,26 @@ export const MessageBubble = memo(function MessageBubble({
     bubbleInlineStyle.borderRadius = `${bubbleRadius}px`;
   }
 
-  const bubbleVariants = {
-    initial: { opacity: 0, x: isOwn ? 16 : -16, y: 8, scale: 0.97 },
-    animate: { opacity: 1, x: 0, y: 0, scale: 1 },
-    exit: { opacity: 0, scale: 0.95, transition: tweens.quickFade },
-  };
-
   // Soft-deleted messages: render a non-interactive placeholder
   if (message.deletedAt) {
     return (
-      <motion.div
-        {...FADE_IN}
-        className={cn('group flex items-end gap-2', isOwn ? 'flex-row-reverse' : '')}
-      >
-        <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[70%]`}>
+      <div className={cn('group flex items-end gap-2', isOwn ? 'flex-row-reverse' : '')}>
+        <div
+          className={cn(
+            'flex max-w-[min(430px,78%)] flex-col',
+            isOwn ? 'items-end' : 'items-start'
+          )}
+        >
           <div className="rounded-2xl border border-transparent bg-[var(--token-card-bg)/0.4] px-4 py-2 backdrop-blur-[8px] dark:border-[var(--token-border-muted)] dark:bg-[var(--token-bg-secondary)]">
             <p className="text-sm italic text-gray-500 dark:text-gray-500">Message deleted</p>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      variants={bubbleVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={{ ...springs.snappy, mass: 0.8 }}
-      layout="position"
+    <div
       className={cn('group flex items-end gap-2', effectCssClass, isOwn ? 'flex-row-reverse' : '')}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -300,7 +302,12 @@ export const MessageBubble = memo(function MessageBubble({
       )}
 
       {/* Message content */}
-      <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[70%]`}>
+      <div
+        className={cn(
+          'flex min-w-0 max-w-[min(430px,78%)] flex-col',
+          isOwn ? 'items-end' : 'items-start'
+        )}
+      >
         {/* Sender name + title badge (for other users' messages) */}
         {!isOwn && showAvatar && (
           <div className="mb-0.5 flex items-center gap-1.5 px-1">
@@ -337,7 +344,7 @@ export const MessageBubble = memo(function MessageBubble({
           />
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {/* Actions (for own messages, show on left) */}
           {isOwn && (showActions || isMenuOpen) && (
             <MessageActionMenu
@@ -356,25 +363,41 @@ export const MessageBubble = memo(function MessageBubble({
           {/* Bubble — dynamic styling from customization + liquid glass */}
           <div
             className={cn(
-              'px-4 py-2 transition-all duration-200',
-              'backdrop-blur-[12px] backdrop-saturate-[1.4]',
-              bubbleCssClass,
-              nameplateBubble?.className,
-              isOwn ? 'is-own text-white' : 'text-white',
+              'min-w-0 max-w-full break-words text-[15px] leading-5',
+              isolatedEmojiCount > 0
+                ? 'bg-transparent px-0 py-0 text-white'
+                : 'min-w-40 border px-[11px] py-2 shadow-sm transition-colors',
+              isolatedEmojiCount === 0 &&
+                (isOwn
+                  ? 'is-own rounded-2xl rounded-br-md border-white/10 text-white'
+                  : 'rounded-2xl rounded-bl-md border-[var(--token-border-muted)] text-white'),
+              isolatedEmojiCount === 0 && bubbleCssClass,
+              isolatedEmojiCount === 0 && nameplateBubble?.className,
               // Fallback Tailwind classes only when no custom bubble CSS class applies
+              isolatedEmojiCount === 0 &&
+                chatThemeAppearance &&
+                'bg-[var(--token-card-bg)]',
+              isolatedEmojiCount === 0 &&
               !chatThemeAppearance &&
                 !bubbleColor &&
                 !nameplateBubble &&
                 bubbleStyle === 'default' &&
                 (isOwn
-                  ? 'bg-primary-600/90 hover:bg-primary-500/90 rounded-2xl rounded-br-md shadow-[0_2px_8px_color-mix(in_srgb,var(--color-brand-purple)_15%,transparent)]'
-                  : 'rounded-2xl rounded-bl-md border border-transparent bg-[var(--token-card-bg)] shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:bg-[var(--token-card-bg)] dark:border-[var(--token-border-muted)] dark:bg-[var(--token-card-bg)] dark:hover:bg-[var(--token-card-bg)]')
+                  ? 'bg-primary-600/95 hover:bg-primary-500/95'
+                  : 'bg-[var(--token-card-bg)] hover:bg-[var(--token-card-bg)]')
             )}
-            style={bubbleInlineStyle}
+            style={isolatedEmojiCount > 0 ? undefined : bubbleInlineStyle}
             data-chat-theme-bubble={
-              chatThemeAppearance ? (isOwn ? 'outgoing' : 'incoming') : undefined
+              chatThemeAppearance && isolatedEmojiCount === 0
+                ? isOwn
+                  ? 'outgoing'
+                  : 'incoming'
+                : undefined
             }
-            data-nameplate-bubble-id={nameplateBubble?.entry.id}
+            data-nameplate-bubble-id={
+              isolatedEmojiCount === 0 ? nameplateBubble?.entry.id : undefined
+            }
+            data-isolated-emoji-count={isolatedEmojiCount || undefined}
           >
             {message.isPinned && (
               <div className="bg-primary-500/15 mb-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-primary-200">
@@ -389,13 +412,7 @@ export const MessageBubble = memo(function MessageBubble({
             />
 
             {/* Text content */}
-            {message.content &&
-              message.messageType !== 'voice' &&
-              message.messageType !== 'audio' &&
-              message.messageType !== 'gif' &&
-              message.messageType !== 'sticker' &&
-              message.messageType !== 'file' &&
-              message.messageType !== 'contact' && (
+            {rendersTextContent && (
                 <>
                   {isEditing ? (
                     <MessageEditForm
@@ -412,7 +429,11 @@ export const MessageBubble = memo(function MessageBubble({
                         </p>
                       ) : (
                         <>
-                          <MarkdownContent content={message.content} />
+                          <MarkdownContent
+                            content={message.content}
+                            emojiSize={isolatedEmojiSize}
+                            className={isolatedEmojiCount > 0 ? 'leading-none' : undefined}
+                          />
                           <RichMediaEmbed content={message.content} isOwnMessage={isOwn} />
                         </>
                       )}
@@ -422,7 +443,24 @@ export const MessageBubble = memo(function MessageBubble({
               )}
 
             <div
-              className={`mt-1 flex items-center gap-1 text-xs ${isOwn ? 'text-primary-200' : 'text-gray-500'}`}
+              className={cn(
+                'mt-1 flex w-fit items-center gap-1 text-[11px] leading-4',
+                isolatedEmojiCount > 0
+                  ? 'rounded-full bg-black/55 px-1.5 py-0.5 text-white/85'
+                  : isOwn
+                    ? 'text-primary-100/90'
+                    : 'text-white/65'
+              )}
+              style={
+                isolatedEmojiCount === 0 && chatThemeAppearance
+                  ? {
+                      color: isOwn
+                        ? chatThemeAppearance.ownTextColor
+                        : chatThemeAppearance.incomingTextColor,
+                      opacity: 0.68,
+                    }
+                  : undefined
+              }
             >
               <span>{formatMessageTime(message.createdAt)}</span>
               {message.isEdited && (
@@ -528,7 +566,13 @@ export const MessageBubble = memo(function MessageBubble({
         </div>
 
         {/* Reactions */}
-        <div className="mt-1">
+        <div
+          className={cn(
+            message.reactions.length > 0
+              ? 'mt-1'
+              : 'h-0 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100'
+          )}
+        >
           <MessageReactions
             messageId={message.id}
             reactions={aggregateReactions(message.reactions)}
@@ -554,7 +598,7 @@ export const MessageBubble = memo(function MessageBubble({
           />
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }, areMessageBubblePropsEqual);
 

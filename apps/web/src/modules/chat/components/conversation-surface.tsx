@@ -1,7 +1,4 @@
 import type { ReactNode, RefObject, UIEventHandler } from 'react';
-import { motion } from 'motion/react';
-import { tweens } from '@/lib/animation-presets';
-import { FADE_IN } from '@/lib/animations/transitions';
 import type { ChatThemeAppearance } from '@/modules/chat/theme/chat-theme-appearance';
 
 export interface ConversationSurfaceProps {
@@ -35,10 +32,9 @@ export function ConversationSurface({
   chatThemeAppearance,
 }: ConversationSurfaceProps) {
   return (
-    <motion.div
-      className="relative flex h-full max-h-screen flex-1 flex-col overflow-hidden"
-      {...FADE_IN}
-      transition={tweens.smooth}
+    <div
+      data-testid="conversation-surface"
+      className="relative flex h-full min-h-0 max-h-screen flex-1 flex-col overflow-hidden bg-[var(--token-bg-primary)]"
     >
       {header}
       {pinnedPanel}
@@ -47,7 +43,7 @@ export function ConversationSurface({
       <div
         ref={messagesScrollRef}
         onScroll={onMessagesScroll}
-        className="min-h-0 flex-1 space-y-4 overflow-y-auto p-6"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5"
         aria-label="Conversation messages"
         data-chat-theme-base={chatThemeAppearance?.base}
         data-chat-conversation-color={chatThemeAppearance?.conversationColor}
@@ -59,7 +55,7 @@ export function ConversationSurface({
       {scrollControl}
       {composer}
       {modalLayer}
-    </motion.div>
+    </div>
   );
 }
 
