@@ -25,6 +25,9 @@ import { VideoMessageRecorder } from '@/components/media/video-message-recorder'
 const GifPicker = lazy(() =>
   import('@/modules/chat/components/gif-picker').then((m) => ({ default: m.GifPicker }))
 );
+const EmojiPicker = lazy(() =>
+  import('@/modules/chat/components/emoji-picker').then((m) => ({ default: m.EmojiPicker }))
+);
 import { useMessageInput } from './useMessageInput';
 import { ReplyPreview } from './reply-preview';
 import { AttachmentsPreview } from './attachments-preview';
@@ -90,6 +93,7 @@ export function MessageInput({
     handleVideoMessage,
     handleStickerSelect,
     handleGifSelect,
+    handleEmojiSelect,
     handleMentionSelect,
     toggleAttachmentMode,
     setIsRecording,
@@ -243,6 +247,16 @@ export function MessageInput({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Suspense fallback={null}>
+        {attachmentMode === 'emoji' ? (
+          <EmojiPicker
+            isOpen
+            onSelect={handleEmojiSelect}
+            onClose={() => setAttachmentMode('none')}
+          />
+        ) : null}
+      </Suspense>
 
       {/* GIF Picker — lazy-loaded */}
       <AnimatePresence>

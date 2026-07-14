@@ -221,6 +221,14 @@ export function useMessageInput({
     HapticFeedback.medium();
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    const nextMessage = `${message}${emoji}`;
+    setMessage(nextMessage);
+    setDraftText(nextMessage);
+    setAttachmentMode('none');
+    inputRef.current?.focus();
+  };
+
   const handleStickerSelect = (sticker: StickerPayload) => {
     onSend({
       content: sticker.emoji,
@@ -275,6 +283,7 @@ export function useMessageInput({
     handleVideoMessage,
     handleStickerSelect,
     handleGifSelect,
+    handleEmojiSelect,
     handleMentionSelect,
     toggleAttachmentMode,
     setIsRecording,
