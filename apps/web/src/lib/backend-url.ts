@@ -4,6 +4,7 @@ const RETIRED_BACKEND_API_URL = 'https://cgraph-backend-prod-v2.fly.dev';
 const RETIRED_BACKEND_WS_URL = 'wss://cgraph-backend-prod-v2.fly.dev';
 const RETIRED_BACKEND_SOCKET_URL = `${RETIRED_BACKEND_WS_URL}/socket`;
 const PROD_BACKEND_API_URL = 'https://cgraph-backend-prod-v3.fly.dev';
+const PROD_BACKEND_SOCKET_URL = 'wss://cgraph-backend-prod-v3.fly.dev/socket';
 
 function shouldUseSameOriginApiProxy(): boolean {
   return !import.meta.env.PROD;
@@ -99,6 +100,10 @@ export function getSocketUrl(): string {
 
   if (envUrl) {
     return envUrl;
+  }
+
+  if (import.meta.env.PROD) {
+    return PROD_BACKEND_SOCKET_URL;
   }
 
   if (typeof window !== 'undefined') {

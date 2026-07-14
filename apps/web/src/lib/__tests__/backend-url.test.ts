@@ -37,4 +37,12 @@ describe('backend URL resolution', () => {
 
     expect(getSocketUrl()).toBe('wss://cgraph-backend-prod-v3.fly.dev/socket');
   });
+
+  it('uses the direct Phoenix endpoint when production socket env values are absent', () => {
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_SOCKET_URL', '');
+    vi.stubEnv('VITE_WS_URL', '');
+
+    expect(getSocketUrl()).toBe('wss://cgraph-backend-prod-v3.fly.dev/socket');
+  });
 });

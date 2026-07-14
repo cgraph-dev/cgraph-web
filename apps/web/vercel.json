@@ -26,10 +26,6 @@
       "destination": "https://cgraph-backend-prod-v3.fly.dev/api/:path*"
     },
     {
-      "source": "/socket/:path*",
-      "destination": "https://cgraph-backend-prod-v3.fly.dev/socket/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/"
     }
