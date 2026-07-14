@@ -15,7 +15,7 @@ import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { http } from '@/lib/api-client';
 import { GIF_CATEGORIES } from './constants';
-import { generateSampleGifs } from './utils';
+import { normalizeGifSearchResponse } from './utils';
 import { GifItem } from './gif-item';
 import { CategoryButton } from './category-button';
 import { EmptyState } from './empty-state';
@@ -35,11 +35,13 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
   const [activeCategory, setActiveCategory] = useState<string>('trending');
   const [gifs, setGifs] = useState<GifResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showRecent, setShowRecent] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
 
   const { favorites, recentlyUsed, toggleFavorite, addToRecent, isFavorite } = useGifStorage();
 
@@ -52,24 +54,38 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
 
   // Fetch GIFs from API
   const fetchGifs = useCallback(async (query: string) => {
+    requestRef.current?.abort();
+    const request = new AbortController();
+    requestRef.current = request;
     setIsLoading(true);
+    setLoadError(null);
     try {
       const response = await http.get('/api/v1/gifs/search', {
         params: { q: query || 'trending', limit: 30 },
+        signal: request.signal,
       });
 
-      if (response.data?.gifs) {
-        setGifs(response.data.gifs);
-      } else {
-        setGifs(generateSampleGifs(query));
-      }
+      if (request.signal.aborted) return;
+      setGifs(normalizeGifSearchResponse(response.data).gifs);
     } catch (error) {
-      logger.warn('GIF API not available, using fallback:', error);
-      setGifs(generateSampleGifs(query));
+      if (request.signal.aborted) return;
+      logger.warn('GIF search failed:', error);
+      setGifs([]);
+      setLoadError('GIF search is temporarily unavailable.');
     } finally {
-      setIsLoading(false);
+      if (requestRef.current === request) {
+        requestRef.current = null;
+        setIsLoading(false);
+      }
     }
   }, []);
+
+  useEffect(
+    () => () => {
+      requestRef.current?.abort();
+    },
+    []
+  );
 
   // Search with debounce
   useEffect(() => {
@@ -101,8 +117,6 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
     setSearchQuery('');
     setShowFavorites(false);
     setShowRecent(false);
-    const category = GIF_CATEGORIES.find((c) => c.id === categoryId);
-    fetchGifs(category?.searchTerm || '');
   }
 
   // Handle GIF selection
@@ -142,7 +156,7 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
         className={cn(
-          'z-50 w-[420px] overflow-hidden rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] shadow-2xl',
+          'z-50 w-full max-w-[420px] overflow-hidden rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] shadow-2xl',
           positionClassName
         )}
       >
@@ -167,7 +181,7 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search KLIPY..."
-              className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] py-2.5 pl-10 pr-4 text-sm text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:bg-[var(--token-card-bg)/0.6] focus:outline-none focus:ring-4"
+              className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2"
             />
             <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
           </div>
@@ -184,7 +198,7 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
               'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
               showFavorites
                 ? 'bg-red-500/20 text-red-400'
-                : 'bg-[var(--token-card-bg)/0.6] text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-white'
+                : 'bg-[var(--token-bg-secondary)] text-gray-400 hover:text-white'
             )}
           >
             <HeartSolidIcon className="h-3.5 w-3.5" />
@@ -199,7 +213,7 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
               'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
               showRecent
                 ? 'bg-primary-500/20 text-primary-400'
-                : 'bg-[var(--token-card-bg)/0.6] text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-white'
+                : 'bg-[var(--token-bg-secondary)] text-gray-400 hover:text-white'
             )}
           >
             <ClockIcon className="h-3.5 w-3.5" />
@@ -230,6 +244,23 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
                 transition={loop(tweens.slow)}
                 className="h-8 w-8 rounded-full border-2 border-primary-500 border-t-transparent"
               />
+            </div>
+          ) : loadError && !showFavorites && !showRecent ? (
+            <div role="alert" className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+              <p className="text-sm text-white/65">{loadError}</p>
+              <button
+                type="button"
+                onClick={() =>
+                  void fetchGifs(
+                    searchQuery.trim() ||
+                      GIF_CATEGORIES.find((category) => category.id === activeCategory)?.searchTerm ||
+                      ''
+                  )
+                }
+                className="h-9 rounded-lg border border-[var(--token-border-muted)] px-4 text-sm font-medium text-white/80 hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+              >
+                Retry
+              </button>
             </div>
           ) : displayGifs.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-gray-500">

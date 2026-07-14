@@ -4,7 +4,9 @@ const CONVERSATION_ID = '11111111-1111-4111-8111-111111111111';
 const FORWARD_CONVERSATION_ID = '11111111-1111-4111-8111-222222222222';
 const CURRENT_USER_ID = 'e2e-user';
 const FRIEND_USER_ID = '33333333-3333-4333-8333-333333333333';
-const GIF_DATA_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+const GIF_URL = 'https://media.klipy.test/launch.gif';
+const GIF_PREVIEW_URL = 'https://media.klipy.test/launch-preview.gif';
+const GIF_BYTES = Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64');
 
 const conversation = {
   id: CONVERSATION_ID,
@@ -174,6 +176,10 @@ async function installMessagingApiMocks(
   const sentMessages: Record<string, unknown>[] = [];
   const spacePatches: Record<string, unknown>[] = [];
   const voiceUploads: string[] = [];
+
+  await page.route('https://media.klipy.test/**', async (route) => {
+    await route.fulfill({ contentType: 'image/gif', body: GIF_BYTES });
+  });
   const spaceProofId = 'space-proof';
   const initialMessages = options.initialMessages ?? [
     messageFixture({}),
@@ -294,17 +300,19 @@ async function installMessagingApiMocks(
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
-        gifs: [
-          {
-            id: 'gif-launch-proof',
-            title: 'Launch Proof',
-            url: GIF_DATA_URL,
-            previewUrl: GIF_DATA_URL,
-            width: 320,
-            height: 180,
-            source: 'klipy',
-          },
-        ],
+        data: {
+          gifs: [
+            {
+              id: 'gif-launch-proof',
+              title: 'Launch Proof',
+              media: {
+                gif: { url: GIF_URL, dims: [320, 180] },
+                tinygif: { url: GIF_PREVIEW_URL, dims: [160, 90] },
+              },
+            },
+          ],
+          next: null,
+        },
       }),
     });
   });
@@ -1119,7 +1127,7 @@ test.describe('DM media composer', () => {
       .toContain('POST unarchive');
   });
 
-  test('sends routed cloud-DM GIF and sticker messages in the browser', async ({ page }) => {
+  test('sends a routed cloud-DM GIF in the browser', async ({ page }) => {
     const { sentMessages } = await installMessagingApiMocks(page);
 
     await page.goto(`/messages/${CONVERSATION_ID}`);
@@ -1130,13 +1138,13 @@ test.describe('DM media composer', () => {
       .poll(() => sentMessages, { message: 'GIF payload was sent through routed composer' })
       .toContainEqual(
         expect.objectContaining({
-          content: GIF_DATA_URL,
+          content: GIF_URL,
           content_type: 'gif',
           metadata: expect.objectContaining({
             gifId: 'gif-launch-proof',
             gifTitle: 'Launch Proof',
-            gifUrl: GIF_DATA_URL,
-            gifPreviewUrl: GIF_DATA_URL,
+            gifUrl: GIF_URL,
+            gifPreviewUrl: GIF_PREVIEW_URL,
             gifWidth: 320,
             gifHeight: 180,
             gifSource: 'klipy',
@@ -1144,6 +1152,12 @@ test.describe('DM media composer', () => {
         })
       );
     await expect(page.getByAltText('Launch Proof').first()).toBeVisible();
+  });
+
+  test('sends a routed cloud-DM sticker in the browser', async ({ page }) => {
+    const { sentMessages } = await installMessagingApiMocks(page);
+
+    await page.goto(`/messages/${CONVERSATION_ID}`);
 
     await page.getByRole('button', { name: /open sticker picker/i }).click();
     await page.getByRole('menuitem', { name: /send sticker wave/i }).click();

@@ -1,13 +1,9 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import type { GifItemProps } from './types';
-import { FADE_IN } from '@/lib/animations/transitions';
 
-/**
- */
 /**
  * Gif Item component.
  */
@@ -17,11 +13,11 @@ export function GifItem({ gif, onSelect, isFavorite, onToggleFavorite }: GifItem
   const selectGif = () => onSelect(gif);
 
   return (
-    <motion.div
+    <div
       role="button"
       tabIndex={0}
       aria-label={`Select GIF ${gif.title}`}
-      className="relative cursor-pointer overflow-hidden rounded-lg bg-[var(--token-card-bg)/0.6]"
+      className="relative cursor-pointer overflow-hidden rounded-lg bg-[var(--token-bg-secondary)]"
       style={{ aspectRatio: gif.width / gif.height }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -32,8 +28,6 @@ export function GifItem({ gif, onSelect, isFavorite, onToggleFavorite }: GifItem
           selectGif();
         }
       }}
-      whileHover={{ opacity: 0.9 }}
-      whileTap={{ scale: 0.98 }}
     >
       {/* Skeleton loader */}
       {!isLoaded && <div className="absolute inset-0 animate-pulse bg-[var(--token-card-bg)]" />}
@@ -51,28 +45,26 @@ export function GifItem({ gif, onSelect, isFavorite, onToggleFavorite }: GifItem
       />
 
       {/* Hover overlay with favorite button */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div {...FADE_IN} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/40">
-            <button
-              type="button"
-              aria-label={isFavorite ? 'Remove GIF from favorites' : 'Add GIF to favorites'}
-              aria-pressed={isFavorite}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(gif);
-              }}
-              className="absolute right-2 top-2 rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"
-            >
-              {isFavorite ? (
-                <HeartSolidIcon className="h-4 w-4 text-red-500" />
-              ) : (
-                <HeartIcon className="h-4 w-4 text-white" />
-              )}
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {isHovered && (
+        <div className="absolute inset-0 bg-black/40">
+          <button
+            type="button"
+            aria-label={isFavorite ? 'Remove GIF from favorites' : 'Add GIF to favorites'}
+            aria-pressed={isFavorite}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(gif);
+            }}
+            className="absolute right-2 top-2 rounded-full bg-black/50 p-1.5 transition-colors hover:bg-black/70"
+          >
+            {isFavorite ? (
+              <HeartSolidIcon className="h-4 w-4 text-red-500" />
+            ) : (
+              <HeartIcon className="h-4 w-4 text-white" />
+            )}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

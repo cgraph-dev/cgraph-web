@@ -4,7 +4,8 @@ export { CategoryButton } from './category-button';
 export { EmptyState } from './empty-state';
 export { useGifStorage } from './useGifStorage';
 export { GIF_CATEGORIES, FAVORITES_KEY, RECENT_KEY, MAX_FAVORITES, MAX_RECENT } from './constants';
-export { generateSampleGifs } from './utils';
+export { normalizeGifSearchResponse } from './utils';
+export type { GifSearchPage } from './utils';
 export type {
   GifResult,
   GifPickerProps,

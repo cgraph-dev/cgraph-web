@@ -267,6 +267,7 @@ export function MessageInput({
                 onSelect={handleGifSelect}
                 onClose={() => setAttachmentMode('none')}
                 isOpen={attachmentMode === 'gif'}
+                className="relative ml-auto"
               />
             </Suspense>
           </motion.div>

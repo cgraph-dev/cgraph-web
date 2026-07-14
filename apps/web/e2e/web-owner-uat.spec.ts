@@ -10,7 +10,9 @@ const LIVE_AVATAR_BORDER_ID = 'border_cyberpunk_epic_01';
 const LIVE_TITLE_ID = 'founding_member';
 const LIVE_BADGE_ID = 'badge-founder';
 const LIVE_NAMEPLATE_ID = 'plate_gilded_sapphire_loop_01';
-const GIF_DATA_URL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+const GIF_URL = 'https://media.klipy.test/group-launch.gif';
+const GIF_PREVIEW_URL = 'https://media.klipy.test/group-launch-preview.gif';
+const GIF_BYTES = Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64');
 
 const friendUser = {
   id: FRIEND_ID,
@@ -442,6 +444,10 @@ async function installOwnerUatMocks(page: Page) {
     });
   });
 
+  await page.route('https://media.klipy.test/**', async (route) => {
+    await route.fulfill({ contentType: 'image/gif', body: GIF_BYTES });
+  });
+
   await page.route('**/api/v1/**', async (route, request) => {
     const url = new URL(request.url());
     const path = url.pathname;
@@ -740,17 +746,19 @@ async function installOwnerUatMocks(page: Page) {
 
     if (path === '/api/v1/gifs/search') {
       await fulfillJson(route, {
-        gifs: [
-          {
-            id: 'group-gif-launch-proof',
-            title: 'Group Launch Proof',
-            url: GIF_DATA_URL,
-            previewUrl: GIF_DATA_URL,
-            width: 320,
-            height: 180,
-            source: 'klipy',
-          },
-        ],
+        data: {
+          gifs: [
+            {
+              id: 'group-gif-launch-proof',
+              title: 'Group Launch Proof',
+              media: {
+                gif: { url: GIF_URL, dims: [320, 180] },
+                tinygif: { url: GIF_PREVIEW_URL, dims: [160, 90] },
+              },
+            },
+          ],
+          next: null,
+        },
       });
       return;
     }
@@ -1195,13 +1203,13 @@ test.describe('Web owner focused UAT', () => {
       .poll(() => sentGroupMessages, { message: 'group message endpoint received GIF metadata' })
       .toContainEqual(
         expect.objectContaining({
-          content: GIF_DATA_URL,
+          content: GIF_URL,
           content_type: 'gif',
           metadata: expect.objectContaining({
             gifId: 'group-gif-launch-proof',
             gifTitle: 'Group Launch Proof',
-            gifUrl: GIF_DATA_URL,
-            gifPreviewUrl: GIF_DATA_URL,
+            gifUrl: GIF_URL,
+            gifPreviewUrl: GIF_PREVIEW_URL,
             gifSource: 'klipy',
           }),
           link_preview: expect.objectContaining({
