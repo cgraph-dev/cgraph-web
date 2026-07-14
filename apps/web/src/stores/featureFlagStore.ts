@@ -8,6 +8,7 @@
  */
 
 import { create } from 'zustand';
+import { isRecord } from '@/lib/api-utils/response-extractors';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('featureFlagStore');
@@ -34,9 +35,11 @@ export interface FlagHistoryEntry {
   readonly timestamp: string;
 }
 
+type EvaluatedFeatureFlag = Pick<FeatureFlag, 'name' | 'enabled' | 'variant'>;
+
 interface FeatureFlagState {
   /** All flags keyed by name */
-  flags: Record<string, FeatureFlag>;
+  flags: Record<string, EvaluatedFeatureFlag>;
   /** Timestamp of last fetch */
   lastFetched: number;
   /** Whether a fetch is in progress */
@@ -62,6 +65,34 @@ type FeatureFlagStore = FeatureFlagState & FeatureFlagActions;
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const FLAGS_API_URL = '/api/v1/feature-flags';
+
+function normalizeFlag(name: unknown, value: unknown): EvaluatedFeatureFlag | null {
+  if (typeof name !== 'string' || !isRecord(value) || typeof value.enabled !== 'boolean') {
+    return null;
+  }
+
+  return {
+    name,
+    enabled: value.enabled,
+    ...(typeof value.variant === 'string' && { variant: value.variant }),
+  };
+}
+
+function normalizeFlags(value: unknown): Record<string, EvaluatedFeatureFlag> {
+  const entries = Array.isArray(value)
+    ? value.map((flag) => [isRecord(flag) ? flag.name : undefined, flag] as const)
+    : isRecord(value)
+      ? Object.entries(value)
+      : [];
+
+  const flags: Record<string, EvaluatedFeatureFlag> = {};
+  for (const [name, value] of entries) {
+    const flag = normalizeFlag(name, value);
+    if (flag) flags[flag.name] = flag;
+  }
+
+  return flags;
+}
 
 export const useFeatureFlagStore = create<FeatureFlagStore>((set, get) => ({
   flags: {},
@@ -89,14 +120,18 @@ export const useFeatureFlagStore = create<FeatureFlagStore>((set, get) => ({
         throw new Error(`Failed to fetch flags: ${response.status}`);
       }
 
-      const data = await response.json();
-      const flagsMap: Record<string, FeatureFlag> = {};
-
-      // Normalize array response to map
-      const flagArray = data.data?.flags ?? data.flags ?? data.data ?? [];
-      for (const flag of flagArray) {
-        flagsMap[flag.name] = flag;
+      const data: unknown = await response.json();
+      let flagPayload: unknown = [];
+      if (isRecord(data)) {
+        if (isRecord(data.data) && 'flags' in data.data) {
+          flagPayload = data.data.flags;
+        } else if ('flags' in data) {
+          flagPayload = data.flags;
+        } else {
+          flagPayload = data.data;
+        }
       }
+      const flagsMap = normalizeFlags(flagPayload);
 
       set({ flags: flagsMap, lastFetched: Date.now(), loading: false });
       logger.debug(`Fetched ${Object.keys(flagsMap).length} feature flags`);

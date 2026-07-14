@@ -171,6 +171,49 @@ describe('fetchFlags', () => {
 
     expect(useFeatureFlagStore.getState().flags).toHaveProperty('voice_e2ee');
   });
+
+  it('normalizes the production name-keyed evaluated flag map', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        data: {
+          flags: {
+            voice_e2ee: { enabled: true, variant: null },
+            theme_variant: { enabled: true, variant: 'dark' },
+          },
+        },
+      }),
+    });
+
+    await useFeatureFlagStore.getState().fetchFlags();
+
+    expect(useFeatureFlagStore.getState().flags).toEqual({
+      voice_e2ee: { name: 'voice_e2ee', enabled: true },
+      theme_variant: { name: 'theme_variant', enabled: true, variant: 'dark' },
+    });
+  });
+
+  it('ignores malformed evaluated flag entries without failing the fetch', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        data: {
+          flags: {
+            valid_flag: { enabled: false },
+            missing_enabled: { variant: 'test' },
+            invalid_enabled: { enabled: 'yes' },
+          },
+        },
+      }),
+    });
+
+    await useFeatureFlagStore.getState().fetchFlags();
+
+    expect(useFeatureFlagStore.getState().flags).toEqual({
+      valid_flag: { name: 'valid_flag', enabled: false },
+    });
+    expect(useFeatureFlagStore.getState().error).toBeNull();
+  });
 });
 
 describe('refreshFlags', () => {
