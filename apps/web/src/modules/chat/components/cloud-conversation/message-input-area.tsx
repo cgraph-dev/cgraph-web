@@ -35,8 +35,8 @@ export function MessageInputArea({
       }
     : null;
 
-  function handleSend(payload: MessagePayload): void {
-    void onPayloadSend(payload);
+  function handleSend(payload: MessagePayload): Promise<void> {
+    return onPayloadSend(payload);
   }
 
   return (

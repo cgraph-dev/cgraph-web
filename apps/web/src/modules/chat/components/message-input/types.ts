@@ -6,7 +6,7 @@ export interface MessageInputProps {
   readonly conversationId?: string;
   readonly channelId?: string;
   readonly replyTo?: ReplyInfo | null;
-  readonly onSend: (message: MessagePayload) => void;
+  readonly onSend: (message: MessagePayload) => void | Promise<void>;
   readonly onCancelReply?: () => void;
   readonly onTyping?: (isTyping: boolean) => void;
   readonly placeholder?: string;

@@ -333,6 +333,8 @@ export function useCloudConversationController() {
     } catch (error) {
       logger.error('Failed to send voice message:', error);
       HapticFeedback.error();
+      toast.error('Voice message not sent', getErrorMessage(error));
+      throw error;
     } finally {
       setIsSending(false);
     }

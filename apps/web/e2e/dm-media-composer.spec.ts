@@ -938,7 +938,6 @@ test.describe('DM media composer', () => {
 
     await expect(page.getByPlaceholder(/type a message/i)).toBeVisible();
     await page.getByRole('button', { name: /record voice message/i }).click();
-    await page.getByRole('button', { name: /record voice message/i }).click();
     await expect(page.getByText(/recording:/i)).toBeVisible();
     await page.getByRole('button', { name: /stop recording/i }).click();
     await page.getByRole('button', { name: /send voice message/i }).click();

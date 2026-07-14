@@ -1241,7 +1241,6 @@ test.describe('Web owner focused UAT', () => {
     await expect(page.getByLabel(/sticker wave/i).first()).toBeVisible();
 
     await page.getByRole('button', { name: /record voice message/i }).click();
-    await page.getByRole('button', { name: /record voice message/i }).click();
     await page.getByRole('button', { name: /stop recording/i }).click();
     await page.getByRole('button', { name: /send voice message/i }).click();
     await expect

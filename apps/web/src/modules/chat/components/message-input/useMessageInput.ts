@@ -16,7 +16,7 @@ import type {
 import { useSlowModeCountdown } from './useSlowModeCountdown';
 
 interface UseMessageInputOptions {
-  readonly onSend: (message: MessagePayload) => void;
+  readonly onSend: (message: MessagePayload) => void | Promise<void>;
   readonly onTyping?: (isTyping: boolean) => void;
   readonly replyTo?: ReplyInfo | null;
   /**
@@ -170,8 +170,8 @@ export function useMessageInput({
   };
 
   // Handle voice message
-  const handleVoiceMessage = (data: VoiceMessageData) => {
-    onSend({
+  const handleVoiceMessage = async (data: VoiceMessageData) => {
+    await onSend({
       content: '',
       type: 'voice',
       replyToId: replyTo?.id,
