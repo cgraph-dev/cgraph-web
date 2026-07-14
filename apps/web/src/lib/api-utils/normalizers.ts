@@ -98,6 +98,23 @@ export function normalizeMessage(raw: Record<string, unknown>): Record<string, u
   // Priority: existing metadata.url > attachment.url > fileUrl/file_url
   let metadata = isRecord(raw.metadata) ? raw.metadata : {};
   const attachment = isRecord(raw.attachment) ? raw.attachment : null;
+  const uploadId =
+    asString(metadata.uploadId) ??
+    asString(raw.uploadId) ??
+    asString(raw.upload_id) ??
+    asString(attachment?.upload_id) ??
+    asString(attachment?.id);
+
+  if (uploadId) {
+    metadata = {
+      ...metadata,
+      uploadId,
+      filename: asString(metadata.filename) ?? asString(attachment?.filename),
+      size: asNumber(metadata.size) ?? asNumber(attachment?.size),
+      mimeType: asString(metadata.mimeType) ?? asString(attachment?.mime_type),
+      checksum: asString(metadata.checksum) ?? asString(attachment?.checksum),
+    };
+  }
 
   // If metadata already has a URL, ensure it's resolved to absolute
   if (metadata.url) {

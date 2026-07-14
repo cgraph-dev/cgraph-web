@@ -27,6 +27,7 @@ import {
   shouldAutoDownloadIncomingMedia,
   useBrowserMediaNetwork,
 } from '@/modules/chat/media/auto-download-policy';
+import { useCloudChatAttachment } from '@/modules/chat/media/use-cloud-chat-attachment';
 
 import { ContactCardMessage } from '@/modules/chat/components/contact-card-message';
 import type { ContactCardData } from '@cgraph-dev/shared-types';
@@ -271,7 +272,7 @@ function StickerMediaContent({ message }: Pick<MessageMediaContentProps, 'messag
 }
 
 interface ManualMediaLoadProps {
-  readonly label: 'image' | 'video';
+  readonly label: 'image' | 'video' | 'file';
   readonly onLoad: () => void;
 }
 
@@ -284,9 +285,95 @@ function ManualMediaLoad({ label, onLoad }: ManualMediaLoadProps) {
       className="mb-2 inline-flex items-center gap-2 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-3 py-2 text-sm font-medium text-[var(--token-text-primary)] transition-colors hover:bg-[var(--token-bg-secondary)]"
     >
       <ArrowDownTrayIcon className="h-4 w-4" aria-hidden="true" />
-      Load {label}
+      {label === 'file' ? 'Download file' : `Load ${label}`}
     </button>
   );
+}
+
+interface PrivateAttachmentContentProps {
+  readonly message: Message;
+  readonly isOwn: boolean;
+  readonly enabled: boolean;
+  readonly onEnable: () => void;
+}
+
+function PrivateAttachmentContent({
+  message,
+  isOwn,
+  enabled,
+  onEnable,
+}: PrivateAttachmentContentProps) {
+  const { status, attachment, error, retry } = useCloudChatAttachment(message, enabled);
+  const label =
+    message.messageType === 'video'
+      ? 'video'
+      : message.messageType === 'file'
+        ? 'file'
+        : 'image';
+
+  if (!enabled) {
+    return <ManualMediaLoad label={label} onLoad={onEnable} />;
+  }
+
+  if (status === 'loading') {
+    return (
+      <div role="status" className="mb-2 text-sm text-[var(--token-text-muted)]">
+        Loading attachment…
+      </div>
+    );
+  }
+
+  if (status === 'error' || !attachment) {
+    return (
+      <button
+        type="button"
+        onClick={retry}
+        className="mb-2 inline-flex items-center gap-2 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-3 py-2 text-sm font-medium text-[var(--token-text-primary)] transition-colors hover:bg-[var(--token-bg-secondary)]"
+        aria-label={`Retry ${label} attachment`}
+        title={error ?? undefined}
+      >
+        <ArrowDownTrayIcon className="h-4 w-4" aria-hidden="true" />
+        Retry
+      </button>
+    );
+  }
+
+  const hydratedMessage: Message = {
+    ...message,
+    metadata: {
+      ...message.metadata,
+      url: attachment.objectUrl,
+      filename: attachment.filename,
+      size: attachment.size,
+      mimeType: attachment.contentType,
+      checksum: attachment.checksum,
+    },
+  };
+
+  if (message.messageType === 'image') {
+    return (
+      <img
+        src={attachment.objectUrl}
+        alt="Shared image"
+        className="mb-2 max-w-xs cursor-pointer rounded-lg transition-opacity hover:opacity-90"
+        loading="lazy"
+        onClick={() => window.open(attachment.objectUrl, '_blank')}
+      />
+    );
+  }
+
+  if (message.messageType === 'video') {
+    return (
+      <video
+        src={attachment.objectUrl}
+        controls
+        preload="metadata"
+        className="mb-2 max-w-xs rounded-lg"
+      />
+    );
+  }
+
+  return <FileMessage message={hydratedMessage} isOwnMessage={isOwn} className="mb-2" />;
 }
 
 /**
@@ -301,12 +388,36 @@ export function MessageMediaContent({
   const mediaSettings = useSettingsStore((state) => state.settings.media);
   const network = useBrowserMediaNetwork();
   const [manuallyLoaded, setManuallyLoaded] = useState(false);
+  const privateUploadId = metaString(message.metadata?.uploadId);
 
   const canAutoLoad = (policy: typeof mediaSettings.autoDownloadPhotos): boolean =>
     isOwn || manuallyLoaded || shouldAutoDownloadIncomingMedia(policy, network);
 
   if (!isOwn && isFileLocked(message)) {
     return <LockedFileOverlay message={message} nodesPrice={getNodesPrice(message)} />;
+  }
+
+  if (
+    privateUploadId &&
+    (message.messageType === 'image' ||
+      message.messageType === 'video' ||
+      message.messageType === 'file')
+  ) {
+    const enabled =
+      message.messageType === 'image'
+        ? canAutoLoad(mediaSettings.autoDownloadPhotos)
+        : message.messageType === 'video'
+          ? canAutoLoad(mediaSettings.autoDownloadVideos)
+          : manuallyLoaded;
+
+    return (
+      <PrivateAttachmentContent
+        message={message}
+        isOwn={isOwn}
+        enabled={enabled}
+        onEnable={() => setManuallyLoaded(true)}
+      />
+    );
   }
 
   if (message.messageType === 'image' && metaUrl !== undefined) {

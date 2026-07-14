@@ -188,6 +188,37 @@ describe('normalizeMessage', () => {
   });
 
   describe('file/image messages', () => {
+    it('keeps opaque private identity without manufacturing a permanent URL', () => {
+      const raw = {
+        id: 'msg-private',
+        conversationId: 'conv-1',
+        contentType: 'image',
+        uploadId: 'upload-private-1',
+        fileUrl: null,
+        attachment: {
+          id: 'upload-private-1',
+          upload_id: 'upload-private-1',
+          filename: 'private.png',
+          size: 128,
+          mime_type: 'image/png',
+          checksum: 'b'.repeat(64),
+        },
+        metadata: {},
+      };
+
+      const msg = normalizeMessage(raw);
+      const meta = msg.metadata as Record<string, unknown>;
+
+      expect(meta).toMatchObject({
+        uploadId: 'upload-private-1',
+        filename: 'private.png',
+        size: 128,
+        mimeType: 'image/png',
+        checksum: 'b'.repeat(64),
+      });
+      expect(meta).not.toHaveProperty('url');
+    });
+
     it('extracts media URL for file messages from attachment', () => {
       const raw = {
         id: 'msg-file',

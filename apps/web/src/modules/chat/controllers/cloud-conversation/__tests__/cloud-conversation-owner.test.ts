@@ -81,6 +81,7 @@ describe('Cloud conversation ownership', () => {
     const voiceUpload = source(
       'src/modules/chat/controllers/cloud-conversation/voice-message-upload.ts'
     );
+    const groupChannel = source('src/pages/groups/group-channel/group-channel.tsx');
 
     expect(controller).toContain('useChatStore');
     expect(controller).toContain('socketManager');
@@ -90,6 +91,10 @@ describe('Cloud conversation ownership', () => {
     expect(messageRequest).toContain("status === 'pending'");
     expect(messageRequest).toContain("status === 'blocked'");
     expect(controller).toContain('uploadMessageAttachment');
+    expect(controller).toContain('shouldUsePrivateCloudChatAttachment');
+    expect(controller).toContain("context: usePrivateUpload ? 'cloud_chat' : 'message'");
+    expect(groupChannel).toContain("context: 'message'");
+    expect(groupChannel).not.toContain("context: 'cloud_chat'");
     expect(controller).toContain('uploadVoiceMessage');
     expect(controller).toContain('sendMessage(conversationId');
     expect(controller).toContain('fetchMessages(conversationId)');

@@ -16,6 +16,10 @@ interface UploadMessageAttachmentOptions {
   readonly onProgress?: (progress: number) => void;
 }
 
+export interface MessageAttachmentUpload extends UploadedMessageAttachment {
+  readonly checksum?: string;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -54,7 +58,7 @@ function assertAllowedMessageUpload(file: File): void {
 function uploadedAttachmentFromResponse(
   data: Record<string, unknown>,
   file: File
-): UploadedMessageAttachment {
+): MessageAttachmentUpload {
   const url = stringValue(data.url);
 
   if (!url) {
@@ -68,6 +72,7 @@ function uploadedAttachmentFromResponse(
     contentType: stringValue(data.content_type) ?? contentTypeFor(file),
     size: numberValue(data.size) ?? file.size,
     thumbnailUrl: stringValue(data.thumbnail_url),
+    checksum: stringValue(data.checksum) ?? undefined,
   };
 }
 
@@ -76,7 +81,7 @@ async function uploadSinglePartAttachment(
   context: string,
   signal: AbortSignal | undefined,
   onProgress: (progress: number) => void
-): Promise<UploadedMessageAttachment> {
+): Promise<MessageAttachmentUpload> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('context', context);
@@ -96,8 +101,14 @@ async function uploadSinglePartAttachment(
     throw new Error('Upload response did not include file data');
   }
 
+  const uploaded = uploadedAttachmentFromResponse(data, file);
+
+  if (context === 'cloud_chat' && (!uploaded.uploadId || !uploaded.checksum)) {
+    throw new Error('Private upload response did not include durable identity and integrity data');
+  }
+
   onProgress(100);
-  return uploadedAttachmentFromResponse(data, file);
+  return uploaded;
 }
 
 function partBlob(file: File, partNumber: number): Blob {
@@ -264,7 +275,7 @@ async function uploadMultipartAttachment(
   context: string,
   signal: AbortSignal | undefined,
   onProgress: (progress: number) => void
-): Promise<UploadedMessageAttachment> {
+): Promise<MessageAttachmentUpload> {
   const start = await apiClient.upload.startMultipartUpload({
     filename: file.name,
     content_type: contentTypeFor(file),
@@ -309,13 +320,17 @@ async function uploadMultipartAttachment(
 export async function uploadMessageAttachment(
   file: File,
   options: UploadMessageAttachmentOptions = {}
-): Promise<UploadedMessageAttachment> {
+): Promise<MessageAttachmentUpload> {
   assertAllowedMessageUpload(file);
 
   const context = options.context ?? 'message';
   const onProgress = options.onProgress ?? (() => undefined);
 
   if (shouldUseMultipartMessageUpload(file.size)) {
+    if (context === 'cloud_chat') {
+      throw new Error('Private Cloud Chat multipart uploads are not available yet');
+    }
+
     return uploadMultipartAttachment(file, context, options.signal, onProgress);
   }
 

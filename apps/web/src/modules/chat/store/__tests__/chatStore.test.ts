@@ -338,6 +338,34 @@ describe('sendMessage', () => {
     );
   });
 
+  it('sends opaque private identity and strips local preview data from transport', async () => {
+    mockApi.post.mockResolvedValueOnce({ data: { message: makeMsg({ messageType: 'image' }) } });
+    const metadata = {
+      uploadId: 'private-upload-1',
+      filename: 'private.png',
+      size: 2048,
+      mimeType: 'image/png',
+      checksum: 'c'.repeat(64),
+      localPreviewUrl: 'blob:optimistic-private',
+    };
+
+    await useChatStore.getState().sendMessage('conv-1', 'private.png', undefined, {
+      type: 'image',
+      metadata,
+    });
+
+    const payload = mockApi.post.mock.calls[0]?.[1] as Record<string, unknown>;
+    const sentMetadata = payload.metadata as Record<string, unknown>;
+
+    expect(payload.upload_id).toBe('private-upload-1');
+    expect(payload).not.toHaveProperty('file_url');
+    expect(sentMetadata).toMatchObject({
+      uploadId: 'private-upload-1',
+      checksum: 'c'.repeat(64),
+    });
+    expect(sentMetadata).not.toHaveProperty('localPreviewUrl');
+  });
+
   it('sends paid file lock fields as root fields plus metadata', async () => {
     mockApi.post.mockResolvedValueOnce({ data: { message: makeMsg({ messageType: 'image' }) } });
     const metadata = {

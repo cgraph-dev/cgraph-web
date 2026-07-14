@@ -5,11 +5,18 @@ import { MessageMediaContent } from '../message-media-content';
 import type { Message } from '@/modules/chat/store/chatStore.impl';
 import { DEFAULT_SETTINGS, useSettingsStore } from '@/modules/settings/store';
 
-const { mockNavigate, mockUnlockFile, mockToastError, mockToastSuccess } = vi.hoisted(() => ({
+const {
+  mockNavigate,
+  mockUnlockFile,
+  mockToastError,
+  mockToastSuccess,
+  mockCloudAttachment,
+} = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockUnlockFile: vi.fn(),
   mockToastError: vi.fn(),
   mockToastSuccess: vi.fn(),
+  mockCloudAttachment: vi.fn(),
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -54,6 +61,10 @@ vi.mock('@/modules/chat/components/gif-message', () => ({
 
 vi.mock('@/modules/chat/components/file-message', () => ({
   FileMessage: () => <div data-testid="file-message" />,
+}));
+
+vi.mock('@/modules/chat/media/use-cloud-chat-attachment', () => ({
+  useCloudChatAttachment: mockCloudAttachment,
 }));
 
 vi.mock('./icons', () => ({
@@ -104,6 +115,12 @@ describe('MessageMediaContent', () => {
           autoDownloadVideos: 'always',
         },
       },
+    });
+    mockCloudAttachment.mockReturnValue({
+      status: 'idle',
+      attachment: null,
+      error: null,
+      retry: vi.fn(),
     });
   });
 
@@ -231,6 +248,64 @@ describe('MessageMediaContent', () => {
     };
     render(<MessageMediaContent {...defaultProps} message={msg} />);
     expect(screen.getByText('doc.pdf')).toBeInTheDocument();
+    expect(screen.getByTestId('file-message')).toBeInTheDocument();
+  });
+
+  it('renders only a verified local URL for a private Cloud Chat image', () => {
+    mockCloudAttachment.mockReturnValue({
+      status: 'ready',
+      attachment: {
+        objectUrl: 'blob:verified-private-image',
+        filename: 'private.png',
+        contentType: 'image/png',
+        size: 128,
+        checksum: 'd'.repeat(64),
+        expiresAt: '2026-07-14T20:00:00Z',
+      },
+      error: null,
+      retry: vi.fn(),
+    });
+    const msg = {
+      ...baseMessage,
+      messageType: 'image' as const,
+      metadata: { uploadId: 'upload-private-1', checksum: 'd'.repeat(64), size: 128 },
+    };
+
+    render(<MessageMediaContent {...defaultProps} message={msg} />);
+
+    expect(screen.getByAltText('Shared image')).toHaveAttribute(
+      'src',
+      'blob:verified-private-image'
+    );
+    expect(screen.queryByText('https://objects.example/private')).not.toBeInTheDocument();
+  });
+
+  it('requires an explicit download before loading a private file', () => {
+    mockCloudAttachment.mockImplementation((_message, enabled: boolean) => ({
+      status: enabled ? 'ready' : 'idle',
+      attachment: enabled
+        ? {
+            objectUrl: 'blob:verified-private-file',
+            filename: 'private.pdf',
+            contentType: 'application/pdf',
+            size: 256,
+            checksum: 'e'.repeat(64),
+            expiresAt: '2026-07-14T20:00:00Z',
+          }
+        : null,
+      error: null,
+      retry: vi.fn(),
+    }));
+    const msg = {
+      ...baseMessage,
+      messageType: 'file' as const,
+      metadata: { uploadId: 'upload-private-2', filename: 'private.pdf' },
+    };
+
+    render(<MessageMediaContent {...defaultProps} message={msg} />);
+    expect(screen.queryByTestId('file-message')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download file' }));
     expect(screen.getByTestId('file-message')).toBeInTheDocument();
   });
 

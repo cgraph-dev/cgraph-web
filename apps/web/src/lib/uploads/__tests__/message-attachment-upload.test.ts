@@ -122,6 +122,50 @@ describe('uploadMessageAttachment', () => {
     expect(apiClient.upload.startMultipartUpload).not.toHaveBeenCalled();
   });
 
+  it('requires opaque identity and integrity data for private Cloud Chat uploads', async () => {
+    vi.mocked(http.post).mockResolvedValue({
+      status: 201,
+      data: {
+        data: {
+          id: 'private-upload-1',
+          url: '/api/v1/files/private-upload-1',
+          original_filename: 'photo.png',
+          content_type: 'image/png',
+          size: 12,
+          checksum: 'a'.repeat(64),
+        },
+      },
+    });
+
+    const result = await uploadMessageAttachment(
+      new File(['private'], 'photo.png', { type: 'image/png' }),
+      { context: 'cloud_chat' }
+    );
+    const formData = vi.mocked(http.post).mock.calls[0]?.[1] as FormData;
+
+    expect(formData.get('context')).toBe('cloud_chat');
+    expect(result).toMatchObject({
+      uploadId: 'private-upload-1',
+      checksum: 'a'.repeat(64),
+      url: '/api/v1/files/private-upload-1',
+    });
+  });
+
+  it('does not route private Cloud Chat through the deferred multipart owner', async () => {
+    const file = new File(
+      [new Uint8Array(MESSAGE_UPLOAD_MULTIPART_PART_SIZE_BYTES + 1)],
+      'private-large.bin',
+      { type: 'application/octet-stream' }
+    );
+
+    await expect(uploadMessageAttachment(file, { context: 'cloud_chat' })).rejects.toThrow(
+      'Private Cloud Chat multipart uploads are not available yet'
+    );
+
+    expect(apiClient.upload.startMultipartUpload).not.toHaveBeenCalled();
+    expect(http.post).not.toHaveBeenCalled();
+  });
+
   it('uses multipart direct uploads for large attachments', async () => {
     vi.mocked(apiClient.upload.startMultipartUpload).mockResolvedValue({
       ok: true,

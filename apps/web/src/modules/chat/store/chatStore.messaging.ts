@@ -73,6 +73,11 @@ function toMessage(raw: Record<string, unknown>): Message | null {
   return isMessage(raw) ? raw : null;
 }
 
+function metadataForTransport(metadata: Record<string, unknown>): Record<string, unknown> {
+  const { localPreviewUrl: _localPreviewUrl, ...transportMetadata } = metadata;
+  return transportMetadata;
+}
+
 async function queuePendingMessage(
   clientMessageId: string,
   conversationId: string,
@@ -114,6 +119,7 @@ export function createMessagingActions(_set: Set, get: Get) {
       const conversation = conversations.find((c) => c.id === conversationId);
       const contentType = options?.type || 'text';
       const metadata = options?.metadata || {};
+      const transportMetadata = metadataForTransport(metadata);
       const isSecretConversation = conversation?.conversationType === 'secret';
 
       if (isSecretConversation) {
@@ -127,7 +133,9 @@ export function createMessagingActions(_set: Set, get: Get) {
       };
       if (replyToId) payload.reply_to_id = replyToId;
 
-      if (metadata.fileUrl) {
+      if (typeof metadata.uploadId === 'string' && metadata.uploadId.length > 0) {
+        payload.upload_id = metadata.uploadId;
+      } else if (metadata.fileUrl) {
         payload.file_url = metadata.fileUrl;
         payload.file_name = metadata.fileName;
         payload.file_size = metadata.fileSize;
@@ -148,8 +156,8 @@ export function createMessagingActions(_set: Set, get: Get) {
         payload.is_file_locked = metadata.isFileLocked;
       }
 
-      if (metadata && Object.keys(metadata).length > 0) {
-        payload.metadata = metadata;
+      if (Object.keys(transportMetadata).length > 0) {
+        payload.metadata = transportMetadata;
       }
 
       const currentUser = useAuthStore.getState().user;

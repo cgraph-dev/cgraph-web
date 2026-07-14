@@ -23,6 +23,10 @@ import { toast } from '@/shared/components/ui';
 import { buildMessageAttachmentMetadata, messageContentTypeForMime } from '@cgraph-dev/shared-types';
 import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload';
 import type { MessagePayload } from '@/modules/chat/components/message-input';
+import {
+  buildPrivateCloudChatAttachmentMetadata,
+  shouldUsePrivateCloudChatAttachment,
+} from '@/modules/chat/media/cloud-chat-attachment';
 import { getDirectCallRoute, type DirectCallType } from './direct-call-routing';
 import {
   uploadVoiceMessage,
@@ -38,6 +42,7 @@ interface MessageScrollSnapshot {
 }
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 96;
+const OPTIMISTIC_ATTACHMENT_URL_TTL_MS = 30_000;
 
 function isNearScrollBottom(container: HTMLDivElement | null): boolean {
   if (!container) return true;
@@ -521,13 +526,26 @@ export function useCloudConversationController() {
           isViewOnce: true,
         }
       : {};
+    let optimisticAttachmentUrl: string | null = null;
 
     try {
       if (attachment) {
-        const uploaded = await uploadMessageAttachment(attachment, { context: 'message' });
+        const usePrivateUpload = shouldUsePrivateCloudChatAttachment(attachment, {
+          isPaid: attachmentNodePrice !== null,
+          isViewOnce: payload.isViewOnce === true,
+        });
+        const uploaded = await uploadMessageAttachment(attachment, {
+          context: usePrivateUpload ? 'cloud_chat' : 'message',
+        });
         content = content || uploaded.filename;
         contentType = messageContentTypeForMime(uploaded.contentType, uploaded.filename);
-        metadata = buildMessageAttachmentMetadata(uploaded);
+
+        if (usePrivateUpload) {
+          optimisticAttachmentUrl = URL.createObjectURL(attachment);
+          metadata = buildPrivateCloudChatAttachmentMetadata(uploaded, optimisticAttachmentUrl);
+        } else {
+          metadata = buildMessageAttachmentMetadata(uploaded);
+        }
 
         if (attachmentNodePrice !== null) {
           if (!callRecipientId) {
@@ -603,6 +621,10 @@ export function useCloudConversationController() {
       HapticFeedback.error();
       toast.error('Message not sent', getErrorMessage(error));
     } finally {
+      if (optimisticAttachmentUrl) {
+        const url = optimisticAttachmentUrl;
+        window.setTimeout(() => URL.revokeObjectURL(url), OPTIMISTIC_ATTACHMENT_URL_TTL_MS);
+      }
       setIsSending(false);
     }
   }
