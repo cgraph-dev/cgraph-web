@@ -36,6 +36,7 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from '@/lib/socket';
 import { useAuthStore } from '@/modules/auth/store';
+import { useSettingsStore } from '@/modules/settings/store';
 import {
   WebRTCManager,
   getWebRTCManager,
@@ -92,6 +93,7 @@ export interface UseCallReturn {
 export function useCall(): UseCallReturn {
   const socketManager = useSocket();
   const token = useAuthStore((state) => state.token);
+  const callSettings = useSettingsStore((state) => state.settings.calls);
   const [manager, setManager] = useState<WebRTCManager | null>(null);
   const [callState, setCallState] = useState<CallState>({
     roomId: null,
@@ -170,7 +172,7 @@ export function useCall(): UseCallReturn {
     options: { video?: boolean; audio?: boolean } = { video: true, audio: true }
   ): Promise<string | null> {
     if (!manager) return null;
-    const roomId = await manager.startCall(targetUserId, options);
+    const roomId = await manager.startCall(targetUserId, options, callSettings);
     setCallState(manager.getState());
     return roomId;
   }
@@ -180,7 +182,7 @@ export function useCall(): UseCallReturn {
     options: { video?: boolean; audio?: boolean } = { video: true, audio: true }
   ): Promise<boolean> {
     if (!manager) return false;
-    const success = await manager.answerCall(roomId, options);
+    const success = await manager.answerCall(roomId, options, callSettings);
     setCallState(manager.getState());
     return success;
   }

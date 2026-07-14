@@ -118,7 +118,11 @@ describe('WebRTCManager', () => {
 
       expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
         video: true,
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
       expect(roomId).toBe('room-123');
     });
@@ -128,11 +132,40 @@ describe('WebRTCManager', () => {
 
       expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
         video: false,
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
 
       const state = manager.getState();
       expect(state.isVideoEnabled).toBe(false);
+    });
+
+    it('uses saved audio processing and 1080p video preferences', async () => {
+      await manager.startCall(
+        'user-456',
+        { video: true, audio: true },
+        {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          defaultVideoResolution: '1080p',
+        }
+      );
+
+      expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
+        video: {
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
     });
 
     it('should return null and set error on failure', async () => {
@@ -162,6 +195,27 @@ describe('WebRTCManager', () => {
 
       const state = manager.getState();
       expect(state.roomId).toBe('room-789');
+    });
+
+    it('uses saved 720p video preferences when answering a direct call', async () => {
+      await manager.answerCall(
+        'room-789',
+        { video: true, audio: false },
+        {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          defaultVideoResolution: '720p',
+        }
+      );
+
+      expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
     });
 
     it('should return false on failure', async () => {

@@ -7,6 +7,7 @@
  */
 
 import { Channel, Socket } from 'phoenix';
+import { DEFAULT_CALLS_SETTINGS, type CallsSettings } from '@cgraph-dev/shared-types';
 import { CallState, CallEventHandler, createDefaultCallState } from './types';
 import { setupChannelHandlers } from './peerConnection';
 import { isRecord } from '@/lib/api-utils/response-extractors';
@@ -50,13 +51,13 @@ export class WebRTCManager {
   /** Start a new call */
   async startCall(
     targetUserId: string,
-    options: { video?: boolean; audio?: boolean } = { video: true, audio: true }
+    options: { video?: boolean; audio?: boolean } = { video: true, audio: true },
+    callSettings: CallsSettings = DEFAULT_CALLS_SETTINGS
   ): Promise<string | null> {
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia({
-        video: options.video,
-        audio: options.audio,
-      });
+      this.localStream = await navigator.mediaDevices.getUserMedia(
+        getMediaConstraints(options, callSettings)
+      );
       this.state.localStream = this.localStream;
       this.state.isVideoEnabled = options.video ?? true;
       this.state.status = 'ringing';
@@ -124,13 +125,13 @@ export class WebRTCManager {
   /** Answer an incoming call */
   async answerCall(
     roomId: string,
-    options: { video?: boolean; audio?: boolean } = { video: true, audio: true }
+    options: { video?: boolean; audio?: boolean } = { video: true, audio: true },
+    callSettings: CallsSettings = DEFAULT_CALLS_SETTINGS
   ): Promise<boolean> {
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia({
-        video: options.video,
-        audio: options.audio,
-      });
+      this.localStream = await navigator.mediaDevices.getUserMedia(
+        getMediaConstraints(options, callSettings)
+      );
       this.state.localStream = this.localStream;
       this.state.roomId = roomId;
       this.state.status = 'connecting';
@@ -270,6 +271,36 @@ export class WebRTCManager {
       () => this.cleanupCall(),
       this.iceServers
     );
+  }
+}
+
+function getMediaConstraints(
+  options: { video?: boolean; audio?: boolean },
+  callSettings: CallsSettings
+): MediaStreamConstraints {
+  return {
+    video: options.video === false ? false : getVideoConstraints(callSettings.defaultVideoResolution),
+    audio:
+      options.audio === false
+        ? false
+        : {
+            echoCancellation: callSettings.echoCancellation,
+            noiseSuppression: callSettings.noiseSuppression,
+            autoGainControl: callSettings.autoGainControl,
+          },
+  };
+}
+
+function getVideoConstraints(
+  preference: CallsSettings['defaultVideoResolution']
+): true | MediaTrackConstraints {
+  switch (preference) {
+    case '720p':
+      return { width: { ideal: 1280 }, height: { ideal: 720 } };
+    case '1080p':
+      return { width: { ideal: 1920 }, height: { ideal: 1080 } };
+    case 'auto':
+      return true;
   }
 }
 

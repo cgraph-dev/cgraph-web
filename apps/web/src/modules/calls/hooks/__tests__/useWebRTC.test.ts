@@ -12,6 +12,15 @@ import { useAuthStore } from '@/modules/auth/store';
 
 // --- Mocks ----------------------------------------------------------------
 
+const { callsSettings } = vi.hoisted(() => ({
+  callsSettings: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+    defaultVideoResolution: '1080p' as const,
+  },
+}));
+
 const mockGetState = vi.fn((): {
   roomId: string | null;
   status: string;
@@ -65,6 +74,15 @@ vi.mock('@/lib/socket', () => ({
     getSocket: mockGetSocket,
     connect: mockConnect,
   })),
+}));
+
+vi.mock('@/modules/settings/store', () => ({
+  useSettingsStore: (selector: (state: { settings: { calls: object } }) => unknown) =>
+    selector({
+      settings: {
+        calls: callsSettings,
+      },
+    }),
 }));
 
 vi.mock('@/components/feedback/toast', () => ({
@@ -150,7 +168,11 @@ describe('useWebRTC', () => {
       await result.current.startCall('user-456', { video: true, audio: true });
     });
 
-    expect(mockStartCall).toHaveBeenCalledWith('user-456', { video: true, audio: true });
+    expect(mockStartCall).toHaveBeenCalledWith(
+      'user-456',
+      { video: true, audio: true },
+      callsSettings
+    );
   });
 
   it('handles null room from startCall gracefully', async () => {
@@ -162,7 +184,11 @@ describe('useWebRTC', () => {
       await result.current.startCall('user-456');
     });
 
-    expect(mockStartCall).toHaveBeenCalledWith('user-456', { video: true, audio: true });
+    expect(mockStartCall).toHaveBeenCalledWith(
+      'user-456',
+      { video: true, audio: true },
+      callsSettings
+    );
     // Source silently returns when roomId is null — callState stays idle
     expect(result.current.callState.status).toBe('idle');
   });
@@ -188,7 +214,11 @@ describe('useWebRTC', () => {
       await result.current.answerCall('room-789', { video: false, audio: true });
     });
 
-    expect(mockAnswerCall).toHaveBeenCalledWith('room-789', { video: false, audio: true });
+    expect(mockAnswerCall).toHaveBeenCalledWith(
+      'room-789',
+      { video: false, audio: true },
+      callsSettings
+    );
   });
 
   it('shows toast error when answerCall fails', async () => {

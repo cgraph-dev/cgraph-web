@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCall } from '../useCall';
@@ -45,6 +45,15 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+const { callsSettings } = vi.hoisted(() => ({
+  callsSettings: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+    defaultVideoResolution: '1080p' as const,
+  },
+}));
+
 vi.mock('@/lib/socket', () => ({
   useSocket: vi.fn(() => ({
     getSocket: mocks.mockGetSocket,
@@ -55,6 +64,15 @@ vi.mock('@/lib/socket', () => ({
 vi.mock('../webrtcService', () => ({
   getWebRTCManager: mocks.mockGetWebRTCManager,
   destroyWebRTCManager: mocks.mockDestroyWebRTCManager,
+}));
+
+vi.mock('@/modules/settings/store', () => ({
+  useSettingsStore: (selector: (state: { settings: { calls: object } }) => unknown) =>
+    selector({
+      settings: {
+        calls: callsSettings,
+      },
+    }),
 }));
 
 describe('useCall', () => {
@@ -96,5 +114,27 @@ describe('useCall', () => {
 
     expect(result.current.isReady).toBe(false);
     expect(mocks.mockGetWebRTCManager).not.toHaveBeenCalled();
+  });
+
+  it('passes persisted call settings to the direct manager', async () => {
+    const { result } = renderHook(() => useCall());
+
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+
+    await act(async () => {
+      await result.current.startCall('user-456');
+      await result.current.answerCall('room-789', { video: false, audio: true });
+    });
+
+    expect(mocks.mockManager.startCall).toHaveBeenCalledWith(
+      'user-456',
+      { video: true, audio: true },
+      callsSettings
+    );
+    expect(mocks.mockManager.answerCall).toHaveBeenCalledWith(
+      'room-789',
+      { video: false, audio: true },
+      callsSettings
+    );
   });
 });

@@ -12,6 +12,7 @@ import { WebRTCManager, CallState, CallEventHandler } from '@/lib/webrtc/webrtcS
 import { toast } from '@/components/feedback/toast';
 import { logger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
+import { useSettingsStore } from '@/modules/settings/store';
 
 export interface UseWebRTCOptions {
   conversationId?: string;
@@ -71,6 +72,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
   const { conversationId: _conversationId, onCallConnected, onCallEnded, onError } = options;
   const socketManager = useSocket();
   const token = useAuthStore((state) => state.token);
+  const callSettings = useSettingsStore((state) => state.settings.calls);
   const webrtcManagerRef = useRef<WebRTCManager | null>(null);
   const isEndingRef = useRef(false);
 
@@ -182,7 +184,11 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
       try {
         logger.log('Starting call to:', targetUserId, 'options:', callOptions);
-        const roomId = await webrtcManagerRef.current.startCall(targetUserId, callOptions);
+        const roomId = await webrtcManagerRef.current.startCall(
+          targetUserId,
+          callOptions,
+          callSettings
+        );
 
         if (roomId) {
           logger.log('Call initiated, room ID:', roomId);
@@ -213,7 +219,7 @@ export function useWebRTC(options: UseWebRTCOptions = {}): UseWebRTCReturn {
 
       try {
         logger.log('Answering call, room ID:', roomId, 'options:', callOptions);
-        const success = await webrtcManagerRef.current.answerCall(roomId, callOptions);
+        const success = await webrtcManagerRef.current.answerCall(roomId, callOptions, callSettings);
 
         if (success) {
           logger.log('Call answered successfully');
