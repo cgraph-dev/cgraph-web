@@ -15,7 +15,6 @@ import {
   LanguageIcon,
   CircleStackIcon,
   Cog6ToothIcon,
-  FaceSmileIcon,
   PhoneIcon,
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
@@ -40,7 +39,6 @@ import {
   ChatSettingsPanel,
 } from '@/modules/settings/components/panels';
 import { AdvancedSettingsPanel } from '@/modules/settings/components/panels/advanced-settings-panel';
-import { StickersEmojiSettingsPanel } from '@/modules/settings/components/panels/stickers-emoji-settings-panel';
 import { CallsSettingsPanel } from '@/modules/settings/components/panels/calls-settings-panel';
 import { NotificationProfilesPanel } from '@/modules/settings/components/panels/notification-profiles-panel';
 import { NotificationProfileEditor } from '@/modules/settings/components/panels/notification-profile-editor';
@@ -99,12 +97,6 @@ const settingsSections = [
     label: 'Data & Storage',
     icon: CircleStackIcon,
     description: 'Cache, auto-download, bandwidth',
-  },
-  {
-    id: 'stickers-emoji',
-    label: 'Stickers & Emoji',
-    icon: FaceSmileIcon,
-    description: 'Suggestions, animation, skin tone',
   },
   {
     id: 'calls',
@@ -377,9 +369,6 @@ export default function Settings() {
                 )}
                 {section === 'privacy' && <PrivacySettingsPanel key="privacy" />}
                 {section === 'data-storage' && <DataStoragePanel key="data-storage" />}
-                {section === 'stickers-emoji' && (
-                  <StickersEmojiSettingsPanel key="stickers-emoji" />
-                )}
                 {section === 'calls' && <CallsSettingsPanel key="calls" />}
                 {section === 'advanced' && <AdvancedSettingsPanel key="advanced" />}
                 {section === 'language' && <LanguageSettingsPanel key="language" />}

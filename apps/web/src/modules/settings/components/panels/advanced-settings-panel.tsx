@@ -94,7 +94,7 @@ export function AdvancedSettingsPanel(): ReactNode {
           <ArrowPathIcon className="h-4 w-4" /> Reset preferences
         </h2>
         <p className="mb-4 text-sm text-[var(--token-text-secondary)]">
-          Snaps Stickers & Emoji and Calls back to defaults and saves them for this account.
+          Resets supported call preferences to their defaults and saves them for this account.
         </p>
         {confirming ? (
           <div className="flex items-center gap-2">

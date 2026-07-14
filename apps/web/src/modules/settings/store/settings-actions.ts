@@ -13,12 +13,10 @@ import { AxiosError } from 'axios';
 import type {
   UserSettings,
   SettingsState,
-  StickersEmojiSettings,
   CallsSettings,
 } from './settingsStore.types';
 import {
   DEFAULT_SETTINGS,
-  DEFAULT_STICKERS_EMOJI_SETTINGS,
   DEFAULT_CALLS_SETTINGS,
 } from './settingsStore.types';
 import { mapSettingsFromApi, mapSettingsToApi, narrowToApiSettings } from './settings-mappers';
@@ -78,8 +76,6 @@ export function createSettingsActions(
   | 'updateLocaleSettings'
   | 'updateKeyboardSettings'
   | 'updateMediaSettings'
-  | 'updateStickersEmojiSettings'
-  | 'removeInstalledStickerPack'
   | 'updateCallsSettings'
   | 'updateAllSettings'
   | 'resetToDefaults'
@@ -299,57 +295,6 @@ export function createSettingsActions(
       }
     },
 
-    updateStickersEmojiSettings: async (partial: Partial<StickersEmojiSettings>) => {
-      const prev = get().settings;
-      const next = { ...prev.stickersEmoji, ...partial };
-      set({
-        settings: {
-          ...prev,
-          stickersEmoji: next,
-        },
-      });
-
-      try {
-        readSettingsResult(
-          await apiClient.settings.updateAll(mapSettingsToApi({ stickersEmoji: next }))
-        );
-        set({ lastSyncedAt: Date.now() });
-      } catch (error) {
-        set({
-          settings: prev,
-          error: getSettingsErrorMessage(error, 'Failed to save sticker settings'),
-        });
-        throw error;
-      }
-    },
-
-    removeInstalledStickerPack: async (packId: string) => {
-      const prev = get().settings;
-      const next = {
-        ...prev.stickersEmoji,
-        installedPackIds: prev.stickersEmoji.installedPackIds.filter((id) => id !== packId),
-      };
-      set({
-        settings: {
-          ...prev,
-          stickersEmoji: next,
-        },
-      });
-
-      try {
-        readSettingsResult(
-          await apiClient.settings.updateAll(mapSettingsToApi({ stickersEmoji: next }))
-        );
-        set({ lastSyncedAt: Date.now() });
-      } catch (error) {
-        set({
-          settings: prev,
-          error: getSettingsErrorMessage(error, 'Failed to remove sticker pack'),
-        });
-        throw error;
-      }
-    },
-
     updateCallsSettings: async (partial: Partial<CallsSettings>) => {
       const prev = get().settings;
       const next = { ...prev.calls, ...partial };
@@ -423,7 +368,6 @@ export function createSettingsActions(
       const previousSettings = get().settings;
       const nextSettings = {
         ...previousSettings,
-        stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
         calls: DEFAULT_CALLS_SETTINGS,
       };
 
@@ -437,7 +381,6 @@ export function createSettingsActions(
         readSettingsResult(
           await apiClient.settings.updateAll(
             mapSettingsToApi({
-              stickersEmoji: DEFAULT_STICKERS_EMOJI_SETTINGS,
               calls: DEFAULT_CALLS_SETTINGS,
             })
           )

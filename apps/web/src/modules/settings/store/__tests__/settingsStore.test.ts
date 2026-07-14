@@ -573,7 +573,7 @@ describe('settingsStore (modules)', () => {
   });
 
   describe('resetAllPreferences', () => {
-    it('resets calls and stickers through the settings API', async () => {
+    it('resets calls through the settings API without modifying deferred sticker preferences', async () => {
       useSettingsStore.setState({
         settings: {
           ...DEFAULT_SETTINGS,
@@ -596,13 +596,13 @@ describe('settingsStore (modules)', () => {
       expect(mockedApi.put).toHaveBeenCalledWith(
         '/api/v1/settings',
         expect.objectContaining({
-          suggest_stickers: DEFAULT_SETTINGS.stickersEmoji.suggestStickers,
           echo_cancellation: DEFAULT_SETTINGS.calls.echoCancellation,
           default_video_resolution: DEFAULT_SETTINGS.calls.defaultVideoResolution,
         })
       );
+      expect(mockedApi.put.mock.calls[0]?.[1]).not.toHaveProperty('suggest_stickers');
       expect(useSettingsStore.getState().settings.stickersEmoji).toEqual(
-        DEFAULT_SETTINGS.stickersEmoji
+        expect.objectContaining({ suggestStickers: false, installedPackIds: ['pack-1'] })
       );
       expect(useSettingsStore.getState().settings.calls).toEqual(DEFAULT_SETTINGS.calls);
     });

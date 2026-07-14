@@ -90,10 +90,6 @@ vi.mock('@/modules/settings/components/panels/advanced-settings-panel', () => ({
   AdvancedSettingsPanel: () => <div>Advanced settings</div>,
 }));
 
-vi.mock('@/modules/settings/components/panels/stickers-emoji-settings-panel', () => ({
-  StickersEmojiSettingsPanel: () => <div>Stickers emoji settings</div>,
-}));
-
 vi.mock('@/modules/settings/components/panels/calls-settings-panel', () => ({
   CallsSettingsPanel: () => <div>Calls settings</div>,
 }));
@@ -170,6 +166,17 @@ describe('Settings navigation', () => {
 
     expect(screen.getByTestId('settings-panel-account')).toBeInTheDocument();
     expect(screen.queryByText('Data Export')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');
+    });
+  });
+
+  it('does not expose the retired Stickers and Emoji route without a runtime owner', async () => {
+    renderSettingsRoute('/me/settings/stickers-emoji');
+
+    expect(screen.getByTestId('settings-panel-account')).toBeInTheDocument();
+    expect(screen.queryByText('Stickers & Emoji')).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');

@@ -14,7 +14,6 @@ import type {
   MediaSettings,
   NotificationSettings,
   PrivacySettings,
-  StickersEmojiSettings,
   UserSettings,
 } from '@cgraph-dev/shared-types';
 
@@ -70,8 +69,6 @@ export interface SettingsState {
   updateLocaleSettings: (settings: Partial<LocaleSettings>) => Promise<void>;
   updateKeyboardSettings: (settings: Partial<KeyboardSettings>) => Promise<void>;
   updateMediaSettings: (settings: Partial<MediaSettings>) => Promise<void>;
-  updateStickersEmojiSettings: (settings: Partial<StickersEmojiSettings>) => Promise<void>;
-  removeInstalledStickerPack: (packId: string) => Promise<void>;
   updateCallsSettings: (settings: Partial<CallsSettings>) => Promise<void>;
   updateAllSettings: (settings: Partial<UserSettings>) => Promise<void>;
   resetToDefaults: () => Promise<void>;
