@@ -212,7 +212,9 @@ describe('FriendsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send request' }));
 
     await waitFor(() => expect(friendStoreState.sendRequest).toHaveBeenCalledWith('missing'));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Add friend' })).toHaveAccessibleDescription(
+      'Enter a public handle, UID, email, or account ID.'
+    );
     expect(identifier).toHaveValue('@missing');
   });
 

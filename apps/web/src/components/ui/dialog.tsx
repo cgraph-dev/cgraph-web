@@ -66,14 +66,24 @@ interface DialogContentProps {
   readonly children: ReactNode;
   readonly className?: string;
   readonly ariaLabel?: string;
+  readonly ariaLabelledBy?: string;
+  readonly ariaDescribedBy?: string;
 }
 /** Dialog Content. */
-export function DialogContent({ children, className = '', ariaLabel }: DialogContentProps) {
+export function DialogContent({
+  children,
+  className = '',
+  ariaLabel,
+  ariaLabelledBy,
+  ariaDescribedBy,
+}: DialogContentProps) {
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
       className={`mx-4 w-full max-w-md rounded-2xl border border-[var(--token-card-border)] p-6 shadow-card ${className} `}
       style={{
         backdropFilter: 'blur(48px)',
