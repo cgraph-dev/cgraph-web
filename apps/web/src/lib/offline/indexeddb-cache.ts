@@ -3,7 +3,7 @@ import { createLogger } from '@/lib/logger';
 const logger = createLogger('IndexedDBCache');
 
 const DB_NAME = 'cgraph_offline';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const MAX_MESSAGES_PER_CONVERSATION = 100;
 
 const MESSAGES_STORE = 'messages';
@@ -17,20 +17,20 @@ export interface CachedMessage {
   readonly id: string;
   readonly conversationId: string;
   readonly senderId: string;
-  readonly content: string;
+  readonly content: string | null;
   readonly contentType: string;
   readonly isEncrypted: boolean;
   readonly isEdited: boolean;
-  readonly clientMessageId?: string;
+  readonly clientMessageId?: string | null;
   readonly replyToId?: string | null;
   readonly sender: {
     readonly id: string;
     readonly username: string | null;
     readonly displayName: string | null;
     readonly avatarUrl: string | null;
-  };
+  } | null;
   readonly metadata?: Record<string, unknown>;
-  readonly insertedAt: string;
+  readonly createdAt: string;
   readonly updatedAt: string;
 }
 
@@ -38,7 +38,7 @@ export interface CachedConversation {
   readonly id: string;
   readonly type: string;
   readonly name: string | null;
-  readonly insertedAt: string;
+  readonly createdAt: string;
   readonly updatedAt: string;
 }
 
@@ -58,6 +58,12 @@ export interface PendingMessage {
 }
 
 let dbInstance: IDBDatabase | null = null;
+
+function assertCacheKey(value: unknown, label: string): asserts value is string {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new TypeError(`${label} must be a non-empty string`);
+  }
+}
 
 function openDB(): Promise<IDBDatabase> {
   if (dbInstance) return Promise.resolve(dbInstance);
@@ -97,12 +103,25 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(DRAFTS_STORE)) {
         db.createObjectStore(DRAFTS_STORE, { keyPath: 'conversationId' });
       }
+
+      // Version 2 accepted snake_case sync records without a conversationId.
+      // The server is authoritative, so reset only refetchable cache state.
+      if (event.oldVersion > 0 && event.oldVersion < 3 && request.transaction) {
+        request.transaction.objectStore(MESSAGES_STORE).clear();
+        request.transaction.objectStore(CONVERSATIONS_STORE).clear();
+        request.transaction.objectStore(SYNC_META_STORE).clear();
+      }
     };
 
     request.onsuccess = () => {
       dbInstance = request.result;
 
       dbInstance.onclose = () => {
+        dbInstance = null;
+      };
+
+      dbInstance.onversionchange = () => {
+        dbInstance?.close();
         dbInstance = null;
       };
 
@@ -148,6 +167,17 @@ export async function saveMessages(
 ): Promise<void> {
   if (messages.length === 0) return;
 
+  assertCacheKey(conversationId, 'conversationId');
+
+  for (const message of messages) {
+    assertCacheKey(message.id, 'message.id');
+    assertCacheKey(message.conversationId, 'message.conversationId');
+
+    if (message.conversationId !== conversationId) {
+      throw new TypeError('message.conversationId must match the cache partition');
+    }
+  }
+
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
@@ -155,35 +185,15 @@ export async function saveMessages(
     const store = tx.objectStore(MESSAGES_STORE);
 
     for (const msg of messages) {
-      store.put({ ...msg, conversationId });
+      store.put(msg);
     }
 
-    tx.oncomplete = () => {
-      pruneMessages(conversationId).then(resolve).catch(resolve);
-    };
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-/** Prune old messages beyond the per-conversation limit. */
-async function pruneMessages(conversationId: string): Promise<void> {
-  const db = await openDB();
-
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MESSAGES_STORE, 'readwrite');
-    const store = tx.objectStore(MESSAGES_STORE);
-    const index = store.index('by_conversation');
-
-    const request = index.getAllKeys(IDBKeyRange.only(conversationId));
+    const index = store.index('by_updated');
+    const range = IDBKeyRange.bound([conversationId, ''], [conversationId, '\uffff']);
+    const request = index.getAllKeys(range);
 
     request.onsuccess = () => {
       const keys = request.result;
-      if (keys.length <= MAX_MESSAGES_PER_CONVERSATION) {
-        resolve();
-        return;
-      }
-
-      // Remove oldest (keys are sorted by insertion, we want to keep the latest)
       const toRemove = keys.slice(0, keys.length - MAX_MESSAGES_PER_CONVERSATION);
       for (const key of toRemove) {
         store.delete(key);
@@ -197,6 +207,7 @@ async function pruneMessages(conversationId: string): Promise<void> {
 
 /** Get cached messages for a conversation, sorted by updatedAt ascending. */
 export async function getMessages(conversationId: string): Promise<CachedMessage[]> {
+  assertCacheKey(conversationId, 'conversationId');
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
@@ -220,6 +231,10 @@ export async function getMessages(conversationId: string): Promise<CachedMessage
 export async function removeMessages(messageIds: readonly string[]): Promise<void> {
   if (messageIds.length === 0) return;
 
+  for (const id of messageIds) {
+    assertCacheKey(id, 'messageId');
+  }
+
   await withTransaction(MESSAGES_STORE, 'readwrite', (tx) => {
     const store = tx.objectStore(MESSAGES_STORE);
     for (const id of messageIds) {
@@ -233,6 +248,10 @@ export async function saveConversations(
   conversations: readonly CachedConversation[]
 ): Promise<void> {
   if (conversations.length === 0) return;
+
+  for (const conversation of conversations) {
+    assertCacheKey(conversation.id, 'conversation.id');
+  }
 
   await withTransaction(CONVERSATIONS_STORE, 'readwrite', (tx) => {
     const store = tx.objectStore(CONVERSATIONS_STORE);
@@ -261,6 +280,10 @@ export async function getConversations(): Promise<CachedConversation[]> {
 
 /** Save a pending outbound message (queued while offline). */
 export async function savePendingMessage(message: PendingMessage): Promise<void> {
+  assertCacheKey(message.id, 'pendingMessage.id');
+  assertCacheKey(message.clientMessageId, 'pendingMessage.clientMessageId');
+  assertCacheKey(message.conversationId, 'pendingMessage.conversationId');
+
   await withTransaction(PENDING_STORE, 'readwrite', (tx) => {
     const store = tx.objectStore(PENDING_STORE);
     store.put(message);
@@ -290,6 +313,7 @@ export async function getPendingMessages(): Promise<PendingMessage[]> {
 export async function getPendingMessagesForConversation(
   conversationId: string
 ): Promise<PendingMessage[]> {
+  assertCacheKey(conversationId, 'conversationId');
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
@@ -311,6 +335,7 @@ export async function getPendingMessagesForConversation(
 
 /** Remove a pending message by ID (after successful send). */
 export async function removePendingMessage(id: string): Promise<void> {
+  assertCacheKey(id, 'pendingMessage.id');
   await withTransaction(PENDING_STORE, 'readwrite', (tx) => {
     const store = tx.objectStore(PENDING_STORE);
     store.delete(id);
@@ -323,6 +348,7 @@ export async function updatePendingMessageStatus(
   status: PendingMessage['status'],
   error?: string
 ): Promise<void> {
+  assertCacheKey(id, 'pendingMessage.id');
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
@@ -412,6 +438,7 @@ export interface DraftRecord {
  * behaviour in `composer.preload.ts`.
  */
 export async function saveDraft(conversationId: string, text: string): Promise<void> {
+  assertCacheKey(conversationId, 'conversationId');
   const trimmed = text.trim();
   if (trimmed.length === 0) {
     await deleteDraft(conversationId);
@@ -431,6 +458,7 @@ export async function saveDraft(conversationId: string, text: string): Promise<v
 
 /** Read a draft for a conversation, or `null` if none exists. */
 export async function getDraft(conversationId: string): Promise<DraftRecord | null> {
+  assertCacheKey(conversationId, 'conversationId');
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DRAFTS_STORE, 'readonly');
@@ -464,6 +492,7 @@ export async function getDraft(conversationId: string): Promise<DraftRecord | nu
 
 /** Remove the draft for a conversation. Called after a successful send. */
 export async function deleteDraft(conversationId: string): Promise<void> {
+  assertCacheKey(conversationId, 'conversationId');
   await withTransaction(DRAFTS_STORE, 'readwrite', (tx) => {
     const store = tx.objectStore(DRAFTS_STORE);
     store.delete(conversationId);

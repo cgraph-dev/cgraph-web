@@ -1,5 +1,6 @@
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { z } from 'zod';
 import {
   getLastSyncTimestamp,
   setLastSyncTimestamp,
@@ -15,15 +16,61 @@ import {
 
 const logger = createLogger('SyncService');
 
+const cacheKeySchema = z.string().trim().min(1);
+
+const cachedMessageSchema: z.ZodType<CachedMessage> = z
+  .object({
+    id: cacheKeySchema,
+    conversationId: cacheKeySchema,
+    senderId: cacheKeySchema,
+    content: z.string().nullable(),
+    contentType: cacheKeySchema,
+    isEncrypted: z.boolean(),
+    isEdited: z.boolean(),
+    clientMessageId: z.string().nullable().optional(),
+    replyToId: z.string().nullable().optional(),
+    sender: z
+      .object({
+        id: cacheKeySchema,
+        username: z.string().nullable(),
+        displayName: z.string().nullable(),
+        avatarUrl: z.string().nullable(),
+      })
+      .passthrough()
+      .nullable(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+    createdAt: cacheKeySchema,
+    updatedAt: cacheKeySchema,
+  })
+  .passthrough();
+
+const cachedConversationSchema: z.ZodType<CachedConversation> = z
+  .object({
+    id: cacheKeySchema,
+    type: cacheKeySchema,
+    name: z.string().nullable(),
+    createdAt: cacheKeySchema,
+    updatedAt: cacheKeySchema,
+  })
+  .passthrough();
+
+const pullDataSchema = z.object({
+  messages: z.array(cachedMessageSchema),
+  tombstones: z.array(
+    z.object({
+      id: cacheKeySchema,
+      deleted_at: cacheKeySchema,
+      conversation_id: cacheKeySchema,
+    })
+  ),
+  conversations: z.array(cachedConversationSchema),
+  cursor: z.string().nullable(),
+  has_more: z.boolean(),
+  server_timestamp: cacheKeySchema,
+});
+
 interface PullResponse {
-  readonly data: {
-    readonly messages: readonly CachedMessage[];
-    readonly tombstones: readonly { id: string; deleted_at: string; conversation_id: string }[];
-    readonly conversations: readonly CachedConversation[];
-    readonly cursor: string | null;
-    readonly has_more: boolean;
-    readonly server_timestamp: string;
-  };
+  readonly data: unknown;
 }
 
 interface PushItemResult {
@@ -117,7 +164,7 @@ async function pullChanges(): Promise<{ pulled: number; tombstones: number }> {
     const { data: response } = await http.get<PullResponse>(
       `/api/v1/sync/offline/pull?${params.toString()}`
     );
-    const result = response.data;
+    const result = pullDataSchema.parse(response.data);
 
     if (result.messages.length > 0) {
       const byConversation = new Map<string, CachedMessage[]>();
