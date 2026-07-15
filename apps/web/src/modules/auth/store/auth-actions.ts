@@ -3,7 +3,13 @@ import { authLogger } from '@/lib/logger';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { AxiosError } from 'axios';
 
-import type { User, WalletChallenge, AuthState, TwoFactorRequired } from './authStore.types';
+import type {
+  User,
+  WalletChallenge,
+  AuthState,
+  TwoFactorRequired,
+  EmailVerificationResult,
+} from './authStore.types';
 import { getApiErrorMessage, getApiResultErrorMessage, mapUserFromApi } from './authStore.utils';
 
 function getResponseStatus(error: unknown): number | null {
@@ -194,6 +200,39 @@ export function createVerifyLoginTwoFactorAction(set: Set, _get: Get) {
       );
       throw error;
     }
+  };
+}
+
+/** Consumes an email token and installs the backend-issued verified session. */
+export function createVerifyEmailAction(set: Set, _get: Get) {
+  return async (token: string): Promise<EmailVerificationResult> => {
+    set({ isLoading: true, error: null }, false, 'verifyEmail/start');
+
+    const result = await apiClient.auth.verifyEmail(token);
+
+    if (!result.ok) {
+      set({ isLoading: false }, false, 'verifyEmail/error');
+      return {
+        ok: false,
+        status: result.status,
+        message: result.error.message,
+      };
+    }
+
+    const { user, tokens } = result.data;
+    set(
+      {
+        user: mapUserFromApi(user),
+        token: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        isAuthenticated: true,
+        isLoading: false,
+      },
+      false,
+      'verifyEmail/success'
+    );
+
+    return { ok: true };
   };
 }
 

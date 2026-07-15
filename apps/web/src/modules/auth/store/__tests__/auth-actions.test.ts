@@ -12,6 +12,7 @@ const mockHttp = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
 }));
+const mockVerifyEmail = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api-client', () => ({
   http: mockHttp,
@@ -28,6 +29,7 @@ vi.mock('@/lib/api-client', () => ({
         });
         return { ok: true, data: response.data };
       },
+      verifyEmail: mockVerifyEmail,
       register: async (payload: Record<string, unknown>) => {
         const response = await mockHttp.post('/api/v1/auth/register', { user: payload });
         return { ok: true, data: response.data };
@@ -84,6 +86,7 @@ import { http } from '@/lib/api-client';
 import {
   createLoginAction,
   createVerifyLoginTwoFactorAction,
+  createVerifyEmailAction,
   createGetWalletChallengeAction,
   createLoginWithWalletAction,
   createRegisterAction,
@@ -264,6 +267,58 @@ describe('createVerifyLoginTwoFactorAction', () => {
       expect.objectContaining({ error: 'Invalid code', isLoading: false }),
       false,
       'verify2fa/error'
+    );
+  });
+});
+
+describe('createVerifyEmailAction', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('installs the verified user and resumable session', async () => {
+    const { set, get } = createMockSetGet();
+    const verifyEmail = createVerifyEmailAction(set as never, get as never);
+
+    mockVerifyEmail.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        email_verified: true,
+        user: { ...mockApiUser, email_verified_at: '2026-07-15T16:00:00Z' },
+        tokens: mockTokens,
+      },
+    });
+
+    expect(await verifyEmail('verification-token')).toEqual({ ok: true });
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isAuthenticated: true,
+        isLoading: false,
+        token: 'access-123',
+        refreshToken: 'refresh-456',
+      }),
+      false,
+      'verifyEmail/success'
+    );
+  });
+
+  it('returns a typed recovery failure without creating client auth state', async () => {
+    const { set, get } = createMockSetGet();
+    const verifyEmail = createVerifyEmailAction(set as never, get as never);
+
+    mockVerifyEmail.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      error: { code: 'invalid_token', message: 'Invalid verification token' },
+    });
+
+    expect(await verifyEmail('replaced-token')).toEqual({
+      ok: false,
+      status: 400,
+      message: 'Invalid verification token',
+    });
+    expect(set).not.toHaveBeenCalledWith(
+      expect.objectContaining({ isAuthenticated: true }),
+      expect.anything(),
+      expect.anything()
     );
   });
 });

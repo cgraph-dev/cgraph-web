@@ -12,6 +12,7 @@ import { getErrorMessage } from '@/lib/api';
 import { getRateLimitRemainingMs, rememberRateLimit } from '@/lib/api-rate-limit';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
+import type { EmailVerificationResult } from '@/modules/auth/store/authStore.types';
 
 const logger = createLogger('VerifyEmail');
 const VERIFICATION_RESEND_RATE_LIMIT_SCOPE = 'auth:verification-resend';
@@ -24,25 +25,11 @@ export type VerificationState =
   | 'error'
   | 'already-verified';
 
-function getResponseStatus(error: unknown): number | undefined {
-  if (!(typeof error === 'object' && error !== null && 'response' in error)) {
-    return undefined;
-  }
-
-  const response = error.response;
-
-  if (!(typeof response === 'object' && response !== null && 'status' in response)) {
-    return undefined;
-  }
-
-  return typeof response.status === 'number' ? response.status : undefined;
-}
-
-function isRecoverableVerificationError(error: unknown): boolean {
-  const message = getErrorMessage(error).toLowerCase();
-  const status = getResponseStatus(error);
-
-  return status === 400 || status === 410 || message.includes('expired');
+function isRecoverableVerificationFailure(result: EmailVerificationResult): boolean {
+  return (
+    !result.ok &&
+    (result.status === 400 || result.status === 410 || result.message.toLowerCase().includes('expired'))
+  );
 }
 
 function getResendErrorMessage(error: unknown): string {
@@ -79,7 +66,7 @@ function getRetryAfterSeconds(response: unknown): number | null {
 export function useVerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const { user, checkAuth } = useAuthStore();
+  const { user, checkAuth, verifyEmail } = useAuthStore();
 
   const [state, setState] = useState<VerificationState>('verifying');
   const [isResending, setIsResending] = useState(false);
@@ -106,25 +93,23 @@ export function useVerifyEmail() {
       }
 
       try {
-        const response = await http.post('/api/v1/auth/verify-email', { token });
+        const result = await verifyEmail(token);
 
-        if (response.data.already_verified) {
-          setState('already-verified');
-        } else {
+        if (result.ok) {
           setState('success');
-          await checkAuth?.();
-        }
-      } catch (error: unknown) {
-        if (isRecoverableVerificationError(error)) {
+        } else if (isRecoverableVerificationFailure(result)) {
           setState('expired');
         } else {
           setState('error');
         }
+      } catch (error: unknown) {
+        logger.warn('Failed to verify email', error);
+        setState('error');
       }
     }
 
     verifyToken();
-  }, [token, checkAuth]);
+  }, [token, verifyEmail]);
 
   useEffect(() => {
     if (user?.email && resendEmail !== user.email) {

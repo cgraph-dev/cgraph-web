@@ -78,6 +78,10 @@ export interface TwoFactorRequired {
   twoFactorToken: string;
 }
 
+export type EmailVerificationResult =
+  | { ok: true }
+  | { ok: false; status: number; message: string };
+
 export interface AuthState {
   user: User | null;
   token: string | null;
@@ -101,6 +105,7 @@ export interface AuthState {
     password: string,
     turnstileToken?: string | null
   ) => Promise<void>;
+  verifyEmail: (token: string) => Promise<EmailVerificationResult>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;

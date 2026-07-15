@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   user: null as { email: string; emailVerifiedAt: string | null } | null,
   searchParams: new URLSearchParams(),
   checkAuth: vi.fn(),
+  verifyEmail: vi.fn(),
   post: vi.fn(),
 }));
 
@@ -22,7 +23,11 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 vi.mock('@/modules/auth/store', () => ({
-  useAuthStore: () => ({ user: mocks.user, checkAuth: mocks.checkAuth }),
+  useAuthStore: () => ({
+    user: mocks.user,
+    checkAuth: mocks.checkAuth,
+    verifyEmail: mocks.verifyEmail,
+  }),
 }));
 
 import { useVerifyEmail } from './useVerifyEmail';
@@ -33,7 +38,32 @@ describe('useVerifyEmail', () => {
     mocks.user = null;
     mocks.searchParams = new URLSearchParams();
     mocks.checkAuth.mockReset();
+    mocks.verifyEmail.mockReset();
     mocks.post.mockReset();
+  });
+
+  it('installs the verified session through the auth owner', async () => {
+    mocks.searchParams = new URLSearchParams('token=verification-token');
+    mocks.verifyEmail.mockResolvedValue({ ok: true });
+
+    const { result } = renderHook(() => useVerifyEmail());
+
+    await waitFor(() => expect(result.current.state).toBe('success'));
+    expect(mocks.verifyEmail).toHaveBeenCalledWith('verification-token');
+    expect(mocks.post).not.toHaveBeenCalledWith('/api/v1/auth/verify-email', expect.anything());
+  });
+
+  it('keeps replaced or expired links on the recovery path', async () => {
+    mocks.searchParams = new URLSearchParams('token=replaced-token');
+    mocks.verifyEmail.mockResolvedValue({
+      ok: false,
+      status: 400,
+      message: 'Invalid verification token',
+    });
+
+    const { result } = renderHook(() => useVerifyEmail());
+
+    await waitFor(() => expect(result.current.state).toBe('expired'));
   });
 
   it('leaves the pending page once the authenticated account refreshes as verified', async () => {

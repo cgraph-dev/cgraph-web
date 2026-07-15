@@ -51,6 +51,7 @@ try {
 import {
   createLoginAction,
   createVerifyLoginTwoFactorAction,
+  createVerifyEmailAction,
   createGetWalletChallengeAction,
   createLoginWithWalletAction,
   createRegisterAction,
@@ -82,6 +83,7 @@ export const useAuthStore = create<AuthState>()(
 
           login: createLoginAction(set, get),
           verifyLoginTwoFactor: createVerifyLoginTwoFactorAction(set, get),
+          verifyEmail: createVerifyEmailAction(set, get),
           getWalletChallenge: createGetWalletChallengeAction(set, get),
           loginWithWallet: createLoginWithWalletAction(set, get),
           register: createRegisterAction(set, get),

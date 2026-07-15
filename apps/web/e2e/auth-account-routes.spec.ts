@@ -219,6 +219,7 @@ async function installAuthRouteMocks(page: Page, options: AuthRouteMockOptions =
             email_verified: true,
             message: 'Email verified',
             user: authUser(),
+            tokens,
           })
         )
       );
@@ -601,11 +602,15 @@ test.describe('auth and account lifecycle routes', () => {
     await page.goto('/verify-email?token=verify-token-uat');
     await expect(page.getByRole('heading', { name: /email verified/i })).toBeVisible();
     expect(requests.verifyEmail[0]).toMatchObject({ token: 'verify-token-uat' });
+    await page.getByRole('button', { name: /continue to app/i }).click();
+    await expect(page).toHaveURL(/\/messages$/);
+    await page.reload();
+    await expect(page).toHaveURL(/\/messages$/);
 
     await page.goto('/verify-email?email=owner-uat%40cgraph.dev');
     await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible();
     await page.getByRole('button', { name: /resend verification email/i }).click();
-    await expect(page.getByText(/new verification email sent/i)).toBeVisible();
+    await expect(page.getByText(/verification request received/i)).toBeVisible();
     expect(requests.resendVerification[0]).toMatchObject({ email: 'owner-uat@cgraph.dev' });
   });
 
@@ -621,7 +626,7 @@ test.describe('auth and account lifecycle routes', () => {
     await page.locator('#email').fill('owner-uat@cgraph.dev');
     await page.getByRole('button', { name: /resend verification email/i }).click();
 
-    await expect(page.getByText(/new verification email sent/i)).toBeVisible();
+    await expect(page.getByText(/verification request received/i)).toBeVisible();
     expect(requests.verifyEmail[0]).toMatchObject({ token: 'replaced-token-uat' });
     expect(requests.resendVerification[0]).toMatchObject({ email: 'owner-uat@cgraph.dev' });
   });
