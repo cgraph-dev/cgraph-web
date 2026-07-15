@@ -48,7 +48,7 @@ function makeProps(overrides: Partial<MessageInputAreaProps> = {}): MessageInput
   return {
     conversationId: 'conv-1',
     attachmentNodePrice: null,
-    isSending: false,
+    isUploading: false,
     replyTo: null,
     onTyping: vi.fn(),
     onAttachmentNodePriceChange: vi.fn(),
@@ -61,6 +61,17 @@ function makeProps(overrides: Partial<MessageInputAreaProps> = {}): MessageInput
 describe('CloudConversation MessageInputArea', () => {
   beforeEach(() => {
     sharedInputMock.props = null;
+  });
+
+  it('disables the shared composer only while an upload is active', () => {
+    render(
+      <MessageInputArea
+        {...makeProps({ isUploading: true })}
+        inputContainerRef={createRef<HTMLDivElement>()}
+      />
+    );
+
+    expect(sharedInputMock.props).toMatchObject({ disabled: true });
   });
 
   it('routes the Cloud Chat composer through the shared message input contract', async () => {

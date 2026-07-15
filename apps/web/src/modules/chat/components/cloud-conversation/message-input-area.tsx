@@ -19,7 +19,7 @@ function replyContent(replyTo: MessageInputAreaProps['replyTo']): string {
 export function MessageInputArea({
   conversationId,
   attachmentNodePrice,
-  isSending,
+  isUploading,
   replyTo,
   inputContainerRef,
   onTyping,
@@ -50,7 +50,7 @@ export function MessageInputArea({
         onSend={handleSend}
         onCancelReply={onClearReply}
         onTyping={onTyping}
-        disabled={isSending}
+        disabled={isUploading}
         maxAttachments={1}
         nodesPrice={attachmentNodePrice}
         onNodesPriceChange={onAttachmentNodePriceChange}

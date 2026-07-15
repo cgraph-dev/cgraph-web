@@ -108,6 +108,8 @@ describe('Cloud conversation ownership', () => {
     expect(controller).not.toContain('showOptimisticMessage');
     expect(controller).not.toContain('optimistic-video-note-');
     expect(controller).not.toContain('optimistic-voice-');
+    expect(controller).toContain('const [isUploading, setIsUploading] = useState(false)');
+    expect(controller).not.toContain('setIsSending');
     expect(messagingStore).toContain('client_message_id: clientMessageId');
     expect(messagingStore).toContain('const optimisticMessage: Message =');
     expect(messagingStore).toContain('get().addMessage(optimisticMessage)');

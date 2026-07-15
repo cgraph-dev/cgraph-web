@@ -85,7 +85,7 @@ export default function CloudConversation() {
     attachmentNodePrice,
     replyTo,
     messageRequest,
-    isSending,
+    isUploading,
     setAttachmentNodePrice,
     setReplyTo,
     messagesEndRef,
@@ -375,7 +375,7 @@ export default function CloudConversation() {
           <MessageInputArea
             conversationId={conversationId}
             attachmentNodePrice={attachmentNodePrice}
-            isSending={isSending}
+            isUploading={isUploading}
             replyTo={replyTo}
             inputContainerRef={inputContainerRef}
             onTyping={handleTyping}

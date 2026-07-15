@@ -90,7 +90,7 @@ export function useCloudConversationController() {
   } = useChatStore();
 
   const [attachmentNodePrice, setAttachmentNodePrice] = useState<number | null>(null);
-  const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const messageActions = useMessageActions();
   const conversation = conversations.find((c) => c.id === conversationId);
@@ -276,10 +276,10 @@ export function useCloudConversationController() {
   );
 
   const handleVoiceComplete = async (recording: VoiceRecordingData) => {
-    if (!conversationId || isSending) return;
+    if (!conversationId || isUploading) return;
 
     HapticFeedback.medium();
-    setIsSending(true);
+    setIsUploading(true);
 
     try {
       await uploadVoiceMessage(conversationId, recording);
@@ -298,7 +298,7 @@ export function useCloudConversationController() {
       toast.error('Voice message not sent', getErrorMessage(error));
       throw error;
     } finally {
-      setIsSending(false);
+      setIsUploading(false);
     }
   };
 
@@ -308,17 +308,15 @@ export function useCloudConversationController() {
     metadata: Record<string, unknown>,
     replyToId?: string
   ): Promise<void> {
-    if (!conversationId || isSending) return;
+    if (!conversationId) return;
 
     HapticFeedback.medium();
-    setIsSending(true);
 
     try {
-      await sendMessage(conversationId, content, replyToId ?? replyTo?.id, {
+      const pendingSend = sendMessage(conversationId, content, replyToId ?? replyTo?.id, {
         type: contentType,
         metadata,
       });
-
       setReplyTo(null);
       setAttachmentNodePrice(null);
 
@@ -326,16 +324,15 @@ export function useCloudConversationController() {
         clearTimeout(typingTimeoutRef.current);
       }
       sendConversationTyping(`conversation:${conversationId}`, false);
+      await pendingSend;
     } catch (error) {
       logger.error('Failed to send rich message:', error);
       HapticFeedback.error();
-    } finally {
-      setIsSending(false);
     }
   }
 
   async function handleComposerPayload(payload: MessagePayload): Promise<void> {
-    if (!conversationId || isSending) return;
+    if (!conversationId) return;
 
     const payloadMetadata = payload.metadata ?? {};
 
@@ -358,6 +355,8 @@ export function useCloudConversationController() {
     }
 
     if (payload.type === 'video') {
+      if (isUploading) return;
+
       const video = payloadMetadata.video;
       if (!(video instanceof Blob)) {
         logger.error('Video-note composer payload did not include a video blob');
@@ -366,7 +365,7 @@ export function useCloudConversationController() {
       }
 
       HapticFeedback.medium();
-      setIsSending(true);
+      setIsUploading(true);
 
       try {
         const mimeType = videoNoteMimeType(video);
@@ -379,11 +378,10 @@ export function useCloudConversationController() {
         };
         const content = uploaded.filename;
 
-        await sendMessage(conversationId, content, payload.replyToId ?? replyTo?.id, {
+        const pendingSend = sendMessage(conversationId, content, payload.replyToId ?? replyTo?.id, {
           type: 'video',
           metadata,
         });
-
         setReplyTo(null);
         setAttachmentNodePrice(null);
 
@@ -391,12 +389,13 @@ export function useCloudConversationController() {
           clearTimeout(typingTimeoutRef.current);
         }
         sendConversationTyping(`conversation:${conversationId}`, false);
+        await pendingSend;
       } catch (error) {
         logger.error('Failed to send video note:', error);
         HapticFeedback.error();
         toast.error('Video note not sent', getErrorMessage(error));
       } finally {
-        setIsSending(false);
+        setIsUploading(false);
       }
       return;
     }
@@ -418,9 +417,10 @@ export function useCloudConversationController() {
 
     const attachment = payload.attachments?.[0] ?? null;
     if (!payload.content.trim() && !attachment) return;
+    if (attachment && isUploading) return;
 
     HapticFeedback.medium();
-    setIsSending(true);
+    if (attachment) setIsUploading(true);
     let content = payload.content.trim();
     let contentType: Message['messageType'] = 'text';
     let metadata: Record<string, unknown> = payload.isViewOnce
@@ -480,7 +480,7 @@ export function useCloudConversationController() {
         }
       }
 
-      await sendMessage(conversationId, content, replyTo?.id, {
+      const pendingSend = sendMessage(conversationId, content, replyTo?.id, {
         type: contentType,
         metadata,
       });
@@ -491,6 +491,7 @@ export function useCloudConversationController() {
         clearTimeout(typingTimeoutRef.current);
       }
       sendConversationTyping(`conversation:${conversationId}`, false);
+      await pendingSend;
     } catch (error) {
       logger.error('Failed to send message:', error);
       HapticFeedback.error();
@@ -500,7 +501,7 @@ export function useCloudConversationController() {
         const url = optimisticAttachmentUrl;
         window.setTimeout(() => URL.revokeObjectURL(url), OPTIMISTIC_ATTACHMENT_URL_TTL_MS);
       }
-      setIsSending(false);
+      if (attachment) setIsUploading(false);
     }
   }
 
@@ -533,7 +534,7 @@ export function useCloudConversationController() {
     messageRequest,
     // State
     attachmentNodePrice,
-    isSending,
+    isUploading,
     replyTo,
     setReplyTo,
     setAttachmentNodePrice,

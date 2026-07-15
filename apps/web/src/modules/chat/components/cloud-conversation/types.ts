@@ -50,7 +50,7 @@ export interface ConversationHeaderProps {
 export interface MessageInputAreaProps {
   conversationId?: string;
   attachmentNodePrice: number | null;
-  isSending: boolean;
+  isUploading: boolean;
   replyTo: Message | null;
   onTyping: (isTyping: boolean) => void;
   onAttachmentNodePriceChange: (price: number | null) => void;
