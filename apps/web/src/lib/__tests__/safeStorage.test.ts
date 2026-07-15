@@ -22,7 +22,12 @@ vi.mock('@/lib/logger', () => ({
   }),
 }));
 
-import { createSafeLocalStorage, safeLocalStorage } from '../safeStorage';
+import {
+  createSafeLocalStorage,
+  createSafeSessionStorage,
+  safeLocalStorage,
+  safeSessionStorage,
+} from '../safeStorage';
 
 describe('safeStorage', () => {
   beforeEach(() => {
@@ -92,12 +97,71 @@ describe('safeStorage', () => {
       localStorage.removeItem = original;
     });
   });
+  describe('createSafeSessionStorage', () => {
+    it('should implement StateStorage interface', () => {
+      const storage = createSafeSessionStorage();
+      expect(storage).toHaveProperty('getItem');
+      expect(storage).toHaveProperty('setItem');
+      expect(storage).toHaveProperty('removeItem');
+    });
+
+    it('should set, get, and remove items', () => {
+      const storage = createSafeSessionStorage();
+      storage.setItem('session-key', 'session-value');
+      expect(storage.getItem('session-key')).toBe('session-value');
+      storage.removeItem('session-key');
+      expect(storage.getItem('session-key')).toBeNull();
+    });
+
+    it('should handle blocked reads gracefully', () => {
+      const storage = createSafeSessionStorage();
+      const original = sessionStorage.getItem;
+      sessionStorage.getItem = () => {
+        throw new Error('SecurityError');
+      };
+
+      expect(storage.getItem('blocked')).toBeNull();
+
+      sessionStorage.getItem = original;
+    });
+
+    it('should handle blocked writes gracefully', () => {
+      const storage = createSafeSessionStorage();
+      const original = sessionStorage.setItem;
+      sessionStorage.setItem = () => {
+        throw new DOMException('QuotaExceededError');
+      };
+
+      expect(() => storage.setItem('blocked', 'value')).not.toThrow();
+
+      sessionStorage.setItem = original;
+    });
+
+    it('should handle blocked removals gracefully', () => {
+      const storage = createSafeSessionStorage();
+      const original = sessionStorage.removeItem;
+      sessionStorage.removeItem = () => {
+        throw new Error('SecurityError');
+      };
+
+      expect(() => storage.removeItem('blocked')).not.toThrow();
+
+      sessionStorage.removeItem = original;
+    });
+  });
   describe('pre-instantiated singletons', () => {
     it('safeLocalStorage should work as StateStorage', () => {
       safeLocalStorage.setItem('singleton-test', 'works');
       expect(safeLocalStorage.getItem('singleton-test')).toBe('works');
       safeLocalStorage.removeItem('singleton-test');
       expect(safeLocalStorage.getItem('singleton-test')).toBeNull();
+    });
+
+    it('safeSessionStorage should work as StateStorage', () => {
+      safeSessionStorage.setItem('session-singleton-test', 'works');
+      expect(safeSessionStorage.getItem('session-singleton-test')).toBe('works');
+      safeSessionStorage.removeItem('session-singleton-test');
+      expect(safeSessionStorage.getItem('session-singleton-test')).toBeNull();
     });
   });
 });

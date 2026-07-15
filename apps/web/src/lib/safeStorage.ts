@@ -48,6 +48,41 @@ export function createSafeLocalStorage(): StateStorage {
 }
 
 /**
+ * Creates a safe sessionStorage wrapper that handles errors gracefully.
+ */
+export function createSafeSessionStorage(): StateStorage {
+  return {
+    getItem: (name: string): string | null => {
+      try {
+        return sessionStorage.getItem(name);
+      } catch (error) {
+        logger.warn(`Failed to read "${name}" from sessionStorage:`, error);
+        return null;
+      }
+    },
+    setItem: (name: string, value: string): void => {
+      try {
+        sessionStorage.setItem(name, value);
+      } catch (error) {
+        logger.warn(`Failed to write "${name}" to sessionStorage:`, error);
+      }
+    },
+    removeItem: (name: string): void => {
+      try {
+        sessionStorage.removeItem(name);
+      } catch (error) {
+        logger.warn(`Failed to remove "${name}" from sessionStorage:`, error);
+      }
+    },
+  };
+}
+
+/**
  * Pre-instantiated safe localStorage for common use
  */
 export const safeLocalStorage = createSafeLocalStorage();
+
+/**
+ * Pre-instantiated safe sessionStorage for same-tab state.
+ */
+export const safeSessionStorage = createSafeSessionStorage();

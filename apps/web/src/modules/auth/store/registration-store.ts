@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import type { StateCreator } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type { Country, Tokens } from '@cgraph-dev/api-client';
 import {
   PHONE_REGISTRATION_CODE_EXPIRY_SECONDS,
@@ -11,13 +13,18 @@ import {
   normalizePhoneNumber as normalizePhoneToE164,
 } from '@cgraph-dev/utils';
 import { apiClient, http } from '@/lib/api-client';
+import { safeSessionStorage } from '@/lib/safeStorage';
 import { useAuthStore } from './authStore.impl';
 import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
 import { resolvePhoneCountries } from './fallback-countries';
 
 export type RegistrationStep = 'phone' | 'otp' | 'registration_lock' | 'profile' | 'permissions';
 export type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported' | 'skipped';
+export type PhoneRegistrationIntent = 'register' | 'login';
 type DeliveryTransport = 'sms' | 'voice';
+
+export const PHONE_REGISTRATION_STORAGE_KEY = 'cgraph-phone-registration-v1';
+const PHONE_REGISTRATION_STORAGE_VERSION = 1;
 
 type AuthenticatedRegistrationStep = Exclude<
   RegistrationStep,
@@ -36,6 +43,7 @@ interface ProfileDraft {
 }
 
 interface PhoneRegistrationState {
+  readonly intent: PhoneRegistrationIntent | null;
   readonly step: RegistrationStep;
   readonly countries: Country[];
   readonly selectedCountry: Country | null;
@@ -61,6 +69,7 @@ interface PhoneRegistrationState {
   readonly profile: ProfileDraft;
   readonly contactsPermission: PermissionState;
   readonly notificationsPermission: PermissionState;
+  readonly prepareFlow: (intent: PhoneRegistrationIntent) => void;
   readonly setPhoneNumber: (value: string) => void;
   readonly setCode: (value: string) => void;
   readonly setProfileField: (field: keyof ProfileDraft, value: string) => void;
@@ -302,6 +311,7 @@ function hasContactsPickerSupport(): boolean {
 }
 
 const initialState = {
+  intent: null,
   step: 'phone',
   countries: [],
   selectedCountry: null,
@@ -333,6 +343,7 @@ const initialState = {
 } satisfies Omit<
   PhoneRegistrationState,
   | 'setPhoneNumber'
+  | 'prepareFlow'
   | 'setCode'
   | 'setProfileField'
   | 'setCountryPickerOpen'
@@ -355,8 +366,150 @@ const initialState = {
   | 'reset'
 >;
 
-export const usePhoneRegistrationStore = create<PhoneRegistrationState>((set, get) => ({
+function validTimestamp(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function validStringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === 'string')
+    : [];
+}
+
+function validCountry(value: unknown): Country | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const { code, name, calling_code: callingCode, flag } = value;
+
+  if (
+    typeof code !== 'string' ||
+    typeof name !== 'string' ||
+    typeof callingCode !== 'string' ||
+    !/^\+[1-9]\d{0,3}$/.test(callingCode)
+  ) {
+    return null;
+  }
+
+  return {
+    code,
+    name,
+    calling_code: callingCode,
+    ...(typeof flag === 'string' ? { flag } : {}),
+  };
+}
+
+function phoneRegistrationCheckpoint(
+  state: PhoneRegistrationState
+): Partial<PhoneRegistrationState> {
+  if (
+    (state.step !== 'otp' && state.step !== 'registration_lock') ||
+    !state.intent ||
+    !state.sessionId ||
+    !state.submittedPhoneNumber ||
+    !state.codeExpiresAt ||
+    !state.selectedCountry
+  ) {
+    return {};
+  }
+
+  return {
+    intent: state.intent,
+    step: state.step,
+    selectedCountry: state.selectedCountry,
+    phoneNumber: state.phoneNumber,
+    submittedPhoneNumber: state.submittedPhoneNumber,
+    requestedTransport: state.requestedTransport,
+    retryAvailableAt: state.retryAvailableAt,
+    callFallbackAvailableAt: state.callFallbackAvailableAt,
+    nextVerificationAttemptAt: state.nextVerificationAttemptAt,
+    allowedToRequestCode: state.allowedToRequestCode,
+    codeExpiresAt: state.codeExpiresAt,
+    incorrectCodeAttempts: state.incorrectCodeAttempts,
+    sessionId: state.sessionId,
+    pendingChallenges: state.pendingChallenges,
+    verificationChallenges: state.verificationChallenges,
+  };
+}
+
+function restorePhoneRegistrationCheckpoint(value: unknown): Partial<PhoneRegistrationState> {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  const intent = value.intent;
+  const step = value.step;
+  const sessionId = value.sessionId;
+  const submittedPhoneNumber = value.submittedPhoneNumber;
+  const codeExpiresAt = validTimestamp(value.codeExpiresAt);
+  const selectedCountry = validCountry(value.selectedCountry);
+
+  if (
+    (intent !== 'register' && intent !== 'login') ||
+    (step !== 'otp' && step !== 'registration_lock') ||
+    typeof sessionId !== 'string' ||
+    sessionId.trim().length === 0 ||
+    typeof submittedPhoneNumber !== 'string' ||
+    !/^\+[1-9]\d{1,14}$/.test(submittedPhoneNumber) ||
+    !selectedCountry ||
+    !codeExpiresAt ||
+    codeExpiresAt <= Date.now()
+  ) {
+    return {};
+  }
+
+  const incorrectCodeAttempts = value.incorrectCodeAttempts;
+
+  return {
+    intent,
+    step,
+    selectedCountry,
+    phoneNumber: typeof value.phoneNumber === 'string' ? value.phoneNumber : '',
+    submittedPhoneNumber,
+    requestedTransport: value.requestedTransport === 'voice' ? 'voice' : 'sms',
+    retryAvailableAt: validTimestamp(value.retryAvailableAt),
+    callFallbackAvailableAt: validTimestamp(value.callFallbackAvailableAt),
+    nextVerificationAttemptAt: validTimestamp(value.nextVerificationAttemptAt),
+    allowedToRequestCode: value.allowedToRequestCode !== false,
+    codeExpiresAt,
+    incorrectCodeAttempts:
+      typeof incorrectCodeAttempts === 'number' && Number.isInteger(incorrectCodeAttempts)
+        ? Math.max(0, incorrectCodeAttempts)
+        : 0,
+    sessionId,
+    pendingChallenges: validStringList(value.pendingChallenges),
+    verificationChallenges: validStringList(value.verificationChallenges),
+    code: '',
+    debugVerificationCode: null,
+    pendingAuth: null,
+    error: null,
+    isSubmitting: false,
+  };
+}
+
+const createPhoneRegistrationState: StateCreator<PhoneRegistrationState> = (set, get) => ({
   ...initialState,
+
+  prepareFlow: (intent) => {
+    const state = get();
+
+    if (state.intent === intent) {
+      return;
+    }
+
+    if (state.intent === null) {
+      set({ intent });
+      return;
+    }
+
+    set({
+      ...initialState,
+      intent,
+      countries: state.countries,
+      selectedCountry: state.selectedCountry,
+    });
+  },
 
   setPhoneNumber: (value) =>
     set((state) => ({
@@ -975,7 +1128,20 @@ export const usePhoneRegistrationStore = create<PhoneRegistrationState>((set, ge
     }),
 
   reset: () => set({ ...initialState }),
-}));
+});
+
+export const usePhoneRegistrationStore = create<PhoneRegistrationState>()(
+  persist(createPhoneRegistrationState, {
+    name: PHONE_REGISTRATION_STORAGE_KEY,
+    version: PHONE_REGISTRATION_STORAGE_VERSION,
+    storage: createJSONStorage(() => safeSessionStorage),
+    partialize: phoneRegistrationCheckpoint,
+    merge: (persistedState, currentState) => ({
+      ...currentState,
+      ...restorePhoneRegistrationCheckpoint(persistedState),
+    }),
+  })
+);
 
 function mapNotificationPermission(permission: NotificationPermission): PermissionState {
   switch (permission) {

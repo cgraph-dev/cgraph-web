@@ -41,7 +41,7 @@ function StepProgress({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-white/40">
-        <span>{isPhoneLogin ? 'Phone login' : 'Signal-style registration'}</span>
+        <span>{isPhoneLogin ? 'Phone login' : 'Phone registration'}</span>
         <span>{stepLabel(step)}</span>
       </div>
       <div className="grid grid-cols-5 gap-2">
@@ -59,7 +59,7 @@ function StepProgress({
 }
 
 /**
- * Phone registration page — orchestrates the multi-step Signal-style registration flow
+ * Phone registration page — orchestrates the CGraph phone registration flow
  * (phone entry → OTP verification → registration lock if needed → profile setup → permissions).
  */
 export default function PhoneRegister(): ReactElement {
@@ -68,16 +68,13 @@ export default function PhoneRegister(): ReactElement {
   const navigate = useNavigate();
   const location = useLocation();
   const isPhoneLogin = location.pathname.startsWith('/login/phone');
+  const flowIntent = isPhoneLogin ? 'login' : 'register';
 
   useEffect(() => {
     const store = usePhoneRegistrationStore.getState();
-    store.reset();
+    store.prepareFlow(flowIntent);
     void store.loadCountries();
-
-    return () => {
-      usePhoneRegistrationStore.getState().reset();
-    };
-  }, []);
+  }, [flowIntent]);
 
   const handleComplete = async () => {
     const success = await usePhoneRegistrationStore.getState().completeRegistration();

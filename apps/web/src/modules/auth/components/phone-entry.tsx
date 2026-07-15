@@ -61,7 +61,7 @@ export function PhoneEntry(): ReactElement {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/35">
-          Signal Registration
+          CGraph registration
         </p>
         <h2 className="text-2xl font-semibold text-white">Enter your phone number</h2>
         <p className="text-sm text-white/60">
