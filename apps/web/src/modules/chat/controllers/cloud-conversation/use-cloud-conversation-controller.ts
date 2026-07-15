@@ -7,14 +7,7 @@
  * themselves.
  */
 
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useOptimistic,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { createLogger } from '@/lib/logger';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
@@ -35,11 +28,7 @@ import {
   shouldUsePrivateCloudChatAttachment,
 } from '@/modules/chat/media/cloud-chat-attachment';
 import { getDirectCallRoute, type DirectCallType } from './direct-call-routing';
-import {
-  uploadVoiceMessage,
-  type UploadedVoiceMessage,
-  type VoiceRecordingData,
-} from './voice-message-upload';
+import { uploadVoiceMessage, type VoiceRecordingData } from './voice-message-upload';
 const logger = createLogger('CloudConversationController');
 
 interface MessageScrollSnapshot {
@@ -50,6 +39,7 @@ interface MessageScrollSnapshot {
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 96;
 const OPTIMISTIC_ATTACHMENT_URL_TTL_MS = 30_000;
+const EMPTY_MESSAGES: readonly Message[] = [];
 
 function isNearScrollBottom(container: HTMLDivElement | null): boolean {
   if (!container) return true;
@@ -124,18 +114,9 @@ export function useCloudConversationController() {
   const scrollToMessageId = searchParams.get('scrollTo');
   const callRecipientId =
     conversationId && user?.id ? getRecipientId(conversationId, user.id) : null;
-  const rawMessages = conversationId ? messages[conversationId] || [] : [];
-
-  // React 19 useOptimistic: show sent messages immediately before the API responds.
-  // When the store updates with the real server message, the optimistic overlay is discarded.
-  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-    rawMessages,
-    (state: readonly Message[], newMessage: Message) => [...state, newMessage]
-  );
-  const showOptimisticMessage = (message: Message): void => {
-    startTransition(() => addOptimisticMessage(message));
-  };
-  const conversationMessages = optimisticMessages;
+  const conversationMessages = conversationId
+    ? (messages[conversationId] ?? EMPTY_MESSAGES)
+    : EMPTY_MESSAGES;
   const lastMessageId = conversationMessages.at(-1)?.id ?? null;
   const typing = conversationId
     ? (typingUsers[conversationId] || []).filter((userId) => userId !== user?.id)
@@ -294,44 +275,6 @@ export function useCloudConversationController() {
     [conversationId]
   );
 
-  function addOptimisticVoiceMessage(uploaded: UploadedVoiceMessage) {
-    if (!conversationId) return;
-
-    showOptimisticMessage({
-      id: uploaded.messageId ?? uploaded.id ?? `optimistic-voice-${Date.now()}`,
-      conversationId,
-      senderId: user?.id ?? '',
-      content: '[Voice Message]',
-      encryptedContent: null,
-      isEncrypted: false,
-      messageType: 'voice',
-      replyToId: replyTo?.id ?? null,
-      replyTo: null,
-      isPinned: false,
-      isEdited: false,
-      deletedAt: null,
-      metadata: {
-        url: uploaded.url,
-        filename: 'voice-message.webm',
-        size: uploaded.size,
-        mimeType: uploaded.contentType,
-        duration: uploaded.duration,
-        waveform: uploaded.waveform,
-        voiceMessageId: uploaded.id,
-      },
-      reactions: [],
-      sender: {
-        id: user?.id ?? '',
-        username: user?.username ?? '',
-        displayName: user?.displayName ?? null,
-        avatarUrl: user?.avatarUrl ?? null,
-      },
-      deliveryStatus: 'sent',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    } satisfies Message);
-  }
-
   const handleVoiceComplete = async (recording: VoiceRecordingData) => {
     if (!conversationId || isSending) return;
 
@@ -339,8 +282,7 @@ export function useCloudConversationController() {
     setIsSending(true);
 
     try {
-      const uploaded = await uploadVoiceMessage(conversationId, recording);
-      addOptimisticVoiceMessage(uploaded);
+      await uploadVoiceMessage(conversationId, recording);
       setReplyTo(null);
 
       if (typingTimeoutRef.current) {
@@ -372,37 +314,10 @@ export function useCloudConversationController() {
     setIsSending(true);
 
     try {
-      showOptimisticMessage({
-        id: `optimistic-${contentType}-${Date.now()}`,
-        conversationId,
-        senderId: user?.id ?? '',
-        content,
-        encryptedContent: null,
-        isEncrypted: false,
-        messageType: contentType,
-        replyToId: replyToId ?? replyTo?.id ?? null,
-        replyTo: null,
-        isPinned: false,
-        isEdited: false,
-        deletedAt: null,
-        metadata: metadata satisfies Message['metadata'],
-        reactions: [],
-        sender: {
-          id: user?.id ?? '',
-          username: user?.username ?? '',
-          displayName: user?.displayName ?? null,
-          avatarUrl: user?.avatarUrl ?? null,
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } satisfies Message);
-      window.requestAnimationFrame(() => scrollToLatestMessages('auto'));
-
       await sendMessage(conversationId, content, replyToId ?? replyTo?.id, {
         type: contentType,
         metadata,
       });
-      window.requestAnimationFrame(() => scrollToLatestMessages('smooth'));
 
       setReplyTo(null);
       setAttachmentNodePrice(null);
@@ -464,37 +379,10 @@ export function useCloudConversationController() {
         };
         const content = uploaded.filename;
 
-        showOptimisticMessage({
-          id: `optimistic-video-note-${Date.now()}`,
-          conversationId,
-          senderId: user?.id ?? '',
-          content,
-          encryptedContent: null,
-          isEncrypted: false,
-          messageType: 'video',
-          replyToId: payload.replyToId ?? replyTo?.id ?? null,
-          replyTo: null,
-          isPinned: false,
-          isEdited: false,
-          deletedAt: null,
-          metadata: metadata satisfies Message['metadata'],
-          reactions: [],
-          sender: {
-            id: user?.id ?? '',
-            username: user?.username ?? '',
-            displayName: user?.displayName ?? null,
-            avatarUrl: user?.avatarUrl ?? null,
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        } satisfies Message);
-        window.requestAnimationFrame(() => scrollToLatestMessages('auto'));
-
         await sendMessage(conversationId, content, payload.replyToId ?? replyTo?.id, {
           type: 'video',
           metadata,
         });
-        window.requestAnimationFrame(() => scrollToLatestMessages('smooth'));
 
         setReplyTo(null);
         setAttachmentNodePrice(null);
@@ -591,34 +479,6 @@ export function useCloudConversationController() {
           };
         }
       }
-
-      // Optimistic: show message in the list immediately with a sending indicator
-
-      showOptimisticMessage({
-        id: `optimistic-${Date.now()}`,
-        conversationId,
-        senderId: user?.id ?? '',
-        content,
-        encryptedContent: null,
-        isEncrypted: false,
-        messageType: contentType,
-        replyToId: replyTo?.id ?? null,
-        replyTo: null,
-        isPinned: false,
-        isEdited: false,
-        deletedAt: null,
-
-        metadata: metadata satisfies Message['metadata'],
-        reactions: [],
-        sender: {
-          id: user?.id ?? '',
-          username: user?.username ?? '',
-          displayName: user?.displayName ?? null,
-          avatarUrl: user?.avatarUrl ?? null,
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } satisfies Message);
 
       await sendMessage(conversationId, content, replyTo?.id, {
         type: contentType,

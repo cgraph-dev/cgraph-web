@@ -77,6 +77,7 @@ describe('Cloud conversation ownership', () => {
     const controller = source(
       'src/modules/chat/controllers/cloud-conversation/use-cloud-conversation-controller.ts'
     );
+    const messagingStore = source('src/modules/chat/store/chatStore.messaging.ts');
     const messageRequest = source('src/modules/chat/hooks/use-message-request.ts');
     const voiceUpload = source(
       'src/modules/chat/controllers/cloud-conversation/voice-message-upload.ts'
@@ -102,6 +103,14 @@ describe('Cloud conversation ownership', () => {
     expect(controller).toContain('setActiveConversation(conversationId)');
     expect(controller).toContain('setActiveConversation(null)');
     expect(voiceUpload).toContain("http.post('/api/v1/voice-messages'");
+
+    expect(controller).not.toContain('useOptimistic');
+    expect(controller).not.toContain('showOptimisticMessage');
+    expect(controller).not.toContain('optimistic-video-note-');
+    expect(controller).not.toContain('optimistic-voice-');
+    expect(messagingStore).toContain('client_message_id: clientMessageId');
+    expect(messagingStore).toContain('const optimisticMessage: Message =');
+    expect(messagingStore).toContain('get().addMessage(optimisticMessage)');
   });
 
   it('keeps the routed inbox and chat-list actions on the shared conversation-list owner', () => {
