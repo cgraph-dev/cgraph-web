@@ -270,6 +270,7 @@ describe('normalizeIncomingRequestEvent', () => {
         equippedTitleId: null,
         equippedBadgeIds: [],
         equippedNameplateId: null,
+        profileColor: null,
         profileTheme: null,
         chatTheme: null,
         displayNameFont: null,
