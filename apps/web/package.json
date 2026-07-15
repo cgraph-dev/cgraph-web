@@ -17,7 +17,7 @@
     "check:unit-suite": "vitest run --coverage=false --reporter=dot --maxWorkers=1 --minWorkers=1",
     "check:release-gates": "pnpm check:customization-lottie-assets && pnpm check:safe-html && pnpm check:storage-policy && pnpm check:import-cycles && pnpm check:state-stores && pnpm check:background-polling && pnpm check:auth-storage && pnpm check:unit-suite",
     "build:budget": "pnpm build && pnpm check:bundle-budgets",
-    "build:strict": "tsc -b && vite build",
+    "build:strict": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json && vite build",
     "lint": "eslint src/ --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",
     "preview": "vite preview",
