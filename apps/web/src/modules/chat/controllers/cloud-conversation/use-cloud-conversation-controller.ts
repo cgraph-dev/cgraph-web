@@ -7,7 +7,14 @@
  * themselves.
  */
 
-import { useCallback, useEffect, useRef, useState, useOptimistic } from 'react';
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useOptimistic,
+} from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { createLogger } from '@/lib/logger';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
@@ -89,6 +96,7 @@ export function useCloudConversationController() {
     fetchMessages,
     markAsRead,
     getRecipientId,
+    setActiveConversation,
   } = useChatStore();
 
   const [attachmentNodePrice, setAttachmentNodePrice] = useState<number | null>(null);
@@ -124,6 +132,9 @@ export function useCloudConversationController() {
     rawMessages,
     (state: readonly Message[], newMessage: Message) => [...state, newMessage]
   );
+  const showOptimisticMessage = (message: Message): void => {
+    startTransition(() => addOptimisticMessage(message));
+  };
   const conversationMessages = optimisticMessages;
   const lastMessageId = conversationMessages.at(-1)?.id ?? null;
   const typing = conversationId
@@ -150,6 +161,7 @@ export function useCloudConversationController() {
     if (!conversationId) return;
 
     let isActive = true;
+    setActiveConversation(conversationId);
 
     void fetchMessages(conversationId)
       .then(() => markAsRead(conversationId))
@@ -181,8 +193,11 @@ export function useCloudConversationController() {
       }
       sendConversationTyping(`conversation:${conversationId}`, false);
       socketManager.leaveConversation(conversationId);
+      if (useChatStore.getState().activeConversationId === conversationId) {
+        setActiveConversation(null);
+      }
     };
-  }, [conversationId, fetchMessages, markAsRead]);
+  }, [conversationId, fetchMessages, markAsRead, setActiveConversation]);
 
   // Guarded autoscroll: keep users anchored when they are reading older messages.
   useEffect(() => {
@@ -282,7 +297,7 @@ export function useCloudConversationController() {
   function addOptimisticVoiceMessage(uploaded: UploadedVoiceMessage) {
     if (!conversationId) return;
 
-    addOptimisticMessage({
+    showOptimisticMessage({
       id: uploaded.messageId ?? uploaded.id ?? `optimistic-voice-${Date.now()}`,
       conversationId,
       senderId: user?.id ?? '',
@@ -357,7 +372,7 @@ export function useCloudConversationController() {
     setIsSending(true);
 
     try {
-      addOptimisticMessage({
+      showOptimisticMessage({
         id: `optimistic-${contentType}-${Date.now()}`,
         conversationId,
         senderId: user?.id ?? '',
@@ -449,7 +464,7 @@ export function useCloudConversationController() {
         };
         const content = uploaded.filename;
 
-        addOptimisticMessage({
+        showOptimisticMessage({
           id: `optimistic-video-note-${Date.now()}`,
           conversationId,
           senderId: user?.id ?? '',
@@ -579,7 +594,7 @@ export function useCloudConversationController() {
 
       // Optimistic: show message in the list immediately with a sending indicator
 
-      addOptimisticMessage({
+      showOptimisticMessage({
         id: `optimistic-${Date.now()}`,
         conversationId,
         senderId: user?.id ?? '',

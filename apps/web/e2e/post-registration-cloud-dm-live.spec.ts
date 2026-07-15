@@ -34,19 +34,60 @@ function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
 
-function historyFrameIncludes(frame: string, text: string): boolean {
+function eventFrameIncludesText(frame: string, eventName: string, text: string): boolean {
   try {
     const decoded: unknown = JSON.parse(frame);
-    if (!Array.isArray(decoded) || decoded[3] !== 'message_history') return false;
-
-    const payload = decoded[4];
-    if (!payload || typeof payload !== 'object' || !('messages' in payload)) return false;
-
-    const messages = payload.messages;
-    return Array.isArray(messages) && messages.some((message) => JSON.stringify(message).includes(text));
+    return (
+      Array.isArray(decoded) &&
+      decoded[3] === eventName &&
+      JSON.stringify(decoded[4]).includes(text)
+    );
   } catch {
     return false;
   }
+}
+
+function getFrameTopicAndEvent(frame: string): string | null {
+  try {
+    const decoded: unknown = JSON.parse(frame);
+    return (
+      Array.isArray(decoded) &&
+        typeof decoded[2] === 'string' &&
+        typeof decoded[3] === 'string'
+        ? `${decoded[2]}:${decoded[3]}`
+        : null
+    );
+  } catch {
+    return null;
+  }
+}
+
+function getEventFramePayload(frame: string, eventName: string): string | null {
+  try {
+    const decoded: unknown = JSON.parse(frame);
+    return Array.isArray(decoded) && decoded[3] === eventName
+      ? JSON.stringify(decoded[4])
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function trackPageErrors(page: Page): string[] {
+  const errors: string[] = [];
+
+  page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+  });
+  page.on('response', (response) => {
+    const url = new URL(response.url());
+    if (url.pathname.startsWith('/api/') && response.status() >= 500) {
+      errors.push(`http: ${response.status()} ${response.request().method()} ${url.pathname}`);
+    }
+  });
+
+  return errors;
 }
 
 function sqlLiteral(value: string): string {
@@ -204,10 +245,13 @@ async function acceptFriendRequest(page: Page, requesterUsername: string): Promi
   ).toBeVisible();
 }
 
-async function openFriendDm(page: Page, friendUsername: string): Promise<void> {
-  await friendsRegion(page).getByRole('button', { name: new RegExp(`Message ${friendUsername}`) }).click();
+async function openFriendDm(page: Page, friendUsername: string): Promise<string> {
+  await friendsRegion(page)
+    .getByRole('button', { name: new RegExp(`Message ${friendUsername}`) })
+    .click();
   await expect(page).toHaveURL(/\/messages\/[^/?#]+$/);
   await expect(page.getByPlaceholder(/type a message/i)).toBeVisible();
+  return new URL(page.url()).pathname.split('/').at(-1)!;
 }
 
 async function sendMessage(page: Page, text: string): Promise<void> {
@@ -312,7 +356,19 @@ test.describe('Post-registration Cloud DM live web acceptance', () => {
     const bob = await registerLiveAccount(request, 'bob');
     const alicePage = await newSignedInPage(browser, alice);
     const bobPage = await newSignedInPage(browser, bob);
+    const aliceErrors = trackPageErrors(alicePage);
+    const bobErrors = trackPageErrors(bobPage);
+    const aliceSocketSentFrames: string[] = [];
+    const aliceSocketFrames: string[] = [];
     const bobSocketFrames: string[] = [];
+    alicePage.on('websocket', (socket) => {
+      socket.on('framesent', (event) => {
+        aliceSocketSentFrames.push(event.payload);
+      });
+      socket.on('framereceived', (event) => {
+        aliceSocketFrames.push(event.payload);
+      });
+    });
     bobPage.on('websocket', (socket) => {
       socket.on('framereceived', (event) => {
         bobSocketFrames.push(event.payload);
@@ -330,16 +386,37 @@ test.describe('Post-registration Cloud DM live web acceptance', () => {
 
       await alicePage.reload();
       await expect(friendsRegion(alicePage).getByText(`@${bob.username}`)).toBeVisible();
-      await openFriendDm(alicePage, bob.username);
+      const conversationId = await openFriendDm(alicePage, bob.username);
+      aliceSocketSentFrames.length = 0;
       await sendMessage(alicePage, aliceText);
 
       await openFriends(bobPage);
-      await openFriendDm(bobPage, alice.username);
-      await expect.poll(() => bobSocketFrames.some((frame) => historyFrameIncludes(frame, aliceText))).toBe(
-        true
-      );
+      const bobConversationId = await openFriendDm(bobPage, alice.username);
+      expect(bobConversationId).toBe(conversationId);
+      await expect
+        .poll(() =>
+          bobSocketFrames.some((frame) =>
+            eventFrameIncludesText(frame, 'message_history', aliceText)
+          )
+        )
+        .toBe(true);
       await expect(bobPage.getByLabel('Conversation messages')).toContainText(aliceText);
       await sendMessage(bobPage, bobText);
+
+      expect(aliceSocketSentFrames.map(getFrameTopicAndEvent).filter(Boolean)).not.toContain(
+        `conversation:${conversationId}:phx_leave`
+      );
+      await expect
+        .poll(() => aliceSocketFrames.map(getFrameTopicAndEvent).filter(Boolean))
+        .toContain(`conversation:${conversationId}:new_message`);
+      await expect
+        .poll(() =>
+          aliceSocketFrames
+            .map((frame) => getEventFramePayload(frame, 'new_message'))
+            .filter((payload): payload is string => payload !== null)
+        )
+        .toEqual(expect.arrayContaining([expect.stringContaining(bobText)]));
+      await expectOrderedMessages(alicePage, aliceText, bobText);
 
       await bobPage.reload();
       await expect(bobPage.getByPlaceholder(/type a message/i)).toBeVisible();
@@ -348,6 +425,9 @@ test.describe('Post-registration Cloud DM live web acceptance', () => {
       await alicePage.reload();
       await expect(alicePage.getByPlaceholder(/type a message/i)).toBeVisible();
       await expectOrderedMessages(alicePage, aliceText, bobText);
+
+      expect(aliceErrors).toEqual([]);
+      expect(bobErrors).toEqual([]);
     } finally {
       await alicePage.context().close();
       await bobPage.context().close();

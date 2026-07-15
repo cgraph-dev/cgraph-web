@@ -99,6 +99,8 @@ describe('Cloud conversation ownership', () => {
     expect(controller).toContain('sendMessage(conversationId');
     expect(controller).toContain('fetchMessages(conversationId)');
     expect(controller).toContain('markAsRead(conversationId)');
+    expect(controller).toContain('setActiveConversation(conversationId)');
+    expect(controller).toContain('setActiveConversation(null)');
     expect(voiceUpload).toContain("http.post('/api/v1/voice-messages'");
   });
 
