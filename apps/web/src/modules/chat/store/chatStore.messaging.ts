@@ -22,6 +22,7 @@ const LOCKED_PLACEHOLDER = '🔒 Open on mobile or desktop to read';
 const CLOUD_DECRYPT_FAILED_PLACEHOLDER = 'Unable to decrypt this Cloud Chat message.';
 const WEB_DM_UNAVAILABLE =
   'Secret Chats are post-quantum end-to-end encrypted. Open the mobile or desktop app to send one. Cloud Chats work on web.';
+const conversationSendTails = new Map<string, Promise<void>>();
 
 type Set = (
   partial: ChatState | Partial<ChatState> | ((s: ChatState) => ChatState | Partial<ChatState>)
@@ -76,6 +77,29 @@ function toMessage(raw: Record<string, unknown>): Message | null {
 function metadataForTransport(metadata: Record<string, unknown>): Record<string, unknown> {
   const { localPreviewUrl: _localPreviewUrl, ...transportMetadata } = metadata;
   return transportMetadata;
+}
+
+async function runInConversationSendQueue<T>(
+  conversationId: string,
+  task: () => Promise<T>
+): Promise<T> {
+  const previous = conversationSendTails.get(conversationId) ?? Promise.resolve();
+  let release!: () => void;
+  const tail = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  conversationSendTails.set(conversationId, tail);
+  await previous;
+
+  try {
+    return await task();
+  } finally {
+    release();
+    if (conversationSendTails.get(conversationId) === tail) {
+      conversationSendTails.delete(conversationId);
+    }
+  }
 }
 
 async function queuePendingMessage(
@@ -163,6 +187,7 @@ export function createMessagingActions(_set: Set, get: Get) {
       const currentUser = useAuthStore.getState().user;
       const optimisticMessage: Message = {
         id: clientMessageId,
+        clientMessageId,
         conversationId,
         senderId: currentUser?.id || '',
         content,
@@ -188,49 +213,56 @@ export function createMessagingActions(_set: Set, get: Get) {
       };
       get().addMessage(optimisticMessage);
 
-      try {
-        if (typeof navigator !== 'undefined' && !navigator.onLine) {
-          await queuePendingMessage(
-            clientMessageId,
-            conversationId,
-            content,
-            contentType,
-            replyToId,
+      return runInConversationSendQueue(conversationId, async () => {
+        try {
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            await queuePendingMessage(
+              clientMessageId,
+              conversationId,
+              content,
+              contentType,
+              replyToId,
+              payload
+            );
+            logger.log('Queued message for offline sync');
+            return;
+          }
+
+          const response = await http.post(
+            `/api/v1/conversations/${conversationId}/messages`,
             payload
           );
-          logger.log('Queued message for offline sync');
-          return;
-        }
+          const rawMessage: Record<string, unknown> = ensureObject(response.data, 'message') ?? {};
+          const normalized = normalizeMessage(rawMessage);
+          const message = toMessage(normalized);
+          if (!message) {
+            throw new Error('Message response did not include a valid message');
+          }
 
-        const response = await http.post(
-          `/api/v1/conversations/${conversationId}/messages`,
-          payload
-        );
-        const rawMessage: Record<string, unknown> = ensureObject(response.data, 'message') ?? {};
-        const normalized = normalizeMessage(rawMessage);
-        const message = toMessage(normalized);
-        if (message) {
-          get().removeMessage(clientMessageId, conversationId);
-          get().addMessage({ ...message, deliveryStatus: 'sent' });
-        }
-      } catch (error: unknown) {
-        if (typeof navigator !== 'undefined' && !navigator.onLine) {
-          await queuePendingMessage(
-            clientMessageId,
-            conversationId,
-            content,
-            contentType,
-            replyToId,
-            payload
-          );
-          logger.log('Queued message for offline sync after connection loss');
-          return;
-        }
+          get().addMessage({
+            ...message,
+            clientMessageId: message.clientMessageId ?? clientMessageId,
+            deliveryStatus: 'sent',
+          });
+        } catch (error: unknown) {
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            await queuePendingMessage(
+              clientMessageId,
+              conversationId,
+              content,
+              contentType,
+              replyToId,
+              payload
+            );
+            logger.log('Queued message for offline sync after connection loss');
+            return;
+          }
 
-        get().updateMessageStatus(conversationId, clientMessageId, 'failed');
-        logger.error('Failed to send message:', error);
-        throw error;
-      }
+          get().updateMessageStatus(conversationId, clientMessageId, 'failed');
+          logger.error('Failed to send message:', error);
+          throw error;
+        }
+      });
     },
 
     /**

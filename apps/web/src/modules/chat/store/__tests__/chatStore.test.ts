@@ -2,13 +2,17 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useChatStore, toConversation } from '../chatStore.impl';
 import type { Message, Conversation } from '../chatStore.types';
 
+const idempotencyKeys = vi.hoisted(() => ({ value: 0 }));
+
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 vi.mock('@/modules/auth/store', () => ({
   useAuthStore: { getState: vi.fn(() => ({ user: { id: 'me' } })) },
 }));
-vi.mock('@cgraph-dev/utils', () => ({ createIdempotencyKey: () => 'idem-key-1' }));
+vi.mock('@cgraph-dev/utils', () => ({
+  createIdempotencyKey: () => `idem-key-${++idempotencyKeys.value}`,
+}));
 vi.mock('@/lib/api-utils', () => ({
   ensureArray: (_d: unknown, key: string) => {
     if (Array.isArray(_d)) return _d;
@@ -144,6 +148,21 @@ const makeConv = (overrides: Partial<Conversation> = {}): Conversation => ({
   ...overrides,
 });
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+
+  return { promise, resolve, reject };
+}
+
+async function flushMessageUpdates(): Promise<void> {
+  await new Promise<void>((resolve) => queueMicrotask(resolve));
+}
+
 beforeEach(() => {
   useChatStore.setState({
     conversations: [],
@@ -159,6 +178,7 @@ beforeEach(() => {
     hasMoreMessages: {},
     conversationsLastFetchedAt: null,
   });
+  idempotencyKeys.value = 0;
   vi.clearAllMocks();
 });
 
@@ -290,13 +310,81 @@ describe('fetchMessages', () => {
 // 3. Send Message (plaintext path)
 describe('sendMessage', () => {
   it('sends plaintext message and adds to store', async () => {
-    const msg = makeMsg();
+    const msg = makeMsg({ id: 'server-msg-1', senderId: 'me' });
     mockApi.post.mockResolvedValueOnce({ data: { message: msg } });
     await useChatStore.getState().sendMessage('conv-1', 'hello');
+    await flushMessageUpdates();
+
     expect(mockApi.post).toHaveBeenCalledWith(
       '/api/v1/conversations/conv-1/messages',
       expect.objectContaining({ content: 'hello' })
     );
+    expect(useChatStore.getState().messages['conv-1']).toEqual([
+      expect.objectContaining({
+        id: 'server-msg-1',
+        clientMessageId: 'idem-key-1',
+        deliveryStatus: 'sent',
+      }),
+    ]);
+  });
+
+  it('serializes sends per conversation and releases the queue after a failure', async () => {
+    const firstRequest = deferred<{ data: { message: Message } }>();
+    mockApi.post
+      .mockImplementationOnce(() => firstRequest.promise)
+      .mockResolvedValueOnce({
+        data: {
+          message: makeMsg({
+            id: 'server-msg-2',
+            senderId: 'me',
+            content: 'second',
+          }),
+        },
+      });
+
+    const firstSend = useChatStore.getState().sendMessage('conv-1', 'first');
+    const firstFailure = expect(firstSend).rejects.toThrow('first failed');
+    const secondSend = useChatStore.getState().sendMessage('conv-1', 'second');
+
+    await vi.waitFor(() => expect(mockApi.post).toHaveBeenCalledTimes(1));
+    firstRequest.reject(new Error('first failed'));
+
+    await firstFailure;
+    await secondSend;
+
+    expect(mockApi.post.mock.calls.map((call) => call[1]?.content)).toEqual(['first', 'second']);
+  });
+
+  it('does not block sends to a different conversation', async () => {
+    const firstRequest = deferred<{ data: { message: Message } }>();
+    mockApi.post
+      .mockImplementationOnce(() => firstRequest.promise)
+      .mockResolvedValueOnce({
+        data: {
+          message: makeMsg({
+            id: 'server-other-1',
+            conversationId: 'conv-2',
+            senderId: 'me',
+            content: 'other',
+          }),
+        },
+      });
+
+    const firstSend = useChatStore.getState().sendMessage('conv-1', 'first');
+    const otherSend = useChatStore.getState().sendMessage('conv-2', 'other');
+
+    await vi.waitFor(() => expect(mockApi.post).toHaveBeenCalledTimes(2));
+    firstRequest.resolve({
+      data: {
+        message: makeMsg({ id: 'server-msg-1', senderId: 'me', content: 'first' }),
+      },
+    });
+
+    await Promise.all([firstSend, otherSend]);
+    expect(mockApi.post.mock.calls.map((call) => call[0])).toEqual([
+      '/api/v1/conversations/conv-1/messages',
+      '/api/v1/conversations/conv-2/messages',
+    ]);
   });
 
   it('includes replyToId in payload', async () => {
