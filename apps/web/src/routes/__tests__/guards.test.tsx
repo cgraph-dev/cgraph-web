@@ -113,6 +113,25 @@ describe('Route Guards', () => {
 
       expect(screen.getByTestId('content')).toHaveTextContent('Onboarding');
     });
+
+    it('leaves onboarding after a fresh profile read confirms completion', () => {
+      window.history.replaceState({}, '', '/onboarding');
+      authState.isAuthenticated = true;
+      authState.user = {
+        id: 'u1',
+        email: 'new@example.com',
+        emailVerifiedAt: 'verified',
+        onboardingCompleted: true,
+      };
+
+      render(
+        <ProtectedRoute>
+          <div>Onboarding</div>
+        </ProtectedRoute>
+      );
+
+      expect(screen.getByTestId('navigate')).toHaveAttribute('data-to', '/messages');
+    });
   });
 
   describe('PublicRoute', () => {

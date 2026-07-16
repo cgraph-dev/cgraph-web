@@ -38,9 +38,15 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isAuthenticated) {
     const redirectTo = getPostAuthRedirect(user);
+    const pathname = window.location.pathname;
+
+    if (redirectTo === '/messages' && pathname === '/onboarding') {
+      return <Navigate to="/messages" replace />;
+    }
+
     if (
       redirectTo !== '/messages' &&
-      !isCurrentPostAuthGate(window.location.pathname, redirectTo)
+      !isCurrentPostAuthGate(pathname, redirectTo)
     ) {
       return <Navigate to={redirectTo} replace />;
     }
