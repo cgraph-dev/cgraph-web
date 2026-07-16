@@ -1,6 +1,6 @@
 import type React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 const { mockUseAppLayout } = vi.hoisted(() => ({
   mockUseAppLayout: vi.fn(),
@@ -229,6 +229,27 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('@/shared/components/ui', () => ({
+  Button: ({
+    children,
+    animated: _animated,
+    isLoading,
+    variant: _variant,
+    ...props
+  }: Record<string, unknown> & { children?: React.ReactNode; isLoading?: boolean }) => (
+    <button {...props} disabled={Boolean(props.disabled) || isLoading}>
+      {isLoading ? 'Loading...' : children}
+    </button>
+  ),
+  Dialog: ({
+    open,
+    children,
+  }: Record<string, unknown> & { open?: boolean; children?: React.ReactNode }) =>
+    open ? <div role="dialog">{children}</div> : null,
+  DialogContent: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  DialogDescription: ({ children }: { children?: React.ReactNode }) => <p>{children}</p>,
+  DialogFooter: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  DialogHeader: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children?: React.ReactNode }) => <h2>{children}</h2>,
   GlassCard: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div data-testid="glass-card" className={className}>
       {children}
@@ -514,5 +535,33 @@ describe('Sidebar', () => {
   it('caps social badge at 99+', () => {
     render(<Sidebar {...sidebarProps} unreadCount={200} />);
     expect(screen.getByText('99+')).toBeInTheDocument();
+  });
+
+  it('requires confirmation before logout', () => {
+    const handleLogout = vi.fn();
+    render(<Sidebar {...sidebarProps} handleLogout={handleLogout} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Logout from your account' }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(handleLogout).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(handleLogout).not.toHaveBeenCalled();
+  });
+
+  it('runs the confirmed logout command once', async () => {
+    const handleLogout = vi.fn().mockResolvedValue(undefined);
+    render(<Sidebar {...sidebarProps} handleLogout={handleLogout} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Logout from your account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Log out' }));
+
+    await waitFor(() => {
+      expect(handleLogout).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

@@ -29,6 +29,7 @@ const sessionsHook = vi.hoisted(() => ({
   revokeSession: vi.fn(),
   revokeAllOtherSessions: vi.fn(),
 }));
+const defaultSessions = sessionsHook.sessions.map((session) => ({ ...session }));
 
 vi.mock('@/modules/auth/hooks', () => ({
   useSessions: vi.fn(() => sessionsHook),
@@ -38,6 +39,8 @@ vi.mock('@/shared/components/ui', () => ({
   Button: ({
     children,
     isLoading,
+    animated: _animated,
+    size: _size,
     variant: _variant,
     ...props
   }: Record<string, unknown> & { children?: React.ReactNode; isLoading?: boolean }) => (
@@ -70,6 +73,7 @@ describe('SessionsSettingsPanel', () => {
     sessionsHook.isLoading = false;
     sessionsHook.isMutating = false;
     sessionsHook.error = null;
+    sessionsHook.sessions = defaultSessions.map((session) => ({ ...session }));
     sessionsHook.revokeSession.mockResolvedValue(true);
     sessionsHook.revokeAllOtherSessions.mockResolvedValue(true);
   });
@@ -80,6 +84,31 @@ describe('SessionsSettingsPanel', () => {
     await waitFor(() => {
       expect(sessionsHook.getSessions).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('renders the current session first and never gives it a revoke control', () => {
+    sessionsHook.sessions = [
+      { ...defaultSessions[1]! },
+      { ...defaultSessions[0]! },
+    ];
+
+    renderPanel();
+
+    const sessionHeadings = screen.getAllByRole('heading', { level: 3 });
+    expect(sessionHeadings[0]).toHaveTextContent('Chrome(Current)');
+    expect(sessionHeadings[1]).toHaveTextContent('Firefox');
+    expect(screen.getAllByRole('button', { name: 'Revoke' })).toHaveLength(1);
+  });
+
+  it('hides every revoke action when only the current session remains', () => {
+    sessionsHook.sessions = [{ ...defaultSessions[0]! }];
+
+    renderPanel();
+
+    expect(screen.queryByRole('button', { name: 'Revoke' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Revoke All Other Sessions' })
+    ).not.toBeInTheDocument();
   });
 
   it('requires confirmation before revoking an individual session', async () => {
@@ -104,6 +133,20 @@ describe('SessionsSettingsPanel', () => {
       expect(sessionsHook.revokeSession).toHaveBeenCalledWith('session-other');
     });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('keeps a failed revocation open for retry', async () => {
+    sessionsHook.revokeSession.mockResolvedValueOnce(false);
+    renderPanel();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Revoke' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Revoke session' }));
+
+    await waitFor(() => {
+      expect(sessionsHook.revokeSession).toHaveBeenCalledWith('session-other');
+    });
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('confirms and uses the atomic all-other command', async () => {

@@ -15,6 +15,8 @@ const mockHttp = vi.hoisted(() => ({
 const mockVerifyEmail = vi.hoisted(() => vi.fn());
 const mockForgotPassword = vi.hoisted(() => vi.fn());
 const mockResetPassword = vi.hoisted(() => vi.fn());
+const mockClearOfflineData = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const mockResetToDefaults = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api-client', () => ({
   http: mockHttp,
@@ -74,15 +76,19 @@ vi.mock('@/lib/logger', () => ({
   },
 }));
 
+vi.mock('@/lib/offline/indexeddb-cache', () => ({
+  clearOfflineData: mockClearOfflineData,
+}));
+
 vi.mock('@/modules/settings/store/customization', () => ({
   useCustomizationStore: {
-    getState: vi.fn(() => ({ resetToDefaults: vi.fn() })),
+    getState: vi.fn(() => ({ resetToDefaults: mockResetToDefaults })),
   },
 }));
 
 vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   useCustomizationStore: {
-    getState: vi.fn(() => ({ resetToDefaults: vi.fn() })),
+    getState: vi.fn(() => ({ resetToDefaults: mockResetToDefaults })),
   },
 }));
 
@@ -582,6 +588,8 @@ describe('createLogoutAction', () => {
     await logout();
 
     expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/logout');
+    expect(mockClearOfflineData).toHaveBeenCalledTimes(1);
+    expect(mockResetToDefaults).toHaveBeenCalledTimes(1);
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({
         user: null,
@@ -592,14 +600,35 @@ describe('createLogoutAction', () => {
     );
   });
 
-  it('skips server call when no token and still clears state', async () => {
+  it('calls server logout for a cookie-restored authenticated session', async () => {
     const { set, get, state } = createMockSetGet();
     state.token = null;
+    state.refreshToken = null;
+    state.isAuthenticated = true;
+    const logout = createLogoutAction(set as never, get as never);
+
+    mockedApi.post.mockResolvedValueOnce({} as AxiosResponse);
+
+    await logout();
+
+    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/logout');
+    expect(mockClearOfflineData).toHaveBeenCalledTimes(1);
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({ user: null, isAuthenticated: false })
+    );
+  });
+
+  it('skips the remote command without auth state but still clears local data', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.token = null;
+    state.refreshToken = null;
+    state.isAuthenticated = false;
     const logout = createLogoutAction(set as never, get as never);
 
     await logout();
 
     expect(mockedApi.post).not.toHaveBeenCalled();
+    expect(mockClearOfflineData).toHaveBeenCalledTimes(1);
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({ user: null, isAuthenticated: false })
     );
@@ -614,9 +643,53 @@ describe('createLogoutAction', () => {
 
     await logout();
 
+    expect(mockClearOfflineData).toHaveBeenCalledTimes(1);
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({ user: null, isAuthenticated: false })
     );
+  });
+
+  it('clears auth state when durable local cleanup fails', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.isAuthenticated = false;
+    state.token = null;
+    state.refreshToken = null;
+    const logout = createLogoutAction(set as never, get as never);
+
+    mockClearOfflineData.mockRejectedValueOnce(new Error('indexeddb unavailable'));
+
+    await logout();
+
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({ user: null, isAuthenticated: false })
+    );
+  });
+
+  it('shares one in-flight logout command across duplicate calls', async () => {
+    const { set, get, state } = createMockSetGet();
+    state.token = 'tok';
+    state.isAuthenticated = true;
+    const logout = createLogoutAction(set as never, get as never);
+    let resolveRequest: ((value: AxiosResponse) => void) | undefined;
+
+    mockedApi.post.mockImplementationOnce(
+      () =>
+        new Promise<AxiosResponse>((resolve) => {
+          resolveRequest = resolve;
+        })
+    );
+
+    const first = logout();
+    const second = logout();
+
+    expect(first).toBe(second);
+    expect(mockedApi.post).toHaveBeenCalledTimes(1);
+
+    resolveRequest?.({} as AxiosResponse);
+    await Promise.all([first, second]);
+
+    expect(mockClearOfflineData).toHaveBeenCalledTimes(1);
+    expect(set).toHaveBeenCalledTimes(1);
   });
 });
 

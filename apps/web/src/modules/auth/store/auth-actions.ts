@@ -1,5 +1,6 @@
 import { apiClient, http } from '@/lib/api-client';
 import { authLogger } from '@/lib/logger';
+import { clearOfflineData } from '@/lib/offline/indexeddb-cache';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { AxiosError } from 'axios';
 
@@ -452,30 +453,53 @@ export function createRegisterAction(set: Set, _get: Get) {
  * Description.
  */
 export function createLogoutAction(set: Set, get: Get) {
-  return async () => {
-    // Attempt server-side logout to invalidate tokens
-    const { token } = get();
-    if (token) {
-      try {
-        await apiClient.auth.logout();
-      } catch (error) {
-        // Continue with client-side cleanup even if server call fails
-        // This handles offline scenarios gracefully
-        authLogger.warn('Server-side logout failed (continuing with client cleanup)', error);
+  let activeLogout: Promise<void> | null = null;
+
+  return () => {
+    if (activeLogout) return activeLogout;
+
+    activeLogout = (async () => {
+      const { isAuthenticated, refreshToken, token } = get();
+
+      if (isAuthenticated || token || refreshToken) {
+        try {
+          const result = await apiClient.auth.logout();
+
+          if (!result.ok) {
+            authLogger.warn('Server-side logout was rejected (continuing with client cleanup)', {
+              code: result.error.code,
+            });
+          }
+        } catch (error) {
+          authLogger.warn('Server-side logout failed (continuing with client cleanup)', error);
+        }
       }
-    }
 
-    // Clear customizations to prevent persistence bleed to the next user
-    useCustomizationStore.getState().resetToDefaults();
+      try {
+        await clearOfflineData();
+      } catch (error) {
+        authLogger.warn('Offline data cleanup failed (continuing with logout)', error);
+      }
 
-    // Clear all client-side auth state
-    set({
-      user: null,
-      token: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      isLoading: false,
+      try {
+        useCustomizationStore.getState().resetToDefaults();
+      } catch (error) {
+        authLogger.warn('Customization cleanup failed (continuing with logout)', error);
+      }
+
+      set({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+      });
+    })().finally(() => {
+      activeLogout = null;
     });
+
+    return activeLogout;
   };
 }
 

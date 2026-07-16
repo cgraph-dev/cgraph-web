@@ -325,9 +325,7 @@ describe('Auth Hooks — Extended Coverage', () => {
           created_at: '2025-11-30T00:00:00Z',
         },
       ];
-      mockApiClient.profile.getSessions
-        .mockResolvedValueOnce({ ok: true, data: sessionsData })
-        .mockResolvedValueOnce({ ok: true, data: [sessionsData[0]] });
+      mockApiClient.profile.getSessions.mockResolvedValueOnce({ ok: true, data: sessionsData });
       mockApiClient.profile.revokeSession.mockResolvedValueOnce({
         ok: true,
         data: { message: 'Session revoked successfully' },
@@ -346,9 +344,107 @@ describe('Auth Hooks — Extended Coverage', () => {
       });
 
       expect(mockApiClient.profile.revokeSession).toHaveBeenCalledWith('s2');
+      expect(mockApiClient.profile.getSessions).toHaveBeenCalledTimes(1);
       expect(revokeResult).toBe(true);
       expect(result.current.sessions).toHaveLength(1);
       expect(result.current.sessions[0]!.id).toBe('s1');
+    });
+
+    it('retains the selected session when the server rejects revocation', async () => {
+      const sessionsData = [
+        {
+          id: 's1',
+          ip: '1.2.3.4',
+          user_agent: 'Chrome',
+          location: 'Bucharest',
+          current: true,
+          last_active_at: '2025-12-01T00:00:00Z',
+          created_at: '2025-12-01T00:00:00Z',
+        },
+        {
+          id: 's2',
+          ip: '5.6.7.8',
+          user_agent: 'Firefox',
+          location: 'Bucharest',
+          current: false,
+          last_active_at: '2025-11-30T00:00:00Z',
+          created_at: '2025-11-30T00:00:00Z',
+        },
+      ];
+      mockApiClient.profile.getSessions.mockResolvedValueOnce({ ok: true, data: sessionsData });
+      mockApiClient.profile.revokeSession.mockResolvedValueOnce({
+        ok: false,
+        error: { code: 'current_session', message: 'Use logout to end the current session' },
+        status: 409,
+      });
+
+      const { result } = renderHook(() => useSessions());
+
+      await act(async () => {
+        await result.current.getSessions();
+      });
+
+      let revokeResult: boolean | undefined;
+      await act(async () => {
+        revokeResult = await result.current.revokeSession('s2');
+      });
+
+      expect(revokeResult).toBe(false);
+      expect(result.current.sessions).toEqual(sessionsData);
+      expect(result.current.error).toBe('Use logout to end the current session');
+    });
+
+    it('rejects a duplicate mutation while the first command is in flight', async () => {
+      const sessionsData = [
+        {
+          id: 's1',
+          ip: '1.2.3.4',
+          user_agent: 'Chrome',
+          location: 'Bucharest',
+          current: true,
+          last_active_at: '2025-12-01T00:00:00Z',
+          created_at: '2025-12-01T00:00:00Z',
+        },
+        {
+          id: 's2',
+          ip: '5.6.7.8',
+          user_agent: 'Firefox',
+          location: 'Bucharest',
+          current: false,
+          last_active_at: '2025-11-30T00:00:00Z',
+          created_at: '2025-11-30T00:00:00Z',
+        },
+      ];
+      let resolveRevocation:
+        | ((value: { ok: true; data: { message: string } }) => void)
+        | undefined;
+
+      mockApiClient.profile.getSessions.mockResolvedValueOnce({ ok: true, data: sessionsData });
+      mockApiClient.profile.revokeSession.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRevocation = resolve;
+          })
+      );
+
+      const { result } = renderHook(() => useSessions());
+
+      await act(async () => {
+        await result.current.getSessions();
+      });
+
+      await act(async () => {
+        const first = result.current.revokeSession('s2');
+        const duplicate = result.current.revokeSession('s2');
+
+        expect(await duplicate).toBe(false);
+        expect(mockApiClient.profile.revokeSession).toHaveBeenCalledTimes(1);
+
+        resolveRevocation?.({ ok: true, data: { message: 'Session revoked successfully' } });
+        expect(await first).toBe(true);
+      });
+
+      expect(result.current.sessions.map((session) => session.id)).toEqual(['s1']);
     });
   });
 
@@ -383,9 +479,7 @@ describe('Auth Hooks — Extended Coverage', () => {
           created_at: '2025-11-29T00:00:00Z',
         },
       ];
-      mockApiClient.profile.getSessions
-        .mockResolvedValueOnce({ ok: true, data: sessionsData })
-        .mockResolvedValueOnce({ ok: true, data: [sessionsData[0]] });
+      mockApiClient.profile.getSessions.mockResolvedValueOnce({ ok: true, data: sessionsData });
       mockApiClient.profile.revokeOtherSessions.mockResolvedValueOnce({
         ok: true,
         data: { message: 'Other sessions revoked successfully' },
@@ -404,6 +498,7 @@ describe('Auth Hooks — Extended Coverage', () => {
       });
 
       expect(mockApiClient.profile.revokeOtherSessions).toHaveBeenCalledTimes(1);
+      expect(mockApiClient.profile.getSessions).toHaveBeenCalledTimes(1);
       expect(revokeResult).toBe(true);
       expect(result.current.sessions).toHaveLength(1);
       expect(result.current.sessions[0]!.current).toBe(true);

@@ -8,8 +8,18 @@ import { LogoIcon } from '@/components/logo/logo-icon';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { getAvatarBorderId } from '@/lib/utils';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { ArrowRightOnRectangleIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon } from '@heroicons/react/24/outline';
+import { LogOut } from 'lucide-react';
 import { PresenceStatusSelector } from '@/shared/components/presence-status-selector';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui';
 import type { User } from '@/modules/auth/store';
 import {
   normalizeAccentThemeId,
@@ -269,7 +279,7 @@ function SidebarNavItem({
 interface SidebarProps {
   user: User | null;
   location: Location;
-  handleLogout: () => void;
+  handleLogout: () => void | Promise<void>;
   totalUnread: number;
   unreadCount: number;
   navItems: NavItem[];
@@ -288,6 +298,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { theme } = useThemeEnhanced();
   const isLight = theme.category === 'light';
   const profileRoute = user ? publicProfilePath(user) : '/me/profile';
@@ -302,12 +314,26 @@ export default function Sidebar({
   }
   const glassClasses = getGlassClasses();
 
+  const confirmLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
+    try {
+      await handleLogout();
+      setLogoutOpen(false);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
-    <aside
-      className={`group/sidebar relative z-10 flex w-[72px] flex-col items-center overflow-visible overscroll-contain border-r border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] py-4 ${glassClasses}`}
-      role="navigation"
-      aria-label="Main navigation"
-    >
+    <>
+      <aside
+        className={`group/sidebar relative z-10 flex w-[72px] flex-col items-center overflow-visible overscroll-contain border-r border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] py-4 ${glassClasses}`}
+        role="navigation"
+        aria-label="Main navigation"
+      >
       {/* Animated right edge — thin luminous line */}
       <motion.div
         className="pointer-events-none absolute inset-y-0 right-0 z-20 w-px"
@@ -420,13 +446,12 @@ export default function Sidebar({
         aria-label="Bottom actions"
       >
         {/* Logout */}
-        <motion.button
+        <button
+          type="button"
           onClick={() => {
             HapticFeedback.medium();
-            handleLogout();
+            setLogoutOpen(true);
           }}
-          whileTap={{ scale: 0.88 }}
-          transition={tapSpring}
           className="group relative flex h-10 w-10 items-center justify-center rounded-xl text-gray-600 transition-colors duration-200 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
           title="Logout"
           aria-label="Logout from your account"
@@ -435,8 +460,8 @@ export default function Sidebar({
             className="absolute inset-0 rounded-xl bg-red-500/0 transition-colors duration-200 group-hover:bg-red-500/[0.08]"
             initial={false}
           />
-          <ArrowRightOnRectangleIcon className="relative z-10 h-5 w-5" aria-hidden="true" />
-        </motion.button>
+          <LogOut className="relative z-10 h-5 w-5" aria-hidden="true" />
+        </button>
 
         {/* Logo */}
         <a
@@ -454,6 +479,43 @@ export default function Sidebar({
           </motion.div>
         </a>
       </div>
-    </aside>
+      </aside>
+
+      <Dialog
+        open={logoutOpen}
+        onOpenChange={(open) => {
+          if (!isLoggingOut) setLogoutOpen(open);
+        }}
+      >
+        <DialogContent ariaLabel="Confirm logout">
+          <DialogHeader>
+            <DialogTitle>Log out of CGraph?</DialogTitle>
+            <DialogDescription>
+              This browser session will end and its local account data will be cleared.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              animated={false}
+              disabled={isLoggingOut}
+              onClick={() => setLogoutOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              animated={false}
+              isLoading={isLoggingOut}
+              onClick={confirmLogout}
+            >
+              Log out
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

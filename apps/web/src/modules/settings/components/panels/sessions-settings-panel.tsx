@@ -3,12 +3,7 @@
  */
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import {
-  DevicePhoneMobileIcon,
-  ComputerDesktopIcon,
-  DeviceTabletIcon,
-  GlobeAltIcon,
-} from '@heroicons/react/24/outline';
+import { Globe2, Monitor, Smartphone, Tablet } from 'lucide-react';
 import {
   Button,
   Dialog,
@@ -46,22 +41,22 @@ function formatLastActive(dateString: string | null): string {
 
 function parseBrowser(userAgent: string | null): string {
   if (!userAgent) return 'Unknown Browser';
+  if (userAgent.includes('Edg/')) return 'Microsoft Edge';
+  if (userAgent.includes('OPR/') || userAgent.includes('Opera')) return 'Opera';
   if (userAgent.includes('Chrome')) return 'Chrome';
   if (userAgent.includes('Firefox')) return 'Firefox';
   if (userAgent.includes('Safari')) return 'Safari';
-  if (userAgent.includes('Edge')) return 'Microsoft Edge';
-  if (userAgent.includes('Opera')) return 'Opera';
   return 'Unknown Browser';
 }
 
 function getDeviceIcon(userAgent: string | null) {
   const d = userAgent?.toLowerCase() ?? '';
   if (d.includes('iphone') || d.includes('android') || d.includes('mobile'))
-    return DevicePhoneMobileIcon;
-  if (d.includes('ipad') || d.includes('tablet')) return DeviceTabletIcon;
+    return Smartphone;
+  if (d.includes('ipad') || d.includes('tablet')) return Tablet;
   if (d.includes('mac') || d.includes('windows') || d.includes('linux') || d.includes('desktop'))
-    return ComputerDesktopIcon;
-  return GlobeAltIcon;
+    return Monitor;
+  return Globe2;
 }
 
 /**
@@ -98,7 +93,9 @@ export function SessionsSettingsPanel() {
   };
 
   const isBulkRevocation = pendingRevocation === 'all';
+  const currentSessions = sessions.filter((session) => session.current);
   const otherSessions = sessions.filter((session) => !session.current);
+  const orderedSessions = [...currentSessions, ...otherSessions];
 
   if (isLoading && sessions.length === 0) {
     return (
@@ -132,73 +129,78 @@ export function SessionsSettingsPanel() {
             <p className="text-[var(--token-text-muted)]">No active sessions found</p>
           </GlassCard>
         ) : (
-          sessions.map((session) => (
-            <GlassCard
-              key={session.id}
-              variant={session.current ? 'crystal' : 'default'}
-              className="p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {(() => {
-                    const DeviceIcon = getDeviceIcon(session.user_agent);
-                    return (
-                      <DeviceIcon
-                        className={`h-8 w-8 ${session.current ? 'text-primary-500' : 'text-[var(--token-text-muted)]'}`}
-                      />
-                    );
-                  })()}
-                  <div>
-                    <h3 className="font-medium text-[var(--token-text-primary)]">
-                      {parseBrowser(session.user_agent)}
-                      {session.current && (
-                        <span className="ml-2 text-xs font-semibold text-primary-300">
-                          (Current)
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-sm text-[var(--token-text-muted)]">
-                      {session.location ?? 'Unknown location'} •{' '}
-                      {formatLastActive(session.last_active_at ?? session.created_at)}
-                    </p>
-                    {session.ip && (
-                      <p className="font-mono text-xs text-[var(--token-text-muted)]">
-                        {session.ip}
+          orderedSessions.map((session) => {
+            const DeviceIcon = getDeviceIcon(session.user_agent);
+
+            return (
+              <GlassCard
+                key={session.id}
+                variant={session.current ? 'crystal' : 'default'}
+                className="p-4"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <DeviceIcon
+                      aria-hidden="true"
+                      className={`h-8 w-8 shrink-0 ${session.current ? 'text-primary-500' : 'text-[var(--token-text-muted)]'}`}
+                    />
+                    <div className="min-w-0">
+                      <h3 className="font-medium text-[var(--token-text-primary)]">
+                        {parseBrowser(session.user_agent)}
+                        {session.current && (
+                          <span className="ml-2 text-xs font-semibold text-primary-300">
+                            (Current)
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-[var(--token-text-muted)]">
+                        {session.location ?? 'Unknown location'} •{' '}
+                        {formatLastActive(session.last_active_at ?? session.created_at)}
                       </p>
-                    )}
+                      {session.ip && (
+                        <p className="break-all font-mono text-xs text-[var(--token-text-muted)]">
+                          {session.ip}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  {!session.current && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="danger"
+                      animated={false}
+                      onClick={() => {
+                        setSuccessMessage(null);
+                        setPendingRevocation(session.id);
+                      }}
+                      disabled={isMutating}
+                      className="shrink-0 self-end sm:self-auto"
+                    >
+                      Revoke
+                    </Button>
+                  )}
                 </div>
-                {!session.current && (
-                  <motion.button
-                    whileTap={{ scale: 0.88 }}
-                    onClick={() => {
-                      setSuccessMessage(null);
-                      setPendingRevocation(session.id);
-                    }}
-                    disabled={isMutating}
-                    className="rounded-lg bg-red-600/20 px-3 py-1.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-600/30 disabled:opacity-50"
-                  >
-                    Revoke
-                  </motion.button>
-                )}
-              </div>
-            </GlassCard>
-          ))
+              </GlassCard>
+            );
+          })
         )}
       </div>
 
       {otherSessions.length > 0 && (
-        <motion.button
-          whileTap={{ scale: 0.88 }}
+        <Button
+          type="button"
+          variant="danger"
+          animated={false}
           onClick={() => {
             setSuccessMessage(null);
             setPendingRevocation('all');
           }}
           disabled={isMutating}
-          className="mt-6 rounded-lg bg-red-600/20 px-4 py-2 font-medium text-red-400 transition-colors hover:bg-red-600/30 disabled:opacity-50"
+          className="mt-6"
         >
           Revoke All Other Sessions
-        </motion.button>
+        </Button>
       )}
 
       <Dialog
@@ -222,12 +224,19 @@ export function SessionsSettingsPanel() {
             <Button
               type="button"
               variant="ghost"
+              animated={false}
               onClick={() => setPendingRevocation(null)}
               disabled={isMutating}
             >
               Cancel
             </Button>
-            <Button type="button" variant="danger" onClick={confirmRevocation} isLoading={isMutating}>
+            <Button
+              type="button"
+              variant="danger"
+              animated={false}
+              onClick={confirmRevocation}
+              isLoading={isMutating}
+            >
               {isBulkRevocation ? 'Revoke other sessions' : 'Revoke session'}
             </Button>
           </DialogFooter>

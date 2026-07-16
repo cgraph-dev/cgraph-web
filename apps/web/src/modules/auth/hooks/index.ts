@@ -5,7 +5,7 @@
  * Connected to authStore for actual backend integration.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { ActiveSession } from '@cgraph-dev/api-client';
 import { useAuthStore } from '@/modules/auth/store';
 import { authLogger } from '@/lib/logger';
@@ -265,6 +265,7 @@ export function useSessions() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mutationInFlight = useRef(false);
 
   const getSessions = useCallback(async () => {
     setIsLoading(true);
@@ -289,33 +290,37 @@ export function useSessions() {
     }
   }, []);
 
-  const revokeSession = useCallback(
-    async (sessionId: string) => {
-      setIsMutating(true);
-      setError(null);
+  const revokeSession = useCallback(async (sessionId: string) => {
+    if (mutationInFlight.current) return false;
 
-      try {
-        const result = await apiClient.profile.revokeSession(sessionId);
+    mutationInFlight.current = true;
+    setIsMutating(true);
+    setError(null);
 
-        if (!result.ok) {
-          setError(result.error.message);
-          return false;
-        }
+    try {
+      const result = await apiClient.profile.revokeSession(sessionId);
 
-        await getSessions();
-        return true;
-      } catch (error) {
-        authLogger.error('Failed to revoke session', error);
-        setError('Failed to revoke the session. Please try again.');
+      if (!result.ok) {
+        setError(result.error.message);
         return false;
-      } finally {
-        setIsMutating(false);
       }
-    },
-    [getSessions]
-  );
+
+      setSessions((current) => current.filter((session) => session.id !== sessionId));
+      return true;
+    } catch (error) {
+      authLogger.error('Failed to revoke session', error);
+      setError('Failed to revoke the session. Please try again.');
+      return false;
+    } finally {
+      mutationInFlight.current = false;
+      setIsMutating(false);
+    }
+  }, []);
 
   const revokeAllOtherSessions = useCallback(async () => {
+    if (mutationInFlight.current) return false;
+
+    mutationInFlight.current = true;
     setIsMutating(true);
     setError(null);
 
@@ -327,16 +332,17 @@ export function useSessions() {
         return false;
       }
 
-      await getSessions();
+      setSessions((current) => current.filter((session) => session.current));
       return true;
     } catch (error) {
       authLogger.error('Failed to revoke all other sessions', error);
       setError('Failed to revoke other sessions. Please try again.');
       return false;
     } finally {
+      mutationInFlight.current = false;
       setIsMutating(false);
     }
-  }, [getSessions]);
+  }, []);
 
   return {
     sessions,
