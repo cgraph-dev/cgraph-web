@@ -32,6 +32,7 @@ function renderMeRoute(initialPath: string) {
       <Routes>
         <Route path="/me" element={<MePage />}>
           <Route path="settings" element={<div>Settings route</div>} />
+          <Route path="settings/:section" element={<div>Settings detail route</div>} />
           <Route path="appearance/:category" element={<div>Appearance route</div>} />
         </Route>
       </Routes>
@@ -53,5 +54,16 @@ describe('MePage', () => {
 
     expect(screen.getByTestId('location')).toHaveTextContent('/me/appearance/identity');
     expect(screen.getByText('Appearance route')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Me sections' })).toHaveClass('flex');
+  });
+
+  it('yields narrow settings detail routes to the settings slider surface', () => {
+    renderMeRoute('/me/settings/sessions');
+
+    expect(screen.getByText('Settings detail route')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Me sections' })).toHaveClass(
+      'hidden',
+      'lg:flex'
+    );
   });
 });

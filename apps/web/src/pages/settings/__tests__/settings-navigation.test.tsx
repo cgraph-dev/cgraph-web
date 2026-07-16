@@ -136,6 +136,31 @@ function renderSettingsRoute(initialPath: string) {
 }
 
 describe('Settings navigation', () => {
+  it('keeps the settings list as the narrow-layout entry surface', () => {
+    renderSettingsRoute('/me/settings');
+
+    expect(screen.getByRole('navigation', { name: 'Settings navigation' })).toHaveClass('flex');
+    expect(screen.getByLabelText('Settings content')).toHaveClass('hidden', 'lg:flex');
+    expect(screen.queryByRole('button', { name: 'Back to settings' })).not.toBeInTheDocument();
+  });
+
+  it('replaces the narrow-layout list with a selected detail and back command', async () => {
+    renderSettingsRoute('/me/settings/sessions');
+    const user = userEvent.setup();
+
+    expect(screen.getByRole('navigation', { name: 'Settings navigation' })).toHaveClass(
+      'hidden',
+      'lg:flex'
+    );
+    expect(screen.getByLabelText('Settings content')).toHaveClass('flex');
+    expect(screen.getByText('Sessions settings')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Back to settings' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent('/me/settings');
+    expect(screen.getByRole('navigation', { name: 'Settings navigation' })).toHaveClass('flex');
+  });
+
   it('opens app appearance settings from the base settings route by keyboard', async () => {
     renderSettingsRoute('/me/settings');
     const user = userEvent.setup();

@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { ChevronLeft } from 'lucide-react';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import {
   UserIcon,
@@ -194,6 +195,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { section: routeSection, detail } = useParams();
   const section = getSettingsSection(routeSection, detail);
+  const hasSectionRoute = Boolean(routeSection);
   const requestedSection = detail ? `${routeSection}/${detail}` : routeSection;
   const shouldRecoverRoute = Boolean(requestedSection && requestedSection !== section);
   const [searchQuery, setSearchQuery] = useState('');
@@ -240,7 +242,10 @@ export default function Settings() {
   return (
     <div className="relative flex flex-1 overflow-hidden bg-transparent">
       {/* Sidebar */}
-      <nav className="bg-[var(--token-card-bg)]/40 relative z-10 flex h-full w-72 shrink-0 flex-col border-r border-[var(--token-card-border)] py-4 backdrop-blur-3xl transition-all duration-300">
+      <nav
+        aria-label="Settings navigation"
+        className={`bg-[var(--token-card-bg)]/40 relative z-10 h-full w-full shrink-0 flex-col border-r border-[var(--token-card-border)] py-4 backdrop-blur-3xl transition-all duration-300 lg:w-72 ${hasSectionRoute ? 'hidden lg:flex' : 'flex'}`}
+      >
         <div className="flex-1 overflow-y-auto p-5">
           {/* Header */}
           <motion.div
@@ -334,12 +339,26 @@ export default function Settings() {
 
       {/* Content */}
       <div
-        className="relative z-10 flex-1 overflow-y-auto bg-transparent p-8"
+        className={`relative z-10 flex-1 flex-col overflow-y-auto bg-transparent p-4 sm:p-6 lg:p-8 ${hasSectionRoute ? 'flex' : 'hidden lg:flex'}`}
         tabIndex={0}
         aria-label="Settings content"
       >
+        {hasSectionRoute && (
+          <div className="mb-3 flex lg:hidden">
+            <button
+              type="button"
+              onClick={() => navigate('/me/settings')}
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-[var(--token-text-primary)] transition-colors hover:bg-[var(--token-bg-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-interactive-primary)]"
+              aria-label="Back to settings"
+              title="Back to settings"
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
         <motion.div
-          className="mx-auto max-w-2xl"
+          className="mx-auto w-full max-w-2xl"
           {...FADE_UP}
           transition={{ ...tweens.moderate, delay: 0.1 }}
         >

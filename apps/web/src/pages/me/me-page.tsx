@@ -94,6 +94,7 @@ const ME_NAV_SECTIONS: readonly MeNavSection[] = [
  */
 export default function MePage(): React.ReactNode {
   const location = useLocation();
+  const isSettingsRoute = location.pathname.startsWith('/me/settings');
 
   // Keep the bare legacy entry aligned with the primary Settings navigation target.
   if (location.pathname === '/me') {
@@ -103,7 +104,10 @@ export default function MePage(): React.ReactNode {
   return (
     <div className="relative flex flex-1 overflow-hidden bg-transparent">
       {/* Secondary Nav Rail */}
-      <nav className="bg-[var(--token-card-bg)]/40 relative z-10 flex h-full w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] py-4 backdrop-blur-3xl transition-all duration-300">
+      <nav
+        aria-label="Me sections"
+        className={`bg-[var(--token-card-bg)]/40 relative z-10 h-full w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] py-4 backdrop-blur-3xl transition-all duration-300 ${isSettingsRoute ? 'hidden lg:flex' : 'flex'}`}
+      >
         <div className="flex-1 overflow-y-auto p-5">
           {/* Header */}
           <motion.div
