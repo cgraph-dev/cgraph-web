@@ -1,138 +1,147 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { PROFILE_CHECKPOINT_STORAGE_KEY } from '../profile-checkpoint';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   updateUser: vi.fn(),
-  httpPost: vi.fn(),
-  httpPut: vi.fn(),
-  updateSettingsCategory: vi.fn(),
+  completeOnboarding: vi.fn(),
+  uploadAvatar: vi.fn(),
+  applyIdentityPatch: vi.fn(),
+  user: {
+    id: 'user-1',
+    username: 'tricky',
+    displayName: null as string | null,
+    avatarUrl: null as string | null,
+    phoneNumber: null as string | null,
+  },
 }));
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mocks.navigate,
-}));
-
+vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
 vi.mock('@/modules/auth/store', () => ({
-  useAuthStore: () => ({
-    user: {
-      id: 'user-1',
-      username: 'tricky',
-      displayName: 'Tricky',
-      avatarUrl: null,
-    },
-    updateUser: mocks.updateUser,
-  }),
+  useAuthStore: () => ({ user: mocks.user, updateUser: mocks.updateUser }),
 }));
-
 vi.mock('@/lib/api-client', () => ({
-  apiClient: {
-    settings: {
-      updateCategory: mocks.updateSettingsCategory,
-    },
-  },
-  http: {
-    post: mocks.httpPost,
-    put: mocks.httpPut,
-  },
+  apiClient: { profile: { completeOnboarding: mocks.completeOnboarding } },
 }));
-
+vi.mock('@/lib/avatar-upload', () => ({
+  uploadCurrentUserAvatarAndSync: mocks.uploadAvatar,
+}));
+vi.mock('@/lib/identity/ownIdentitySync', () => ({
+  applyOwnIdentityPatch: mocks.applyIdentityPatch,
+}));
 vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
-    error: vi.fn(),
-  }),
+  createLogger: () => ({ error: vi.fn(), warn: vi.fn() }),
 }));
 
 import { useOnboarding } from '../useOnboarding';
 
+function completedProfile(displayName = 'Canonical Name') {
+  return {
+    ok: true,
+    data: {
+      id: 'user-1',
+      username: 'tricky',
+      display_name: displayName,
+      onboarding_completed: true,
+    },
+  };
+}
+
 describe('useOnboarding', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.updateSettingsCategory.mockResolvedValue({ ok: true, data: {} });
+    sessionStorage.clear();
+    mocks.user.displayName = null;
+    mocks.user.phoneNumber = null;
+    mocks.completeOnboarding.mockResolvedValue(completedProfile());
   });
 
-  it('marks onboarding skipped before leaving the route', async () => {
-    mocks.httpPost.mockResolvedValueOnce({ data: { data: { completed: true } } });
+  it('restores a same-user draft after a remount', () => {
+    const first = renderHook(() => useOnboarding());
+
+    act(() => first.result.current.setDisplayName('Draft Name'));
+    first.unmount();
+
+    const second = renderHook(() => useOnboarding());
+    expect(second.result.current.displayName).toBe('Draft Name');
+  });
+
+  it('does not present a generated phone username as the display-name draft', () => {
+    mocks.user.phoneNumber = '+14155550001';
 
     const { result } = renderHook(() => useOnboarding());
 
-    await act(async () => {
-      await result.current.handleSkip();
-    });
-
-    expect(mocks.httpPost).toHaveBeenCalledWith('/api/v1/onboarding/skip');
-    expect(mocks.updateUser).toHaveBeenCalledWith({ onboardingCompleted: true });
-    expect(mocks.navigate).toHaveBeenCalledWith('/messages');
-    expect(result.current.error).toBeNull();
+    expect(result.current.displayName).toBe('');
   });
 
-  it('marks onboarding complete locally before leaving after final save', async () => {
-    mocks.httpPut.mockResolvedValue({ data: { data: {} } });
-    mocks.httpPost.mockResolvedValue({ data: { data: { onboarding_completed: true } } });
-
+  it('trims once, syncs the canonical account, clears the draft, and leaves', async () => {
     const { result } = renderHook(() => useOnboarding());
+    act(() => result.current.setDisplayName('  Draft Name  '));
 
-    await act(async () => {
-      await result.current.handleNext();
-      await result.current.handleNext();
-      await result.current.handleNext();
-    });
+    await act(async () => result.current.submit());
 
-    await act(async () => {
-      await result.current.handleNext();
-    });
-
-    expect(mocks.httpPut).toHaveBeenNthCalledWith(1, '/api/v1/me', {
-      user: {
-        display_name: 'Tricky',
-        bio: '',
-        avatar_url: null,
-      },
-    });
-    expect(mocks.updateSettingsCategory).toHaveBeenCalledWith('notifications', {
-      notify_messages: true,
-      notify_mentions: true,
-      notify_friend_requests: true,
-    });
-    expect(mocks.httpPost).toHaveBeenCalledWith('/api/v1/me/onboarding/complete');
+    expect(mocks.completeOnboarding).toHaveBeenCalledWith({ display_name: 'Draft Name' });
     expect(mocks.updateUser).toHaveBeenCalledWith({
-      displayName: 'Tricky',
-      avatarUrl: null,
+      displayName: 'Canonical Name',
+      onboardingCompleted: true,
     });
-    expect(mocks.updateUser).toHaveBeenCalledWith({ onboardingCompleted: true });
-    expect(mocks.navigate).toHaveBeenCalledWith('/messages');
+    expect(sessionStorage.getItem(PROFILE_CHECKPOINT_STORAGE_KEY)).toBeNull();
+    expect(mocks.navigate).toHaveBeenCalledWith('/messages', { replace: true });
+  });
+
+  it('blocks duplicate submission while the command is pending', async () => {
+    let resolveRequest: ((value: ReturnType<typeof completedProfile>) => void) | undefined;
+    mocks.completeOnboarding.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      })
+    );
+    const { result } = renderHook(() => useOnboarding());
+    act(() => result.current.setDisplayName('Tricky'));
+
+    let firstRequest: Promise<void> | undefined;
+    await act(async () => {
+      firstRequest = result.current.submit();
+      await result.current.submit();
+    });
+
+    expect(mocks.completeOnboarding).toHaveBeenCalledTimes(1);
+    resolveRequest?.(completedProfile());
+    await act(async () => firstRequest);
+  });
+
+  it('keeps the draft and a retryable error when persistence fails', async () => {
+    mocks.completeOnboarding.mockResolvedValueOnce({
+      ok: false,
+      error: { code: 'invalid', message: 'Choose another name' },
+    });
+    const { result } = renderHook(() => useOnboarding());
+    act(() => result.current.setDisplayName('Retry Name'));
+
+    await act(async () => result.current.submit());
+
+    expect(result.current.error).toBe('Choose another name');
+    expect(sessionStorage.getItem(PROFILE_CHECKPOINT_STORAGE_KEY)).toContain('Retry Name');
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it('finishes after an optional avatar failure because the account is already committed', async () => {
+    mocks.uploadAvatar.mockRejectedValueOnce(new Error('upload failed'));
+    const { result } = renderHook(() => useOnboarding());
+    act(() => {
+      result.current.setDisplayName('Tricky');
+      result.current.handleAvatarCropped({
+        blob: new Blob(['avatar'], { type: 'image/jpeg' }),
+        file: new File(['avatar'], 'avatar.jpg', { type: 'image/jpeg' }),
+        previewUrl: 'blob:avatar',
+      });
+    });
+
+    await act(async () => result.current.submit());
+
+    expect(mocks.uploadAvatar).toHaveBeenCalledTimes(1);
+    expect(mocks.navigate).toHaveBeenCalledWith('/messages', { replace: true });
     expect(result.current.error).toBeNull();
-  });
-
-  it('keeps the user on onboarding when skip cannot be saved', async () => {
-    mocks.httpPost.mockRejectedValueOnce(new Error('network down'));
-
-    const { result } = renderHook(() => useOnboarding());
-
-    await act(async () => {
-      await result.current.handleSkip();
-    });
-
-    expect(mocks.navigate).not.toHaveBeenCalled();
-    expect(result.current.error).toBe('We could not skip onboarding. Please try again.');
-  });
-
-  it('surfaces a route-owned error when final onboarding save fails', async () => {
-    mocks.httpPut.mockRejectedValueOnce(new Error('save failed'));
-
-    const { result } = renderHook(() => useOnboarding());
-
-    await act(async () => {
-      await result.current.handleNext();
-      await result.current.handleNext();
-      await result.current.handleNext();
-    });
-
-    await act(async () => {
-      await result.current.handleNext();
-    });
-
-    expect(mocks.navigate).not.toHaveBeenCalled();
-    expect(result.current.error).toBe('We could not save onboarding. Please try again.');
   });
 });

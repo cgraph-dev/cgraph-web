@@ -1,18 +1,16 @@
 import { useEffect, type ReactElement } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CountryPicker } from '@/modules/auth/components/country-picker';
 import { OtpEntry } from '@/modules/auth/components/otp-entry';
-import { PermissionRequests } from '@/modules/auth/components/permission-requests';
 import { PinEntry } from '@/modules/auth/components/pin-entry';
 import { PhoneEntry } from '@/modules/auth/components/phone-entry';
-import { ProfileSetup } from '@/modules/auth/components/profile-setup';
 import {
   usePhoneRegistrationStore,
   type RegistrationStep,
 } from '@/modules/auth/store/registration-store';
 
-const registrationSteps = ['phone', 'otp', 'registration_lock', 'profile', 'permissions'] as const;
+const registrationSteps = ['phone', 'otp', 'registration_lock'] as const;
 
 function stepLabel(step: RegistrationStep): string {
   switch (step) {
@@ -20,10 +18,6 @@ function stepLabel(step: RegistrationStep): string {
       return 'Phone';
     case 'otp':
       return 'Code';
-    case 'profile':
-      return 'Profile';
-    case 'permissions':
-      return 'Permissions';
     case 'registration_lock':
       return 'PIN';
   }
@@ -44,7 +38,7 @@ function StepProgress({
         <span>{isPhoneLogin ? 'Phone login' : 'Phone registration'}</span>
         <span>{stepLabel(step)}</span>
       </div>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {registrationSteps.map((entry, index) => (
           <div
             key={entry}
@@ -60,12 +54,11 @@ function StepProgress({
 
 /**
  * Phone registration page — orchestrates the CGraph phone registration flow
- * (phone entry → OTP verification → registration lock if needed → profile setup → permissions).
+ * (phone entry → OTP verification → registration lock if needed).
  */
 export default function PhoneRegister(): ReactElement {
   const step = usePhoneRegistrationStore((state) => state.step);
   const sessionId = usePhoneRegistrationStore((state) => state.sessionId);
-  const navigate = useNavigate();
   const location = useLocation();
   const isPhoneLogin = location.pathname.startsWith('/login/phone');
   const flowIntent = isPhoneLogin ? 'login' : 'register';
@@ -75,14 +68,6 @@ export default function PhoneRegister(): ReactElement {
     store.prepareFlow(flowIntent);
     void store.loadCountries();
   }, [flowIntent]);
-
-  const handleComplete = async () => {
-    const success = await usePhoneRegistrationStore.getState().completeRegistration();
-
-    if (success) {
-      navigate('/messages', { replace: true });
-    }
-  };
 
   return (
     <motion.div
@@ -94,16 +79,13 @@ export default function PhoneRegister(): ReactElement {
       <StepProgress step={step} isPhoneLogin={isPhoneLogin} />
 
       {step === 'phone' ? <PhoneEntry /> : null}
-      {step === 'otp' ? <OtpEntry completeExistingUser={isPhoneLogin} /> : null}
+      {step === 'otp' ? <OtpEntry /> : null}
       {step === 'registration_lock' ? (
         <PinEntry
           sessionId={sessionId}
-          completeExistingUser={isPhoneLogin}
           onNeedHelp={() => usePhoneRegistrationStore.getState().returnToPhoneEntry()}
         />
       ) : null}
-      {step === 'profile' ? <ProfileSetup /> : null}
-      {step === 'permissions' ? <PermissionRequests onContinue={handleComplete} /> : null}
 
       <div className="border-t border-white/10 pt-4 text-center text-sm text-white/50">
         Prefer email?{' '}

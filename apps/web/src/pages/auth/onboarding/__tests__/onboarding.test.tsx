@@ -1,65 +1,60 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Onboarding from '../onboarding';
 
 const mocks = vi.hoisted(() => ({
-  currentStep: 1,
+  isLoading: false,
+  error: null as string | null,
+  setDisplayName: vi.fn(),
   handleAvatarCropped: vi.fn(),
-  handleNext: vi.fn(),
-  handleBack: vi.fn(),
-  handleSkip: vi.fn(),
-  updateProfileData: vi.fn(),
-  setProfileData: vi.fn(),
+  submit: vi.fn(),
 }));
 
 vi.mock('../useOnboarding', () => ({
   useOnboarding: () => ({
-    currentStep: mocks.currentStep,
-    isLoading: false,
-    error: null,
-    avatarPreview: null,
-    profileData: {
-      displayName: 'Tricky',
-      bio: '',
-      avatarUrl: null,
-      notifyMessages: true,
-      notifyMentions: true,
-      notifyFriendRequests: true,
-      theme: 'dark',
-    },
+    user: { avatarUrl: null },
+    displayName: 'Tricky',
+    isLoading: mocks.isLoading,
+    error: mocks.error,
+    setDisplayName: mocks.setDisplayName,
     handleAvatarCropped: mocks.handleAvatarCropped,
-    handleNext: mocks.handleNext,
-    handleBack: mocks.handleBack,
-    handleSkip: mocks.handleSkip,
-    updateProfileData: mocks.updateProfileData,
-    setProfileData: mocks.setProfileData,
-    totalSteps: 4,
+    submit: mocks.submit,
   }),
 }));
-
-vi.mock('../find-friends-step', () => ({
-  FindFriendsStep: () => <div>Search people already on CGraph</div>,
+vi.mock('@/components/avatar/avatar-upload-cropper', () => ({
+  AvatarUploadCropper: () => <button type="button">Choose avatar image</button>,
 }));
 
 describe('Onboarding', () => {
   beforeEach(() => {
-    mocks.currentStep = 1;
+    vi.clearAllMocks();
+    mocks.isLoading = false;
+    mocks.error = null;
   });
 
-  it('renders the required wizard as a full-width app route', () => {
-    const { container } = render(<Onboarding />);
+  it('renders one accessible required profile form', () => {
+    render(<Onboarding />);
 
-    expect(screen.getByRole('heading', { name: 'Welcome to CGraph' })).toBeInTheDocument();
-    expect(container.firstElementChild).toHaveClass('w-full', 'flex-1', 'overflow-y-auto');
+    expect(screen.getByRole('heading', { name: 'Choose how people see you' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Display name')).toHaveAttribute('maxLength', '100');
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled();
+    expect(screen.queryByText('Find Friends')).not.toBeInTheDocument();
   });
 
-  it('mounts real friend discovery as the second onboarding step', () => {
-    mocks.currentStep = 2;
+  it('submits the form through the single hook command', () => {
+    render(<Onboarding />);
+
+    fireEvent.submit(screen.getByRole('button', { name: 'Continue' }).closest('form')!);
+    expect(mocks.submit).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows loading and retryable failure states without moving the layout', () => {
+    mocks.isLoading = true;
+    mocks.error = 'We could not save your profile.';
 
     render(<Onboarding />);
 
-    expect(screen.getByRole('heading', { name: 'Find Friends' })).toBeInTheDocument();
-    expect(screen.getByText('Search people already on CGraph')).toBeInTheDocument();
-    expect(screen.queryByText('Discover Communities')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Saving profile' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('We could not save your profile.');
   });
 });

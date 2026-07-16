@@ -12,34 +12,22 @@ import {
   isPlausiblePhoneNumber,
   normalizePhoneNumber as normalizePhoneToE164,
 } from '@cgraph-dev/utils';
-import { apiClient, http } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import { safeSessionStorage } from '@/lib/safeStorage';
 import { useAuthStore } from './authStore.impl';
-import { getApiErrorMessage, mapUserFromApi } from './authStore.utils';
+import { mapUserFromApi } from './authStore.utils';
 import { resolvePhoneCountries } from './fallback-countries';
 
-export type RegistrationStep = 'phone' | 'otp' | 'registration_lock' | 'profile' | 'permissions';
-export type PermissionState = 'idle' | 'granted' | 'denied' | 'unsupported' | 'skipped';
+export type RegistrationStep = 'phone' | 'otp' | 'registration_lock';
 export type PhoneRegistrationIntent = 'register' | 'login';
 type DeliveryTransport = 'sms' | 'voice';
 
 export const PHONE_REGISTRATION_STORAGE_KEY = 'cgraph-phone-registration-v1';
 const PHONE_REGISTRATION_STORAGE_VERSION = 1;
 
-type AuthenticatedRegistrationStep = Exclude<
-  RegistrationStep,
-  'phone' | 'otp' | 'registration_lock'
->;
-
-interface PendingAuthState {
+interface PhoneAuthPayload {
   readonly user: Record<string, unknown>;
   readonly tokens: Tokens;
-  readonly isNewUser: boolean;
-}
-
-interface ProfileDraft {
-  readonly displayName: string;
-  readonly username: string;
 }
 
 interface PhoneRegistrationState {
@@ -65,14 +53,9 @@ interface PhoneRegistrationState {
   readonly sessionId: string | null;
   readonly pendingChallenges: string[];
   readonly verificationChallenges: string[];
-  readonly pendingAuth: PendingAuthState | null;
-  readonly profile: ProfileDraft;
-  readonly contactsPermission: PermissionState;
-  readonly notificationsPermission: PermissionState;
   readonly prepareFlow: (intent: PhoneRegistrationIntent) => void;
   readonly setPhoneNumber: (value: string) => void;
   readonly setCode: (value: string) => void;
-  readonly setProfileField: (field: keyof ProfileDraft, value: string) => void;
   readonly setCountryPickerOpen: (isOpen: boolean) => void;
   readonly selectCountry: (country: Country) => void;
   readonly setCallingCode: (value: string) => boolean;
@@ -80,10 +63,7 @@ interface PhoneRegistrationState {
   readonly requestCode: (turnstileToken?: string | null) => Promise<boolean>;
   readonly resendCode: (turnstileToken?: string | null) => Promise<boolean>;
   readonly requestCallFallback: () => Promise<boolean>;
-  readonly verifyCode: (options?: {
-    readonly completeExistingUser?: boolean;
-    readonly turnstileToken?: string | null;
-  }) => Promise<boolean>;
+  readonly verifyCode: (options?: { readonly turnstileToken?: string | null }) => Promise<boolean>;
   readonly completeRegistrationLock: (
     payload: {
       readonly user: unknown;
@@ -91,26 +71,14 @@ interface PhoneRegistrationState {
       readonly is_new_user: boolean;
       readonly next_step?: string | null;
       readonly session_id?: string | null;
-    },
-    options?: { readonly completeExistingUser?: boolean }
+    }
   ) => Promise<boolean>;
-  readonly submitProfile: (avatarUpload?: FormData | null) => Promise<boolean>;
-  readonly refreshPermissionStates: () => Promise<void>;
-  readonly requestContactsPermission: () => Promise<PermissionState>;
-  readonly skipContactsPermission: () => void;
-  readonly requestNotificationsPermission: () => Promise<PermissionState>;
-  readonly skipNotificationsPermission: () => void;
-  readonly completeRegistration: () => Promise<boolean>;
   readonly returnToPhoneEntry: () => void;
   readonly reset: () => void;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
-}
-
-function isString(value: unknown): value is string {
-  return typeof value === 'string';
 }
 
 function defaultCountry(countries: Country[]): Country | null {
@@ -140,39 +108,11 @@ function extractWrappedRecord(payload: unknown): Record<string, unknown> | null 
   return isRecord(payload) ? payload : null;
 }
 
-function userNeedsProfile(user: Record<string, unknown>, isNewUser: boolean): boolean {
-  if (isNewUser) {
-    return true;
-  }
-
-  const displayName = isString(user.display_name) ? user.display_name.trim() : '';
-  return displayName.length < 2;
-}
-
-function resolveAuthenticatedStep(
-  user: Record<string, unknown>,
-  isNewUser: boolean,
-  nextStep?: string | null
-): AuthenticatedRegistrationStep {
-  if (nextStep === 'profile' || nextStep === 'permissions') {
-    return nextStep;
-  }
-
-  return userNeedsProfile(user, isNewUser) ? 'profile' : 'permissions';
-}
-
-function buildProfileDraft(user: Record<string, unknown>): ProfileDraft {
-  return {
-    displayName: isString(user.display_name) ? user.display_name : '',
-    username: isString(user.username) ? user.username : '',
-  };
-}
-
-function commitPhoneAuth(pendingAuth: PendingAuthState): void {
+function commitPhoneAuth(payload: PhoneAuthPayload): void {
   useAuthStore.setState({
-    user: mapUserFromApi(pendingAuth.user),
-    token: pendingAuth.tokens.access_token,
-    refreshToken: pendingAuth.tokens.refresh_token,
+    user: mapUserFromApi(payload.user),
+    token: payload.tokens.access_token,
+    refreshToken: payload.tokens.refresh_token,
     isAuthenticated: true,
     isLoading: false,
     error: null,
@@ -273,43 +213,6 @@ function extractChallengeList(details: unknown): string[] {
   );
 }
 
-type ContactsSelectFn = (
-  properties: readonly string[],
-  options?: { readonly multiple?: boolean }
-) => Promise<unknown>;
-
-function getContactsSelectFunction(): ContactsSelectFn | null {
-  if (typeof navigator === 'undefined' || !('contacts' in navigator)) {
-    return null;
-  }
-
-  const contactsCandidate = Reflect.get(navigator, 'contacts');
-
-  if (!isRecord(contactsCandidate)) {
-    return null;
-  }
-
-  const selectCandidate = Reflect.get(contactsCandidate, 'select');
-
-  if (typeof selectCandidate !== 'function') {
-    return null;
-  }
-
-  return (properties, options) => {
-    const maybePromise = Reflect.apply(selectCandidate, contactsCandidate, [properties, options]);
-
-    if (maybePromise instanceof Promise) {
-      return maybePromise;
-    }
-
-    return Promise.resolve(maybePromise);
-  };
-}
-
-function hasContactsPickerSupport(): boolean {
-  return getContactsSelectFunction() !== null;
-}
-
 const initialState = {
   intent: null,
   step: 'phone',
@@ -333,19 +236,11 @@ const initialState = {
   sessionId: null,
   pendingChallenges: [],
   verificationChallenges: [],
-  pendingAuth: null,
-  profile: {
-    displayName: '',
-    username: '',
-  },
-  contactsPermission: 'idle',
-  notificationsPermission: 'idle',
 } satisfies Omit<
   PhoneRegistrationState,
   | 'setPhoneNumber'
   | 'prepareFlow'
   | 'setCode'
-  | 'setProfileField'
   | 'setCountryPickerOpen'
   | 'selectCountry'
   | 'setCallingCode'
@@ -355,13 +250,6 @@ const initialState = {
   | 'requestCallFallback'
   | 'verifyCode'
   | 'completeRegistrationLock'
-  | 'submitProfile'
-  | 'refreshPermissionStates'
-  | 'requestContactsPermission'
-  | 'skipContactsPermission'
-  | 'requestNotificationsPermission'
-  | 'skipNotificationsPermission'
-  | 'completeRegistration'
   | 'returnToPhoneEntry'
   | 'reset'
 >;
@@ -482,7 +370,6 @@ function restorePhoneRegistrationCheckpoint(value: unknown): Partial<PhoneRegist
     verificationChallenges: validStringList(value.verificationChallenges),
     code: '',
     debugVerificationCode: null,
-    pendingAuth: null,
     error: null,
     isSubmitting: false,
   };
@@ -517,14 +404,6 @@ const createPhoneRegistrationState: StateCreator<PhoneRegistrationState> = (set,
       error: null,
     })),
   setCode: (value) => set({ code: clampOtpDigits(value), error: null }),
-  setProfileField: (field, value) =>
-    set((state) => ({
-      profile: {
-        ...state.profile,
-        [field]: value,
-      },
-      error: null,
-    })),
   setCountryPickerOpen: (isOpen) => set({ isCountryPickerOpen: isOpen }),
   selectCountry: (country) =>
     set((state) => ({
@@ -792,7 +671,6 @@ const createPhoneRegistrationState: StateCreator<PhoneRegistrationState> = (set,
         isSubmitting: false,
         step: 'registration_lock',
         sessionId: result.data.session_id ?? get().sessionId,
-        pendingAuth: null,
         debugVerificationCode: null,
         incorrectCodeAttempts: 0,
         pendingChallenges: [],
@@ -807,7 +685,6 @@ const createPhoneRegistrationState: StateCreator<PhoneRegistrationState> = (set,
       set({
         isSubmitting: false,
         sessionId: result.data.session_id ?? get().sessionId,
-        pendingAuth: null,
         debugVerificationCode: null,
         incorrectCodeAttempts: 0,
         pendingChallenges: [],
@@ -823,50 +700,24 @@ const createPhoneRegistrationState: StateCreator<PhoneRegistrationState> = (set,
       return false;
     }
 
-    const step = resolveAuthenticatedStep(nextUser, result.data.is_new_user, result.data.next_step);
-    const pendingAuth = {
+    commitPhoneAuth({
       user: nextUser,
       tokens: result.data.tokens,
-      isNewUser: result.data.is_new_user,
-    };
-
-    if (!result.data.is_new_user && options?.completeExistingUser) {
-      commitPhoneAuth(pendingAuth);
-
-      set({
-        ...initialState,
-        countries: get().countries,
-        selectedCountry: get().selectedCountry,
-      });
-
-      return true;
-    }
-
-    set({
-      isSubmitting: false,
-      pendingAuth,
-      profile: buildProfileDraft(nextUser),
-      step,
-      debugVerificationCode: null,
-      incorrectCodeAttempts: 0,
-      pendingChallenges: [],
-      verificationChallenges: [],
-      contactsPermission: 'unsupported',
-      error: null,
     });
 
-    if (step === 'permissions') {
-      await get().refreshPermissionStates();
-    }
+    set({
+      ...initialState,
+      countries: get().countries,
+      selectedCountry: get().selectedCountry,
+    });
 
     return true;
   },
 
-  completeRegistrationLock: async (payload, options) => {
+  completeRegistrationLock: async (payload) => {
     if (payload.next_step === 'device_attestation') {
       set({
         sessionId: payload.session_id ?? get().sessionId,
-        pendingAuth: null,
         debugVerificationCode: null,
         incorrectCodeAttempts: 0,
         pendingChallenges: [],
@@ -889,213 +740,10 @@ const createPhoneRegistrationState: StateCreator<PhoneRegistrationState> = (set,
       return false;
     }
 
-    const step = resolveAuthenticatedStep(nextUser, payload.is_new_user, payload.next_step);
-    const pendingAuth = {
+    commitPhoneAuth({
       user: nextUser,
       tokens: payload.tokens,
-      isNewUser: payload.is_new_user,
-    };
-
-    if (!payload.is_new_user && options?.completeExistingUser) {
-      commitPhoneAuth(pendingAuth);
-
-      set({
-        ...initialState,
-        countries: get().countries,
-        selectedCountry: get().selectedCountry,
-      });
-
-      return true;
-    }
-
-    set({
-      pendingAuth,
-      profile: buildProfileDraft(nextUser),
-      step,
-      sessionId: payload.session_id ?? get().sessionId,
-      debugVerificationCode: null,
-      incorrectCodeAttempts: 0,
-      pendingChallenges: [],
-      verificationChallenges: [],
-      error: null,
     });
-
-    if (step === 'permissions') {
-      await get().refreshPermissionStates();
-    }
-
-    return true;
-  },
-
-  submitProfile: async (avatarUpload) => {
-    const { pendingAuth, profile } = get();
-    const displayName = profile.displayName.trim();
-    const username = profile.username.trim();
-
-    if (!pendingAuth) {
-      set({ error: 'Verify your code before updating your profile.' });
-      return false;
-    }
-
-    if (displayName.length < 1 || displayName.length > 64) {
-      set({ error: 'Add the name people will see on your account.' });
-      return false;
-    }
-
-    if (username && !/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
-      set({ error: 'Username must be 3-32 characters and use letters, numbers, or underscores.' });
-      return false;
-    }
-
-    set({ isSubmitting: true, error: null });
-
-    try {
-      let latestUser = pendingAuth.user;
-
-      if (avatarUpload) {
-        const avatarResponse = await http.post('/api/v1/me/avatar', avatarUpload, {
-          headers: {
-            Authorization: `Bearer ${pendingAuth.tokens.access_token}`,
-          },
-        });
-
-        const uploadedUser = extractWrappedRecord(avatarResponse.data);
-
-        if (uploadedUser) {
-          latestUser = uploadedUser;
-        }
-      }
-
-      const response = await http.put(
-        '/api/v1/me',
-        {
-          user: {
-            display_name: displayName,
-            ...(username ? { username } : {}),
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${pendingAuth.tokens.access_token}`,
-          },
-        }
-      );
-
-      const updatedUser = extractWrappedRecord(response.data);
-
-      if (!updatedUser) {
-        set({ isSubmitting: false, error: 'Unable to save your profile right now.' });
-        return false;
-      }
-
-      await get().refreshPermissionStates();
-
-      set({
-        isSubmitting: false,
-        pendingAuth: {
-          ...pendingAuth,
-          user: {
-            ...latestUser,
-            ...updatedUser,
-          },
-        },
-        step: 'permissions',
-      });
-
-      return true;
-    } catch (error: unknown) {
-      set({
-        isSubmitting: false,
-        error: getApiErrorMessage(error, 'Unable to save your profile right now.'),
-      });
-
-      return false;
-    }
-  },
-
-  refreshPermissionStates: async () => {
-    const nextNotificationsPermission =
-      typeof window === 'undefined' || !('Notification' in window)
-        ? 'unsupported'
-        : mapNotificationPermission(window.Notification.permission);
-
-    const contactsSupported = hasContactsPickerSupport();
-
-    set((state) => ({
-      contactsPermission: contactsSupported
-        ? state.contactsPermission === 'granted' ||
-          state.contactsPermission === 'denied' ||
-          state.contactsPermission === 'skipped'
-          ? state.contactsPermission
-          : 'idle'
-        : 'unsupported',
-      notificationsPermission: nextNotificationsPermission,
-    }));
-  },
-
-  requestContactsPermission: async () => {
-    const contactsSelect = getContactsSelectFunction();
-
-    if (!contactsSelect) {
-      set({ contactsPermission: 'unsupported' });
-      return 'unsupported';
-    }
-
-    try {
-      await contactsSelect(['name', 'tel'], { multiple: true });
-      set({ contactsPermission: 'granted' });
-      return 'granted';
-    } catch (error: unknown) {
-      const errorName = isRecord(error) && isString(error.name) ? error.name : '';
-
-      if (errorName === 'AbortError') {
-        set({ contactsPermission: 'skipped' });
-        return 'skipped';
-      }
-
-      set({ contactsPermission: 'denied' });
-      return 'denied';
-    }
-  },
-
-  skipContactsPermission: () => set({ contactsPermission: 'skipped' }),
-
-  requestNotificationsPermission: async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      set({ notificationsPermission: 'unsupported' });
-      return 'unsupported';
-    }
-
-    const currentPermission = mapNotificationPermission(window.Notification.permission);
-
-    if (currentPermission !== 'idle') {
-      set({ notificationsPermission: currentPermission });
-      return currentPermission;
-    }
-
-    const permission = await window.Notification.requestPermission();
-
-    if (permission === 'granted') {
-      set({ notificationsPermission: 'granted' });
-      return 'granted';
-    }
-
-    const nextState = permission === 'denied' ? 'denied' : 'skipped';
-    set({ notificationsPermission: nextState });
-    return nextState;
-  },
-
-  skipNotificationsPermission: () => set({ notificationsPermission: 'skipped' }),
-
-  completeRegistration: async () => {
-    const pendingAuth = get().pendingAuth;
-
-    if (!pendingAuth) {
-      set({ error: 'Complete phone verification before entering the app.' });
-      return false;
-    }
-
-    commitPhoneAuth(pendingAuth);
 
     set({
       ...initialState,
@@ -1122,8 +770,6 @@ const createPhoneRegistrationState: StateCreator<PhoneRegistrationState> = (set,
       sessionId: null,
       pendingChallenges: [],
       verificationChallenges: [],
-      pendingAuth: null,
-      profile: initialState.profile,
       error: null,
     }),
 
@@ -1142,14 +788,3 @@ export const usePhoneRegistrationStore = create<PhoneRegistrationState>()(
     }),
   })
 );
-
-function mapNotificationPermission(permission: NotificationPermission): PermissionState {
-  switch (permission) {
-    case 'granted':
-      return 'granted';
-    case 'denied':
-      return 'denied';
-    default:
-      return 'idle';
-  }
-}

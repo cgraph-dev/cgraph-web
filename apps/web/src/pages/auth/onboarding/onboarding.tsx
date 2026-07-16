@@ -1,110 +1,96 @@
-/**
- * Onboarding Page - main component
- *
- * First-time user experience with progressive profile setup.
- * Features step-by-step wizard with animated transitions.
- */
-
-import { motion, AnimatePresence } from 'motion/react';
-import { GlassCard } from '@/shared/components/ui';
+import { ArrowRight, LoaderCircle } from 'lucide-react';
+import { AvatarUploadCropper } from '@/components/avatar/avatar-upload-cropper';
 import { useOnboarding } from './useOnboarding';
-import { ProgressBar } from './progress-bar';
-import { StepHeader } from './step-header';
-import { WelcomeStep } from './welcome-step';
-import { FindFriendsStep } from './find-friends-step';
-import { InviteStep } from './invite-step';
-import { AllSetStep } from './all-set-step';
-import { NavigationButtons } from './navigation-buttons';
-import { pageVariants } from './animations';
-import { tweens } from '@/lib/animation-presets';
 
-/**
- * Onboarding component.
- */
 export default function Onboarding() {
-  const {
-    currentStep,
-    isLoading,
-    error,
-    avatarPreview,
-    profileData,
-    handleAvatarCropped,
-    handleNext,
-    handleBack,
-    handleSkip,
-    updateProfileData,
-    totalSteps,
-  } = useOnboarding();
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <WelcomeStep
-            avatarPreview={avatarPreview}
-            displayName={profileData.displayName}
-            onAvatarCropped={handleAvatarCropped}
-            onDisplayNameChange={(name) => updateProfileData('displayName', name)}
-          />
-        );
-      case 2:
-        return <FindFriendsStep />;
-      case 3:
-        return <InviteStep />;
-      case 4:
-        return <AllSetStep />;
-      default:
-        return null;
-    }
-  };
+  const { user, displayName, isLoading, error, setDisplayName, handleAvatarCropped, submit } =
+    useOnboarding();
 
   return (
-    <div className="flex min-h-full w-full flex-1 items-center justify-center overflow-y-auto bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 p-4">
-      {/* Animated Background */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="bg-gradient-radial from-primary-500/10 absolute -right-1/2 -top-1/2 h-full w-full rounded-full to-transparent" />
-        <div className="bg-gradient-radial from-purple-500/10 absolute -bottom-1/2 -left-1/2 h-full w-full rounded-full to-transparent" />
-      </div>
+    <div className="flex min-h-full w-full flex-1 items-center justify-center overflow-y-auto bg-[var(--token-bg-primary)] px-5 py-10 sm:px-8">
+      <div className="w-full max-w-lg">
+        <header className="mb-9">
+          <p className="mb-3 text-sm font-semibold text-primary-300">Profile setup</p>
+          <h1 className="text-3xl font-semibold text-[var(--token-text-primary)] sm:text-4xl">
+            Choose how people see you
+          </h1>
+          <p className="mt-3 max-w-md text-base leading-7 text-[var(--token-text-secondary)]">
+            Add your name now. A profile picture is optional and can be changed later.
+          </p>
+        </header>
 
-      <GlassCard variant="frosted" className="relative z-10 w-full max-w-lg">
-        <div className="p-8">
-          <ProgressBar currentStep={currentStep} />
-          <StepHeader currentStep={currentStep} />
-
-          {/* Step Content */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`content-${currentStep}`}
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={tweens.standard}
-              className="min-h-[300px]"
-            >
-              {renderStepContent()}
-            </motion.div>
-          </AnimatePresence>
-
-          {error && (
-            <div
-              role="alert"
-              className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200"
-            >
-              {error}
-            </div>
-          )}
-
-          <NavigationButtons
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            isLoading={isLoading}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSkip={handleSkip}
+        <form
+          className="space-y-8"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submit();
+          }}
+        >
+          <AvatarUploadCropper
+            avatarUrl={user?.avatarUrl}
+            displayName={displayName}
+            disabled={isLoading}
+            size="xlarge"
+            label="Profile picture"
+            helperText="Optional"
+            saveLabel="Use picture"
+            onAvatarCropped={handleAvatarCropped}
+            className="items-start"
           />
-        </div>
-      </GlassCard>
+
+          <div>
+            <div className="mb-2 flex items-baseline justify-between gap-4">
+              <label
+                htmlFor="onboarding-display-name"
+                className="text-sm font-medium text-[var(--token-text-primary)]"
+              >
+                Display name
+              </label>
+              <span className="text-xs text-[var(--token-text-tertiary)]">
+                {displayName.length}/100
+              </span>
+            </div>
+            <input
+              id="onboarding-display-name"
+              name="displayName"
+              type="text"
+              autoComplete="name"
+              autoFocus
+              required
+              maxLength={100}
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              disabled={isLoading}
+              className="h-12 w-full rounded-lg border border-white/15 bg-black/20 px-4 text-base text-[var(--token-text-primary)] outline-none transition-colors placeholder:text-[var(--token-text-tertiary)] focus:border-primary-400 focus:ring-2 focus:ring-primary-400/25 disabled:cursor-not-allowed disabled:opacity-60"
+              placeholder="Your name"
+            />
+          </div>
+
+          {error ? (
+            <p role="alert" className="text-sm text-red-300">
+              {error}
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={isLoading || displayName.trim().length === 0}
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary-500 px-5 font-semibold text-white transition-colors hover:bg-primary-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--token-bg-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isLoading ? (
+              <>
+                <LoaderCircle className="h-5 w-5 animate-spin" aria-hidden="true" />
+                Saving profile
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="h-5 w-5" aria-hidden="true" />
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

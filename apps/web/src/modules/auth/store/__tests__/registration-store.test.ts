@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockPhoneVerifyCode } = vi.hoisted(() => ({
+const { mockAuthSetState, mockPhoneVerifyCode } = vi.hoisted(() => ({
+  mockAuthSetState: vi.fn(),
   mockPhoneVerifyCode: vi.fn(),
 }));
 
@@ -10,20 +11,15 @@ vi.mock('@/lib/api-client', () => ({
       phoneVerifyCode: mockPhoneVerifyCode,
     },
   },
-  http: {
-    post: vi.fn(),
-    put: vi.fn(),
-  },
 }));
 
 vi.mock('../authStore.impl', () => ({
   useAuthStore: {
-    setState: vi.fn(),
+    setState: mockAuthSetState,
   },
 }));
 
 vi.mock('../authStore.utils', () => ({
-  getApiErrorMessage: (_error: unknown, fallback: string) => fallback,
   mapUserFromApi: (user: unknown) => user,
 }));
 
@@ -72,19 +68,11 @@ describe('usePhoneRegistrationStore', () => {
     sessionStorage.clear();
   });
 
-  it('persists only the resumable OTP checkpoint and excludes codes and auth secrets', () => {
+  it('persists only the resumable OTP checkpoint and excludes codes', () => {
     usePhoneRegistrationStore.setState({
       ...validOtpCheckpoint(),
       code: '123456',
       debugVerificationCode: '654321',
-      pendingAuth: {
-        user: phoneUser,
-        tokens: {
-          access_token: 'access-secret',
-          refresh_token: 'refresh-secret',
-        },
-        isNewUser: true,
-      },
     });
 
     const rawCheckpoint = sessionStorage.getItem(PHONE_REGISTRATION_STORAGE_KEY);
@@ -104,11 +92,8 @@ describe('usePhoneRegistrationStore', () => {
     });
     expect(persisted.state).not.toHaveProperty('code');
     expect(persisted.state).not.toHaveProperty('debugVerificationCode');
-    expect(persisted.state).not.toHaveProperty('pendingAuth');
     expect(rawCheckpoint).not.toContain('123456');
     expect(rawCheckpoint).not.toContain('654321');
-    expect(rawCheckpoint).not.toContain('access-secret');
-    expect(rawCheckpoint).not.toContain('refresh-secret');
   });
 
   it('rehydrates one valid OTP session without resetting absolute server timers', async () => {
@@ -125,7 +110,6 @@ describe('usePhoneRegistrationStore', () => {
       ...checkpoint,
       code: '',
       debugVerificationCode: null,
-      pendingAuth: null,
       isSubmitting: false,
       error: null,
     });
@@ -210,6 +194,45 @@ describe('usePhoneRegistrationStore', () => {
     expect(state.step).toBe('otp');
     expect(state.isSubmitting).toBe(false);
     expect(state.error).toContain('native device verification');
+  });
+
+  it('commits token-bearing verification immediately and leaves no phone auth checkpoint', async () => {
+    mockPhoneVerifyCode.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        user: { ...phoneUser, onboarding_completed: false },
+        tokens: {
+          access_token: 'access-secret',
+          refresh_token: 'refresh-secret',
+        },
+        is_new_user: true,
+        session_id: 'session-1',
+        next_step: 'profile',
+      },
+    });
+    usePhoneRegistrationStore.setState({
+      ...validOtpCheckpoint(),
+      code: '123456',
+    });
+
+    await expect(usePhoneRegistrationStore.getState().verifyCode()).resolves.toBe(true);
+
+    expect(mockAuthSetState).toHaveBeenCalledWith({
+      user: { ...phoneUser, onboarding_completed: false },
+      token: 'access-secret',
+      refreshToken: 'refresh-secret',
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    });
+    expect(usePhoneRegistrationStore.getState()).toMatchObject({
+      step: 'phone',
+      sessionId: null,
+      code: '',
+    });
+    const rawCheckpoint = sessionStorage.getItem(PHONE_REGISTRATION_STORAGE_KEY) ?? '';
+    expect(rawCheckpoint).not.toContain('access-secret');
+    expect(rawCheckpoint).not.toContain('refresh-secret');
   });
 
   it('keeps registration-lock users on web when native attestation is required next', async () => {

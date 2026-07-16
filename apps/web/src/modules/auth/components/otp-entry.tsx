@@ -30,14 +30,10 @@ function formatRemaining(seconds: number): string {
   return `${minutes}:${String(remainder).padStart(2, '0')}`;
 }
 
-interface OtpEntryProps {
-  readonly completeExistingUser?: boolean;
-}
-
 /**
  * OTP verification step with paste handling, resend countdown, CAPTCHA, and call fallback.
  */
-export function OtpEntry({ completeExistingUser = false }: OtpEntryProps): ReactElement {
+export function OtpEntry(): ReactElement {
   const submittedPhoneNumber = usePhoneRegistrationStore((state) => state.submittedPhoneNumber);
   const code = usePhoneRegistrationStore((state) => state.code);
   const isSubmitting = usePhoneRegistrationStore((state) => state.isSubmitting);
@@ -74,23 +70,21 @@ export function OtpEntry({ completeExistingUser = false }: OtpEntryProps): React
         return;
       }
 
-      const submissionKey = `${code}:${completeExistingUser ? 'login' : 'register'}:${
-        turnstileToken ?? ''
-      }`;
+      const submissionKey = `${code}:${turnstileToken ?? ''}`;
 
       if (lastSubmittedCodeRef.current === submissionKey) {
         return;
       }
 
       lastSubmittedCodeRef.current = submissionKey;
-      const ok = await verifyCode({ completeExistingUser, turnstileToken });
+      const ok = await verifyCode({ turnstileToken });
 
       if (!ok && turnstileToken) {
         setVerifyTurnstileToken(null);
         verifyCaptchaRef.current?.reset();
       }
     },
-    [code, completeExistingUser, isSubmitting, verifyCode]
+    [code, isSubmitting, verifyCode]
   );
 
   useEffect(() => {

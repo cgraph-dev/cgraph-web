@@ -12,12 +12,8 @@ vi.mock('motion/react', () => ({
 vi.mock('@/lib/api-client', () => ({
   apiClient: {
     auth: {
-      phoneCountries: vi.fn(),
+      phoneCountries: vi.fn().mockResolvedValue({ ok: true, data: { countries: [] } }),
     },
-  },
-  http: {
-    post: vi.fn(),
-    put: vi.fn(),
   },
 }));
 
@@ -28,7 +24,6 @@ vi.mock('@/modules/auth/store/authStore.impl', () => ({
 }));
 
 vi.mock('@/modules/auth/store/authStore.utils', () => ({
-  getApiErrorMessage: (_error: unknown, fallback: string) => fallback,
   mapUserFromApi: (user: unknown) => user,
 }));
 
@@ -38,17 +33,11 @@ vi.mock('@/modules/auth/components/country-picker', () => ({
 vi.mock('@/modules/auth/components/otp-entry', () => ({
   OtpEntry: () => <div data-testid="otp-entry" />,
 }));
-vi.mock('@/modules/auth/components/permission-requests', () => ({
-  PermissionRequests: () => <div data-testid="permission-entry" />,
-}));
 vi.mock('@/modules/auth/components/pin-entry', () => ({
   PinEntry: () => <div data-testid="pin-entry" />,
 }));
 vi.mock('@/modules/auth/components/phone-entry', () => ({
   PhoneEntry: () => <div data-testid="phone-entry" />,
-}));
-vi.mock('@/modules/auth/components/profile-setup', () => ({
-  ProfileSetup: () => <div data-testid="profile-entry" />,
 }));
 
 import { usePhoneRegistrationStore } from '@/modules/auth/store/registration-store';
@@ -99,5 +88,17 @@ describe('PhoneRegister', () => {
 
     expect(screen.getByTestId('otp-entry')).toBeInTheDocument();
     expect(usePhoneRegistrationStore.getState().sessionId).toBe('session-1');
+  });
+
+  it('exposes only phone, code, and registration-lock stages', () => {
+    render(
+      <MemoryRouter initialEntries={['/register/phone']}>
+        <PhoneRegister />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Phone registration')).toBeInTheDocument();
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument();
+    expect(screen.queryByText('Permissions')).not.toBeInTheDocument();
   });
 });

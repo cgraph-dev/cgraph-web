@@ -10,7 +10,6 @@ const MAX_PIN_LENGTH = 20;
 interface PinEntryProps {
   readonly sessionId: string | null;
   readonly onNeedHelp: () => void;
-  readonly completeExistingUser?: boolean;
 }
 
 /**
@@ -25,7 +24,6 @@ interface PinEntryProps {
 function PinEntry({
   sessionId,
   onNeedHelp,
-  completeExistingUser = false,
 }: PinEntryProps): ReactNode {
   const completeRegistrationLock = usePhoneRegistrationStore(
     (state) => state.completeRegistrationLock
@@ -64,7 +62,7 @@ function PinEntry({
       const result = await apiClient.pin.verifyRegistrationLock(sessionId, pin);
 
       if (result.ok) {
-        const success = await completeRegistrationLock(result.data, { completeExistingUser });
+        const success = await completeRegistrationLock(result.data);
 
         if (!success) {
           setError(
@@ -106,7 +104,7 @@ function PinEntry({
     } finally {
       setLoading(false);
     }
-  }, [completeExistingUser, completeRegistrationLock, lockoutSeconds, pin, sessionId]);
+  }, [completeRegistrationLock, lockoutSeconds, pin, sessionId]);
 
   const isLocked = lockoutSeconds > 0;
 

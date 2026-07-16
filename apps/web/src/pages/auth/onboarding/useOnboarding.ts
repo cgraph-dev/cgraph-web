@@ -1,150 +1,108 @@
-/**
- * useOnboarding hook - state and logic for onboarding flow
- */
-
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/modules/auth/store';
-import { apiClient, http } from '@/lib/api-client';
-import { createLogger } from '@/lib/logger';
 import type { CroppedAvatarPayload } from '@/components/avatar/avatar-upload-cropper';
+import { apiClient } from '@/lib/api-client';
 import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';
-import { DEFAULT_PROFILE_DATA, ONBOARDING_STEPS } from './constants';
-import type { ProfileData, ProfileUpdatePayload } from './types';
+import { createLogger } from '@/lib/logger';
+import { useAuthStore } from '@/modules/auth/store';
+import {
+  clearProfileCheckpoint,
+  readProfileCheckpoint,
+  writeProfileCheckpoint,
+} from './profile-checkpoint';
 
-const logger = createLogger('Onboarding');
+const logger = createLogger('ProfileInitialization');
 
-/**
- * Hook for managing onboarding.
- */
 export function useOnboarding() {
   const navigate = useNavigate();
   const { user, updateUser } = useAuthStore();
-  const [currentStep, setCurrentStep] = useState(1);
+  const userId = user?.id ?? '';
+  const fallbackName = user?.displayName || (user?.phoneNumber ? '' : user?.username) || '';
+  const [displayName, setDisplayNameState] = useState(() =>
+    readProfileCheckpoint(userId, fallbackName)
+  );
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl || null);
+  const submittingRef = useRef(false);
 
-  const [profileData, setProfileData] = useState<ProfileData>({
-    ...DEFAULT_PROFILE_DATA,
-    displayName: user?.displayName || user?.username || '',
-    avatarUrl: user?.avatarUrl || null,
-  });
+  function setDisplayName(value: string): void {
+    setDisplayNameState(value);
+    if (userId) writeProfileCheckpoint(userId, value);
+    setError(null);
+  }
 
   function handleAvatarCropped(payload: CroppedAvatarPayload): void {
     setAvatarFile(payload.file);
-    setAvatarPreview(payload.previewUrl);
   }
 
-  async function handleNext(): Promise<void> {
-    setError(null);
+  async function submit(): Promise<void> {
+    if (submittingRef.current) return;
 
-    if (currentStep < ONBOARDING_STEPS.length) {
-      setCurrentStep((prev) => prev + 1);
-    } else {
-      // Final step - save everything and navigate
-      setIsLoading(true);
-      try {
-        // Upload avatar if changed
-        let avatarUrl = profileData.avatarUrl;
-        if (avatarFile) {
-          const result = await uploadCurrentUserAvatarAndSync(avatarFile);
-          avatarUrl = result.user?.avatarUrl ?? result.avatarUrl;
-          applyOwnIdentityPatch({
-            avatarUrl,
-            avatarBorderId: result.user?.avatarBorderId,
-            equippedTitleId: result.user?.equippedTitleId,
-            equippedBadgeIds: result.user?.equippedBadgeIds,
-            equippedNameplateId: result.user?.equippedNameplateId,
-            profileTheme: result.user?.profileTheme,
-            chatTheme: result.user?.chatTheme,
-          });
-        }
-
-        // Update profile via API
-
-        const profilePayload: ProfileUpdatePayload = {
-          display_name: profileData.displayName,
-          bio: profileData.bio,
-          avatar_url: avatarUrl,
-        };
-        await http.put('/api/v1/me', { user: profilePayload });
-
-        // Update local user state
-        updateUser({
-          displayName: profileData.displayName,
-          avatarUrl: avatarUrl,
-        });
-
-        // Update notification preferences
-        const settingsResult = await apiClient.settings.updateCategory('notifications', {
-          notify_messages: profileData.notifyMessages,
-          notify_mentions: profileData.notifyMentions,
-          notify_friend_requests: profileData.notifyFriendRequests,
-        });
-        if (!settingsResult.ok) throw new Error(settingsResult.error.message);
-
-        // Mark onboarding complete
-        await http.post('/api/v1/me/onboarding/complete');
-
-        updateUser({
-          onboardingCompleted: true,
-        });
-
-        navigate('/messages');
-      } catch (error) {
-        logger.error('Onboarding error:', error);
-        setError('We could not save onboarding. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
+    const trimmedName = displayName.trim();
+    if (!trimmedName) {
+      setError('Enter the name people will see.');
+      return;
     }
-  }
-
-  function handleBack(): void {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
+    if (trimmedName.length > 100) {
+      setError('Display name must be 100 characters or fewer.');
+      return;
     }
-  }
 
-  async function handleSkip(): Promise<void> {
-    if (isLoading) return;
-
+    submittingRef.current = true;
     setIsLoading(true);
     setError(null);
 
     try {
-      await http.post('/api/v1/onboarding/skip');
+      const result = await apiClient.profile.completeOnboarding({ display_name: trimmedName });
+      if (!result.ok) {
+        setError(result.error.message || 'We could not save your profile. Please try again.');
+        return;
+      }
+
+      const canonicalName = result.data.display_name?.trim() || trimmedName;
       updateUser({
-        onboardingCompleted: true,
+        displayName: canonicalName,
+        onboardingCompleted: result.data.onboarding_completed ?? true,
       });
-      navigate('/messages');
-    } catch (error) {
-      logger.error('Failed to skip onboarding:', error);
-      setError('We could not skip onboarding. Please try again.');
+      clearProfileCheckpoint();
+
+      if (avatarFile) {
+        try {
+          const avatar = await uploadCurrentUserAvatarAndSync(avatarFile);
+          updateUser({ avatarUrl: avatar.user?.avatarUrl ?? avatar.avatarUrl });
+          applyOwnIdentityPatch({
+            avatarUrl: avatar.user?.avatarUrl ?? avatar.avatarUrl,
+            avatarBorderId: avatar.user?.avatarBorderId,
+            equippedTitleId: avatar.user?.equippedTitleId,
+            equippedBadgeIds: avatar.user?.equippedBadgeIds,
+            equippedNameplateId: avatar.user?.equippedNameplateId,
+            profileTheme: avatar.user?.profileTheme,
+            chatTheme: avatar.user?.chatTheme,
+          });
+        } catch (avatarError) {
+          logger.warn('Optional avatar upload failed after profile initialization', avatarError);
+        }
+      }
+
+      navigate('/messages', { replace: true });
+    } catch (submissionError) {
+      logger.error('Profile initialization failed', submissionError);
+      setError('We could not save your profile. Please try again.');
     } finally {
+      submittingRef.current = false;
       setIsLoading(false);
     }
   }
 
-  function updateProfileData<K extends keyof ProfileData>(key: K, value: ProfileData[K]): void {
-    setProfileData((prev) => ({ ...prev, [key]: value }));
-  }
-
   return {
-    currentStep,
+    user,
+    displayName,
     isLoading,
     error,
-    avatarPreview,
-    profileData,
+    setDisplayName,
     handleAvatarCropped,
-    handleNext,
-    handleBack,
-    handleSkip,
-    updateProfileData,
-    setProfileData,
-    totalSteps: ONBOARDING_STEPS.length,
+    submit,
   };
 }
