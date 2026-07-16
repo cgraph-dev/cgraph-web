@@ -1,120 +1,216 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
-const { mockDelete, mockPost, mockLogout } = vi.hoisted(() => ({
-  mockDelete: vi.fn(),
-  mockPost: vi.fn(),
+const { mockLogout, mockRequest } = vi.hoisted(() => ({
   mockLogout: vi.fn(),
+  mockRequest: vi.fn(),
 }));
 
-vi.mock('motion/react', () => ({
-  motion: new Proxy(
-    {},
-    {
-      get: (_target, prop) => {
-        if (typeof prop !== 'string') return undefined;
-        return ({
-          children,
-          className,
-          onClick,
-          ...rest
-        }: React.PropsWithChildren<Record<string, unknown>>) => {
-          const Element = prop as React.ElementType;
-          const domProps = { ...rest };
-          delete domProps.animate;
-          delete domProps.exit;
-          delete domProps.initial;
-          delete domProps.transition;
-          delete domProps.variants;
-          delete domProps.whileHover;
-          delete domProps.whileTap;
-          return (
-            <Element
-              className={className as string}
-              onClick={onClick as React.MouseEventHandler}
-              {...domProps}
-            >
-              {children}
-            </Element>
-          );
-        };
-      },
-    }
-  ),
-  AnimatePresence: ({ children }: React.PropsWithChildren) => <>{children}</>,
-}));
-
-vi.mock('@heroicons/react/24/outline', () => ({
-  ArrowUturnLeftIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
-  ExclamationTriangleIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
-  TrashIcon: (props: React.SVGProps<SVGSVGElement>) => <svg {...props} />,
-}));
-
-vi.mock('@/shared/components/ui', () => ({
-  GlassCard: ({ children }: React.PropsWithChildren) => (
-    <div data-testid="glass-card">{children}</div>
-  ),
-}));
-
-vi.mock('@/lib/api', () => ({
-  api: {
-    delete: mockDelete,
-    post: mockPost,
+vi.mock('@/lib/api-client', () => ({
+  apiClient: {
+    accountDeletion: {
+      request: mockRequest,
+    },
   },
-  getErrorMessage: () => 'Failed to delete account. Please check your password.',
 }));
 
 vi.mock('@/modules/auth/store', () => ({
-  useAuthStore: () => ({
-    logout: mockLogout,
-  }),
+  useAuthStore: (selector: (state: { logout: typeof mockLogout }) => unknown) =>
+    selector({ logout: mockLogout }),
 }));
 
-vi.mock('@/lib/animations/animation-engine', () => ({
-  HapticFeedback: {
-    light: vi.fn(),
-    heavy: vi.fn(),
-    selection: vi.fn(),
-  },
+interface MockButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  readonly animated?: boolean;
+  readonly leftIcon?: React.ReactNode;
+  readonly variant?: string;
+  readonly ref?: React.Ref<HTMLButtonElement>;
+}
+
+vi.mock('@/shared/components/ui', () => ({
+  Button: ({
+    animated: _animated,
+    children,
+    leftIcon,
+    variant: _variant,
+    ...props
+  }: MockButtonProps) => (
+    <button {...props}>
+      {leftIcon}
+      {children}
+    </button>
+  ),
+  Dialog: ({
+    children,
+    open,
+  }: {
+    readonly children: React.ReactNode;
+    readonly open: boolean;
+  }) => (open ? <>{children}</> : null),
+  DialogContent: ({
+    ariaDescribedBy,
+    ariaLabelledBy,
+    children,
+  }: {
+    readonly ariaDescribedBy?: string;
+    readonly ariaLabelledBy?: string;
+    readonly children: React.ReactNode;
+  }) => (
+    <div role="dialog" aria-labelledby={ariaLabelledBy} aria-describedby={ariaDescribedBy}>
+      {children}
+    </div>
+  ),
 }));
 
 import { DeleteAccount } from '../delete-account';
 
+const deletionResponse = {
+  status: 'pending' as const,
+  message: 'Account scheduled for permanent anonymization',
+  requested_at: '2026-07-16T10:00:00.000Z',
+  hard_delete_at: '2026-08-15T10:00:00.000Z',
+  grace_period_days: 30,
+  already_pending: false,
+};
+
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+
+  return { promise, reject, resolve };
+}
+
+async function completeConfirmation(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Request account deletion' }));
+  await user.type(screen.getByLabelText('Current password'), 'correct-password');
+  await user.type(screen.getByLabelText('Type DELETE to confirm'), 'DELETE');
+}
+
 describe('DeleteAccount', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockDelete.mockResolvedValue({ data: { message: 'Account deletion cancelled.' } });
-    mockPost.mockResolvedValue({});
+    mockRequest.mockResolvedValue({ ok: true, data: deletionResponse });
+    mockLogout.mockResolvedValue(undefined);
   });
 
-  it('uses the password-confirmed account deletion endpoint', async () => {
+  it('renders only backend-proven consequences and the relogin recovery path', () => {
     render(<DeleteAccount />);
 
-    fireEvent.click(screen.getByText('Start Deletion Process'));
-    fireEvent.change(screen.getByPlaceholderText('Enter your current password'), {
-      target: { value: 'correct-password' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('Type DELETE to confirm'), {
-      target: { value: 'DELETE' },
-    });
-    fireEvent.click(screen.getByText('Final Confirmation'));
-
-    await waitFor(() => {
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/me/delete-account', {
-        password: 'correct-password',
-      });
-    });
-    expect(mockLogout).toHaveBeenCalled();
+    expect(screen.getByText(/permanently anonymizes the account/i)).toBeInTheDocument();
+    expect(screen.getByText(/successfully signing in/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /cancel pending deletion/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/all your chats, groups, and contacts/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/subscriptions.*terminated/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/30-day grace period/i)).not.toBeInTheDocument();
   });
 
-  it('uses the cancel-deletion endpoint for grace-period recovery', async () => {
+  it('moves focus into confirmation and returns it after cancellation', async () => {
+    const user = userEvent.setup();
     render(<DeleteAccount />);
 
-    fireEvent.click(screen.getByText('Cancel Pending Deletion'));
+    const trigger = screen.getByRole('button', { name: 'Request account deletion' });
+    await user.click(trigger);
+
+    expect(screen.getByLabelText('Current password')).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it('requires a password and the exact DELETE confirmation', async () => {
+    const user = userEvent.setup();
+    render(<DeleteAccount />);
+
+    await user.click(screen.getByRole('button', { name: 'Request account deletion' }));
+    const submit = screen.getByRole('button', { name: 'Request deletion' });
+    expect(submit).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Current password'), 'correct-password');
+    await user.type(screen.getByLabelText('Type DELETE to confirm'), 'delete');
+    expect(submit).toBeDisabled();
+
+    await user.clear(screen.getByLabelText('Type DELETE to confirm'));
+    await user.type(screen.getByLabelText('Type DELETE to confirm'), 'DELETE');
+    expect(submit).toBeEnabled();
+  });
+
+  it('uses the typed endpoint, presents server timing, and awaits logout cleanup', async () => {
+    const user = userEvent.setup();
+    const logout = deferred<void>();
+    mockLogout.mockReturnValueOnce(logout.promise);
+    render(<DeleteAccount />);
+
+    await completeConfirmation(user);
+    await user.click(screen.getByRole('button', { name: 'Request deletion' }));
 
     await waitFor(() => {
-      expect(mockDelete).toHaveBeenCalledWith('/api/v1/me/delete-account');
+      expect(mockRequest).toHaveBeenCalledWith({ password: 'correct-password' });
     });
-    expect(await screen.findByText('Account deletion cancelled.')).toBeInTheDocument();
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('Deletion request accepted')).toBeInTheDocument();
+    expect(screen.getByText('30 days')).toBeInTheDocument();
+    expect(screen.getByText('Signing out and clearing local account data...')).toBeInTheDocument();
+    expect(
+      screen.getByText('Permanent anonymization').parentElement?.querySelector('time')
+    ).toHaveAttribute('datetime', deletionResponse.hard_delete_at);
+
+    logout.resolve();
+    expect(await screen.findByText('Local account data cleared.')).toBeInTheDocument();
+  });
+
+  it('shows typed request errors without signing out and allows retry', async () => {
+    const user = userEvent.setup();
+    mockRequest.mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      error: { code: 'invalid_password', message: 'The current password is incorrect.' },
+    });
+    render(<DeleteAccount />);
+
+    await completeConfirmation(user);
+    await user.click(screen.getByRole('button', { name: 'Request deletion' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('The current password is incorrect.');
+    expect(mockLogout).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Request deletion' })).toBeEnabled();
+  });
+
+  it('keeps an accepted request visible when local logout cleanup fails', async () => {
+    const user = userEvent.setup();
+    mockLogout.mockRejectedValueOnce(new Error('cleanup failed'));
+    render(<DeleteAccount />);
+
+    await completeConfirmation(user);
+    await user.click(screen.getByRole('button', { name: 'Request deletion' }));
+
+    expect(await screen.findByText('Deletion request accepted')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The request was accepted, but local sign-out did not finish.'
+    );
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks duplicate submissions while the typed request is pending', async () => {
+    const user = userEvent.setup();
+    const request = deferred<{ ok: true; data: typeof deletionResponse }>();
+    mockRequest.mockReturnValueOnce(request.promise);
+    render(<DeleteAccount />);
+
+    await completeConfirmation(user);
+    const submit = screen.getByRole('button', { name: 'Request deletion' });
+    await user.dblClick(submit);
+
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Submitting request...' })).toBeDisabled();
+
+    request.resolve({ ok: true, data: deletionResponse });
+    expect(await screen.findByText('Deletion request accepted')).toBeInTheDocument();
   });
 });

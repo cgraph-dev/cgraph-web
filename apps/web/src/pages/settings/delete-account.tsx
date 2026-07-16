@@ -1,297 +1,365 @@
-/**
- * DeleteAccount - Elite self-service account deletion with immersive visual feedback
- */
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  ArrowUturnLeftIcon,
-  ExclamationTriangleIcon,
-  TrashIcon,
-} from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
-import { api as http } from '@/lib/api';
-import { getErrorMessage } from '@/lib/api';
+import { useEffect, useRef, useState } from 'react';
+import type { AccountDeletionResponse } from '@cgraph-dev/api-client';
+import { CheckCircle2, LoaderCircle, Trash2, TriangleAlert } from 'lucide-react';
+import { Button, Dialog, DialogContent } from '@/shared/components/ui';
+import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/modules/auth/store';
-import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { tweens, springs, entranceVariants } from '@/lib/animation-presets';
-import { FADE_UP } from '@/lib/animations/transitions';
 
-/**
- * Delete Account component.
- */
+type CleanupStatus = 'idle' | 'running' | 'complete' | 'failed';
+
+function formatServerTime(value: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  }).format(new Date(value));
+}
+
+function formatGracePeriod(days: number): string {
+  return `${days} ${days === 1 ? 'day' : 'days'}`;
+}
+
+/** Request permanent account anonymization through the server-owned lifecycle. */
 export function DeleteAccount() {
-  const { logout } = useAuthStore();
-  const [showConfirm, setShowConfirm] = useState(false);
+  const logout = useAuthStore((state) => state.logout);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [password, setPassword] = useState('');
-  const [confirmText, setConfirmText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [cancelMessage, setCancelMessage] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [accepted, setAccepted] = useState<AccountDeletionResponse | null>(null);
+  const [cleanupStatus, setCleanupStatus] = useState<CleanupStatus>('idle');
   const [error, setError] = useState('');
 
-  const canDelete = password.length > 0 && confirmText === 'DELETE';
+  const canSubmit = password.length > 0 && confirmation === 'DELETE' && !isSubmitting;
 
-  // Haptic feedback when validation is met
   useEffect(() => {
-    if (canDelete) {
-      HapticFeedback.selection();
+    if (isConfirming && !accepted && !isSubmitting) {
+      passwordRef.current?.focus();
     }
-  }, [canDelete]);
+  }, [accepted, isConfirming, isSubmitting]);
 
-  const handleDelete = async () => {
-    if (!canDelete) return;
-    HapticFeedback.heavy();
-    setIsDeleting(true);
+  const openConfirmation = () => {
+    setPassword('');
+    setConfirmation('');
+    setAccepted(null);
+    setCleanupStatus('idle');
     setError('');
+    setIsConfirming(true);
+  };
+
+  const closeConfirmation = () => {
+    if (isSubmitting) return;
+
+    setIsConfirming(false);
+    setPassword('');
+    setConfirmation('');
+    setAccepted(null);
+    setCleanupStatus('idle');
+    setError('');
+    window.setTimeout(() => triggerRef.current?.focus(), 0);
+  };
+
+  const handleDelete = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit) return;
+
+    setIsSubmitting(true);
+    setError('');
+    let requestAccepted = false;
 
     try {
-      await http.post('/api/v1/me/delete-account', { password });
-      logout();
-    } catch (err: unknown) {
-      const errMsg =
-        getErrorMessage(err) || 'Failed to delete account. Please check your password.';
-      setError(errMsg);
+      const result = await apiClient.accountDeletion.request({ password });
+
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+
+      requestAccepted = true;
+      setAccepted(result.data);
+      setPassword('');
+      setConfirmation('');
+      setCleanupStatus('running');
+
+      await logout();
+      setCleanupStatus('complete');
+    } catch {
+      if (requestAccepted) {
+        setCleanupStatus('failed');
+      } else {
+        setError('The request could not be submitted. Please try again.');
+      }
     } finally {
-      setIsDeleting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleCancelDeletion = async () => {
-    HapticFeedback.light();
-    setIsCancelling(true);
-    setError('');
-    setCancelMessage('');
+  const keepFocusInConfirmation = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key !== 'Tab') return;
 
-    try {
-      const response = await http.delete('/api/v1/me/delete-account');
-      const message =
-        typeof response.data?.message === 'string'
-          ? response.data.message
-          : 'Account deletion cancelled.';
-      setCancelMessage(message);
-    } catch (err: unknown) {
-      const errMsg = getErrorMessage(err) || 'No pending account deletion could be cancelled.';
-      setError(errMsg);
-    } finally {
-      setIsCancelling(false);
+    const lastControl = canSubmit ? submitRef.current : cancelRef.current;
+
+    if (event.shiftKey && document.activeElement === passwordRef.current) {
+      event.preventDefault();
+      lastControl?.focus();
+    } else if (!event.shiftKey && document.activeElement === lastControl) {
+      event.preventDefault();
+      passwordRef.current?.focus();
     }
   };
-
-  const consequences = [
-    'All your chats, groups, and contacts will be permanently deleted.',
-    'Your unique user ID and custom tags will be released.',
-    'Any active subscriptions will be immediately terminated.',
-    'There is a 30-day grace period where you can restore your account by logging back in.',
-  ];
 
   return (
-    <motion.div
-      {...FADE_UP}
-      exit={{ opacity: 0, y: -20 }}
-      transition={tweens.standard}
-      className="relative space-y-6"
-    >
-      {/* Immersive Background Aurora (Red-tinted) */}
-      <div className="pointer-events-none absolute -left-20 -top-20 h-[400px] w-[400px] rounded-full bg-red-500/10 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-[300px] w-[300px] rounded-full bg-rose-500/5 blur-[100px]" />
-
-      <div className="relative z-10">
-        <h1 className="mb-1 bg-gradient-to-r from-red-400 via-rose-300 to-red-400 bg-clip-text text-2xl font-black text-transparent">
-          Delete My Account
+    <section className="space-y-6" aria-labelledby="delete-account-heading">
+      <header>
+        <h1
+          id="delete-account-heading"
+          className="text-2xl font-bold text-[var(--token-text-primary)]"
+        >
+          Delete account
         </h1>
-        <p className="text-sm font-medium text-[var(--token-text-muted)]">
-          This action is permanent and cannot be undone
+        <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+          Request permanent anonymization of your CGraph account.
+        </p>
+      </header>
+
+      <div className="border-y border-red-500/25 py-5">
+        <div className="flex items-start gap-3">
+          <TriangleAlert
+            className="mt-0.5 h-5 w-5 shrink-0 text-red-400"
+            aria-hidden="true"
+          />
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-[var(--token-text-primary)]">
+              What happens after the request
+            </h2>
+            <ul className="mt-3 space-y-2 text-sm text-[var(--token-text-secondary)]">
+              <li>Your account is deactivated and active sessions are signed out.</li>
+              <li>
+                CGraph permanently anonymizes the account after the grace period returned by the
+                server.
+              </li>
+              <li>
+                Messages may remain under an anonymized identity to preserve conversation
+                integrity.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-l-2 border-[var(--token-interactive-primary)] pl-4">
+        <h2 className="text-sm font-semibold text-[var(--token-text-primary)]">
+          Recovery during the grace period
+        </h2>
+        <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+          Successfully signing in before the server-provided deadline cancels the pending
+          anonymization. There is no separate cancellation button.
         </p>
       </div>
 
-      <GlassCard className="relative z-10 overflow-hidden border border-red-500/20 bg-red-950/5 p-6 backdrop-blur-2xl">
-        {/* Holographic Grid Overlay */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #ff0000 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-          }}
-        />
+      <Button
+        ref={triggerRef}
+        type="button"
+        variant="danger"
+        animated={false}
+        leftIcon={<Trash2 aria-hidden="true" />}
+        onClick={openConfirmation}
+        className="!border-red-500/40 !bg-red-600 !text-white !shadow-none !backdrop-blur-none hover:!bg-red-500"
+      >
+        Request account deletion
+      </Button>
 
-        {/* Danger accent line */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
-
-        <div className="flex items-start gap-5">
-          <motion.div
-            animate={{
-              boxShadow: [
-                '0 0 0px 0px rgba(239,68,68,0)',
-                '0 0 20px 2px rgba(239,68,68,0.2)',
-                '0 0 0px 0px rgba(239,68,68,0)',
-              ],
-            }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-400 shadow-inner shadow-red-500/5 ring-1 ring-red-500/20"
-          >
-            <ExclamationTriangleIcon className="h-7 w-7" />
-          </motion.div>
-          <div className="flex-1">
-            <h2 className="text-xl font-black tracking-tight text-red-400">Danger Zone</h2>
-            <p className="mt-1 text-sm font-medium text-[var(--token-text-secondary)]">
-              Once you initiate the deletion process, your account will be marked for removal.
+      <Dialog
+        open={isConfirming}
+        onOpenChange={(open) => {
+          if (!open) closeConfirmation();
+        }}
+      >
+        <DialogContent
+          ariaLabelledBy="delete-account-dialog-title"
+          ariaDescribedBy="delete-account-dialog-description"
+          className="!max-w-lg !rounded-lg !border-red-500/30 !bg-[var(--token-bg-primary)] !p-5 sm:!p-6"
+        >
+          <div aria-busy={isSubmitting}>
+            <h2
+              id="delete-account-dialog-title"
+              className="text-lg font-semibold text-[var(--token-text-primary)]"
+            >
+              Confirm account deletion
+            </h2>
+            <p
+              id="delete-account-dialog-description"
+              className="mt-1 text-sm text-[var(--token-text-secondary)]"
+            >
+              Enter your current password and type DELETE. The server request is sent before local
+              account data is cleared.
             </p>
 
-            <motion.ul
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: { transition: { staggerChildren: 0.1 } },
-              }}
-              className="mt-6 space-y-3"
-            >
-              {consequences.map((text, i) => (
-                <motion.li
-                  key={i}
-                  variants={entranceVariants.fadeRight}
-                  className="flex items-start gap-3 text-sm text-[var(--token-text-muted)]"
-                >
-                  <span
-                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${i === 3 ? 'bg-yellow-500/60 shadow-[0_0_8px_rgba(234,179,8,0.4)]' : 'bg-red-500/60'}`}
+            {accepted ? (
+              <div className="mt-5 space-y-4">
+                <div className="flex items-start gap-3" role="status" aria-live="polite">
+                  <CheckCircle2
+                    className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400"
+                    aria-hidden="true"
                   />
-                  <span className={i === 3 ? 'text-[var(--token-text-secondary)]' : ''}>
-                    {i === 3 ? (
-                      <>
-                        There is a{' '}
-                        <span className="font-bold text-[var(--token-text-primary)] underline decoration-yellow-500/30 underline-offset-4">
-                          30-day grace period
-                        </span>{' '}
-                        where you can restore your account by logging back in.
-                      </>
-                    ) : (
-                      text
-                    )}
-                  </span>
-                </motion.li>
-              ))}
-            </motion.ul>
+                  <div>
+                    <p className="font-semibold text-[var(--token-text-primary)]">
+                      {accepted.already_pending
+                        ? 'Deletion request was already pending'
+                        : 'Deletion request accepted'}
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+                      {accepted.message}
+                    </p>
+                  </div>
+                </div>
 
-            <div className="mt-6 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-              <p className="text-sm font-semibold text-yellow-100">Already scheduled deletion?</p>
-              <p className="mt-1 text-xs text-yellow-100/70">
-                You can cancel a pending deletion during the grace period.
-              </p>
-              <button
-                type="button"
-                onClick={handleCancelDeletion}
-                disabled={isCancelling}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-yellow-400/30 bg-yellow-400/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-yellow-100 transition-colors hover:bg-yellow-400/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isCancelling ? (
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-yellow-100/20 border-t-yellow-100" />
+                <dl className="grid gap-3 border-y border-[var(--token-card-border)] py-4 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-[var(--token-text-muted)]">Requested</dt>
+                    <dd className="mt-1 font-medium text-[var(--token-text-primary)]">
+                      <time dateTime={accepted.requested_at}>
+                        {formatServerTime(accepted.requested_at)}
+                      </time>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[var(--token-text-muted)]">Permanent anonymization</dt>
+                    <dd className="mt-1 font-medium text-[var(--token-text-primary)]">
+                      <time dateTime={accepted.hard_delete_at}>
+                        {formatServerTime(accepted.hard_delete_at)}
+                      </time>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[var(--token-text-muted)]">Server grace period</dt>
+                    <dd className="mt-1 font-medium text-[var(--token-text-primary)]">
+                      {formatGracePeriod(accepted.grace_period_days)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {cleanupStatus === 'failed' ? (
+                  <p className="text-sm text-red-300" role="alert">
+                    The request was accepted, but local sign-out did not finish. Reload the app to
+                    clear this session.
+                  </p>
                 ) : (
-                  <ArrowUturnLeftIcon className="h-4 w-4" />
+                  <p
+                    className="flex items-center gap-2 text-sm text-[var(--token-text-secondary)]"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {cleanupStatus === 'running' && (
+                      <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    )}
+                    {cleanupStatus === 'complete'
+                      ? 'Local account data cleared.'
+                      : 'Signing out and clearing local account data...'}
+                  </p>
                 )}
-                Cancel Pending Deletion
-              </button>
-              {cancelMessage && (
-                <p className="mt-3 text-xs font-bold text-green-300">{cancelMessage}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-10">
-          {!showConfirm ? (
-            <motion.button
-              whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.25)' }}
-              whileTap={{ scale: 0.88 }}
-              onClick={() => {
-                HapticFeedback.light();
-                setShowConfirm(true);
-              }}
-              className="group relative overflow-hidden rounded-xl border border-red-500/30 bg-red-500/20 px-6 py-3 text-sm font-black uppercase tracking-wider text-red-400 shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition-all"
-            >
-              Start Deletion Process
-            </motion.button>
-          ) : (
-            <AnimatePresence>
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                transition={springs.smooth}
-                className="space-y-6 pt-4"
+              </div>
+            ) : (
+              <form
+                className="mt-5 space-y-4"
+                onSubmit={handleDelete}
+                onKeyDown={keepFocusInConfirmation}
+                noValidate
               >
-                <div className="space-y-2.5">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--token-text-muted)]">
-                    Confirm Identity
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your current password"
-                    className="w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3.5 text-[var(--token-text-primary)] outline-none ring-0 transition-all placeholder:text-[var(--token-text-muted)] focus:border-red-500/40 focus:bg-red-500/[0.03] focus:shadow-[0_0_20px_rgba(239,68,68,0.05)]"
-                  />
-                </div>
+                <fieldset className="space-y-4" disabled={isSubmitting}>
+                  <div>
+                    <label
+                      htmlFor="delete-account-password"
+                      className="text-sm font-medium text-[var(--token-text-primary)]"
+                    >
+                      Current password
+                    </label>
+                    <input
+                      ref={passwordRef}
+                      id="delete-account-password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      aria-describedby="delete-account-password-help"
+                      className="mt-2 w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-3 py-2.5 text-[var(--token-text-primary)] outline-none placeholder:text-[var(--token-text-muted)] focus-visible:border-red-400 focus-visible:ring-2 focus-visible:ring-red-400/30"
+                    />
+                    <p
+                      id="delete-account-password-help"
+                      className="mt-1.5 text-xs text-[var(--token-text-secondary)]"
+                    >
+                      Your password is required before the request can be accepted.
+                    </p>
+                  </div>
 
-                <div className="space-y-2.5">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--token-text-muted)]">
-                    Security Key: <span className="font-mono text-red-500/60">DELETE</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={confirmText}
-                    onChange={(e) => setConfirmText(e.target.value)}
-                    placeholder="Type DELETE to confirm"
-                    className="w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3.5 font-mono text-[var(--token-text-primary)] outline-none ring-0 transition-all placeholder:text-[var(--token-text-muted)] focus:border-red-500/40 focus:bg-red-500/[0.03] focus:shadow-[0_0_20px_rgba(239,68,68,0.05)]"
-                  />
-                </div>
+                  <div>
+                    <label
+                      htmlFor="delete-account-confirmation"
+                      className="text-sm font-medium text-[var(--token-text-primary)]"
+                    >
+                      Type DELETE to confirm
+                    </label>
+                    <input
+                      id="delete-account-confirmation"
+                      type="text"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={confirmation}
+                      onChange={(event) => setConfirmation(event.target.value)}
+                      className="mt-2 w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-3 py-2.5 font-mono text-[var(--token-text-primary)] outline-none placeholder:text-[var(--token-text-muted)] focus-visible:border-red-400 focus-visible:ring-2 focus-visible:ring-red-400/30"
+                    />
+                  </div>
+                </fieldset>
 
                 {error && (
-                  <motion.p
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-400"
+                  <p
+                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200"
+                    role="alert"
+                    aria-live="assertive"
                   >
                     {error}
-                  </motion.p>
+                  </p>
                 )}
 
-                <div className="flex items-center gap-4 pt-4">
-                  <button
-                    onClick={() => {
-                      HapticFeedback.light();
-                      setShowConfirm(false);
-                      setPassword('');
-                      setConfirmText('');
-                      setError('');
-                    }}
-                    className="rounded-xl px-5 py-2.5 text-sm font-bold text-[var(--token-text-muted)] transition-all hover:scale-[1.02] hover:bg-[var(--token-bg-secondary)] hover:text-[var(--token-text-primary)] active:scale-[0.98]"
+                <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
+                  <Button
+                    ref={cancelRef}
+                    type="button"
+                    variant="ghost"
+                    animated={false}
+                    onClick={closeConfirmation}
+                    disabled={isSubmitting}
+                    className="!shadow-none !backdrop-blur-none"
                   >
                     Cancel
-                  </button>
-                  <motion.button
-                    whileHover={canDelete ? { boxShadow: '0 0 20px rgba(234,68,68,0.3)' } : {}}
-                    whileTap={canDelete ? { scale: 0.88 } : {}}
-                    onClick={handleDelete}
-                    disabled={!canDelete || isDeleting}
-                    className="flex items-center gap-2 rounded-xl border border-red-500/40 bg-red-600 px-6 py-2.5 text-sm font-black uppercase tracking-widest text-white shadow-[0_8px_32px_rgba(220,38,38,0.3)] transition-all hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-20 disabled:shadow-none disabled:grayscale"
+                  </Button>
+                  <Button
+                    ref={submitRef}
+                    type="submit"
+                    variant="danger"
+                    animated={false}
+                    disabled={!canSubmit}
+                    leftIcon={
+                      isSubmitting ? (
+                        <LoaderCircle className="animate-spin" aria-hidden="true" />
+                      ) : (
+                        <Trash2 aria-hidden="true" />
+                      )
+                    }
+                    className="!border-red-500/40 !bg-red-600 !text-white !shadow-none !backdrop-blur-none hover:!bg-red-500"
                   >
-                    {isDeleting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                        Deleting...
-                      </div>
-                    ) : (
-                      <>
-                        <TrashIcon className="h-4 w-4" />
-                        Final Confirmation
-                      </>
-                    )}
-                  </motion.button>
+                    {isSubmitting ? 'Submitting request...' : 'Request deletion'}
+                  </Button>
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
-      </GlassCard>
-    </motion.div>
+              </form>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </section>
   );
 }
 

@@ -121,7 +121,7 @@ const settingsSections = [
     id: 'delete-account',
     label: 'Delete Account',
     icon: TrashIcon,
-    description: 'Permanently delete account',
+    description: 'Request permanent anonymization',
   },
 ];
 

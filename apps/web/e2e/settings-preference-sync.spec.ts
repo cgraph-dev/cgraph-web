@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { createHash } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import type { Socket } from 'node:net';
@@ -300,7 +301,6 @@ let socketHarness: PhoenixSocketHarness | null = null;
 
 async function installPreferenceMocks(page: Page) {
   const requests = {
-    cancelDeletion: [] as unknown[],
     logout: [] as unknown[],
     oauthStart: [] as unknown[],
     scheduleDeletion: [] as unknown[],
@@ -389,19 +389,16 @@ async function installPreferenceMocks(page: Page) {
       return;
     }
 
-    if (path === '/api/v1/me/delete-account' && method === 'DELETE') {
-      requests.cancelDeletion.push(readJsonRequest(route));
-      await fulfillJson(route, { data: { message: 'Account deletion cancelled.' } });
-      return;
-    }
-
     if (path === '/api/v1/me/delete-account' && method === 'POST') {
       requests.scheduleDeletion.push(readJsonRequest(route));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       await fulfillJson(route, {
-        data: {
-          scheduled_for: '2026-06-22T00:00:00.000Z',
-          grace_period_days: 30,
-        },
+        status: 'pending',
+        message: 'Account scheduled for permanent anonymization',
+        requested_at: '2026-07-16T10:00:00.000Z',
+        hard_delete_at: '2026-08-15T10:00:00.000Z',
+        grace_period_days: 30,
+        already_pending: false,
       });
       return;
     }
@@ -866,27 +863,65 @@ Diagnostics: ${JSON.stringify(diagnostics)}`);
     }
   });
 
-  test('proves routed account deletion scheduling and grace-period cancellation', async ({
+  test('proves typed account deletion, accessible confirmation, cleanup, and relogin recovery', async ({
     page,
-  }) => {
+  }, testInfo) => {
     const requests = await installPreferenceMocks(page);
 
     await page.goto('/me/settings/delete-account');
 
-    await expect(page.getByRole('heading', { name: /delete my account/i })).toBeVisible();
-    await page.getByRole('button', { name: /cancel pending deletion/i }).click();
+    await expect(page.getByRole('heading', { name: /^Delete account$/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /cancel pending deletion/i })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Request account deletion' }).click();
 
-    await expect(page.getByText('Account deletion cancelled.')).toBeVisible();
-    await expect.poll(() => requests.cancelDeletion.length).toBe(1);
+    const password = page.getByLabel('Current password');
+    const confirmation = page.getByLabel('Type DELETE to confirm');
+    const submit = page.getByRole('button', { name: 'Request deletion' });
 
-    await page.getByRole('button', { name: /start deletion process/i }).click();
-    await page.getByPlaceholder('Enter your current password').fill('CGraph!2026Password');
-    await page.getByPlaceholder('Type DELETE to confirm').fill('DELETE');
-    await page.getByRole('button', { name: /final confirmation/i }).click();
+    await expect(password).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Request account deletion' })).toBeFocused();
+    await page.getByRole('button', { name: 'Request account deletion' }).click();
+    await expect(password).toBeFocused();
+    await page.keyboard.type('CGraph!2026Password');
+    await page.keyboard.press('Tab');
+    await expect(confirmation).toBeFocused();
+    await page.keyboard.type('DELETE');
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Cancel' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(submit).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(password).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(submit).toBeFocused();
+
+    const accessibility = await new AxeBuilder({ page })
+      .include('[role="dialog"]')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    expect(accessibility.violations).toEqual([]);
+
+    await page.screenshot({
+      path: testInfo.outputPath('account-deletion-confirmation.png'),
+      fullPage: true,
+    });
+
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('button', { name: 'Submitting request...' })).toBeDisabled();
 
     await expect.poll(() => requests.scheduleDeletion.length).toBe(1);
     expect(requests.scheduleDeletion[0]).toMatchObject({ password: 'CGraph!2026Password' });
+    await expect(page.getByText('Deletion request accepted')).toBeVisible();
+    await expect(page.locator('time[datetime="2026-08-15T10:00:00.000Z"]')).toBeVisible();
     await expect.poll(() => requests.logout.length).toBe(1);
+    await expect(page.getByText('Local account data cleared.')).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByRole('heading', { name: /^Delete account$/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Request account deletion' })).toBeVisible();
+    await expect(page.getByText('Deletion request accepted')).toHaveCount(0);
+    expect(requests.scheduleDeletion).toHaveLength(1);
   });
 
   test('discovers connected-account providers from backend configuration on the routed settings page', async ({
