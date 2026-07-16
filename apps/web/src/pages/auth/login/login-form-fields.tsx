@@ -81,16 +81,7 @@ export function LoginFormFields({
         </div>
       </motion.div>
 
-      <motion.div variants={itemVariants} className="flex items-center justify-between">
-        <label className="group flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-[var(--token-card-border)] bg-[var(--token-card-bg)] text-primary-500 transition-all checked:border-primary-600 checked:bg-primary-600 focus:ring-primary-500/50 focus:ring-offset-0"
-          />
-          <span className="text-sm text-foreground-muted transition-colors group-hover:text-foreground-secondary">
-            {t('login.remember_me')}
-          </span>
-        </label>
+      <motion.div variants={itemVariants} className="flex justify-end">
         <Link to="/forgot-password" className="matrix-link text-sm">
           {t('forgot_password.title')}
         </Link>

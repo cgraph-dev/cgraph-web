@@ -141,7 +141,7 @@ export function TurnstileWidget({
   onError,
   resetSignal,
   theme = 'dark',
-  size = 'normal',
+  size = 'flexible',
   className = '',
 }: TurnstileWidgetProps): ReactElement | null {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -265,13 +265,13 @@ export function TurnstileWidget({
 
   return (
     <div
-      className={`flex min-h-[65px] justify-center ${className}`}
+      className={`flex min-h-[65px] w-full min-w-0 flex-col items-center justify-center gap-2 overflow-hidden ${className}`}
       data-status={status}
       data-turnstile-widget="true"
     >
-      <div ref={containerRef} />
+      <div ref={containerRef} className="w-full max-w-[300px]" />
       {status === 'error' && (
-        <div className="flex flex-col items-center justify-center gap-2 text-center text-xs text-red-300">
+        <div className="flex w-full flex-col items-center justify-center gap-2 text-center text-xs text-red-300">
           <span role="alert">Security check could not load.</span>
           <button
             type="button"

@@ -9,6 +9,7 @@ import type {
   AuthState,
   TwoFactorRequired,
   EmailVerificationResult,
+  PasswordResetResult,
 } from './authStore.types';
 import { getApiErrorMessage, getApiResultErrorMessage, mapUserFromApi } from './authStore.utils';
 
@@ -233,6 +234,115 @@ export function createVerifyEmailAction(set: Set, _get: Get) {
     );
 
     return { ok: true };
+  };
+}
+
+/** Requests a reset email through the auth state owner. */
+export function createRequestPasswordResetAction(set: Set, _get: Get) {
+  let activeRequest: Promise<void> | null = null;
+
+  const request = async (email: string, turnstileToken?: string | null): Promise<void> => {
+    set({ isLoading: true, error: null }, false, 'requestPasswordReset/start');
+
+    try {
+      const result = await apiClient.auth.forgotPassword(email, turnstileToken);
+      if (!result.ok) {
+        throw new Error(result.error.message);
+      }
+
+      set({ isLoading: false }, false, 'requestPasswordReset/success');
+    } catch (error: unknown) {
+      set(
+        {
+          error: getApiErrorMessage(error, 'Unable to request a password reset'),
+          isLoading: false,
+        },
+        false,
+        'requestPasswordReset/error'
+      );
+      throw error;
+    }
+  };
+
+  return (email: string, turnstileToken?: string | null): Promise<void> => {
+    if (activeRequest) {
+      return activeRequest;
+    }
+
+    activeRequest = request(email, turnstileToken).finally(() => {
+      activeRequest = null;
+    });
+
+    return activeRequest;
+  };
+}
+
+/** Consumes a reset token through the auth state owner. */
+export function createResetPasswordAction(set: Set, _get: Get) {
+  let activeRequest: Promise<PasswordResetResult> | null = null;
+
+  const reset = async (
+    token: string,
+    password: string,
+    passwordConfirmation: string,
+    turnstileToken?: string | null
+  ): Promise<PasswordResetResult> => {
+    set({ isLoading: true, error: null }, false, 'resetPassword/start');
+
+    try {
+      const result = await apiClient.auth.resetPassword(
+        token,
+        password,
+        passwordConfirmation,
+        turnstileToken
+      );
+
+      if (!result.ok) {
+        const failure: PasswordResetResult = {
+          ok: false,
+          status: result.status,
+          code: result.error.code ?? null,
+          message: result.error.message,
+        };
+
+        set(
+          { error: failure.message, isLoading: false },
+          false,
+          'resetPassword/rejected'
+        );
+        return failure;
+      }
+
+      set({ isLoading: false }, false, 'resetPassword/success');
+      return { ok: true };
+    } catch (error: unknown) {
+      const failure: PasswordResetResult = {
+        ok: false,
+        status: getResponseStatus(error),
+        code: null,
+        message: getApiErrorMessage(error, 'Unable to reset your password'),
+      };
+
+      set({ error: failure.message, isLoading: false }, false, 'resetPassword/error');
+      return failure;
+    }
+  };
+
+  return (
+    token: string,
+    password: string,
+    passwordConfirmation: string,
+    turnstileToken?: string | null
+  ): Promise<PasswordResetResult> => {
+    if (activeRequest) {
+      return activeRequest;
+    }
+
+    activeRequest = reset(token, password, passwordConfirmation, turnstileToken).finally(() => {
+      activeRequest = null;
+    });
+
+    return activeRequest;
   };
 }
 

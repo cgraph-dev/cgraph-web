@@ -32,4 +32,40 @@ describe('route inventory hygiene', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('keeps password recovery inside the shared auth layout and store boundary', () => {
+    const authRoutes = readFileSync(join(WEB_SRC, 'routes/route-groups/auth-routes.tsx'), 'utf8');
+    const resetPage = readFileSync(join(WEB_SRC, 'pages/auth/reset-password.tsx'), 'utf8');
+    const forgotPage = readFileSync(join(WEB_SRC, 'pages/auth/forgot-password.tsx'), 'utf8');
+
+    expect(authRoutes).toMatch(
+      /path="\/reset-password"[\s\S]*?<AuthLayout>[\s\S]*?<ResetPassword \/>/
+    );
+    expect(resetPage).toContain('state.resetPassword');
+    expect(forgotPage).toContain('state.requestPasswordReset');
+    expect(resetPage).not.toContain('apiClient.auth');
+    expect(forgotPage).not.toContain('apiClient.auth');
+  });
+
+  it('does not expose a remember-me control without a persistence contract', () => {
+    const loginFields = readFileSync(
+      join(WEB_SRC, 'pages/auth/login/login-form-fields.tsx'),
+      'utf8'
+    );
+
+    expect(loginFields).not.toContain("t('login.remember_me')");
+    expect(loginFields).not.toContain('type="checkbox"');
+  });
+
+  it('keeps the Turnstile provider responsive inside narrow auth cards', () => {
+    const turnstileWidget = readFileSync(
+      join(WEB_SRC, 'modules/auth/components/turnstile-widget.tsx'),
+      'utf8'
+    );
+
+    expect(turnstileWidget).toContain("size = 'flexible'");
+    expect(turnstileWidget).toContain('w-full min-w-0 flex-col');
+    expect(turnstileWidget).toContain('overflow-hidden');
+    expect(turnstileWidget).toContain('className="w-full max-w-[300px]"');
+  });
 });

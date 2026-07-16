@@ -50,6 +50,15 @@ describe('validatePassword', () => {
     });
   });
 
+  describe('too long', () => {
+    it('rejects passwords beyond the backend Argon2 input limit', () => {
+      const result = validatePassword(`Aa1!${'x'.repeat(69)}`);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Password must be at most 72 characters');
+    });
+  });
+
   describe('missing lowercase', () => {
     it('rejects a password with no lowercase letter', () => {
       const result = validatePassword('ABCDEF1!');

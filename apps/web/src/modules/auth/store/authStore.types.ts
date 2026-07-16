@@ -82,6 +82,15 @@ export type EmailVerificationResult =
   | { ok: true }
   | { ok: false; status: number; message: string };
 
+export type PasswordResetResult =
+  | { ok: true }
+  | {
+      ok: false;
+      status: number | null;
+      code: string | null;
+      message: string;
+    };
+
 export interface AuthState {
   user: User | null;
   token: string | null;
@@ -106,6 +115,13 @@ export interface AuthState {
     turnstileToken?: string | null
   ) => Promise<void>;
   verifyEmail: (token: string) => Promise<EmailVerificationResult>;
+  requestPasswordReset: (email: string, turnstileToken?: string | null) => Promise<void>;
+  resetPassword: (
+    token: string,
+    password: string,
+    passwordConfirmation: string,
+    turnstileToken?: string | null
+  ) => Promise<PasswordResetResult>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;

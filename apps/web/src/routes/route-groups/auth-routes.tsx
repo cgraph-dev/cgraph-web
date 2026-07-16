@@ -69,9 +69,11 @@ export function AuthRoutes() {
       <Route
         path="/reset-password"
         element={
-          <RouteErrorBoundary routeName="Reset Password">
-            <ResetPassword />
-          </RouteErrorBoundary>
+          <AuthLayout>
+            <RouteErrorBoundary routeName="Reset Password">
+              <ResetPassword />
+            </RouteErrorBoundary>
+          </AuthLayout>
         }
       />
       <Route

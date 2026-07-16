@@ -15,7 +15,13 @@ import type { StateStorage } from 'zustand/middleware';
 import { authLogger } from '@/lib/logger';
 
 // Types
-export type { ApiErrorResponse, User, WalletChallenge, AuthState } from './authStore.types';
+export type {
+  ApiErrorResponse,
+  User,
+  WalletChallenge,
+  AuthState,
+  PasswordResetResult,
+} from './authStore.types';
 
 import type { AuthState } from './authStore.types';
 
@@ -52,6 +58,8 @@ import {
   createLoginAction,
   createVerifyLoginTwoFactorAction,
   createVerifyEmailAction,
+  createRequestPasswordResetAction,
+  createResetPasswordAction,
   createGetWalletChallengeAction,
   createLoginWithWalletAction,
   createRegisterAction,
@@ -84,6 +92,8 @@ export const useAuthStore = create<AuthState>()(
           login: createLoginAction(set, get),
           verifyLoginTwoFactor: createVerifyLoginTwoFactorAction(set, get),
           verifyEmail: createVerifyEmailAction(set, get),
+          requestPasswordReset: createRequestPasswordResetAction(set, get),
+          resetPassword: createResetPasswordAction(set, get),
           getWalletChallenge: createGetWalletChallengeAction(set, get),
           loginWithWallet: createLoginWithWalletAction(set, get),
           register: createRegisterAction(set, get),

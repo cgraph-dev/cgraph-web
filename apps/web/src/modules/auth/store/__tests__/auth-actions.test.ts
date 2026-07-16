@@ -13,6 +13,8 @@ const mockHttp = vi.hoisted(() => ({
   post: vi.fn(),
 }));
 const mockVerifyEmail = vi.hoisted(() => vi.fn());
+const mockForgotPassword = vi.hoisted(() => vi.fn());
+const mockResetPassword = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api-client', () => ({
   http: mockHttp,
@@ -30,6 +32,8 @@ vi.mock('@/lib/api-client', () => ({
         return { ok: true, data: response.data };
       },
       verifyEmail: mockVerifyEmail,
+      forgotPassword: mockForgotPassword,
+      resetPassword: mockResetPassword,
       register: async (payload: Record<string, unknown>) => {
         const response = await mockHttp.post('/api/v1/auth/register', { user: payload });
         return { ok: true, data: response.data };
@@ -87,6 +91,8 @@ import {
   createLoginAction,
   createVerifyLoginTwoFactorAction,
   createVerifyEmailAction,
+  createRequestPasswordResetAction,
+  createResetPasswordAction,
   createGetWalletChallengeAction,
   createLoginWithWalletAction,
   createRegisterAction,
@@ -320,6 +326,116 @@ describe('createVerifyEmailAction', () => {
       expect.anything(),
       expect.anything()
     );
+  });
+});
+
+describe('password recovery actions', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('shares one reset-email request across concurrent callers', async () => {
+    const { set, get } = createMockSetGet();
+    const requestPasswordReset = createRequestPasswordResetAction(set as never, get as never);
+    let resolveRequest: ((result: { ok: true; data: { message: string } }) => void) | null = null;
+
+    mockForgotPassword.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        })
+    );
+
+    const first = requestPasswordReset('user@example.com', 'captcha-token');
+    const second = requestPasswordReset('ignored@example.com', 'other-token');
+
+    expect(first).toBe(second);
+    expect(mockForgotPassword).toHaveBeenCalledTimes(1);
+    expect(mockForgotPassword).toHaveBeenCalledWith('user@example.com', 'captcha-token');
+
+    resolveRequest?.({ ok: true, data: { message: 'Check your email' } });
+    await first;
+
+    expect(set).toHaveBeenCalledWith(
+      { isLoading: false },
+      false,
+      'requestPasswordReset/success'
+    );
+  });
+
+  it('keeps a reset-email failure visible until the next explicit attempt', async () => {
+    const { state, set, get } = createMockSetGet();
+    const requestPasswordReset = createRequestPasswordResetAction(set as never, get as never);
+
+    mockForgotPassword.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      error: { code: 'service_unavailable', message: 'Email service is unavailable' },
+    });
+
+    await expect(requestPasswordReset('user@example.com')).rejects.toThrow(
+      'Email service is unavailable'
+    );
+    expect(state.error).toBe('Email service is unavailable');
+    expect(state.isLoading).toBe(false);
+
+    mockForgotPassword.mockResolvedValueOnce({
+      ok: true,
+      data: { message: 'Check your email' },
+    });
+    await requestPasswordReset('user@example.com');
+
+    expect(mockForgotPassword).toHaveBeenCalledTimes(2);
+    expect(state.error).toBeNull();
+  });
+
+  it('returns a typed invalid-token result without creating auth state', async () => {
+    const { state, set, get } = createMockSetGet();
+    const resetPassword = createResetPasswordAction(set as never, get as never);
+
+    mockResetPassword.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      error: { code: 'invalid_reset_token', message: 'Invalid or expired reset token' },
+    });
+
+    await expect(
+      resetPassword('used-token', 'NewPassword123!', 'NewPassword123!')
+    ).resolves.toEqual({
+      ok: false,
+      status: 400,
+      code: 'invalid_reset_token',
+      message: 'Invalid or expired reset token',
+    });
+    expect(state.error).toBe('Invalid or expired reset token');
+    expect(state.isAuthenticated).toBe(false);
+  });
+
+  it('shares one reset submission and permits a later retry', async () => {
+    const { state, set, get } = createMockSetGet();
+    const resetPassword = createResetPasswordAction(set as never, get as never);
+    let resolveRequest: ((result: { ok: true; data: { message: string } }) => void) | null = null;
+
+    mockResetPassword.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        })
+    );
+
+    const first = resetPassword('token', 'NewPassword123!', 'NewPassword123!', 'captcha');
+    const second = resetPassword('token', 'NewPassword123!', 'NewPassword123!', 'captcha');
+
+    expect(first).toBe(second);
+    expect(mockResetPassword).toHaveBeenCalledTimes(1);
+    resolveRequest?.({ ok: true, data: { message: 'Password reset' } });
+    await expect(first).resolves.toEqual({ ok: true });
+    expect(state.error).toBeNull();
+
+    mockResetPassword.mockResolvedValueOnce({
+      ok: true,
+      data: { message: 'Password reset again' },
+    });
+    await resetPassword('new-token', 'OtherPassword123!', 'OtherPassword123!');
+    expect(mockResetPassword).toHaveBeenCalledTimes(2);
   });
 });
 

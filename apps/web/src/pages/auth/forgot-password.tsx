@@ -1,9 +1,8 @@
-/** ForgotPassword — password reset request page with email submission form. */
-import { useState, useEffect, useRef } from 'react';
+/** Password-reset request page. */
+import { useRef, useState } from 'react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiClient } from '@/lib/api-client';
-import { getErrorMessage } from '@/lib/api';
 import { LogoIcon } from '@/components/logo';
 import { SubmitButton } from '@/components/ui/submit-button';
 import {
@@ -11,127 +10,89 @@ import {
   isTurnstileEnabled,
   type TurnstileWidgetHandle,
 } from '@/modules/auth/components/turnstile-widget';
+import { useAuthStore } from '@/modules/auth/store';
 
-/**
- * Forgot Password component.
- */
+/** Requests a reset link without disclosing whether the account exists. */
 export default function ForgotPassword() {
   const { t } = useTranslation('auth');
+  const requestPasswordReset = useAuthStore((state) => state.requestPasswordReset);
+  const clearError = useAuthStore((state) => state.clearError);
+  const requestError = useAuthStore((state) => state.error);
+  const isLoading = useAuthStore((state) => state.isLoading);
   const [email, setEmail] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const captchaRef = useRef<TurnstileWidgetHandle | null>(null);
   const captchaRequired = isTurnstileEnabled();
+  const error = validationError ?? requestError;
 
-  // Auto-dismiss error after 1.5 seconds
-  useEffect(() => {
-    if (!error) return;
-
-    const timer = setTimeout(() => {
-      setError(null);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [error]);
-
-  const forgotPasswordAction = async () => {
-    setError(null);
+  const submit = async () => {
+    setValidationError(null);
+    clearError();
 
     if (captchaRequired && !turnstileToken) {
-      setError('Complete the verification challenge to continue.');
+      setValidationError('Complete the verification challenge to continue.');
       return;
     }
 
     try {
-      const result = await apiClient.auth.forgotPassword(email, turnstileToken);
-      if (!result.ok) throw new Error(result.error.message);
+      await requestPasswordReset(email.trim(), turnstileToken);
       setIsSuccess(true);
-    } catch (err) {
-      setError(getErrorMessage(err));
+    } catch {
       setTurnstileToken(null);
       captchaRef.current?.reset();
     }
   };
 
+  const tryAnotherAddress = () => {
+    clearError();
+    setValidationError(null);
+    setTurnstileToken(null);
+    setIsSuccess(false);
+    captchaRef.current?.reset();
+  };
+
   if (isSuccess) {
     return (
-      <div className="space-y-4">
-        {/* Mobile Logo */}
-        <div className="text-center lg:hidden">
-          <a href="https://www.cgraph.org" className="inline-flex items-center gap-3">
-            <LogoIcon size={192} color="gradient" showGlow={false} />
-          </a>
-        </div>
-
-        {/* Success Message */}
+      <div className="space-y-6">
+        <MobileLogo />
         <div className="text-center lg:text-left">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 lg:mx-0">
-            <svg
-              className="h-8 w-8 text-green-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          <h2 className="text-3xl font-bold text-white">{t('forgot_password.check_email')}</h2>
-          <p className="mt-2 text-gray-400">
-            {t('forgot_password.reset_link_sent')} <span className="text-white">{email}</span>
+          <CheckCircle2 className="mx-auto mb-5 h-12 w-12 text-green-400 lg:mx-0" aria-hidden />
+          <h2 className="text-2xl font-bold text-white">Request received</h2>
+          <p className="mt-2 text-sm leading-6 text-gray-400">
+            If a CGraph account matches <span className="break-all text-white">{email}</span>,
+            reset instructions will arrive shortly.
           </p>
         </div>
 
-        <div className="space-y-4">
-          <p className="text-sm text-gray-400">
-            {t('forgot_password.didnt_receive')}{' '}
-            <button
-              onClick={() => setIsSuccess(false)}
-              className="text-primary-400 transition-colors hover:text-primary-300"
-            >
-              {t('forgot_password.try_another')}
-            </button>
-          </p>
+        <button type="button" onClick={tryAnotherAddress} className="matrix-link text-sm">
+          {t('forgot_password.try_another')}
+        </button>
 
-          <Link
-            to="/login"
-            className="block w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3 text-center font-medium text-white transition-colors hover:bg-[var(--token-card-bg)]"
-          >
-            {t('forgot_password.back_to_login')}
-          </Link>
-        </div>
+        <BackToLogin label={t('forgot_password.back_to_login')} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Mobile Logo */}
-      <div className="text-center lg:hidden">
-        <a href="https://www.cgraph.org" className="inline-flex items-center gap-3">
-          <LogoIcon size={192} color="gradient" showGlow={false} />
-        </a>
-      </div>
-
-      {/* Header */}
+    <div className="space-y-6">
+      <MobileLogo />
       <div className="text-center lg:text-left">
-        <h2 className="text-3xl font-bold text-white">{t('forgot_password.title')}</h2>
-        <p className="mt-2 text-gray-400">{t('forgot_password.subtitle')}</p>
+        <h2 className="text-2xl font-bold text-white">{t('forgot_password.title')}</h2>
+        <p className="mt-2 text-sm leading-6 text-gray-400">{t('forgot_password.subtitle')}</p>
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+      {error ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+        >
           {error}
         </div>
-      )}
+      ) : null}
 
-      {/* Form */}
-      <form action={forgotPasswordAction} className="space-y-6">
+      <form action={submit} className="space-y-5">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-300">
             {t('forgot_password.email')}
@@ -140,35 +101,58 @@ export default function ForgotPassword() {
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setValidationError(null);
+              clearError();
+            }}
             required
             autoComplete="email"
-            className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3 text-white placeholder-white/30 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="matrix-input w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3 text-white placeholder-white/30 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
             placeholder="you@example.com"
           />
         </div>
 
-        <TurnstileWidget ref={captchaRef} onTokenChange={setTurnstileToken} />
+        <TurnstileWidget
+          ref={captchaRef}
+          onTokenChange={(token) => {
+            setTurnstileToken(token);
+            if (token) setValidationError(null);
+          }}
+        />
 
         <SubmitButton
           pendingText="Sending..."
           className="auth-cta-button w-full py-3"
-          disabled={captchaRequired && !turnstileToken}
+          disabled={isLoading || (captchaRequired && !turnstileToken)}
         >
           {t('forgot_password.submit')}
         </SubmitButton>
       </form>
 
-      {/* Back to Login */}
-      <Link
-        to="/login"
-        className="flex items-center justify-center gap-2 text-gray-400 transition-colors hover:text-white"
-      >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to login
-      </Link>
+      <BackToLogin label={t('forgot_password.back_to_login')} />
     </div>
+  );
+}
+
+function MobileLogo() {
+  return (
+    <div className="text-center lg:hidden">
+      <a href="https://www.cgraph.org" className="inline-flex items-center">
+        <LogoIcon size={144} color="gradient" showGlow={false} />
+      </a>
+    </div>
+  );
+}
+
+function BackToLogin({ label }: { label: string }) {
+  return (
+    <Link
+      to="/login"
+      className="flex items-center justify-center gap-2 text-sm text-gray-400 transition-colors hover:text-white"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden />
+      {label}
+    </Link>
   );
 }

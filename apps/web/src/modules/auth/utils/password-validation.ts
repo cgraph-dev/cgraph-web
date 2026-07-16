@@ -16,6 +16,7 @@ export interface PasswordValidationResult {
  *
  * Rules (aligned with mobile):
  * - Minimum 8 characters
+ * - Maximum 72 characters (Argon2 input policy)
  * - At least one lowercase letter
  * - At least one uppercase letter
  * - At least one digit
@@ -26,6 +27,9 @@ export function validatePassword(password: string): PasswordValidationResult {
 
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters');
+  }
+  if (password.length > 72) {
+    errors.push('Password must be at most 72 characters');
   }
   if (!/[a-z]/.test(password)) {
     errors.push('Must contain a lowercase letter');
