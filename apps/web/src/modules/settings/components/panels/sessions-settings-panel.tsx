@@ -145,14 +145,14 @@ export function SessionsSettingsPanel() {
                       className={`h-8 w-8 shrink-0 ${session.current ? 'text-primary-500' : 'text-[var(--token-text-muted)]'}`}
                     />
                     <div className="min-w-0">
-                      <h3 className="font-medium text-[var(--token-text-primary)]">
+                      <h2 className="font-medium text-[var(--token-text-primary)]">
                         {parseBrowser(session.user_agent)}
                         {session.current && (
                           <span className="ml-2 text-xs font-semibold text-primary-300">
                             (Current)
                           </span>
                         )}
-                      </h3>
+                      </h2>
                       <p className="text-sm text-[var(--token-text-muted)]">
                         {session.location ?? 'Unknown location'} •{' '}
                         {formatLastActive(session.last_active_at ?? session.created_at)}

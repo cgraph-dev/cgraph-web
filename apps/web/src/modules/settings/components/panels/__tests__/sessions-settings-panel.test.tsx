@@ -94,7 +94,7 @@ describe('SessionsSettingsPanel', () => {
 
     renderPanel();
 
-    const sessionHeadings = screen.getAllByRole('heading', { level: 3 });
+    const sessionHeadings = screen.getAllByRole('heading', { level: 2 });
     expect(sessionHeadings[0]).toHaveTextContent('Chrome(Current)');
     expect(sessionHeadings[1]).toHaveTextContent('Firefox');
     expect(screen.getAllByRole('button', { name: 'Revoke' })).toHaveLength(1);
