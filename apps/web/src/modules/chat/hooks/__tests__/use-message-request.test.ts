@@ -88,6 +88,36 @@ describe('useMessageRequest', () => {
     expect(messageRequestApi.get).not.toHaveBeenCalled();
   });
 
+  it('restores a durable blocked request after a refresh', async () => {
+    messageRequestApi.get.mockResolvedValue({
+      ok: true,
+      data: requestPayload('blocked'),
+    });
+
+    const { result } = renderHook(() =>
+      useMessageRequest(CONVERSATION_ID, 'blocked')
+    );
+
+    await waitFor(() => expect(result.current.status).toBe('blocked'));
+
+    expect(result.current.blocksComposer).toBe(true);
+    expect(result.current.details?.requesterName).toBe('Ada Lovelace');
+  });
+
+  it('fails closed if an installed legacy client returns the removed fallback shape', async () => {
+    messageRequestApi.get.mockResolvedValue({
+      ok: true,
+      data: { status: 'accepted', conversation_id: CONVERSATION_ID },
+    });
+
+    const { result } = renderHook(() => useMessageRequest(CONVERSATION_ID));
+
+    await waitFor(() => expect(result.current.status).toBe('error'));
+
+    expect(result.current.blocksComposer).toBe(true);
+    expect(result.current.error).toBe('Message request details are unavailable.');
+  });
+
   it('does not advance state or report success when the API rejects an action', async () => {
     messageRequestApi.accept.mockResolvedValue({
       ok: false,

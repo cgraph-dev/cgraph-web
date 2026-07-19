@@ -64,7 +64,7 @@ function requestDetails(
 }
 
 /**
- * Route-local message-request state based on S1G's conversation request model.
+ * Route-local projection of the recipient-owned message-request contract.
  */
 export function useMessageRequest(
   conversationId: string | undefined,
@@ -113,8 +113,16 @@ export function useMessageRequest(
           return;
         }
 
+        const details = requestDetails(result.data);
+
+        if (!details) {
+          setStatus('error');
+          setError('Message request details are unavailable.');
+          return;
+        }
+
         setStatus(result.data.status);
-        setDetails(requestDetails(result.data));
+        setDetails(details);
       })
       .catch((loadError: unknown) => {
         if (!isActive) return;
