@@ -1,17 +1,7 @@
 /**
  * API Validation Module
  *
- * Provides Zod schemas for runtime validation of API responses
- * and a validated API client for type-safe API calls.
- *
- * @example
- * ```ts
- * import { validatedApi } from '@/lib/validation';
- *
- * // Type-safe API calls with runtime validation
- * const { user, tokens } = await validatedApi.auth.login(email, password);
- * const conversations = await validatedApi.conversations.list();
- * ```
+ * Provides Zod schemas for runtime validation of API responses.
  *
  * @example
  * ```ts
@@ -79,12 +69,3 @@ export {
   type ApiError,
   type ValidationResult,
 } from './schemas';
-
-// Validated API client
-export {
-  validatedApi,
-  authApi,
-  conversationsApi,
-  messagesApi,
-} from './validatedApi';
-export { validatedApi as default } from './validatedApi';
