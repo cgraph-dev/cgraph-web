@@ -16,7 +16,6 @@ import {
   refreshResponseSchema,
   conversationsListSchema,
   messagesListSchema,
-  notificationsListSchema,
   userSchema,
   conversationSchema,
   messageSchema,
@@ -24,7 +23,6 @@ import {
   type Tokens,
   type Conversation,
   type Message,
-  type Notification,
   type User,
 } from './schemas';
 
@@ -208,83 +206,12 @@ export const messagesApi = {
   },
 };
 
-/**
- * Validated notification endpoints
- */
-export const notificationsApi = {
-  /**
-   * List notifications
-   */
-  async list(
-    page = 1,
-    limit = 20
-  ): Promise<{
-    notifications: Notification[];
-    unreadCount: number;
-    hasMore: boolean;
-  }> {
-    const response = await http.get('/api/v1/notifications', {
-      params: { page, limit },
-    });
-    const validated = validateWithFallback(
-      notificationsListSchema,
-      response.data,
-      'notifications.list'
-    );
-
-    // Normalize response format
-    let notifications: Notification[];
-    if (Array.isArray(validated)) {
-      notifications = validated;
-    } else {
-      notifications = validated.notifications || validated.data || [];
-    }
-
-    const unreadCount = Array.isArray(validated)
-      ? notifications.filter((n) => !n.is_read).length
-      : (validated.meta?.unread_count ?? notifications.filter((n) => !n.is_read).length);
-
-    const hasMore = notifications.length >= limit;
-
-    return { notifications, unreadCount, hasMore };
-  },
-
-  /**
-   * Mark notification as read
-   */
-  async markAsRead(notificationId: string): Promise<void> {
-    await http.post(`/api/v1/notifications/${notificationId}/read`);
-  },
-
-  /**
-   * Mark all notifications as read
-   */
-  async markAllAsRead(): Promise<void> {
-    await http.post('/api/v1/notifications/read');
-  },
-
-  /**
-   * Delete a notification
-   */
-  async delete(notificationId: string): Promise<void> {
-    await http.delete(`/api/v1/notifications/${notificationId}`);
-  },
-
-  /**
-   * Clear all notifications
-   */
-  async clearAll(): Promise<void> {
-    await http.delete('/api/v1/notifications');
-  },
-};
-
 // Export validated API client
 
 export const validatedApi = {
   auth: authApi,
   conversations: conversationsApi,
   messages: messagesApi,
-  notifications: notificationsApi,
 };
 
 export default validatedApi;

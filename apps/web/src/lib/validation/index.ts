@@ -86,6 +86,5 @@ export {
   authApi,
   conversationsApi,
   messagesApi,
-  notificationsApi,
 } from './validatedApi';
 export { validatedApi as default } from './validatedApi';

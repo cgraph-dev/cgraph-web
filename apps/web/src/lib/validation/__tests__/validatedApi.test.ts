@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/test/setup';
-import { authApi, conversationsApi, messagesApi, notificationsApi } from '../validatedApi';
+import { authApi, conversationsApi, messagesApi } from '../validatedApi';
 
 // Fixtures
 
@@ -66,16 +66,6 @@ const mockMessage = {
   conversation_id: mockConversation.id,
   inserted_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
-};
-
-const mockNotification = {
-  id: '550e8400-e29b-41d4-a716-446655440003',
-  type: 'message',
-  title: 'New message',
-  body: 'You have a new message',
-  is_read: false,
-  data: {},
-  inserted_at: '2024-01-01T00:00:00Z',
 };
 
 const API_BASE = '';
@@ -329,86 +319,6 @@ describe('messagesApi', () => {
       );
 
       await messagesApi.delete(mockConversation.id, mockMessage.id);
-      expect(called).toBe(true);
-    });
-  });
-});
-
-// Notifications API Tests
-
-describe('notificationsApi', () => {
-  describe('list', () => {
-    it('normalizes { notifications: [...] } response', async () => {
-      server.use(
-        http.get(`${API_BASE}/api/v1/notifications`, () =>
-          HttpResponse.json({
-            notifications: [mockNotification],
-            meta: { unread_count: 1 },
-          })
-        )
-      );
-
-      const result = await notificationsApi.list();
-      expect(result.notifications).toHaveLength(1);
-      expect(result.unreadCount).toBe(1);
-    });
-
-    it('calculates unread count from data when meta is absent', async () => {
-      server.use(
-        http.get(`${API_BASE}/api/v1/notifications`, () =>
-          HttpResponse.json([
-            { ...mockNotification, is_read: false },
-            { ...mockNotification, id: 'notif-2', is_read: true },
-          ])
-        )
-      );
-
-      const result = await notificationsApi.list();
-      expect(result.unreadCount).toBe(1);
-    });
-  });
-
-  describe('markAsRead', () => {
-    it('sends POST to mark specific notification', async () => {
-      let called = false;
-      server.use(
-        http.post(`${API_BASE}/api/v1/notifications/:id/read`, () => {
-          called = true;
-          return HttpResponse.json({});
-        })
-      );
-
-      await notificationsApi.markAsRead('notif-1');
-      expect(called).toBe(true);
-    });
-  });
-
-  describe('markAllAsRead', () => {
-    it('sends POST to mark all notifications', async () => {
-      let called = false;
-      server.use(
-        http.post(`${API_BASE}/api/v1/notifications/read`, () => {
-          called = true;
-          return HttpResponse.json({});
-        })
-      );
-
-      await notificationsApi.markAllAsRead();
-      expect(called).toBe(true);
-    });
-  });
-
-  describe('clearAll', () => {
-    it('sends DELETE to clear all notifications', async () => {
-      let called = false;
-      server.use(
-        http.delete(`${API_BASE}/api/v1/notifications`, () => {
-          called = true;
-          return new HttpResponse(null, { status: 204 });
-        })
-      );
-
-      await notificationsApi.clearAll();
       expect(called).toBe(true);
     });
   });
