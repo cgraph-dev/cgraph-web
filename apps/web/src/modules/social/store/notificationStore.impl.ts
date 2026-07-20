@@ -83,6 +83,13 @@ function isFriendRequestFrom(notification: Notification, userId: string): boolea
   return notification.type === 'friend_request' && notificationSenderId(notification) === userId;
 }
 
+function serverUnreadCount(value: unknown): number | null {
+  if (!isRecord(value)) return null;
+
+  const count = value['count'] ?? value['unread_count'];
+  return typeof count === 'number' && Number.isInteger(count) && count >= 0 ? count : null;
+}
+
 export interface Notification {
   id: ApiNotification['id'];
   type: NotificationStoreType;
@@ -114,7 +121,8 @@ export interface NotificationState {
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
-  addNotification: (notification: Notification) => void;
+  addNotification: (notification: Notification, unreadCount?: number | null) => void;
+  removeNotifications: (notificationIds: readonly string[], unreadCount?: number | null) => void;
   dismissFriendRequestNotificationsFromUser: (userId: string) => void;
   clearAll: () => Promise<void>;
   reset: () => void;
@@ -142,10 +150,15 @@ export const useNotificationStore = create<NotificationState>()(
 
         const request = (async () => {
           set({ isLoading: true });
-          const result = await apiClient.notifications.list({
+          const listRequest = apiClient.notifications.list({
             limit: 20,
             ...(cursor ? { cursor } : {}),
           });
+          const unreadRequest = cursor === null ? apiClient.notifications.getUnreadCount() : null;
+          const [result, unreadResult] = await Promise.all([
+            listRequest,
+            unreadRequest ?? Promise.resolve(null),
+          ]);
           if (!result.ok) {
             const rateLimitMessage = rememberRateLimit(NOTIFICATION_RATE_LIMIT_SCOPES, result);
             logger.warn('Failed to fetch notifications:', rateLimitMessage ?? result.error.message);
@@ -186,6 +199,9 @@ export const useNotificationStore = create<NotificationState>()(
             });
           // Derive pagination from the raw array length (cursor support via store state)
           const hasMore = newNotifications.length === 20;
+          const authoritativeUnreadCount = unreadResult?.ok
+            ? serverUnreadCount(unreadResult.data)
+            : null;
 
           set((state) => {
             const merged =
@@ -193,7 +209,10 @@ export const useNotificationStore = create<NotificationState>()(
             const capped = merged.slice(0, MAX_NOTIFICATIONS);
             return {
               notifications: capped,
-              unreadCount: capped.filter((n) => !n.isRead).length,
+              unreadCount:
+                cursor === null
+                  ? (authoritativeUnreadCount ?? capped.filter((n) => !n.isRead).length)
+                  : state.unreadCount,
               hasMore,
               isLoading: false,
             };
@@ -223,12 +242,20 @@ export const useNotificationStore = create<NotificationState>()(
           logger.warn('Failed to mark notification as read:', result.error.message);
           return;
         }
-        set((state) => ({
-          notifications: state.notifications.map((n) =>
-            n.id === notificationId ? { ...n, isRead: true } : n
-          ),
-          unreadCount: Math.max(0, state.unreadCount - 1),
-        }));
+        const authoritativeUnreadCount = serverUnreadCount(result.data);
+        set((state) => {
+          const notification = state.notifications.find((n) => n.id === notificationId);
+          return {
+            notifications: state.notifications.map((n) =>
+              n.id === notificationId ? { ...n, isRead: true } : n
+            ),
+            unreadCount:
+              authoritativeUnreadCount ??
+              (notification && !notification.isRead
+                ? Math.max(0, state.unreadCount - 1)
+                : state.unreadCount),
+          };
+        });
       },
 
       markAllAsRead: async () => {
@@ -237,9 +264,10 @@ export const useNotificationStore = create<NotificationState>()(
           logger.warn('Failed to mark all notifications as read:', result.error.message);
           return;
         }
+        const authoritativeUnreadCount = serverUnreadCount(result.data);
         set((state) => ({
           notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
-          unreadCount: 0,
+          unreadCount: authoritativeUnreadCount ?? 0,
         }));
       },
 
@@ -261,11 +289,36 @@ export const useNotificationStore = create<NotificationState>()(
         });
       },
 
-      addNotification: (notification: Notification) => {
-        set((state) => ({
-          notifications: [notification, ...state.notifications].slice(0, MAX_NOTIFICATIONS),
-          unreadCount: notification.isRead ? state.unreadCount : state.unreadCount + 1,
-        }));
+      addNotification: (notification: Notification, unreadCount: number | null = null) => {
+        set((state) => {
+          const alreadyPresent = state.notifications.some((existing) => existing.id === notification.id);
+          const notifications = alreadyPresent
+            ? state.notifications
+            : [notification, ...state.notifications].slice(0, MAX_NOTIFICATIONS);
+
+          return {
+            notifications,
+            unreadCount:
+              unreadCount ??
+              (alreadyPresent || notification.isRead ? state.unreadCount : state.unreadCount + 1),
+          };
+        });
+      },
+
+      removeNotifications: (notificationIds: readonly string[], unreadCount: number | null = null) => {
+        const ids = new Set(notificationIds);
+        if (ids.size === 0) return;
+
+        set((state) => {
+          const removedUnread = state.notifications.filter(
+            (notification) => ids.has(notification.id) && !notification.isRead
+          ).length;
+
+          return {
+            notifications: state.notifications.filter((notification) => !ids.has(notification.id)),
+            unreadCount: unreadCount ?? Math.max(0, state.unreadCount - removedUnread),
+          };
+        });
       },
 
       dismissFriendRequestNotificationsFromUser: (userId: string) => {

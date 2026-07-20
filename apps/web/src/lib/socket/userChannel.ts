@@ -245,6 +245,7 @@ export function joinUserChannel(
     const actionUrl = data['action_url'];
     const notifData = data['data'];
     const createdAt = data['created_at'];
+    const unreadCount = data['unread_count'];
 
     if (typeof id !== 'string' || typeof type !== 'string' || typeof title !== 'string') {
       logger.warn('Malformed notification payload — missing required fields:', payload);
@@ -284,11 +285,9 @@ export function joinUserChannel(
       createdAt: typeof createdAt === 'string' ? createdAt : new Date().toISOString(),
     };
 
-    // Deduplicate: don't add if we already have this notification ID
-    const existing = useNotificationStore.getState().notifications;
-    if (!existing.some((n) => n.id === notification.id)) {
-      useNotificationStore.getState().addNotification(notification);
-    }
+    useNotificationStore
+      .getState()
+      .addNotification(notification, typeof unreadCount === 'number' ? unreadCount : null);
   });
 
   // Real-time notification dismissal — removes cancelled/declined friend request notifications
@@ -297,22 +296,16 @@ export function joinUserChannel(
     const data = toRecord(payload);
     const rawIds = data['notification_ids'];
     const reason = data['reason'];
+    const unreadCount = data['unread_count'];
     const notificationIds = Array.isArray(rawIds)
       ? rawIds.filter((x): x is string => typeof x === 'string')
       : [];
     const idsToRemove = new Set(notificationIds);
 
     if (idsToRemove.size > 0) {
-      const store = useNotificationStore.getState();
-      const remaining = store.notifications.filter((n) => !idsToRemove.has(n.id));
-      const removedUnread = store.notifications.filter(
-        (n) => idsToRemove.has(n.id) && !n.isRead
-      ).length;
-
-      useNotificationStore.setState({
-        notifications: remaining,
-        unreadCount: Math.max(0, store.unreadCount - removedUnread),
-      });
+      useNotificationStore
+        .getState()
+        .removeNotifications([...idsToRemove], typeof unreadCount === 'number' ? unreadCount : null);
     }
 
     // Also refresh friend lists since this likely means a request was cancelled
