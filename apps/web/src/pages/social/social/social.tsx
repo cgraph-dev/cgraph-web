@@ -34,6 +34,7 @@ function isNotificationType(value: string): value is NotificationType {
     value === 'friend_request' ||
     value === 'friend_accepted' ||
     value === 'message' ||
+    value === 'message_request' ||
     value === 'group_invite' ||
     value === 'group_mention' ||
     value === 'channel_mention' ||

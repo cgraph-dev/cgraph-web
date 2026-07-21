@@ -61,6 +61,12 @@ function notification(overrides: Partial<Notification> = {}): Notification {
 const first = notification();
 const second = notification({ id: 'notification-2', type: 'message', title: 'New message' });
 const read = notification({ id: 'notification-3', isRead: true });
+const messageRequest = notification({
+  id: 'notification-4',
+  type: 'message_request',
+  title: 'New message request',
+  data: { conversation_id: 'request-conversation-1', requester_id: 'alice-id' },
+});
 
 function notificationResponse(item: Notification): Record<string, unknown> {
   return {
@@ -118,6 +124,16 @@ describe('NotificationStore', () => {
     expect(state.unreadCount).toBe(31);
     expect(notificationApi.list).toHaveBeenCalledWith({ limit: 20 });
     expect(notificationApi.getUnreadCount).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves the message-request type and its canonical conversation data', async () => {
+    notificationApi.list.mockResolvedValueOnce(ok([notificationResponse(messageRequest)]));
+    notificationApi.getUnreadCount.mockResolvedValueOnce(ok({ count: 1 }));
+
+    await useNotificationStore.getState().fetchNotifications();
+
+    expect(useNotificationStore.getState().notifications).toMatchObject([messageRequest]);
+    expect(useNotificationStore.getState().unreadCount).toBe(1);
   });
 
   it('falls back to the loaded rows only when the count endpoint is unavailable', async () => {

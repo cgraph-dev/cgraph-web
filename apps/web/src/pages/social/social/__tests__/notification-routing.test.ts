@@ -38,6 +38,17 @@ describe('getNotificationActionUrl', () => {
     ).toBe('/messages/conversation-1?scrollTo=message-1');
   });
 
+  it('routes message requests to their recipient conversation', () => {
+    expect(
+      getNotificationActionUrl(
+        notification({
+          type: 'message_request',
+          data: { conversation_id: 'request-conversation-1' },
+        })
+      )
+    ).toBe('/messages/request-conversation-1');
+  });
+
   it('maps forum notification data to the routed forum post', () => {
     expect(
       getNotificationActionUrl(

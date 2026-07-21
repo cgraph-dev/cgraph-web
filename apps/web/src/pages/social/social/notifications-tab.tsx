@@ -26,6 +26,7 @@ function getNotificationIcon(type: NotificationRow['type']): NotificationIcon {
     case 'friend_accepted':
       return UserPlusIcon;
     case 'message':
+    case 'message_request':
       return ChatBubbleLeftRightIcon;
     case 'group_invite':
     case 'group_mention':

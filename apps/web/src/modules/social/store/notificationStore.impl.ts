@@ -39,6 +39,7 @@ function resetNotificationFetchGuards() {
 type NotificationApiRecord = ApiNotification & Record<string, unknown>;
 const NOTIFICATION_TYPES = [
   'message',
+  'message_request',
   'friend_request',
   'friend_accepted',
   'group_invite',

@@ -15,6 +15,7 @@ export type NotificationType =
   | 'friend_request'
   | 'friend_accepted'
   | 'message'
+  | 'message_request'
   | 'group_invite'
   | 'group_mention'
   | 'channel_mention'
