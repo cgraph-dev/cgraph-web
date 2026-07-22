@@ -85,8 +85,12 @@ export class SocketManager {
   private statusListeners = new Set<(cId: string, uId: string, online: boolean) => void>();
   private readonly JOIN_DEBOUNCE_MS = 1000;
   private peekTimeouts = new Set<ReturnType<typeof setTimeout>>();
+  private requiredUserChannelId: string | null = null;
+  private requiredConversationIds = new Set<string>();
 
   constructor() {
+    this.state.onConnected = () => this.restoreRequiredRealtimeSubscriptions();
+
     registerCustomizationChangeNotifier(() => {
       this.notifyCustomizationChanged();
     });
@@ -144,6 +148,8 @@ export class SocketManager {
    *
    */
   disconnect() {
+    this.requiredUserChannelId = null;
+    this.requiredConversationIds.clear();
     disconnectSocket(this.state);
   }
 
@@ -172,6 +178,7 @@ export class SocketManager {
    *
    */
   joinUserChannel(userId: string): Channel | null {
+    this.requiredUserChannelId = userId;
     return joinUserChannelImpl(
       this.socket,
       userId,
@@ -186,6 +193,9 @@ export class SocketManager {
    *
    */
   leaveUserChannel(userId: string) {
+    if (this.requiredUserChannelId === userId) {
+      this.requiredUserChannelId = null;
+    }
     leaveUserChannelImpl(userId, this.channels);
   }
 
@@ -235,6 +245,18 @@ export class SocketManager {
     this.statusListeners.forEach((cb) => cb(cId, uId, online));
   }
 
+  private restoreRequiredRealtimeSubscriptions(): void {
+    if (this.requiredUserChannelId && !this.channels.has(`user:${this.requiredUserChannelId}`)) {
+      this.joinUserChannel(this.requiredUserChannelId);
+    }
+
+    this.requiredConversationIds.forEach((conversationId) => {
+      if (!this.channels.has(`conversation:${conversationId}`)) {
+        this.joinConversation(conversationId);
+      }
+    });
+  }
+
   /**
    *
    */
@@ -278,6 +300,7 @@ export class SocketManager {
    *
    */
   joinConversation(conversationId: string): Channel | null {
+    this.requiredConversationIds.add(conversationId);
     return joinConversationImpl(
       this.socket,
       conversationId,
@@ -296,6 +319,7 @@ export class SocketManager {
    *
    */
   leaveConversation(conversationId: string) {
+    this.requiredConversationIds.delete(conversationId);
     leaveConversationImpl(
       conversationId,
       this.channels,

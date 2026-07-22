@@ -168,7 +168,8 @@ describe('connectSocket', () => {
 
   it('creates Socket and connects on success', async () => {
     const mockSocketInstance = setupMockSocket();
-    const state = makeState();
+    const onConnected = vi.fn();
+    const state = makeState({ onConnected });
 
     const promise = connectSocket(state);
 
@@ -182,6 +183,7 @@ describe('connectSocket', () => {
     expect(state.reconnectAttempts).toBe(0);
     expect(state.connectedToken).toBe('test-token');
     expect(state.connectionPromise).toBeNull();
+    expect(onConnected).toHaveBeenCalledTimes(1);
   });
 
   it('reads the latest token whenever the transport connects', async () => {

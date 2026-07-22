@@ -46,6 +46,7 @@ export interface SocketManagerState {
   reconnectAttempts: number;
   connectedToken: string | null;
   credentialReconnectInProgress: boolean;
+  onConnected?: () => void;
 }
 
 /**
@@ -100,6 +101,11 @@ export function connectSocket(state: SocketManagerState): Promise<void> {
       }
       state.connectionPromise = null;
       setConnectionStatus('connected');
+      try {
+        state.onConnected?.();
+      } catch (error) {
+        logger.error('Failed to restore realtime subscriptions after reconnect', error);
+      }
       resolve();
     });
 

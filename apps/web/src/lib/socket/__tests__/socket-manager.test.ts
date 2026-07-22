@@ -151,6 +151,58 @@ describe('SocketManager', () => {
     it('getSocket() returns null initially', () => {
       expect(manager.getSocket()).toBeNull();
     });
+
+    it('restores required realtime subscriptions after the transport opens', async () => {
+      manager.joinUserChannel('user-1');
+      manager.joinConversation('conv-42');
+      vi.mocked(joinUserChannelImpl).mockClear();
+      vi.mocked(joinConvImpl).mockClear();
+
+      await manager.connect();
+      const state = vi.mocked(connectSocket).mock.calls[0]?.[0];
+
+      expect(state?.onConnected).toBeTypeOf('function');
+      state?.onConnected?.();
+
+      expect(joinUserChannelImpl).toHaveBeenCalledTimes(1);
+      expect(joinUserChannelImpl).toHaveBeenCalledWith(
+        null,
+        'user-1',
+        expect.any(Map),
+        expect.any(Map),
+        expect.any(Function),
+        state
+      );
+      expect(joinConvImpl).toHaveBeenCalledTimes(1);
+      expect(joinConvImpl).toHaveBeenCalledWith(
+        null,
+        'conv-42',
+        expect.any(Map),
+        expect.any(Map),
+        expect.any(Map),
+        expect.any(Set),
+        expect.any(Map),
+        expect.any(Number),
+        expect.any(Function),
+        expect.any(Function)
+      );
+    });
+
+    it('does not duplicate subscriptions Phoenix is already rejoining', async () => {
+      manager.joinUserChannel('user-1');
+      manager.joinConversation('conv-42');
+      await manager.connect();
+      const state = vi.mocked(connectSocket).mock.calls[0]?.[0];
+      state?.channels.set('user:user-1', mockChannel as never);
+      state?.channels.set('conversation:conv-42', mockChannel as never);
+      vi.mocked(joinUserChannelImpl).mockClear();
+      vi.mocked(joinConvImpl).mockClear();
+
+      state?.onConnected?.();
+
+      expect(joinUserChannelImpl).not.toHaveBeenCalled();
+      expect(joinConvImpl).not.toHaveBeenCalled();
+    });
   });
   describe('reconnectWithNewToken', () => {
     it('delegates credential replacement to the connection owner', async () => {
