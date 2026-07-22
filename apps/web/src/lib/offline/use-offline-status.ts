@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { runSync, onStatusChange, onSyncComplete, type SyncStats } from './sync-service';
 import { getPendingMessages } from './indexeddb-cache';
+import { useAuthStore } from '@/modules/auth/store';
 
 export interface OfflineStatus {
   readonly isOnline: boolean;
@@ -46,7 +47,13 @@ export function useOfflineStatus(): OfflineStatus {
   }, []);
 
   function refreshPendingCount(): void {
-    getPendingMessages()
+    const accountId = useAuthStore.getState().user?.id;
+    if (!accountId) {
+      setPendingCount(0);
+      return;
+    }
+
+    getPendingMessages(accountId)
       .then((messages) => setPendingCount(messages.length))
       .catch(() => setPendingCount(0));
   }

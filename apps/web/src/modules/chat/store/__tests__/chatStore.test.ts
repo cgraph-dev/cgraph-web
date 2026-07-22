@@ -3,6 +3,13 @@ import { useChatStore, toConversation } from '../chatStore.impl';
 import type { Message, Conversation } from '../chatStore.types';
 
 const idempotencyKeys = vi.hoisted(() => ({ value: 0 }));
+const offline = vi.hoisted(() => ({
+  getPendingMessagesForConversation: vi.fn(),
+  removePendingMessage: vi.fn(),
+  savePendingMessage: vi.fn(),
+  updatePendingMessageStatus: vi.fn(),
+  requestBackgroundSync: vi.fn(),
+}));
 
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
@@ -12,6 +19,15 @@ vi.mock('@/modules/auth/store', () => ({
 }));
 vi.mock('@cgraph-dev/utils', () => ({
   createIdempotencyKey: () => `idem-key-${++idempotencyKeys.value}`,
+}));
+vi.mock('@/lib/offline/indexeddb-cache', () => ({
+  getPendingMessagesForConversation: offline.getPendingMessagesForConversation,
+  removePendingMessage: offline.removePendingMessage,
+  savePendingMessage: offline.savePendingMessage,
+  updatePendingMessageStatus: offline.updatePendingMessageStatus,
+}));
+vi.mock('@/lib/offline/sync-registration', () => ({
+  requestBackgroundSync: offline.requestBackgroundSync,
 }));
 vi.mock('@/lib/api-utils', () => ({
   ensureArray: (_d: unknown, key: string) => {
@@ -180,6 +196,11 @@ beforeEach(() => {
   });
   idempotencyKeys.value = 0;
   vi.clearAllMocks();
+  offline.getPendingMessagesForConversation.mockResolvedValue([]);
+  offline.removePendingMessage.mockResolvedValue(undefined);
+  offline.savePendingMessage.mockResolvedValue(undefined);
+  offline.updatePendingMessageStatus.mockResolvedValue(undefined);
+  offline.requestBackgroundSync.mockResolvedValue(undefined);
 });
 
 // 1. Fetch Conversations
@@ -317,6 +338,36 @@ describe('fetchMessages', () => {
     await expect(useChatStore.getState().fetchMessages('conv-1')).rejects.toThrow();
     expect(useChatStore.getState().isLoadingMessages).toBe(false);
   });
+
+  it('hydrates the persisted outbox after the first server history page', async () => {
+    mockApi.get.mockResolvedValueOnce({ data: { messages: [] } });
+    offline.getPendingMessagesForConversation.mockResolvedValue([
+      {
+        id: 'outbox-1',
+        accountId: 'me',
+        clientMessageId: 'outbox-1',
+        conversationId: 'conv-1',
+        content: 'survives a reload',
+        contentType: 'text',
+        payload: { content: 'survives a reload', client_message_id: 'outbox-1' },
+        replyToId: null,
+        createdAt: 1_784_966_400_000,
+        status: 'pending',
+        retryCount: 0,
+      },
+    ]);
+
+    await useChatStore.getState().fetchMessages('conv-1');
+
+    expect(useChatStore.getState().messages['conv-1']).toEqual([
+      expect.objectContaining({
+        id: 'outbox-1',
+        clientMessageId: 'outbox-1',
+        content: 'survives a reload',
+        deliveryStatus: 'sending',
+      }),
+    ]);
+  });
 });
 
 // 3. Send Message (plaintext path)
@@ -338,6 +389,15 @@ describe('sendMessage', () => {
         deliveryStatus: 'sent',
       }),
     ]);
+    expect(offline.savePendingMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accountId: 'me',
+        clientMessageId: 'idem-key-1',
+        conversationId: 'conv-1',
+        status: 'pending',
+      })
+    );
+    expect(offline.removePendingMessage).toHaveBeenCalledWith('idem-key-1');
   });
 
   it('serializes sends per conversation and releases the queue after a failure', async () => {
@@ -359,12 +419,134 @@ describe('sendMessage', () => {
     const secondSend = useChatStore.getState().sendMessage('conv-1', 'second');
 
     await vi.waitFor(() => expect(mockApi.post).toHaveBeenCalledTimes(1));
-    firstRequest.reject(new Error('first failed'));
+    firstRequest.reject({ response: { status: 422 }, message: 'first failed' });
 
     await firstFailure;
     await secondSend;
 
     expect(mockApi.post.mock.calls.map((call) => call[1]?.content)).toEqual(['first', 'second']);
+  });
+
+  it('keeps transient transport failures in the persisted outbox for retry', async () => {
+    mockApi.post.mockRejectedValueOnce(new Error('network unavailable'));
+
+    await expect(useChatStore.getState().sendMessage('conv-1', 'retry later')).resolves.toBeUndefined();
+
+    expect(offline.updatePendingMessageStatus).toHaveBeenNthCalledWith(
+      1,
+      'idem-key-1',
+      'sending'
+    );
+    expect(offline.updatePendingMessageStatus).toHaveBeenNthCalledWith(
+      2,
+      'idem-key-1',
+      'pending'
+    );
+    expect(offline.removePendingMessage).not.toHaveBeenCalled();
+    expect(offline.requestBackgroundSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('hydrates account-scoped pending messages after a refresh', async () => {
+    offline.getPendingMessagesForConversation.mockResolvedValue([
+      {
+        id: 'outbox-1',
+        accountId: 'me',
+        clientMessageId: 'outbox-1',
+        conversationId: 'conv-1',
+        content: 'persisted before refresh',
+        contentType: 'text',
+        payload: { content: 'persisted before refresh', client_message_id: 'outbox-1' },
+        replyToId: null,
+        createdAt: 1_784_966_400_000,
+        status: 'pending',
+        retryCount: 0,
+      },
+    ]);
+
+    await useChatStore.getState().hydratePendingMessages('conv-1');
+
+    expect(useChatStore.getState().messages['conv-1']).toEqual([
+      expect.objectContaining({
+        id: 'outbox-1',
+        clientMessageId: 'outbox-1',
+        content: 'persisted before refresh',
+        deliveryStatus: 'sending',
+      }),
+    ]);
+    expect(offline.getPendingMessagesForConversation).toHaveBeenCalledWith('me', 'conv-1');
+  });
+
+  it('does not replace an acknowledged server message during pending hydration', async () => {
+    useChatStore.setState({
+      messages: {
+        'conv-1': [makeMsg({ id: 'server-1', senderId: 'me', clientMessageId: 'outbox-1' })],
+      },
+      messageIdSets: { 'conv-1': new Set(['server-1']) },
+    });
+    offline.getPendingMessagesForConversation.mockResolvedValue([
+      {
+        id: 'outbox-1',
+        accountId: 'me',
+        clientMessageId: 'outbox-1',
+        conversationId: 'conv-1',
+        content: 'duplicate pending record',
+        contentType: 'text',
+        payload: { content: 'duplicate pending record', client_message_id: 'outbox-1' },
+        replyToId: null,
+        createdAt: 1_784_966_400_000,
+        status: 'sending',
+        retryCount: 0,
+      },
+    ]);
+
+    await useChatStore.getState().hydratePendingMessages('conv-1');
+
+    expect(useChatStore.getState().messages['conv-1']?.map((message) => message.id)).toEqual([
+      'server-1',
+    ]);
+  });
+
+  it('retries a terminal failure with the original idempotency key', async () => {
+    useChatStore.setState({
+      messages: {
+        'conv-1': [
+          makeMsg({
+            id: 'outbox-1',
+            clientMessageId: 'outbox-1',
+            senderId: 'me',
+            deliveryStatus: 'failed',
+          }),
+        ],
+      },
+      messageIdSets: { 'conv-1': new Set(['outbox-1']) },
+    });
+    offline.getPendingMessagesForConversation.mockResolvedValue([
+      {
+        id: 'outbox-1',
+        accountId: 'me',
+        clientMessageId: 'outbox-1',
+        conversationId: 'conv-1',
+        content: 'retry me',
+        contentType: 'text',
+        payload: { content: 'retry me', client_message_id: 'outbox-1', content_type: 'text' },
+        replyToId: null,
+        createdAt: 1_784_966_400_000,
+        status: 'failed',
+        retryCount: 1,
+      },
+    ]);
+    mockApi.post.mockResolvedValueOnce({
+      data: { message: makeMsg({ id: 'server-1', senderId: 'me', content: 'retry me' }) },
+    });
+
+    await useChatStore.getState().resendMessage('conv-1', 'outbox-1');
+
+    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/conversations/conv-1/messages', {
+      content: 'retry me',
+      client_message_id: 'outbox-1',
+      content_type: 'text',
+    });
+    expect(offline.removePendingMessage).toHaveBeenCalledWith('outbox-1');
   });
 
   it('does not block sends to a different conversation', async () => {

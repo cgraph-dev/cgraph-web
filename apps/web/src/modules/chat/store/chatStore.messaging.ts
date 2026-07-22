@@ -14,7 +14,13 @@ import { createIdempotencyKey } from '@cgraph-dev/utils';
 import { ensureObject, normalizeMessage } from '@/lib/api-utils';
 import { useAuthStore } from '@/modules/auth/store';
 import { chatLogger as logger } from '@/lib/logger';
-import { savePendingMessage } from '@/lib/offline/indexeddb-cache';
+import {
+  getPendingMessagesForConversation,
+  removePendingMessage,
+  savePendingMessage,
+  updatePendingMessageStatus,
+  type PendingMessage,
+} from '@/lib/offline/indexeddb-cache';
 import { requestBackgroundSync } from '@/lib/offline/sync-registration';
 import type { Message, ChatState } from './chatStore.types';
 
@@ -52,6 +58,11 @@ function asMessageType(v: string): Message['messageType'] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function isRetryableTransportFailure(error: unknown): boolean {
+  if (!isRecord(error) || !isRecord(error.response)) return true;
+  return typeof error.response.status === 'number' && error.response.status >= 500;
 }
 
 function isMessage(raw: unknown): raw is Message {
@@ -103,15 +114,18 @@ async function runInConversationSendQueue<T>(
 }
 
 async function queuePendingMessage(
+  accountId: string,
   clientMessageId: string,
   conversationId: string,
   content: string,
   contentType: string,
   replyToId: string | undefined,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
+  requestBackground: boolean
 ): Promise<void> {
   await savePendingMessage({
     id: clientMessageId,
+    accountId,
     clientMessageId,
     conversationId,
     content,
@@ -123,14 +137,96 @@ async function queuePendingMessage(
     retryCount: 0,
   });
 
-  // Wake the SW the moment the browser regains connectivity, even if the
-  // tab is closed. Falls back silently in browsers without SyncManager —
-  // sync-service.ts still retries on the window `online` event.
-  await requestBackgroundSync();
+  if (requestBackground) {
+    // Wake the SW when connectivity returns. The window sync service remains
+    // the fallback for browsers without SyncManager.
+    await requestBackgroundSync();
+  }
+}
+
+function pendingMessageToLocalMessage(pending: PendingMessage, currentUser: NonNullable<ReturnType<typeof useAuthStore.getState>['user']>): Message {
+  const metadata = isRecord(pending.payload?.metadata) ? pending.payload.metadata : {};
+  const timestamp = new Date(pending.createdAt).toISOString();
+
+  return {
+    id: pending.clientMessageId,
+    clientMessageId: pending.clientMessageId,
+    conversationId: pending.conversationId,
+    senderId: currentUser.id,
+    content: pending.content,
+    encryptedContent: null,
+    isEncrypted: false,
+    messageType: asMessageType(pending.contentType),
+    replyToId: pending.replyToId ?? null,
+    replyTo: null,
+    isPinned: false,
+    isEdited: false,
+    deletedAt: null,
+    metadata,
+    reactions: [],
+    sender: {
+      id: currentUser.id,
+      username: currentUser.username || '',
+      displayName: currentUser.displayName || null,
+      avatarUrl: currentUser.avatarUrl || null,
+    },
+    deliveryStatus: pending.status === 'failed' ? 'failed' : 'sending',
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+}
+
+async function sendPendingMessage(get: Get, pending: PendingMessage): Promise<void> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    await requestBackgroundSync();
+    return;
+  }
+
+  await updatePendingMessageStatus(pending.id, 'sending');
+  get().updateMessageStatus(pending.conversationId, pending.clientMessageId, 'sending');
+
+  try {
+    const response = await http.post(
+      `/api/v1/conversations/${pending.conversationId}/messages`,
+      pending.payload
+    );
+    const rawMessage: Record<string, unknown> = ensureObject(response.data, 'message') ?? {};
+    const normalized = normalizeMessage(rawMessage);
+    const message = toMessage(normalized);
+    if (!message) {
+      throw new Error('Message response did not include a valid message');
+    }
+
+    get().addMessage({
+      ...message,
+      clientMessageId: message.clientMessageId ?? pending.clientMessageId,
+      deliveryStatus: 'sent',
+    });
+
+    try {
+      await removePendingMessage(pending.id);
+    } catch (cleanupError) {
+      logger.warn('Sent message outbox cleanup failed:', cleanupError);
+    }
+  } catch (error: unknown) {
+    if (
+      (typeof navigator !== 'undefined' && !navigator.onLine) ||
+      isRetryableTransportFailure(error)
+    ) {
+      await updatePendingMessageStatus(pending.id, 'pending');
+      await requestBackgroundSync();
+      return;
+    }
+
+    await updatePendingMessageStatus(pending.id, 'failed', 'Message send failed.');
+    get().updateMessageStatus(pending.conversationId, pending.clientMessageId, 'failed');
+    logger.error('Failed to send message:', error);
+    throw error;
+  }
 }
 
 /** Create messaging actions for the chat store. */
-export function createMessagingActions(_set: Set, get: Get) {
+export function createMessagingActions(set: Set, get: Get) {
   return {
     sendMessage: async (
       conversationId: string,
@@ -185,11 +281,26 @@ export function createMessagingActions(_set: Set, get: Get) {
       }
 
       const currentUser = useAuthStore.getState().user;
+      if (!currentUser?.id) {
+        throw new Error('An authenticated account is required to send a message.');
+      }
+
+      await queuePendingMessage(
+        currentUser.id,
+        clientMessageId,
+        conversationId,
+        content,
+        contentType,
+        replyToId,
+        payload,
+        false
+      );
+
       const optimisticMessage: Message = {
         id: clientMessageId,
         clientMessageId,
         conversationId,
-        senderId: currentUser?.id || '',
+        senderId: currentUser.id,
         content,
         encryptedContent: null,
         isEncrypted: false,
@@ -202,10 +313,10 @@ export function createMessagingActions(_set: Set, get: Get) {
         metadata: metadata || {},
         reactions: [],
         sender: {
-          id: currentUser?.id || '',
-          username: currentUser?.username || '',
-          displayName: currentUser?.displayName || null,
-          avatarUrl: currentUser?.avatarUrl || null,
+          id: currentUser.id,
+          username: currentUser.username || '',
+          displayName: currentUser.displayName || null,
+          avatarUrl: currentUser.avatarUrl || null,
         },
         deliveryStatus: 'sending',
         createdAt: new Date().toISOString(),
@@ -213,56 +324,21 @@ export function createMessagingActions(_set: Set, get: Get) {
       };
       get().addMessage(optimisticMessage);
 
-      return runInConversationSendQueue(conversationId, async () => {
-        try {
-          if (typeof navigator !== 'undefined' && !navigator.onLine) {
-            await queuePendingMessage(
-              clientMessageId,
-              conversationId,
-              content,
-              contentType,
-              replyToId,
-              payload
-            );
-            logger.log('Queued message for offline sync');
-            return;
-          }
+      const pending: PendingMessage = {
+        id: clientMessageId,
+        accountId: currentUser.id,
+        clientMessageId,
+        conversationId,
+        content,
+        contentType,
+        payload,
+        replyToId: replyToId ?? null,
+        createdAt: Date.now(),
+        status: 'pending',
+        retryCount: 0,
+      };
 
-          const response = await http.post(
-            `/api/v1/conversations/${conversationId}/messages`,
-            payload
-          );
-          const rawMessage: Record<string, unknown> = ensureObject(response.data, 'message') ?? {};
-          const normalized = normalizeMessage(rawMessage);
-          const message = toMessage(normalized);
-          if (!message) {
-            throw new Error('Message response did not include a valid message');
-          }
-
-          get().addMessage({
-            ...message,
-            clientMessageId: message.clientMessageId ?? clientMessageId,
-            deliveryStatus: 'sent',
-          });
-        } catch (error: unknown) {
-          if (typeof navigator !== 'undefined' && !navigator.onLine) {
-            await queuePendingMessage(
-              clientMessageId,
-              conversationId,
-              content,
-              contentType,
-              replyToId,
-              payload
-            );
-            logger.log('Queued message for offline sync after connection loss');
-            return;
-          }
-
-          get().updateMessageStatus(conversationId, clientMessageId, 'failed');
-          logger.error('Failed to send message:', error);
-          throw error;
-        }
-      });
+      return runInConversationSendQueue(conversationId, () => sendPendingMessage(get, pending));
     },
 
     /**
@@ -273,8 +349,61 @@ export function createMessagingActions(_set: Set, get: Get) {
       const failedMsg = messages.find((m) => m.id === failedMessageId);
       if (!failedMsg || failedMsg.deliveryStatus !== 'failed') return;
 
-      get().removeMessage(failedMessageId, conversationId);
-      await get().sendMessage(conversationId, failedMsg.content, failedMsg.replyToId ?? undefined);
+      const accountId = useAuthStore.getState().user?.id;
+      if (!accountId) return;
+
+      const pendingMessages = await getPendingMessagesForConversation(accountId, conversationId);
+      const pending = pendingMessages.find((message) => message.clientMessageId === failedMessageId);
+      if (!pending || pending.status !== 'failed') return;
+
+      await updatePendingMessageStatus(pending.id, 'pending');
+      get().updateMessageStatus(conversationId, failedMessageId, 'sending');
+      await runInConversationSendQueue(conversationId, () => sendPendingMessage(get, pending));
+    },
+
+    hydratePendingMessages: async (conversationId: string) => {
+      const currentUser = useAuthStore.getState().user;
+      if (!currentUser?.id) return;
+
+      let pendingMessages: PendingMessage[];
+      try {
+        pendingMessages = await getPendingMessagesForConversation(currentUser.id, conversationId);
+      } catch (error) {
+        logger.warn('Pending message hydration failed:', error);
+        return;
+      }
+
+      if (pendingMessages.length === 0) return;
+
+      set((state) => {
+        const existing = state.messages[conversationId] || [];
+        const knownClientMessageIds = new Set(
+          existing.map((message) => message.clientMessageId ?? message.id)
+        );
+        const additions = pendingMessages
+          .filter((pending) => !knownClientMessageIds.has(pending.clientMessageId))
+          .map((pending) => pendingMessageToLocalMessage(pending, currentUser));
+
+        if (additions.length === 0) return state;
+
+        const messageIdSet = new Set(state.messageIdSets[conversationId] || []);
+        for (const message of additions) {
+          messageIdSet.add(message.id);
+        }
+
+        return {
+          messages: {
+            ...state.messages,
+            [conversationId]: [...existing, ...additions].sort((left, right) =>
+              left.createdAt.localeCompare(right.createdAt)
+            ),
+          },
+          messageIdSets: {
+            ...state.messageIdSets,
+            [conversationId]: messageIdSet,
+          },
+        };
+      });
     },
 
     /**

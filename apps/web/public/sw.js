@@ -18,7 +18,7 @@ const NOTIFICATION_ICON = '/icon-192x192.png';
 // Background Sync constants — must match `apps/web/src/lib/offline/`
 // (DB_NAME / DB_VERSION / PENDING_STORE / sync tag).
 const OFFLINE_DB_NAME = 'cgraph_offline';
-const OFFLINE_DB_VERSION = 2;
+const OFFLINE_DB_VERSION = 4;
 const PENDING_MESSAGES_STORE = 'pending_messages';
 const MESSAGE_QUEUE_SYNC_TAG = 'cgraph-message-queue';
 
@@ -262,6 +262,61 @@ self.addEventListener('pushsubscriptionchange', (event) => {
 function openOfflineDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(OFFLINE_DB_NAME, OFFLINE_DB_VERSION);
+
+    request.onupgradeneeded = (event) => {
+      const db = request.result;
+      const tx = request.transaction;
+      if (!tx) return;
+
+      const messages = db.objectStoreNames.contains('messages')
+        ? tx.objectStore('messages')
+        : db.createObjectStore('messages', { keyPath: 'id' });
+      if (!messages.indexNames.contains('by_conversation')) {
+        messages.createIndex('by_conversation', 'conversationId', { unique: false });
+      }
+      if (!messages.indexNames.contains('by_updated')) {
+        messages.createIndex('by_updated', ['conversationId', 'updatedAt'], { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains('conversations')) {
+        db.createObjectStore('conversations', { keyPath: 'id' });
+      }
+
+      const pending = db.objectStoreNames.contains(PENDING_MESSAGES_STORE)
+        ? tx.objectStore(PENDING_MESSAGES_STORE)
+        : db.createObjectStore(PENDING_MESSAGES_STORE, { keyPath: 'id' });
+      if (!pending.indexNames.contains('by_conversation')) {
+        pending.createIndex('by_conversation', 'conversationId', { unique: false });
+      }
+      if (!pending.indexNames.contains('by_status')) {
+        pending.createIndex('by_status', 'status', { unique: false });
+      }
+      if (!pending.indexNames.contains('by_account')) {
+        pending.createIndex('by_account', 'accountId', { unique: false });
+      }
+      if (!pending.indexNames.contains('by_account_conversation')) {
+        pending.createIndex('by_account_conversation', ['accountId', 'conversationId'], {
+          unique: false,
+        });
+      }
+
+      if (!db.objectStoreNames.contains('sync_meta')) {
+        db.createObjectStore('sync_meta', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('drafts')) {
+        db.createObjectStore('drafts', { keyPath: 'conversationId' });
+      }
+
+      if (event.oldVersion > 0 && event.oldVersion < 3) {
+        tx.objectStore('messages').clear();
+        tx.objectStore('conversations').clear();
+        tx.objectStore('sync_meta').clear();
+      }
+      if (event.oldVersion > 0 && event.oldVersion < 4) {
+        pending.clear();
+      }
+    };
+
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
     request.onblocked = () => reject(new Error('IndexedDB open blocked'));
@@ -293,6 +348,36 @@ function deletePendingMessage(db, id) {
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
+}
+
+function updatePendingMessage(db, id, updates) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PENDING_MESSAGES_STORE, 'readwrite');
+    const store = tx.objectStore(PENDING_MESSAGES_STORE);
+    const request = store.get(id);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const existing = request.result;
+      if (!existing) {
+        resolve();
+        return;
+      }
+
+      const putRequest = store.put({ ...existing, ...updates });
+      putRequest.onsuccess = () => resolve();
+      putRequest.onerror = () => reject(putRequest.error);
+    };
+  });
+}
+
+async function authenticatedAccountId() {
+  const response = await fetch('/api/v1/me', { credentials: 'include' });
+  if (!response.ok) return null;
+
+  const payload = await response.json();
+  const accountId = payload && payload.data && payload.data.id;
+  return typeof accountId === 'string' && accountId.length > 0 ? accountId : null;
 }
 
 function buildMessageBody(pending) {
@@ -336,16 +421,19 @@ async function flushPendingMessage(db, pending) {
     return true;
   }
 
-  // 4xx (other than auth/conflict) means the message will never succeed on
-  // retry — drop it so we don't retry forever. 401/408/409/429/5xx are
-  // transient and stay queued.
+  // Terminal client errors remain visible to the user as failed messages.
+  // 401/408/409/429/5xx remain pending for a later authenticated retry.
   const TRANSIENT_STATUSES = [401, 408, 409, 429];
   if (
     response.status >= 400 &&
     response.status < 500 &&
     !TRANSIENT_STATUSES.includes(response.status)
   ) {
-    await deletePendingMessage(db, pending.id);
+    await updatePendingMessage(db, pending.id, {
+      status: 'failed',
+      lastError: `Message request failed with status ${response.status}`,
+      updatedAt: Date.now(),
+    });
   }
   return false;
 }
@@ -359,7 +447,15 @@ async function flushPendingMessages() {
     throw error;
   }
 
-  const pending = await readPendingMessages(db);
+  const accountId = await authenticatedAccountId();
+  if (!accountId) return;
+
+  const pending = (await readPendingMessages(db)).filter(
+    (message) =>
+      message &&
+      message.accountId === accountId &&
+      (message.status === 'pending' || message.status === 'sending')
+  );
   if (pending.length === 0) {
     return;
   }

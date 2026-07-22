@@ -1,5 +1,6 @@
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { useAuthStore } from '@/modules/auth/store';
 import { z } from 'zod';
 import {
   getLastSyncTimestamp,
@@ -200,13 +201,20 @@ async function pullChanges(): Promise<{ pulled: number; tombstones: number }> {
   return { pulled: totalPulled, tombstones: totalTombstones };
 }
 
-/** Push pending messages from the offline queue to the server. */
-async function pushChanges(): Promise<number> {
-  const pending = await getPendingMessages();
+function currentAccountId(): string | null {
+  const accountId = useAuthStore.getState().user?.id;
+  return typeof accountId === 'string' && accountId.trim().length > 0 ? accountId : null;
+}
+
+/** Push retryable pending messages from one account's outbox to the server. */
+async function pushChanges(accountId: string): Promise<number> {
+  const pending = await getPendingMessages(accountId);
   if (pending.length === 0) return 0;
 
-  const messagesToPush = pending
-    .filter((m) => m.status === 'pending')
+  // A tab can close while a record is marked sending. Treat that as retryable
+  // on the next sync, while keeping an explicit failed state manual-only.
+  const retryable = pending.filter((m) => m.status === 'pending' || m.status === 'sending');
+  const messagesToPush = retryable
     .map((m) => {
       const payload =
         typeof m.payload === 'object' && m.payload !== null && !Array.isArray(m.payload)
@@ -227,7 +235,7 @@ async function pushChanges(): Promise<number> {
 
   if (messagesToPush.length === 0) return 0;
 
-  for (const msg of pending) {
+  for (const msg of retryable) {
     await updatePendingMessageStatus(msg.id, 'sending');
   }
 
@@ -236,12 +244,21 @@ async function pushChanges(): Promise<number> {
       messages: messagesToPush,
     });
 
-    const results = response.data.messages;
+    const resultsByClientId = new Map(
+      response.data.messages.map((result) => [result.client_id, result])
+    );
     let pushed = 0;
 
-    for (const result of results) {
-      const pendingMsg = pending.find((m) => m.clientMessageId === result.client_id);
-      if (!pendingMsg) continue;
+    for (const pendingMsg of retryable) {
+      const result = resultsByClientId.get(pendingMsg.clientMessageId);
+      if (!result) {
+        await updatePendingMessageStatus(
+          pendingMsg.id,
+          'failed',
+          'Sync response did not include this message.'
+        );
+        continue;
+      }
 
       if (result.status === 'ok' || result.status === 'duplicate') {
         await removePendingMessage(pendingMsg.id);
@@ -253,7 +270,7 @@ async function pushChanges(): Promise<number> {
 
     return pushed;
   } catch (error) {
-    for (const msg of pending) {
+    for (const msg of retryable) {
       await updatePendingMessageStatus(msg.id, 'pending');
     }
     throw error;
@@ -265,12 +282,15 @@ export async function runSync(): Promise<SyncStats | null> {
   if (isSyncing) return null;
   if (!navigator.onLine) return null;
 
+  const accountId = currentAccountId();
+  if (!accountId) return null;
+
   isSyncing = true;
   const startTime = Date.now();
 
   try {
     const { pulled, tombstones } = await pullChanges();
-    const pushed = await pushChanges();
+    const pushed = await pushChanges(accountId);
 
     const stats: SyncStats = {
       pulled,

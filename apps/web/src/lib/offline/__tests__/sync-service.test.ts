@@ -11,12 +11,19 @@ const mocks = vi.hoisted(() => ({
   getPendingMessages: vi.fn(),
   removePendingMessage: vi.fn(),
   updatePendingMessageStatus: vi.fn(),
+  getCurrentUser: vi.fn(),
 }));
 
 vi.mock('@/lib/api-client', () => ({
   http: {
     get: mocks.get,
     post: mocks.post,
+  },
+}));
+
+vi.mock('@/modules/auth/store', () => ({
+  useAuthStore: {
+    getState: mocks.getCurrentUser,
   },
 }));
 
@@ -81,6 +88,7 @@ describe('offline sync response validation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
+    mocks.getCurrentUser.mockReturnValue({ user: { id: 'account-1' } });
     mocks.getLastSyncTimestamp.mockResolvedValue(null);
     mocks.getPendingMessages.mockResolvedValue([]);
   });
@@ -107,5 +115,62 @@ describe('offline sync response validation', () => {
 
     expect(mocks.saveMessages).not.toHaveBeenCalled();
     expect(mocks.setLastSyncTimestamp).not.toHaveBeenCalled();
+  });
+
+  it('retries interrupted sends for the active account but leaves terminal failures alone', async () => {
+    mocks.get.mockResolvedValue(pullResponse([]));
+    mocks.getPendingMessages.mockResolvedValue([
+      {
+        id: 'pending-1',
+        accountId: 'account-1',
+        clientMessageId: 'client-1',
+        conversationId: 'conversation-1',
+        content: 'retry after reload',
+        contentType: 'text',
+        payload: { content: 'retry after reload', client_message_id: 'client-1' },
+        createdAt: 1,
+        status: 'sending',
+        retryCount: 0,
+      },
+      {
+        id: 'failed-1',
+        accountId: 'account-1',
+        clientMessageId: 'client-failed',
+        conversationId: 'conversation-1',
+        content: 'manual retry only',
+        contentType: 'text',
+        payload: { content: 'manual retry only', client_message_id: 'client-failed' },
+        createdAt: 2,
+        status: 'failed',
+        retryCount: 1,
+      },
+    ]);
+    mocks.post.mockResolvedValue({
+      data: {
+        data: {
+          messages: [
+            { client_id: 'client-1', status: 'duplicate', server_id: 'message-1', error: null },
+          ],
+          read_receipts: [],
+          reactions: [],
+        },
+      },
+    });
+
+    await expect(runSync()).resolves.toMatchObject({ pushed: 1 });
+
+    expect(mocks.getPendingMessages).toHaveBeenCalledWith('account-1');
+    expect(mocks.post).toHaveBeenCalledWith('/api/v1/sync/offline/push', {
+      messages: [
+        {
+          conversation_id: 'conversation-1',
+          content: 'retry after reload',
+          client_message_id: 'client-1',
+        },
+      ],
+    });
+    expect(mocks.updatePendingMessageStatus).toHaveBeenCalledWith('pending-1', 'sending');
+    expect(mocks.updatePendingMessageStatus).not.toHaveBeenCalledWith('failed-1', 'sending');
+    expect(mocks.removePendingMessage).toHaveBeenCalledWith('pending-1');
   });
 });

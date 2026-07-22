@@ -285,6 +285,7 @@ export interface ChatState {
     options?: { type?: string; metadata?: Record<string, unknown> }
   ) => Promise<void>;
   resendMessage: (conversationId: string, failedMessageId: string) => Promise<void>;
+  hydratePendingMessages: (conversationId: string) => Promise<void>;
   sendEncryptedMessage: (
     conversationId: string,
     recipientId: string,

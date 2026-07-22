@@ -3,7 +3,7 @@ import { createLogger } from '@/lib/logger';
 const logger = createLogger('IndexedDBCache');
 
 const DB_NAME = 'cgraph_offline';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const MAX_MESSAGES_PER_CONVERSATION = 100;
 
 const MESSAGES_STORE = 'messages';
@@ -44,6 +44,7 @@ export interface CachedConversation {
 
 export interface PendingMessage {
   readonly id: string;
+  readonly accountId: string;
   readonly clientMessageId: string;
   readonly conversationId: string;
   readonly content: string;
@@ -88,12 +89,26 @@ function openDB(): Promise<IDBDatabase> {
         db.createObjectStore(CONVERSATIONS_STORE, { keyPath: 'id' });
       }
 
-      if (!db.objectStoreNames.contains(PENDING_STORE)) {
-        const pendingStore = db.createObjectStore(PENDING_STORE, { keyPath: 'id' });
-        pendingStore.createIndex('by_conversation', 'conversationId', {
+      const pendingStore = db.objectStoreNames.contains(PENDING_STORE)
+        ? request.transaction?.objectStore(PENDING_STORE)
+        : db.createObjectStore(PENDING_STORE, { keyPath: 'id' });
+
+      if (pendingStore && !pendingStore.indexNames.contains('by_conversation')) {
+        pendingStore.createIndex('by_conversation', 'conversationId', { unique: false });
+      }
+
+      if (pendingStore && !pendingStore.indexNames.contains('by_status')) {
+        pendingStore.createIndex('by_status', 'status', { unique: false });
+      }
+
+      if (pendingStore && !pendingStore.indexNames.contains('by_account')) {
+        pendingStore.createIndex('by_account', 'accountId', { unique: false });
+      }
+
+      if (pendingStore && !pendingStore.indexNames.contains('by_account_conversation')) {
+        pendingStore.createIndex('by_account_conversation', ['accountId', 'conversationId'], {
           unique: false,
         });
-        pendingStore.createIndex('by_status', 'status', { unique: false });
       }
 
       if (!db.objectStoreNames.contains(SYNC_META_STORE)) {
@@ -110,6 +125,12 @@ function openDB(): Promise<IDBDatabase> {
         request.transaction.objectStore(MESSAGES_STORE).clear();
         request.transaction.objectStore(CONVERSATIONS_STORE).clear();
         request.transaction.objectStore(SYNC_META_STORE).clear();
+      }
+
+      // Pending records created before version 4 were not account-scoped. They
+      // cannot safely be retried after a later sign-in, so discard only them.
+      if (event.oldVersion > 0 && event.oldVersion < 4 && pendingStore) {
+        pendingStore.clear();
       }
     };
 
@@ -281,6 +302,7 @@ export async function getConversations(): Promise<CachedConversation[]> {
 /** Save a pending outbound message (queued while offline). */
 export async function savePendingMessage(message: PendingMessage): Promise<void> {
   assertCacheKey(message.id, 'pendingMessage.id');
+  assertCacheKey(message.accountId, 'pendingMessage.accountId');
   assertCacheKey(message.clientMessageId, 'pendingMessage.clientMessageId');
   assertCacheKey(message.conversationId, 'pendingMessage.conversationId');
 
@@ -290,14 +312,15 @@ export async function savePendingMessage(message: PendingMessage): Promise<void>
   });
 }
 
-/** Get all pending messages, ordered by createdAt ascending. */
-export async function getPendingMessages(): Promise<PendingMessage[]> {
+/** Get one account's pending messages, ordered by createdAt ascending. */
+export async function getPendingMessages(accountId: string): Promise<PendingMessage[]> {
+  assertCacheKey(accountId, 'pendingMessage.accountId');
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
     const tx = db.transaction(PENDING_STORE, 'readonly');
-    const store = tx.objectStore(PENDING_STORE);
-    const request = store.getAll();
+    const index = tx.objectStore(PENDING_STORE).index('by_account');
+    const request = index.getAll(IDBKeyRange.only(accountId));
 
     request.onsuccess = () => {
       const raw: PendingMessage[] = request.result;
@@ -311,17 +334,19 @@ export async function getPendingMessages(): Promise<PendingMessage[]> {
 
 /** Get pending messages for a specific conversation. */
 export async function getPendingMessagesForConversation(
+  accountId: string,
   conversationId: string
 ): Promise<PendingMessage[]> {
+  assertCacheKey(accountId, 'pendingMessage.accountId');
   assertCacheKey(conversationId, 'conversationId');
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
     const tx = db.transaction(PENDING_STORE, 'readonly');
     const store = tx.objectStore(PENDING_STORE);
-    const index = store.index('by_conversation');
+    const index = store.index('by_account_conversation');
 
-    const request = index.getAll(IDBKeyRange.only(conversationId));
+    const request = index.getAll(IDBKeyRange.only([accountId, conversationId]));
 
     request.onsuccess = () => {
       const raw: PendingMessage[] = request.result;
@@ -366,7 +391,7 @@ export async function updatePendingMessageStatus(
       store.put({
         ...existing,
         status,
-        lastError: error ?? existing.lastError,
+        lastError: error,
         retryCount: status === 'failed' ? existing.retryCount + 1 : existing.retryCount,
       });
     };

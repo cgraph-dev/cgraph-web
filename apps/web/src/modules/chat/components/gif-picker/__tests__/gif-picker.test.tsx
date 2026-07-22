@@ -8,7 +8,8 @@ vi.mock('@/lib/api-client', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({ warn: vi.fn() }),
+  createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  authLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
 interface Deferred<T> {

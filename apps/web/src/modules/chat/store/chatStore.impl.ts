@@ -292,7 +292,14 @@ export const useChatStore = create<ChatState>()(
               isLoadingMessages: false,
             };
           });
+
+          if (!before) {
+            await get().hydratePendingMessages(conversationId);
+          }
         } catch (error: unknown) {
+          if (!before) {
+            await get().hydratePendingMessages(conversationId);
+          }
           set({ isLoadingMessages: false });
           throw error;
         }
