@@ -5,7 +5,7 @@
  * message/typing/reaction event handlers, and error cleanup.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { joinConversation, leaveConversation, _gapRepairInFlightHas } from '../conversationChannel';
+import { joinConversation, leaveConversation } from '../conversationChannel';
 
 // Mocks
 const { MockPresence, mockChatStore, mockHttpGet, mockSettingsStore } = vi.hoisted(() => {
@@ -486,76 +486,8 @@ describe('joinConversation', () => {
     );
   });
 
-  it('repairs sequence gaps through the REST messages endpoint', async () => {
+  it('accepts sparse Snowflake IDs without requesting redundant history', async () => {
     const socket = createMockSocket();
-    mockChatStore.messages = {
-      conv1: [
-        {
-          id: 'msg-1',
-          sequence: 1,
-          conversationId: 'conv1',
-          senderId: 'user-2',
-          content: 'first',
-          createdAt: '2026-04-01T00:00:00Z',
-          updatedAt: '2026-04-01T00:00:00Z',
-        },
-        {
-          id: 'msg-2',
-          sequence: 2,
-          conversationId: 'conv1',
-          senderId: 'user-2',
-          content: 'second',
-          createdAt: '2026-04-01T00:00:01Z',
-          updatedAt: '2026-04-01T00:00:01Z',
-        },
-        {
-          id: 'msg-3',
-          sequence: 3,
-          conversationId: 'conv1',
-          senderId: 'user-2',
-          content: 'third',
-          createdAt: '2026-04-01T00:00:02Z',
-          updatedAt: '2026-04-01T00:00:02Z',
-        },
-      ],
-    };
-
-    mockHttpGet.mockResolvedValue({
-      data: {
-        data: [
-          {
-            id: 'msg-4',
-            sequence: 4,
-            conversationId: 'conv1',
-            senderId: 'user-2',
-            content: 'fourth',
-            createdAt: '2026-04-01T00:00:03Z',
-            updatedAt: '2026-04-01T00:00:03Z',
-            sender: { id: 'user-2', username: 'alice', displayName: null, avatarUrl: null },
-            messageType: 'text',
-            isEncrypted: false,
-            metadata: {},
-            reactions: [],
-            deliveryStatus: 'sent',
-          },
-          {
-            id: 'msg-5',
-            sequence: 5,
-            conversationId: 'conv1',
-            senderId: 'user-2',
-            content: 'fifth',
-            createdAt: '2026-04-01T00:00:04Z',
-            updatedAt: '2026-04-01T00:00:04Z',
-            sender: { id: 'user-2', username: 'alice', displayName: null, avatarUrl: null },
-            messageType: 'text',
-            isEncrypted: false,
-            metadata: {},
-            reactions: [],
-            deliveryStatus: 'sent',
-          },
-        ],
-      },
-    });
 
     joinConversation(
       socket as never,
@@ -571,37 +503,52 @@ describe('joinConversation', () => {
     );
 
     const ch = socket._lastChannel;
-    ch._trigger('new_message', {
-      message: {
-        id: 'msg-5',
-        sequence: 5,
-        conversationId: 'conv1',
-        senderId: 'user-2',
-        content: 'fifth',
-        createdAt: '2026-04-01T00:00:04Z',
-        updatedAt: '2026-04-01T00:00:04Z',
-        sender: { id: 'user-2', username: 'alice', displayName: null, avatarUrl: null },
-        messageType: 'text',
-        isEncrypted: false,
-        metadata: {},
-        reactions: [],
-        deliveryStatus: 'sent',
-      },
+    ch._trigger('message_history', {
+      messages: [
+        {
+          id: 'msg-1',
+          sequence: 73_213_384_047_984_640,
+          conversationId: 'conv1',
+          senderId: 'user-2',
+          content: 'first',
+          createdAt: '2026-04-01T00:00:00Z',
+          updatedAt: '2026-04-01T00:00:00Z',
+          sender: { id: 'user-2', username: 'alice', displayName: null, avatarUrl: null },
+          messageType: 'text',
+          isEncrypted: false,
+          metadata: {},
+          reactions: [],
+          deliveryStatus: 'sent',
+        },
+        {
+          id: 'msg-2',
+          sequence: 73_213_384_100_413_440,
+          conversationId: 'conv1',
+          senderId: 'user-2',
+          content: 'second',
+          createdAt: '2026-04-01T00:00:01Z',
+          updatedAt: '2026-04-01T00:00:01Z',
+          sender: { id: 'user-2', username: 'alice', displayName: null, avatarUrl: null },
+          messageType: 'text',
+          isEncrypted: false,
+          metadata: {},
+          reactions: [],
+          deliveryStatus: 'sent',
+        },
+      ],
     });
 
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(mockHttpGet).toHaveBeenCalledWith('/api/v1/conversations/conv1/messages', {
-      params: { after_sequence: 3, limit: 100 },
-    });
+    expect(mockHttpGet).not.toHaveBeenCalled();
     expect(mockChatStore.decryptAndAddMessage).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining({ id: 'msg-4', sequence: 4, content: 'fourth' })
+      expect.objectContaining({ id: 'msg-1', content: 'first' })
     );
     expect(mockChatStore.decryptAndAddMessage).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ id: 'msg-5', sequence: 5, content: 'fifth' })
+      expect.objectContaining({ id: 'msg-2', content: 'second' })
     );
   });
 });
@@ -646,155 +593,6 @@ describe('leaveConversation', () => {
     ).not.toThrow();
   });
 
-  it('clears gapRepairInFlight entry for the conversation', async () => {
-    // Trigger an in-flight gap repair by sending a message with a sequence
-    // gap; the repair fetches via http.get, which we hold open with a
-    // never-resolving promise so the entry stays in the map.
-    let releaseHttp: (value: unknown) => void = () => {};
-    mockHttpGet.mockReturnValue(
-      new Promise((resolve) => {
-        releaseHttp = resolve;
-      })
-    );
-    mockChatStore.messages = {
-      'conv-leak': [
-        {
-          id: 'msg-1',
-          sequence: 1,
-          conversationId: 'conv-leak',
-          senderId: 'user-2',
-          content: 'first',
-          createdAt: '2026-04-01T00:00:00Z',
-          updatedAt: '2026-04-01T00:00:00Z',
-        },
-      ],
-    };
-
-    const local = makeArgs();
-    const socket = createMockSocket();
-    joinConversation(
-      socket as never,
-      'conv-leak',
-      local.channels as never,
-      local.presences as never,
-      local.onlineUsers,
-      local.channelHandlersSetUp,
-      local.lastJoinAttempts,
-      local.joinDebounceMs,
-      local.notifyStatusChange,
-      local.connectFn
-    );
-
-    const ch = socket._lastChannel;
-    ch._trigger('new_message', {
-      message: {
-        id: 'msg-9',
-        sequence: 9,
-        conversationId: 'conv-leak',
-        senderId: 'user-2',
-        content: 'jump-ahead',
-        createdAt: '2026-04-01T00:00:09Z',
-        updatedAt: '2026-04-01T00:00:09Z',
-        sender: { id: 'user-2', username: 'alice', displayName: null, avatarUrl: null },
-        messageType: 'text',
-        isEncrypted: false,
-        metadata: {},
-        reactions: [],
-        deliveryStatus: 'sent',
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(_gapRepairInFlightHas('conv-leak')).toBe(true);
-
-    leaveConversation(
-      'conv-leak',
-      local.channels as never,
-      local.channelHandlersSetUp,
-      local.presences as never,
-      local.onlineUsers,
-      local.lastJoinAttempts
-    );
-
-    expect(_gapRepairInFlightHas('conv-leak')).toBe(false);
-
-    // Drain the held http.get so the in-flight promise can settle and stop
-    // tripping vitest's open-handle warning.
-    releaseHttp({ data: { data: [] } });
-    await Promise.resolve();
-    await Promise.resolve();
-  });
-
-  it('clears gapRepairInFlight when channel.onClose fires', async () => {
-    let releaseHttp: (value: unknown) => void = () => {};
-    mockHttpGet.mockReturnValue(
-      new Promise((resolve) => {
-        releaseHttp = resolve;
-      })
-    );
-    mockChatStore.messages = {
-      'conv-close': [
-        {
-          id: 'msg-1',
-          sequence: 1,
-          conversationId: 'conv-close',
-          senderId: 'user-2',
-          content: 'first',
-          createdAt: '2026-04-01T00:00:00Z',
-          updatedAt: '2026-04-01T00:00:00Z',
-        },
-      ],
-    };
-
-    const local = makeArgs();
-    const socket = createMockSocket();
-    joinConversation(
-      socket as never,
-      'conv-close',
-      local.channels as never,
-      local.presences as never,
-      local.onlineUsers,
-      local.channelHandlersSetUp,
-      local.lastJoinAttempts,
-      local.joinDebounceMs,
-      local.notifyStatusChange,
-      local.connectFn
-    );
-
-    const ch = socket._lastChannel;
-    ch._trigger('new_message', {
-      message: {
-        id: 'msg-9',
-        sequence: 9,
-        conversationId: 'conv-close',
-        senderId: 'user-2',
-        content: 'jump-ahead',
-        createdAt: '2026-04-01T00:00:09Z',
-        updatedAt: '2026-04-01T00:00:09Z',
-        sender: { id: 'user-2', username: 'alice', displayName: null, avatarUrl: null },
-        messageType: 'text',
-        isEncrypted: false,
-        metadata: {},
-        reactions: [],
-        deliveryStatus: 'sent',
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(_gapRepairInFlightHas('conv-close')).toBe(true);
-
-    ch._triggerClose();
-
-    expect(_gapRepairInFlightHas('conv-close')).toBe(false);
-
-    releaseHttp({ data: { data: [] } });
-    await Promise.resolve();
-    await Promise.resolve();
-  });
 });
 
 describe('lastJoinAttempts LRU cap', () => {

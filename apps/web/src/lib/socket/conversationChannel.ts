@@ -12,7 +12,6 @@ import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl'
 import { useAuthStore } from '@/modules/auth/store';
 import { useSettingsStore } from '@/modules/settings/store';
 import { normalizeMessageReactions } from '@/modules/chat/store/chatStore.normalizers';
-import { http } from '../api-client';
 import { socketLogger as logger } from '../logger';
 import { normalizeMessage } from '../api-utils';
 import { identityFieldsFromApi } from '../identity';
@@ -110,8 +109,6 @@ function isReactionRemovedPayload(payload: unknown): payload is ReactionRemovedP
   );
 }
 
-const gapRepairInFlight = new Map<string, Promise<void>>();
-
 /**
  * Maximum number of entries we keep in `lastJoinAttempts`. JS Maps preserve
  * insertion order, so when we exceed the cap we delete the oldest key
@@ -142,23 +139,6 @@ function setBoundedJoinAttempt(
     if (oldestKey === undefined) break;
     lastJoinAttempts.delete(oldestKey);
   }
-}
-
-/**
- * Drop the in-flight gap-repair entry for a conversation. Used when leaving
- * a conversation channel or when the channel closes — both signal that the
- * pending repair (if any) is no longer relevant and the entry must not leak.
- */
-function clearGapRepairInFlight(conversationId: string): void {
-  gapRepairInFlight.delete(conversationId);
-}
-
-/**
- * Test-only accessor for the gap-repair map. Used by unit tests to verify
- * cleanup; not exported through the socket barrel.
- */
-export function _gapRepairInFlightHas(conversationId: string): boolean {
-  return gapRepairInFlight.has(conversationId);
 }
 
 /**
@@ -222,129 +202,12 @@ function recordToMessage(record: Record<string, unknown>): Message {
   };
 }
 
-function compareMessageOrder(left: Message, right: Message): number {
-  if (typeof left.sequence === 'number' && typeof right.sequence === 'number') {
-    return left.sequence - right.sequence;
-  }
-
-  return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
-}
-
-function getHighestConversationSequence(conversationId: string): number {
-  const messages = useChatStore.getState().messages[conversationId] || [];
-
-  return messages.reduce((highest, message) => {
-    if (typeof message.sequence === 'number' && message.sequence > highest) {
-      return message.sequence;
-    }
-
-    return highest;
-  }, 0);
-}
-
-async function repairConversationGap(conversationId: string, afterSequence: number): Promise<void> {
-  const existingRepair = gapRepairInFlight.get(conversationId);
-  if (existingRepair) {
-    await existingRepair;
-    return;
-  }
-
-  const repairPromise = (async () => {
-    try {
-      const response = await http.get(`/api/v1/conversations/${conversationId}/messages`, {
-        params: { after_sequence: afterSequence, limit: 100 },
-      });
-
-      const rawMessages = Array.isArray(response.data?.data)
-        ? response.data.data
-        : Array.isArray(response.data?.messages)
-          ? response.data.messages
-          : [];
-
-      const repairedMessages = rawMessages
-        .filter((value: unknown): value is Record<string, unknown> => isRecord(value))
-        .map((rawMessage: Record<string, unknown>) => recordToMessage(normalizeMessage(rawMessage)))
-        .sort(compareMessageOrder);
-
-      for (const repairedMessage of repairedMessages) {
-        await useChatStore.getState().decryptAndAddMessage(repairedMessage);
-      }
-    } finally {
-      gapRepairInFlight.delete(conversationId);
-    }
-  })();
-
-  gapRepairInFlight.set(conversationId, repairPromise);
-  await repairPromise;
-}
-
-async function addMessageWithGapRepair(conversationId: string, message: Message): Promise<void> {
-  const inFlightRepair = gapRepairInFlight.get(conversationId);
-  if (inFlightRepair) {
-    await inFlightRepair;
-    await addMessageWithGapRepair(conversationId, message);
-    return;
-  }
-
-  const highestSequence = getHighestConversationSequence(conversationId);
-  if (
-    typeof message.sequence === 'number' &&
-    highestSequence > 0 &&
-    message.sequence > highestSequence + 1
-  ) {
-    logger.warn(
-      `Gap detected in ${conversationId}: expected ${highestSequence + 1}, got ${message.sequence}`
-    );
-    await repairConversationGap(conversationId, highestSequence);
-
-    if (getHighestConversationSequence(conversationId) >= message.sequence) {
-      return;
-    }
-  }
-
-  await useChatStore.getState().decryptAndAddMessage(message);
-}
-
-async function addHistoryWithGapRepair(
-  conversationId: string,
-  rawMessages: Record<string, unknown>[]
-): Promise<void> {
-  const normalizedMessages = rawMessages
-    .map((rawMessage) => recordToMessage(normalizeMessage(rawMessage)))
-    .sort(compareMessageOrder);
-
-  const highestSequence = getHighestConversationSequence(conversationId);
-  const firstSequencedMessage = normalizedMessages.find(
-    (message) => typeof message.sequence === 'number'
-  );
-
-  if (
-    highestSequence > 0 &&
-    typeof firstSequencedMessage?.sequence === 'number' &&
-    firstSequencedMessage.sequence > highestSequence + 1
-  ) {
-    logger.warn(
-      `History gap detected in ${conversationId}: expected ${highestSequence + 1}, got ${firstSequencedMessage.sequence}`
-    );
-    await repairConversationGap(conversationId, highestSequence);
-    return;
-  }
-
-  let previousSequence = 0;
-
-  for (const message of normalizedMessages) {
-    if (typeof message.sequence === 'number') {
-      if (previousSequence > 0 && message.sequence > previousSequence + 1) {
-        logger.warn(
-          `History gap detected in ${conversationId}: expected ${previousSequence + 1}, got ${message.sequence}`
-        );
-        await repairConversationGap(conversationId, previousSequence);
-        return;
-      }
-
-      previousSequence = message.sequence;
-    }
-
+async function addMessageHistory(rawMessages: Record<string, unknown>[]): Promise<void> {
+  // The backend already returns history in Snowflake order. Snowflake IDs are
+  // sparse identifiers, not a dense transport sequence, so preserve that order
+  // and never infer missing messages from arithmetic on the IDs.
+  for (const rawMessage of rawMessages) {
+    const message = recordToMessage(normalizeMessage(rawMessage));
     await useChatStore.getState().decryptAndAddMessage(message);
   }
 }
@@ -437,12 +300,6 @@ export function joinConversation(
   if (!channelHandlersSetUp.has(topic)) {
     channelHandlersSetUp.add(topic);
 
-    // Drop any pending gap-repair entry when the underlying channel closes.
-    // Without this, gapRepairInFlight grows unbounded on long-running tabs.
-    channel.onClose(() => {
-      clearGapRepairInFlight(conversationId);
-    });
-
     const presence = new Presence(channel);
     presences.set(topic, presence);
     onlineUsers.set(conversationId, new Set());
@@ -504,13 +361,11 @@ export function joinConversation(
 
       logger.log('Received new_message:', normalized);
 
-      void addMessageWithGapRepair(conversationId, normalized)
+      void useChatStore
+        .getState()
+        .decryptAndAddMessage(normalized)
         .catch((error: unknown) => {
-          logger.warn(
-            `Gap repair failed for ${conversationId}, falling back to direct insert`,
-            error
-          );
-          void useChatStore.getState().decryptAndAddMessage(normalized);
+          logger.warn(`Failed to process realtime message for ${conversationId}`, error);
         })
         .finally(() => {
           const currentUserId = useAuthStore.getState().user?.id;
@@ -523,16 +378,8 @@ export function joinConversation(
     channel.on('message_history', (payload) => {
       if (!hasMessageHistoryPayload(payload)) return;
 
-      void addHistoryWithGapRepair(conversationId, payload.messages).catch((error: unknown) => {
-        logger.warn(
-          `History gap repair failed for ${conversationId}, falling back to raw history`,
-          error
-        );
-
-        payload.messages.forEach((rawMessage) => {
-          const normalized = recordToMessage(normalizeMessage(rawMessage));
-          void useChatStore.getState().decryptAndAddMessage(normalized);
-        });
+      void addMessageHistory(payload.messages).catch((error: unknown) => {
+        logger.warn(`Failed to process message history for ${conversationId}`, error);
       });
     });
 
@@ -633,7 +480,4 @@ export function leaveConversation(
     onlineUsers.delete(conversationId);
     lastJoinAttempts.delete(topic);
   }
-  // Always clear pending gap-repair, even if the channel was already gone —
-  // the conversation is leaving the foreground and any in-flight repair is moot.
-  clearGapRepairInFlight(conversationId);
 }
