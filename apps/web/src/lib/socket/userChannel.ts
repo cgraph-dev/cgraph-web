@@ -269,9 +269,10 @@ export function joinUserChannel(
         ? objectToRecord(notifData)
         : {};
 
+    const notificationType = toNotificationStoreType(type);
     const notification: Notification = {
       id,
-      type: toNotificationStoreType(type),
+      type: notificationType,
       title,
       body: typeof body === 'string' ? body : '',
       isRead: typeof read === 'boolean' ? read : false,
@@ -288,6 +289,19 @@ export function joinUserChannel(
     useNotificationStore
       .getState()
       .addNotification(notification, typeof unreadCount === 'number' ? unreadCount : null);
+
+    if (notificationType === 'message') {
+      const chatStore = useChatStore.getState();
+      const conversationId =
+        typeof dataField['conversation_id'] === 'string' ? dataField['conversation_id'] : null;
+      const updates: Promise<unknown>[] = [chatStore.fetchConversations({ force: true })];
+
+      if (conversationId && conversationId === chatStore.activeConversationId) {
+        updates.push(chatStore.fetchMessages(conversationId));
+      }
+
+      void Promise.allSettled(updates);
+    }
   });
 
   channel.on('message_request_state', (payload) => {

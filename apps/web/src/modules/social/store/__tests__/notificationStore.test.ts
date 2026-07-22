@@ -126,6 +126,20 @@ describe('NotificationStore', () => {
     expect(notificationApi.getUnreadCount).toHaveBeenCalledTimes(1);
   });
 
+  it('normalizes backend new_message deliveries to the message UI type', async () => {
+    notificationApi.list.mockResolvedValueOnce(
+      ok([notificationResponse({ ...second, type: 'new_message' as Notification['type'] })])
+    );
+    notificationApi.getUnreadCount.mockResolvedValueOnce(ok({ count: 1 }));
+
+    await useNotificationStore.getState().fetchNotifications();
+
+    expect(useNotificationStore.getState().notifications[0]).toMatchObject({
+      id: second.id,
+      type: 'message',
+    });
+  });
+
   it('preserves the message-request type and its canonical conversation data', async () => {
     notificationApi.list.mockResolvedValueOnce(ok([notificationResponse(messageRequest)]));
     notificationApi.getUnreadCount.mockResolvedValueOnce(ok({ count: 1 }));

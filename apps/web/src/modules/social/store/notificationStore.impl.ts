@@ -73,7 +73,8 @@ function isNotificationApiRecord(value: ApiNotification): value is NotificationA
 }
 
 export function toNotificationStoreType(rawType: string): NotificationStoreType {
-  return NOTIFICATION_TYPES.find((type) => type === rawType) ?? 'system';
+  const canonicalType = rawType === 'new_message' ? 'message' : rawType;
+  return NOTIFICATION_TYPES.find((type) => type === canonicalType) ?? 'system';
 }
 
 function notificationSenderId(notification: Notification): string {
