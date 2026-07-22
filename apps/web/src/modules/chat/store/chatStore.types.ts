@@ -254,6 +254,10 @@ export interface TypingUserInfo {
   startedAt?: string;
 }
 
+export interface ConversationFetchOptions {
+  force?: boolean;
+}
+
 export interface ChatState {
   readonly conversations: readonly Conversation[];
   readonly archivedConversations: readonly Conversation[];
@@ -270,7 +274,7 @@ export interface ChatState {
   readonly readReceipts: Readonly<Record<string, Readonly<Record<string, string>>>>; // messageId → userId → readAt
 
   // Actions
-  fetchConversations: () => Promise<void>;
+  fetchConversations: (options?: ConversationFetchOptions) => Promise<void>;
   fetchArchivedConversations: () => Promise<void>;
   fetchMessages: (conversationId: string, before?: string) => Promise<void>;
   applyUserIdentityPatch: (userId: string, patch: ChatIdentityPatch) => void;

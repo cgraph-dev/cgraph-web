@@ -290,6 +290,23 @@ export function joinUserChannel(
       .addNotification(notification, typeof unreadCount === 'number' ? unreadCount : null);
   });
 
+  channel.on('message_request_state', (payload) => {
+    const data = toRecord(payload);
+    const conversationId = data['conversation_id'];
+    const status = data['status'];
+
+    if (typeof conversationId !== 'string' || typeof status !== 'string') {
+      logger.warn('Malformed message-request state payload:', payload);
+      return;
+    }
+
+    logger.log('Message request state received:', { conversationId, status });
+    void Promise.allSettled([
+      useChatStore.getState().fetchConversations({ force: true }),
+      useNotificationStore.getState().fetchNotifications(null, { force: true }),
+    ]);
+  });
+
   // Real-time notification dismissal — removes cancelled/declined friend request notifications
   channel.on('notifications:dismissed', (payload) => {
     logger.log('Notifications dismissed:', payload);
@@ -557,8 +574,8 @@ export function joinUserChannel(
 
     if (fullSyncRequired) {
       void Promise.allSettled([
-        useChatStore.getState().fetchConversations(),
-        useNotificationStore.getState().fetchNotifications(),
+        useChatStore.getState().fetchConversations({ force: true }),
+        useNotificationStore.getState().fetchNotifications(null, { force: true }),
         useFriendStore.getState().fetchPendingRequests(),
       ]);
     }

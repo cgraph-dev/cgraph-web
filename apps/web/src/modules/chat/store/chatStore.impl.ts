@@ -14,6 +14,7 @@ import { ensureArray, normalizeMessage, normalizeConversations } from '@/lib/api
 import type {
   Message,
   Conversation,
+  ConversationFetchOptions,
   ChatState,
   ChatIdentityPatch,
 } from './chatStore.types';
@@ -28,8 +29,17 @@ import { toTypedConversation, toTypedMessage } from './chatStore.normalizers';
  * than an unbounded in-memory list.
  */
 const MAX_CONVERSATIONS = 1000;
+const CONVERSATION_CACHE_TTL_MS = 30_000;
 const LOCKED_WEB_PLACEHOLDER = '🔒 Open on mobile or desktop to read';
 const CLOUD_DECRYPT_FAILED_PLACEHOLDER = 'Unable to decrypt this Cloud Chat message.';
+
+let conversationFetchInFlight: Promise<void> | null = null;
+let forcedConversationRefreshQueued = false;
+
+function resetConversationFetchGuards() {
+  conversationFetchInFlight = null;
+  forcedConversationRefreshQueued = false;
+}
 
 function renderableMessageForWeb(msg: Message): Message {
   if (!msg.isEncrypted) {
@@ -101,6 +111,7 @@ export type {
   EditHistory,
   Conversation,
   ConversationParticipant,
+  ConversationFetchOptions,
   TypingUserInfo,
   ChatState,
 } from './chatStore.types';
@@ -137,36 +148,60 @@ export const useChatStore = create<ChatState>()(
           ),
         }));
       },
-      fetchConversations: async () => {
+      fetchConversations: async (options: ConversationFetchOptions = {}) => {
+        const force = options.force === true;
         const { conversationsLastFetchedAt, isLoadingConversations } = get();
         const now = Date.now();
-        const CACHE_TTL = 30000; // 30 seconds
+
+        if (conversationFetchInFlight) {
+          if (force) forcedConversationRefreshQueued = true;
+          return conversationFetchInFlight;
+        }
 
         if (isLoadingConversations) return;
-        if (conversationsLastFetchedAt && now - conversationsLastFetchedAt < CACHE_TTL) {
+        if (
+          !force &&
+          conversationsLastFetchedAt &&
+          now - conversationsLastFetchedAt < CONVERSATION_CACHE_TTL_MS
+        ) {
           return;
         }
 
-        set({ isLoadingConversations: true });
-        try {
-          const result = await apiClient.messaging.getConversations();
-          if (!result.ok) {
-            throw new Error(result.error.message);
-          }
-          const rawConversations: Record<string, unknown>[] = ensureArray(result.data);
+        const request = (async () => {
+          set({ isLoadingConversations: true });
+          try {
+            const result = await apiClient.messaging.getConversations();
+            if (!result.ok) {
+              throw new Error(result.error.message);
+            }
+            const rawConversations: Record<string, unknown>[] = ensureArray(result.data);
 
-          const normalizedConversations: Conversation[] = normalizeConversations(rawConversations)
-            .map(toTypedConversation)
-            .slice(0, MAX_CONVERSATIONS);
-          set({
-            conversations: normalizedConversations,
-            isLoadingConversations: false,
-            conversationsLastFetchedAt: now,
-          });
-        } catch (error: unknown) {
-          set({ isLoadingConversations: false });
-          throw error;
-        }
+            const normalizedConversations: Conversation[] = normalizeConversations(rawConversations)
+              .map(toTypedConversation)
+              .slice(0, MAX_CONVERSATIONS);
+            set({
+              conversations: normalizedConversations,
+              isLoadingConversations: false,
+              conversationsLastFetchedAt: now,
+            });
+          } catch (error: unknown) {
+            set({ isLoadingConversations: false });
+            throw error;
+          }
+        })();
+
+        const guardedRequest = request.finally(async () => {
+          if (conversationFetchInFlight !== guardedRequest) return;
+
+          conversationFetchInFlight = null;
+          if (!forcedConversationRefreshQueued) return;
+
+          forcedConversationRefreshQueued = false;
+          await get().fetchConversations({ force: true });
+        });
+
+        conversationFetchInFlight = guardedRequest;
+        return guardedRequest;
       },
 
       fetchArchivedConversations: async () => {
@@ -266,7 +301,8 @@ export const useChatStore = create<ChatState>()(
       ...createMessagingActions(set, get),
       ...createOperationsActions(set, get),
 
-      reset: () =>
+      reset: () => {
+        resetConversationFetchGuards();
         set({
           conversations: [],
           archivedConversations: [],
@@ -281,7 +317,8 @@ export const useChatStore = create<ChatState>()(
           hasMoreMessages: {},
           conversationsLastFetchedAt: null,
           readReceipts: {},
-        }),
+        });
+      },
     }),
     {
       name: 'ChatStore',

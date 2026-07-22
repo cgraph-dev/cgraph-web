@@ -1,9 +1,7 @@
 /**
  * App Layout constants — primary navigation matching mobile tab structure.
  *
- * Sections: Chats, Spaces, Groups, Discover, Forums, Settings
- * Social + Explore removed as standalone items — content merged into Chats/Groups/Forums.
- * Creator accessible from Settings hub.
+ * Sections: Chats, Spaces, Groups, Discover, Forums, Notifications, Settings.
  *
  * @see reference/Signal/Signal-Android/.../MainNavigation.kt
  * @see reference/Telegram/Telegram-iOS/.../TabBarComponent/
@@ -15,6 +13,7 @@ import {
   NewspaperIcon,
   Cog6ToothIcon,
   GlobeAltIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 import {
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
@@ -23,6 +22,7 @@ import {
   NewspaperIcon as NewspaperIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
   GlobeAltIcon as GlobeAltIconSolid,
+  BellIcon as BellIconSolid,
 } from '@heroicons/react/24/solid';
 
 export const navItems = [
@@ -55,6 +55,12 @@ export const navItems = [
     label: 'Forums',
     icon: NewspaperIcon,
     activeIcon: NewspaperIconSolid,
+  },
+  {
+    path: '/social/notifications',
+    label: 'Notifications',
+    icon: BellIcon,
+    activeIcon: BellIconSolid,
   },
   {
     path: '/me/settings',

@@ -250,9 +250,9 @@ function SidebarNavItem({
             )}
           </AnimatePresence>
 
-          {/* Social badge */}
+          {/* Notification badge */}
           <AnimatePresence>
-            {item.path === '/social' && unreadCount > 0 && (
+            {item.path === '/social/notifications' && unreadCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}

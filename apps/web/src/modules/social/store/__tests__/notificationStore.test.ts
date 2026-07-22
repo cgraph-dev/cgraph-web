@@ -180,6 +180,17 @@ describe('NotificationStore', () => {
     expect(useNotificationStore.getState().unreadCount).toBe(4);
   });
 
+  it('refreshes a fresh root projection when reconnect recovery requires it', async () => {
+    notificationApi.list.mockResolvedValueOnce(ok([notificationResponse(messageRequest)]));
+    notificationApi.getUnreadCount.mockResolvedValueOnce(ok({ count: 1 }));
+
+    await useNotificationStore.getState().fetchNotifications();
+    await useNotificationStore.getState().fetchNotifications(null, { force: true });
+
+    expect(notificationApi.list).toHaveBeenCalledTimes(2);
+    expect(notificationApi.getUnreadCount).toHaveBeenCalledTimes(2);
+  });
+
   it('keeps the server count when an unread notification is marked read', async () => {
     useNotificationStore.setState({ notifications: [first, second], unreadCount: 22 });
     notificationApi.markAsRead.mockResolvedValueOnce(ok({ unread_count: 21 }));

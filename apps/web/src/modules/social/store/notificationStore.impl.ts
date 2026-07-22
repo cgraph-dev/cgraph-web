@@ -26,6 +26,7 @@ const NOTIFICATION_ROOT_FRESH_MS = 20_000;
 
 let notificationRootInFlight: Promise<void> | null = null;
 let notificationRootLastSuccessAt = 0;
+let forcedNotificationRefreshQueued = false;
 
 function isNotificationRootFresh(): boolean {
   return Date.now() - notificationRootLastSuccessAt < NOTIFICATION_ROOT_FRESH_MS;
@@ -34,6 +35,11 @@ function isNotificationRootFresh(): boolean {
 function resetNotificationFetchGuards() {
   notificationRootInFlight = null;
   notificationRootLastSuccessAt = 0;
+  forcedNotificationRefreshQueued = false;
+}
+
+export interface NotificationFetchOptions {
+  force?: boolean;
 }
 
 type NotificationApiRecord = ApiNotification & Record<string, unknown>;
@@ -118,7 +124,10 @@ export interface NotificationState {
   hasMore: boolean;
 
   // Actions
-  fetchNotifications: (cursor?: string | null) => Promise<void>;
+  fetchNotifications: (
+    cursor?: string | null,
+    options?: NotificationFetchOptions
+  ) => Promise<void>;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
@@ -131,16 +140,24 @@ export interface NotificationState {
 
 export const useNotificationStore = create<NotificationState>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       notifications: [],
       unreadCount: 0,
       isLoading: false,
       hasMore: true,
 
-      fetchNotifications: async (cursor: string | null = null) => {
+      fetchNotifications: async (
+        cursor: string | null = null,
+        options: NotificationFetchOptions = {}
+      ) => {
+        const force = options.force === true;
+
         if (cursor === null) {
-          if (notificationRootInFlight) return notificationRootInFlight;
-          if (isNotificationRootFresh()) return;
+          if (notificationRootInFlight) {
+            if (force) forcedNotificationRefreshQueued = true;
+            return notificationRootInFlight;
+          }
+          if (!force && isNotificationRootFresh()) return;
         }
 
         const remaining = getMaxRateLimitRemainingMs(NOTIFICATION_RATE_LIMIT_SCOPES);
@@ -225,9 +242,14 @@ export const useNotificationStore = create<NotificationState>()(
         })();
 
         if (cursor === null) {
-          const guardedRequest = request.finally(() => {
+          const guardedRequest = request.finally(async () => {
             if (notificationRootInFlight === guardedRequest) {
               notificationRootInFlight = null;
+
+              if (forcedNotificationRefreshQueued) {
+                forcedNotificationRefreshQueued = false;
+                await get().fetchNotifications(null, { force: true });
+              }
             }
           });
           notificationRootInFlight = guardedRequest;

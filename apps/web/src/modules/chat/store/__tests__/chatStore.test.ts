@@ -204,6 +204,18 @@ describe('fetchConversations', () => {
     expect(mockApi.get).not.toHaveBeenCalled();
   });
 
+  it('refreshes a fresh cache for a durable realtime state change', async () => {
+    useChatStore.setState({ conversationsLastFetchedAt: Date.now() });
+    mockApi.get.mockResolvedValueOnce({ data: { conversations: [makeConv({ id: 'request-1' })] } });
+
+    await useChatStore.getState().fetchConversations({ force: true });
+
+    expect(mockApi.get).toHaveBeenCalledTimes(1);
+    expect(useChatStore.getState().conversations.map((conversation) => conversation.id)).toEqual([
+      'request-1',
+    ]);
+  });
+
   it('sets isLoadingConversations false on error', async () => {
     mockApi.get.mockRejectedValueOnce(new Error('network'));
     await expect(useChatStore.getState().fetchConversations()).rejects.toThrow('network');
