@@ -394,10 +394,10 @@ vi.mock('../constants', () => ({
       activeIcon: () => <span data-testid="icon-messages-active">M</span>,
     },
     {
-      path: '/social',
-      label: 'Social',
-      icon: () => <span data-testid="icon-social">S</span>,
-      activeIcon: () => <span data-testid="icon-social-active">S</span>,
+      path: '/social/notifications',
+      label: 'Notifications',
+      icon: () => <span data-testid="icon-notifications">N</span>,
+      activeIcon: () => <span data-testid="icon-notifications-active">N</span>,
     },
     {
       path: '/settings',
@@ -493,10 +493,10 @@ describe('Sidebar', () => {
         activeIcon: () => <span>M*</span>,
       },
       {
-        path: '/social',
-        label: 'Social',
-        icon: () => <span>S</span>,
-        activeIcon: () => <span>S*</span>,
+        path: '/social/notifications',
+        label: 'Notifications',
+        icon: () => <span>N</span>,
+        activeIcon: () => <span>N*</span>,
       },
     ],
   } as unknown as Parameters<typeof Sidebar>[0];
@@ -514,7 +514,7 @@ describe('Sidebar', () => {
   it('renders nav items with proper aria labels', () => {
     render(<Sidebar {...sidebarProps} />);
     expect(screen.getByLabelText('Messages')).toBeInTheDocument();
-    expect(screen.getByLabelText('Social')).toBeInTheDocument();
+    expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
   });
 
   it('shows unread badge on messages when totalUnread > 0', () => {
@@ -527,12 +527,12 @@ describe('Sidebar', () => {
     expect(screen.getByText('99+')).toBeInTheDocument();
   });
 
-  it('shows unread badge on social when unreadCount > 0', () => {
+  it('shows unread badge on notifications when unreadCount > 0', () => {
     render(<Sidebar {...sidebarProps} unreadCount={3} />);
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
-  it('caps social badge at 99+', () => {
+  it('caps notifications badge at 99+', () => {
     render(<Sidebar {...sidebarProps} unreadCount={200} />);
     expect(screen.getByText('99+')).toBeInTheDocument();
   });
