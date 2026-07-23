@@ -11,6 +11,13 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { apiClient, http } from '@/lib/api-client';
 import { ensureArray, normalizeMessage, normalizeConversations } from '@/lib/api-utils';
+import {
+  CHAT_HISTORY_RATE_LIMIT_SCOPE,
+  CHAT_LIST_RATE_LIMIT_SCOPE,
+  createRateLimitCooldownError,
+  getRateLimitRemainingMs,
+  rememberRateLimit,
+} from '@/lib/api-rate-limit';
 import type {
   Message,
   Conversation,
@@ -35,10 +42,16 @@ const CLOUD_DECRYPT_FAILED_PLACEHOLDER = 'Unable to decrypt this Cloud Chat mess
 
 let conversationFetchInFlight: Promise<void> | null = null;
 let forcedConversationRefreshQueued = false;
+const messageFetchInFlight = new Map<string, Promise<void>>();
+
+function messageFetchKey(conversationId: string, before?: string): string {
+  return `${conversationId}:${before ?? 'latest'}`;
+}
 
 function resetConversationFetchGuards() {
   conversationFetchInFlight = null;
   forcedConversationRefreshQueued = false;
+  messageFetchInFlight.clear();
 }
 
 function renderableMessageForWeb(msg: Message): Message {
@@ -131,6 +144,7 @@ export const useChatStore = create<ChatState>()(
       typingUsersInfo: {},
       hasMoreMessages: {},
       conversationsLastFetchedAt: null,
+      messageHistoryErrors: {},
       readReceipts: {},
       applyUserIdentityPatch: (userId, patch) => {
         set((state) => ({
@@ -167,12 +181,18 @@ export const useChatStore = create<ChatState>()(
           return;
         }
 
+        const remainingMs = getRateLimitRemainingMs(CHAT_LIST_RATE_LIMIT_SCOPE);
+        if (remainingMs > 0) {
+          throw createRateLimitCooldownError(remainingMs);
+        }
+
         const request = (async () => {
           set({ isLoadingConversations: true });
           try {
             const result = await apiClient.messaging.getConversations();
             if (!result.ok) {
-              throw new Error(result.error.message);
+              const rateLimitMessage = rememberRateLimit([CHAT_LIST_RATE_LIMIT_SCOPE], result);
+              throw new Error(rateLimitMessage ?? result.error.message);
             }
             const rawConversations: Record<string, unknown>[] = ensureArray(result.data);
 
@@ -182,7 +202,7 @@ export const useChatStore = create<ChatState>()(
             set({
               conversations: normalizedConversations,
               isLoadingConversations: false,
-              conversationsLastFetchedAt: now,
+              conversationsLastFetchedAt: Date.now(),
             });
           } catch (error: unknown) {
             set({ isLoadingConversations: false });
@@ -225,84 +245,125 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
-      fetchMessages: async (conversationId: string, before?: string) => {
+      fetchMessages: (conversationId: string, before?: string) => {
+        const queryKey = messageFetchKey(conversationId, before);
+        const existingRequest = messageFetchInFlight.get(queryKey);
+        if (existingRequest) return existingRequest;
+
+        const remainingMs = getRateLimitRemainingMs(CHAT_HISTORY_RATE_LIMIT_SCOPE);
+        if (remainingMs > 0) {
+          const error = createRateLimitCooldownError(remainingMs);
+          set((state) => ({
+            messageHistoryErrors: {
+              ...state.messageHistoryErrors,
+              [conversationId]: error.message,
+            },
+          }));
+          return Promise.reject(error);
+        }
+
         set({ isLoadingMessages: true });
-        try {
-          const fetchParams = before
-            ? { cursor: before, limit: 50, direction: 'before' as const }
-            : { limit: 50 };
-          const fetchResult = await apiClient.messaging.fetch(conversationId, fetchParams);
-          if (!fetchResult.ok) throw new Error(fetchResult.error.message);
-          const rawMessages: Record<string, unknown>[] = ensureArray(fetchResult.data);
+        const request = (async () => {
+          try {
+            const fetchParams = before
+              ? { cursor: before, limit: 50, direction: 'before' as const }
+              : { limit: 50 };
+            const fetchResult = await apiClient.messaging.fetch(conversationId, fetchParams);
+            if (!fetchResult.ok) {
+              const rateLimitMessage = rememberRateLimit([CHAT_HISTORY_RATE_LIMIT_SCOPE], fetchResult);
+              if (rateLimitMessage) {
+                set((state) => ({
+                  messageHistoryErrors: {
+                    ...state.messageHistoryErrors,
+                    [conversationId]: rateLimitMessage,
+                  },
+                }));
+              }
+              throw new Error(rateLimitMessage ?? fetchResult.error.message);
+            }
+            const rawMessages: Record<string, unknown>[] = ensureArray(fetchResult.data);
 
-          const newMessages: Message[] = rawMessages.map((m) =>
-            toTypedMessage(normalizeMessage(m))
-          );
-          const hasMore = newMessages.length === 50;
+            const newMessages: Message[] = rawMessages.map((m) =>
+              toTypedMessage(normalizeMessage(m))
+            );
+            const hasMore = newMessages.length === 50;
 
-          const processedMessages = newMessages.map(renderableMessageForWeb);
+            const processedMessages = newMessages.map(renderableMessageForWeb);
 
-          set((state) => {
-            const existingIds = state.messageIdSets[conversationId] || new Set<string>();
-            const newIdSet = new Set(existingIds);
-            processedMessages.forEach((m) => newIdSet.add(m.id));
+            set((state) => {
+              const existingIds = state.messageIdSets[conversationId] || new Set<string>();
+              const newIdSet = new Set(existingIds);
+              processedMessages.forEach((m) => newIdSet.add(m.id));
 
-            // Merge messages: prepend if loading older, replace if initial fetch
-            let mergedMessages = before
-              ? [...processedMessages, ...(state.messages[conversationId] || [])]
-              : processedMessages;
+              // Merge messages: prepend if loading older, replace if initial fetch
+              let mergedMessages = before
+                ? [...processedMessages, ...(state.messages[conversationId] || [])]
+                : processedMessages;
 
-            // Enforce MAX_MESSAGES_PER_CONVERSATION to prevent unbounded memory growth.
-            // When scrolling up through history, prune from the END (newest).
-            // When loading fresh, prune from the START (oldest) — same as addMessage.
-            const MAX_MESSAGES = 500;
-            if (mergedMessages.length > MAX_MESSAGES) {
-              if (before) {
-                // User is scrolling up — keep oldest, prune newest (they'll re-fetch on scroll down)
-                const pruneCount = mergedMessages.length - MAX_MESSAGES;
-                const pruned = mergedMessages.slice(mergedMessages.length - pruneCount);
-                mergedMessages = mergedMessages.slice(0, MAX_MESSAGES);
-                for (const p of pruned) {
-                  newIdSet.delete(p.id);
-                }
-              } else {
-                // Initial load — keep newest, prune oldest
-                const pruneCount = mergedMessages.length - MAX_MESSAGES;
-                const pruned = mergedMessages.slice(0, pruneCount);
-                mergedMessages = mergedMessages.slice(pruneCount);
-                for (const p of pruned) {
-                  newIdSet.delete(p.id);
+              // Enforce MAX_MESSAGES_PER_CONVERSATION to prevent unbounded memory growth.
+              // When scrolling up through history, prune from the END (newest).
+              // When loading fresh, prune from the START (oldest) — same as addMessage.
+              const MAX_MESSAGES = 500;
+              if (mergedMessages.length > MAX_MESSAGES) {
+                if (before) {
+                  // User is scrolling up — keep oldest, prune newest (they'll re-fetch on scroll down)
+                  const pruneCount = mergedMessages.length - MAX_MESSAGES;
+                  const pruned = mergedMessages.slice(mergedMessages.length - pruneCount);
+                  mergedMessages = mergedMessages.slice(0, MAX_MESSAGES);
+                  for (const p of pruned) {
+                    newIdSet.delete(p.id);
+                  }
+                } else {
+                  // Initial load — keep newest, prune oldest
+                  const pruneCount = mergedMessages.length - MAX_MESSAGES;
+                  const pruned = mergedMessages.slice(0, pruneCount);
+                  mergedMessages = mergedMessages.slice(pruneCount);
+                  for (const p of pruned) {
+                    newIdSet.delete(p.id);
+                  }
                 }
               }
+
+              const remainingErrors = { ...state.messageHistoryErrors };
+              delete remainingErrors[conversationId];
+
+              return {
+                messages: {
+                  ...state.messages,
+                  [conversationId]: mergedMessages,
+                },
+                messageIdSets: {
+                  ...state.messageIdSets,
+                  [conversationId]: newIdSet,
+                },
+                hasMoreMessages: {
+                  ...state.hasMoreMessages,
+                  [conversationId]: hasMore,
+                },
+                messageHistoryErrors: remainingErrors,
+              };
+            });
+
+            if (!before) {
+              await get().hydratePendingMessages(conversationId);
             }
-
-            return {
-              messages: {
-                ...state.messages,
-                [conversationId]: mergedMessages,
-              },
-              messageIdSets: {
-                ...state.messageIdSets,
-                [conversationId]: newIdSet,
-              },
-              hasMoreMessages: {
-                ...state.hasMoreMessages,
-                [conversationId]: hasMore,
-              },
-              isLoadingMessages: false,
-            };
-          });
-
-          if (!before) {
-            await get().hydratePendingMessages(conversationId);
+          } catch (error: unknown) {
+            if (!before) {
+              await get().hydratePendingMessages(conversationId);
+            }
+            throw error;
           }
-        } catch (error: unknown) {
-          if (!before) {
-            await get().hydratePendingMessages(conversationId);
+        })();
+
+        const guardedRequest = request.finally(() => {
+          if (messageFetchInFlight.get(queryKey) === guardedRequest) {
+            messageFetchInFlight.delete(queryKey);
           }
-          set({ isLoadingMessages: false });
-          throw error;
-        }
+          set({ isLoadingMessages: messageFetchInFlight.size > 0 });
+        });
+
+        messageFetchInFlight.set(queryKey, guardedRequest);
+        return guardedRequest;
       },
 
       ...createMessagingActions(set, get),
@@ -323,6 +384,7 @@ export const useChatStore = create<ChatState>()(
           typingUsersInfo: {},
           hasMoreMessages: {},
           conversationsLastFetchedAt: null,
+          messageHistoryErrors: {},
           readReceipts: {},
         });
       },

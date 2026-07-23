@@ -12,16 +12,9 @@ import { getApiBaseUrl } from './backend-url';
 import { APP_VERSION } from './app-version';
 import { reconnectSocketWithFreshToken } from './socket-token-reconnect';
 import { createLogger } from '@/lib/logger';
-import {
-  createRateLimitCooldownError,
-  getRateLimitRemainingMs,
-  rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
-} from '@/lib/api-rate-limit';
 
 const logger = createLogger('API');
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
-const RATE_LIMITED_READ_METHODS = new Set(['get', 'head', 'options']);
 
 /**
  * API URL Configuration
@@ -141,26 +134,3 @@ export function getErrorMessage(error: unknown): string {
   const info = extractApiError(error);
   return info.message;
 }
-
-// Keep API rate-limit cooldowns scoped to rate-limited reads. Backend and
-// provider failures must remain isolated so an auxiliary endpoint cannot block
-// a direct-message write.
-api.interceptors.response.use(undefined, (error) => {
-  const rateLimitMessage = rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], error);
-  if (rateLimitMessage) {
-    logger.warn('API rate limited:', rateLimitMessage);
-  }
-  return Promise.reject(error);
-});
-
-api.interceptors.request.use((config) => {
-  const method = (config.method ?? 'get').toLowerCase();
-  if (RATE_LIMITED_READ_METHODS.has(method)) {
-    const remainingMs = getRateLimitRemainingMs(USER_API_RATE_LIMIT_SCOPE);
-    if (remainingMs > 0) {
-      return Promise.reject(createRateLimitCooldownError(remainingMs));
-    }
-  }
-
-  return config;
-});

@@ -3,7 +3,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useCloudConversationController } from '@/modules/chat/controllers/cloud-conversation';
 import { ConversationHeader } from './conversation-header';
 import { MessageInputArea } from './message-input-area';
@@ -93,6 +93,7 @@ export default function CloudConversation() {
     messagesScrollRef,
     callRecipientId,
     handleMessagesScroll,
+    messageHistoryError,
     showScrollToLatest,
     newMessagesBelow,
     scrollToLatestMessages,
@@ -100,6 +101,7 @@ export default function CloudConversation() {
     handleComposerPayload,
     handleStartCall,
     handleMessageRequestDeleted,
+    retryMessageHistory,
     messageActions,
   } = useCloudConversationController();
   const chatThemeSettings = useCustomizationStore((state) => state.chatThemeSettings);
@@ -307,6 +309,26 @@ export default function CloudConversation() {
               ))}
             </div>
           </aside>
+        ) : null
+      }
+      requestBanner={
+        messageHistoryError ? (
+          <div
+            className="flex items-center justify-between gap-3 border-b border-amber-400/20 bg-amber-400/10 px-4 py-2 text-sm text-amber-100"
+            role="status"
+            aria-live="polite"
+          >
+            <span>{messageHistoryError}</span>
+            <button
+              type="button"
+              onClick={retryMessageHistory}
+              className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md px-3 font-medium text-amber-50 transition-colors hover:bg-amber-400/10 focus:outline-none focus:ring-2 focus:ring-amber-300"
+              title="Retry message history"
+            >
+              <ArrowPathIcon className="h-4 w-4" aria-hidden="true" />
+              Retry
+            </button>
+          </div>
         ) : null
       }
       messagesScrollRef={messagesScrollRef}

@@ -1,6 +1,8 @@
 const DEFAULT_RETRY_MS = 30_000;
 
-export const USER_API_RATE_LIMIT_SCOPE = 'api:user-session';
+export const SEARCH_READ_RATE_LIMIT_SCOPE = 'search:read';
+export const CHAT_LIST_RATE_LIMIT_SCOPE = 'chat:list';
+export const CHAT_HISTORY_RATE_LIMIT_SCOPE = 'chat:history';
 export const RATE_LIMIT_COOLDOWN_ERROR_CODE = 'ERR_CGRAPH_RATE_LIMIT_COOLDOWN';
 
 const cooldowns = new Map<string, number>();

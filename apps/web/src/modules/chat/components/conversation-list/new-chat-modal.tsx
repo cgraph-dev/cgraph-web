@@ -12,7 +12,7 @@ import { isRecord, asString, asOptionalString, asEnum } from '@/lib/api-utils';
 import {
   getMaxRateLimitRemainingMs,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
+  SEARCH_READ_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 import { getAvatarBorderId } from '@/lib/utils';
 import type { NewChatModalProps, MockUser } from './types';
@@ -21,7 +21,7 @@ import { TypePicker, type ChatTierType } from '@/pages/messages/new-chat/type-pi
 import { WebOnlyRecipientPrompt } from '@/pages/messages/new-chat/web-only-recipient-prompt';
 
 const logger = createLogger('NewChatModal');
-const USER_SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
+const USER_SEARCH_RATE_LIMIT_SCOPES = [SEARCH_READ_RATE_LIMIT_SCOPE] as const;
 
 /**
  * Modal for creating a new 1:1 or group conversation. Searches users

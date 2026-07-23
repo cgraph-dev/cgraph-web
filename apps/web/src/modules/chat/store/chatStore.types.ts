@@ -271,6 +271,7 @@ export interface ChatState {
   readonly typingUsersInfo: Readonly<Record<string, readonly TypingUserInfo[]>>;
   readonly hasMoreMessages: Readonly<Record<string, boolean>>;
   readonly conversationsLastFetchedAt: number | null;
+  readonly messageHistoryErrors: Readonly<Record<string, string>>;
   readonly readReceipts: Readonly<Record<string, Readonly<Record<string, string>>>>; // messageId → userId → readAt
 
   // Actions

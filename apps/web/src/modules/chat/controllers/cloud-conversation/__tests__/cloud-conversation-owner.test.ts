@@ -35,7 +35,9 @@ describe('Cloud conversation ownership', () => {
     expect(cloudSurface).toContain('messageRequest.blocksComposer ?');
     expect(cloudSurface).toContain('<MessageRequestPanel');
     expect(cloudSurface).toContain('<MessageInputArea');
-    expect(cloudSurface).not.toContain('requestBanner=');
+    expect(cloudSurface).toContain('requestBanner={');
+    expect(cloudSurface).toContain('messageHistoryError ? (');
+    expect(cloudSurface).toContain('onClick={retryMessageHistory}');
     expect(cloudSurface).not.toContain("from './useEnhancedConversation'");
 
     expect(routeCompatibilityExport.trim()).toBe(

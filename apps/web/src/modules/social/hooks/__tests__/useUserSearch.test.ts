@@ -34,19 +34,19 @@ import { api } from '@/lib/api-client';
 import {
   clearRateLimitScopes,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
+  SEARCH_READ_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 import { useUserSearch } from '../useUserSearch';
 
 const mockApi = { get: api.get as ReturnType<typeof vi.fn> };
 
 beforeEach(() => {
-  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE]);
+  clearRateLimitScopes([SEARCH_READ_RATE_LIMIT_SCOPE]);
   vi.clearAllMocks();
 });
 
 afterEach(() => {
-  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE]);
+  clearRateLimitScopes([SEARCH_READ_RATE_LIMIT_SCOPE]);
   vi.restoreAllMocks();
 });
 
@@ -224,8 +224,8 @@ describe('useUserSearch', () => {
     expect(result.current.results).toEqual([]);
   });
 
-  it('does not call search while the user API cooldown is active', async () => {
-    rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], {
+  it('does not call search while the search cooldown is active', async () => {
+    rememberRateLimit([SEARCH_READ_RATE_LIMIT_SCOPE], {
       response: {
         status: 429,
         data: {

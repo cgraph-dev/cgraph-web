@@ -16,6 +16,24 @@ function unavailable(config: InternalAxiosRequestConfig): AxiosError {
   return new AxiosError('Request failed with status code 503', 'ERR_BAD_RESPONSE', config, null, response);
 }
 
+function rateLimited(config: InternalAxiosRequestConfig): AxiosError {
+  const response: AxiosResponse = {
+    config,
+    data: {
+      error: {
+        code: 'rate_limited',
+        message: 'Too many search requests',
+        retry_after: 15,
+      },
+    },
+    headers: new AxiosHeaders({ 'retry-after': '15' }),
+    status: 429,
+    statusText: 'Too Many Requests',
+  };
+
+  return new AxiosError('Request failed with status code 429', 'ERR_BAD_RESPONSE', config, null, response);
+}
+
 describe('API failure isolation', () => {
   afterEach(() => {
     api.defaults.adapter = originalAdapter;
@@ -48,5 +66,29 @@ describe('API failure isolation', () => {
       api.post('/api/v1/conversations/conversation-1/messages', { content: 'hello' })
     ).resolves.toMatchObject({ status: 201 });
     expect(adapter).toHaveBeenCalledTimes(6);
+  });
+
+  it('does not retry a rate-limited read or block an unrelated read', async () => {
+    const adapter = vi.fn(async (config: InternalAxiosRequestConfig): Promise<AxiosResponse> => {
+      if (config.url === '/api/v1/search/users') {
+        throw rateLimited(config);
+      }
+
+      return {
+        config,
+        data: { data: [] },
+        headers: new AxiosHeaders(),
+        status: 200,
+        statusText: 'OK',
+      };
+    });
+    api.defaults.adapter = adapter;
+
+    await expect(api.get('/api/v1/search/users')).rejects.toMatchObject({
+      response: { status: 429 },
+    });
+    await expect(api.get('/api/v1/notifications')).resolves.toMatchObject({ status: 200 });
+
+    expect(adapter).toHaveBeenCalledTimes(2);
   });
 });

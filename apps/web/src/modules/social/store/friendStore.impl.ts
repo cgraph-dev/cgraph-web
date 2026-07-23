@@ -14,7 +14,6 @@ import {
   formatRateLimitWait,
   getMaxRateLimitRemainingMs,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 
 // Re-export types so existing consumers keep working
@@ -27,8 +26,8 @@ import { useNotificationStore } from './notificationStore.impl';
 
 const FRIEND_READ_RATE_LIMIT_SCOPE = 'friends:read';
 const FRIEND_WRITE_RATE_LIMIT_SCOPE = 'friends:write';
-const FRIEND_READ_SCOPES = [USER_API_RATE_LIMIT_SCOPE, FRIEND_READ_RATE_LIMIT_SCOPE] as const;
-const FRIEND_WRITE_SCOPES = [USER_API_RATE_LIMIT_SCOPE, FRIEND_WRITE_RATE_LIMIT_SCOPE] as const;
+const FRIEND_READ_SCOPES = [FRIEND_READ_RATE_LIMIT_SCOPE] as const;
+const FRIEND_WRITE_SCOPES = [FRIEND_WRITE_RATE_LIMIT_SCOPE] as const;
 
 type FriendReadKey = 'friends' | 'incoming' | 'outgoing';
 

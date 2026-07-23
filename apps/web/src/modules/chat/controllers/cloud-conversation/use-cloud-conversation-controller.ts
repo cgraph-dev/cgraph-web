@@ -81,6 +81,7 @@ export function useCloudConversationController() {
   const {
     conversations,
     messages,
+    messageHistoryErrors,
     typingUsers,
     sendMessage,
     fetchMessages,
@@ -117,6 +118,7 @@ export function useCloudConversationController() {
   const conversationMessages = conversationId
     ? (messages[conversationId] ?? EMPTY_MESSAGES)
     : EMPTY_MESSAGES;
+  const messageHistoryError = conversationId ? (messageHistoryErrors[conversationId] ?? null) : null;
   const lastMessageId = conversationMessages.at(-1)?.id ?? null;
   const typing = conversationId
     ? (typingUsers[conversationId] || []).filter((userId) => userId !== user?.id)
@@ -522,6 +524,14 @@ export function useCloudConversationController() {
     navigate('/messages', { replace: true });
   };
 
+  const retryMessageHistory = useCallback(() => {
+    if (!conversationId) return;
+
+    void fetchMessages(conversationId).catch((error: unknown) => {
+      logger.warn('Failed to retry conversation history:', error);
+    });
+  }, [conversationId, fetchMessages]);
+
   return {
     // Data
     conversationId,
@@ -532,6 +542,7 @@ export function useCloudConversationController() {
     user,
     callRecipientId,
     messageRequest,
+    messageHistoryError,
     // State
     attachmentNodePrice,
     isUploading,
@@ -552,6 +563,7 @@ export function useCloudConversationController() {
     handleAvatarClick,
     handleStartCall,
     handleMessageRequestDeleted,
+    retryMessageHistory,
     messageActions,
   };
 }

@@ -9,13 +9,13 @@ import {
   formatRateLimitWait,
   getMaxRateLimitRemainingMs,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
+  SEARCH_READ_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
 import type { FriendshipStatus } from '@/modules/social/types';
 
 const logger = createLogger('useUserSearch');
-const USER_SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
+const USER_SEARCH_RATE_LIMIT_SCOPES = [SEARCH_READ_RATE_LIMIT_SCOPE] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

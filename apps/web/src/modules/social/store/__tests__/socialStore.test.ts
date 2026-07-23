@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
 import { useFriendStore } from '../friendStore.impl';
 import { useNotificationStore } from '../notificationStore.impl';
-import { clearRateLimitScopes, USER_API_RATE_LIMIT_SCOPE } from '@/lib/api-rate-limit';
+import { clearRateLimitScopes } from '@/lib/api-rate-limit';
 
 vi.mock('@/lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
@@ -67,7 +67,6 @@ beforeEach(() => {
   useFriendStore.getState().reset();
   useNotificationStore.getState().reset();
   clearRateLimitScopes([
-    USER_API_RATE_LIMIT_SCOPE,
     'friends:read',
     'friends:write',
     'notifications:read',

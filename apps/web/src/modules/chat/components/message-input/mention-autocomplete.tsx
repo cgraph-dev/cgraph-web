@@ -8,7 +8,7 @@ import { http } from '@/lib/api-client';
 import {
   getMaxRateLimitRemainingMs,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
+  SEARCH_READ_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import type { MentionUser } from './types';
@@ -21,7 +21,7 @@ interface MentionAutocompleteProps {
 }
 
 // User search is handled via API exclusively
-const USER_SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
+const USER_SEARCH_RATE_LIMIT_SCOPES = [SEARCH_READ_RATE_LIMIT_SCOPE] as const;
 
 /**
  */

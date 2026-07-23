@@ -36,7 +36,7 @@ vi.mock('@/lib/apiUtils', () => ({
 }));
 
 import { api } from '@/lib/api-client';
-import { clearRateLimitScopes, USER_API_RATE_LIMIT_SCOPE } from '@/lib/api-rate-limit';
+import { clearRateLimitScopes } from '@/lib/api-rate-limit';
 import { useFriendStore } from '../friendStore.impl';
 import type { Friend, FriendRequest } from '../friend-types';
 
@@ -83,7 +83,7 @@ const getInitialState = () => ({
 beforeEach(() => {
   useFriendStore.getState().reset();
   useFriendStore.setState(getInitialState());
-  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE, 'friends:read', 'friends:write']);
+  clearRateLimitScopes(['friends:read', 'friends:write']);
   vi.clearAllMocks();
 });
 

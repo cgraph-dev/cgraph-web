@@ -10,7 +10,6 @@ import { isRecord, asString } from '@/lib/api-utils';
 import {
   getMaxRateLimitRemainingMs,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 
 const logger = createLogger('NotificationStore');
@@ -18,10 +17,7 @@ const logger = createLogger('NotificationStore');
 /** Maximum notifications kept in memory to prevent unbounded growth. */
 const MAX_NOTIFICATIONS = 200;
 const NOTIFICATION_RATE_LIMIT_SCOPE = 'notifications:read';
-const NOTIFICATION_RATE_LIMIT_SCOPES = [
-  USER_API_RATE_LIMIT_SCOPE,
-  NOTIFICATION_RATE_LIMIT_SCOPE,
-] as const;
+const NOTIFICATION_RATE_LIMIT_SCOPES = [NOTIFICATION_RATE_LIMIT_SCOPE] as const;
 const NOTIFICATION_ROOT_FRESH_MS = 20_000;
 
 let notificationRootInFlight: Promise<void> | null = null;

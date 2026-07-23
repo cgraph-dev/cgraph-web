@@ -8,7 +8,7 @@ import {
   formatRateLimitWait,
   getMaxRateLimitRemainingMs,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
+  SEARCH_READ_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 import type {
   SearchUser,
@@ -76,7 +76,7 @@ const MAX_SEARCH_POSTS = 100;
 const MAX_SEARCH_MESSAGES = 100;
 const MAX_GLOBAL_SEARCH_RESULTS = 50;
 const DEFAULT_TYPED_SEARCH_LIMIT = 20;
-const SEARCH_RATE_LIMIT_SCOPES = [USER_API_RATE_LIMIT_SCOPE] as const;
+const SEARCH_RATE_LIMIT_SCOPES = [SEARCH_READ_RATE_LIMIT_SCOPE] as const;
 const SEARCH_RESULT_CATEGORIES = ['users', 'groups', 'forums', 'posts', 'messages'] as const;
 const SEARCH_RESULT_LIMITS: Record<SearchResultCategory, number> = {
   users: MAX_SEARCH_USERS,

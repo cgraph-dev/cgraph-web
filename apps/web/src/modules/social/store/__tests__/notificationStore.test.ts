@@ -22,7 +22,7 @@ vi.mock('@/lib/api-client', () => ({
   },
 }));
 
-import { clearRateLimitScopes, USER_API_RATE_LIMIT_SCOPE } from '@/lib/api-rate-limit';
+import { clearRateLimitScopes } from '@/lib/api-rate-limit';
 import { useNotificationStore, type Notification } from '../notificationStore.impl';
 
 const NOTIFICATION_RATE_LIMIT_SCOPE = 'notifications:read';
@@ -92,7 +92,7 @@ function notificationResponse(item: Notification): Record<string, unknown> {
 
 beforeEach(() => {
   useNotificationStore.getState().reset();
-  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE, NOTIFICATION_RATE_LIMIT_SCOPE]);
+  clearRateLimitScopes([NOTIFICATION_RATE_LIMIT_SCOPE]);
   vi.clearAllMocks();
 
   notificationApi.list.mockResolvedValue(ok([]));

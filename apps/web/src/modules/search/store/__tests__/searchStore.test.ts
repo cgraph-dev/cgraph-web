@@ -49,7 +49,7 @@ import { apiClient } from '@/lib/api-client';
 import {
   clearRateLimitScopes,
   rememberRateLimit,
-  USER_API_RATE_LIMIT_SCOPE,
+  SEARCH_READ_RATE_LIMIT_SCOPE,
 } from '@/lib/api-rate-limit';
 
 // Typed mock helpers — vi.mocked() is the assertion-free Vitest idiom
@@ -216,7 +216,7 @@ function deferred<T>() {
 // Tests
 
 afterEach(() => {
-  clearRateLimitScopes([USER_API_RATE_LIMIT_SCOPE]);
+  clearRateLimitScopes([SEARCH_READ_RATE_LIMIT_SCOPE]);
   useSearchStore.setState(getInitialState());
   vi.clearAllMocks();
 });
@@ -452,8 +452,8 @@ describe('Search Store', () => {
       expect(useSearchStore.getState().hasMore).toBe(false);
     });
 
-    it('should skip global search while the user API cooldown is active', async () => {
-      rememberRateLimit([USER_API_RATE_LIMIT_SCOPE], {
+    it('should skip global search while the search cooldown is active', async () => {
+      rememberRateLimit([SEARCH_READ_RATE_LIMIT_SCOPE], {
         response: {
           status: 429,
           data: {

@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useChatStore, toConversation } from '../chatStore.impl';
 import type { Message, Conversation } from '../chatStore.types';
+import {
+  CHAT_HISTORY_RATE_LIMIT_SCOPE,
+  CHAT_LIST_RATE_LIMIT_SCOPE,
+  clearRateLimitScopes,
+} from '@/lib/api-rate-limit';
 
 const idempotencyKeys = vi.hoisted(() => ({ value: 0 }));
 const offline = vi.hoisted(() => ({
@@ -193,7 +198,9 @@ beforeEach(() => {
     typingUsersInfo: {},
     hasMoreMessages: {},
     conversationsLastFetchedAt: null,
+    messageHistoryErrors: {},
   });
+  clearRateLimitScopes([CHAT_LIST_RATE_LIMIT_SCOPE, CHAT_HISTORY_RATE_LIMIT_SCOPE]);
   idempotencyKeys.value = 0;
   vi.clearAllMocks();
   offline.getPendingMessagesForConversation.mockResolvedValue([]);
@@ -337,6 +344,62 @@ describe('fetchMessages', () => {
     mockApi.get.mockRejectedValueOnce(new Error('fail'));
     await expect(useChatStore.getState().fetchMessages('conv-1')).rejects.toThrow();
     expect(useChatStore.getState().isLoadingMessages).toBe(false);
+  });
+
+  it('returns one in-flight promise for an identical history query', async () => {
+    let resolveRequest: ((value: { data: { messages: Message[] } }) => void) | undefined;
+    mockApi.get.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        })
+    );
+
+    const first = useChatStore.getState().fetchMessages('conv-1');
+    const second = useChatStore.getState().fetchMessages('conv-1');
+
+    expect(second).toBe(first);
+    expect(mockApi.get).toHaveBeenCalledTimes(1);
+
+    resolveRequest?.({ data: { messages: [makeMsg()] } });
+    await first;
+    expect(useChatStore.getState().isLoadingMessages).toBe(false);
+  });
+
+  it('pauses history reads during the server cooldown without starting another request', async () => {
+    mockApi.get.mockRejectedValueOnce({
+      response: {
+        status: 429,
+        data: {
+          error: {
+            code: 'rate_limited',
+            message: 'Too many history requests',
+            retry_after: 12,
+          },
+        },
+      },
+    });
+
+    await expect(useChatStore.getState().fetchMessages('conv-1')).rejects.toThrow(
+      'Too many history requests'
+    );
+    expect(useChatStore.getState().messageHistoryErrors['conv-1']).toBe(
+      'Too many history requests'
+    );
+
+    await expect(useChatStore.getState().fetchMessages('conv-1')).rejects.toMatchObject({
+      response: { status: 429 },
+    });
+    expect(mockApi.get).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears the visible history error after a successful retry', async () => {
+    useChatStore.setState({ messageHistoryErrors: { 'conv-1': 'Please wait' } });
+    mockApi.get.mockResolvedValueOnce({ data: { messages: [makeMsg()] } });
+
+    await useChatStore.getState().fetchMessages('conv-1');
+
+    expect(useChatStore.getState().messageHistoryErrors['conv-1']).toBeUndefined();
   });
 
   it('hydrates the persisted outbox after the first server history page', async () => {
