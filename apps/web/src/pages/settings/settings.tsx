@@ -13,7 +13,6 @@ import {
   KeyIcon,
   TrashIcon,
   ComputerDesktopIcon,
-  LanguageIcon,
   CircleStackIcon,
   Cog6ToothIcon,
   PhoneIcon,
@@ -32,7 +31,6 @@ import { default as DeleteAccount } from '@/pages/settings/delete-account';
 import {
   SecuritySettingsPanel,
   NotificationSettingsPanel,
-  LanguageSettingsPanel,
   SessionsSettingsPanel,
   PrivacySettingsPanel,
   DndSchedulePanel,
@@ -104,12 +102,6 @@ const settingsSections = [
     label: 'Calls',
     icon: PhoneIcon,
     description: 'Mic processing, video resolution',
-  },
-  {
-    id: 'language',
-    label: 'Language',
-    icon: LanguageIcon,
-    description: 'Language, timezone, date format',
   },
   {
     id: 'advanced',
@@ -390,7 +382,6 @@ export default function Settings() {
                 {section === 'data-storage' && <DataStoragePanel key="data-storage" />}
                 {section === 'calls' && <CallsSettingsPanel key="calls" />}
                 {section === 'advanced' && <AdvancedSettingsPanel key="advanced" />}
-                {section === 'language' && <LanguageSettingsPanel key="language" />}
                 {section === 'sessions' && <SessionsSettingsPanel key="sessions" />}
                 {section === 'delete-account' && <DeleteAccount key="delete-account" />}
               </>

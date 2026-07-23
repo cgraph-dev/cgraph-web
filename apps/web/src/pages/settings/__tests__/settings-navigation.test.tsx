@@ -78,7 +78,6 @@ vi.mock('@/pages/settings/delete-account', () => ({
 vi.mock('@/modules/settings/components/panels', () => ({
   SecuritySettingsPanel: () => <div>Security settings</div>,
   NotificationSettingsPanel: () => <div>Notification settings</div>,
-  LanguageSettingsPanel: () => <div>Language settings</div>,
   SessionsSettingsPanel: () => <div>Sessions settings</div>,
   PrivacySettingsPanel: () => <div>Privacy settings</div>,
   DndSchedulePanel: () => <div>DND schedule</div>,
@@ -202,6 +201,17 @@ describe('Settings navigation', () => {
 
     expect(screen.getByTestId('settings-panel-account')).toBeInTheDocument();
     expect(screen.queryByText('Stickers & Emoji')).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');
+    });
+  });
+
+  it('does not expose the retired Language route without a complete locale runtime', async () => {
+    renderSettingsRoute('/me/settings/language');
+
+    expect(screen.getByTestId('settings-panel-account')).toBeInTheDocument();
+    expect(screen.queryByText('Language settings')).not.toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/me/settings/account');
