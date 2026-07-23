@@ -1,20 +1,15 @@
 /**
- * Login form state, wallet connect, and submission logic.
+ * Login form state and submission logic.
  *
  * Supports 2FA login gate — when backend returns 2fa_required,
  * the form transitions to a TOTP code entry step.
- *
- * Uses wagmi/WalletConnect for multi-wallet support (MetaMask,
- * WalletConnect QR, Coinbase Wallet) instead of raw window.ethereum.
  *
  */
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
-import { useWalletConnect } from '@/lib/wallet';
 import { createLogger } from '@/lib/logger';
-import type { WalletConnectorType } from '@cgraph-dev/shared-types';
 
 const logger = createLogger('Login');
 
@@ -22,13 +17,11 @@ const logger = createLogger('Login');
 export type LoginStep = 'credentials' | '2fa';
 
 /**
- * Hook for managing login form, including 2FA step and multi-wallet auth.
+ * Hook for managing login form, including the 2FA step.
  */
 export function useLoginForm() {
   const navigate = useNavigate();
   const { login, verifyLoginTwoFactor, isLoading, error, clearError } = useAuthStore();
-
-  const { connectAndSign, connectors, isConnecting } = useWalletConnect();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -87,20 +80,6 @@ export function useLoginForm() {
     clearError();
   };
 
-  /**
-   * Connect wallet via a specific connector type and complete SIWE auth.
-   * Defaults to injected (MetaMask) if no type specified.
-   */
-  async function handleWalletConnect(connectorType?: WalletConnectorType) {
-    clearError();
-    try {
-      await connectAndSign(connectorType);
-      navigate('/messages');
-    } catch (err) {
-      logger.error('Wallet login error:', err);
-    }
-  }
-
   return {
     email,
     setEmail,
@@ -108,15 +87,12 @@ export function useLoginForm() {
     setPassword,
     showPassword,
     setShowPassword,
-    isLoading: isLoading || isConnecting,
+    isLoading,
     error,
     loginStep,
     twoFactorToken,
     handleSubmit,
     handleVerifyTwoFactor,
     handleBackToCredentials,
-    handleWalletConnect,
-    /** Available wallet connectors for the UI */
-    walletConnectors: connectors,
   };
 }

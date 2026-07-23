@@ -128,7 +128,6 @@ function mapSessionUser(user: RawUser): Record<string, unknown> {
     username,
     displayName,
     avatarUrl: user.avatar_url ?? null,
-    walletAddress: user.wallet_address ?? null,
     emailVerifiedAt: asString(user.email_verified_at, new Date().toISOString()),
     onboardingCompleted: true,
     twoFactorEnabled: user.totp_enabled === true,

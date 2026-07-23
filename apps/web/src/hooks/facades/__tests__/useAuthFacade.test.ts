@@ -24,7 +24,6 @@ const mockUser: User = {
   username: 'testuser',
   displayName: 'Test User',
   avatarUrl: 'https://example.com/avatar.png',
-  walletAddress: null,
   emailVerifiedAt: '2026-01-01T00:00:00Z',
   twoFactorEnabled: false,
   status: 'online',

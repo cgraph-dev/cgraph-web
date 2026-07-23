@@ -27,7 +27,6 @@ interface OAuthTokenResponse {
     username: string | null;
     display_name: string | null;
     avatar_url: string | null;
-    wallet_address: string | null;
     email_verified_at: string | null;
     totp_enabled: boolean;
     status: 'online' | 'idle' | 'dnd' | 'offline';

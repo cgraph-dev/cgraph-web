@@ -30,7 +30,6 @@ const baseUser: User = {
   displayNameEffect: null,
   displayNameColor: null,
   displayNameSecondaryColor: null,
-  walletAddress: null,
   emailVerifiedAt: null,
   twoFactorEnabled: false,
   status: 'online',

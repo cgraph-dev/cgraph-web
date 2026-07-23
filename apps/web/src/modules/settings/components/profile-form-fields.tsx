@@ -128,51 +128,6 @@ export function ProfileFormFields({
         />
       </GlassCard>
 
-      {/* Wallet */}
-      <GlassCard
-        variant="crystal"
-        className="aurora-social-panel relative mb-8 overflow-hidden p-6"
-      >
-        <div className="via-primary-500/30 pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent" />
-        {user?.walletAddress ? (
-          <>
-            <label
-              htmlFor="profile-wallet-address"
-              className="mb-3 block text-sm font-semibold text-[var(--token-text-secondary)]"
-            >
-              Connected Wallet
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                id="profile-wallet-address"
-                type="text"
-                value={user.walletAddress}
-                disabled
-                className="aurora-social-select flex-1 rounded-xl px-4 py-3 font-mono text-sm text-[var(--token-text-muted)]"
-              />
-              <button
-                type="button"
-                className="aurora-social-button-danger rounded-xl px-4 py-3 text-sm font-medium"
-              >
-                Disconnect
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="mb-3 block text-sm font-semibold text-[var(--token-text-secondary)]">
-              Connected Wallet
-            </p>
-            <button
-              type="button"
-              className="aurora-social-button-muted rounded-xl px-5 py-3 text-sm font-medium text-[var(--token-text-primary)]"
-            >
-              Connect Wallet
-            </button>
-          </>
-        )}
-      </GlassCard>
-
       {/* Save Button */}
       <motion.button
         type="submit"

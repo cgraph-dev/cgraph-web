@@ -53,7 +53,6 @@ import App from './App';
 import ErrorBoundary from './components/error-boundary';
 import { ThemeProvider } from './providers/theme-context';
 import { NotificationProvider } from './providers/notification-provider';
-import { WalletProvider } from './lib/wallet';
 import { logger } from './lib/logger';
 import { APP_VERSION } from './lib/app-version';
 import './i18n'; // i18n initialization (must be before App)
@@ -182,9 +181,7 @@ try {
             <QueryClientProvider client={queryClient}>
               <BrowserRouter>
                 <NotificationProvider>
-                  <WalletProvider>
-                    <App />
-                  </WalletProvider>
+                  <App />
                 </NotificationProvider>
                 <Toaster
                   position="bottom-right"

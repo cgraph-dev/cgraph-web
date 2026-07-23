@@ -15,8 +15,6 @@ interface ImportMetaEnv {
   readonly VITE_TURN_URL?: string;
   readonly VITE_TURN_USERNAME?: string;
   readonly VITE_VAPID_PUBLIC_KEY?: string;
-  readonly VITE_WC_PROJECT_ID?: string;
-  readonly VITE_WALLETCONNECT_PROJECT_ID: string;
   readonly DEV: boolean;
   readonly PROD: boolean;
   readonly MODE: string;
@@ -28,20 +26,6 @@ interface ImportMeta {
 }
 
 declare const __CGRAPH_WEB_VERSION__: string;
-
-// Ethereum/Web3 types for wallet integration
-interface EthereumProvider {
-  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
-  on?(eventName: string, callback: (...args: unknown[]) => void): void;
-  removeListener?(eventName: string, callback: (...args: unknown[]) => void): void;
-  isMetaMask?: boolean;
-}
-
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
-}
 
 // Phoenix WebSocket types
 declare module 'phoenix' {

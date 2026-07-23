@@ -80,7 +80,6 @@ const mockApiUser = {
   username: 'testuser',
   display_name: 'Test User',
   avatar_url: 'https://cdn.test.com/avatar.png',
-  wallet_address: null,
   email_verified_at: '2025-01-01T00:00:00Z',
   totp_enabled: false,
   status: 'online',
@@ -271,51 +270,6 @@ describe('AuthStore', () => {
 
       await expect(useAuthStore.getState().register('a@b.com', 'u', 'p')).rejects.toThrow();
       expect(useAuthStore.getState().error).toBe('Username taken');
-    });
-  });
-  describe('getWalletChallenge', () => {
-    it('returns challenge message and nonce', async () => {
-      mockedApi.post.mockResolvedValueOnce({
-        data: { message: 'Sign this', nonce: 'abc123' },
-      } as AxiosResponse);
-
-      const result = await useAuthStore.getState().getWalletChallenge('0xWALLET');
-
-      expect(result).toEqual({ message: 'Sign this', nonce: 'abc123' });
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/wallet/challenge', {
-        wallet_address: '0xWALLET',
-      });
-    });
-
-    it('sets error on failure', async () => {
-      const err = new AxiosError();
-      err.response = { data: { error: 'Invalid wallet' }, status: 400 } as AxiosResponse;
-      mockedApi.post.mockRejectedValueOnce(err);
-
-      await expect(useAuthStore.getState().getWalletChallenge('0xBAD')).rejects.toThrow();
-      expect(useAuthStore.getState().error).toBe('Invalid wallet');
-    });
-  });
-
-  describe('loginWithWallet', () => {
-    it('authenticates with wallet signature', async () => {
-      mockedApi.post.mockResolvedValueOnce({
-        data: { user: mockApiUser, tokens: mockTokens },
-      } as AxiosResponse);
-
-      await useAuthStore.getState().loginWithWallet('0xWALLET', 'sig');
-
-      expect(useAuthStore.getState().isAuthenticated).toBe(true);
-      expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/wallet/verify', {
-        wallet_address: '0xWALLET',
-        signature: 'sig',
-      });
-    });
-
-    it('sets error on wallet login failure', async () => {
-      mockedApi.post.mockRejectedValueOnce(new Error('fail'));
-      await expect(useAuthStore.getState().loginWithWallet('0x', 's')).rejects.toThrow();
-      expect(useAuthStore.getState().isLoading).toBe(false);
     });
   });
   describe('logout', () => {

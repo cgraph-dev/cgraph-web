@@ -18,7 +18,6 @@ import { authLogger } from '@/lib/logger';
 export type {
   ApiErrorResponse,
   User,
-  WalletChallenge,
   AuthState,
   PasswordResetResult,
 } from './authStore.types';
@@ -60,8 +59,6 @@ import {
   createVerifyEmailAction,
   createRequestPasswordResetAction,
   createResetPasswordAction,
-  createGetWalletChallengeAction,
-  createLoginWithWalletAction,
   createRegisterAction,
   createLogoutAction,
   createRefreshSessionAction,
@@ -94,8 +91,6 @@ export const useAuthStore = create<AuthState>()(
           verifyEmail: createVerifyEmailAction(set, get),
           requestPasswordReset: createRequestPasswordResetAction(set, get),
           resetPassword: createResetPasswordAction(set, get),
-          getWalletChallenge: createGetWalletChallengeAction(set, get),
-          loginWithWallet: createLoginWithWalletAction(set, get),
           register: createRegisterAction(set, get),
           logout: createLogoutAction(set, get),
           refreshSession: createRefreshSessionAction(set, get),

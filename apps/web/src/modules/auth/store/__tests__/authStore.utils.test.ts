@@ -126,7 +126,6 @@ describe('mapUserFromApi', () => {
     username: 'testuser',
     display_name: 'Test User',
     avatar_url: 'https://cdn.test.com/avatar.png',
-    wallet_address: '0xABC',
     email_verified_at: '2025-01-01T00:00:00Z',
     onboarding_completed: false,
     totp_enabled: true,
@@ -159,7 +158,6 @@ describe('mapUserFromApi', () => {
     expect(user.username).toBe('testuser');
     expect(user.displayName).toBe('Test User');
     expect(user.avatarUrl).toBe('https://cdn.test.com/avatar.png');
-    expect(user.walletAddress).toBe('0xABC');
     expect(user.emailVerifiedAt).toBe('2025-01-01T00:00:00Z');
     expect(user.onboardingCompleted).toBe(false);
     expect(user.twoFactorEnabled).toBe(true);
@@ -207,7 +205,6 @@ describe('mapUserFromApi', () => {
     expect(user.username).toBeNull();
     expect(user.displayName).toBeNull();
     expect(user.avatarUrl).toBeNull();
-    expect(user.walletAddress).toBeNull();
     expect(user.emailVerifiedAt).toBeNull();
     expect(user.onboardingCompleted).toBe(true);
     expect(user.twoFactorEnabled).toBe(false);

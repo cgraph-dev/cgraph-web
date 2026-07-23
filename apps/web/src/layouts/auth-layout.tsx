@@ -223,7 +223,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           >
             <FeatureCard title="E2E" subtitle="Encrypted" delay={0.7} />
             <FeatureCard title="Real-time" subtitle="Messaging" delay={0.8} />
-            <FeatureCard title="Web3" subtitle="Ready" delay={0.9} />
+            <FeatureCard title="Groups" subtitle="Connected" delay={0.9} />
           </motion.div>
         </div>
 

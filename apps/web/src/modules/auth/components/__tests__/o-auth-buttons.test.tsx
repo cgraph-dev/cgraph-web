@@ -75,35 +75,37 @@ describe('OAuthButtonGroup', () => {
       data: { data: { providers: ['google', { provider: 'tiktok' }, 'unknown'] } },
     });
 
-    render(<OAuthButtonGroup variant="icon" />);
+    render(<OAuthButtonGroup />);
 
     await waitFor(() => {
       expect(mocks.httpGet).toHaveBeenCalledWith('/api/v1/auth/oauth/providers');
     });
 
-    expect(await screen.findByTitle('Continue with Google')).toBeTruthy();
-    expect(screen.getByTitle('Continue with TikTok')).toBeTruthy();
-    expect(screen.queryByTitle('Continue with Apple')).toBeNull();
-    expect(screen.queryByTitle('Continue with Facebook')).toBeNull();
+    expect(await screen.findByRole('button', { name: 'Continue with Google' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Continue with TikTok' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Continue with Apple' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Continue with Facebook' })).toBeNull();
+    expect(screen.getByText('Or continue with')).toBeTruthy();
   });
 
   it('does not render provider buttons when discovery returns none', async () => {
     mocks.httpGet.mockResolvedValueOnce({ data: { data: { providers: [] } } });
 
-    render(<OAuthButtonGroup variant="icon" />);
+    render(<OAuthButtonGroup />);
 
     await waitFor(() => {
       expect(mocks.httpGet).toHaveBeenCalledWith('/api/v1/auth/oauth/providers');
     });
 
     expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByText('Or continue with')).toBeNull();
   });
 
   it('uses explicit providers without calling discovery', () => {
-    render(<OAuthButtonGroup providers={['apple']} variant="icon" />);
+    render(<OAuthButtonGroup providers={['apple']} />);
 
     expect(mocks.httpGet).not.toHaveBeenCalled();
-    expect(screen.getByTitle('Continue with Apple')).toBeTruthy();
-    expect(screen.queryByTitle('Continue with Google')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Continue with Apple' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Continue with Google' })).toBeNull();
   });
 });

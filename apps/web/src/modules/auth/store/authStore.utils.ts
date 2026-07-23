@@ -138,7 +138,6 @@ export function mapUserFromApi(apiUser: Record<string, unknown>): User {
     displayNameEffect: identity.displayNameEffect,
     displayNameColor: identity.displayNameColor,
     displayNameSecondaryColor: identity.displayNameSecondaryColor,
-    walletAddress: isString(apiUser.wallet_address) ? apiUser.wallet_address : null,
     emailVerifiedAt: isString(apiUser.email_verified_at) ? apiUser.email_verified_at : null,
     onboardingCompleted: isBoolean(apiUser.onboarding_completed)
       ? apiUser.onboarding_completed

@@ -366,15 +366,6 @@ export default defineConfig(({ mode }) => {
           }
 
           if (
-            packageName === 'viem' ||
-            packageName === 'wagmi' ||
-            packageName.startsWith('@wagmi/') ||
-            packageName === 'mipd'
-          ) {
-            return 'web3';
-          }
-
-          if (
             packageName === '@sentry/core' ||
             packageName === '@sentry/browser' ||
             packageName === '@sentry/react' ||

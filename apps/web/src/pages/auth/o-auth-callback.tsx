@@ -9,15 +9,9 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
-import { handleOAuthCallback, type OAuthProvider } from '@/lib/oauth';
-import { useAuthStore } from '@/modules/auth/store';
+import { handleOAuthCallback, isOAuthProvider } from '@/lib/oauth';
+import { mapUserFromApi, useAuthStore } from '@/modules/auth/store';
 import { createLogger } from '@/lib/logger';
-
-const VALID_PROVIDERS = new Set<string>(['google', 'apple', 'facebook', 'tiktok']);
-
-function isOAuthProvider(value: string): value is OAuthProvider {
-  return VALID_PROVIDERS.has(value);
-}
 
 const logger = createLogger('OAuthCallback');
 
@@ -101,33 +95,7 @@ export function OAuthCallbackPage() {
         } else {
           // Redirect mode - update store and navigate
           useAuthStore.setState({
-            user: {
-              id: response.user.id,
-              uid:
-                'uid' in response.user && typeof response.user.uid === 'string'
-                  ? response.user.uid
-                  : '',
-              userId: 0,
-              userIdDisplay: '#0000',
-              email: response.user.email,
-              username: response.user.username,
-              displayName: response.user.display_name,
-              avatarUrl: response.user.avatar_url,
-              walletAddress: response.user.wallet_address,
-              emailVerifiedAt: response.user.email_verified_at,
-              onboardingCompleted: response.user.onboarding_completed !== false,
-              twoFactorEnabled: response.user.totp_enabled,
-              status: response.user.status,
-              statusMessage: response.user.custom_status,
-              pulse: 0,
-              isVerified: response.user.is_verified,
-              isPremium: response.user.is_premium,
-              isAdmin: false,
-              canChangeUsername: true,
-              usernameNextChangeAt: null,
-              phoneNumber: null,
-              createdAt: response.user.inserted_at,
-            },
+            user: mapUserFromApi(response.user),
             token: response.tokens.access_token,
             refreshToken: response.tokens.refresh_token,
             isAuthenticated: true,

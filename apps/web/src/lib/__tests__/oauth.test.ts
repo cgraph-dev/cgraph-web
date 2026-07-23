@@ -6,7 +6,14 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { handleOAuthCallback, providerNames, providerColors } from '../oauth';
+import {
+  handleOAuthCallback,
+  isOAuthProvider,
+  knownOAuthProviders,
+  providerNames,
+  providerColors,
+  readDiscoveredOAuthProviders,
+} from '../oauth';
 
 vi.mock('../api', () => ({
   api: {
@@ -34,7 +41,6 @@ describe('handleOAuthCallback', () => {
         username: 'testuser',
         display_name: 'Test User',
         avatar_url: null,
-        wallet_address: null,
         email_verified_at: '2024-01-01T00:00:00Z',
         totp_enabled: false,
         status: 'online' as const,
@@ -78,5 +84,37 @@ describe('providerColors', () => {
       expect(providerColors[provider]).toHaveProperty('text');
       expect(providerColors[provider]).toHaveProperty('hover');
     }
+  });
+});
+
+describe('provider discovery boundary', () => {
+  it('accepts only providers implemented by the CGraph backend', () => {
+    expect(knownOAuthProviders).toEqual(['google', 'apple', 'facebook', 'tiktok']);
+    expect(isOAuthProvider('google')).toBe(true);
+    expect(isOAuthProvider('openai')).toBe(false);
+    expect(isOAuthProvider('anthropic')).toBe(false);
+    expect(isOAuthProvider('grok')).toBe(false);
+    expect(isOAuthProvider('wallet')).toBe(false);
+  });
+
+  it('filters unsupported provider names from discovery payloads', () => {
+    expect(
+      readDiscoveredOAuthProviders({
+        data: {
+          providers: [
+            'google',
+            { provider: 'apple' },
+            'facebook',
+            'tiktok',
+            'openai',
+            'anthropic',
+            'kimi',
+            'deepseek',
+            'grok',
+            'wallet',
+          ],
+        },
+      })
+    ).toEqual(['google', 'apple', 'facebook', 'tiktok']);
   });
 });

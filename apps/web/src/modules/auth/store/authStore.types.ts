@@ -27,7 +27,6 @@ export interface User {
   displayNameEffect?: string | null;
   displayNameColor?: string | null;
   displayNameSecondaryColor?: string | null;
-  walletAddress: string | null;
   emailVerifiedAt: string | null;
   onboardingCompleted?: boolean;
   twoFactorEnabled: boolean;
@@ -67,11 +66,6 @@ export interface User {
   } | null;
 }
 
-export interface WalletChallenge {
-  message: string;
-  nonce: string;
-}
-
 /** Returned by login() when user has 2FA enabled */
 export interface TwoFactorRequired {
   twoFactorRequired: true;
@@ -106,8 +100,6 @@ export interface AuthState {
     turnstileToken?: string | null
   ) => Promise<TwoFactorRequired | void>;
   verifyLoginTwoFactor: (twoFactorToken: string, code: string) => Promise<void>;
-  getWalletChallenge: (walletAddress: string) => Promise<WalletChallenge>;
-  loginWithWallet: (walletAddress: string, signature: string, message?: string) => Promise<void>;
   register: (
     email: string,
     username: string,

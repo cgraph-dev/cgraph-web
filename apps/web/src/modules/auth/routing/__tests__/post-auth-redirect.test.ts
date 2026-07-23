@@ -11,7 +11,6 @@ const baseUser: User = {
   username: 'user',
   displayName: 'User',
   avatarUrl: null,
-  walletAddress: null,
   emailVerifiedAt: '2026-01-01T00:00:00Z',
   onboardingCompleted: true,
   twoFactorEnabled: false,

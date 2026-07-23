@@ -6,7 +6,6 @@ import { AxiosError } from 'axios';
 
 import type {
   User,
-  WalletChallenge,
   AuthState,
   TwoFactorRequired,
   EmailVerificationResult,
@@ -344,64 +343,6 @@ export function createResetPasswordAction(set: Set, _get: Get) {
     });
 
     return activeRequest;
-  };
-}
-
-/**
- *
- * Description.
- */
-export function createGetWalletChallengeAction(set: Set, _get: Get) {
-  return async (walletAddress: string): Promise<WalletChallenge> => {
-    try {
-      // Use http escape hatch: the typed schema returns `challenge` but the
-      // WalletChallenge store type expects `message`; keep raw call to preserve
-      // the existing field mapping until the type is updated.
-      const response = await http.post('/api/v1/auth/wallet/challenge', {
-        wallet_address: walletAddress,
-      });
-      return {
-        message: response.data.message,
-        nonce: response.data.nonce,
-      };
-    } catch (error: unknown) {
-      const errorMessage = getApiErrorMessage(error, 'Failed to get wallet challenge');
-      set({ error: errorMessage });
-      throw new Error(errorMessage);
-    }
-  };
-}
-
-/**
- *
- * Description.
- */
-export function createLoginWithWalletAction(set: Set, _get: Get) {
-  return async (walletAddress: string, signature: string, message?: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      // walletVerify requires a challenge field; fall back to http for the
-      // message-only variant used in the existing wallet login flow.
-      const response = await http.post('/api/v1/auth/wallet/verify', {
-        wallet_address: walletAddress,
-        signature,
-        ...(message ? { message } : {}),
-      });
-      const { user, tokens } = response.data;
-      set({
-        user: mapUserFromApi(user),
-        token: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error: unknown) {
-      set({
-        error: getApiErrorMessage(error, 'Wallet login failed'),
-        isLoading: false,
-      });
-      throw error;
-    }
   };
 }
 

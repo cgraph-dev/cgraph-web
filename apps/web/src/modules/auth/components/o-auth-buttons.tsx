@@ -4,7 +4,6 @@
  */
 
 import { useEffect, useState, type ReactElement } from 'react';
-import { motion } from 'motion/react';
 import {
   OAuthProvider,
   openOAuthPopup,
@@ -80,36 +79,11 @@ const providerIcons: Record<OAuthProvider, () => ReactElement> = {
   tiktok: TikTokIcon,
 };
 
-// Provider-specific hover glow colors
-const providerGlow: Record<OAuthProvider, { ring: string; shadow: string; bg: string }> = {
-  google: {
-    ring: 'rgba(66, 133, 244, 0.5)',
-    shadow: '0 0 20px -4px rgba(66, 133, 244, 0.4), 0 0 10px -4px rgba(234, 67, 53, 0.3)',
-    bg: 'rgba(66, 133, 244, 0.08)',
-  },
-  apple: {
-    ring: 'rgba(255, 255, 255, 0.4)',
-    shadow: '0 0 20px -4px rgba(255, 255, 255, 0.25)',
-    bg: 'rgba(255, 255, 255, 0.08)',
-  },
-  facebook: {
-    ring: 'rgba(24, 119, 242, 0.5)',
-    shadow: '0 0 20px -4px rgba(24, 119, 242, 0.4)',
-    bg: 'rgba(24, 119, 242, 0.08)',
-  },
-  tiktok: {
-    ring: 'rgba(254, 44, 85, 0.4)',
-    shadow: '0 0 20px -4px rgba(254, 44, 85, 0.3), 0 0 10px -4px rgba(37, 244, 238, 0.3)',
-    bg: 'rgba(254, 44, 85, 0.08)',
-  },
-};
-
 interface OAuthButtonProps {
   provider: OAuthProvider;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
   className?: string;
-  variant?: 'full' | 'icon';
 }
 
 /**
@@ -120,7 +94,6 @@ export function OAuthButton({
   onSuccess,
   onError,
   className = '',
-  variant = 'full',
 }: OAuthButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -152,48 +125,6 @@ export function OAuthButton({
       setIsLoading(false);
     }
   };
-
-  if (variant === 'icon') {
-    const glow = providerGlow[provider];
-    return (
-      <motion.button
-        onClick={handleClick}
-        disabled={isLoading}
-        whileHover={{
-          scale: 1.12,
-          boxShadow: glow.shadow,
-          borderColor: glow.ring,
-          backgroundColor: glow.bg,
-        }}
-        whileTap={{ scale: 0.92 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-        className={`rounded-full border p-3 transition-colors ${colors.bg} ${colors.text} disabled:cursor-not-allowed disabled:opacity-50 ${provider === 'google' ? 'border-gray-300' : 'border-transparent'} ${className} `}
-        title={`Continue with ${name}`}
-        style={{ willChange: 'transform' }}
-      >
-        {isLoading ? (
-          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        ) : (
-          <Icon />
-        )}
-      </motion.button>
-    );
-  }
 
   return (
     <button
@@ -230,7 +161,6 @@ interface OAuthButtonGroupProps {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
   providers?: readonly OAuthProvider[];
-  variant?: 'full' | 'icon';
   className?: string;
 }
 
@@ -241,7 +171,6 @@ export function OAuthButtonGroup({
   onSuccess,
   onError,
   providers,
-  variant = 'full',
   className = '',
 }: OAuthButtonGroupProps) {
   const [discoveredProviders, setDiscoveredProviders] = useState<OAuthProvider[] | null>(null);
@@ -277,50 +206,27 @@ export function OAuthButtonGroup({
     return null;
   }
 
-  if (variant === 'icon') {
-    return (
-      <div className={`flex items-center justify-center gap-4 ${className}`}>
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-dark-600/50" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-[var(--token-card-bg)] px-4 text-foreground-muted">
+            Or continue with
+          </span>
+        </div>
+      </div>
+      <div className="space-y-3">
         {resolvedProviders.map((provider) => (
           <OAuthButton
             key={provider}
             provider={provider}
-            variant="icon"
             onSuccess={onSuccess}
             onError={onError}
           />
         ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className={`space-y-3 ${className}`}>
-      {resolvedProviders.map((provider) => (
-        <OAuthButton
-          key={provider}
-          provider={provider}
-          variant="full"
-          onSuccess={onSuccess}
-          onError={onError}
-        />
-      ))}
-    </div>
-  );
-}
-
-/**
- * Divider with "or" text for separating OAuth from email/password
- */
-export function AuthDivider({ text = 'or continue with' }: { text?: string }) {
-  return (
-    <div className="relative my-6">
-      <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-      </div>
-      <div className="relative flex justify-center text-sm">
-        <span className="bg-white px-2 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
-          {text}
-        </span>
       </div>
     </div>
   );

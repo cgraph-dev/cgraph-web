@@ -107,22 +107,9 @@ export default function Register() {
         </Link>
       </motion.div>
 
-      {/* Divider with matrix styling */}
-      <motion.div variants={reduced ? {} : itemVariants} className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-dark-600/50" />
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-transparent px-4 text-foreground-muted backdrop-blur-sm">
-            Or sign up with
-          </span>
-        </div>
-      </motion.div>
-
-      {/* OAuth Buttons with matrix hover effects */}
+      {/* Configured OAuth providers are discovered from the backend. */}
       <motion.div variants={reduced ? {} : itemVariants}>
         <OAuthButtonGroup
-          variant="icon"
           onSuccess={() => navigate('/messages')}
           onError={(err) => logger.error('OAuth error:', err)}
         />

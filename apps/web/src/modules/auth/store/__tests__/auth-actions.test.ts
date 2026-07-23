@@ -99,8 +99,6 @@ import {
   createVerifyEmailAction,
   createRequestPasswordResetAction,
   createResetPasswordAction,
-  createGetWalletChallengeAction,
-  createLoginWithWalletAction,
   createRegisterAction,
   createLogoutAction,
   createRefreshSessionAction,
@@ -121,7 +119,6 @@ const mockApiUser = {
   username: 'testuser',
   display_name: 'Test User',
   avatar_url: null,
-  wallet_address: null,
   email_verified_at: null,
   totp_enabled: false,
   status: 'online',
@@ -442,78 +439,6 @@ describe('password recovery actions', () => {
     });
     await resetPassword('new-token', 'OtherPassword123!', 'OtherPassword123!');
     expect(mockResetPassword).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe('createGetWalletChallengeAction', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it('returns wallet challenge from API', async () => {
-    const { set, get } = createMockSetGet();
-    const getChallenge = createGetWalletChallengeAction(set as never, get as never);
-
-    mockedApi.post.mockResolvedValueOnce({
-      data: { message: 'Sign this message', nonce: 'nonce-xyz' },
-    } as AxiosResponse);
-
-    const result = await getChallenge('0xWALLET');
-
-    expect(result).toEqual({ message: 'Sign this message', nonce: 'nonce-xyz' });
-    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/wallet/challenge', {
-      wallet_address: '0xWALLET',
-    });
-  });
-
-  it('sets error and throws on failure', async () => {
-    const { set, get } = createMockSetGet();
-    const getChallenge = createGetWalletChallengeAction(set as never, get as never);
-
-    const err = new AxiosError('fail');
-    err.response = { data: { error: 'Wallet not found' }, status: 404 } as AxiosResponse;
-    mockedApi.post.mockRejectedValueOnce(err);
-
-    await expect(getChallenge('0xBAD')).rejects.toThrow('Wallet not found');
-    expect(set).toHaveBeenCalledWith(expect.objectContaining({ error: 'Wallet not found' }));
-  });
-});
-
-describe('createLoginWithWalletAction', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it('authenticates with wallet and sets state', async () => {
-    const { set, get } = createMockSetGet();
-    const loginWallet = createLoginWithWalletAction(set as never, get as never);
-
-    mockedApi.post.mockResolvedValueOnce({
-      data: { user: mockApiUser, tokens: mockTokens },
-    } as AxiosResponse);
-
-    await loginWallet('0xWALLET', 'sig123');
-
-    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/wallet/verify', {
-      wallet_address: '0xWALLET',
-      signature: 'sig123',
-    });
-    expect(set).toHaveBeenCalledWith(
-      expect.objectContaining({ isAuthenticated: true, isLoading: false })
-    );
-  });
-
-  it('includes optional message parameter', async () => {
-    const { set, get } = createMockSetGet();
-    const loginWallet = createLoginWithWalletAction(set as never, get as never);
-
-    mockedApi.post.mockResolvedValueOnce({
-      data: { user: mockApiUser, tokens: mockTokens },
-    } as AxiosResponse);
-
-    await loginWallet('0xWALLET', 'sig', 'Sign this');
-
-    expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/wallet/verify', {
-      wallet_address: '0xWALLET',
-      signature: 'sig',
-      message: 'Sign this',
-    });
   });
 });
 

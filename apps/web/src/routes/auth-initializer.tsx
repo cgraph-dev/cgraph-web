@@ -60,7 +60,6 @@ const E2E_USER: User = {
   displayNameEffect: 'neon',
   displayNameColor: '#7dd3fc',
   displayNameSecondaryColor: '#a78bfa',
-  walletAddress: null,
   emailVerifiedAt: '2026-01-01T00:00:00.000Z',
   onboardingCompleted: true,
   twoFactorEnabled: false,
