@@ -524,6 +524,10 @@ export function useCloudConversationController() {
     navigate('/messages', { replace: true });
   };
 
+  const handleBackToMessages = useCallback(() => {
+    navigate('/messages');
+  }, [navigate]);
+
   const retryMessageHistory = useCallback(() => {
     if (!conversationId) return;
 
@@ -562,6 +566,7 @@ export function useCloudConversationController() {
     handleComposerPayload,
     handleAvatarClick,
     handleStartCall,
+    handleBackToMessages,
     handleMessageRequestDeleted,
     retryMessageHistory,
     messageActions,

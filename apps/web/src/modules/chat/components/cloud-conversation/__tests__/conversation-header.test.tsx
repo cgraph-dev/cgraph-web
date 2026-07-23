@@ -114,6 +114,26 @@ describe('Cloud ConversationHeader', () => {
     expect(screen.getByRole('button', { name: 'Start video call' })).toHaveClass('h-9', 'w-9');
   });
 
+  it('provides a stable narrow-screen back action without changing desktop actions', async () => {
+    const user = userEvent.setup();
+    const onBack = vi.fn();
+
+    render(
+      <ConversationHeader
+        conversationId="conversation-1"
+        conversationName="Ada"
+        isTyping={false}
+        onBack={onBack}
+      />,
+    );
+
+    const backButton = screen.getByRole('button', { name: 'Back to conversations' });
+    expect(backButton).toHaveClass('h-10', 'w-10', 'lg:hidden');
+
+    await user.click(backButton);
+    expect(onBack).toHaveBeenCalledOnce();
+  });
+
   it('resets only a persisted conversation wallpaper from the live header', async () => {
     const user = userEvent.setup();
     store.state.conversationChatThemeOverrides = {

@@ -63,7 +63,12 @@ export function ConversationSidebar({
   }, [fetchPendingRequests, fetchSentRequests]);
 
   return (
-    <div className="bg-[var(--token-card-bg)]/40 relative flex h-full w-80 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
+    <div
+      data-testid="conversation-sidebar"
+      className={`bg-[var(--token-card-bg)]/40 relative h-full shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300 lg:flex lg:w-80 ${
+        activeConversationId ? 'hidden' : 'flex w-full'
+      }`}
+    >
       {/* Ambient glow effect */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10" />
 

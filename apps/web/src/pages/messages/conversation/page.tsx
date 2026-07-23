@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useNavigate, useParams } from 'react-router-dom';
 import { MobileOnlyFeature } from '@/components/mobile-only-feature';
 import { CloudConversation } from '@/modules/chat/components/cloud-conversation';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
@@ -16,12 +17,29 @@ import { LoadingSpinner } from '@/pages/messages/messages/empty-states';
  */
 export default function Conversation(): ReactNode {
   const { conversationId } = useParams<{ conversationId: string }>();
+  const navigate = useNavigate();
   const conversation = useChatStore((state) =>
     state.conversations.find((c) => c.id === conversationId)
   );
   const isLoadingConversations = useChatStore((state) => state.isLoadingConversations);
   const fetchConversations = useChatStore((state) => state.fetchConversations);
   const [resolvedConversationId, setResolvedConversationId] = useState<string | undefined>();
+  const mobileBackHeader = (
+    <header className="flex h-16 shrink-0 items-center border-b border-[var(--token-card-border)] bg-[var(--token-bg-primary)]/95 px-3 lg:hidden">
+      <button
+        type="button"
+        onClick={() => navigate('/messages')}
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-[var(--token-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        aria-label="Back to conversations"
+        title="Back to conversations"
+      >
+        <ArrowLeftIcon className="h-5 w-5" />
+      </button>
+      <span className="ml-2 text-sm font-semibold text-[var(--token-text-primary)]">
+        Conversation
+      </span>
+    </header>
+  );
 
   useEffect(() => {
     if (!conversationId) return;
@@ -45,12 +63,15 @@ export default function Conversation(): ReactNode {
 
   if (!conversation && (conversationId !== resolvedConversationId || isLoadingConversations)) {
     return (
-      <div
-        className="flex h-full flex-1 items-center justify-center"
-        role="status"
-        aria-label="Loading conversation"
-      >
-        <LoadingSpinner />
+      <div className="flex h-full min-w-0 flex-1 flex-col">
+        {mobileBackHeader}
+        <div
+          className="flex min-h-0 flex-1 items-center justify-center"
+          role="status"
+          aria-label="Loading conversation"
+        >
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }
@@ -65,5 +86,12 @@ export default function Conversation(): ReactNode {
     ? 'Secret Chats use post-quantum end-to-end encryption that runs only on mobile or desktop. Install the app to read this conversation.'
     : 'To open this conversation, pick a tier when you start it: a Cloud Chat works on every platform including web, while a Secret Chat is post-quantum end-to-end encrypted and requires the mobile or desktop app.';
 
-  return <MobileOnlyFeature feature={feature} description={description} />;
+  return (
+    <div className="flex h-full min-w-0 flex-1 flex-col">
+      {mobileBackHeader}
+      <div className="min-h-0 flex-1">
+        <MobileOnlyFeature feature={feature} description={description} />
+      </div>
+    </div>
+  );
 }

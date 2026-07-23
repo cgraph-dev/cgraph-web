@@ -1,6 +1,7 @@
 /**
  * AppLayout Component - Main application shell with sidebar and content area
  */
+import { lazy, Suspense } from 'react';
 import { ToastContainer } from '@/shared/components/ui';
 import { pageTransitions, buttonVariantsSubtle } from '@/lib/animations/transitions';
 import { useAppLayout } from './hooks';
@@ -19,17 +20,20 @@ import { OnboardingTutorial } from '@/modules/onboarding/onboarding-tutorial';
 void pageTransitions;
 void buttonVariantsSubtle;
 
+const MobileNavigation = lazy(() => import('./mobile-navigation'));
+
 /**
  * App Layout — page layout wrapper.
  */
 export default function AppLayout() {
   const { location, user, theme, handleLogout, totalUnread, unreadCount } = useAppLayout();
+  const isOpenConversation = location.pathname.startsWith('/messages/');
   useKeyboardNavigation();
   useHighContrast();
 
   return (
     <div
-      className={`relative flex h-screen min-h-screen text-[var(--token-text-primary)] ${
+      className={`relative flex h-dvh min-h-dvh flex-col text-[var(--token-text-primary)] lg:h-screen lg:min-h-screen lg:flex-row ${
         theme.category !== 'light' ? 'bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950' : ''
       }`}
       style={{
@@ -66,11 +70,24 @@ export default function AppLayout() {
       {/* Main Content */}
       <main
         id="main-content"
-        className="z-0 flex flex-1 overflow-hidden bg-transparent"
+        className="z-0 flex min-h-0 min-w-0 flex-1 overflow-hidden bg-transparent"
         role="main"
       >
         <AnimatedOutlet />
       </main>
+
+      {!isOpenConversation ? (
+        <Suspense fallback={null}>
+          <MobileNavigation
+            user={user}
+            location={location}
+            handleLogout={handleLogout}
+            totalUnread={totalUnread}
+            unreadCount={unreadCount}
+            navItems={navItems}
+          />
+        </Suspense>
+      ) : null}
 
       {/* Toast Notifications */}
       <ToastContainer />

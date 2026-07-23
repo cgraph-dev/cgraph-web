@@ -213,6 +213,9 @@ export default defineConfig(({ mode }) => {
           if (normalizedId.includes('/src/lib/socket/')) {
             return 'app-runtime';
           }
+          if (normalizedId.includes('/src/layouts/app-layout/mobile-navigation')) {
+            return 'mobile-navigation';
+          }
           if (normalizedId.includes('/src/layouts/app-layout/')) {
             return 'app-runtime';
           }

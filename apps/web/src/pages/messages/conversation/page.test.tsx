@@ -1,6 +1,6 @@
 /** @module conversation-page tests */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 vi.mock('@/modules/chat/components/cloud-conversation', () => ({
@@ -37,6 +37,7 @@ function renderAt(id: string): ReturnType<typeof render> {
   return render(
     <MemoryRouter initialEntries={[`/messages/${id}`]}>
       <Routes>
+        <Route path="/messages" element={<div>conversation list</div>} />
         <Route path="/messages/:conversationId" element={<Conversation />} />
       </Routes>
     </MemoryRouter>
@@ -77,10 +78,16 @@ describe('ConversationPage', () => {
     expect(getByText(/Secret Chat is mobile \+ desktop only/i)).toBeInTheDocument();
   });
 
-  it('falls back to MobileOnlyFeature when conversationType is missing (pre-migration)', () => {
+  it('falls back safely and lets mobile users return when the tier is missing', () => {
     setConversations([makeConv({ id: 'c1' })]);
-    const { getByTestId } = renderAt('c1');
+    const { getByRole, getByTestId } = renderAt('c1');
     expect(getByTestId('mobile-only')).toBeInTheDocument();
+    const backButton = getByRole('button', { name: 'Back to conversations' });
+    expect(backButton).toHaveClass('h-10', 'w-10');
+
+    fireEvent.click(backButton);
+
+    expect(screen.getByText('conversation list')).toBeInTheDocument();
   });
 
   it('loads the conversation list before applying the unknown-tier gate', async () => {
@@ -88,6 +95,7 @@ describe('ConversationPage', () => {
     renderAt('c1');
 
     expect(screen.getByRole('status', { name: 'Loading conversation' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back to conversations' })).toBeInTheDocument();
     await waitFor(() => expect(fetchConversations).toHaveBeenCalledOnce());
   });
 });

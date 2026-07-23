@@ -455,6 +455,37 @@ describe('AppLayout', () => {
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
+  it('uses a dynamic narrow viewport shell while retaining desktop dimensions', async () => {
+    const { container } = render(<AppLayout />);
+
+    expect(container.firstChild).toHaveClass(
+      'h-dvh',
+      'min-h-dvh',
+      'flex-col',
+      'lg:h-screen',
+      'lg:min-h-screen',
+      'lg:flex-row',
+    );
+    expect(screen.getByRole('main')).toHaveClass('min-h-0', 'min-w-0');
+    await waitFor(() => expect(screen.getByTestId('mobile-navigation')).toHaveClass('lg:hidden'));
+    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toHaveClass(
+      'hidden',
+      'lg:flex',
+      'w-[72px]',
+    );
+  });
+
+  it('removes the mobile footer from an open conversation route', () => {
+    mockUseAppLayout.mockReturnValue({
+      ...baseLayout,
+      location: { pathname: '/messages/conversation-1' },
+    });
+
+    render(<AppLayout />);
+
+    expect(screen.queryByTestId('mobile-navigation')).not.toBeInTheDocument();
+  });
+
   it('renders the non-light ambient background layer', () => {
     mockUseAppLayout.mockReturnValue({
       ...baseLayout,

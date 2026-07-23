@@ -3,7 +3,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useCloudConversationController } from '@/modules/chat/controllers/cloud-conversation';
 import { ConversationHeader } from './conversation-header';
 import { MessageInputArea } from './message-input-area';
@@ -100,6 +100,7 @@ export default function CloudConversation() {
     handleTyping,
     handleComposerPayload,
     handleStartCall,
+    handleBackToMessages,
     handleMessageRequestDeleted,
     retryMessageHistory,
     messageActions,
@@ -243,7 +244,25 @@ export default function CloudConversation() {
   };
 
   if (!conversation) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex h-full min-w-0 flex-1 flex-col">
+        <header className="flex h-16 shrink-0 items-center border-b border-[var(--token-card-border)] bg-[var(--token-bg-primary)]/95 px-3 lg:hidden">
+          <button
+            type="button"
+            onClick={handleBackToMessages}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-[var(--token-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            aria-label="Back to conversations"
+            title="Back to conversations"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+          </button>
+          <span className="ml-2 text-sm font-semibold text-[var(--token-text-primary)]">
+            Conversation
+          </span>
+        </header>
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   const conversationName = getConversationName(conversation, user?.id);
@@ -264,6 +283,7 @@ export default function CloudConversation() {
           canStartCall={Boolean(callRecipientId)}
           pinnedCount={pinnedMessages.length}
           showPinnedMessages={showPinnedMessages}
+          onBack={handleBackToMessages}
           onTogglePinnedMessages={() => setShowPinnedMessages((value) => !value)}
           onStartVoiceCall={() => handleStartCall('audio')}
           onStartVideoCall={() => handleStartCall('video')}

@@ -31,13 +31,15 @@ vi.mock('@/modules/chat/store/chatStore.impl', () => ({
 
 vi.mock('@/modules/chat/components/conversation-list', () => ({
   ConversationSidebar: ({
+    activeConversationId,
     showArchived,
     onShowArchivedChange,
   }: {
+    readonly activeConversationId?: string;
     readonly showArchived: boolean;
     readonly onShowArchivedChange: (nextShowArchived: boolean) => void;
   }) => (
-    <div>
+    <div data-testid="conversation-sidebar" data-active-id={activeConversationId ?? ''}>
       <div data-testid="conversation-view">{showArchived ? 'archived' : 'inbox'}</div>
       <button type="button" onClick={() => onShowArchivedChange(true)}>
         Show archived
@@ -101,7 +103,9 @@ function renderMessages(initialEntry: string) {
               <LocationProbe />
             </>
           }
-        />
+        >
+          <Route path=":conversationId" element={<div>Opened conversation</div>} />
+        </Route>
       </Routes>
     </MemoryRouter>
   );
@@ -135,5 +139,34 @@ describe('Messages archive navigation', () => {
 
     expect(screen.getByTestId('conversation-view')).toHaveTextContent('archived');
     expect(screen.getByTestId('location')).toHaveTextContent('/messages?scrollTo=message-1&view=archived');
+  });
+});
+
+describe('Messages responsive pane ownership', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('owns the narrow list pane at the messages index route', async () => {
+    renderMessages('/messages');
+
+    await waitFor(() => expect(fetchConversations).toHaveBeenCalledOnce());
+
+    expect(screen.getByTestId('conversation-sidebar')).toHaveAttribute('data-active-id', '');
+    expect(screen.getByTestId('conversation-pane')).toHaveClass('hidden', 'lg:flex');
+    expect(screen.getByTestId('conversation-pane')).not.toHaveClass('flex');
+  });
+
+  it('owns the narrow conversation pane when the route has a conversation id', async () => {
+    renderMessages('/messages/conversation-1');
+
+    await waitFor(() => expect(fetchConversations).toHaveBeenCalledOnce());
+
+    expect(screen.getByTestId('conversation-sidebar')).toHaveAttribute(
+      'data-active-id',
+      'conversation-1',
+    );
+    expect(screen.getByTestId('conversation-pane')).toHaveClass('flex', 'lg:flex');
+    expect(screen.getByText('Opened conversation')).toBeInTheDocument();
   });
 });

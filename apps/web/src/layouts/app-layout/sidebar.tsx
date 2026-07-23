@@ -330,7 +330,7 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`group/sidebar relative z-10 flex w-[72px] flex-col items-center overflow-visible overscroll-contain border-r border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] py-4 ${glassClasses}`}
+        className={`group/sidebar relative z-10 hidden w-[72px] flex-col items-center overflow-visible overscroll-contain border-r border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] py-4 lg:flex ${glassClasses}`}
         role="navigation"
         aria-label="Main navigation"
       >

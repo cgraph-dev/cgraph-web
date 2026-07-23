@@ -21,10 +21,11 @@ vi.mock('@/modules/social/store', () => ({
   useFriendStore: (selector: (state: typeof friendState) => unknown) => selector(friendState),
 }));
 
-function renderSidebar(onAddFriend = vi.fn()) {
-  render(
+function renderSidebar(onAddFriend = vi.fn(), activeConversationId?: string) {
+  return render(
     <ConversationSidebar
       conversations={[]}
+      activeConversationId={activeConversationId}
       currentUserId="current-user"
       onlineStatus={{}}
       searchQuery=""
@@ -64,5 +65,27 @@ describe('ConversationSidebar friend request ownership', () => {
     await user.click(requestsButton);
     expect(onAddFriend).toHaveBeenCalledOnce();
     expect(screen.queryByRole('region', { name: /friend requests/i })).not.toBeInTheDocument();
+  });
+
+  it('fills the narrow viewport only when no conversation route is active', () => {
+    renderSidebar();
+
+    expect(screen.getByTestId('conversation-sidebar')).toHaveClass(
+      'flex',
+      'w-full',
+      'lg:w-80',
+    );
+    expect(screen.getByTestId('conversation-sidebar')).not.toHaveClass('hidden');
+  });
+
+  it('leaves the narrow viewport when a conversation route is active', () => {
+    renderSidebar(vi.fn(), 'conversation-1');
+
+    expect(screen.getByTestId('conversation-sidebar')).toHaveClass(
+      'hidden',
+      'lg:flex',
+      'lg:w-80',
+    );
+    expect(screen.getByTestId('conversation-sidebar')).not.toHaveClass('w-full');
   });
 });

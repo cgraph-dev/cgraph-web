@@ -5,7 +5,11 @@ const controller = vi.hoisted(() => ({
   retryMessageHistory: vi.fn(),
   value: {
     conversationId: 'conversation-1',
-    conversation: { id: 'conversation-1', type: 'direct', isGroup: false },
+    conversation: { id: 'conversation-1', type: 'direct', isGroup: false } as {
+      id: string;
+      type: string;
+      isGroup: boolean;
+    } | null,
     conversationMessages: [],
     scrollToMessageId: null,
     typing: [],
@@ -28,6 +32,7 @@ const controller = vi.hoisted(() => ({
     handleTyping: vi.fn(),
     handleComposerPayload: vi.fn(),
     handleStartCall: vi.fn(),
+    handleBackToMessages: vi.fn(),
     handleMessageRequestDeleted: vi.fn(),
     retryMessageHistory: vi.fn(),
     messageActions: {
@@ -119,6 +124,12 @@ import CloudConversation from '../cloud-conversation';
 describe('CloudConversation history rate-limit banner', () => {
   beforeEach(() => {
     controller.value.retryMessageHistory.mockClear();
+    controller.value.handleBackToMessages.mockClear();
+    controller.value.conversation = {
+      id: 'conversation-1',
+      type: 'direct',
+      isGroup: false,
+    };
   });
 
   it('announces the server wait and exposes one explicit retry command', () => {
@@ -130,5 +141,18 @@ describe('CloudConversation history rate-limit banner', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(controller.value.retryMessageHistory).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a narrow-screen back command available while conversation data loads', () => {
+    controller.value.conversation = null;
+
+    render(<CloudConversation />);
+
+    const backButton = screen.getByRole('button', { name: 'Back to conversations' });
+    expect(backButton).toHaveClass('h-10', 'w-10');
+    expect(screen.getByText('loading')).toBeInTheDocument();
+
+    fireEvent.click(backButton);
+    expect(controller.value.handleBackToMessages).toHaveBeenCalledOnce();
   });
 });

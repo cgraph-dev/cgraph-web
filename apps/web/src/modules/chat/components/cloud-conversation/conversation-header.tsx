@@ -1,4 +1,5 @@
 import {
+  ArrowLeftIcon,
   BookmarkIcon,
   PhoneIcon,
   VideoCameraIcon,
@@ -32,6 +33,7 @@ export function ConversationHeader({
   canStartCall = false,
   pinnedCount = 0,
   showPinnedMessages = false,
+  onBack,
   onTogglePinnedMessages,
   onStartVoiceCall,
   onStartVideoCall,
@@ -57,7 +59,18 @@ export function ConversationHeader({
         data-testid="conversation-header"
         className="relative z-20 flex h-16 flex-shrink-0 items-center justify-between gap-3 border-b border-[var(--token-card-border)] bg-[var(--token-bg-primary)]/95 px-4 backdrop-blur-xl"
       >
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-[var(--token-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 lg:hidden"
+              aria-label="Back to conversations"
+              title="Back to conversations"
+            >
+              <ArrowLeftIcon className="h-5 w-5" />
+            </button>
+          ) : null}
           <div className="relative shrink-0">
             <ThemedAvatar
               src={avatarUrl}

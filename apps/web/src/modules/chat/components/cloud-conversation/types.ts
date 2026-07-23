@@ -42,6 +42,7 @@ export interface ConversationHeaderProps {
   canStartCall?: boolean;
   pinnedCount?: number;
   showPinnedMessages?: boolean;
+  onBack?: () => void;
   onTogglePinnedMessages?: () => void;
   onStartVoiceCall?: () => void;
   onStartVideoCall?: () => void;
