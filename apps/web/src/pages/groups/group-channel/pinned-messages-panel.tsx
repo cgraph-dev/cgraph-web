@@ -12,6 +12,7 @@ import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import type { ChannelMessage } from '@/modules/groups/store';
 import { springs } from '@/lib/animation-presets';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 const logger = createLogger('PinnedMessagesPanel');
 
@@ -68,6 +69,7 @@ export function PinnedMessagesPanel({
   onClose,
   onUnpin,
 }: PinnedMessagesPanelProps) {
+  const isNarrowLayout = useMediaQuery('(max-width: 1279px)');
   const [pins, setPins] = useState<PinnedMessageEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -128,10 +130,10 @@ export function PinnedMessagesPanel({
   return (
     <motion.div
       initial={{ width: 0, opacity: 0 }}
-      animate={{ width: 320, opacity: 1 }}
+      animate={{ width: isNarrowLayout ? '100%' : 320, opacity: 1 }}
       exit={{ width: 0, opacity: 0 }}
       transition={{ ...springs.stiff, mass: 0.8 }}
-      className="flex flex-col overflow-hidden border-l border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4]"
+      className="absolute inset-0 z-40 flex flex-col overflow-hidden border-l border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] xl:static xl:bg-[var(--token-card-bg)/0.4]"
       role="complementary"
       aria-label="Pinned messages"
     >

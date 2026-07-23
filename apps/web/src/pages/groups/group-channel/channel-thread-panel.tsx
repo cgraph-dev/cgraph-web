@@ -79,7 +79,7 @@ export function ChannelThreadPanel() {
           transition={springs.gentle}
           role="complementary"
           aria-label="Message thread"
-          className="flex h-full w-96 flex-col border-l border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4]"
+          className="absolute inset-0 z-40 flex h-full w-full flex-col border-l border-[var(--token-card-border)] bg-[var(--token-bg-primary)] xl:static xl:w-96 xl:bg-[var(--token-card-bg)/0.4]"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--token-card-border)] px-4 py-3">

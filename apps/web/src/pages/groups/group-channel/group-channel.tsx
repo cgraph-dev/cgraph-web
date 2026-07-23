@@ -24,6 +24,7 @@ import { uploadMessageAttachment } from '@/lib/uploads/message-attachment-upload
 import { buildMessageAttachmentSendPayload } from '@cgraph-dev/shared-types';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 import { ChannelHeader } from './channel-header';
 import { MessagesArea } from './messages-area';
@@ -245,6 +246,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const currentUser = useAuthStore((s) => s.user);
   const currentUserId = currentUser?.id;
   const copy = surfaceCopy[surface];
+  const isWideLayout = useMediaQuery('(min-width: 1280px)');
 
   const {
     groups,
@@ -270,7 +272,7 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const [replyTo, setReplyTo] = useState<ChannelMessage | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
-  const [showMembers, setShowMembers] = useState(true);
+  const [showMembers, setShowMembers] = useState(isWideLayout);
   const [showPinned, setShowPinned] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -297,6 +299,10 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   const replyCounts = useChannelThreadStore((s) => s.replyCounts);
   const openThread = useChannelThreadStore((s) => s.openThread);
   const fetchReplyCounts = useChannelThreadStore((s) => s.fetchReplyCounts);
+
+  useEffect(() => {
+    setShowMembers(isWideLayout);
+  }, [isWideLayout]);
 
   const group = groups.find((g) => g.id === groupId);
   const channel = group ? findGroupChannel(group, channelId) : null;
@@ -951,9 +957,9 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
   }
 
   return (
-    <div className="flex flex-1">
+    <div className="relative flex min-w-0 flex-1 overflow-hidden">
       {/* Main content */}
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         <ChannelHeader
           channelName={channel.name}
           channelTopic={channel.topic ?? undefined}
@@ -1079,7 +1085,11 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
       {/* Members sidebar */}
       {showMembers && (
-        <MembersSidebar onlineMembers={onlineMembers} offlineMembers={offlineMembers} />
+        <MembersSidebar
+          onlineMembers={onlineMembers}
+          offlineMembers={offlineMembers}
+          onClose={() => setShowMembers(false)}
+        />
       )}
 
       {/* Thread panel */}

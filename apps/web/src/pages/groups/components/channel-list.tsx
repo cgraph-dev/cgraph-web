@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { NavLink } from 'react-router-dom';
 import {
   ChevronDownIcon,
+  ChevronLeftIcon,
+  XMarkIcon,
   UserGroupIcon,
   PlusIcon,
   Cog6ToothIcon,
@@ -27,13 +29,19 @@ export function ChannelList({
   channelId,
   expandedCategories,
   toggleCategory,
+  mobileVisible = false,
+  onCloseMobile,
+  onBackToGroups,
 }: ChannelListProps) {
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const { fetchGroup } = useGroupStore();
   if (!activeGroup) {
     return (
-      <div className="bg-[var(--token-card-bg)]/40 relative z-10 flex w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
+      <div
+        data-testid="groups-channel-list"
+        className="bg-[var(--token-card-bg)]/40 relative z-10 hidden w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300 lg:flex"
+      >
         {/* Ambient glow */}
         <div className="from-primary-500/5 to-purple-500/5 pointer-events-none absolute inset-0 bg-gradient-to-b via-black/20" />
 
@@ -67,15 +75,52 @@ export function ChannelList({
   }
 
   return (
-    <div className="bg-[var(--token-card-bg)]/40 relative z-10 flex w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
+    <div
+      data-testid="groups-channel-list"
+      aria-label={`${activeGroup.name} channels`}
+      className={`${mobileVisible ? 'flex' : 'hidden'} bg-[var(--token-card-bg)]/40 relative z-20 min-h-0 w-full shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300 lg:flex lg:w-60`}
+    >
       {/* Ambient glow */}
       <div className="from-primary-500/5 to-purple-500/5 pointer-events-none absolute inset-0 bg-gradient-to-b via-black/20" />
+
+      <div
+        className="relative z-10 flex h-14 shrink-0 items-center gap-1 border-b border-[var(--token-border-muted)] px-2 lg:hidden"
+        data-testid="groups-channel-list-mobile-header"
+      >
+        <button
+          type="button"
+          onClick={onBackToGroups}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+          aria-label="Back to groups"
+        >
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
+        <h2 className="min-w-0 flex-1 truncate px-1 text-sm font-semibold text-white">
+          {activeGroup.name}
+        </h2>
+        <NavLink
+          to={`/groups/${activeGroup.id}/settings`}
+          onClick={() => HapticFeedback.light()}
+          aria-label={`Open ${activeGroup.name} settings`}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+        >
+          <Cog6ToothIcon className="h-5 w-5" />
+        </NavLink>
+        <button
+          type="button"
+          onClick={onCloseMobile}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+          aria-label="Close channel list"
+        >
+          <XMarkIcon className="h-5 w-5" />
+        </button>
+      </div>
 
       {/* Server Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10"
+        className="relative z-10 hidden lg:block"
       >
         <div className="flex h-14 items-center border-b border-[var(--token-border-muted)] p-5 px-4 pb-3">
           <h2 className="truncate bg-gradient-to-br from-white to-white/60 bg-clip-text font-bold tracking-tight text-transparent">
@@ -144,6 +189,7 @@ export function ChannelList({
                         channel={channel}
                         groupId={activeGroup.id}
                         isActive={channel.id === channelId}
+                        onSelect={onCloseMobile}
                       />
                     </motion.div>
                   ))}
@@ -167,6 +213,7 @@ export function ChannelList({
                 channel={channel}
                 groupId={activeGroup.id}
                 isActive={channel.id === channelId}
+                onSelect={onCloseMobile}
               />
             </motion.div>
           ))}

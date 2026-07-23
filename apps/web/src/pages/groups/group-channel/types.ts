@@ -138,6 +138,7 @@ export interface MessageInputProps {
 export interface MembersSidebarProps {
   onlineMembers: readonly Member[];
   offlineMembers: readonly Member[];
+  onClose?: () => void;
 }
 
 // Re-export store types for convenience

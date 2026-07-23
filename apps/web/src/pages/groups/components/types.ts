@@ -13,6 +13,7 @@ export interface ChannelItemProps {
   channel: Channel;
   groupId: string;
   isActive: boolean;
+  onSelect?: () => void;
 }
 
 export interface CategorySectionProps {
@@ -31,6 +32,7 @@ export interface CategorySectionProps {
 export interface ServerListProps {
   groups: readonly Group[];
   activeGroupId?: string;
+  showMobileDirectory?: boolean;
 }
 
 export interface ChannelListProps {
@@ -38,6 +40,9 @@ export interface ChannelListProps {
   channelId?: string;
   expandedCategories: Set<string>;
   toggleCategory: (id: string) => void;
+  mobileVisible?: boolean;
+  onCloseMobile?: () => void;
+  onBackToGroups?: () => void;
 }
 
 export interface ContentAreaProps {

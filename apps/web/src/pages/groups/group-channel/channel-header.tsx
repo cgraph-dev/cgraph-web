@@ -48,29 +48,29 @@ export function ChannelHeader({
   const NotificationIcon = notificationLevel === 'none' ? BellSlashIcon : BellIcon;
 
   return (
-    <header className="flex h-12 items-center justify-between border-b border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4">
-      <div className="flex items-center gap-2">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-2 sm:px-4 lg:h-12">
+      <div className="flex min-w-0 items-center gap-2">
         <Icon className="h-5 w-5 text-gray-400" />
-        <span className="font-semibold text-white">{channelName}</span>
+        <span className="truncate font-semibold text-white">{channelName}</span>
         {channelLabel && (
-          <span className="rounded bg-white/[0.08] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/60">
+          <span className="hidden rounded bg-white/[0.08] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/60 sm:inline">
             {channelLabel}
           </span>
         )}
         {channelTopic && (
-          <>
+          <div className="hidden min-w-0 items-center sm:flex">
             <div className="mx-2 h-5 w-px bg-white/[0.08]" />
             <span className="max-w-md truncate text-sm text-gray-400">{channelTopic}</span>
-          </>
+          </div>
         )}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center">
         {onToggleSearch && (
           <motion.button
             whileTap={{ scale: 0.88 }}
             onClick={onToggleSearch}
-            className={`rounded p-1.5 transition-colors ${
+            className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors lg:h-8 lg:w-8 ${
               isSearchOpen
                 ? 'bg-white/[0.08] text-white'
                 : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
@@ -86,7 +86,7 @@ export function ChannelHeader({
             whileTap={{ scale: 0.88 }}
             onClick={onToggleNotifications}
             disabled={isSavingNotifications}
-            className={`rounded p-1.5 transition-colors disabled:cursor-wait disabled:opacity-60 ${
+            className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors disabled:cursor-wait disabled:opacity-60 lg:h-8 lg:w-8 ${
               notificationLevel === 'none'
                 ? 'bg-white/[0.08] text-red-300'
                 : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
@@ -100,7 +100,7 @@ export function ChannelHeader({
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={onTogglePinnedMessages}
-          className={`relative rounded p-1.5 transition-colors ${
+          className={`relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors lg:h-8 lg:w-8 ${
             showPinnedMessages
               ? 'bg-white/[0.08] text-white'
               : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
@@ -117,7 +117,7 @@ export function ChannelHeader({
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={onToggleMembers}
-          className={`rounded p-1.5 transition-colors ${
+          className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors lg:h-8 lg:w-8 ${
             showMembers
               ? 'bg-white/[0.08] text-white'
               : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'

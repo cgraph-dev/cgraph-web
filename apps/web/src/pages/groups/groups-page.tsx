@@ -3,7 +3,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, List } from 'lucide-react';
 import { useGroupStore } from '@/modules/groups/store';
 import {
   ServerList,
@@ -12,7 +13,7 @@ import {
   LoadingOverlay,
   AmbientParticles,
 } from './components';
-import { getGroupRoute } from '@/modules/groups/routing';
+import { findGroupChannel, getGroupRoute } from '@/modules/groups/routing';
 
 /**
  * Groups component.
@@ -20,9 +21,11 @@ import { getGroupRoute } from '@/modules/groups/routing';
 export default function Groups() {
   const { groupId, channelId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { groups, isLoadingGroups, fetchGroups, fetchGroup, setActiveGroup, setActiveChannel } =
     useGroupStore();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [showMobileChannels, setShowMobileChannels] = useState(false);
 
   useEffect(() => {
     fetchGroups();
@@ -40,7 +43,12 @@ export default function Groups() {
   }, [groupId, channelId, setActiveGroup, fetchGroup, setActiveChannel]);
 
   const activeGroup = groups.find((g) => g.id === groupId);
+  const activeChannel = activeGroup && channelId ? findGroupChannel(activeGroup, channelId) : null;
   const defaultGroupRoute = activeGroup ? getGroupRoute(activeGroup) : null;
+
+  useEffect(() => {
+    setShowMobileChannels(false);
+  }, [location.pathname]);
 
   // Initialize all categories as expanded
   useEffect(() => {
@@ -82,7 +90,11 @@ export default function Groups() {
       <AmbientParticles />
 
       {/* Server List */}
-      <ServerList groups={groups} activeGroupId={groupId} />
+      <ServerList
+        groups={groups}
+        activeGroupId={groupId}
+        showMobileDirectory={!activeGroup}
+      />
 
       {/* Channel List */}
       <ChannelList
@@ -90,14 +102,61 @@ export default function Groups() {
         channelId={channelId}
         expandedCategories={expandedCategories}
         toggleCategory={toggleCategory}
+        mobileVisible={Boolean(activeGroup && showMobileChannels)}
+        onCloseMobile={() => setShowMobileChannels(false)}
+        onBackToGroups={() => navigate('/groups')}
       />
 
       {/* Channel Content */}
       <div
-        className="aurora-hub-main relative z-10 flex h-full min-w-0 flex-col bg-transparent"
+        data-testid="group-content-pane"
+        className={`${activeGroup && !showMobileChannels ? 'flex' : 'hidden'} aurora-hub-main relative z-10 h-full min-w-0 flex-1 flex-col bg-transparent lg:flex`}
         aria-label="Group content"
         tabIndex={0}
       >
+        {activeGroup && (
+          <header
+            data-testid="mobile-group-toolbar"
+            className="flex h-14 shrink-0 items-center gap-1 border-b border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] px-2 lg:hidden"
+          >
+            <button
+              type="button"
+              onClick={() => navigate('/groups')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+              aria-label="Back to groups"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobileChannels(true)}
+              className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+              aria-label={`Open ${activeGroup.name} channels`}
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary-600 text-xs font-bold text-white">
+                {activeGroup.iconUrl ? (
+                  <img
+                    src={activeGroup.iconUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  activeGroup.name.charAt(0).toLocaleUpperCase()
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-white">
+                  {activeGroup.name}
+                </span>
+                <span className="block truncate text-[11px] text-white/45">
+                  {activeChannel ? `# ${activeChannel.name}` : 'Channels'}
+                </span>
+              </span>
+              <List className="h-5 w-5 shrink-0 text-white/50" />
+            </button>
+          </header>
+        )}
         <ContentArea activeGroup={activeGroup} groupId={groupId} channelId={channelId} />
       </div>
     </div>
