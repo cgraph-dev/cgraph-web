@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  recoverCloudChatEvents: vi.fn(),
+  recoverCloudChatEventsAfterResume: vi.fn(),
   chatState: {
     activeConversationId: 'conversation-1',
     fetchConversations: vi.fn().mockResolvedValue(undefined),
@@ -87,7 +87,7 @@ vi.mock('@/lib/preferences/preference-sync-bus', () => ({
 }));
 
 vi.mock('../cloudChatRecovery', () => ({
-  recoverCloudChatEvents: mocks.recoverCloudChatEvents,
+  recoverCloudChatEventsAfterResume: mocks.recoverCloudChatEventsAfterResume,
 }));
 
 vi.mock('../deviceRevocation', () => ({
@@ -125,10 +125,10 @@ function createChannel() {
 describe('user channel Cloud Chat recovery wiring', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.recoverCloudChatEvents.mockResolvedValue(undefined);
+    mocks.recoverCloudChatEventsAfterResume.mockResolvedValue(undefined);
   });
 
-  it('starts the account-scoped recovery owner after resume completion', () => {
+  it('starts the account-scoped recovery owner after resume completion', async () => {
     const { channel, handlers } = createChannel();
     const socket = { channel: vi.fn(() => channel) };
 
@@ -146,13 +146,12 @@ describe('user channel Cloud Chat recovery wiring', () => {
       full_sync_required: false,
     });
 
-    expect(mocks.recoverCloudChatEvents).toHaveBeenCalledWith(
-      'account-1',
-      expect.objectContaining({
-        getActiveConversationId: expect.any(Function),
-        refreshConversations: expect.any(Function),
-        refreshMessages: expect.any(Function),
-      })
+    await vi.waitFor(() =>
+      expect(mocks.recoverCloudChatEventsAfterResume).toHaveBeenCalledWith(
+        'account-1',
+        mocks.chatState,
+        expect.any(Function)
+      )
     );
   });
 
@@ -170,9 +169,8 @@ describe('user channel Cloud Chat recovery wiring', () => {
     );
 
     handlers.get('resume_complete')?.({ full_sync_required: true });
-    await Promise.resolve();
+    await vi.waitFor(() => expect(mocks.recoverCloudChatEventsAfterResume).toHaveBeenCalledTimes(1));
 
-    expect(mocks.recoverCloudChatEvents).toHaveBeenCalledTimes(1);
     expect(mocks.chatState.fetchConversations).toHaveBeenCalledWith({ force: true });
     expect(mocks.notificationState.fetchNotifications).toHaveBeenCalledWith(null, { force: true });
     expect(mocks.friendState.fetchPendingRequests).toHaveBeenCalledTimes(1);

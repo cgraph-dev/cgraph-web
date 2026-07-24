@@ -210,6 +210,9 @@ export default defineConfig(({ mode }) => {
           if (normalizedId.includes('/src/modules/') && normalizedId.includes('/store/')) {
             return 'app-runtime';
           }
+          if (normalizedId.includes('/src/lib/socket/cloudChatRecovery')) {
+            return 'cloud-chat-recovery';
+          }
           if (normalizedId.includes('/src/lib/socket/')) {
             return 'app-runtime';
           }

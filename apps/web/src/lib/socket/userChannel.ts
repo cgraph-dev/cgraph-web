@@ -36,7 +36,6 @@ import {
   applySettingsPreferenceSync,
   applyThemePreferenceSync,
 } from '../preferences/preference-sync-bus';
-import { recoverCloudChatEvents } from './cloudChatRecovery';
 import { shouldLogoutForDeviceRevocation } from './deviceRevocation';
 import { shouldDropIncomingCall } from './incomingCallDedup';
 
@@ -588,13 +587,13 @@ export function joinUserChannel(
       sessionState.sessionId = newSessionId;
     }
 
-    void recoverCloudChatEvents(userId, {
-      getActiveConversationId: () => useChatStore.getState().activeConversationId,
-      refreshConversations: () => chatStore.fetchConversations({ force: true }),
-      refreshMessages: (conversationId) => chatStore.fetchMessages(conversationId),
-    }).catch((error: unknown) => {
-      logger.warn('Cloud Chat resume recovery failed', error);
-    });
+    void import('./cloudChatRecovery')
+      .then(({ recoverCloudChatEventsAfterResume }) =>
+        recoverCloudChatEventsAfterResume(userId, chatStore, useChatStore.getState)
+      )
+      .catch((error: unknown) => {
+        logger.warn('Cloud Chat resume recovery failed', error);
+      });
 
     if (fullSyncRequired) {
       void Promise.allSettled([

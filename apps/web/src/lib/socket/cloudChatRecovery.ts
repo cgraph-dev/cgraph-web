@@ -1,14 +1,12 @@
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
-import {
-  getCloudChatEventCursor,
-  setCloudChatEventCursor,
-} from '@/lib/offline/indexeddb-cache';
+import { getSyncMetadata, setSyncMetadata } from '@/lib/offline/indexeddb-cache';
 import { z } from 'zod';
 
 const logger = createLogger('CloudChatRecovery');
 const CLOUD_CHAT_STREAM = 'cloud_chat';
 const CLOUD_CHAT_EVENT_PAGE_LIMIT = 200;
+const CLOUD_CHAT_EVENT_CURSOR_KEY_PREFIX = 'cloud_chat_event_cursor:';
 
 const nonEmptyStringSchema = z.string().trim().min(1);
 const cloudChatEventSchema = z
@@ -43,6 +41,11 @@ export interface CloudChatRecoveryProjection {
   readonly refreshMessages: (conversationId: string) => Promise<void>;
 }
 
+interface CloudChatResumeStore {
+  readonly fetchConversations: (options: { force: true }) => Promise<void>;
+  readonly fetchMessages: (conversationId: string) => Promise<void>;
+}
+
 const recoveryByAccountId = new Map<string, Promise<void>>();
 
 function cloudChatEventsPath(afterStreamSeq: number): string {
@@ -52,6 +55,25 @@ function cloudChatEventsPath(afterStreamSeq: number): string {
   });
 
   return `/api/v1/sync/cloud-chat/events?${params.toString()}`;
+}
+
+function cloudChatEventCursorKey(accountId: string): string {
+  return `${CLOUD_CHAT_EVENT_CURSOR_KEY_PREFIX}${accountId}`;
+}
+
+async function getCloudChatEventCursor(accountId: string): Promise<number> {
+  const value = await getSyncMetadata(cloudChatEventCursorKey(accountId));
+  const cursor = value === null ? 0 : Number(value);
+
+  return Number.isSafeInteger(cursor) && cursor >= 0 ? cursor : 0;
+}
+
+async function setCloudChatEventCursor(accountId: string, cursor: number): Promise<void> {
+  if (!Number.isSafeInteger(cursor) || cursor < 0) {
+    throw new RangeError('Cloud Chat event cursor must be a non-negative safe integer');
+  }
+
+  await setSyncMetadata(cloudChatEventCursorKey(accountId), String(cursor));
 }
 
 function assertOrderedPage(page: CloudChatEventPage, afterStreamSeq: number): void {
@@ -155,4 +177,20 @@ export function recoverCloudChatEvents(
   );
 
   return recovery;
+}
+
+/**
+ * Preserve the resume handler's captured refresh methods while reading the
+ * active conversation from the current store state when recovery runs.
+ */
+export function recoverCloudChatEventsAfterResume(
+  accountId: string,
+  chatStore: CloudChatResumeStore,
+  getCurrentChatState: () => { activeConversationId: string | null }
+): Promise<void> {
+  return recoverCloudChatEvents(accountId, {
+    getActiveConversationId: () => getCurrentChatState().activeConversationId,
+    refreshConversations: () => chatStore.fetchConversations({ force: true }),
+    refreshMessages: (conversationId) => chatStore.fetchMessages(conversationId),
+  });
 }

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  getSyncMetadata,
   getMessages,
   saveMessages,
   savePendingMessage,
+  setSyncMetadata,
   type CachedMessage,
   type PendingMessage,
 } from '../indexeddb-cache';
@@ -59,6 +61,15 @@ describe('IndexedDB cache keys', () => {
   it('requires an account key before persisting an outbound message', async () => {
     await expect(savePendingMessage({ ...pendingMessage, accountId: '' })).rejects.toThrow(
       'pendingMessage.accountId must be a non-empty string'
+    );
+  });
+
+  it('rejects a missing sync metadata key before opening IndexedDB', async () => {
+    await expect(getSyncMetadata('')).rejects.toThrow(
+      'syncMetadata.key must be a non-empty string'
+    );
+    await expect(setSyncMetadata(' ', 'cursor')).rejects.toThrow(
+      'syncMetadata.key must be a non-empty string'
     );
   });
 });

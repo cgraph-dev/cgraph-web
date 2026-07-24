@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
-  getCloudChatEventCursor: vi.fn(),
-  setCloudChatEventCursor: vi.fn(),
+  getSyncMetadata: vi.fn(),
+  setSyncMetadata: vi.fn(),
 }));
 
 vi.mock('@/lib/api-client', () => ({
@@ -13,8 +13,8 @@ vi.mock('@/lib/api-client', () => ({
 }));
 
 vi.mock('@/lib/offline/indexeddb-cache', () => ({
-  getCloudChatEventCursor: mocks.getCloudChatEventCursor,
-  setCloudChatEventCursor: mocks.setCloudChatEventCursor,
+  getSyncMetadata: mocks.getSyncMetadata,
+  setSyncMetadata: mocks.setSyncMetadata,
 }));
 
 import {
@@ -68,8 +68,8 @@ function projection(activeConversationId: string | null = null): {
 describe('Cloud Chat durable recovery', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getCloudChatEventCursor.mockResolvedValue(0);
-    mocks.setCloudChatEventCursor.mockResolvedValue(undefined);
+    mocks.getSyncMetadata.mockResolvedValue(null);
+    mocks.setSyncMetadata.mockResolvedValue(undefined);
   });
 
   it('continues ordered pages and advances only with server-issued positions', async () => {
@@ -87,14 +87,14 @@ describe('Cloud Chat durable recovery', () => {
       2,
       '/api/v1/sync/cloud-chat/events?after_stream_seq=4&limit=200'
     );
-    expect(mocks.setCloudChatEventCursor).toHaveBeenNthCalledWith(1, 'account-1', 4);
-    expect(mocks.setCloudChatEventCursor).toHaveBeenNthCalledWith(2, 'account-1', 5);
+    expect(mocks.setSyncMetadata).toHaveBeenNthCalledWith(1, 'cloud_chat_event_cursor:account-1', '4');
+    expect(mocks.setSyncMetadata).toHaveBeenNthCalledWith(2, 'cloud_chat_event_cursor:account-1', '5');
     expect(state.refreshConversations).toHaveBeenCalledTimes(2);
     expect(state.refreshMessages).toHaveBeenCalledWith('conversation-1');
   });
 
   it('uses the persisted account cursor after a relogin or browser restart', async () => {
-    mocks.getCloudChatEventCursor.mockResolvedValue(41);
+    mocks.getSyncMetadata.mockResolvedValue('41');
     mocks.get.mockResolvedValueOnce(response([event(42, 'conversation-2')], false, 42));
     const state = projection();
 
@@ -103,7 +103,7 @@ describe('Cloud Chat durable recovery', () => {
     expect(mocks.get).toHaveBeenCalledWith(
       '/api/v1/sync/cloud-chat/events?after_stream_seq=41&limit=200'
     );
-    expect(mocks.setCloudChatEventCursor).toHaveBeenCalledWith('account-1', 42);
+    expect(mocks.setSyncMetadata).toHaveBeenCalledWith('cloud_chat_event_cursor:account-1', '42');
     expect(state.refreshMessages).not.toHaveBeenCalled();
   });
 
@@ -134,7 +134,7 @@ describe('Cloud Chat durable recovery', () => {
 
     expect(state.refreshConversations).toHaveBeenCalledTimes(1);
     expect(state.refreshMessages).toHaveBeenCalledTimes(1);
-    expect(mocks.setCloudChatEventCursor).toHaveBeenCalledWith('account-1', 2);
+    expect(mocks.setSyncMetadata).toHaveBeenCalledWith('cloud_chat_event_cursor:account-1', '2');
   });
 
   it('does not advance when a projection refresh fails', async () => {
@@ -146,7 +146,7 @@ describe('Cloud Chat durable recovery', () => {
       'conversation refresh failed'
     );
 
-    expect(mocks.setCloudChatEventCursor).not.toHaveBeenCalled();
+    expect(mocks.setSyncMetadata).not.toHaveBeenCalled();
   });
 
   it('rejects a non-progressing server page without advancing the cursor', async () => {
@@ -158,6 +158,18 @@ describe('Cloud Chat durable recovery', () => {
     );
 
     expect(state.refreshConversations).not.toHaveBeenCalled();
-    expect(mocks.setCloudChatEventCursor).not.toHaveBeenCalled();
+    expect(mocks.setSyncMetadata).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the stream origin when durable cursor data is malformed', async () => {
+    mocks.getSyncMetadata.mockResolvedValue('not-a-cursor');
+    mocks.get.mockResolvedValueOnce(response([], false, 0));
+
+    await recoverCloudChatEvents('account-1', projection().projection);
+
+    expect(mocks.get).toHaveBeenCalledWith(
+      '/api/v1/sync/cloud-chat/events?after_stream_seq=0&limit=200'
+    );
+    expect(mocks.setSyncMetadata).not.toHaveBeenCalled();
   });
 });
