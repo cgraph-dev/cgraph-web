@@ -21,6 +21,7 @@ import { socketManager } from '@/lib/socket';
 import { http } from '@/lib/api-client';
 import { ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
+import { startAutoSync, stopAutoSync } from '@/lib/offline/sync-service';
 import { toast } from '@/shared/components/ui';
 import { MessageSearch } from '@/modules/chat/components/message-search';
 
@@ -59,6 +60,11 @@ export default function Messages() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [spaces, setSpaces] = useState<readonly ConversationSpace[]>([]);
   const showArchived = searchParams.get('view') === 'archived';
+
+  useEffect(() => {
+    startAutoSync();
+    return stopAutoSync;
+  }, []);
 
   // Handle search result click - navigate to conversation and scroll to message
   function handleSearchResultClick(convId: string, messageId: string) {

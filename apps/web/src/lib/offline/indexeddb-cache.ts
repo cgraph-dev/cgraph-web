@@ -55,6 +55,7 @@ export interface PendingMessage {
   readonly createdAt: number;
   readonly status: 'pending' | 'sending' | 'failed';
   readonly retryCount: number;
+  readonly lastAttemptAt?: number;
   readonly lastError?: string;
 }
 
@@ -392,6 +393,7 @@ export async function updatePendingMessageStatus(
         ...existing,
         status,
         lastError: error,
+        lastAttemptAt: status === 'sending' ? Date.now() : existing.lastAttemptAt,
         retryCount: status === 'failed' ? existing.retryCount + 1 : existing.retryCount,
       });
     };

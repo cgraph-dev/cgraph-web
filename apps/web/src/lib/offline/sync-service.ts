@@ -1,6 +1,7 @@
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
+import { isAxiosError } from 'axios';
 import { z } from 'zod';
 import {
   getLastSyncTimestamp,
@@ -13,6 +14,7 @@ import {
   updatePendingMessageStatus,
   type CachedMessage,
   type CachedConversation,
+  type PendingMessage,
 } from './indexeddb-cache';
 
 const logger = createLogger('SyncService');
@@ -74,21 +76,6 @@ interface PullResponse {
   readonly data: unknown;
 }
 
-interface PushItemResult {
-  readonly client_id: string;
-  readonly status: 'ok' | 'duplicate' | 'error';
-  readonly server_id: string | null;
-  readonly error: string | null;
-}
-
-interface PushResponse {
-  readonly data: {
-    readonly messages: readonly PushItemResult[];
-    readonly read_receipts: readonly PushItemResult[];
-    readonly reactions: readonly PushItemResult[];
-  };
-}
-
 export interface SyncStats {
   readonly pulled: number;
   readonly pushed: number;
@@ -103,6 +90,7 @@ let offlineHandler: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
 
 const VISIBLE_SYNC_DELAY_MS = 60_000;
+const STALE_SEND_RETRY_MS = 30_000;
 
 type SyncListener = (stats: SyncStats) => void;
 type StatusListener = (isOnline: boolean) => void;
@@ -206,75 +194,65 @@ function currentAccountId(): string | null {
   return typeof accountId === 'string' && accountId.trim().length > 0 ? accountId : null;
 }
 
-/** Push retryable pending messages from one account's outbox to the server. */
+function isStaleSend(message: PendingMessage, now: number): boolean {
+  if (message.status !== 'sending') return false;
+  const startedAt = message.lastAttemptAt ?? message.createdAt;
+  return now - startedAt >= STALE_SEND_RETRY_MS;
+}
+
+function pendingMessagePayload(message: PendingMessage): Record<string, unknown> {
+  return message.payload ?? {
+    client_message_id: message.clientMessageId,
+    content: message.content,
+    content_type: message.contentType,
+    reply_to_id: message.replyToId ?? null,
+    attachments: message.attachments ?? [],
+  };
+}
+
+async function supportsBackgroundSync(): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return false;
+
+  try {
+    return 'sync' in (await navigator.serviceWorker.ready);
+  } catch {
+    return false;
+  }
+}
+
+/** Retry durable messages through the direct Cloud Chat owner when Background Sync is unavailable. */
 async function pushChanges(accountId: string): Promise<number> {
+  if (await supportsBackgroundSync()) return 0;
+
   const pending = await getPendingMessages(accountId);
   if (pending.length === 0) return 0;
 
-  // A tab can close while a record is marked sending. Treat that as retryable
-  // on the next sync, while keeping an explicit failed state manual-only.
-  const retryable = pending.filter((m) => m.status === 'pending' || m.status === 'sending');
-  const messagesToPush = retryable
-    .map((m) => {
-      const payload =
-        typeof m.payload === 'object' && m.payload !== null && !Array.isArray(m.payload)
-          ? m.payload
-          : {
-              client_message_id: m.clientMessageId,
-              content: m.content,
-              content_type: m.contentType,
-              reply_to_id: m.replyToId ?? null,
-              attachments: m.attachments ?? [],
-            };
+  const retryable = pending.filter(
+    (message) => message.status === 'pending' || isStaleSend(message, Date.now())
+  );
+  let pushed = 0;
 
-      return {
-        conversation_id: m.conversationId,
-        ...payload,
-      };
-    });
+  for (const message of retryable) {
+    await updatePendingMessageStatus(message.id, 'sending');
 
-  if (messagesToPush.length === 0) return 0;
-
-  for (const msg of retryable) {
-    await updatePendingMessageStatus(msg.id, 'sending');
-  }
-
-  try {
-    const { data: response } = await http.post<PushResponse>('/api/v1/sync/offline/push', {
-      messages: messagesToPush,
-    });
-
-    const resultsByClientId = new Map(
-      response.data.messages.map((result) => [result.client_id, result])
-    );
-    let pushed = 0;
-
-    for (const pendingMsg of retryable) {
-      const result = resultsByClientId.get(pendingMsg.clientMessageId);
-      if (!result) {
-        await updatePendingMessageStatus(
-          pendingMsg.id,
-          'failed',
-          'Sync response did not include this message.'
-        );
-        continue;
+    try {
+      await http.post(
+        `/api/v1/conversations/${encodeURIComponent(message.conversationId)}/messages`,
+        pendingMessagePayload(message)
+      );
+      await removePendingMessage(message.id);
+      pushed++;
+    } catch (error) {
+      if (!isAxiosError(error) || !error.response || error.response.status >= 500) {
+        await updatePendingMessageStatus(message.id, 'pending');
+        throw error;
       }
 
-      if (result.status === 'ok' || result.status === 'duplicate') {
-        await removePendingMessage(pendingMsg.id);
-        pushed++;
-      } else {
-        await updatePendingMessageStatus(pendingMsg.id, 'failed', result.error ?? undefined);
-      }
+      await updatePendingMessageStatus(message.id, 'failed', 'Message send failed.');
     }
-
-    return pushed;
-  } catch (error) {
-    for (const msg of retryable) {
-      await updatePendingMessageStatus(msg.id, 'pending');
-    }
-    throw error;
   }
+
+  return pushed;
 }
 
 /** Run a full pull + push sync cycle. Safe to call concurrently (deduplicates). */

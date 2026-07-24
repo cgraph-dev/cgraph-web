@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -85,12 +85,24 @@ function pullResponse(messages: unknown[]) {
 }
 
 describe('offline sync response validation', () => {
+  let serviceWorkerDescriptor: PropertyDescriptor | undefined;
+
   beforeEach(() => {
     vi.clearAllMocks();
     Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
+    serviceWorkerDescriptor = Object.getOwnPropertyDescriptor(navigator, 'serviceWorker');
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: undefined });
     mocks.getCurrentUser.mockReturnValue({ user: { id: 'account-1' } });
     mocks.getLastSyncTimestamp.mockResolvedValue(null);
     mocks.getPendingMessages.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    if (serviceWorkerDescriptor) {
+      Object.defineProperty(navigator, 'serviceWorker', serviceWorkerDescriptor);
+    } else {
+      Reflect.deleteProperty(navigator, 'serviceWorker');
+    }
   });
 
   it('persists canonical messages by their validated conversation key', async () => {
@@ -117,7 +129,8 @@ describe('offline sync response validation', () => {
     expect(mocks.setLastSyncTimestamp).not.toHaveBeenCalled();
   });
 
-  it('retries interrupted sends for the active account but leaves terminal failures alone', async () => {
+  it('retries stale interrupted sends through the direct Cloud Chat endpoint', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(31_000);
     mocks.get.mockResolvedValue(pullResponse([]));
     mocks.getPendingMessages.mockResolvedValue([
       {
@@ -130,6 +143,7 @@ describe('offline sync response validation', () => {
         payload: { content: 'retry after reload', client_message_id: 'client-1' },
         createdAt: 1,
         status: 'sending',
+        lastAttemptAt: 0,
         retryCount: 0,
       },
       {
@@ -145,32 +159,69 @@ describe('offline sync response validation', () => {
         retryCount: 1,
       },
     ]);
-    mocks.post.mockResolvedValue({
-      data: {
-        data: {
-          messages: [
-            { client_id: 'client-1', status: 'duplicate', server_id: 'message-1', error: null },
-          ],
-          read_receipts: [],
-          reactions: [],
-        },
-      },
-    });
+    mocks.post.mockResolvedValue({ data: { message: validMessage } });
 
     await expect(runSync()).resolves.toMatchObject({ pushed: 1 });
 
     expect(mocks.getPendingMessages).toHaveBeenCalledWith('account-1');
-    expect(mocks.post).toHaveBeenCalledWith('/api/v1/sync/offline/push', {
-      messages: [
-        {
-          conversation_id: 'conversation-1',
-          content: 'retry after reload',
-          client_message_id: 'client-1',
-        },
-      ],
+    expect(mocks.post).toHaveBeenCalledWith('/api/v1/conversations/conversation-1/messages', {
+      content: 'retry after reload',
+      client_message_id: 'client-1',
     });
     expect(mocks.updatePendingMessageStatus).toHaveBeenCalledWith('pending-1', 'sending');
     expect(mocks.updatePendingMessageStatus).not.toHaveBeenCalledWith('failed-1', 'sending');
     expect(mocks.removePendingMessage).toHaveBeenCalledWith('pending-1');
+  });
+
+  it('does not retry an active direct send before its stale window', async () => {
+    vi.spyOn(Date, 'now').mockReturnValue(10_000);
+    mocks.get.mockResolvedValue(pullResponse([]));
+    mocks.getPendingMessages.mockResolvedValue([
+      {
+        id: 'pending-1',
+        accountId: 'account-1',
+        clientMessageId: 'client-1',
+        conversationId: 'conversation-1',
+        content: 'still sending',
+        contentType: 'text',
+        payload: { content: 'still sending', client_message_id: 'client-1' },
+        createdAt: 1,
+        status: 'sending',
+        lastAttemptAt: 9_999,
+        retryCount: 0,
+      },
+    ]);
+
+    await expect(runSync()).resolves.toMatchObject({ pushed: 0 });
+
+    expect(mocks.post).not.toHaveBeenCalled();
+    expect(mocks.updatePendingMessageStatus).not.toHaveBeenCalled();
+  });
+
+  it('leaves queued delivery to Background Sync when the browser supports it', async () => {
+    mocks.get.mockResolvedValue(pullResponse([]));
+    mocks.getPendingMessages.mockResolvedValue([
+      {
+        id: 'pending-1',
+        accountId: 'account-1',
+        clientMessageId: 'client-1',
+        conversationId: 'conversation-1',
+        content: 'worker owns retry',
+        contentType: 'text',
+        payload: { content: 'worker owns retry', client_message_id: 'client-1' },
+        createdAt: 1,
+        status: 'pending',
+        retryCount: 0,
+      },
+    ]);
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: { ready: Promise.resolve({ sync: { register: vi.fn() } }) },
+    });
+
+    await expect(runSync()).resolves.toMatchObject({ pushed: 0 });
+
+    expect(mocks.post).not.toHaveBeenCalled();
+    expect(mocks.getPendingMessages).not.toHaveBeenCalled();
   });
 });

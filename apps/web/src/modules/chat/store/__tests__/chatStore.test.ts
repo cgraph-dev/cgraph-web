@@ -457,7 +457,7 @@ describe('sendMessage', () => {
         accountId: 'me',
         clientMessageId: 'idem-key-1',
         conversationId: 'conv-1',
-        status: 'pending',
+        status: 'sending',
       })
     );
     expect(offline.removePendingMessage).toHaveBeenCalledWith('idem-key-1');
@@ -507,6 +507,26 @@ describe('sendMessage', () => {
     );
     expect(offline.removePendingMessage).not.toHaveBeenCalled();
     expect(offline.requestBackgroundSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps an offline first send queued for Background Sync without a direct request', async () => {
+    const originalOnline = navigator.onLine;
+    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
+
+    try {
+      await expect(useChatStore.getState().sendMessage('conv-1', 'send when online')).resolves.toBeUndefined();
+
+      expect(offline.savePendingMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'idem-key-1',
+          status: 'pending',
+        })
+      );
+      expect(mockApi.post).not.toHaveBeenCalled();
+      expect(offline.requestBackgroundSync).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(navigator, 'onLine', { configurable: true, value: originalOnline });
+    }
   });
 
   it('hydrates account-scoped pending messages after a refresh', async () => {

@@ -3,6 +3,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 
+const syncService = vi.hoisted(() => ({
+  startAutoSync: vi.fn(),
+  stopAutoSync: vi.fn(),
+}));
 const fetchConversations = vi.fn().mockResolvedValue(undefined);
 const fetchArchivedConversations = vi.fn().mockResolvedValue(undefined);
 const chatState = {
@@ -70,6 +74,11 @@ vi.mock('@/lib/api-client', () => ({
 
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ error: vi.fn(), warn: vi.fn() }),
+}));
+
+vi.mock('@/lib/offline/sync-service', () => ({
+  startAutoSync: syncService.startAutoSync,
+  stopAutoSync: syncService.stopAutoSync,
 }));
 
 vi.mock('@/shared/components/ui', () => ({

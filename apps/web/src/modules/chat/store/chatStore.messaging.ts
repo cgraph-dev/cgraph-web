@@ -121,8 +121,10 @@ async function queuePendingMessage(
   contentType: string,
   replyToId: string | undefined,
   payload: Record<string, unknown>,
-  requestBackground: boolean
+  status: PendingMessage['status']
 ): Promise<void> {
+  const createdAt = Date.now();
+
   await savePendingMessage({
     id: clientMessageId,
     accountId,
@@ -132,16 +134,15 @@ async function queuePendingMessage(
     contentType,
     payload,
     replyToId: replyToId ?? null,
-    createdAt: Date.now(),
-    status: 'pending',
+    createdAt,
+    status,
     retryCount: 0,
+    lastAttemptAt: status === 'sending' ? createdAt : undefined,
   });
+}
 
-  if (requestBackground) {
-    // Wake the SW when connectivity returns. The window sync service remains
-    // the fallback for browsers without SyncManager.
-    await requestBackgroundSync();
-  }
+function initialPendingStatus(): PendingMessage['status'] {
+  return typeof navigator === 'undefined' || navigator.onLine ? 'sending' : 'pending';
 }
 
 function pendingMessageToLocalMessage(pending: PendingMessage, currentUser: NonNullable<ReturnType<typeof useAuthStore.getState>['user']>): Message {
@@ -178,6 +179,7 @@ function pendingMessageToLocalMessage(pending: PendingMessage, currentUser: NonN
 
 async function sendPendingMessage(get: Get, pending: PendingMessage): Promise<void> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    await updatePendingMessageStatus(pending.id, 'pending');
     await requestBackgroundSync();
     return;
   }
@@ -285,6 +287,8 @@ export function createMessagingActions(set: Set, get: Get) {
         throw new Error('An authenticated account is required to send a message.');
       }
 
+      const pendingStatus = initialPendingStatus();
+
       await queuePendingMessage(
         currentUser.id,
         clientMessageId,
@@ -293,7 +297,7 @@ export function createMessagingActions(set: Set, get: Get) {
         contentType,
         replyToId,
         payload,
-        false
+        pendingStatus
       );
 
       const optimisticMessage: Message = {
@@ -334,7 +338,7 @@ export function createMessagingActions(set: Set, get: Get) {
         payload,
         replyToId: replyToId ?? null,
         createdAt: Date.now(),
-        status: 'pending',
+        status: pendingStatus,
         retryCount: 0,
       };
 
@@ -356,9 +360,12 @@ export function createMessagingActions(set: Set, get: Get) {
       const pending = pendingMessages.find((message) => message.clientMessageId === failedMessageId);
       if (!pending || pending.status !== 'failed') return;
 
-      await updatePendingMessageStatus(pending.id, 'pending');
+      const pendingStatus = initialPendingStatus();
+      await updatePendingMessageStatus(pending.id, pendingStatus);
       get().updateMessageStatus(conversationId, failedMessageId, 'sending');
-      await runInConversationSendQueue(conversationId, () => sendPendingMessage(get, pending));
+      await runInConversationSendQueue(conversationId, () =>
+        sendPendingMessage(get, { ...pending, status: pendingStatus })
+      );
     },
 
     hydratePendingMessages: async (conversationId: string) => {

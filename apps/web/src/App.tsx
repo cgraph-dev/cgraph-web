@@ -16,12 +16,10 @@ import { AppRoutes } from '@/routes/app-routes';
 import { ReconnectBanner } from '@/components/socket/reconnect-banner';
 import { useGroupStore } from '@/modules/groups/store';
 import { initErrorTracking, reportWebVitals } from '@/lib/error-tracking';
-import { startAutoSync, stopAutoSync } from '@/lib/offline/sync-service';
 import { startPeriodicCheck, stopPeriodicCheck } from '@/lib/client-version-check';
 import { useAuthStore } from '@/modules/auth/store';
 import { useDesktopInit } from '@/lib/desktop/use-desktop-init';
 import { applyOtherUserIdentityPayload } from '@/lib/identity/otherIdentitySync';
-import { VersionUpdateGate } from '@/shared/components/version-update-gate';
 import {
   applyCustomizationPreferenceSync,
   applySettingsPreferenceSync,
@@ -54,6 +52,9 @@ const PushNotificationPrompt = lazy(() =>
   import('@/shared/components/push-notification-prompt').then((m) => ({
     default: m.PushNotificationPrompt,
   }))
+);
+const VersionUpdateGate = lazy(() =>
+  import('@/shared/components/version-update-gate').then((m) => ({ default: m.VersionUpdateGate }))
 );
 
 const isE2EAuthBypass = import.meta.env.VITE_E2E_AUTH_BYPASS === 'true';
@@ -103,15 +104,8 @@ function getUserIdFromPayload(payload: Record<string, unknown>) {
   return typeof userId === 'string' ? userId : null;
 }
 
-function getStringFromPayload(
-  payload: Record<string, unknown>,
-  keys: readonly string[]
-): string | null {
-  for (const key of keys) {
-    const value = payload[key];
-    if (typeof value === 'string') return value;
-  }
-  return null;
+function getString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
 }
 
 /**
@@ -122,7 +116,6 @@ export default function App() {
   const [versionUpdateRequired, setVersionUpdateRequired] = useState(false);
   const justJoinedGroupName = useGroupStore((s) => s.justJoinedGroupName);
   const clearJoinCelebration = useGroupStore((s) => s.clearJoinCelebration);
-  const token = useAuthStore((s) => s.token);
 
   // Initialize desktop-native features (tray, deep links, updater, menus)
   // No-op when running in browser — all Tauri APIs are gated by isTauri()
@@ -147,16 +140,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!token) {
-      stopAutoSync();
-      return;
-    }
-
-    startAutoSync();
-    return () => stopAutoSync();
-  }, [token]);
-
-  useEffect(() => {
     if (!isE2EAuthBypass) return undefined;
 
     const handleIdentityPatch = (event: Event) => {
@@ -178,17 +161,18 @@ export default function App() {
     const handlePreferenceSync = (event: Event) => {
       if (!(event instanceof CustomEvent) || !isRecord(event.detail)) return;
 
-      const surface = getStringFromPayload(event.detail, ['surface', 'type']);
+      const surface = getString(event.detail.surface) ?? getString(event.detail.type);
       const userId = getUserIdFromPayload(event.detail) ?? useAuthStore.getState().user?.id ?? null;
       if (!userId) return;
 
       if (surface === 'settings') {
-        const section = getStringFromPayload(event.detail, ['section']);
+        const section = getString(event.detail.section);
         const changes = event.detail.changes;
         if (!section || !isRecord(changes)) return;
 
         const incomingAt =
-          getStringFromPayload(event.detail, ['last_updated_at', 'lastUpdatedAt']) ??
+          getString(event.detail.last_updated_at) ??
+          getString(event.detail.lastUpdatedAt) ??
           new Date(Date.now() + 1).toISOString();
 
         applySettingsPreferenceSync({
@@ -248,7 +232,11 @@ export default function App() {
           </Suspense>
         </PageTransition>
       </AnimatePresence>
-      {versionUpdateRequired && <VersionUpdateGate onReload={() => window.location.reload()} />}
+      {versionUpdateRequired && (
+        <Suspense fallback={null}>
+          <VersionUpdateGate onReload={() => window.location.reload()} />
+        </Suspense>
+      )}
     </AuthInitializer>
   );
 }
