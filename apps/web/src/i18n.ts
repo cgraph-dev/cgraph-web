@@ -6,8 +6,8 @@
  * - ICU MessageFormat for pluralization (Arabic 6-form, Russian 3-form, etc.)
  * - Missing key handling (dev: logger.warn, prod: report to Sentry)
  *
- * Namespaces (8):
- *   common, auth, messages, groups, settings, premium, forums, accessibility
+ * Namespaces (6):
+ *   common, auth, messages, groups, settings, premium
  *
  * Usage:
  *   const { t } = useTranslation('common');
@@ -21,7 +21,7 @@ import ICU from 'i18next-icu';
 import { logger } from '@/lib/logger';
 
 const NAMESPACES: readonly string[] = [
-  'common', 'auth', 'messages', 'groups', 'settings', 'premium', 'forums', 'accessibility',
+  'common', 'auth', 'messages', 'groups', 'settings', 'premium',
 ];
 
 /**
