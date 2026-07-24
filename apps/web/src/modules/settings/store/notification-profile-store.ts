@@ -1,12 +1,18 @@
 /**
  * Zustand store for notification profile management.
  *
- * Manages profile CRUD, schedule updates, allowed members,
- * and manual activation/deactivation state.
+ * Manages profile CRUD, allowed members, and manual activation/deactivation
+ * state. Profile saves include their schedule so the backend can persist both
+ * records in one transaction.
  */
 import { create } from 'zustand';
-import type { NotificationProfile, NotificationProfileSchedule } from '@cgraph-dev/shared-types';
+import type {
+  CreateNotificationProfileRequest,
+  NotificationProfile,
+  UpdateNotificationProfileRequest,
+} from '@cgraph-dev/shared-types';
 import { api as httpClient } from '@/lib/api';
+import { apiClient } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { toast } from '@/shared/components/ui';
 
@@ -22,31 +28,12 @@ interface NotificationProfileState {
 interface NotificationProfileActions {
   fetchProfiles(): Promise<void>;
   fetchActiveProfile(): Promise<void>;
-  createProfile(params: {
-    readonly name: string;
-    readonly emoji?: string;
-    readonly color?: string;
-  }): Promise<NotificationProfile | null>;
+  createProfile(params: CreateNotificationProfileRequest): Promise<NotificationProfile | null>;
   updateProfile(
     profileId: string,
-    params: {
-      readonly name?: string;
-      readonly emoji?: string;
-      readonly color?: string;
-      readonly allow_all_calls?: boolean;
-      readonly allow_all_mentions?: boolean;
-    }
-  ): Promise<void>;
+    params: UpdateNotificationProfileRequest
+  ): Promise<NotificationProfile | null>;
   deleteProfile(profileId: string): Promise<void>;
-  updateSchedule(
-    profileId: string,
-    params: {
-      readonly enabled?: boolean;
-      readonly start_time?: number;
-      readonly end_time?: number;
-      readonly days_enabled?: readonly number[];
-    }
-  ): Promise<void>;
   setAllowedMembers(profileId: string, userIds: readonly string[]): Promise<void>;
   activateProfile(profileId: string, durationMinutes?: number | null): Promise<void>;
   deactivateProfile(): Promise<void>;
@@ -109,9 +96,16 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
   },
 
   async createProfile(params) {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const result = await apiPost<NotificationProfile>(BASE_PATH, params);
+      const result = await apiClient.notificationProfiles.create(params);
+      if (!result.ok) {
+        logger.error('Failed to create profile', result.error);
+        toast.error(result.error.message);
+        set({ error: result.error.message, isLoading: false });
+        return null;
+      }
+
       set((state) => ({
         profiles: [result.data, ...state.profiles],
         isLoading: false,
@@ -128,16 +122,28 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
   },
 
   async updateProfile(profileId, params) {
+    set({ isLoading: true, error: null });
     try {
-      const result = await apiPut<NotificationProfile>(`${BASE_PATH}/${profileId}`, params);
+      const result = await apiClient.notificationProfiles.update(profileId, params);
+      if (!result.ok) {
+        logger.error('Failed to update profile', result.error);
+        toast.error(result.error.message);
+        set({ error: result.error.message, isLoading: false });
+        return null;
+      }
+
       set((state) => ({
         profiles: state.profiles.map((p) => (p.id === profileId ? result.data : p)),
+        isLoading: false,
       }));
       toast.success('Profile updated');
+      return result.data;
     } catch (err) {
       const message = extractErrorMessage(err);
       logger.error('Failed to update profile', err);
       toast.error(message);
+      set({ error: message, isLoading: false });
+      return null;
     }
   },
 
@@ -152,25 +158,6 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
     } catch (err) {
       const message = extractErrorMessage(err);
       logger.error('Failed to delete profile', err);
-      toast.error(message);
-    }
-  },
-
-  async updateSchedule(profileId, params) {
-    try {
-      const result = await apiPut<NotificationProfileSchedule>(
-        `${BASE_PATH}/${profileId}/schedule`,
-        params
-      );
-      set((state) => ({
-        profiles: state.profiles.map((p) =>
-          p.id === profileId ? { ...p, schedule: result.data } : p
-        ),
-      }));
-      toast.success('Schedule updated');
-    } catch (err) {
-      const message = extractErrorMessage(err);
-      logger.error('Failed to update schedule', err);
       toast.error(message);
     }
   },

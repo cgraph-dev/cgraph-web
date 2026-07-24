@@ -53,7 +53,7 @@ export function NotificationProfileEditor(): React.ReactNode {
   const profileId = id ?? detail;
   const isNew = profileId === 'new';
 
-  const { profiles, fetchProfiles, createProfile, updateProfile, updateSchedule, deleteProfile } =
+  const { profiles, fetchProfiles, createProfile, updateProfile, deleteProfile } =
     useNotificationProfileStore();
 
   // Form state
@@ -109,39 +109,30 @@ export function NotificationProfileEditor(): React.ReactNode {
     HapticFeedback.medium();
 
     try {
+      const params = {
+        name: name.trim(),
+        emoji,
+        color,
+        allow_all_calls: allowAllCalls,
+        allow_all_mentions: allowAllMentions,
+        schedule: {
+          enabled: scheduleEnabled,
+          start_time: timeInputToHhmm(startTime),
+          end_time: timeInputToHhmm(endTime),
+          days_enabled: [...daysEnabled],
+        },
+      };
+
       if (isNew) {
-        const created = await createProfile({ name: name.trim(), emoji, color });
+        const created = await createProfile(params);
         if (created) {
-          // Update schedule if user configured it
-          if (scheduleEnabled || daysEnabled.length > 0) {
-            await updateSchedule(created.id, {
-              enabled: scheduleEnabled,
-              start_time: timeInputToHhmm(startTime),
-              end_time: timeInputToHhmm(endTime),
-              days_enabled: [...daysEnabled],
-            });
-          }
           navigate('/me/settings/notification-profiles');
         }
       } else if (existingProfile) {
-        await updateProfile(existingProfile.id, {
-          name: name.trim(),
-          emoji,
-          color,
-          allow_all_calls: allowAllCalls,
-          allow_all_mentions: allowAllMentions,
-        });
-
-        if (existingProfile.schedule) {
-          await updateSchedule(existingProfile.id, {
-            enabled: scheduleEnabled,
-            start_time: timeInputToHhmm(startTime),
-            end_time: timeInputToHhmm(endTime),
-            days_enabled: [...daysEnabled],
-          });
+        const updated = await updateProfile(existingProfile.id, params);
+        if (updated) {
+          navigate('/me/settings/notification-profiles');
         }
-
-        navigate('/me/settings/notification-profiles');
       }
     } catch (err) {
       logger.error('Failed to save profile', err);
