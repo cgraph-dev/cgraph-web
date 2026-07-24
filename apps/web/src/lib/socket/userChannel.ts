@@ -36,6 +36,7 @@ import {
   applySettingsPreferenceSync,
   applyThemePreferenceSync,
 } from '../preferences/preference-sync-bus';
+import { recoverCloudChatEvents } from './cloudChatRecovery';
 import { shouldLogoutForDeviceRevocation } from './deviceRevocation';
 import { shouldDropIncomingCall } from './incomingCallDedup';
 
@@ -581,14 +582,23 @@ export function joinUserChannel(
     const data = updateSessionResumeState(payload, sessionState);
     const newSessionId = typeof data['new_session_id'] === 'string' ? data['new_session_id'] : null;
     const fullSyncRequired = data['full_sync_required'] === true;
+    const chatStore = useChatStore.getState();
 
     if (newSessionId) {
       sessionState.sessionId = newSessionId;
     }
 
+    void recoverCloudChatEvents(userId, {
+      getActiveConversationId: () => useChatStore.getState().activeConversationId,
+      refreshConversations: () => chatStore.fetchConversations({ force: true }),
+      refreshMessages: (conversationId) => chatStore.fetchMessages(conversationId),
+    }).catch((error: unknown) => {
+      logger.warn('Cloud Chat resume recovery failed', error);
+    });
+
     if (fullSyncRequired) {
       void Promise.allSettled([
-        useChatStore.getState().fetchConversations({ force: true }),
+        chatStore.fetchConversations({ force: true }),
         useNotificationStore.getState().fetchNotifications(null, { force: true }),
         useFriendStore.getState().fetchPendingRequests(),
       ]);

@@ -402,6 +402,7 @@ export async function updatePendingMessageStatus(
 }
 
 const LAST_SYNC_KEY = 'last_sync_timestamp';
+const CLOUD_CHAT_EVENT_CURSOR_KEY_PREFIX = 'cloud_chat_event_cursor:';
 
 /** Get the last sync timestamp (ISO 8601 string). */
 export async function getLastSyncTimestamp(): Promise<string | null> {
@@ -426,6 +427,44 @@ export async function setLastSyncTimestamp(timestamp: string): Promise<void> {
   await withTransaction(SYNC_META_STORE, 'readwrite', (tx) => {
     const store = tx.objectStore(SYNC_META_STORE);
     store.put({ key: LAST_SYNC_KEY, value: timestamp });
+  });
+}
+
+function cloudChatEventCursorKey(accountId: string): string {
+  assertCacheKey(accountId, 'accountId');
+  return `${CLOUD_CHAT_EVENT_CURSOR_KEY_PREFIX}${accountId}`;
+}
+
+/** Read one account's durable Cloud Chat recovery position. */
+export async function getCloudChatEventCursor(accountId: string): Promise<number> {
+  const db = await openDB();
+  const key = cloudChatEventCursorKey(accountId);
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(SYNC_META_STORE, 'readonly');
+    const request = tx.objectStore(SYNC_META_STORE).get(key);
+
+    request.onsuccess = () => {
+      const record: { value?: unknown } | undefined = request.result;
+      const value = record?.value;
+      const cursor = typeof value === 'string' ? Number(value) : NaN;
+      resolve(Number.isSafeInteger(cursor) && cursor >= 0 ? cursor : 0);
+    };
+
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/** Persist one account's server-issued Cloud Chat recovery position. */
+export async function setCloudChatEventCursor(accountId: string, cursor: number): Promise<void> {
+  const key = cloudChatEventCursorKey(accountId);
+
+  if (!Number.isSafeInteger(cursor) || cursor < 0) {
+    throw new RangeError('Cloud Chat event cursor must be a non-negative safe integer');
+  }
+
+  await withTransaction(SYNC_META_STORE, 'readwrite', (tx) => {
+    tx.objectStore(SYNC_META_STORE).put({ key, value: String(cursor) });
   });
 }
 
