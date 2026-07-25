@@ -15,13 +15,23 @@ import {
   CalendarDaysIcon,
   UserPlusIcon,
 } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  GlassCard,
+} from '@/shared/components/ui';
 import { toast } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { createLogger } from '@/lib/logger';
 import { useNotificationProfileStore } from '@/modules/settings/store/notification-profile-store';
+import { useFriendStore } from '@/modules/social/store/friendStore';
 import type { DayOfWeek } from '@cgraph-dev/shared-types';
 import {
   ALL_DAYS,
@@ -53,8 +63,9 @@ export function NotificationProfileEditor(): React.ReactNode {
   const profileId = id ?? detail;
   const isNew = profileId === 'new';
 
-  const { profiles, fetchProfiles, createProfile, updateProfile, deleteProfile } =
+  const { profiles, fetchProfiles, createProfile, updateProfile, deleteProfile, setAllowedMembers } =
     useNotificationProfileStore();
+  const { friends, fetchFriends, error: friendError } = useFriendStore();
 
   // Form state
   const [name, setName] = useState('');
@@ -68,6 +79,10 @@ export function NotificationProfileEditor(): React.ReactNode {
   const [daysEnabled, setDaysEnabled] = useState<readonly DayOfWeek[]>([...WEEKDAYS]);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isAllowedContactsOpen, setIsAllowedContactsOpen] = useState(false);
+  const [selectedAllowedContactIds, setSelectedAllowedContactIds] = useState<readonly string[]>([]);
+  const [isLoadingAllowedContacts, setIsLoadingAllowedContacts] = useState(false);
+  const [isSavingAllowedContacts, setIsSavingAllowedContacts] = useState(false);
 
   // Load existing profile data
   useEffect(() => {
@@ -85,6 +100,7 @@ export function NotificationProfileEditor(): React.ReactNode {
       setColor(existingProfile.color);
       setAllowAllCalls(existingProfile.allow_all_calls);
       setAllowAllMentions(existingProfile.allow_all_mentions);
+      setSelectedAllowedContactIds(existingProfile.allowed_members.map((member) => member.id));
       if (existingProfile.schedule) {
         setScheduleEnabled(existingProfile.schedule.enabled);
         setStartTime(hhmmToTimeInput(existingProfile.schedule.start_time));
@@ -97,6 +113,45 @@ export function NotificationProfileEditor(): React.ReactNode {
 
   function toggleDay(day: DayOfWeek): void {
     setDaysEnabled((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
+  }
+
+  function displayFriendName(friend: (typeof friends)[number]): string {
+    return friend.displayName || friend.username || 'Contact';
+  }
+
+  function toggleAllowedContact(userId: string): void {
+    setSelectedAllowedContactIds((current) =>
+      current.includes(userId)
+        ? current.filter((selectedId) => selectedId !== userId)
+        : [...current, userId]
+    );
+  }
+
+  function openAllowedContacts(): void {
+    if (!existingProfile) return;
+
+    setSelectedAllowedContactIds(existingProfile.allowed_members.map((member) => member.id));
+    setIsAllowedContactsOpen(true);
+    setIsLoadingAllowedContacts(true);
+    void fetchFriends().finally(() => setIsLoadingAllowedContacts(false));
+  }
+
+  async function saveAllowedContacts(): Promise<void> {
+    if (!existingProfile) return;
+
+    const acceptedContactIds = new Set(friends.map((friend) => friend.id));
+    const userIds = selectedAllowedContactIds.filter((userId) => acceptedContactIds.has(userId));
+
+    setIsSavingAllowedContacts(true);
+
+    try {
+      const updated = await setAllowedMembers(existingProfile.id, userIds);
+      if (updated) {
+        setIsAllowedContactsOpen(false);
+      }
+    } finally {
+      setIsSavingAllowedContacts(false);
+    }
   }
 
   async function handleSave(): Promise<void> {
@@ -342,7 +397,7 @@ export function NotificationProfileEditor(): React.ReactNode {
           ) : null}
         </GlassCard>
 
-        {/* Allowed Contacts (display-only summary for now; full editor in profile view) */}
+        {/* Allowed contacts */}
         {!isNew && existingProfile ? (
           <GlassCard variant="default" className="aurora-social-panel p-4">
             <div className="flex items-center gap-3">
@@ -352,9 +407,12 @@ export function NotificationProfileEditor(): React.ReactNode {
                 <p className="text-sm text-[var(--token-text-muted)]">
                   {existingProfile.allowed_members.length > 0
                     ? `${existingProfile.allowed_members.length} contact${existingProfile.allowed_members.length !== 1 ? 's' : ''} can bypass this profile`
-                    : 'No exceptions — all notifications filtered'}
+                  : 'No exceptions — all notifications filtered'}
                 </p>
               </div>
+              <Button type="button" variant="secondary" size="sm" onClick={openAllowedContacts} animated={false}>
+                Manage
+              </Button>
             </div>
             {existingProfile.allowed_members.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -412,6 +470,85 @@ export function NotificationProfileEditor(): React.ReactNode {
           </button>
         </div>
       </div>
+
+      <Dialog open={isAllowedContactsOpen} onOpenChange={(open) => !open && setIsAllowedContactsOpen(false)}>
+        <DialogContent
+          ariaLabel="Allowed contacts"
+          className="max-h-[calc(100vh-2rem)] max-w-lg overflow-y-auto"
+        >
+          <DialogHeader>
+            <DialogTitle>Allowed contacts</DialogTitle>
+            <DialogDescription>
+              Selected accepted contacts can notify you while this profile is active.
+            </DialogDescription>
+          </DialogHeader>
+
+          {friendError ? (
+            <p className="text-sm text-red-300" role="alert">
+              {friendError}
+            </p>
+          ) : null}
+
+          {isLoadingAllowedContacts ? (
+            <div className="flex justify-center py-8" aria-label="Loading contacts">
+              <div className="size-7 animate-spin rounded-full border-2 border-primary-400 border-t-transparent" />
+            </div>
+          ) : friends.length === 0 ? (
+            <p className="py-8 text-center text-sm text-[var(--token-text-muted)]">
+              You do not have any accepted contacts yet.
+            </p>
+          ) : (
+            <fieldset className="divide-y divide-[var(--token-border-muted)]">
+              <legend className="sr-only">Allowed contacts</legend>
+              {friends.map((friend) => {
+                const checked = selectedAllowedContactIds.includes(friend.id);
+                const label = displayFriendName(friend);
+
+                return (
+                  <label key={friend.id} className="flex cursor-pointer items-center gap-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleAllowedContact(friend.id)}
+                      aria-label={`Allow ${label}`}
+                      className="size-4 accent-primary-500"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-[var(--token-text-primary)]">
+                        {label}
+                      </span>
+                      <span className="block truncate text-sm text-[var(--token-text-muted)]">
+                        @{friend.username}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsAllowedContactsOpen(false)}
+              disabled={isSavingAllowedContacts}
+              animated={false}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void saveAllowedContacts()}
+              isLoading={isSavingAllowedContacts}
+              disabled={isLoadingAllowedContacts || Boolean(friendError)}
+              animated={false}
+            >
+              Save allowed contacts
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

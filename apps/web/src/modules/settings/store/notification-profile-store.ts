@@ -34,7 +34,7 @@ interface NotificationProfileActions {
     params: UpdateNotificationProfileRequest
   ): Promise<NotificationProfile | null>;
   deleteProfile(profileId: string): Promise<void>;
-  setAllowedMembers(profileId: string, userIds: readonly string[]): Promise<void>;
+  setAllowedMembers(profileId: string, userIds: readonly string[]): Promise<NotificationProfile | null>;
   activateProfile(profileId: string, durationMinutes?: number | null): Promise<void>;
   deactivateProfile(): Promise<void>;
 }
@@ -53,11 +53,6 @@ async function apiGet<T>(path: string): Promise<ApiEnvelope<T>> {
 
 async function apiPost<T>(path: string, data?: unknown): Promise<ApiEnvelope<T>> {
   const response: { data: ApiEnvelope<T> } = await httpClient.post(path, data);
-  return response.data;
-}
-
-async function apiPut<T>(path: string, data?: unknown): Promise<ApiEnvelope<T>> {
-  const response: { data: ApiEnvelope<T> } = await httpClient.put(path, data);
   return response.data;
 }
 
@@ -163,18 +158,29 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
   },
 
   async setAllowedMembers(profileId, userIds) {
+    set({ isLoading: true, error: null });
+
     try {
-      const result = await apiPut<NotificationProfile>(`${BASE_PATH}/${profileId}/members`, {
-        user_ids: userIds,
-      });
+      const result = await apiClient.notificationProfiles.setMembers(profileId, userIds);
+      if (!result.ok) {
+        logger.error('Failed to update allowed contacts', result.error);
+        toast.error(result.error.message);
+        set({ error: result.error.message, isLoading: false });
+        return null;
+      }
+
       set((state) => ({
         profiles: state.profiles.map((p) => (p.id === profileId ? result.data : p)),
+        isLoading: false,
       }));
       toast.success('Allowed contacts updated');
+      return result.data;
     } catch (err) {
       const message = extractErrorMessage(err);
-      logger.error('Failed to update allowed members', err);
+      logger.error('Failed to update allowed contacts', err);
       toast.error(message);
+      set({ error: message, isLoading: false });
+      return null;
     }
   },
 

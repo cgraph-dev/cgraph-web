@@ -8,6 +8,7 @@ import type {
 const notificationProfilesApi = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
+  setMembers: vi.fn(),
 }));
 
 vi.mock('@/lib/api-client', () => ({
@@ -166,6 +167,38 @@ describe('NotificationProfileStore', () => {
       profiles: [existing],
       isLoading: false,
       error: 'Schedule is invalid',
+    });
+  });
+
+  it('uses the typed member-set command and only projects it after success', async () => {
+    const existing = notificationProfile();
+    const saved = notificationProfile({
+      allowed_members: [{ id: 'friend-1', username: 'ada', avatar_url: null }],
+    });
+    useNotificationProfileStore.setState({ profiles: [existing] });
+    notificationProfilesApi.setMembers.mockResolvedValueOnce(ok(saved));
+
+    await expect(
+      useNotificationProfileStore.getState().setAllowedMembers(existing.id, ['friend-1'])
+    ).resolves.toEqual(saved);
+
+    expect(notificationProfilesApi.setMembers).toHaveBeenCalledWith(existing.id, ['friend-1']);
+    expect(useNotificationProfileStore.getState().profiles).toEqual([saved]);
+  });
+
+  it('keeps the prior allowed-contact projection when the typed member-set command is rejected', async () => {
+    const existing = notificationProfile();
+    useNotificationProfileStore.setState({ profiles: [existing] });
+    notificationProfilesApi.setMembers.mockResolvedValueOnce(failure('Allowed contacts must be friends'));
+
+    await expect(
+      useNotificationProfileStore.getState().setAllowedMembers(existing.id, ['stranger-1'])
+    ).resolves.toBeNull();
+
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      profiles: [existing],
+      isLoading: false,
+      error: 'Allowed contacts must be friends',
     });
   });
 });

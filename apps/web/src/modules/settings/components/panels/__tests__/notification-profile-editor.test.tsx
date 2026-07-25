@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { PropsWithChildren } from 'react';
+import type { ButtonHTMLAttributes, HTMLAttributes, PropsWithChildren } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
@@ -13,6 +13,18 @@ const profileActions = vi.hoisted(() => ({
   createProfile: vi.fn(),
   updateProfile: vi.fn(),
   deleteProfile: vi.fn(),
+  setAllowedMembers: vi.fn(),
+}));
+
+const friendActions = vi.hoisted(() => ({
+  friends: [] as Array<{
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  }>,
+  fetchFriends: vi.fn(),
+  error: null as string | null,
 }));
 
 vi.mock('motion/react', () => ({
@@ -31,8 +43,53 @@ vi.mock('@/lib/animations/animation-engine', () => ({
   },
 }));
 
+function TestButton({
+  children,
+  animated: _animated,
+  isLoading,
+  ...props
+}: PropsWithChildren<ButtonHTMLAttributes<HTMLButtonElement> & { animated?: boolean; isLoading?: boolean }>) {
+  return (
+    <button {...props} disabled={props.disabled || isLoading}>
+      {children}
+    </button>
+  );
+}
+
+function TestDialog({ children, open }: PropsWithChildren<{ open: boolean }>) {
+  return open ? <>{children}</> : null;
+}
+
+function TestDialogContent({
+  children,
+  ariaLabel,
+  ...props
+}: PropsWithChildren<HTMLAttributes<HTMLDivElement> & { ariaLabel?: string }>) {
+  return (
+    <div {...props} role="dialog" aria-label={ariaLabel}>
+      {children}
+    </div>
+  );
+}
+
+vi.mock('@/shared/components/ui', () => ({
+  Button: TestButton,
+  Dialog: TestDialog,
+  DialogContent: TestDialogContent,
+  DialogDescription: ({ children }: PropsWithChildren) => <p>{children}</p>,
+  DialogFooter: ({ children }: PropsWithChildren) => <footer>{children}</footer>,
+  DialogHeader: ({ children }: PropsWithChildren) => <header>{children}</header>,
+  DialogTitle: ({ children }: PropsWithChildren) => <h2>{children}</h2>,
+  GlassCard: ({ children }: PropsWithChildren) => <div>{children}</div>,
+  toast: { error: vi.fn(), success: vi.fn() },
+}));
+
 vi.mock('@/modules/settings/store/notification-profile-store', () => ({
   useNotificationProfileStore: () => profileActions,
+}));
+
+vi.mock('@/modules/social/store/friendStore', () => ({
+  useFriendStore: () => friendActions,
 }));
 
 function notificationProfile(overrides: Partial<NotificationProfile> = {}): NotificationProfile {
@@ -83,6 +140,10 @@ beforeEach(() => {
   profileActions.createProfile.mockResolvedValue(notificationProfile());
   profileActions.updateProfile.mockResolvedValue(notificationProfile());
   profileActions.deleteProfile.mockResolvedValue(undefined);
+  profileActions.setAllowedMembers.mockResolvedValue(notificationProfile());
+  friendActions.friends = [];
+  friendActions.fetchFriends.mockResolvedValue(undefined);
+  friendActions.error = null;
 });
 
 describe('NotificationProfileEditor', () => {
@@ -175,5 +236,33 @@ describe('NotificationProfileEditor', () => {
     expect(screen.getByTestId('current-location')).toHaveTextContent(
       '/me/settings/notification-profiles'
     );
+  });
+
+  it('replaces the selected allowed-contact set through the profile store', async () => {
+    const user = userEvent.setup();
+    const existing = notificationProfile({
+      allowed_members: [{ id: 'friend-1', username: 'ada', avatar_url: null }],
+    });
+    const saved = notificationProfile({
+      allowed_members: [{ id: 'friend-2', username: 'grace', avatar_url: null }],
+    });
+
+    profileActions.profiles = [existing];
+    profileActions.setAllowedMembers.mockResolvedValueOnce(saved);
+    friendActions.friends = [
+      { id: 'friend-1', username: 'ada', displayName: 'Ada Lovelace', avatarUrl: null },
+      { id: 'friend-2', username: 'grace', displayName: 'Grace Hopper', avatarUrl: null },
+    ];
+    renderEditor('/me/settings/notification-profiles/profile-1');
+
+    await user.click(await screen.findByRole('button', { name: 'Manage' }));
+    expect(friendActions.fetchFriends).toHaveBeenCalledTimes(1);
+    await screen.findByRole('dialog', { name: 'Allowed contacts' });
+
+    await user.click(screen.getByRole('checkbox', { name: 'Allow Ada Lovelace' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Allow Grace Hopper' }));
+    await user.click(screen.getByRole('button', { name: 'Save allowed contacts' }));
+
+    expect(profileActions.setAllowedMembers).toHaveBeenCalledWith('profile-1', ['friend-2']);
   });
 });

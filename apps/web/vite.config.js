@@ -194,6 +194,10 @@ export default defineConfig(({ mode }) => {
             return 'app-runtime';
           }
 
+          if (normalizedId.includes('/settings/store/notification-profile-store')) {
+            return 'notification-profiles';
+          }
+
           // Published shared packages that heavily contribute to common index chunks.
           if (isPublishedCgraphPackageModule(normalizedId, 'api-client')) {
             return 'api-client';
