@@ -12,8 +12,7 @@ interface SkeletonProps {
   readonly count?: number;
 }
 
-const shimmerClass =
-  'relative overflow-hidden bg-[var(--token-card-bg)] before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/[0.04] before:to-transparent';
+const shimmerClass = 'cgraph-skeleton relative overflow-hidden';
 
 /** Skeleton. */
 export default function Skeleton({
@@ -29,7 +28,7 @@ export default function Skeleton({
   if (shape) {
     const items = Array.from({ length: count });
     return (
-      <div className={cn('space-y-3', className)}>
+      <div aria-hidden="true" data-cgraph-skeleton="true" className={cn('space-y-3', className)}>
         {items.map((_, i) => (
           <SkeletonShape key={i} shape={shape} />
         ))}
@@ -52,7 +51,7 @@ export default function Skeleton({
 
   if (v === 'text' && lines > 1) {
     return (
-      <div className={cn('space-y-2', className)}>
+      <div aria-hidden="true" data-cgraph-skeleton="true" className={cn('space-y-2', className)}>
         {Array.from({ length: lines }).map((_, i) => (
           <div
             key={i}
@@ -64,14 +63,21 @@ export default function Skeleton({
     );
   }
 
-  return <div className={cn(shimmerClass, variantStyles[v], className)} style={style} />;
+  return (
+    <div
+      aria-hidden="true"
+      data-cgraph-skeleton="true"
+      className={cn(shimmerClass, variantStyles[v], className)}
+      style={style}
+    />
+  );
 }
 
 function SkeletonShape({ shape }: { shape: SkeletonShape }) {
   switch (shape) {
     case 'text':
       return (
-        <div className="space-y-1.5">
+        <div aria-hidden="true" data-cgraph-skeleton="true" className="space-y-1.5">
           <div className={cn(shimmerClass, 'h-3.5 w-full rounded')} />
           <div className={cn(shimmerClass, 'h-3.5 w-4/5 rounded')} />
           <div className={cn(shimmerClass, 'h-3.5 w-3/5 rounded')} />
@@ -103,7 +109,11 @@ function SkeletonShape({ shape }: { shape: SkeletonShape }) {
 /** Post Card Skeleton. */
 export function PostCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-4">
+    <div
+      aria-hidden="true"
+      data-cgraph-skeleton="true"
+      className="rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-4"
+    >
       <div className="flex gap-3">
         {/* Vote buttons skeleton */}
         <div className="flex flex-col items-center gap-1">
@@ -145,7 +155,11 @@ export function PostCardSkeleton() {
 /** Forum Card Skeleton. */
 export function ForumCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-4">
+    <div
+      aria-hidden="true"
+      data-cgraph-skeleton="true"
+      className="rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-4"
+    >
       <div className="flex items-center gap-3">
         <div className="h-12 w-12 rounded-full bg-[var(--token-card-bg)]" />
         <div className="flex-1">
@@ -161,7 +175,7 @@ export function ForumCardSkeleton() {
 /** Comment Skeleton. */
 export function CommentSkeleton({ depth = 0 }: { depth?: number }) {
   return (
-    <div className="animate-pulse" style={{ marginLeft: depth * 24 }}>
+    <div aria-hidden="true" data-cgraph-skeleton="true" style={{ marginLeft: depth * 24 }}>
       <div className="flex gap-3">
         <div className="h-8 w-8 rounded-full bg-[var(--token-card-bg)]" />
         <div className="flex-1">
@@ -186,7 +200,7 @@ export function CommentSkeleton({ depth = 0 }: { depth?: number }) {
 /** Message Skeleton. */
 export function MessageSkeleton({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex animate-pulse gap-3 px-4 py-2">
+    <div aria-hidden="true" data-cgraph-skeleton="true" className="flex gap-3 px-4 py-2">
       {!compact && <div className="h-10 w-10 shrink-0 rounded-full bg-[var(--token-card-bg)]" />}
       <div className="flex-1 space-y-1.5">
         {!compact && (
@@ -207,7 +221,7 @@ export function MessageSkeleton({ compact = false }: { compact?: boolean }) {
 /** Message List Skeleton. */
 export function MessageListSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div aria-hidden="true" data-cgraph-skeleton="true" className="flex flex-col gap-1">
       {Array.from({ length: count }).map((_, i) => (
         <MessageSkeleton key={i} compact={i > 0 && i % 3 !== 0} />
       ))}

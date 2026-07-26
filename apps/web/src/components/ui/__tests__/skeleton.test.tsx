@@ -10,11 +10,13 @@ describe('Skeleton', () => {
   it('renders a div with shimmer animation', () => {
     const { container } = render(<Skeleton />);
     expect(container.firstElementChild!).toHaveClass('overflow-hidden');
+    expect(container.firstElementChild!).toHaveAttribute('data-cgraph-skeleton', 'true');
+    expect(container.firstElementChild!).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('applies glass base style', () => {
+  it('uses the shared skeleton material class', () => {
     const { container } = render(<Skeleton />);
-    expect(container.firstElementChild!.className).toContain('bg-[var(--token-card-bg)]');
+    expect(container.firstElementChild!.className).toContain('cgraph-skeleton');
   });
 
   it('applies custom className', () => {
@@ -99,7 +101,8 @@ describe('Skeleton', () => {
 describe('PostCardSkeleton', () => {
   it('renders without crashing', () => {
     const { container } = render(<PostCardSkeleton />);
-    expect(container.firstElementChild!).toHaveClass('animate-pulse');
+    expect(container.firstElementChild!).toHaveAttribute('aria-hidden', 'true');
+    expect(container.firstElementChild!).toHaveAttribute('data-cgraph-skeleton', 'true');
   });
 
   it('has card-like structure with border', () => {
@@ -114,7 +117,8 @@ describe('PostCardSkeleton', () => {
 describe('ForumCardSkeleton', () => {
   it('renders without crashing', () => {
     const { container } = render(<ForumCardSkeleton />);
-    expect(container.firstElementChild!).toHaveClass('animate-pulse');
+    expect(container.firstElementChild!).toHaveAttribute('aria-hidden', 'true');
+    expect(container.firstElementChild!).toHaveAttribute('data-cgraph-skeleton', 'true');
   });
 
   it('has card-like structure', () => {
@@ -128,7 +132,8 @@ describe('ForumCardSkeleton', () => {
 describe('CommentSkeleton', () => {
   it('renders without crashing', () => {
     const { container } = render(<CommentSkeleton />);
-    expect(container.firstElementChild!).toHaveClass('animate-pulse');
+    expect(container.firstElementChild!).toHaveAttribute('aria-hidden', 'true');
+    expect(container.firstElementChild!).toHaveAttribute('data-cgraph-skeleton', 'true');
   });
 
   it('applies left margin based on depth', () => {

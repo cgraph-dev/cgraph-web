@@ -12,6 +12,13 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Click Me' })).toBeInTheDocument();
   });
 
+  it('exposes the shared control material contract', () => {
+    render(<Button>Action</Button>);
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-material', 'control');
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-state', 'idle');
+  });
+
   it('applies custom className', () => {
     render(<Button className="custom-class">Btn</Button>);
     expect(screen.getByRole('button')).toHaveClass('custom-class');
@@ -88,6 +95,8 @@ describe('Button', () => {
   it('is disabled when isLoading is true', () => {
     render(<Button isLoading>Loading</Button>);
     expect(screen.getByRole('button')).toBeDisabled();
+    expect(screen.getByRole('button')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-state', 'disabled');
   });
 
   it('renders a spinner SVG when isLoading', () => {
@@ -170,6 +179,12 @@ describe('IconButton', () => {
   it('sets aria-label from label prop', () => {
     render(<IconButton icon={<span>X</span>} label="Close" />);
     expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Close');
+  });
+
+  it('exposes the shared icon control material contract', () => {
+    render(<IconButton icon={<span>X</span>} label="Close" />);
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-material', 'solid');
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-surface', 'control');
   });
 
   it('applies size sm styles', () => {

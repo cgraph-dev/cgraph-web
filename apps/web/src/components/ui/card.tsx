@@ -30,7 +30,7 @@ export default function Card({
   const variantStyles = {
     default: '',
     interactive:
-      'hover:bg-[var(--token-card-bg)] hover:shadow-card-hover transition-all duration-200 cursor-pointer',
+      'hover:bg-[var(--token-card-bg)] hover:shadow-card-hover transition-[background-color,border-color,box-shadow,color] duration-200 cursor-pointer',
     elevated: 'shadow-card',
   };
 
@@ -45,6 +45,9 @@ export default function Card({
 
   return (
     <div
+      data-cgraph-material={variant === 'elevated' ? 'floating' : variant === 'interactive' ? 'recessed' : 'solid'}
+      data-cgraph-surface="card"
+      data-cgraph-state={variant === 'interactive' ? 'idle' : undefined}
       className={`${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${animateStyles} ${className}`}
     >
       {children}
@@ -80,7 +83,7 @@ interface CardTitleProps {
  * Card Title display component.
  */
 export function CardTitle({ children, className = '', as: Tag = 'h3' }: CardTitleProps) {
-  return <Tag className={`font-semibold text-white ${className}`}>{children}</Tag>;
+  return <Tag className={`font-semibold text-[var(--token-text-primary)] ${className}`}>{children}</Tag>;
 }
 
 // Card Content component
@@ -95,7 +98,7 @@ interface CardContentProps {
  * Card Content display component.
  */
 export function CardContent({ children, className = '' }: CardContentProps) {
-  return <div className={`text-gray-300 ${className}`}>{children}</div>;
+  return <div className={`text-[var(--token-text-secondary)] ${className}`}>{children}</div>;
 }
 
 // Card Footer component
@@ -125,5 +128,5 @@ interface CardDescriptionProps {
  * Card Description display component.
  */
 export function CardDescription({ children, className = '' }: CardDescriptionProps) {
-  return <p className={`text-sm text-gray-400 ${className}`}>{children}</p>;
+  return <p className={`text-sm text-[var(--token-text-muted)] ${className}`}>{children}</p>;
 }

@@ -23,6 +23,8 @@ describe('Card', () => {
     expect(el.className).toContain('rounded-lg');
     expect(el.className).toContain('bg-white/[0.72]');
     expect(el.className).toContain('border');
+    expect(el).toHaveAttribute('data-cgraph-material', 'solid');
+    expect(el).toHaveAttribute('data-cgraph-surface', 'card');
   });
 
   it('applies custom className', () => {
@@ -39,7 +41,7 @@ describe('Card', () => {
     const { container } = render(<Card variant="interactive">I</Card>);
     const el = container.firstElementChild!;
     expect(el.className).toContain('cursor-pointer');
-    expect(el.className).toContain('transition-all');
+    expect(el.className).toContain('transition-[background-color,border-color,box-shadow,color]');
   });
 
   it('renders elevated variant with shadow', () => {
@@ -119,11 +121,11 @@ describe('CardTitle', () => {
     expect(screen.getByText('H2').tagName).toBe('H2');
   });
 
-  it('applies font-semibold and text-white', () => {
+  it('applies font-semibold and the theme text token', () => {
     render(<CardTitle>T</CardTitle>);
     const el = screen.getByText('T');
     expect(el).toHaveClass('font-semibold');
-    expect(el).toHaveClass('text-white');
+    expect(el).toHaveClass('text-[var(--token-text-primary)]');
   });
 });
 
@@ -133,9 +135,9 @@ describe('CardContent', () => {
     expect(screen.getByText('Content here')).toBeInTheDocument();
   });
 
-  it('applies text-gray-300 class', () => {
+  it('applies the theme secondary text token', () => {
     const { container } = render(<CardContent>C</CardContent>);
-    expect(container.firstElementChild!).toHaveClass('text-gray-300');
+    expect(container.firstElementChild!).toHaveClass('text-[var(--token-text-secondary)]');
   });
 });
 
@@ -165,6 +167,6 @@ describe('CardDescription', () => {
     render(<CardDescription>D</CardDescription>);
     const el = screen.getByText('D');
     expect(el).toHaveClass('text-sm');
-    expect(el).toHaveClass('text-gray-400');
+    expect(el).toHaveClass('text-[var(--token-text-muted)]');
   });
 });

@@ -1,0 +1,40 @@
+/* Shared loading geometry and material. Skeletons are silent placeholders. */
+
+.cgraph-skeleton {
+  background: var(--token-skeletonBase, var(--token-card-bg));
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    var(--token-skeletonShimmer, rgba(255, 255, 255, 0.08)) 50%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 220% 100%;
+  animation: cgraph-skeleton-shimmer 1.8s var(--ease-out-expo, cubic-bezier(0.19, 1, 0.22, 1))
+    infinite;
+}
+
+@keyframes cgraph-skeleton-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce) {
+  .cgraph-skeleton {
+    animation: none;
+    background-image: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .cgraph-skeleton {
+    forced-color-adjust: none;
+    background: CanvasText;
+    opacity: 0.2;
+  }
+}

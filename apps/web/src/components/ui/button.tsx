@@ -26,10 +26,10 @@ export function Button({
   ref,
   ...props
 }: ButtonProps & { ref?: React.Ref<HTMLButtonElement> }) {
-  const { tapScale, hoverScale } = useMotionSafe();
+  const { tapScale } = useMotionSafe();
 
   const baseStyles =
-    'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center font-medium rounded-lg transition-[background-color,border-color,box-shadow,color,opacity] duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantStyles: Record<typeof variant, string> = {
     primary:
@@ -56,7 +56,6 @@ export function Button({
   const motionProps = animated
     ? {
         whileTap: tapScale(),
-        whileHover: hoverScale(),
         transition: { type: 'spring' as const, stiffness: 400, damping: 25, mass: 0.8 },
       }
     : {};
@@ -65,6 +64,12 @@ export function Button({
     <motion.button
       ref={ref}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      data-cgraph-material={
+        variant === 'glass' ? 'glass' : variant === 'ghost' ? 'solid' : 'control'
+      }
+      data-cgraph-surface="control"
+      data-cgraph-state={disabled || isLoading ? 'disabled' : 'idle'}
       className={` ${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? 'w-full' : ''} ${className} `}
       {...motionProps}
       {...props}
@@ -110,6 +115,7 @@ function LoadingSpinner({ size, className = '' }: LoadingSpinnerProps): React.Re
     <svg
       className={`animate-spin ${SPINNER_SIZE_CLASSES[size]} ${className}`}
       fill="none"
+      aria-hidden="true"
       viewBox="0 0 24 24"
     >
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -141,10 +147,10 @@ export function IconButton({
   ref,
   ...props
 }: IconButtonProps & { ref?: React.Ref<HTMLButtonElement> }) {
-  const { tapScale, hoverScale } = useMotionSafe();
+  const { tapScale } = useMotionSafe();
 
   const baseStyles =
-    'inline-flex items-center justify-center rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center rounded-lg transition-[background-color,border-color,box-shadow,color,opacity] duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantStyles: Record<typeof variant, string> = {
     primary:
@@ -175,9 +181,12 @@ export function IconButton({
       disabled={disabled || isLoading}
       aria-label={label}
       title={label}
+      aria-busy={isLoading || undefined}
+      data-cgraph-material={variant === 'ghost' ? 'solid' : variant === 'secondary' ? 'recessed' : 'control'}
+      data-cgraph-surface="control"
+      data-cgraph-state={disabled || isLoading ? 'disabled' : 'idle'}
       className={` ${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className} `}
       whileTap={tapScale()}
-      whileHover={hoverScale()}
       transition={{ type: 'spring', stiffness: 500, damping: 25, mass: 0.8 }}
       {...props}
     >

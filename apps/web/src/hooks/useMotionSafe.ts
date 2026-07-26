@@ -26,18 +26,15 @@ export interface MotionSafeResult {
   getTransition: (springConfig?: { damping?: number; stiffness?: number }) => Transition;
   /** whileTap value — returns {} when reduced motion, { scale } when active */
   tapScale: (scale?: number) => TargetAndTransition;
-  /** whileHover value — returns {} when reduced motion, { scale } when active */
-  hoverScale: (scale?: number) => TargetAndTransition;
 }
 
 /**
  * Hook that provides animation configurations respecting user motion preferences.
  *
  * @example
- * const { shouldAnimate, springs, tapScale, hoverScale } = useMotionSafe();
+ * const { shouldAnimate, springs, tapScale } = useMotionSafe();
  * <motion.button
  *   whileTap={tapScale(0.97)}
- *   whileHover={hoverScale(1.02)}
  *   transition={springs.snappy}
  * />
  */
@@ -67,6 +64,5 @@ export function useMotionSafe(): MotionSafeResult {
     },
     getTransition: (springConfig) => getMotionTransition(reducedMotion, springConfig),
     tapScale: (scale = 0.97): TargetAndTransition => (shouldAnimate ? { scale } : { scale: 1 }),
-    hoverScale: (scale = 1.02): TargetAndTransition => (shouldAnimate ? { scale } : { scale: 1 }),
   };
 }
