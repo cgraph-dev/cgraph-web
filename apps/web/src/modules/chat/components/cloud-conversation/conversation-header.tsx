@@ -1,10 +1,4 @@
-import {
-  ArrowLeftIcon,
-  BookmarkIcon,
-  PhoneIcon,
-  VideoCameraIcon,
-} from '@heroicons/react/24/outline';
-import { Palette, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Bookmark, Palette, Phone, RotateCcw, Video } from 'lucide-react';
 import { resolveChatThemeConversationWallpaper } from '@cgraph-dev/shared-types/chat-theme';
 import {
   Dialog,
@@ -17,6 +11,7 @@ import { ChatColorPicker } from '@/modules/settings/components/customize/panels/
 import { ChatWallpaperGrid } from '@/modules/chat/theme/chat-wallpaper-grid';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
+import { IconButton } from '@/components/ui/button';
 import type { ConversationHeaderProps } from './types';
 import { useState } from 'react';
 
@@ -61,15 +56,14 @@ export function ConversationHeader({
       >
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {onBack ? (
-            <button
-              type="button"
+            <IconButton
+              icon={<ArrowLeft />}
+              label="Back to conversations"
+              size="sm"
+              variant="ghost"
               onClick={onBack}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-[var(--token-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 lg:hidden"
-              aria-label="Back to conversations"
-              title="Back to conversations"
-            >
-              <ArrowLeftIcon className="h-5 w-5" />
-            </button>
+              className="h-10 w-10 shrink-0 lg:hidden"
+            />
           ) : null}
           <div className="relative shrink-0">
             <ThemedAvatar
@@ -107,58 +101,54 @@ export function ConversationHeader({
           aria-label="Conversation actions"
         >
           {pinnedCount > 0 && onTogglePinnedMessages && (
-            <button
-              type="button"
+            <IconButton
+              icon={
+                <span className="relative block h-5 w-5">
+                  <Bookmark className="h-5 w-5" aria-hidden="true" />
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--token-interactive-primary)] px-1 text-[10px] font-semibold text-[var(--token-text-on-primary)]">
+                    {pinnedCount}
+                  </span>
+                </span>
+              }
+              label={showPinnedMessages ? 'Close pinned messages' : 'Open pinned messages'}
+              size="sm"
+              variant={showPinnedMessages ? 'secondary' : 'ghost'}
               onClick={onTogglePinnedMessages}
-              className={`relative grid h-9 w-9 place-items-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
-                showPinnedMessages
-                  ? 'bg-primary-500/15 text-primary-300'
-                  : 'text-[var(--token-text-muted)] hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)]'
-              }`}
-              aria-label={showPinnedMessages ? 'Close pinned messages' : 'Open pinned messages'}
-              title="Pinned messages"
-            >
-              <BookmarkIcon className="h-5 w-5" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-500 px-1 text-[10px] font-semibold text-white">
-                {pinnedCount}
-              </span>
-            </button>
+              className="h-9 w-9"
+            />
           )}
 
           {canStartCall && (
             <>
-              <button
-                type="button"
+              <IconButton
+                icon={<Phone />}
+                label="Start voice call"
+                size="sm"
+                variant="ghost"
                 onClick={onStartVoiceCall}
-                className="grid h-9 w-9 place-items-center rounded-md text-[var(--token-text-muted)] transition-colors hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                aria-label="Start voice call"
-                title="Start voice call"
-              >
-                <PhoneIcon className="h-5 w-5" />
-              </button>
+                className="h-9 w-9"
+              />
 
-              <button
-                type="button"
+              <IconButton
+                icon={<Video />}
+                label="Start video call"
+                size="sm"
+                variant="ghost"
                 onClick={onStartVideoCall}
-                className="grid h-9 w-9 place-items-center rounded-md text-[var(--token-text-muted)] transition-colors hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                aria-label="Start video call"
-                title="Start video call"
-              >
-                <VideoCameraIcon className="h-5 w-5" />
-              </button>
+                className="h-9 w-9"
+              />
             </>
           )}
 
           {conversationId ? (
-            <button
-              type="button"
+            <IconButton
+              icon={<Palette />}
+              label="Change conversation appearance"
+              size="sm"
+              variant="ghost"
               onClick={() => setShowAppearancePicker(true)}
-              className="grid h-9 w-9 place-items-center rounded-md text-[var(--token-text-muted)] transition-colors hover:bg-[var(--token-card-bg)] hover:text-[var(--token-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              aria-label="Change conversation appearance"
-              title="Conversation appearance"
-            >
-              <Palette className="h-5 w-5" aria-hidden="true" />
-            </button>
+              className="h-9 w-9"
+            />
           ) : null}
 
           <div className="ml-1 hidden sm:block">
@@ -177,16 +167,15 @@ export function ConversationHeader({
               <section className="space-y-4" aria-label="Conversation wallpaper settings">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-semibold text-white">Conversation Background</span>
-                  <button
-                    type="button"
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-white/15 text-white/70 transition hover:border-white/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Reset conversation wallpaper"
-                    title="Reset conversation wallpaper"
+                  <IconButton
+                    icon={<RotateCcw />}
+                    label="Reset conversation wallpaper"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0"
                     disabled={!conversationWallpaperOverride}
                     onClick={() => resetConversationChatThemeWallpaper(conversationId)}
-                  >
-                    <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                  />
                 </div>
                 <ChatWallpaperGrid
                   wallpaper={conversationWallpaper}

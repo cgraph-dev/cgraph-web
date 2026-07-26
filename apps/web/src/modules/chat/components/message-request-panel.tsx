@@ -9,15 +9,13 @@ import {
   Trash2,
   Unlock,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { MessageRequestController } from '../hooks/use-message-request';
 
 interface MessageRequestPanelProps {
   readonly request: MessageRequestController;
   readonly onDeleted: () => void;
 }
-
-const ACTION_CLASS =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 disabled:cursor-not-allowed disabled:opacity-50';
 
 /**
  * Conversation bottom panel for pending and blocked message requests.
@@ -71,14 +69,14 @@ export function MessageRequestPanel({
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          className={`${ACTION_CLASS} bg-secondary text-secondary-foreground hover:bg-secondary/80`}
+        <Button
+          variant="secondary"
+          leftIcon={<RotateCw aria-hidden="true" />}
+          className="min-h-11"
           onClick={request.retry}
         >
-          <RotateCw className="h-4 w-4" aria-hidden="true" />
           Retry
-        </button>
+        </Button>
       </section>
     );
   }
@@ -146,73 +144,67 @@ export function MessageRequestPanel({
 
         {status === 'pending' ? (
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
-            <button
-              type="button"
-              className={`${ACTION_CLASS} bg-secondary text-destructive hover:bg-destructive/10`}
+            <Button
+              variant="danger"
+              leftIcon={<Ban aria-hidden="true" />}
+              className="min-h-11"
               onClick={() => void request.block()}
               disabled={isProcessing}
             >
-              <Ban className="h-4 w-4" aria-hidden="true" />
               Block
-            </button>
-            <button
-              type="button"
-              className={`${ACTION_CLASS} bg-secondary text-destructive hover:bg-destructive/10`}
+            </Button>
+            <Button
+              variant="danger"
+              leftIcon={<Flag aria-hidden="true" />}
+              className="min-h-11"
               onClick={() => void request.blockAndReport()}
               disabled={isProcessing}
             >
-              <Flag className="h-4 w-4" aria-hidden="true" />
               Block &amp; report
-            </button>
-            <button
-              type="button"
-              className={`${ACTION_CLASS} bg-secondary text-secondary-foreground hover:bg-secondary/80`}
+            </Button>
+            <Button
+              variant="secondary"
+              leftIcon={<Trash2 aria-hidden="true" />}
+              className="min-h-11"
               onClick={() => void handleDelete()}
               disabled={isProcessing}
             >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
               Delete
-            </button>
-            <button
-              type="button"
-              className={`${ACTION_CLASS} bg-primary text-primary-foreground hover:bg-primary/90`}
+            </Button>
+            <Button
+              variant="primary"
+              leftIcon={<Check aria-hidden="true" />}
+              className="min-h-11"
               onClick={() => void request.accept()}
               disabled={isProcessing}
+              isLoading={activeAction === 'accept'}
             >
-              {activeAction === 'accept' ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Check className="h-4 w-4" aria-hidden="true" />
-              )}
               Accept
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="flex flex-wrap justify-end gap-2">
             {!details.reportedAsSpam ? (
-              <button
-                type="button"
-                className={`${ACTION_CLASS} bg-secondary text-destructive hover:bg-destructive/10`}
+              <Button
+                variant="danger"
+                leftIcon={<Flag aria-hidden="true" />}
+                className="min-h-11"
                 onClick={() => void request.blockAndReport()}
                 disabled={isProcessing}
               >
-                <Flag className="h-4 w-4" aria-hidden="true" />
                 Report spam
-              </button>
+              </Button>
             ) : null}
-            <button
-              type="button"
-              className={`${ACTION_CLASS} bg-primary text-primary-foreground hover:bg-primary/90`}
+            <Button
+              variant="primary"
+              leftIcon={<Unlock aria-hidden="true" />}
+              className="min-h-11"
               onClick={() => void request.unblock()}
               disabled={isProcessing}
+              isLoading={activeAction === 'unblock'}
             >
-              {activeAction === 'unblock' ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Unlock className="h-4 w-4" aria-hidden="true" />
-              )}
               Unblock &amp; accept
-            </button>
+            </Button>
           </div>
         )}
       </div>
