@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { THEME_LIGHT } from '../../lib/theme/themes';
+import { TOKEN_REGISTRY, injectSemanticTokens } from '../../lib/theme/tokens';
 
 const storageState: Record<string, string> = {};
 
@@ -83,6 +84,29 @@ afterAll(() => {
 });
 
 describe('professional theme switching', () => {
+  it.each([
+    ['aurora', 'dark', 'theme-aurora'],
+    ['dark', 'dark', 'theme-dark'],
+    ['light', 'light', 'theme-light'],
+    ['bubble', 'dark', 'theme-bubble'],
+  ] as const)('applies the %s app-theme contract', async (themeId, category, variantClass) => {
+    const { themeEngine } = await import('../../lib/theme/theme-engine');
+
+    themeEngine.setTheme(themeId);
+    injectSemanticTokens(themeId);
+
+    expect(themeEngine.getCurrentTheme().id).toBe(themeId);
+    expect(document.documentElement.classList.contains(category)).toBe(true);
+    expect(document.documentElement.classList.contains(variantClass)).toBe(true);
+    expect(document.documentElement.style.getPropertyValue('color-scheme')).toBe(
+      category === 'light' ? 'light' : 'dark'
+    );
+
+    for (const [token, value] of Object.entries(TOKEN_REGISTRY[themeId]!)) {
+      expect(document.documentElement.style.getPropertyValue(`--token-${token}`)).toBe(value);
+    }
+  });
+
   it('applies Aurora variables and classes to the document root', async () => {
     const { themeEngine } = await import('../../lib/theme/theme-engine');
 

@@ -17,6 +17,7 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-material', 'control');
     expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-surface', 'control');
     expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-state', 'idle');
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-variant', 'primary');
   });
 
   it('applies custom className', () => {
@@ -185,6 +186,7 @@ describe('IconButton', () => {
     render(<IconButton icon={<span>X</span>} label="Close" />);
     expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-material', 'solid');
     expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-variant', 'ghost');
   });
 
   it('applies size sm styles', () => {

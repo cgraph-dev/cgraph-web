@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type SemanticTokens,
   AURORA_TOKENS,
+  BUBBLE_TOKENS,
   DARK_TOKENS,
   LIGHT_TOKENS,
   contrastRatio,
@@ -34,6 +35,7 @@ const THEMES: ThemeFixture[] = [
   { name: 'Aurora', tokens: AURORA_TOKENS },
   { name: 'Dark', tokens: DARK_TOKENS },
   { name: 'Light', tokens: LIGHT_TOKENS },
+  { name: 'Bubble', tokens: BUBBLE_TOKENS },
 ];
 
 const CONTRAST_PAIRS: ContrastPair[] = [
@@ -199,10 +201,11 @@ describe('WCAG AA contrast validation', () => {
         it(`${pair.name} meets ${pair.minimumRatio}:1`, () => {
           const bgPrimary = theme.tokens['bg-primary'];
           const textColor = resolveOpaqueColor(theme.tokens[pair.textKey]!, bgPrimary);
-          const backdrop =
+          const rawBackdrop =
             (pair.backdropKey
               ? theme.tokens[pair.backdropKey]
-              : theme.tokens[pair.backgroundKey]) ?? bgPrimary;
+              : bgPrimary) ?? bgPrimary;
+          const backdrop = resolveOpaqueColor(rawBackdrop, bgPrimary);
           const backgroundColor = resolveOpaqueColor(theme.tokens[pair.backgroundKey]!, backdrop);
           const ratio = contrastRatio(textColor, backgroundColor);
           const passes = pair.usesLargeText

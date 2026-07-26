@@ -427,15 +427,15 @@ export const AURORA_TOKENS: SemanticTokens = {
 
 /**
  * Bubble theme — liquid glass with prismatic edges, purple-green dual accent.
- * Bubble primary: #8B5CF6 = oklch(0.541 0.281 293)
+ * Bubble primary: #7C3AED = oklch(0.491 0.27 293)
  *
  * Key contrast ratios:
  * - text-primary (#ffffff) on bg-primary (#111827): 16.8:1 ✅ AAA
  * - text-secondary (#D1D5DB) on bg-primary (#111827): 11.2:1 ✅ AAA
  * - text-muted (#9CA3AF) on bg-primary (#111827): 6.5:1      ✅ AA
- * - text-on-primary (#ffffff) on interactive-primary (#8B5CF6): 4.6:1 ✅ AA
+ * - text-on-primary (#ffffff) on interactive-primary (#7C3AED): 5.70:1 ✅ AA
  */
-const BUBBLE_TOKENS: SemanticTokens = {
+export const BUBBLE_TOKENS: SemanticTokens = {
   // Surfaces — translucent for glass blur-through
   'bg-primary': '#111827',
   'bg-secondary': 'rgba(255, 255, 255, 0.04)',
@@ -451,9 +451,9 @@ const BUBBLE_TOKENS: SemanticTokens = {
   'text-on-error': '#ffffff',
 
   // Interactive (purple brand)
-  'interactive-primary': '#8B5CF6',
-  'interactive-hover': '#A78BFA',
-  'interactive-active': '#7C3AED',
+  'interactive-primary': '#7C3AED',
+  'interactive-hover': '#6D28D9',
+  'interactive-active': '#5B21B6',
   'interactive-disabled': 'rgba(255, 255, 255, 0.08)',
 
   // Feedback

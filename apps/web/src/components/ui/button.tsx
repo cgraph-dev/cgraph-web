@@ -70,6 +70,7 @@ export function Button({
       }
       data-cgraph-surface="control"
       data-cgraph-state={disabled || isLoading ? 'disabled' : 'idle'}
+      data-cgraph-variant={variant}
       className={` ${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${fullWidth ? 'w-full' : ''} ${className} `}
       {...motionProps}
       {...props}
@@ -185,6 +186,7 @@ export function IconButton({
       data-cgraph-material={variant === 'ghost' ? 'solid' : variant === 'secondary' ? 'recessed' : 'control'}
       data-cgraph-surface="control"
       data-cgraph-state={disabled || isLoading ? 'disabled' : 'idle'}
+      data-cgraph-variant={variant}
       className={` ${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className} `}
       whileTap={tapScale()}
       transition={{ type: 'spring', stiffness: 500, damping: 25, mass: 0.8 }}

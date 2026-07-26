@@ -12,7 +12,8 @@
   --bubble-solid: rgba(15, 25, 44, 0.94);
   --bubble-recessed: rgba(5, 13, 27, 0.68);
   --bubble-accent: #9b7cff;
-  --bubble-accent-strong: #7f5af0;
+  --bubble-accent-strong: #7c3aed;
+  --bubble-accent-control-hover: #6d28d9;
   --bubble-accent-soft: rgba(155, 124, 255, 0.22);
   --bubble-success: #34d399;
   --bubble-danger: #fb7185;
@@ -165,6 +166,58 @@
   border-color: var(--bubble-border-strong);
   background: var(--bubble-glass-hover);
   box-shadow: var(--bubble-shadow-md);
+}
+
+.theme-bubble [data-cgraph-surface='control'][data-cgraph-variant='primary'] {
+  border-color: rgba(224, 215, 255, 0.34);
+  background: var(--bubble-accent-strong);
+  color: #ffffff;
+  box-shadow:
+    0 10px 26px rgba(78, 53, 170, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.theme-bubble [data-cgraph-surface='control'][data-cgraph-variant='primary']:hover {
+  border-color: rgba(238, 233, 255, 0.5);
+  background: var(--bubble-accent-control-hover);
+}
+
+.theme-bubble [data-cgraph-surface='control'][data-cgraph-variant='danger'] {
+  border-color: rgba(251, 113, 133, 0.42);
+  background: rgba(136, 19, 55, 0.82);
+  color: #fff1f2;
+  box-shadow:
+    0 8px 22px rgba(76, 5, 25, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.theme-bubble [data-cgraph-surface='control'][data-cgraph-variant='danger']:hover {
+  border-color: rgba(253, 164, 175, 0.56);
+  background: rgba(159, 18, 57, 0.9);
+}
+
+.theme-bubble [data-cgraph-surface='control'][data-cgraph-variant='success'] {
+  border-color: rgba(110, 231, 183, 0.46);
+  background: rgba(6, 95, 70, 0.84);
+  color: #ecfdf5;
+  box-shadow:
+    0 8px 22px rgba(2, 44, 34, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.theme-bubble [data-cgraph-surface='control'][data-cgraph-variant='success']:hover {
+  border-color: rgba(167, 243, 208, 0.58);
+  background: rgba(4, 120, 87, 0.9);
+}
+
+.theme-bubble
+  [data-cgraph-surface='control']:where(
+    [data-cgraph-variant='secondary'],
+    [data-cgraph-variant='outline'],
+    [data-cgraph-variant='ghost'],
+    [data-cgraph-variant='glass']
+  ) {
+  color: var(--bubble-text);
 }
 
 .theme-bubble :where(
