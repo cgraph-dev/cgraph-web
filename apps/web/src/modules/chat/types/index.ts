@@ -17,7 +17,6 @@ export type {
 
 // Re-export types from components
 export type { UIPreferences, MessageBubbleProps } from '../components/message-bubble';
-export type { MessageInputAreaProps } from '../components/message-input-area';
 export type { ReplyPreviewProps } from '../components/reply-preview';
 export type { AmbientBackgroundProps } from '../components/ambient-background';
 export type { UISettingsPanelProps } from '../components/ui-settings-panel';

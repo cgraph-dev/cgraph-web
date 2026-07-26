@@ -17,7 +17,6 @@ export {
   type UIPreferences,
 } from './message-bubble';
 export { MessageList } from './message-list';
-export { MessageInputArea, type MessageInputAreaProps } from './message-input-area';
 export { MessageSearch } from './message-search';
 export { default as MessageReactions } from './message-reactions';
 
@@ -39,7 +38,6 @@ export {
   EnhancedConversation,
   LoadingSpinner as CloudConversationLoadingSpinner,
 } from './cloud-conversation';
-export { ConversationInput } from './conversation-input';
 export { TypingIndicator } from './typing-indicator';
 // Animation Components
 export { AnimatedMessageWrapper } from './animated-message-wrapper';
