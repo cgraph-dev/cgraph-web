@@ -31,5 +31,7 @@ describe('hover motion policy', () => {
     expect(css).not.toMatch(/:hover\s*\{[^}]*\btransform:/);
     expect(css).not.toContain('transform-style: preserve-3d');
     expect(css).not.toMatch(/\bperspective:/);
+    expect(css).not.toMatch(/\bhover:-?translate(?:-[xy])?/);
+    expect(css).not.toContain('transition-all');
   });
 });

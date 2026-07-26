@@ -53,6 +53,76 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.98);
 }
 
+/*
+ * Canonical controls.
+ *
+ * Components expose intent through data-cgraph-variant. Keeping the material
+ * recipe here prevents route-local buttons from growing their own visual
+ * language while allowing Bubble to provide its own scoped glass treatment.
+ */
+.cgraph-control {
+  border: 1px solid var(--token-border-muted);
+  border-radius: var(--app-material-radius, 8px);
+  background: var(--token-bg-secondary);
+  color: var(--token-text-primary);
+  box-shadow: var(--app-material-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.12));
+  transition:
+    background-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cgraph-control:hover:not(:disabled) {
+  border-color: var(--token-card-border);
+  background: var(--token-bg-tertiary);
+}
+
+.cgraph-control-primary {
+  border-color: var(--token-border-muted);
+  background: var(--token-interactive-primary);
+  color: var(--token-text-on-primary);
+}
+
+.cgraph-control-primary:hover:not(:disabled) {
+  border-color: var(--token-card-border);
+  background: var(--token-interactive-hover);
+}
+
+.cgraph-control-outline {
+  background: transparent;
+}
+
+.cgraph-control-ghost {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--token-text-secondary);
+}
+
+.cgraph-control-ghost:hover:not(:disabled) {
+  color: var(--token-text-primary);
+}
+
+.cgraph-control-danger {
+  border-color: color-mix(in srgb, #ef4444 24%, transparent);
+  background: color-mix(in srgb, #7f1d1d 24%, transparent);
+  color: #fecaca;
+}
+
+.cgraph-control-success {
+  border-color: color-mix(in srgb, var(--token-interactive-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--token-interactive-primary) 10%, transparent);
+  color: var(--token-interactive-primary);
+}
+
+.cgraph-control-glass {
+  background: var(--token-bg-secondary);
+  backdrop-filter: blur(var(--app-material-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--app-material-blur, 0px));
+}
+
 :where(.theme-aurora, .theme-dark, .theme-light)
   [data-cgraph-surface='card'][data-cgraph-material='solid'] {
   border-color: var(--app-material-border);

@@ -12,6 +12,11 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Click Me' })).toBeInTheDocument();
   });
 
+  it('defaults to a non-submitting button', () => {
+    render(<Button>Action</Button>);
+    expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
+  });
+
   it('exposes the shared control material contract', () => {
     render(<Button>Action</Button>);
     expect(screen.getByRole('button')).toHaveAttribute('data-cgraph-material', 'control');
@@ -35,25 +40,25 @@ describe('Button', () => {
   it('applies primary variant styles by default', () => {
     render(<Button>Default</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('bg-[var(--token-interactive-primary)]');
+    expect(btn).toHaveClass('cgraph-control-primary');
   });
 
   it('applies danger variant styles', () => {
     render(<Button variant="danger">Delete</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('bg-red-950/20');
+    expect(btn).toHaveClass('cgraph-control-danger');
   });
 
   it('applies ghost variant styles', () => {
     render(<Button variant="ghost">Ghost</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('hover:bg-[var(--token-bg-secondary)]');
+    expect(btn).toHaveClass('cgraph-control-ghost');
   });
 
   it('applies outline variant styles', () => {
     render(<Button variant="outline">Outline</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('border');
+    expect(btn).toHaveClass('cgraph-control-outline');
   });
   it('renders small size', () => {
     render(<Button size="sm">Small</Button>);
@@ -104,6 +109,7 @@ describe('Button', () => {
     const { container } = render(<Button isLoading>Loading</Button>);
     const svg = container.querySelector('svg.animate-spin');
     expect(svg).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Loading' })).toBeInTheDocument();
   });
 
   it('does not render spinner when not loading', () => {
@@ -180,6 +186,11 @@ describe('IconButton', () => {
   it('sets aria-label from label prop', () => {
     render(<IconButton icon={<span>X</span>} label="Close" />);
     expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Close');
+  });
+
+  it('defaults to a non-submitting button', () => {
+    render(<IconButton icon={<span>X</span>} label="Action" />);
+    expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
   });
 
   it('exposes the shared icon control material contract', () => {

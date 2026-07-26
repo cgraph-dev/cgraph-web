@@ -175,11 +175,11 @@
   }
 
   .btn-primary {
-    @apply btn relative overflow-hidden bg-gradient-to-br from-primary-500 to-primary-dark font-medium text-white shadow-lg shadow-primary-500/20 ring-2 ring-primary-500/20 hover:from-primary-400 hover:to-primary-500 hover:shadow-primary-500/40 hover:-translate-y-0.5 hover:ring-white/20 transition-all duration-300 px-4 py-2;
+    @apply btn relative overflow-hidden bg-gradient-to-br from-primary-500 to-primary-dark font-medium text-white shadow-lg shadow-primary-500/20 ring-2 ring-primary-500/20 hover:from-primary-400 hover:to-primary-500 hover:shadow-primary-500/40 hover:ring-white/20 transition-[background-color,border-color,box-shadow,color,opacity] duration-200 px-4 py-2;
   }
 
   .btn-secondary {
-    @apply btn bg-[var(--token-card-bg)]/50 backdrop-blur-md border border-[var(--token-card-border)] text-[var(--token-text-primary)] hover:border-primary-500/50 hover:bg-[var(--token-card-bg)]/80 hover:-translate-y-0.5 transition-all duration-300 px-4 py-2;
+    @apply btn bg-[var(--token-card-bg)]/50 backdrop-blur-md border border-[var(--token-card-border)] text-[var(--token-text-primary)] hover:border-primary-500/50 hover:bg-[var(--token-card-bg)]/80 transition-[background-color,border-color,box-shadow,color,opacity] duration-200 px-4 py-2;
   }
 
   .btn-ghost {
