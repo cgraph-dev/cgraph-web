@@ -113,12 +113,16 @@ describe('ServerList', () => {
 
     const directory = within(screen.getByTestId('mobile-group-directory'));
 
-    expect(directory.getByRole('button', { name: 'Create' })).toBeInTheDocument();
-    expect(directory.getByRole('button', { name: 'Join' })).toBeInTheDocument();
-    expect(directory.getByRole('link', { name: 'Explore public groups' })).toHaveAttribute(
-      'href',
-      '/groups/explore'
-    );
+    const createButton = directory.getByRole('button', { name: 'Create' });
+    const joinButton = directory.getByRole('button', { name: 'Join' });
+    const exploreLink = directory.getByRole('link', { name: 'Explore public groups' });
+
+    expect(createButton).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(createButton).toHaveAttribute('data-cgraph-variant', 'primary');
+    expect(joinButton).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(joinButton).toHaveAttribute('data-cgraph-variant', 'outline');
+    expect(exploreLink).toHaveAttribute('href', '/groups/explore');
+    expect(exploreLink).toHaveAttribute('data-cgraph-surface', 'control');
     expect(directory.getByRole('link', { name: /Alpha Team/ })).toBeInTheDocument();
     expect(directory.getByRole('link', { name: /Beta Guild/ })).toBeInTheDocument();
 
@@ -128,5 +132,40 @@ describe('ServerList', () => {
 
     expect(directory.queryByRole('link', { name: /Alpha Team/ })).not.toBeInTheDocument();
     expect(directory.getByRole('link', { name: /Beta Guild/ })).toBeInTheDocument();
+  });
+
+  it('uses canonical controls for the server rail and join modal', () => {
+    render(
+      <MemoryRouter initialEntries={['/groups']}>
+        <ServerList groups={[]} showMobileDirectory />
+      </MemoryRouter>
+    );
+
+    const rail = within(screen.getByTestId('groups-server-rail'));
+    const createButton = rail.getByRole('button', { name: 'Create new server' });
+    const joinButton = rail.getByRole('button', { name: 'Join server with invite' });
+
+    expect(createButton).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(joinButton).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(rail.getByRole('link', { name: 'Open direct messages' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
+    expect(rail.getByRole('link', { name: 'Explore public groups' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
+
+    fireEvent.click(joinButton);
+
+    const dialog = within(screen.getByRole('dialog', { name: 'Join a Server' }));
+    const cancelButton = dialog.getByRole('button', { name: 'Cancel' });
+    const submitButton = dialog.getByRole('button', { name: 'Join Server' });
+
+    expect(cancelButton).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(cancelButton).toHaveAttribute('data-cgraph-variant', 'outline');
+    expect(submitButton).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(submitButton).toHaveAttribute('data-cgraph-variant', 'primary');
+    expect(submitButton).toBeDisabled();
   });
 });
