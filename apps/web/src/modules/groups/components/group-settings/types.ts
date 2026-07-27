@@ -29,6 +29,8 @@ export interface MembersTabProps {
 export interface InvitesTabProps {
   groupId: string;
   groupName: string;
+  canCreateInvites: boolean;
+  canDeleteInvites: boolean;
 }
 
 export interface ChannelsTabProps {
@@ -65,7 +67,8 @@ export interface GroupSettingsPermissions {
   canKickMembers: boolean;
   canBanMembers: boolean;
   canMuteMembers: boolean;
-  canManageInvites: boolean;
+  canCreateInvites: boolean;
+  canDeleteInvites: boolean;
   canViewAuditLog: boolean;
   canManageAutomod: boolean;
   isOwner: boolean;

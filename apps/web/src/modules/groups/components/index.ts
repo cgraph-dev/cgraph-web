@@ -4,5 +4,4 @@
 export { GroupList, default as GroupListDefault } from './group-list';
 export { MemberList, default as MemberListDefault } from './member-list';
 export { RoleManager, default as RoleManagerDefault } from './role-manager';
-export { InviteModal, default as InviteModalDefault } from './invite-modal';
 export { GroupSettings, default as GroupSettingsDefault } from './group-settings';

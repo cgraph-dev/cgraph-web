@@ -71,7 +71,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
           case 'members':
             return permissions.canManageMembers;
           case 'invites':
-            return permissions.canManageInvites;
+            return permissions.canCreateInvites;
           case 'channels':
             return permissions.canManageChannels;
           case 'audit-log':
@@ -162,7 +162,13 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
           )}
 
           {effectiveActiveTab === 'invites' && (
-            <InvitesTab key="invites" groupId={groupId} groupName={activeGroup.name} />
+            <InvitesTab
+              key="invites"
+              groupId={groupId}
+              groupName={activeGroup.name}
+              canCreateInvites={permissions.canCreateInvites}
+              canDeleteInvites={permissions.canDeleteInvites}
+            />
           )}
 
           {effectiveActiveTab === 'channels' && <ChannelsTab key="channels" groupId={groupId} />}

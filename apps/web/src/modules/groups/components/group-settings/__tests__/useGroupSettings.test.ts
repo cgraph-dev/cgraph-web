@@ -167,6 +167,86 @@ describe('useGroupSettings', () => {
     });
   });
 
+  it('uses the create-invites bit and reserves invite deletion for the owner', () => {
+    mockGroups.push(
+      makeGroup({
+        ownerId: 'u-other',
+        myMember: {
+          id: 'member-current',
+          userId: 'u-current',
+          nickname: null,
+          user: {
+            id: 'u-current',
+            username: 'current',
+            displayName: 'Current User',
+            avatarUrl: null,
+            status: 'online',
+          },
+          roles: [
+            {
+              id: 'invite-role',
+              name: 'Inviter',
+              color: '#3b82f6',
+              position: 1,
+              permissions: PERMISSIONS.CREATE_INVITES.value,
+              isDefault: false,
+              isHoisted: false,
+              isMentionable: false,
+            },
+          ],
+          joinedAt: '2026-01-01T00:00:00Z',
+        },
+      })
+    );
+
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    expect(result.current.permissions).toMatchObject({
+      canCreateInvites: true,
+      canDeleteInvites: false,
+      canManageGroup: false,
+    });
+  });
+
+  it('does not infer invite creation from manage-group permission', () => {
+    mockGroups.push(
+      makeGroup({
+        ownerId: 'u-other',
+        myMember: {
+          id: 'member-current',
+          userId: 'u-current',
+          nickname: null,
+          user: {
+            id: 'u-current',
+            username: 'current',
+            displayName: 'Current User',
+            avatarUrl: null,
+            status: 'online',
+          },
+          roles: [
+            {
+              id: 'manager-role',
+              name: 'Group manager',
+              color: '#3b82f6',
+              position: 1,
+              permissions: PERMISSIONS.MANAGE_GROUP.value,
+              isDefault: false,
+              isHoisted: false,
+              isMentionable: false,
+            },
+          ],
+          joinedAt: '2026-01-01T00:00:00Z',
+        },
+      })
+    );
+
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    expect(result.current.permissions.canManageGroup).toBe(true);
+    expect(result.current.permissions.canCreateInvites).toBe(false);
+    expect(result.current.permissions.canDeleteInvites).toBe(false);
+  });
+
   it('initializes form data from group', () => {
     mockGroups.push(makeGroup({ name: 'Cool Group', description: 'Desc', isPublic: false }));
     const { result } = renderHook(() => useGroupSettings('g-1'));

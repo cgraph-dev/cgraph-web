@@ -204,7 +204,8 @@ const mockPermissions = {
   canManageRoles: true,
   canManageChannels: true,
   canManageMembers: true,
-  canManageInvites: true,
+  canCreateInvites: true,
+  canDeleteInvites: true,
   canViewAuditLog: true,
   canManageAutomod: true,
 };

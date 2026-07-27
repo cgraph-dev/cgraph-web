@@ -561,8 +561,7 @@ async function installGroupPermissionMocks(
               max_uses: 10,
               uses: 1,
               expires_at: null,
-              creator_id: CURRENT_USER_ID,
-              creator_username: currentUser.username,
+              inviter: currentUser,
               created_at: '2026-01-01T00:00:00.000Z',
             },
           ],
@@ -590,8 +589,7 @@ async function installGroupPermissionMocks(
             max_uses: requestedMaxUses,
             uses: 0,
             expires_at: expiresAt,
-            creator_id: CURRENT_USER_ID,
-            creator_username: currentUser.username,
+            inviter: currentUser,
             created_at: '2026-01-01T00:00:00.000Z',
           },
         });
@@ -1476,8 +1474,8 @@ test.describe('Group settings permissions', () => {
     await page.getByRole('button', { name: /^Invites$/ }).click();
     await expect(page.getByRole('heading', { name: /^Invites$/ })).toBeVisible();
 
-    await page.getByRole('button', { name: /^Create Invite$/ }).click();
-    await page.getByRole('button', { name: /generate new link/i }).click();
+    await page.getByRole('button', { name: /^Create invite$/ }).click();
+    await page.getByRole('button', { name: /^Create link$/ }).click();
 
     await expect
       .poll(() => requests.inviteCreates, { message: 'invite create reached backend' })
@@ -1494,12 +1492,12 @@ test.describe('Group settings permissions', () => {
 
     await page.goto(`/groups/${GROUP_ID}/settings`);
     await page.getByRole('button', { name: /^Invites$/ }).click();
-    await page.getByRole('button', { name: /^Create Invite$/ }).click();
-    await expect(page.getByText('Invite People')).toBeVisible();
+    await page.getByRole('button', { name: /^Create invite$/ }).click();
+    await expect(page.getByRole('dialog', { name: 'Create invite link' })).toBeVisible();
 
-    await page.getByLabel(/expire after/i).selectOption({ label: '6 hours' });
-    await page.getByLabel(/max number of uses/i).selectOption({ label: '5 uses' });
-    await page.getByRole('button', { name: /generate new link/i }).click();
+    await page.getByLabel(/expire after/i).selectOption({ label: '7 days' });
+    await page.getByLabel(/maximum uses/i).selectOption({ label: '10 uses' });
+    await page.getByRole('button', { name: /^Create link$/ }).click();
 
     await expect
       .poll(() => requests.inviteCreates, {
@@ -1507,17 +1505,20 @@ test.describe('Group settings permissions', () => {
       })
       .toContainEqual(
         expect.objectContaining({
-          expires_in: 21600,
-          max_uses: 5,
+          expires_in: 604800,
+          max_uses: 10,
         })
       );
-    await expect(page.locator('input[readonly]')).toHaveValue(/\/invite\/NEW403$/);
-
-    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
+    await expect(
+      page
+        .getByRole('dialog', { name: 'Create invite link' })
+        .getByRole('textbox', { name: 'Invite link', exact: true })
+    ).toHaveValue(/\/invite\/NEW403$/);
+    await page.getByRole('button', { name: 'Done' }).click();
     const generatedInvite = page.getByTestId('invite-row-NEW403');
     await expect(generatedInvite).toContainText('NEW403');
-    await expect(generatedInvite).toContainText('0 / 5 uses');
-    await expect(generatedInvite).toContainText(/[0-9]+ hours/);
+    await expect(generatedInvite).toContainText('0 / 10 uses');
+    await expect(generatedInvite).toContainText(/Expires in 7 days/);
   });
 
   test('omits invite lifecycle fields when no expiry and no usage limit are selected', async ({
@@ -1529,12 +1530,12 @@ test.describe('Group settings permissions', () => {
 
     await page.goto(`/groups/${GROUP_ID}/settings`);
     await page.getByRole('button', { name: /^Invites$/ }).click();
-    await page.getByRole('button', { name: /^Create Invite$/ }).click();
-    await expect(page.getByText('Invite People')).toBeVisible();
+    await page.getByRole('button', { name: /^Create invite$/ }).click();
+    await expect(page.getByRole('dialog', { name: 'Create invite link' })).toBeVisible();
 
     await page.getByLabel(/expire after/i).selectOption({ label: 'Never' });
-    await page.getByLabel(/max number of uses/i).selectOption({ label: 'No limit' });
-    await page.getByRole('button', { name: /generate new link/i }).click();
+    await page.getByLabel(/maximum uses/i).selectOption({ label: 'No limit' });
+    await page.getByRole('button', { name: /^Create link$/ }).click();
 
     await expect
       .poll(() => requests.inviteCreates.length, {
@@ -1543,34 +1544,36 @@ test.describe('Group settings permissions', () => {
       .toBeGreaterThan(0);
     expect(requests.inviteCreates[0]).not.toHaveProperty('expires_in');
     expect(requests.inviteCreates[0]).not.toHaveProperty('max_uses');
-    await expect(page.locator('input[readonly]')).toHaveValue(/\/invite\/NEW403$/);
-
-    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
+    await expect(
+      page
+        .getByRole('dialog', { name: 'Create invite link' })
+        .getByRole('textbox', { name: 'Invite link', exact: true })
+    ).toHaveValue(/\/invite\/NEW403$/);
+    await page.getByRole('button', { name: 'Done' }).click();
     const generatedInvite = page.getByTestId('invite-row-NEW403');
     await expect(generatedInvite).toContainText('NEW403');
     await expect(generatedInvite).toContainText('0 uses');
     await expect(generatedInvite).toContainText('Never expires');
   });
 
-  test('reconciles successful invite delete on the routed manage-invites tab', async ({ page }) => {
+  test('reconciles successful invite delete on the mounted invite list', async ({ page }) => {
     const requests = await installGroupPermissionMocks(page, {
       groupFixture: ownerGroup,
     });
 
     await page.goto(`/groups/${GROUP_ID}/settings`);
     await page.getByRole('button', { name: /^Invites$/ }).click();
-    await page.getByRole('button', { name: /^Create Invite$/ }).click();
-    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
 
     const inviteRow = page.getByTestId('invite-row-EDGE403');
     await expect(inviteRow).toContainText('EDGE403');
     await page.getByRole('button', { name: /delete invite edge403/i }).click();
+    await page.getByRole('button', { name: /^Delete link$/ }).click();
 
     await expect
       .poll(() => requests.inviteDeletes, { message: 'invite delete reached backend' })
       .toContain('invite-edge');
     await expect(inviteRow).toHaveCount(0);
-    await expect(page.getByText('No active invites')).toBeVisible();
+    await expect(page.getByText('No invite links')).toBeVisible();
   });
 
   test('shows endpoint 403 copy when invite list and delete are denied', async ({ page }) => {
@@ -1582,7 +1585,6 @@ test.describe('Group settings permissions', () => {
     await page.goto(`/groups/${GROUP_ID}/settings`);
     await page.getByRole('button', { name: /^Invites$/ }).click();
     await expect(page.getByRole('heading', { name: /^Invites$/ })).toBeVisible();
-    await page.getByRole('button', { name: /^Create Invite$/ }).click();
 
     await expect
       .poll(() => listRequests.inviteLists, { message: 'invite list reached backend' })
@@ -1599,10 +1601,9 @@ test.describe('Group settings permissions', () => {
 
     await page.goto(`/groups/${GROUP_ID}/settings`);
     await page.getByRole('button', { name: /^Invites$/ }).click();
-    await page.getByRole('button', { name: /^Create Invite$/ }).click();
-    await page.getByRole('button', { name: /^Manage Invites$/ }).click();
-    await expect(page.getByText('EDGE403')).toBeVisible();
+    await expect(page.getByTestId('invite-row-EDGE403')).toBeVisible();
     await page.getByRole('button', { name: /delete invite edge403/i }).click();
+    await page.getByRole('button', { name: /^Delete link$/ }).click();
 
     await expect
       .poll(() => deleteRequests.inviteDeletes, { message: 'invite delete reached backend' })
@@ -1610,7 +1611,7 @@ test.describe('Group settings permissions', () => {
     await expect(
       page.getByText('You do not have permission to delete invites for this group.')
     ).toBeVisible();
-    await expect(page.getByText('EDGE403')).toBeVisible();
+    await expect(page.getByTestId('invite-row-EDGE403')).toBeVisible();
   });
 
   test('shows endpoint 403 copy when member role assignment is denied', async ({ page }) => {

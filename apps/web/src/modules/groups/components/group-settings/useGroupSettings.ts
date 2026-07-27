@@ -23,6 +23,7 @@ const KICK_MEMBERS = PERMISSIONS.KICK_MEMBERS?.value ?? 0;
 const BAN_MEMBERS = PERMISSIONS.BAN_MEMBERS?.value ?? 0;
 const MUTE_MEMBERS = PERMISSIONS.MUTE_MEMBERS?.value ?? 0;
 const VIEW_AUDIT_LOG = PERMISSIONS.VIEW_AUDIT_LOG?.value ?? 0;
+const CREATE_INVITES = PERMISSIONS.CREATE_INVITES?.value ?? 0;
 
 function getOverviewFormData(group: Group | undefined): OverviewFormData {
   return {
@@ -78,7 +79,8 @@ export function useGroupSettings(groupId: string) {
     canKickMembers,
     canBanMembers,
     canMuteMembers,
-    canManageInvites: hasPermission(MANAGE_GROUP),
+    canCreateInvites: hasPermission(CREATE_INVITES),
+    canDeleteInvites: Boolean(isOwner),
     canViewAuditLog: hasPermission(VIEW_AUDIT_LOG),
     canManageAutomod: hasPermission(MANAGE_GROUP),
   };
