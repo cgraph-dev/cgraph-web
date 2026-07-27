@@ -292,7 +292,7 @@ export default function Messages() {
   ].sort((a, b) => Number(b.isPinned === true) - Number(a.isPinned === true));
 
   return (
-    <div className="aurora-hub-shell max-h-full min-h-0 min-w-0 flex-1">
+    <div className="aurora-hub-shell cgraph-workspace max-h-full min-h-0 min-w-0 flex-1">
       {/* Conversations Sidebar */}
       <ConversationSidebar
         conversations={filteredConversations}
@@ -320,7 +320,7 @@ export default function Messages() {
       {/* Conversation Content */}
       <div
         data-testid="conversation-pane"
-        className={`aurora-hub-main h-full min-w-0 flex-col bg-transparent lg:flex ${
+        className={`aurora-hub-main cgraph-workspace h-full min-w-0 flex-col lg:flex ${
           conversationId ? 'flex' : 'hidden'
         }`}
         aria-label="Conversation content"

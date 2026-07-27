@@ -12,6 +12,8 @@ import {
 } from '@heroicons/react/24/outline';
 import CommunityCard, { type Community } from '../community-card';
 import CategoryBar from '../category-bar';
+import EmptyState from '@/components/ui/empty-state';
+import Skeleton from '@/components/ui/skeleton';
 import { http } from '@/lib/api-client';
 import { captureError } from '@/lib/error-tracking';
 
@@ -126,7 +128,7 @@ export function DiscoverTab() {
   return (
     <div className="flex flex-col">
       {/* Search + filters */}
-      <div className="border-b border-[var(--token-border-muted)] px-6 py-4">
+      <div className="cgraph-pane border-b px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <input
@@ -134,7 +136,7 @@ export function DiscoverTab() {
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search communities..."
-              className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] py-2.5 pl-10 pr-4 text-sm text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:bg-[var(--token-card-bg)] focus:outline-none focus:ring-4"
+              className="cgraph-field peer w-full py-2 pl-10 pr-4 text-sm"
             />
             <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
           </div>
@@ -147,7 +149,7 @@ export function DiscoverTab() {
               onChange={(e) => {
                 if (isSortOption(e.target.value)) setSort(e.target.value);
               }}
-              className="focus:ring-primary-500/50 appearance-none rounded-xl bg-[var(--token-bg-secondary)] py-2.5 pl-9 pr-8 text-sm text-white outline-none ring-1 ring-white/10"
+              className="cgraph-field appearance-none py-2 pl-9 pr-8 text-sm"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -164,19 +166,18 @@ export function DiscoverTab() {
       </div>
 
       {/* Community grid */}
-      <div className="flex-1 p-6">
+      <div className="cgraph-content flex-1">
         {isLoading && communities.length === 0 ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading communities">
+            <span className="sr-only">Loading communities</span>
+            <Skeleton shape="card" count={6} />
           </div>
         ) : communities.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <SparklesIcon className="mb-4 h-12 w-12 text-white/20" />
-            <h3 className="text-lg font-semibold text-white/60">No communities found</h3>
-            <p className="mt-1 text-sm text-white/40">
-              {search ? 'Try a different search term' : 'No public communities available yet'}
-            </p>
-          </div>
+          <EmptyState
+            icon={<SparklesIcon className="h-7 w-7" />}
+            title="No communities found"
+            message={search ? 'Try a different search term' : 'No public communities available yet'}
+          />
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

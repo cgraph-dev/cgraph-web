@@ -49,8 +49,13 @@ vi.mock('@/shared/components/ui', () => ({
     children,
     isLoading,
     variant: _variant,
+    animated: _animated,
     ...props
-  }: Record<string, unknown> & { children?: React.ReactNode; isLoading?: boolean }) => (
+  }: Record<string, unknown> & {
+    children?: React.ReactNode;
+    isLoading?: boolean;
+    animated?: boolean;
+  }) => (
     <button {...props}>{isLoading ? 'Loading...' : children}</button>
   ),
   Dialog: ({

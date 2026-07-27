@@ -43,9 +43,23 @@ vi.mock('@/modules/settings/store', () => ({
 }));
 
 vi.mock('@/shared/components/ui', () => ({
+  Button: ({
+    animated: _animated,
+    children,
+    size: _size,
+    variant: _variant,
+    ...props
+  }: React.PropsWithChildren<
+    React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      animated?: boolean;
+      size?: string;
+      variant?: string;
+    }
+  >) => <button {...props}>{children}</button>,
   GlassCard: ({ children }: React.PropsWithChildren) => (
     <div data-testid="glass-card">{children}</div>
   ),
+  Skeleton: ({ className }: { className?: string }) => <div className={className} />,
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 

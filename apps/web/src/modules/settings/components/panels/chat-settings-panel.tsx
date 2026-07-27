@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ChatBubbleLeftRightIcon, FolderIcon, PaintBrushIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
 import { FADE_UP } from '@/lib/animations/transitions';
 
 interface ChatSettingsDestination {
@@ -44,7 +45,7 @@ export function ChatSettingsPanel(): ReactNode {
   return (
     <motion.div {...FADE_UP} className="space-y-6">
       <header className="flex items-center gap-3">
-        <div className="rounded-xl bg-[var(--token-card-bg)] p-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md border border-[var(--product-line)] bg-[var(--product-surface-recessed)]">
           <ChatBubbleLeftRightIcon className="h-5 w-5 text-[var(--token-interactive-primary)]" />
         </div>
         <div>
@@ -60,24 +61,29 @@ export function ChatSettingsPanel(): ReactNode {
           const Icon = item.icon;
 
           return (
-            <GlassCard key={item.destination} variant="frosted" className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--token-bg-secondary)] text-[var(--token-interactive-primary)]">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
+            <GlassCard key={item.destination} variant="frosted" className="p-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 items-start gap-3 sm:flex-1 sm:items-center">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--token-bg-secondary)] text-[var(--token-interactive-primary)]">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-base font-semibold text-[var(--token-text-primary)]">
+                      {item.title}
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-base font-semibold text-[var(--token-text-primary)]">
-                    {item.title}
-                  </h2>
-                  <p className="mt-1 text-sm text-[var(--token-text-muted)]">{item.description}</p>
-                </div>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  animated={false}
                   onClick={() => navigate(item.destination)}
-                  className="shrink-0 rounded-lg border border-[var(--token-border-subtle)] px-3 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition hover:border-[var(--token-border-hover)] hover:bg-[var(--token-bg-secondary)]"
+                  className="w-full shrink-0 sm:w-auto"
                 >
                   {item.action}
-                </button>
+                </Button>
               </div>
             </GlassCard>
           );

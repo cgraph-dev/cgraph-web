@@ -65,9 +65,7 @@ export function PrivacySettingsPanel() {
           <p className="text-primary-300/75 mb-1 text-[11px] font-black uppercase tracking-[0.24em]">
             Privacy Controls
           </p>
-          <h1 className="bg-gradient-to-r from-[var(--token-text-primary)] via-primary-500 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
-            Privacy
-          </h1>
+          <h1 className="text-2xl font-semibold text-[var(--token-text-primary)]">Privacy</h1>
           <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
             Manage blocked people, friend requests, read receipt visibility, and typing indicators.
           </p>
@@ -77,7 +75,7 @@ export function PrivacySettingsPanel() {
       <div className="space-y-4">
         <BlockedUsersSettings />
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <PrivacyToggle
             label="Friend Requests"
             description="Let people send you friend requests"
@@ -87,7 +85,7 @@ export function PrivacySettingsPanel() {
           />
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <PrivacyToggle
             label="Read Receipts"
             description="Show when you have read a direct message"
@@ -97,7 +95,7 @@ export function PrivacySettingsPanel() {
           />
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <PrivacyToggle
             label="Typing Indicators"
             description="Show when you are typing in a direct message"

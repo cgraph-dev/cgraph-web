@@ -210,8 +210,21 @@
   color: var(--token-text-muted);
 }
 
+.cgraph-segmented > button {
+  min-height: 32px;
+  border-radius: var(--product-radius-sm);
+  color: var(--token-text-muted);
+  transition:
+    background-color 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .cgraph-segmented-item[aria-selected='true'],
-.cgraph-segmented-item[aria-current='page'] {
+.cgraph-segmented-item[aria-current='page'],
+.cgraph-segmented-item[data-selected='true'],
+.cgraph-segmented > button[aria-selected='true'],
+.cgraph-segmented > button[aria-pressed='true'],
+.cgraph-segmented > button[data-active='true'] {
   background: var(--product-surface-raised);
   color: var(--token-text-primary);
   box-shadow: var(--product-shadow-control);

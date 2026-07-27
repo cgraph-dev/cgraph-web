@@ -7,8 +7,7 @@ import { motion } from 'motion/react';
 import { BellIcon } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { useSettingsStore } from '@/modules/settings/store';
-import { toast } from '@/shared/components/ui';
-import { GlassCard } from '@/shared/components/ui';
+import { Button, GlassCard, Skeleton, toast } from '@/shared/components/ui';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { createLogger } from '@/lib/logger';
@@ -143,8 +142,10 @@ export function NotificationSettingsPanel() {
 
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+      <div className="space-y-4" aria-label="Loading notification settings">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-20 w-full" />
       </div>
     );
   }
@@ -159,18 +160,17 @@ export function NotificationSettingsPanel() {
           <p className="text-primary-300/75 mb-1 text-[11px] font-black uppercase tracking-[0.24em]">
             Alerts & Delivery
           </p>
-          <h1 className="bg-gradient-to-r from-[var(--token-text-primary)] via-primary-500 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
+          <h1 className="text-2xl font-semibold text-[var(--token-text-primary)]">
             Notifications
           </h1>
           <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
-            Keep message, mention, and browser alerts aligned with the Social and Groups Aurora
-            gradients.
+            Choose which message, mention, and browser alerts you receive.
           </p>
         </div>
       </div>
 
       <div className="space-y-4">
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Direct Messages</h3>
@@ -182,7 +182,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Mentions</h3>
@@ -194,7 +194,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Forum Replies</h3>
@@ -209,7 +209,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Friend Requests</h3>
@@ -224,7 +224,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Group Invites</h3>
@@ -240,7 +240,7 @@ export function NotificationSettingsPanel() {
         </GlassCard>
 
         {/* Economy / Nodes */}
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Economy & Nodes</h3>
@@ -252,7 +252,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">System Notifications</h3>
@@ -264,7 +264,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Email Notifications</h3>
@@ -279,7 +279,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Push Notifications</h3>
@@ -305,7 +305,7 @@ export function NotificationSettingsPanel() {
           </div>
         </GlassCard>
 
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Notification Sound</h3>
@@ -321,7 +321,7 @@ export function NotificationSettingsPanel() {
         </GlassCard>
 
         {/* Notification Profiles Link */}
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">
@@ -331,15 +331,18 @@ export function NotificationSettingsPanel() {
                 Named DND schedules with per-contact exceptions
               </p>
             </div>
-            <button
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              animated={false}
               onClick={() => {
                 HapticFeedback.light();
                 navigate('/me/settings/notification-profiles');
               }}
-              className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold hover:scale-[1.02] active:scale-[0.98]"
             >
               Configure
-            </button>
+            </Button>
           </div>
         </GlassCard>
       </div>

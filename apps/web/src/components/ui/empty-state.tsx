@@ -15,6 +15,7 @@ interface EmptyStateProps {
   title?: string;
   message?: string;
   icon?: React.ReactNode;
+  meta?: React.ReactNode;
   action?: {
     label: string;
     onClick: () => void;
@@ -29,6 +30,7 @@ export default function EmptyState({
   title = 'Nothing here yet',
   message = 'No items to display.',
   icon,
+  meta,
   action,
   className = '',
 }: EmptyStateProps) {
@@ -46,6 +48,7 @@ export default function EmptyState({
       </div>
       <h3>{title}</h3>
       <p>{message}</p>
+      {meta ? <div className="cgraph-empty-meta">{meta}</div> : null}
       {action && (
         <Button
           className="mt-5"

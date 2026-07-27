@@ -22,6 +22,7 @@ import {
   PaintBrushIcon,
 } from '@heroicons/react/24/outline';
 import { GlassSearchInput } from '@/components/ui/glass-search-input';
+import { Button, IconButton } from '@/components/ui/button';
 
 // These components are available for extended settings functionality
 import { AccountSettings } from '@/modules/settings/components/account-settings';
@@ -148,9 +149,9 @@ function SettingsBootstrapGate({
       aria-busy={isLoading}
       aria-live="polite"
     >
-      <div className="bg-[var(--token-card-bg)]/50 w-full max-w-md space-y-5 rounded-2xl border border-[var(--token-card-border)] p-6 shadow-2xl shadow-black/10 backdrop-blur-xl">
+      <div className="cgraph-card w-full max-w-md space-y-5 p-5">
         <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--product-line)] bg-[var(--product-surface-recessed)]">
             <ArrowPathIcon
               className={`h-5 w-5 text-[var(--color-brand-purple)] ${isLoading ? 'animate-spin' : ''}`}
             />
@@ -166,14 +167,14 @@ function SettingsBootstrapGate({
         </div>
 
         {hasError && (
-          <button
-            type="button"
+          <Button
             onClick={onRetry}
-            className="inline-flex items-center gap-2 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition hover:bg-[var(--token-bg-primary)]"
+            leftIcon={<ArrowPathIcon />}
+            variant="secondary"
+            animated={false}
           >
-            <ArrowPathIcon className="h-4 w-4" />
             Retry
-          </button>
+          </Button>
         )}
       </div>
     </motion.div>
@@ -232,30 +233,24 @@ export default function Settings() {
   }, [searchQuery]);
 
   return (
-    <div className="relative flex flex-1 overflow-hidden bg-transparent">
-      {/* Sidebar */}
+    <div className="cgraph-workspace relative flex flex-1 overflow-hidden">
       <nav
         aria-label="Settings navigation"
-        className={`bg-[var(--token-card-bg)]/40 relative z-10 h-full w-full shrink-0 flex-col border-r border-[var(--token-card-border)] py-4 backdrop-blur-3xl transition-all duration-300 lg:w-72 ${hasSectionRoute ? 'hidden lg:flex' : 'flex'}`}
+        className={`cgraph-pane relative z-10 h-full w-full shrink-0 flex-col lg:w-72 ${hasSectionRoute ? 'hidden lg:flex' : 'flex'}`}
       >
-        <div className="flex-1 overflow-y-auto p-5">
-          {/* Header */}
+        <div className="cgraph-pane-header flex flex-col justify-center px-4">
+          <h2 className="text-xl font-semibold text-[var(--token-text-primary)]">Settings</h2>
+          <p className="mt-0.5 text-xs text-[var(--token-text-muted)]">
+            Account and app preferences
+          </p>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={tweens.moderate}
           >
-            <div className="mb-8 pl-1">
-              <h2 className="text-2xl font-bold tracking-tight text-[var(--token-text-primary)]">
-                Settings
-              </h2>
-              <p className="mt-1 text-xs font-medium text-[var(--token-text-muted)]">
-                Manage your account &amp; preferences
-              </p>
-            </div>
-
-            {/* Live filter over settingsSections by label + description. */}
-            <div className="mb-8 px-1">
+            <div className="mb-3">
               <GlassSearchInput
                 placeholder="Search settings..."
                 value={searchQuery}
@@ -264,8 +259,7 @@ export default function Settings() {
               />
             </div>
 
-            {/* Category Navigation */}
-            <nav className="space-y-2" aria-label="Settings sections">
+            <nav className="space-y-1" aria-label="Settings sections">
               {filteredSections.length === 0 && (
                 <p className="px-4 py-2 text-xs text-[var(--token-text-muted)]">
                   No sections match "{searchQuery}".
@@ -275,7 +269,7 @@ export default function Settings() {
                 const active = section === item.id;
 
                 return (
-                  <motion.button
+                  <button
                     key={item.id}
                     type="button"
                     aria-current={active ? 'page' : undefined}
@@ -283,45 +277,28 @@ export default function Settings() {
                       HapticFeedback.light();
                       navigate(`/me/settings/${item.id}`);
                     }}
-                    initial={false}
-                    animate={{ opacity: 1, x: 0 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`group relative flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left font-bold transition-all duration-200 ${
-                      active
-                        ? 'shadow-primary-500/5 text-[var(--token-text-primary)] shadow-lg'
-                        : 'text-[var(--token-text-muted)] hover:bg-[var(--token-bg-primary)] hover:text-[var(--token-text-primary)]'
-                    }`}
+                    data-active={active || undefined}
+                    className="cgraph-list-row group flex w-full items-center gap-3 px-3 py-2 text-left"
                   >
-                    {active && (
-                      <motion.div
-                        layoutId="settingsActiveTab"
-                        initial={false}
-                        className="absolute inset-0 rounded-2xl border border-[var(--token-card-border)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                        style={{
-                          background:
-                            'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 10%, transparent) 0%, rgba(59,130,246,0.08) 100%)',
-                        }}
-                        transition={{ type: 'spring', stiffness: 380, damping: 35 }}
-                      />
-                    )}
-
                     <div
-                      className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-500 ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors ${
                         active
-                          ? 'border-primary-500/30 bg-primary-500/10 text-primary-400'
-                          : 'border-transparent bg-[var(--token-bg-primary)] text-[var(--token-text-muted)] group-hover:bg-[var(--token-bg-secondary)] group-hover:text-[var(--token-text-primary)]'
+                          ? 'border-[var(--product-line-strong)] bg-[var(--product-surface-selected)] text-[var(--token-interactive-primary)]'
+                          : 'border-transparent bg-[var(--product-surface-recessed)] text-[var(--token-text-muted)]'
                       }`}
                     >
                       <item.icon className="h-5 w-5" />
                     </div>
 
-                    <div className="relative z-10 min-w-0 flex-1">
-                      <div className="text-sm tracking-wide">{item.label}</div>
-                      <div className="truncate text-[11px] font-medium text-[var(--token-text-muted)] transition-colors group-hover:text-[var(--token-text-secondary)]">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-[var(--token-text-primary)]">
+                        {item.label}
+                      </div>
+                      <div className="truncate text-xs text-[var(--token-text-muted)]">
                         {item.description}
                       </div>
                     </div>
-                  </motion.button>
+                  </button>
                 );
               })}
             </nav>
@@ -329,28 +306,23 @@ export default function Settings() {
         </div>
       </nav>
 
-      {/* Content */}
       <div
-        className={`relative z-10 flex-1 flex-col overflow-y-auto bg-transparent p-4 sm:p-6 lg:p-8 ${hasSectionRoute ? 'flex' : 'hidden lg:flex'}`}
+        className={`cgraph-workspace relative z-10 flex-1 flex-col overflow-y-auto ${hasSectionRoute ? 'flex' : 'hidden lg:flex'}`}
         tabIndex={0}
         aria-label="Settings content"
       >
         {hasSectionRoute && (
-          <div className="mb-3 flex lg:hidden">
-            <button
-              type="button"
+          <div className="cgraph-content flex pb-0 lg:hidden">
+            <IconButton
+              icon={<ChevronLeft />}
+              label="Back to settings"
               onClick={() => navigate('/me/settings')}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-[var(--token-text-primary)] transition-colors hover:bg-[var(--token-bg-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-interactive-primary)]"
-              aria-label="Back to settings"
-              title="Back to settings"
-            >
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </button>
+            />
           </div>
         )}
 
         <motion.div
-          className="mx-auto w-full max-w-2xl"
+          className="cgraph-content w-full max-w-3xl"
           {...FADE_UP}
           transition={{ ...tweens.moderate, delay: 0.1 }}
         >

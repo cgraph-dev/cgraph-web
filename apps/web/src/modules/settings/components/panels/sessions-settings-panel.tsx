@@ -107,7 +107,7 @@ export function SessionsSettingsPanel() {
 
   return (
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} transition={tweens.standard}>
-      <h1 className="mb-6 bg-gradient-to-r from-[var(--token-text-primary)] via-primary-500 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
+      <h1 className="mb-6 text-2xl font-semibold text-[var(--token-text-primary)]">
         Active Sessions
       </h1>
 

@@ -51,21 +51,28 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
+    <div className="cgraph-workspace flex flex-1 flex-col overflow-hidden">
       {/* Tab bar */}
-      <div className="flex-shrink-0 border-b border-[var(--token-border-muted)] px-6 pt-5">
-        <div className="scrollbar-hide flex items-center gap-1 overflow-x-auto pb-0">
+      <header className="cgraph-pane-header flex shrink-0 items-center gap-5 px-4 sm:px-6">
+        <div className="hidden min-w-0 sm:block">
+          <h1 className="text-lg font-semibold text-[var(--token-text-primary)]">Explore</h1>
+          <p className="text-xs text-[var(--token-text-muted)]">People and communities</p>
+        </div>
+        <div
+          className="cgraph-segmented scrollbar-hide min-w-0 overflow-x-auto"
+          role="tablist"
+          aria-label="Explore"
+        >
           {TABS.map(({ id, label, icon: Icon }) => {
             const isActive = activeTab === id;
             return (
               <button
                 key={id}
+                type="button"
                 onClick={() => handleTabChange(id)}
-                className={`flex flex-shrink-0 items-center gap-2 border-b-2 px-4 pb-3.5 pt-1 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'border-primary-500 text-white'
-                    : 'border-transparent text-white/40 hover:text-white/70'
-                }`}
+                className="cgraph-segmented-item flex shrink-0 items-center gap-2 px-3 text-sm font-medium"
+                role="tab"
+                aria-selected={isActive}
               >
                 <Icon className="h-4 w-4" />
                 {label}
@@ -73,7 +80,7 @@ export default function ExplorePage() {
             );
           })}
         </div>
-      </div>
+      </header>
 
       {/* Tab content */}
       <div className="min-h-0 flex-1 overflow-y-auto">

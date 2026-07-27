@@ -8,7 +8,17 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { CircleStackIcon, TrashIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { GlassCard, toast } from '@/shared/components/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  GlassCard,
+  toast,
+} from '@/shared/components/ui';
 import { useSettingsStore } from '@/modules/settings/store';
 import {
   DEFAULT_MEDIA_SETTINGS,
@@ -99,48 +109,27 @@ interface ConfirmDialogProps {
 function ConfirmDialog(props: ConfirmDialogProps): ReactNode {
   const { title, message, confirmLabel, danger, onConfirm, onClose } = props;
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="data-storage-confirm-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-2xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)] p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2
-          id="data-storage-confirm-title"
-          className={`mb-2 text-xl font-bold ${
-            danger === true
-              ? 'text-[var(--token-status-danger)]'
-              : 'text-[var(--token-text-primary)]'
-          }`}
-        >
-          {title}
-        </h2>
-        <p className="mb-6 text-sm text-[var(--token-text-secondary)]">{message}</p>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-xl border border-[var(--token-card-border)] py-3 text-sm font-semibold text-[var(--token-text-secondary)] transition-colors hover:bg-[var(--token-bg-secondary)]"
-          >
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent ariaLabel={title}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="ghost" animated={false} onClick={onClose}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={danger === true ? 'danger' : 'primary'}
+            animated={false}
             onClick={onConfirm}
-            className={`flex-1 rounded-xl py-3 text-sm font-semibold text-white ${
-              danger === true ? 'bg-[var(--token-status-danger)]' : 'bg-primary-600'
-            }`}
           >
             {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -163,18 +152,17 @@ function AutoDownloadRow(props: AutoDownloadRowProps): ReactNode {
       <div
         role="radiogroup"
         aria-label={`Auto-download ${group.label.toLowerCase()}`}
-        className="flex flex-wrap gap-2"
+        className="cgraph-segmented flex flex-wrap"
       >
         {AUTO_DOWNLOAD_OPTIONS.map((option) => {
           const checked = option.value === value;
           return (
             <label
               key={option.value}
-              className={`cursor-pointer rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
-                checked
-                  ? 'border-primary-500/50 bg-primary-500/10 text-[var(--token-text-primary)]'
-                  : 'border-[var(--token-card-border)] text-[var(--token-text-secondary)] hover:bg-[var(--token-bg-secondary)]'
-              } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+              data-selected={checked}
+              className={`cgraph-segmented-item flex cursor-pointer items-center px-4 text-sm font-medium ${
+                disabled ? 'cursor-not-allowed opacity-50' : ''
+              }`}
             >
               <input
                 type="radio"
@@ -275,7 +263,7 @@ export function DataStoragePanel(): ReactNode {
           <p className="text-primary-300/75 mb-1 text-[11px] font-black uppercase tracking-[0.24em]">
             Caches & Bandwidth
           </p>
-          <h1 className="bg-gradient-to-r from-[var(--token-text-primary)] via-primary-500 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
+          <h1 className="text-2xl font-semibold text-[var(--token-text-primary)]">
             Data & Storage
           </h1>
           <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
@@ -286,7 +274,7 @@ export function DataStoragePanel(): ReactNode {
 
       <div className="space-y-4">
         {/* Cache size */}
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">Cache size</h3>
@@ -296,15 +284,17 @@ export function DataStoragePanel(): ReactNode {
                   : 'Storage estimate is not available in this browser.'}
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              size="sm"
+              variant="danger"
+              animated={false}
               onClick={() => setShowClearConfirm(true)}
               disabled={isClearing}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--token-status-danger)]/10 px-4 py-2 text-sm font-semibold text-[var(--token-status-danger)] transition-colors hover:bg-[var(--token-status-danger)]/20 disabled:cursor-wait disabled:opacity-60"
             >
               <TrashIcon className="h-4 w-4" />
               {isClearing ? 'Clearing…' : 'Clear cache'}
-            </button>
+            </Button>
           </div>
           {lowQuota && (
             <div className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--token-status-warning)]/40 bg-[var(--token-status-warning)]/10 p-3 text-sm text-[var(--token-status-warning)]">
@@ -315,7 +305,7 @@ export function DataStoragePanel(): ReactNode {
         </GlassCard>
 
         {/* Auto-download media */}
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="mb-4">
             <h2 className="text-base font-semibold text-[var(--token-text-primary)]">
               Auto-download media
@@ -342,7 +332,7 @@ export function DataStoragePanel(): ReactNode {
         </GlassCard>
 
         {/* Reset */}
-        <GlassCard variant="default" className="aurora-social-panel p-4">
+        <GlassCard variant="default" className="p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="font-medium text-[var(--token-text-primary)]">
@@ -352,14 +342,16 @@ export function DataStoragePanel(): ReactNode {
                 Restore photo and video loading defaults.
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              size="sm"
+              variant="secondary"
+              animated={false}
               onClick={() => setShowResetConfirm(true)}
               disabled={isSaving}
-              className="rounded-xl border border-[var(--token-card-border)] px-4 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition-colors hover:bg-[var(--token-bg-secondary)] disabled:cursor-wait disabled:opacity-60"
             >
               Reset to defaults
-            </button>
+            </Button>
           </div>
         </GlassCard>
       </div>

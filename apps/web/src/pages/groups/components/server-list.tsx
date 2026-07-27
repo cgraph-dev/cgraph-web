@@ -91,7 +91,7 @@ export function ServerList({
     <>
       <div
         data-testid="groups-server-rail"
-        className="relative z-10 hidden w-[72px] shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-[var(--token-card-border)] bg-[var(--token-card-bg)] py-3 lg:flex"
+        className="cgraph-navigation-rail relative z-10 hidden w-[72px] shrink-0 flex-col items-center gap-2 overflow-y-auto py-3 lg:flex"
       >
         <NavLink
           to="/messages"
@@ -149,7 +149,7 @@ export function ServerList({
       <section
         data-testid="mobile-group-directory"
         aria-label="Your groups"
-        className={`${showMobileDirectory ? 'flex' : 'hidden'} relative z-10 min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--token-bg-primary)] lg:hidden`}
+        className={`${showMobileDirectory ? 'flex' : 'hidden'} cgraph-workspace relative z-10 min-h-0 w-full flex-1 flex-col overflow-hidden lg:hidden`}
       >
         <header className="border-b border-[var(--token-border-muted)] px-5 pb-4 pt-5">
           <div className="flex items-center justify-between gap-4">
@@ -180,7 +180,7 @@ export function ServerList({
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search your groups"
               aria-label="Search your groups"
-              className="h-11 w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] pl-10 pr-3 text-sm text-[var(--token-text-primary)] outline-none placeholder:text-[var(--token-text-muted)] focus:border-[var(--token-interactive-primary)] focus:ring-2 focus:ring-[var(--token-interactive-primary)]/20"
+              className="cgraph-field h-11 w-full pl-10 pr-3 text-sm"
             />
           </div>
 
@@ -219,7 +219,7 @@ export function ServerList({
                   <NavLink
                     to={getGroupRoute(group)}
                     onClick={() => HapticFeedback.medium()}
-                    className="flex min-h-[68px] items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[var(--token-bg-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-interactive-primary)]"
+                    className="cgraph-list-row flex min-h-[68px] items-center gap-3 px-3 py-2.5"
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--token-interactive-primary)] text-base font-bold text-[var(--token-text-on-primary)]">
                       {group.iconUrl ? (

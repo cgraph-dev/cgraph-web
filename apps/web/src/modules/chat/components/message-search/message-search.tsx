@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import type { MessageSearchProps, MessageSearchResult, SearchFilters } from './types';
 import {
   loadRecentSearches,
@@ -17,7 +17,6 @@ import {
 import { SearchHeader } from './search-header';
 import { SearchFiltersPanel } from './search-filters-panel';
 import { SearchResults } from './search-results';
-import { FADE_IN } from '@/lib/animations/transitions';
 
 /**
  * Message search modal component
@@ -60,17 +59,6 @@ export function MessageSearch({
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
-
-  // Handle Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   /**
    * Call the backend MeiliSearch endpoint; stale requests are aborted.
@@ -171,25 +159,12 @@ export function MessageSearch({
     void performSearch(term);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      <motion.div
-        {...FADE_IN}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-start justify-center pt-20"
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        ariaLabel="Search messages"
+        className="flex max-h-[70vh] max-w-lg flex-col overflow-hidden p-0"
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-
-        {/* Modal */}
-        <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          className="relative flex max-h-[70vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-[var(--token-card-border)] bg-gradient-to-b from-gray-800 to-gray-900 shadow-2xl"
-        >
           <SearchHeader
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
@@ -222,9 +197,8 @@ export function MessageSearch({
             onJumpToMessage={handleJumpToMessage}
             onRecentSearchClick={handleRecentSearchClick}
           />
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 }
 

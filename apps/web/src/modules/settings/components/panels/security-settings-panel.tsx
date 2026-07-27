@@ -181,30 +181,28 @@ export function SecuritySettingsPanel() {
           <p className="text-primary-300/75 mb-1 text-[11px] font-black uppercase tracking-[0.24em]">
             Account Protection
           </p>
-          <h1 className="bg-gradient-to-r from-[var(--token-text-primary)] via-primary-500 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
-            Security
-          </h1>
+          <h1 className="text-2xl font-semibold text-[var(--token-text-primary)]">Security</h1>
           <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
-            Passwords, verification, and session controls styled to match the Social Aurora shell.
+            Passwords, verification, and active session controls.
           </p>
         </div>
       </div>
 
       {/* Password */}
-      <GlassCard variant="default" className="aurora-social-panel mb-4 p-6">
+      <GlassCard variant="default" className="mb-3 p-5">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium text-[var(--token-text-primary)]">Password</h3>
             <p className="mt-1 text-sm text-[var(--token-text-muted)]">Change your password</p>
           </div>
-          <button
-            type="button"
-            className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          <Button
+            variant="secondary"
+            animated={false}
             onClick={openPasswordDialog}
             disabled={isChangingPassword}
           >
             Change
-          </button>
+          </Button>
         </div>
       </GlassCard>
 
@@ -266,7 +264,7 @@ export function SecuritySettingsPanel() {
       </Dialog>
 
       {/* 2FA */}
-      <GlassCard variant="default" className="aurora-social-panel mb-4 p-6">
+      <GlassCard variant="default" className="mb-3 p-5">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium text-[var(--token-text-primary)]">
@@ -277,25 +275,24 @@ export function SecuritySettingsPanel() {
             </p>
           </div>
           {twoFactorStatus === null && twoFactorError ? (
-            <button
-              type="button"
-              className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98]"
+            <Button
+              variant="secondary"
+              animated={false}
               onClick={() => void refreshStatus()}
               disabled={isLoadingStatus || isMutating}
             >
               Retry status
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
-              className={`rounded-xl px-5 py-2 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
-                twoFactorStatus?.enabled ? 'aurora-social-button-danger' : 'aurora-social-button'
-              }`}
+            <Button
+              variant={twoFactorStatus?.enabled ? 'danger' : 'secondary'}
+              animated={false}
               onClick={() => void startTwoFactorAction()}
               disabled={twoFactorActionDisabled}
+              isLoading={isMutating}
             >
-              {isMutating ? 'Working...' : twoFactorActionLabel}
-            </button>
+              {twoFactorActionLabel}
+            </Button>
           )}
         </div>
         {twoFactorError && twoFactorDialog === null && (
@@ -395,7 +392,7 @@ export function SecuritySettingsPanel() {
       </Dialog>
 
       {/* Email Verification */}
-      <GlassCard variant="default" className="aurora-social-panel p-6">
+      <GlassCard variant="default" className="p-5">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium text-[var(--token-text-primary)]">Email Verification</h3>
@@ -404,10 +401,7 @@ export function SecuritySettingsPanel() {
             </p>
           </div>
           {!user?.emailVerifiedAt && (
-            <Link
-              to="/verify-email"
-              className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98]"
-            >
+            <Link to="/verify-email" className="cgraph-control cgraph-control-secondary px-4 py-2 text-sm font-medium">
               Verify
             </Link>
           )}
@@ -418,7 +412,7 @@ export function SecuritySettingsPanel() {
       </GlassCard>
 
       {/* Active Sessions */}
-      <GlassCard variant="default" className="aurora-social-panel mt-4 p-6">
+      <GlassCard variant="default" className="mt-3 p-5">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium text-[var(--token-text-primary)]">Active Sessions</h3>
@@ -426,10 +420,7 @@ export function SecuritySettingsPanel() {
               Manage your logged-in devices and sessions
             </p>
           </div>
-          <Link
-            to="/me/settings/sessions"
-            className="aurora-social-button rounded-xl px-5 py-2 text-sm font-bold text-[var(--token-text-primary)] hover:scale-[1.02] active:scale-[0.98]"
-          >
+          <Link to="/me/settings/sessions" className="cgraph-control cgraph-control-secondary px-4 py-2 text-sm font-medium">
             View Sessions
           </Link>
         </div>

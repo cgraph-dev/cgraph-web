@@ -9,6 +9,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { UserGroupIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
 import { getCommunityRoute } from './community-routing';
 
 export interface Community {
@@ -49,19 +50,19 @@ export default function CommunityCard({ community }: CommunityCardProps) {
   return (
     <div
       onClick={handleClick}
-      className="hover:border-primary-500/30 hover:shadow-primary-500/5 group cursor-pointer rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] p-4 transition-all hover:bg-[var(--token-bg-secondary)] hover:shadow-lg"
+      className="cgraph-card group cursor-pointer p-4"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && handleClick()}
     >
       {/* Header — avatar + name + type */}
       <div className="mb-3 flex items-start gap-3">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-purple-600 text-lg font-bold text-white">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--product-surface-selected)] text-lg font-bold text-[var(--token-interactive-primary)]">
           {community.avatar_url ? (
             <img
               src={community.avatar_url}
               alt={community.name}
-              className="h-full w-full rounded-xl object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
             community.name.charAt(0).toUpperCase()
@@ -70,7 +71,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate font-semibold text-white transition-colors group-hover:text-primary-400">
+            <h3 className="truncate font-semibold text-[var(--token-text-primary)]">
               {community.name}
             </h3>
             {community.is_verified && (
@@ -80,7 +81,7 @@ export default function CommunityCard({ community }: CommunityCardProps) {
             )}
           </div>
 
-          <div className="mt-0.5 flex items-center gap-2 text-xs text-white/40">
+          <div className="mt-0.5 flex items-center gap-2 text-xs text-[var(--token-text-muted)]">
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${typeColor}`}
             >
@@ -98,28 +99,31 @@ export default function CommunityCard({ community }: CommunityCardProps) {
 
       {/* Description */}
       {community.description && (
-        <p className="mb-3 line-clamp-2 text-sm text-white/60">{community.description}</p>
+        <p className="mb-3 line-clamp-2 text-sm text-[var(--token-text-secondary)]">
+          {community.description}
+        </p>
       )}
 
       {/* Footer — category + action */}
       <div className="flex items-center justify-between">
         {community.category ? (
-          <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-white/50">
+          <span className="rounded-full bg-[var(--product-surface-recessed)] px-2.5 py-0.5 text-xs text-[var(--token-text-muted)]">
             {community.category}
           </span>
         ) : (
           <span />
         )}
 
-        <button
+        <Button
+          size="sm"
+          animated={false}
           onClick={(e) => {
             e.stopPropagation();
             handleClick();
           }}
-          className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-500"
         >
           View
-        </button>
+        </Button>
       </div>
     </div>
   );

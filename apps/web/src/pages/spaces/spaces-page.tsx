@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import {
   ChatBubbleLeftRightIcon,
+  ChevronLeftIcon,
   FolderIcon,
   PencilSquareIcon,
   PlusIcon,
@@ -16,6 +17,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { motion } from 'motion/react';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
+import { Button, IconButton } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import Skeleton from '@/components/ui/skeleton';
 import { http } from '@/lib/api-client';
 import { ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
@@ -210,27 +214,27 @@ export default function SpacesPage() {
   }
 
   return (
-    <main className="flex h-full min-h-0 flex-1 bg-transparent" aria-label="Spaces">
-      <aside className="bg-[var(--token-card-bg)]/35 flex h-full w-80 shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl">
-        <div className="border-b border-[var(--token-card-border)] p-5">
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-            <FolderIcon className="h-6 w-6 text-primary-300" />
+    <main className="cgraph-workspace flex h-full min-h-0 flex-1" aria-label="Spaces">
+      <aside
+        className={`cgraph-pane h-full w-full shrink-0 flex-col md:w-80 ${
+          spaceId ? 'hidden md:flex' : 'flex'
+        }`}
+      >
+        <div className="cgraph-pane-header flex flex-col justify-center px-4">
+          <h1 className="flex items-center gap-2 text-xl font-semibold text-[var(--token-text-primary)]">
+            <FolderIcon className="h-5 w-5 text-[var(--token-interactive-primary)]" />
             Spaces
           </h1>
-          <p className="mt-1 text-sm text-white/45">Organize conversations into routed lists.</p>
+          <p className="mt-0.5 text-xs text-[var(--token-text-muted)]">
+            Focused conversation lists
+          </p>
         </div>
 
         <nav className="min-h-0 flex-1 overflow-y-auto p-3" aria-label="Space list">
           <NavLink
             to="/spaces"
             end
-            className={({ isActive }) =>
-              `mb-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                isActive
-                  ? 'bg-primary-500/15 text-primary-100'
-                  : 'text-white/70 hover:bg-white/[0.08]'
-              }`
-            }
+            className="cgraph-list-row mb-1 flex items-center gap-3 px-3 py-2 text-sm"
           >
             <ChatBubbleLeftRightIcon className="h-5 w-5" />
             All conversations
@@ -240,15 +244,9 @@ export default function SpacesPage() {
             <NavLink
               key={space.id}
               to={`/spaces/${space.id}`}
-              className={({ isActive }) =>
-                `mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  isActive
-                    ? 'bg-primary-500/15 text-primary-100'
-                    : 'text-white/70 hover:bg-white/[0.08]'
-                }`
-              }
+              className="cgraph-list-row mb-1 flex items-center gap-3 px-3 py-2 text-sm"
             >
-              <span className="bg-white/8 flex h-7 w-7 items-center justify-center rounded-md text-base">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--product-surface-recessed)] text-base">
                 {space.emoji || <FolderIcon className="h-4 w-4" />}
               </span>
               <span className="truncate font-medium">{space.name}</span>
@@ -258,10 +256,10 @@ export default function SpacesPage() {
 
         <form
           onSubmit={handleSaveSpace}
-          className="border-t border-[var(--token-card-border)] p-4"
+          className="border-t border-[var(--product-line)] p-4"
           aria-label={editingSpace ? 'Edit Space' : 'Create Space'}
         >
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--token-text-primary)]">
             {editingSpace ? (
               <PencilSquareIcon className="h-4 w-4 text-primary-300" />
             ) : (
@@ -273,7 +271,7 @@ export default function SpacesPage() {
             <input
               value={form.emoji}
               onChange={(event) => setForm((state) => ({ ...state, emoji: event.target.value }))}
-              className="h-10 w-14 rounded-md border border-white/10 bg-black/20 px-2 text-center text-sm text-white outline-none focus:border-primary-400"
+              className="cgraph-field h-10 w-14 px-2 text-center text-sm"
               placeholder="Icon"
               aria-label="Space icon"
               maxLength={8}
@@ -281,7 +279,7 @@ export default function SpacesPage() {
             <input
               value={form.name}
               onChange={(event) => setForm((state) => ({ ...state, name: event.target.value }))}
-              className="h-10 min-w-0 flex-1 rounded-md border border-white/10 bg-black/20 px-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-primary-400"
+              className="cgraph-field h-10 min-w-0 flex-1 px-3 text-sm"
               placeholder="Space name"
               aria-label="Space name"
               maxLength={64}
@@ -300,7 +298,7 @@ export default function SpacesPage() {
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <label className="flex items-center gap-2 rounded-md border border-white/10 bg-black/20 px-2 py-2 text-xs text-white/70">
+            <label className="cgraph-card flex items-center gap-2 px-2 py-2 text-xs text-[var(--token-text-secondary)]" data-cgraph-material="recessed">
               <input
                 type="checkbox"
                 checked={form.includeAllIndividual}
@@ -310,7 +308,7 @@ export default function SpacesPage() {
               />
               Direct
             </label>
-            <label className="flex items-center gap-2 rounded-md border border-white/10 bg-black/20 px-2 py-2 text-xs text-white/70">
+            <label className="cgraph-card flex items-center gap-2 px-2 py-2 text-xs text-[var(--token-text-secondary)]" data-cgraph-material="recessed">
               <input
                 type="checkbox"
                 checked={form.includeAllGroups}
@@ -323,109 +321,129 @@ export default function SpacesPage() {
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <button
+            <Button
               type="submit"
               disabled={!form.name.trim() || isSaving}
-              className="col-span-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary-500 px-3 text-sm font-semibold text-dark-950 transition-colors hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
+              isLoading={isSaving}
+              fullWidth
+              animated={false}
+              className="col-span-2"
+              leftIcon={
+                editingSpace ? <PencilSquareIcon /> : <PlusIcon />
+              }
             >
-              {editingSpace ? (
-                <PencilSquareIcon className="h-4 w-4" />
-              ) : (
-                <PlusIcon className="h-4 w-4" />
-              )}
               {editingSpace ? 'Save changes' : 'Create Space'}
-            </button>
+            </Button>
             {editingSpace && (
-              <button
+              <Button
                 type="button"
                 onClick={cancelEditingSpace}
                 disabled={isSaving}
-                className="col-span-2 h-9 rounded-md border border-white/10 px-3 text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+                variant="ghost"
+                animated={false}
+                className="col-span-2"
               >
                 Cancel
-              </button>
+              </Button>
             )}
           </div>
         </form>
       </aside>
 
-      <section className="min-w-0 flex-1 overflow-y-auto p-6" aria-label="Space conversations">
-        <motion.div {...FADE_UP} transition={tweens.smooth} className="mb-6">
-          <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary-200">
-            <SparklesIcon className="h-4 w-4" />
-            {selectedSpace ? 'Selected Space' : 'All Spaces'}
-          </p>
-          <h2 className="mt-2 text-3xl font-bold text-white">
-            {selectedSpace ? selectedSpace.name : 'All conversations'}
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-white/50">
-            {selectedSpace
-              ? 'This routed Space applies its server-owned filter rules to your conversation list.'
-              : 'Pick or create a Space to focus the conversation list.'}
-          </p>
+      <section
+        className={`${spaceId ? 'flex' : 'hidden md:flex'} cgraph-workspace min-w-0 flex-1 flex-col overflow-y-auto`}
+        aria-label="Space conversations"
+      >
+        <motion.div
+          {...FADE_UP}
+          transition={tweens.smooth}
+          className="cgraph-content cgraph-page-header"
+        >
+          <div className="min-w-0">
+            <div className="mb-3 md:hidden">
+              <IconButton
+                icon={<ChevronLeftIcon />}
+                label="Back to Spaces"
+                onClick={() => navigate('/spaces')}
+              />
+            </div>
+            <p className="cgraph-eyebrow flex items-center gap-2">
+              <SparklesIcon className="h-4 w-4" />
+              {selectedSpace ? 'Selected Space' : 'All Spaces'}
+            </p>
+            <h2 className="text-2xl font-semibold text-[var(--token-text-primary)]">
+              {selectedSpace ? selectedSpace.name : 'All conversations'}
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm text-[var(--token-text-muted)]">
+              {selectedSpace
+                ? 'This routed Space applies its server-owned filter rules to your conversation list.'
+                : 'Pick or create a Space to focus the conversation list.'}
+            </p>
+          </div>
           {selectedSpace && (
-            <div className="mt-4 flex items-center gap-2">
-              <button
-                type="button"
+            <div className="flex items-center gap-2">
+              <IconButton
+                icon={<PencilSquareIcon />}
+                label={`Edit ${selectedSpace.name}`}
                 onClick={() => startEditingSpace(selectedSpace)}
-                className="grid h-9 w-9 place-items-center rounded-md border border-white/10 text-white/70 transition-colors hover:border-primary-400/60 hover:bg-primary-500/10 hover:text-white"
-                aria-label={`Edit ${selectedSpace.name}`}
-                title="Edit Space"
-              >
-                <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
+              />
+              <IconButton
+                icon={<TrashIcon />}
+                label={`Delete ${selectedSpace.name}`}
+                variant="danger"
                 onClick={() => setSpacePendingDelete(selectedSpace)}
-                className="grid h-9 w-9 place-items-center rounded-md border border-white/10 text-white/70 transition-colors hover:border-red-400/60 hover:bg-red-500/10 hover:text-red-200"
-                aria-label={`Delete ${selectedSpace.name}`}
-                title="Delete Space"
-              >
-                <TrashIcon className="h-4 w-4" aria-hidden="true" />
-              </button>
+              />
             </div>
           )}
         </motion.div>
 
-        {error && (
-          <div className="mb-4 rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
-            {error}
-          </div>
-        )}
+        <div className="cgraph-content pt-0">
+          {error && (
+            <div
+              className="mb-4 rounded-md border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
 
-        {isLoading ? (
-          <div className="rounded-md border border-white/10 bg-white/[0.03] p-6 text-sm text-white/60">
-            Loading Spaces...
-          </div>
-        ) : visibleConversations.length === 0 ? (
-          <div className="rounded-md border border-white/10 bg-white/[0.03] p-6 text-sm text-white/60">
-            No conversations match this Space.
-          </div>
-        ) : (
-          <motion.div {...FADE_IN} transition={tweens.standard} className="grid gap-2">
-            {visibleConversations.map((conversation) => (
-              <NavLink
-                key={conversation.id}
-                to={`/messages/${conversation.id}`}
-                className="hover:border-primary-400/40 hover:bg-primary-500/10 group flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.04] px-4 py-3 transition-colors"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">
-                    {getConversationName(conversation, user?.id ?? '')}
-                  </p>
-                  <p className="mt-1 truncate text-xs text-white/45">
-                    {conversation.lastMessage?.content || 'No messages yet'}
-                  </p>
-                </div>
-                {conversation.unreadCount > 0 && (
-                  <span className="rounded-full bg-primary-400 px-2 py-0.5 text-xs font-bold text-dark-950">
-                    {conversation.unreadCount}
-                  </span>
-                )}
-              </NavLink>
-            ))}
-          </motion.div>
-        )}
+          {isLoading ? (
+            <div className="space-y-2" role="status" aria-label="Loading Spaces">
+              <span className="sr-only">Loading Spaces</span>
+              <Skeleton shape="card" count={4} />
+            </div>
+          ) : visibleConversations.length === 0 ? (
+            <EmptyState
+              icon={<ChatBubbleLeftRightIcon className="h-7 w-7" />}
+              title="No conversations here"
+              message="No conversations match this Space."
+            />
+          ) : (
+            <motion.div {...FADE_IN} transition={tweens.standard} className="grid gap-2">
+              {visibleConversations.map((conversation) => (
+                <NavLink
+                  key={conversation.id}
+                  to={`/messages/${conversation.id}`}
+                  className="cgraph-list-row flex items-center justify-between gap-3 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[var(--token-text-primary)]">
+                      {getConversationName(conversation, user?.id ?? '')}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-[var(--token-text-muted)]">
+                      {conversation.lastMessage?.content || 'No messages yet'}
+                    </p>
+                  </div>
+                  {conversation.unreadCount > 0 && (
+                    <span className="rounded-full bg-primary-400 px-2 py-0.5 text-xs font-bold text-dark-950">
+                      {conversation.unreadCount}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </motion.div>
+          )}
+        </div>
       </section>
 
       <Dialog
@@ -442,22 +460,25 @@ export default function SpacesPage() {
               : ''}
           </p>
           <DialogFooter>
-            <button
+            <Button
               type="button"
               onClick={() => setSpacePendingDelete(null)}
               disabled={isDeleting}
-              className="rounded-lg border border-[var(--token-border-subtle)] px-3 py-2 text-sm font-semibold text-[var(--token-text-primary)] transition hover:bg-[var(--token-bg-secondary)] disabled:opacity-50"
+              variant="ghost"
+              animated={false}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => void deleteSpace()}
               disabled={isDeleting}
-              className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-400 disabled:opacity-50"
+              variant="danger"
+              animated={false}
+              isLoading={isDeleting}
             >
               {isDeleting ? 'Deleting...' : 'Delete Space'}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

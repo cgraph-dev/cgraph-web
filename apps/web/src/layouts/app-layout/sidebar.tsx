@@ -27,8 +27,6 @@ import {
   type ProfileCardUserV2,
 } from '@/modules/social/components/user-profile-card';
 import type { NavItem } from './constants';
-import { loop } from '@/lib/animation-presets';
-import { useThemeEnhanced } from '@/providers/theme-enhanced';
 import { publicProfilePath } from '@/lib/profile-route';
 type FeatureGateKey = string;
 type IconComponent = (props: { className?: string }) => ReactNode;
@@ -104,11 +102,8 @@ function NavItemGateBadge({ feature: _feature }: { feature: FeatureGateKey }) {
     <motion.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
-      className="absolute -right-1 -top-1 z-30 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg"
+      className="absolute -right-1 -top-1 z-30 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--token-interactive-primary)]"
       title={`Unlock at Level ${requiredLevel}`}
-      style={{
-        boxShadow: '0 0 8px color-mix(in srgb, var(--color-brand-purple) 50%, transparent)',
-      }}
     >
       <LockClosedIcon className="h-2.5 w-2.5 text-white" />
     </motion.div>
@@ -122,25 +117,19 @@ function NavItemGateBadge({ feature: _feature }: { feature: FeatureGateKey }) {
 function SidebarNavItem({
   item,
   isActive,
-  isHovered,
   totalUnread,
   unreadCount,
-  onHover,
-  onLeave,
 }: {
   item: NavItem;
   isActive: boolean;
-  isHovered: boolean;
   totalUnread: number;
   unreadCount: number;
-  onHover: () => void;
-  onLeave: () => void;
 }) {
   const iconRaw = isActive ? item.activeIcon : item.icon;
   const Icon: IconComponent = iconRaw satisfies IconComponent;
 
   return (
-    <div onMouseEnter={onHover} onMouseLeave={onLeave}>
+    <div>
       <NavLink
         to={item.path}
         aria-label={item.label}
@@ -149,90 +138,21 @@ function SidebarNavItem({
         className="relative block"
       >
         <motion.div
-          className="relative flex h-11 w-11 items-center justify-center rounded-xl"
-          whileTap={{ scale: 0.88 }}
+          className={`cgraph-control cgraph-control-icon relative flex h-11 w-11 items-center justify-center ${
+            isActive ? 'cgraph-control-primary' : 'cgraph-control-ghost'
+          }`}
+          whileTap={{ scale: 0.94 }}
           transition={tapSpring}
+          data-cgraph-surface="control"
+          data-cgraph-state={isActive ? 'selected' : 'idle'}
         >
-          {/* Active background — clean morphing pill */}
-          {isActive && (
-            <motion.div
-              layoutId="sidebar-active-bg"
-              className="border-primary-500/30 bg-primary-500/10 absolute inset-0 rounded-xl border"
-              initial={false}
-              transition={{
-                type: 'spring',
-                stiffness: 400,
-                damping: 28,
-                mass: 0.7,
-              }}
-              style={{
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
-              }}
-            />
-          )}
-
-          {/* Hover background (inactive items) */}
-          {!isActive && (
-            <motion.div
-              className="absolute inset-0 rounded-xl"
-              initial={false}
-              animate={{
-                opacity: isHovered ? 1 : 0,
-              }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              style={{
-                background:
-                  'radial-gradient(circle at center, rgba(255,255,255,0.06) 0%, transparent 70%)',
-              }}
-            />
-          )}
-
-          {/* Icon with color transition */}
-          <motion.div
-            className="relative z-10"
-            animate={
-              isActive
-                ? {
-                    y: 0,
-                    filter:
-                      'drop-shadow(0 0 6px color-mix(in srgb, var(--color-brand-purple) 35%, transparent))',
-                  }
-                : {
-                    y: 0,
-                    filter:
-                      'drop-shadow(0 0 0px color-mix(in srgb, var(--color-brand-purple) 0%, transparent))',
-                  }
-            }
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            initial={false}
-          >
+          <div className="relative z-10">
             <Icon
-              className={`h-[22px] w-[22px] transition-colors duration-200 ${(() => {
-                if (isActive) return 'text-primary-400';
-                if (isHovered) return 'text-[var(--token-sidebar-text)]';
-                return 'text-[var(--token-text-secondary)]';
-              })()}`}
+              className={`h-[22px] w-[22px] transition-colors duration-150 ${
+                isActive ? 'text-current' : 'text-[var(--token-text-secondary)]'
+              }`}
             />
-          </motion.div>
-
-          {/* Tooltip with arrow */}
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                initial={{ opacity: 0, x: -6, scale: 0.9 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -6, scale: 0.9 }}
-                transition={{ duration: 0.15, ease: [0.2, 0.9, 0.3, 1] }}
-                className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2"
-              >
-                <div className="relative whitespace-nowrap rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-tertiary)] px-2.5 py-1.5 text-xs font-medium text-[var(--token-text-primary)] shadow-xl shadow-black/30 backdrop-blur-xl">
-                  {item.label}
-                  {/* Arrow */}
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[var(--token-bg-tertiary)]" />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </div>
 
           {/* Message badge */}
           <AnimatePresence>
@@ -243,7 +163,6 @@ function SidebarNavItem({
                 exit={{ scale: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 className="absolute -right-1 -top-1 z-20 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
-                style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.5)' }}
               >
                 {totalUnread > 99 ? '99+' : totalUnread}
               </motion.span>
@@ -259,7 +178,6 @@ function SidebarNavItem({
                 exit={{ scale: 0 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                 className="absolute -right-1 -top-1 z-20 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
-                style={{ boxShadow: '0 0 8px rgba(239, 68, 68, 0.5)' }}
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </motion.span>
@@ -297,22 +215,10 @@ export default function Sidebar({
   navItems,
 }: SidebarProps) {
   const navigate = useNavigate();
-  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const { theme } = useThemeEnhanced();
-  const isLight = theme.category === 'light';
   const profileRoute = user ? publicProfilePath(user) : '/me/profile';
   const profileCardUser = useMemo(() => (user ? sidebarProfileCardUser(user) : null), [user]);
-
-  // Glass effects: aurora/bubble = blur+saturate, dark = blur only, light = none (solid bg)
-  function getGlassClasses(): string {
-    if (isLight) return '';
-    if (theme.variant === 'aurora' || theme.variant === 'bubble')
-      return 'backdrop-blur-2xl backdrop-saturate-[1.8]';
-    return 'backdrop-blur-2xl';
-  }
-  const glassClasses = getGlassClasses();
 
   const confirmLogout = async () => {
     if (isLoggingOut) return;
@@ -330,33 +236,10 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`group/sidebar relative z-10 hidden w-[72px] flex-col items-center overflow-visible overscroll-contain border-r border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] py-4 lg:flex ${glassClasses}`}
+        className="cgraph-navigation-rail relative z-10 hidden w-[72px] flex-col items-center overflow-visible overscroll-contain py-4 lg:flex"
         role="navigation"
         aria-label="Main navigation"
       >
-      {/* Animated right edge — thin luminous line */}
-      <motion.div
-        className="pointer-events-none absolute inset-y-0 right-0 z-20 w-px"
-        style={{
-          background:
-            'linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--color-brand-purple) 25%, transparent) 30%, rgba(59,130,246,0.3) 50%, color-mix(in srgb, var(--color-brand-purple) 25%, transparent) 70%, transparent 100%)',
-          backgroundSize: '100% 200%',
-          animation: 'sidebar-border-flow 6s linear infinite',
-        }}
-      />
-
-      {/* Inner soft light for depth */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.02] via-transparent to-white/[0.01]" />
-
-      {/* Subtle noise texture */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage:
-            'url("data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E")',
-        }}
-      />
-
       {/* ── User Avatar (top) ── */}
       <div className="relative z-10 mb-2" role="group" aria-label="User profile">
         {user?.id && profileCardUser ? (
@@ -373,37 +256,15 @@ export default function Sidebar({
               className="focus-visible:ring-primary-400/70 relative block focus:outline-none focus-visible:ring-2"
               aria-label="Open your public profile"
             >
-              <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
+              <motion.div whileTap={{ scale: 0.94 }} transition={tapSpring} className="relative">
                 <SidebarProfileAvatar user={user} />
-
-                <motion.div
-                  className="pointer-events-none absolute -inset-0.5 rounded-full"
-                  animate={{
-                    boxShadow: [
-                      '0 0 0 0 color-mix(in srgb, var(--color-brand-purple) 30%, transparent)',
-                      '0 0 0 5px color-mix(in srgb, var(--color-brand-purple) 0%, transparent)',
-                    ],
-                  }}
-                  transition={loop({ duration: 3, ease: 'easeOut' })}
-                />
               </motion.div>
             </button>
           </UserProfileCard>
         ) : (
           <NavLink to={profileRoute} className="relative block">
-            <motion.div whileTap={{ scale: 0.88 }} transition={tapSpring} className="relative">
+            <motion.div whileTap={{ scale: 0.94 }} transition={tapSpring} className="relative">
               <SidebarProfileAvatar user={user} />
-
-              <motion.div
-                className="pointer-events-none absolute -inset-0.5 rounded-full"
-                animate={{
-                  boxShadow: [
-                    '0 0 0 0 color-mix(in srgb, var(--color-brand-purple) 30%, transparent)',
-                    '0 0 0 5px color-mix(in srgb, var(--color-brand-purple) 0%, transparent)',
-                  ],
-                }}
-                transition={loop({ duration: 3, ease: 'easeOut' })}
-              />
             </motion.div>
           </NavLink>
         )}
@@ -415,7 +276,7 @@ export default function Sidebar({
       </div>
 
       {/* Divider */}
-      <div className="mb-2 h-px w-8 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className="mb-2 h-px w-8 bg-[var(--product-line)]" />
 
       {/* ── Navigation ── */}
       <nav className="relative z-10 flex flex-1 flex-col items-center gap-1" aria-label="Primary">
@@ -426,18 +287,15 @@ export default function Sidebar({
               key={item.path}
               item={item}
               isActive={isActive}
-              isHovered={hoveredNav === item.path}
               totalUnread={totalUnread}
               unreadCount={unreadCount}
-              onHover={() => setHoveredNav(item.path)}
-              onLeave={() => setHoveredNav(null)}
             />
           );
         })}
       </nav>
 
       {/* Divider */}
-      <div className="mb-2 mt-auto h-px w-8 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className="mb-2 mt-auto h-px w-8 bg-[var(--product-line)]" />
 
       {/* ── Bottom: Logout + Logo ── */}
       <div
@@ -452,14 +310,10 @@ export default function Sidebar({
             HapticFeedback.medium();
             setLogoutOpen(true);
           }}
-          className="group relative flex h-10 w-10 items-center justify-center rounded-xl text-gray-600 transition-colors duration-200 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50"
+          className="cgraph-control cgraph-control-icon cgraph-control-ghost relative flex h-10 w-10 items-center justify-center text-[var(--token-text-muted)] hover:text-[var(--token-feedback-error)]"
           title="Logout"
           aria-label="Logout from your account"
         >
-          <motion.div
-            className="absolute inset-0 rounded-xl bg-red-500/0 transition-colors duration-200 group-hover:bg-red-500/[0.08]"
-            initial={false}
-          />
           <LogOut className="relative z-10 h-5 w-5" aria-hidden="true" />
         </button>
 
@@ -467,16 +321,11 @@ export default function Sidebar({
         <a
           href="https://www.cgraph.org"
           title="CGraph"
-          className="block opacity-40 transition-opacity duration-300 hover:opacity-70"
+          className="block opacity-50 transition-opacity duration-150 hover:opacity-80"
         >
-          <motion.div
-            whileTap={{ scale: 0.88 }}
-            transition={tapSpring}
-            role="img"
-            aria-label="CGraph logo"
-          >
+          <div role="img" aria-label="CGraph logo">
             <LogoIcon size={44} />
-          </motion.div>
+          </div>
         </a>
       </div>
       </aside>

@@ -17,6 +17,9 @@ import {
 } from '@/modules/social/friendship-status';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { publicProfilePath } from '@/lib/profile-route';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import Skeleton from '@/components/ui/skeleton';
 
 /** People tab — search and discover users. */
 export function PeopleTab() {
@@ -33,8 +36,7 @@ export function PeopleTab() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      {/* Search input */}
+    <div className="cgraph-content max-w-2xl">
       <div className="relative mb-6">
         <input
           type="text"
@@ -42,25 +44,25 @@ export function PeopleTab() {
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search people..."
           autoFocus
-          className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] py-3 pl-11 pr-4 text-sm text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:bg-[var(--token-card-bg)] focus:outline-none focus:ring-4"
+          className="cgraph-field peer w-full pl-11 pr-4 text-sm"
         />
         <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
       </div>
 
       {/* Empty state */}
       {query.length === 0 && (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 ring-1 ring-white/10">
-            <UserIcon className="h-8 w-8 text-white/30" />
-          </div>
-          <p className="text-sm text-white/40">Search for people to connect with</p>
-        </div>
+        <EmptyState
+          icon={<UserIcon className="h-7 w-7" />}
+          title="Find people"
+          message="Search by username or display name to connect."
+        />
       )}
 
       {/* Loading */}
       {query.length >= 2 && isLoading && (
-        <div className="flex justify-center py-10">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+        <div className="space-y-2 py-4" role="status" aria-label="Searching people">
+          <span className="sr-only">Searching people</span>
+          <Skeleton shape="card" count={4} />
         </div>
       )}
 
@@ -97,14 +99,14 @@ export function PeopleTab() {
             return (
               <div
                 key={user.id}
-                className="hover:border-primary-500/20 flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] p-3 transition-colors hover:bg-[var(--token-bg-primary)]"
+                className="cgraph-list-row flex cursor-pointer items-center gap-3 p-3"
                 onClick={() => navigate(profilePath)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && navigate(profilePath)}
               >
                 {/* Avatar */}
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary-600 to-purple-600 text-sm font-bold text-white ring-2 ring-white/10">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--product-surface-selected)] text-sm font-bold text-[var(--token-interactive-primary)]">
                   {user.avatar_url ? (
                     <img
                       src={user.avatar_url}
@@ -118,13 +120,20 @@ export function PeopleTab() {
 
                 {/* Info */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-white">{displayName}</p>
-                  <p className="truncate text-xs text-white/40">@{user.username}</p>
+                  <p className="truncate text-sm font-semibold text-[var(--token-text-primary)]">
+                    {displayName}
+                  </p>
+                  <p className="truncate text-xs text-[var(--token-text-muted)]">
+                    @{user.username}
+                  </p>
                 </div>
 
                 {/* Action */}
                 {!isSelf && (
-                  <button
+                  <Button
+                    size="sm"
+                    animated={false}
+                    variant="secondary"
                     type="button"
                     onClick={async (e) => {
                       e.stopPropagation();
@@ -145,14 +154,10 @@ export function PeopleTab() {
                       }
                     }}
                     disabled={isDisabled}
-                    className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${
-                      isDisabled
-                        ? 'cursor-default bg-[var(--token-card-bg)] text-white/20'
-                        : 'bg-primary-500/10 hover:bg-primary-500/20 text-primary-400'
-                    }`}
+                    className="flex-shrink-0"
                   >
                     {actionLabel}
-                  </button>
+                  </Button>
                 )}
               </div>
             );

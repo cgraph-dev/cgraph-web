@@ -12,7 +12,6 @@ import {
   ChannelList,
   ContentArea,
   LoadingOverlay,
-  AmbientParticles,
 } from './components';
 import { findGroupChannel, getGroupRoute } from '@/modules/groups/routing';
 
@@ -83,12 +82,9 @@ export default function Groups() {
   };
 
   return (
-    <div className="aurora-hub-shell max-h-screen flex-1">
+    <div className="aurora-hub-shell cgraph-workspace max-h-screen flex-1">
       {/* Loading state */}
       {isLoadingGroups && groups.length === 0 && <LoadingOverlay />}
-
-      {/* Ambient particles */}
-      <AmbientParticles />
 
       {/* Server List */}
       <ServerList
@@ -111,7 +107,7 @@ export default function Groups() {
       {/* Channel Content */}
       <div
         data-testid="group-content-pane"
-        className={`${activeGroup && !showMobileChannels ? 'flex' : 'hidden'} aurora-hub-main relative z-10 h-full min-w-0 flex-1 flex-col bg-transparent lg:flex`}
+        className={`${activeGroup && !showMobileChannels ? 'flex' : 'hidden'} aurora-hub-main cgraph-workspace relative z-10 h-full min-w-0 flex-1 flex-col lg:flex`}
         aria-label="Group content"
         tabIndex={0}
       >

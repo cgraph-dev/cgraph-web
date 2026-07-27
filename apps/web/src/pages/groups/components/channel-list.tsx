@@ -31,7 +31,7 @@ export function ChannelList({
     return (
       <div
         data-testid="groups-channel-list"
-        className="relative z-10 hidden w-60 shrink-0 flex-col border-r border-[var(--token-card-border)] bg-[var(--token-card-bg)] lg:flex"
+        className="cgraph-pane relative z-10 hidden w-60 shrink-0 flex-col lg:flex"
       >
         <div className="flex h-14 shrink-0 items-center border-b border-[var(--token-border-muted)] px-4">
           <h2 className="truncate font-bold text-[var(--token-text-primary)]">Select a server</h2>
@@ -52,7 +52,7 @@ export function ChannelList({
     <div
       data-testid="groups-channel-list"
       aria-label={`${activeGroup.name} channels`}
-      className={`${mobileVisible ? 'flex' : 'hidden'} relative z-20 min-h-0 w-full shrink-0 flex-col border-r border-[var(--token-card-border)] bg-[var(--token-card-bg)] lg:flex lg:w-60`}
+      className={`${mobileVisible ? 'flex' : 'hidden'} cgraph-pane relative z-20 min-h-0 w-full shrink-0 flex-col lg:flex lg:w-60`}
     >
       <div
         className="flex h-14 shrink-0 items-center gap-1 border-b border-[var(--token-border-muted)] px-2 lg:hidden"

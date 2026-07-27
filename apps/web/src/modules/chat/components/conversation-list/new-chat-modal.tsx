@@ -1,9 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
+import { CheckIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
+import { Button, IconButton } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import { createLogger } from '@/lib/logger';
@@ -16,7 +23,6 @@ import {
 } from '@/lib/api-rate-limit';
 import { getAvatarBorderId } from '@/lib/utils';
 import type { NewChatModalProps, MockUser } from './types';
-import { FADE_IN } from '@/lib/animations/transitions';
 import { TypePicker, type ChatTierType } from '@/pages/messages/new-chat/type-picker';
 import { WebOnlyRecipientPrompt } from '@/pages/messages/new-chat/web-only-recipient-prompt';
 
@@ -105,67 +111,55 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
   };
 
   return (
-    <motion.div
-      {...FADE_IN}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GlassCard variant="crystal" glow className="p-6">
-          <h2 className="mb-4 text-xl font-bold text-white">New Conversation</h2>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent ariaLabel="New conversation" className="max-w-md p-0">
+        <DialogHeader className="px-5 pt-5">
+          <DialogTitle>New conversation</DialogTitle>
+          <DialogDescription>Choose people and the conversation type.</DialogDescription>
+        </DialogHeader>
 
-          {/* Search */}
-          <div className="relative mb-4">
+        <div className="space-y-4 px-5 pt-4">
+          <div className="relative">
             <input
               type="text"
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] py-2 pl-9 pr-4 text-sm text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:bg-[var(--token-card-bg)/0.6] focus:outline-none focus:ring-4"
+              className="cgraph-field peer w-full pl-9 pr-4 text-sm"
               autoFocus
             />
             <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
           </div>
 
-          {/* Selected Users */}
           {selectedUsers.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" aria-label="Selected people">
               {selectedUsers.map((userId) => {
                 const user = users.find((u) => u.id === userId);
                 if (!user) return null;
                 return (
-                  <motion.div
+                  <div
                     key={userId}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="bg-primary-600/20 flex items-center gap-1 rounded-full px-2 py-1 text-sm text-primary-400"
+                    className="flex items-center gap-1 rounded-full border border-[var(--product-line)] bg-[var(--product-surface-selected)] py-1 pl-2.5 pr-1 text-sm text-[var(--token-text-primary)]"
                   >
                     <span>{user.displayName}</span>
-                    <button
+                    <IconButton
+                      icon={<XMarkIcon />}
+                      label={`Remove ${user.displayName}`}
+                      size="sm"
                       onClick={() => setSelectedUsers((prev) => prev.filter((id) => id !== userId))}
-                      className="hover:text-white"
-                    >
-                      ×
-                    </button>
-                  </motion.div>
+                      className="h-7 min-h-7 w-7 min-w-7"
+                    />
+                  </div>
                 );
               })}
             </div>
           )}
 
-          {/* User List */}
-          <div className="max-h-60 space-y-1 overflow-y-auto">
+          <div className="max-h-60 space-y-1 overflow-y-auto" aria-label="People">
             {users.map((user) => (
-              <motion.button
+              <button
                 key={user.id}
-                whileHover={{ x: 2 }}
+                type="button"
                 onClick={() => {
                   setSelectedUsers((prev) =>
                     prev.includes(user.id)
@@ -173,11 +167,8 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
                       : [...prev, user.id]
                   );
                 }}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
-                  selectedUsers.includes(user.id)
-                    ? 'bg-primary-600/20'
-                    : 'hover:bg-[var(--token-card-bg)]'
-                }`}
+                aria-pressed={selectedUsers.includes(user.id)}
+                className="cgraph-list-row flex w-full items-center gap-3 px-3 py-2"
               >
                 <div className="relative">
                   <ThemedAvatar
@@ -190,16 +181,16 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
                     <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-dark-900 bg-green-500" />
                   )}
                 </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-white">{user.displayName}</p>
-                  <p className="text-xs text-gray-400">@{user.username}</p>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate font-medium text-[var(--token-text-primary)]">
+                    {user.displayName}
+                  </p>
+                  <p className="truncate text-xs text-[var(--token-text-muted)]">@{user.username}</p>
                 </div>
                 {selectedUsers.includes(user.id) && (
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600">
-                    <span className="text-xs text-white">✓</span>
-                  </div>
+                  <CheckIcon className="h-5 w-5 text-[var(--token-interactive-primary)]" />
                 )}
-              </motion.button>
+              </button>
             ))}
           </div>
 
@@ -207,7 +198,10 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
               use their own E2EE path and don't surface the cloud/secret
               choice here. */}
           {selectedUsers.length === 1 && (
-            <div className="mt-4 space-y-3 rounded-xl border border-[var(--token-border-muted)] bg-black/20 p-3">
+            <div
+              className="cgraph-section space-y-3 p-3"
+              data-cgraph-material="recessed"
+            >
               <TypePicker onChange={setChatType} defaultValue={chatType} />
               <WebOnlyRecipientPrompt
                 recipientId={selectedUsers[0]!}
@@ -217,30 +211,24 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
             </div>
           )}
 
-          {/* Actions */}
-          <div className="mt-4 flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 rounded-xl bg-[var(--token-card-bg)/0.6] py-2 text-gray-300 hover:bg-[var(--token-card-bg)/0.8]"
-            >
+        </div>
+
+        <DialogFooter className="mx-5 mb-5">
+            <Button onClick={onClose} variant="ghost" animated={false}>
               Cancel
-            </button>
-            <motion.button
-              whileHover={{ opacity: 0.9 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleStartChat}
+            </Button>
+            <Button
+              onClick={() => void handleStartChat()}
               disabled={selectedUsers.length === 0 || isStarting}
-              className="flex-1 rounded-xl bg-primary-600 py-2 font-semibold text-white disabled:opacity-50"
+              isLoading={isStarting}
+              animated={false}
             >
-              {isStarting
-                ? 'Creating...'
-                : selectedUsers.length > 1
+              {selectedUsers.length > 1
                   ? 'Create Group'
                   : 'Start Chat'}
-            </motion.button>
-          </div>
-        </GlassCard>
-      </motion.div>
-    </motion.div>
+            </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -49,6 +49,30 @@ vi.mock('@/modules/settings/store', () => {
 });
 
 vi.mock('@/shared/components/ui', () => ({
+  Button: ({
+    animated: _animated,
+    children,
+    isLoading: _isLoading,
+    size: _size,
+    variant: _variant,
+    ...props
+  }: React.PropsWithChildren<
+    React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      animated?: boolean;
+      isLoading?: boolean;
+      size?: string;
+      variant?: string;
+    }
+  >) => <button {...props}>{children}</button>,
+  Dialog: ({ open, children }: React.PropsWithChildren<{ open: boolean }>) =>
+    open ? <>{children}</> : null,
+  DialogContent: ({ children }: React.PropsWithChildren) => (
+    <div role="dialog">{children}</div>
+  ),
+  DialogDescription: ({ children }: React.PropsWithChildren) => <p>{children}</p>,
+  DialogFooter: ({ children }: React.PropsWithChildren) => <footer>{children}</footer>,
+  DialogHeader: ({ children }: React.PropsWithChildren) => <header>{children}</header>,
+  DialogTitle: ({ children }: React.PropsWithChildren) => <h2>{children}</h2>,
   GlassCard: ({ children }: React.PropsWithChildren) => (
     <div data-testid="glass-card">{children}</div>
   ),

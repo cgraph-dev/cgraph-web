@@ -10,6 +10,14 @@ vi.mock('motion/react', () => ({
     div: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => (
       <div {...props}>{children}</div>
     ),
+    button: ({
+      children,
+      whileTap: _whileTap,
+      transition: _transition,
+      ...props
+    }: PropsWithChildren<Record<string, unknown>>) => (
+      <button {...props}>{children}</button>
+    ),
   },
 }));
 
