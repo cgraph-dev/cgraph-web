@@ -50,6 +50,13 @@ function waitForOAuthProviders(page) {
     .catch(() => null);
 }
 
+function waitForAppVersion(page) {
+  return page.waitForResponse(
+    (response) => matchesApiPath(response.url(), '/api/v1/app/version'),
+    { timeout: 20_000 }
+  );
+}
+
 async function launchBrowser() {
   const executablePath = systemChromePath();
   return chromium.launch({
@@ -64,6 +71,7 @@ async function main() {
   const badResponses = [];
   const failedRequests = [];
   const appConsoleErrors = [];
+  const appVersionStatuses = [];
   const oauthProviderStatuses = [];
 
   page.on('console', (message) => {
@@ -116,25 +124,31 @@ async function main() {
     }
   });
 
+  const loginAppVersionResponse = waitForAppVersion(page);
   const loginOAuthProvidersResponse = waitForOAuthProviders(page);
   await page.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await page.getByRole('heading', { name: /welcome back/i }).waitFor({ timeout: 20_000 });
+  appVersionStatuses.push((await loginAppVersionResponse).status());
   oauthProviderStatuses.push((await loginOAuthProvidersResponse)?.status() ?? null);
   const loginOk = await page.getByRole('button', { name: /sign in/i }).isVisible();
 
+  const phoneAppVersionResponse = waitForAppVersion(page);
   const countriesResponse = page.waitForResponse(
     (response) => matchesApiPath(response.url(), '/api/v1/auth/phone/countries'),
     { timeout: 20_000 }
   );
   await page.goto(`${baseUrl}/login/phone`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await page.getByText(/phone login/i).waitFor({ timeout: 20_000 });
+  appVersionStatuses.push((await phoneAppVersionResponse).status());
   const countriesStatus = (await countriesResponse).status();
   const phoneInputOk = (await page.locator('input[type="tel"]').count()) >= 2;
   const phoneNextOk = await page.getByRole('button', { name: /^next$/i }).isVisible();
 
+  const registerAppVersionResponse = waitForAppVersion(page);
   const registerOAuthProvidersResponse = waitForOAuthProviders(page);
   await page.goto(`${baseUrl}/register`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   await page.getByRole('heading', { name: /create your account/i }).waitFor({ timeout: 20_000 });
+  appVersionStatuses.push((await registerAppVersionResponse).status());
   oauthProviderStatuses.push((await registerOAuthProvidersResponse)?.status() ?? null);
   const registerOk = await page.getByRole('button', { name: /create account/i }).isVisible();
 
@@ -155,6 +169,7 @@ async function main() {
     phoneInputOk,
     phoneNextOk,
     countriesStatus,
+    appVersionStatuses,
     oauthProviderStatuses,
     registerOk,
     turnstileFrames,
@@ -170,6 +185,9 @@ async function main() {
   if (!loginOk) failures.push('login form did not render');
   if (!phoneInputOk || !phoneNextOk) failures.push('phone login form did not render');
   if (countriesStatus !== 200) failures.push(`phone countries returned ${countriesStatus}`);
+  if (appVersionStatuses.some((status) => status !== 200)) {
+    failures.push(`app version returned ${appVersionStatuses.join(', ')}`);
+  }
   if (oauthProviderStatuses.some((status) => status !== 200)) {
     failures.push(`OAuth providers returned ${oauthProviderStatuses.join(', ')}`);
   }
