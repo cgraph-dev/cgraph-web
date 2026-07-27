@@ -47,13 +47,13 @@ describe('LoadingOverlay', () => {
 describe('SkeletonText', () => {
   it('renders a single skeleton line by default', () => {
     const { container } = render(<SkeletonText />);
-    const lines = container.querySelectorAll('.animate-pulse');
+    const lines = container.querySelectorAll('.cgraph-skeleton');
     expect(lines).toHaveLength(1);
   });
 
   it('renders multiple skeleton lines', () => {
     const { container } = render(<SkeletonText lines={3} />);
-    const lines = container.querySelectorAll('.animate-pulse');
+    const lines = container.querySelectorAll('.cgraph-skeleton');
     expect(lines).toHaveLength(3);
   });
 
@@ -64,9 +64,9 @@ describe('SkeletonText', () => {
 
   it('makes the last line shorter when multiple lines', () => {
     const { container } = render(<SkeletonText lines={3} />);
-    const lines = container.querySelectorAll('.animate-pulse');
+    const lines = container.querySelectorAll('.cgraph-skeleton');
     const lastLine = lines[lines.length - 1] as HTMLElement;
-    expect(lastLine.style.width).toBe('70%');
+    expect(lastLine.style.width).toBe('75%');
   });
 });
 
@@ -96,10 +96,9 @@ describe('SkeletonAvatar', () => {
 describe('SkeletonMessage', () => {
   it('renders avatar and text placeholders', () => {
     const { container } = render(<SkeletonMessage />);
-    // Should contain an avatar (rounded-full) and multiple pulse elements
     expect(container.querySelector('.rounded-full')).toBeInTheDocument();
-    const pulseElements = container.querySelectorAll('.animate-pulse');
-    expect(pulseElements.length).toBeGreaterThanOrEqual(3);
+    const skeletonElements = container.querySelectorAll('.cgraph-skeleton');
+    expect(skeletonElements.length).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -107,7 +106,7 @@ describe('SkeletonConversation', () => {
   it('renders avatar and text placeholders', () => {
     const { container } = render(<SkeletonConversation />);
     expect(container.querySelector('.rounded-full')).toBeInTheDocument();
-    const pulseElements = container.querySelectorAll('.animate-pulse');
-    expect(pulseElements.length).toBeGreaterThanOrEqual(2);
+    const skeletonElements = container.querySelectorAll('.cgraph-skeleton');
+    expect(skeletonElements.length).toBeGreaterThanOrEqual(2);
   });
 });
