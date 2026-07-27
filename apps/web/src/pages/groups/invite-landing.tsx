@@ -7,6 +7,8 @@ import { createLogger } from '@/lib/logger';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { getGroupRoute } from '@/modules/groups/routing';
 import { useGroupStore } from '@/modules/groups/store';
+import { Button } from '@/components/ui/button';
+import Skeleton from '@/components/ui/skeleton';
 
 const logger = createLogger('GroupInviteLanding');
 
@@ -191,10 +193,10 @@ export default function GroupInviteLanding() {
   };
 
   return (
-    <main className="flex min-h-full items-center justify-center px-4 py-10">
-      <section className="bg-[var(--token-card-bg)]/70 w-full max-w-lg rounded-2xl border border-[var(--token-card-border)] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+    <main className="cgraph-workspace flex min-h-full items-center justify-center px-4 py-10">
+      <section className="cgraph-dialog-content w-full max-w-lg p-6">
         <div className="mb-6 flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)]">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-[var(--product-line)] bg-[var(--product-surface-recessed)]">
             {preview?.groupAvatar ? (
               <img
                 src={preview.groupAvatar}
@@ -203,25 +205,24 @@ export default function GroupInviteLanding() {
                 draggable={false}
               />
             ) : (
-              <TicketIcon className="h-7 w-7 text-primary-300" />
+              <TicketIcon className="h-7 w-7 text-[var(--token-interactive-primary)]" />
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-300">
-              Group invite
-            </p>
-            <h1 className="truncate text-2xl font-bold text-white">
+            <p className="cgraph-eyebrow">Group invite</p>
+            <h1 className="truncate text-2xl font-semibold text-[var(--token-text-primary)]">
               {preview?.groupName ?? 'Opening invite'}
             </h1>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="rounded-xl border border-[var(--token-card-border)] bg-black/20 p-4 text-sm text-white/60">
-            Checking invite...
+          <div className="cgraph-card space-y-3 p-4" aria-label="Checking invite">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-4 w-full" />
           </div>
         ) : errorMessage ? (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+          <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
             <div className="flex items-start gap-3">
               <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0" />
               <p>{errorMessage}</p>
@@ -230,25 +231,27 @@ export default function GroupInviteLanding() {
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-xl border border-[var(--token-card-border)] bg-black/20 p-3">
-                <p className="text-white/40">Uses</p>
-                <p className="mt-1 font-semibold text-white">
+              <div className="cgraph-card p-3" data-cgraph-material="recessed">
+                <p className="text-[var(--token-text-muted)]">Uses</p>
+                <p className="mt-1 font-semibold text-[var(--token-text-primary)]">
                   {preview?.uses ?? 0}
                   {preview?.maxUses ? ` / ${preview.maxUses}` : ''}
                 </p>
               </div>
-              <div className="rounded-xl border border-[var(--token-card-border)] bg-black/20 p-3">
-                <p className="text-white/40">Availability</p>
-                <p className="mt-1 font-semibold text-white">
+              <div className="cgraph-card p-3" data-cgraph-material="recessed">
+                <p className="text-[var(--token-text-muted)]">Availability</p>
+                <p className="mt-1 font-semibold text-[var(--token-text-primary)]">
                   {formatExpiry(preview?.expiresAt ?? null)}
                 </p>
               </div>
             </div>
             {preview?.creatorUsername && (
-              <p className="text-sm text-white/45">Invited by {preview.creatorUsername}</p>
+              <p className="text-sm text-[var(--token-text-muted)]">
+                Invited by {preview.creatorUsername}
+              </p>
             )}
             {availabilityError && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+              <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
                 {availabilityError}
               </div>
             )}
@@ -258,19 +261,21 @@ export default function GroupInviteLanding() {
         <div className="mt-6 flex gap-3">
           <Link
             to="/groups"
-            className="bg-[var(--token-bg-primary)]/30 flex-1 rounded-xl border border-[var(--token-border-muted)] px-4 py-3 text-center text-sm font-semibold text-white/55 transition hover:text-white"
+            className="cgraph-control cgraph-control-secondary flex min-h-10 flex-1 items-center justify-center rounded-md px-4 py-2 text-center text-sm font-medium"
           >
             Back to Groups
           </Link>
-          <button
+          <Button
             type="button"
             onClick={handleJoin}
+            isLoading={isJoining}
             disabled={isLoading || !!errorMessage || !!availabilityError || isJoining}
-            className="border-primary-500/25 bg-primary-500/15 hover:bg-primary-500/20 flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold text-primary-200 transition disabled:cursor-not-allowed disabled:opacity-50"
+            rightIcon={<ArrowRightIcon />}
+            animated={false}
+            className="flex-1"
           >
-            {isJoining ? 'Joining...' : 'Join Group'}
-            <ArrowRightIcon className="h-4 w-4" />
-          </button>
+            Join Group
+          </Button>
         </div>
       </section>
     </main>

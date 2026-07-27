@@ -32,6 +32,8 @@ vi.mock('motion/react', () => ({
       disabled,
       type,
       className,
+      whileTap: _whileTap,
+      transition: _transition,
       ...rest
     }: Record<string, unknown> & {
       children?: React.ReactNode;
@@ -43,6 +45,13 @@ vi.mock('motion/react', () => ({
       <button onClick={onClick} disabled={disabled} type={type} className={className} {...rest}>
         {children}
       </button>
+    ),
+    span: ({
+      className,
+      whileTap: _whileTap,
+      ...rest
+    }: Record<string, unknown> & { className?: string }) => (
+      <span className={className} {...rest} />
     ),
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
@@ -64,18 +73,27 @@ vi.mock('@/lib/animations/animation-engine', () => ({
   HapticFeedback: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    log: vi.fn(),
-  }),
-}));
+vi.mock('@/lib/logger', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/logger')>();
+  return {
+    ...actual,
+    createLogger: () => ({
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      log: vi.fn(),
+      time: vi.fn(),
+      timeEnd: vi.fn(),
+      breadcrumb: vi.fn(),
+    }),
+  };
+});
 
 vi.mock('@/lib/animation-presets', () => ({
   tweens: { ambient: { type: 'tween', duration: 0.5 } },
   loop: () => ({ duration: 1, repeat: Infinity }),
+  durationsSec: { normal: 0.2 },
 }));
 
 vi.mock('@/lib/animations/transitions', () => ({
@@ -145,9 +163,7 @@ describe('CreateGroupModal', () => {
 
   it('calls onClose when backdrop is clicked', () => {
     render(<CreateGroupModal {...defaultProps} />);
-    // The first outer div with the fixed class is the backdrop
-    const backdrop = document.querySelector('.fixed.inset-0');
-    if (backdrop) fireEvent.click(backdrop);
+    fireEvent.click(screen.getByTestId('dialog-backdrop'));
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 

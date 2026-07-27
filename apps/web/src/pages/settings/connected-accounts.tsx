@@ -4,11 +4,11 @@
  */
 
 import { useCallback, useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { entranceVariants, springs, staggerConfigs } from '@/lib/animation-presets';
 import { LinkIcon, XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { Button } from '@/components/ui/button';
+import Skeleton from '@/components/ui/skeleton';
 import {
   OAuthProvider,
   providerNames,
@@ -137,31 +137,36 @@ export function ConnectedAccounts() {
   const providerRows = [...new Set([...linkedProviderIds, ...availableProviders])];
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <motion.div
-        variants={entranceVariants.fadeUp}
-        initial="initial"
-        animate="animate"
-        transition={springs.gentle}
-        className="mb-6"
-      >
-        <div className="mb-2 flex items-center gap-3">
-          <LinkIcon className="h-6 w-6 text-primary-400" />
-          <h2 className="text-xl font-bold text-white">Connected Accounts</h2>
+    <div className="mx-auto max-w-2xl space-y-5">
+      <header className="cgraph-page-header">
+        <div className="flex items-start gap-3">
+          <div className="cgraph-empty-icon mb-0 h-10 w-10 shrink-0">
+            <LinkIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="cgraph-eyebrow">Sign-in methods</p>
+            <h1 className="text-2xl font-semibold text-[var(--token-text-primary)]">
+              Connected Accounts
+            </h1>
+            <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+              Manage external accounts linked to your CGraph profile.
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-white/40">
-          Manage external accounts linked to your CGraph profile
-        </p>
-      </motion.div>
+      </header>
 
-      <motion.div
-        initial="initial"
-        animate="animate"
-        variants={{
-          animate: { transition: { staggerChildren: staggerConfigs.fast.staggerChildren } },
-        }}
-        className="space-y-3"
-      >
+      <div className="space-y-3" aria-busy={loading}>
+        {loading &&
+          Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="cgraph-card flex items-center gap-3 p-4">
+              <Skeleton className="h-11 w-11 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-44" />
+              </div>
+              <Skeleton className="h-9 w-24 rounded-md" />
+            </div>
+          ))}
         {providerRows.map((provider) => {
           const linked = isLinked(provider);
           const providerId = toOAuthProvider(provider);
@@ -170,19 +175,18 @@ export function ConnectedAccounts() {
           );
           const label = getProviderLabel(provider, linked);
           return (
-            <motion.div
+            <div
               key={provider}
-              variants={entranceVariants.fadeUp}
-              className="aurora-social-panel flex items-center justify-between rounded-2xl p-4"
+              className="cgraph-card flex flex-wrap items-center justify-between gap-3 p-4"
             >
               <div className="flex items-center gap-3">
-                <span className="border-primary-500/20 bg-primary-500/10 flex h-11 w-11 items-center justify-center rounded-xl border text-xl text-primary-300">
+                <span className="flex h-11 w-11 items-center justify-center rounded-md border border-[var(--product-line)] bg-[var(--product-surface-recessed)] text-lg font-semibold text-[var(--token-interactive-primary)]">
                   {getProviderInitial(provider, linked)}
                 </span>
                 <div>
-                  <span className="font-medium text-white">{label}</span>
+                  <span className="font-medium text-[var(--token-text-primary)]">{label}</span>
                   {linked && (
-                    <div className="flex items-center gap-1 text-xs text-primary-300">
+                    <div className="flex items-center gap-1 text-xs text-[var(--token-text-muted)]">
                       <CheckCircleIcon className="h-3.5 w-3.5" />
                       <span>Connected{linked.email ? ` · ${linked.email}` : ''}</span>
                     </div>
@@ -191,35 +195,40 @@ export function ConnectedAccounts() {
               </div>
 
               {linked ? (
-                <button
+                <Button
+                  variant="danger"
+                  size="sm"
+                  animated={false}
+                  leftIcon={<XMarkIcon />}
                   onClick={() => handleUnlink(linked.provider)}
-                  className="aurora-social-button-danger flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium"
                 >
-                  <XMarkIcon className="h-4 w-4" />
                   Unlink
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  animated={false}
+                  leftIcon={<LinkIcon />}
                   onClick={() => providerId && handleLink(providerId)}
                   disabled={!providerIsAvailable}
-                  className="aurora-social-button flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium"
                 >
-                  <LinkIcon className="h-4 w-4" />
                   Connect
-                </button>
+                </Button>
               )}
-            </motion.div>
+            </div>
           );
         })}
         {!loading && providerRows.length === 0 && (
-          <motion.div
-            variants={entranceVariants.fadeUp}
-            className="aurora-social-panel rounded-2xl p-4 text-sm text-white/50"
-          >
-            No external account providers are available right now.
-          </motion.div>
+          <div className="cgraph-empty-state cgraph-card">
+            <div className="cgraph-empty-icon">
+              <LinkIcon className="h-6 w-6" />
+            </div>
+            <h2>No providers available</h2>
+            <p>External sign-in providers are unavailable right now.</p>
+          </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

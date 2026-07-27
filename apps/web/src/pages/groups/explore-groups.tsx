@@ -8,7 +8,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
 import {
   MagnifyingGlassIcon,
   UserGroupIcon,
@@ -18,9 +17,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { useGroupStore } from '@/modules/groups/store';
 import type { Group } from '@/modules/groups/store';
-import { GlassCard } from '@/shared/components/ui';
-import { durations } from '@cgraph-dev/animation-constants';
-import { tweens, loop, springs } from '@/lib/animation-presets';
+import { Button, IconButton } from '@/components/ui/button';
+import Skeleton from '@/components/ui/skeleton';
 import { captureError } from '@/lib/error-tracking';
 import { NodeGateModal } from '@/modules/groups/components/node-gate-modal';
 import { getGroupRoute, getKnownGroupRoute } from '@/modules/groups/routing';
@@ -94,46 +92,44 @@ export default function ExploreGroups() {
   const isMember = (groupId: string) => groups.some((g) => g.id === groupId);
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
-      {/* Header */}
-      <div className="border-b border-[var(--token-card-border)] px-6 py-4">
+    <div className="cgraph-workspace flex flex-1 flex-col overflow-y-auto">
+      <header className="cgraph-pane-header px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
-          <motion.button
+          <IconButton
+            icon={<ArrowLeftIcon />}
+            label="Back to groups"
             onClick={() => navigate('/groups')}
-            className="rounded-lg p-2 text-white/60 transition-all hover:bg-white/10 hover:text-white"
-          >
-            <ArrowLeftIcon className="h-5 w-5" />
-          </motion.button>
-
-          <div className="flex items-center gap-2">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={loop(tweens.ambient)}
-              className="inline-block"
-            >
-              <GlobeAltIcon className="h-6 w-6 text-primary-400" />
-            </motion.div>
-            <h1 className="text-xl font-bold text-white">Explore Groups</h1>
+          />
+          <div className="flex min-w-0 items-center gap-2">
+            <GlobeAltIcon className="h-6 w-6 shrink-0 text-[var(--token-interactive-primary)]" />
+            <div>
+              <h1 className="text-xl font-semibold text-[var(--token-text-primary)]">
+                Explore Groups
+              </h1>
+              <p className="text-xs text-[var(--token-text-muted)]">
+                Find public communities to join.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Search and Sort */}
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <input
               type="text"
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search public groups..."
-              className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] py-2.5 pl-10 pr-4 text-sm text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:bg-[var(--token-card-bg)/0.6] focus:outline-none focus:ring-4"
+              className="cgraph-field peer w-full py-2 pl-10 pr-4 text-sm"
             />
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--token-text-muted)] peer-focus:text-[var(--token-interactive-primary)]" />
           </div>
 
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="focus:ring-primary-500/50 rounded-xl bg-white/[0.08] px-4 py-2.5 text-sm text-white outline-none ring-1 ring-white/10"
+            aria-label="Sort groups"
+            className="cgraph-field px-4 py-2 text-sm"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -142,92 +138,62 @@ export default function ExploreGroups() {
             ))}
           </select>
         </div>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="flex-1 p-6">
+      <div className="cgraph-content flex-1">
         {isLoadingDiscover && discoverableGroups.length === 0 ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+          <div
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            aria-label="Loading public groups"
+          >
+            {Array.from({ length: 6 }, (_, index) => (
+              <div key={index} className="cgraph-card space-y-4 p-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-12 w-12 rounded-md" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+            ))}
           </div>
         ) : discoverableGroups.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-20">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={springs.bouncy}
-            >
-              <GlassCard variant="holographic" className="p-16 text-center">
-                {/* Floating particles */}
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute h-1 w-1 rounded-full bg-primary-400"
-                    style={{
-                      left: `${50 + Math.cos((i * Math.PI * 2) / 6) * 20}%`,
-                      top: `${40 + Math.sin((i * Math.PI * 2) / 6) * 20}%`,
-                    }}
-                    animate={{
-                      y: [0, -10, 0],
-                      opacity: [0.2, 0.5, 0.2],
-                    }}
-                    transition={{
-                      duration: durations.cinematic.ms / 1000,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  />
-                ))}
-                <motion.div
-                  animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.05, 1] }}
-                  transition={loop(tweens.glacial)}
-                  className="relative mb-4 inline-block"
-                >
-                  <MagnifyingGlassIcon className="mx-auto h-20 w-20 text-primary-400" />
-                  <motion.div
-                    className="border-primary-500/30 absolute inset-0 rounded-full border-2"
-                    animate={{
-                      scale: [1, 1.3, 1],
-                      opacity: [0.5, 0, 0.5],
-                    }}
-                    transition={loop(tweens.decorative)}
-                  />
-                </motion.div>
-                <h3 className="mb-2 bg-gradient-to-r from-white via-primary-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
-                  No groups found
-                </h3>
-                <p className="max-w-md text-gray-400">
-                  {search ? 'Try a different search term' : 'No public groups available yet'}
-                </p>
-              </GlassCard>
-            </motion.div>
+          <div className="cgraph-empty-state">
+            <div className="cgraph-empty-icon">
+              <MagnifyingGlassIcon className="h-6 w-6" />
+            </div>
+            <h2>No groups found</h2>
+            <p>{search ? 'Try a different search term.' : 'No public groups are available yet.'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {discoverableGroups.map((group) => (
-              <motion.div
+              <article
                 key={group.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="hover:border-primary-500/30 cursor-pointer rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] p-4 transition-colors hover:bg-[var(--token-card-bg)/0.4]"
+                className="cgraph-card flex cursor-pointer flex-col p-4"
+                data-cgraph-emphasis={group.is_node_gated || undefined}
                 onClick={() => navigate(getGroupRoute(group))}
               >
-                {/* Group Banner / Icon */}
                 <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-purple-600 text-lg font-bold text-white">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-[var(--product-line)] bg-[var(--product-surface-recessed)] text-lg font-semibold text-[var(--token-interactive-primary)]">
                     {group.iconUrl ? (
                       <img
                         src={group.iconUrl}
                         alt={group.name}
-                        className="h-full w-full rounded-xl object-cover"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
                       group.name.charAt(0).toUpperCase()
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold text-white">{group.name}</h3>
-                    <div className="flex items-center gap-2 text-xs text-white/40">
+                    <h3 className="truncate font-semibold text-[var(--token-text-primary)]">
+                      {group.name}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--token-text-muted)]">
                       <div className="flex items-center gap-1">
                         <UserGroupIcon className="h-3.5 w-3.5" />
                         <span>
@@ -235,7 +201,7 @@ export default function ExploreGroups() {
                         </span>
                       </div>
                       {group.is_node_gated && (
-                        <div className="flex items-center gap-1 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-amber-400">
+                        <div className="flex items-center gap-1 rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-0.5 text-amber-300">
                           <CurrencyDollarIcon className="h-3 w-3" />
                           <span>{group.gate_price_nodes} Nodes</span>
                         </div>
@@ -246,49 +212,41 @@ export default function ExploreGroups() {
 
                 {/* Description */}
                 {group.description && (
-                  <p className="mb-3 line-clamp-2 text-sm text-white/60">{group.description}</p>
+                  <p className="mb-4 line-clamp-2 flex-1 text-sm text-[var(--token-text-muted)]">
+                    {group.description}
+                  </p>
                 )}
 
-                {/* Join Button */}
-                <motion.button
-                  whileTap={!isMember(group.id) && joiningId !== group.id ? { scale: 0.98 } : {}}
+                <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!isMember(group.id)) handleJoin(group);
                   }}
                   disabled={isMember(group.id) || joiningId === group.id}
-                  className={`w-full rounded-lg py-2 text-sm font-medium transition-colors ${
-                    isMember(group.id)
-                      ? 'bg-[var(--token-card-bg)/0.6] text-white/40'
-                      : joiningId === group.id
-                        ? 'bg-primary-600/50 text-white/60'
-                        : 'bg-primary-600 text-white hover:bg-primary-500'
-                  }`}
+                  isLoading={joiningId === group.id}
+                  variant={isMember(group.id) ? 'secondary' : 'primary'}
+                  fullWidth
+                  animated={false}
                 >
                   {isMember(group.id)
                     ? 'Joined'
-                    : joiningId === group.id
-                      ? 'Joining...'
-                      : group.is_node_gated
+                    : group.is_node_gated
                         ? `Pay ${group.gate_price_nodes} Nodes`
                         : 'Join Group'}
-                </motion.button>
-              </motion.div>
+                </Button>
+              </article>
             ))}
           </div>
         )}
       </div>
 
-      {/* Node Gate Modal */}
-      <AnimatePresence>
-        {nodeGateGroup && (
-          <NodeGateModal
-            group={nodeGateGroup}
-            onSuccess={handleNodeGateSuccess}
-            onClose={() => setNodeGateGroup(null)}
-          />
-        )}
-      </AnimatePresence>
+      {nodeGateGroup && (
+        <NodeGateModal
+          group={nodeGateGroup}
+          onSuccess={handleNodeGateSuccess}
+          onClose={() => setNodeGateGroup(null)}
+        />
+      )}
     </div>
   );
 }

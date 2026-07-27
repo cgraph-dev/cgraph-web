@@ -31,11 +31,12 @@ export function SaveBar({
           exit={{ y: 100, opacity: 0 }}
           role="region"
           aria-label="Unsaved group settings"
-          className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 border-t border-[var(--token-border-muted)] bg-[var(--token-card-bg)]/90 p-4 backdrop-blur-sm lg:bottom-0"
+          className="cgraph-dialog-content fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-3 right-3 z-50 p-4 lg:bottom-3 lg:left-auto lg:right-3 lg:w-[min(42rem,calc(100vw-1.5rem))]"
+          data-cgraph-material="floating"
         >
           <div className="mx-auto flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="min-w-0">
-              <p className="text-sm text-gray-400">You have unsaved changes</p>
+              <p className="text-sm text-[var(--token-text-muted)]">You have unsaved changes</p>
               {errorMessage && (
                 <p role="alert" className="mt-1 text-sm text-red-300">
                   {errorMessage}
@@ -45,12 +46,14 @@ export function SaveBar({
             <div className="grid grid-cols-2 gap-3 sm:flex">
               <Button
                 variant="secondary"
+                animated={false}
                 onClick={onReset}
                 disabled={isSaving}
               >
                 Reset
               </Button>
               <Button
+                animated={false}
                 onClick={onSave}
                 disabled={!canSave}
                 isLoading={isSaving}

@@ -12,9 +12,8 @@
  *
  */
 
-import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useMemo } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { IconButton } from '@/components/ui/button';
 import { RoleManager } from '../role-manager';
 import type { GroupSettingsProps } from './types';
@@ -31,7 +30,6 @@ import { DangerTab } from './danger-tab';
 import { ConfirmModal } from './confirm-modal';
 import { SaveBar } from './save-bar';
 import { SETTINGS_TABS } from './constants';
-import { FADE_UP } from '@/lib/animations/transitions';
 
 /**
  * Group Settings component.
@@ -99,18 +97,31 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
 
   if (!activeGroup) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-gray-500">Group not found</p>
+      <div className="cgraph-workspace flex h-full items-center justify-center p-6">
+        <div className="cgraph-empty-state">
+          <div className="cgraph-empty-icon">
+            <Cog6ToothIcon className="h-6 w-6" />
+          </div>
+          <h2 className="text-lg font-semibold text-[var(--token-text-primary)]">Group not found</h2>
+          <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+            This group is unavailable or you no longer have access.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!effectiveActiveTab) {
     return (
-      <div className="flex h-full items-center justify-center bg-[var(--token-card-bg)] p-8">
-        <div className="max-w-md rounded-2xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-6 text-center">
-          <h2 className="text-lg font-bold text-white">Group settings unavailable</h2>
-          <p className="mt-2 text-sm text-gray-400">
+      <div className="cgraph-workspace flex h-full items-center justify-center p-8">
+        <div className="cgraph-empty-state max-w-md">
+          <div className="cgraph-empty-icon">
+            <Cog6ToothIcon className="h-6 w-6" />
+          </div>
+          <h2 className="text-lg font-semibold text-[var(--token-text-primary)]">
+            Group settings unavailable
+          </h2>
+          <p className="mt-2 text-sm text-[var(--token-text-muted)]">
             You do not have access to manage or personalize this group.
           </p>
         </div>
@@ -119,8 +130,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
   }
 
   return (
-    <div className="flex h-full min-w-0 flex-col bg-[var(--token-card-bg)] lg:flex-row">
-      {/* Sidebar */}
+    <div className="cgraph-workspace flex h-full min-w-0 flex-col lg:flex-row">
       <SettingsSidebar
         group={activeGroup}
         activeTab={effectiveActiveTab}
@@ -128,8 +138,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
         tabs={visibleTabs}
       />
 
-      {/* Content */}
-      <div className="min-w-0 flex-1 overflow-y-auto p-4 pb-24 lg:p-6">
+      <div className="cgraph-content min-w-0 flex-1 overflow-y-auto pb-24">
         {onClose && (
           <div className="mb-4 flex justify-end">
             <IconButton
@@ -140,60 +149,48 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
           </div>
         )}
 
-        <AnimatePresence mode="wait">
-          {effectiveActiveTab === 'overview' && (
-            <OverviewTab
-              key="overview"
-              group={activeGroup}
-              formData={formData}
-              onChange={handleFormChange}
-              isAdmin={permissions.canManageGroup}
-            />
-          )}
+        {effectiveActiveTab === 'overview' && (
+          <OverviewTab
+            group={activeGroup}
+            formData={formData}
+            onChange={handleFormChange}
+            isAdmin={permissions.canManageGroup}
+          />
+        )}
 
-          {effectiveActiveTab === 'roles' && (
-            <motion.div key="roles" {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="h-full">
-              <RoleManager groupId={groupId} />
-            </motion.div>
-          )}
+        {effectiveActiveTab === 'roles' && <RoleManager groupId={groupId} />}
 
-          {effectiveActiveTab === 'members' && (
-            <MembersTab key="members" group={activeGroup} permissions={permissions} />
-          )}
+        {effectiveActiveTab === 'members' && (
+          <MembersTab group={activeGroup} permissions={permissions} />
+        )}
 
-          {effectiveActiveTab === 'invites' && (
-            <InvitesTab
-              key="invites"
-              groupId={groupId}
-              groupName={activeGroup.name}
-              canCreateInvites={permissions.canCreateInvites}
-              canDeleteInvites={permissions.canDeleteInvites}
-            />
-          )}
+        {effectiveActiveTab === 'invites' && (
+          <InvitesTab
+            groupId={groupId}
+            groupName={activeGroup.name}
+            canCreateInvites={permissions.canCreateInvites}
+            canDeleteInvites={permissions.canDeleteInvites}
+          />
+        )}
 
-          {effectiveActiveTab === 'channels' && <ChannelsTab key="channels" groupId={groupId} />}
+        {effectiveActiveTab === 'channels' && <ChannelsTab groupId={groupId} />}
 
-          {effectiveActiveTab === 'notifications' && (
-            <NotificationsTab key="notifications" groupId={groupId} />
-          )}
+        {effectiveActiveTab === 'notifications' && <NotificationsTab groupId={groupId} />}
 
-          {effectiveActiveTab === 'audit-log' && <AuditLogTab key="audit-log" groupId={groupId} />}
+        {effectiveActiveTab === 'audit-log' && <AuditLogTab groupId={groupId} />}
 
-          {effectiveActiveTab === 'automod' && <AutomodTab key="automod" groupId={groupId} />}
+        {effectiveActiveTab === 'automod' && <AutomodTab groupId={groupId} />}
 
-          {effectiveActiveTab === 'danger' && (
-            <DangerTab
-              key="danger"
-              isOwner={isOwner}
-              errorMessage={dangerError}
-              onLeave={() => setShowLeaveConfirm(true)}
-              onDelete={() => setShowDeleteConfirm(true)}
-            />
-          )}
-        </AnimatePresence>
+        {effectiveActiveTab === 'danger' && (
+          <DangerTab
+            isOwner={isOwner}
+            errorMessage={dangerError}
+            onLeave={() => setShowLeaveConfirm(true)}
+            onDelete={() => setShowDeleteConfirm(true)}
+          />
+        )}
       </div>
 
-      {/* Save Bar */}
       <SaveBar
         hasChanges={permissions.canManageGroup && hasChanges}
         canSave={canSave}
@@ -203,33 +200,27 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
         onReset={handleReset}
       />
 
-      {/* Leave Confirmation */}
-      <AnimatePresence>
-        {showLeaveConfirm && (
-          <ConfirmModal
-            title="Leave Group"
-            message={`Are you sure you want to leave ${activeGroup.name}? You'll need an invite to rejoin.`}
-            confirmLabel="Leave"
-            danger
-            onConfirm={handleLeave}
-            onClose={() => setShowLeaveConfirm(false)}
-          />
-        )}
-      </AnimatePresence>
+      {showLeaveConfirm && (
+        <ConfirmModal
+          title="Leave Group"
+          message={`Are you sure you want to leave ${activeGroup.name}? You'll need an invite to rejoin.`}
+          confirmLabel="Leave"
+          danger
+          onConfirm={handleLeave}
+          onClose={() => setShowLeaveConfirm(false)}
+        />
+      )}
 
-      {/* Delete Confirmation */}
-      <AnimatePresence>
-        {showDeleteConfirm && (
-          <ConfirmModal
-            title="Delete Group"
-            message={`Are you sure you want to delete ${activeGroup.name}? This action cannot be undone and all data will be lost.`}
-            confirmLabel="Delete"
-            danger
-            onConfirm={handleDelete}
-            onClose={() => setShowDeleteConfirm(false)}
-          />
-        )}
-      </AnimatePresence>
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Delete Group"
+          message={`Are you sure you want to delete ${activeGroup.name}? This action cannot be undone and all data will be lost.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={handleDelete}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }

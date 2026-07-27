@@ -6,8 +6,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { GlassCard } from '@/shared/components/ui';
+import { ClipboardDocumentIcon, PlusIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
+import { GlassCard, Skeleton } from '@/shared/components/ui';
 import { apiClient, http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 
@@ -116,71 +117,85 @@ export default function InviteFriendsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Invite Friends</h1>
-        <p className="mt-1 text-foreground-muted">
-          Share your invite link and earn 50 Nodes for each friend who joins CGraph.
-        </p>
-      </div>
-
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <GlassCard variant="frosted">
-          <div className="p-4 text-center">
-            <p className="text-3xl font-bold text-primary-400">{stats.total_referrals}</p>
-            <p className="mt-1 text-sm text-foreground-muted">Friends Invited</p>
+    <div className="cgraph-content mx-auto max-w-3xl space-y-5">
+      <header className="cgraph-page-header">
+        <div className="flex items-start gap-3">
+          <div className="cgraph-empty-icon mb-0 h-10 w-10 shrink-0">
+            <UserPlusIcon className="h-5 w-5" />
           </div>
-        </GlassCard>
-        <GlassCard variant="frosted">
-          <div className="p-4 text-center">
-            <p className="text-3xl font-bold text-primary-400">{stats.total_nodes_earned}</p>
-            <p className="mt-1 text-sm text-foreground-muted">Nodes Earned</p>
+          <div>
+            <p className="cgraph-eyebrow">Invitations</p>
+            <h1 className="text-2xl font-semibold text-[var(--token-text-primary)]">
+              Invite Friends
+            </h1>
+            <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+              Share an invite link and earn 50 Nodes for each friend who joins CGraph.
+            </p>
           </div>
-        </GlassCard>
-      </div>
-
-      {/* Create new invite */}
-      <div className="flex justify-end">
-        <button
+        </div>
+        <Button
           type="button"
           onClick={handleCreate}
-          disabled={isCreating}
-          className="shadow-primary-500/25 rounded-xl bg-gradient-to-r from-primary-500 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
+          isLoading={isCreating}
+          leftIcon={<PlusIcon />}
+          animated={false}
         >
-          {isCreating ? 'Creating...' : 'Create New Invite'}
-        </button>
+          Create invite
+        </Button>
+      </header>
+
+      <div className="grid grid-cols-2 gap-4">
+        <GlassCard>
+          <div className="p-4 text-center">
+            <p className="text-2xl font-semibold text-[var(--token-text-primary)]">
+              {stats.total_referrals}
+            </p>
+            <p className="mt-1 text-sm text-[var(--token-text-muted)]">Friends invited</p>
+          </div>
+        </GlassCard>
+        <GlassCard>
+          <div className="p-4 text-center">
+            <p className="text-2xl font-semibold text-[var(--token-text-primary)]">
+              {stats.total_nodes_earned}
+            </p>
+            <p className="mt-1 text-sm text-[var(--token-text-muted)]">Nodes earned</p>
+          </div>
+        </GlassCard>
       </div>
 
-      {/* Invite list */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+        <div className="space-y-3" aria-label="Loading invites">
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="cgraph-card flex items-center gap-4 p-4">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-36" />
+              </div>
+              <Skeleton className="h-9 w-24 rounded-md" />
+            </div>
+          ))}
         </div>
       ) : invites.length === 0 ? (
-        <GlassCard variant="frosted">
-          <div className="p-8 text-center">
-            <p className="text-foreground-muted">
-              No invites yet. Create one to start inviting friends!
-            </p>
+        <GlassCard>
+          <div className="cgraph-empty-state">
+            <div className="cgraph-empty-icon">
+              <UserPlusIcon className="h-6 w-6" />
+            </div>
+            <h2>No invites yet</h2>
+            <p>Create an invite to start bringing friends into CGraph.</p>
           </div>
         </GlassCard>
       ) : (
         <div className="space-y-3">
           {invites.map((invite) => (
-            <motion.div
-              key={invite.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-primary)] p-4"
-            >
-              <div className="flex items-center justify-between gap-4">
+            <GlassCard key={invite.id} className="p-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 flex-1">
-                  <code className="text-sm font-medium text-foreground">
+                  <code className="break-all text-sm font-medium text-[var(--token-text-primary)]">
                     {INVITE_BASE_URL}
                     {invite.code}
                   </code>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-foreground-muted">
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--token-text-muted)]">
                     <span>
                       {invite.uses} / {invite.max_uses} uses
                     </span>
@@ -189,15 +204,19 @@ export default function InviteFriendsPage() {
                     )}
                   </div>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
+                  animated={false}
+                  leftIcon={<ClipboardDocumentIcon />}
                   onClick={() => handleCopy(invite)}
-                  className="bg-primary-500/20 hover:bg-primary-500/30 flex-shrink-0 rounded-lg px-4 py-2 text-sm font-medium text-primary-400 transition-all"
+                  className="shrink-0"
                 >
                   {copiedId === invite.id ? 'Copied!' : 'Copy Link'}
-                </button>
+                </Button>
               </div>
-            </motion.div>
+            </GlassCard>
           ))}
         </div>
       )}

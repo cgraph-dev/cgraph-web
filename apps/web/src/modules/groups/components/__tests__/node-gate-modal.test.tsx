@@ -78,14 +78,22 @@ vi.mock('@/lib/animations/transitions', () => ({
   FADE_IN: { initial: { opacity: 0 }, animate: { opacity: 1 } },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    log: vi.fn(),
-  }),
-}));
+vi.mock('@/lib/logger', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/logger')>();
+  return {
+    ...actual,
+    createLogger: () => ({
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      log: vi.fn(),
+      time: vi.fn(),
+      timeEnd: vi.fn(),
+      breadcrumb: vi.fn(),
+    }),
+  };
+});
 
 const mockSubscribeToGroup = vi.fn();
 vi.mock('@/modules/groups/services/group-subscription-api', () => ({
@@ -187,8 +195,7 @@ describe('NodeGateModal', () => {
 
   it('calls onClose when backdrop is clicked', () => {
     render(<NodeGateModal {...defaultProps} />);
-    const backdrop = document.querySelector('.fixed.inset-0');
-    if (backdrop) fireEvent.click(backdrop);
+    fireEvent.click(screen.getByTestId('dialog-backdrop'));
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
@@ -212,9 +219,10 @@ describe('NodeGateModal', () => {
     );
 
     render(<NodeGateModal {...defaultProps} />);
-    fireEvent.click(screen.getByText('Pay & Join'));
+    const submit = screen.getByRole('button', { name: 'Pay & Join' });
+    fireEvent.click(submit);
 
-    expect(screen.getByText('Processing...')).toBeInTheDocument();
+    expect(submit).toHaveAttribute('aria-busy', 'true');
     resolveSubscription({ id: 'sub-1', status: 'active' });
     await waitFor(() => {
       expect(screen.getByText('Pay & Join')).toBeInTheDocument();

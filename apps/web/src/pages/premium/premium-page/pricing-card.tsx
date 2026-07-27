@@ -4,13 +4,11 @@
  * Individual pricing tier card with features and CTA button.
  */
 
-import { motion } from 'motion/react';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
 import type { PremiumTier, BillingInterval } from './types';
 import { getPrice, getYearlyTotal } from './utils';
-import { tweens, loop } from '@/lib/animation-presets';
-import { FADE_UP } from '@/lib/animations/transitions';
 
 interface PricingCardProps {
   tier: PremiumTier;
@@ -31,7 +29,7 @@ interface PricingCardProps {
  */
 export function PricingCard({
   tier,
-  index,
+  index: _index,
   isSelected,
   isCurrentPlan,
   isSubscribing,
@@ -41,59 +39,45 @@ export function PricingCard({
   onSubscribe,
 }: PricingCardProps) {
   return (
-    <motion.div
-      key={tier.id}
-      {...FADE_UP}
-      transition={{ delay: 0.1 + index * 0.1 }}
+    <button
+      type="button"
       onClick={() => onSelect(tier.id)}
-      className="cursor-pointer"
+      aria-pressed={isSelected}
+      className="h-full text-left focus:outline-none"
     >
       <GlassCard
-        variant={tier.popular ? 'holographic' : 'frosted'}
-        glow={tier.popular || isSelected}
-        glowColor={tier.popular ? 'rgba(16, 185, 129, 0.3)' : undefined}
-        borderGradient={tier.popular}
-        className={`relative h-full overflow-hidden p-6 transition-all ${
-          isSelected ? 'ring-2 ring-primary-500' : ''
+        className={`relative h-full overflow-hidden p-6 ${
+          isSelected ? 'ring-2 ring-[var(--token-focus-ring)]' : ''
         }`}
+        data-cgraph-emphasis={tier.popular || undefined}
       >
-        {/* Popular Badge */}
         {tier.popular && (
-          <div className="absolute right-0 top-0">
-            <div className="rounded-bl-lg bg-gradient-to-r from-primary-500 to-purple-500 px-4 py-1 text-xs font-bold text-white">
-              MOST POPULAR
-            </div>
-          </div>
+          <span className="absolute right-4 top-4 rounded-md border border-[var(--token-border-default)] bg-[var(--token-interactive-primary)] px-2 py-1 text-xs font-semibold text-[var(--token-text-inverse)]">
+            Most popular
+          </span>
         )}
 
-        {/* Current Plan Badge */}
         {isCurrentPlan && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute left-4 top-4 rounded-full border border-green-500/30 bg-green-500/20 px-3 py-1"
-          >
-            <span className="text-xs font-semibold text-green-400">Current Plan</span>
-          </motion.div>
+          <span className="absolute left-4 top-4 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-400">
+            Current plan
+          </span>
         )}
 
-        {/* Tier Header */}
-        <div className="mb-4 mt-4 flex items-center gap-3">
-          <div className={`rounded-xl bg-gradient-to-br p-3 ${tier.gradient}`}>{tier.icon}</div>
+        <div className="mb-4 mt-8 flex items-center gap-3">
+          <div className="cgraph-empty-icon mb-0 h-11 w-11 shrink-0">{tier.icon}</div>
           <div>
-            <h3 className="text-xl font-bold text-white">{tier.name}</h3>
-            <p className="text-sm text-gray-400">{tier.description}</p>
+            <h3 className="text-xl font-semibold text-[var(--token-text-primary)]">{tier.name}</h3>
+            <p className="text-sm text-[var(--token-text-muted)]">{tier.description}</p>
           </div>
         </div>
 
-        {/* Price */}
         <div className="mb-6">
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-bold text-white">
+            <span className="text-4xl font-semibold text-[var(--token-text-primary)]">
               ${getPrice(tier, billingInterval)}
             </span>
             {tier.price > 0 && (
-              <span className="text-gray-400">
+              <span className="text-[var(--token-text-muted)]">
                 /{billingInterval === 'year' ? 'year' : 'month'}
               </span>
             )}
@@ -103,63 +87,52 @@ export function PricingCard({
           )}
         </div>
 
-        {/* Features */}
         <ul className="mb-6 space-y-3">
-          {tier.features.slice(0, 8).map((feature, fIndex) => (
-            <motion.li
-              key={fIndex}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + fIndex * 0.05 }}
-              className="flex items-center gap-2"
-            >
+          {tier.features.slice(0, 8).map((feature) => (
+            <li key={feature.name} className="flex items-center gap-2">
               {feature.included ? (
                 <CheckIcon className="h-5 w-5 flex-shrink-0 text-green-400" />
               ) : (
-                <XMarkIcon className="h-5 w-5 flex-shrink-0 text-gray-600" />
+                <XMarkIcon className="h-5 w-5 flex-shrink-0 text-[var(--token-text-disabled)]" />
               )}
-              <span className={feature.included ? 'text-gray-300' : 'text-gray-600'}>
+              <span
+                className={
+                  feature.included
+                    ? 'text-[var(--token-text-secondary)]'
+                    : 'text-[var(--token-text-disabled)]'
+                }
+              >
                 {feature.name}
                 {feature.detail && (
-                  <span className="ml-1 text-xs text-gray-500">({feature.detail})</span>
+                  <span className="ml-1 text-xs text-[var(--token-text-muted)]">
+                    ({feature.detail})
+                  </span>
                 )}
               </span>
-            </motion.li>
+            </li>
           ))}
         </ul>
 
-        {/* CTA Button */}
-        <motion.button
+        <Button
+          variant={tier.popular ? 'primary' : 'secondary'}
+          fullWidth
+          animated={false}
           onClick={(e) => {
             e.stopPropagation();
             onSubscribe(tier.id);
           }}
           disabled={isCurrentPlan || isSubscribing}
-          className={`w-full rounded-xl py-3 font-semibold transition-all ${
-            isCurrentPlan
-              ? 'cursor-not-allowed bg-[var(--token-card-bg)] text-gray-500'
-              : tier.popular
-                ? `bg-gradient-to-r ${tier.gradient} text-white hover:opacity-90`
-                : 'bg-[var(--token-card-bg)] text-white hover:bg-[var(--token-card-bg)]'
-          }`}
-          whileHover={!isCurrentPlan ? { scale: 1.02 } : {}}
-          whileTap={!isCurrentPlan ? { scale: 0.98 } : {}}
+          isLoading={isSubscribing && selectedTier === tier.id}
         >
-          {isSubscribing && selectedTier === tier.id ? (
-            <motion.div
-              className="mx-auto h-5 w-5 rounded-full border-2 border-white border-t-transparent"
-              animate={{ rotate: 360 }}
-              transition={loop(tweens.slow)}
-            />
-          ) : isCurrentPlan ? (
+          {isCurrentPlan ? (
             'Current Plan'
           ) : tier.id === 'free' ? (
             'Free Forever'
           ) : (
             `Get ${tier.name}`
           )}
-        </motion.button>
+        </Button>
       </GlassCard>
-    </motion.div>
+    </button>
   );
 }

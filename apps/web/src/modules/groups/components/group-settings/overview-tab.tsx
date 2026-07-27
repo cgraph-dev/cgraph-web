@@ -133,16 +133,17 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <h2 className="mb-2 text-2xl font-bold text-white">Overview</h2>
-        <p className="text-gray-400">Configure your group's basic settings</p>
-      </div>
+      <header>
+        <p className="cgraph-eyebrow">Group settings</p>
+        <h2 className="text-2xl font-semibold text-[var(--token-text-primary)]">Overview</h2>
+        <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+          Configure your group&apos;s basic settings
+        </p>
+      </header>
 
-      {/* Banner & Icon */}
-      <GlassCard variant="frosted" className="p-6">
-        <h3 className="mb-4 font-semibold text-white">Group Appearance</h3>
+      <GlassCard className="p-6">
+        <h3 className="mb-4 font-semibold text-[var(--token-text-primary)]">Group Appearance</h3>
 
-        {/* Hidden file inputs */}
         <input
           ref={bannerInputRef}
           type="file"
@@ -160,8 +161,10 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
           onChange={handleIconChange}
         />
 
-        {/* Banner */}
-        <div className="relative mb-4 h-32 overflow-hidden rounded-xl bg-[var(--token-card-bg)/0.6]">
+        <div
+          className="cgraph-section-surface relative mb-4 h-32 overflow-hidden"
+          data-cgraph-material="recessed"
+        >
           {displayBannerUrl ? (
             <img
               src={displayBannerUrl}
@@ -171,7 +174,7 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <PhotoIcon className="h-12 w-12 text-gray-600" />
+              <PhotoIcon className="h-12 w-12 text-[var(--token-text-disabled)]" />
             </div>
           )}
           {isAdmin && (
@@ -181,6 +184,7 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
               leftIcon={<PhotoIcon />}
               onClick={handleBannerClick}
               isLoading={isUploadingBanner}
+              animated={false}
               className="absolute bottom-3 right-3"
             >
               Change banner
@@ -188,9 +192,8 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
           )}
         </div>
 
-        {/* Icon */}
         <div className="flex items-center gap-4">
-          <div className="h-20 w-20 overflow-hidden rounded-2xl bg-[var(--token-card-bg)/0.6]">
+          <div className="cgraph-empty-icon mb-0 h-20 w-20 overflow-hidden p-0">
             {displayIconUrl ? (
               <img
                 src={displayIconUrl}
@@ -199,8 +202,8 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
                 loading="lazy"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-600 to-purple-600">
-                <span className="text-2xl font-bold text-white">
+              <div className="flex h-full w-full items-center justify-center">
+                <span className="text-2xl font-semibold text-[var(--token-text-primary)]">
                   {group.name.slice(0, 2).toUpperCase()}
                 </span>
               </div>
@@ -214,18 +217,20 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
                 leftIcon={<PhotoIcon />}
                 onClick={handleIconClick}
                 isLoading={isUploadingIcon}
+                animated={false}
               >
                 Upload icon
               </Button>
-              <p className="mt-1 text-xs text-gray-500">Recommended: 512x512 · Max 5MB</p>
+              <p className="mt-1 text-xs text-[var(--token-text-muted)]">
+                Recommended: 512x512, max 5MB
+              </p>
             </div>
           )}
         </div>
       </GlassCard>
 
-      {/* Basic Info */}
-      <GlassCard variant="frosted" className="space-y-4 p-6">
-        <h3 className="font-semibold text-white">Basic Information</h3>
+      <GlassCard className="space-y-4 p-6">
+        <h3 className="font-semibold text-[var(--token-text-primary)]">Basic Information</h3>
 
         <Input
           id="group-settings-name"
@@ -249,12 +254,21 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
           onChange={(event) => onChange({ ...formData, description: event.target.value })}
         />
 
-        <div className="flex items-center justify-between rounded-lg bg-[var(--token-card-bg)/0.4] p-4">
+        <div
+          className="cgraph-list-row flex items-center justify-between"
+          data-cgraph-material="recessed"
+        >
           <div className="min-w-0 pr-4">
-            <label htmlFor="group-settings-public" className="font-medium text-white">
+            <label
+              htmlFor="group-settings-public"
+              className="font-medium text-[var(--token-text-primary)]"
+            >
               Public group
             </label>
-            <p id="group-settings-public-description" className="text-xs text-gray-400">
+            <p
+              id="group-settings-public-description"
+              className="text-xs text-[var(--token-text-muted)]"
+            >
               Anyone can discover and join
             </p>
           </div>
@@ -267,7 +281,6 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
         </div>
       </GlassCard>
 
-      {/* Node Gating */}
       <NodeGatingSection group={group} isOwner={isAdmin} />
     </div>
   );

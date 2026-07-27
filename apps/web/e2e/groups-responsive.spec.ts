@@ -1,8 +1,24 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import { TOKEN_REGISTRY } from '../src/lib/theme/tokens';
 
 const GROUP_ID = 'responsive-group';
 const GENERAL_CHANNEL_ID = 'responsive-general';
 const NEWS_CHANNEL_ID = 'responsive-news';
+const APP_THEMES = ['aurora', 'dark', 'light', 'bubble'] as const;
+const THEME_RUNTIME = {
+  aurora: { category: 'dark', variant: 'aurora', colorScheme: 'dark' },
+  dark: { category: 'dark', variant: 'dark', colorScheme: 'dark' },
+  light: { category: 'light', variant: 'light', colorScheme: 'light' },
+  bubble: { category: 'dark', variant: 'bubble', colorScheme: 'dark' },
+} as const;
+const UI_MATRIX_VIEWPORTS = [
+  { width: 360, height: 800 },
+  { width: 390, height: 844 },
+  { width: 768, height: 1024 },
+  { width: 1024, height: 720 },
+  { width: 1440, height: 900 },
+  { width: 1920, height: 1080 },
+] as const;
 
 const group = {
   id: GROUP_ID,
@@ -164,6 +180,38 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth
     )
   ).toBe(true);
+}
+
+async function applyAppTheme(page: Page, theme: (typeof APP_THEMES)[number]): Promise<void> {
+  const runtime = THEME_RUNTIME[theme];
+  const tokens = TOKEN_REGISTRY[theme];
+  if (!tokens) throw new Error(`Missing visual contract for ${theme}`);
+
+  await page.evaluate(
+    ({ runtime, theme, tokens }) => {
+      const root = document.documentElement;
+      root.classList.remove(
+        'light',
+        'dark',
+        'theme-aurora',
+        'theme-dark',
+        'theme-light',
+        'theme-bubble'
+      );
+      root.classList.add(runtime.category);
+      root.classList.add(`theme-${runtime.variant}`);
+      root.style.setProperty('color-scheme', runtime.colorScheme);
+
+      for (const [key, value] of Object.entries(tokens)) {
+        root.style.setProperty(`--token-${key}`, value);
+      }
+
+      root.dataset.cgraphTestTheme = theme;
+    },
+    { runtime, theme, tokens }
+  );
+  await expect(page.locator('html')).toHaveClass(new RegExp(`theme-${theme}`));
+  await expect(page.locator('html')).toHaveAttribute('data-cgraph-test-theme', theme);
 }
 
 test.describe('Responsive Groups navigation', () => {
@@ -342,7 +390,7 @@ test.describe('Responsive Groups navigation', () => {
             const saveBarBox = await saveBar.boundingBox();
             return saveBarBox ? Math.round(saveBarBox.y + saveBarBox.height) : null;
           })
-          .toBe(viewport.height);
+          .toBe(viewport.height - 12);
       }
 
       await saveBar.getByRole('button', { name: 'Reset' }).click();
@@ -421,6 +469,40 @@ test.describe('Responsive Groups navigation', () => {
       await expect(page.getByRole('searchbox', { name: 'Search members' })).toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Filter members by role' })).toBeVisible();
       await expectNoHorizontalOverflow(page);
+    });
+  }
+
+  for (const viewport of UI_MATRIX_VIEWPORTS) {
+    test(`renders every app theme at ${viewport.width}x${viewport.height}`, async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(60_000);
+      await page.setViewportSize(viewport);
+      await installGroupMocks(page);
+      await page.goto(`/groups/${GROUP_ID}/settings`);
+
+      for (const theme of APP_THEMES) {
+        await applyAppTheme(page, theme);
+        await expect(
+          page.getByRole('navigation', { name: 'Group settings' })
+        ).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: 'Overview', exact: true })
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Change banner' })).toHaveAttribute(
+          'data-cgraph-surface',
+          'control'
+        );
+        await expectNoHorizontalOverflow(page);
+
+        await testInfo.attach(
+          `groups-settings-${theme}-${viewport.width}x${viewport.height}`,
+          {
+            body: await page.screenshot({ fullPage: true }),
+            contentType: 'image/png',
+          }
+        );
+      }
     });
   }
 });

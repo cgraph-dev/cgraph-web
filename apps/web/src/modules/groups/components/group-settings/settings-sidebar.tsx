@@ -20,9 +20,9 @@ export function SettingsSidebar({
   tabs = SETTINGS_TABS,
 }: SettingsSidebarProps) {
   return (
-    <aside className="w-full shrink-0 border-b border-[var(--token-border-muted)] bg-[var(--token-sidebar-bg)] p-3 backdrop-blur-2xl backdrop-saturate-[1.8] lg:w-56 lg:border-r lg:border-b-0 lg:p-5">
+    <aside className="cgraph-pane w-full shrink-0 border-b p-3 lg:w-56 lg:border-r lg:border-b-0 lg:p-5">
       <div className="mb-3 flex items-center gap-3 lg:mb-6 lg:border-b lg:border-[var(--token-border-muted)] lg:pb-4">
-        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+        <div className="cgraph-empty-icon mb-0 h-10 w-10 shrink-0 overflow-hidden p-0">
           {group.iconUrl ? (
             <img
               src={group.iconUrl}
@@ -31,14 +31,16 @@ export function SettingsSidebar({
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-600 to-purple-600">
-              <span className="font-bold text-white">{group.name.slice(0, 2).toUpperCase()}</span>
+            <div className="flex h-full w-full items-center justify-center">
+              <span className="font-semibold text-[var(--token-text-primary)]">
+                {group.name.slice(0, 2).toUpperCase()}
+              </span>
             </div>
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-semibold text-white">{group.name}</h3>
-          <p className="text-xs text-gray-400">Group Settings</p>
+          <h3 className="truncate font-semibold text-[var(--token-text-primary)]">{group.name}</h3>
+          <p className="text-xs text-[var(--token-text-muted)]">Group Settings</p>
         </div>
       </div>
 
@@ -53,6 +55,7 @@ export function SettingsSidebar({
               tab.id === 'danger' ? 'danger' : activeTab === tab.id ? 'secondary' : 'ghost'
             }
             size="sm"
+            animated={false}
             leftIcon={<tab.icon />}
             onClick={() => onTabChange(tab.id)}
             aria-current={activeTab === tab.id ? 'page' : undefined}

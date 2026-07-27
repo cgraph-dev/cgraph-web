@@ -28,15 +28,21 @@ export function FeatureComparisonTable({ isVisible }: FeatureComparisonTableProp
           exit={{ height: 0, opacity: 0 }}
           className="overflow-hidden"
         >
-          <GlassCard variant="frosted" className="overflow-x-auto p-6">
+          <GlassCard className="overflow-x-auto p-5">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-dark-700">
-                  <th className="px-4 py-4 text-left font-medium text-gray-400">Feature</th>
+                <tr className="border-b border-[var(--token-border-muted)]">
+                  <th className="px-4 py-4 text-left font-medium text-[var(--token-text-muted)]">
+                    Feature
+                  </th>
                   {PREMIUM_TIERS.map((tier) => (
                     <th key={tier.id} className="px-4 py-4 text-center">
                       <span
-                        className={`font-bold ${tier.popular ? 'text-primary-400' : 'text-white'}`}
+                        className={`font-semibold ${
+                          tier.popular
+                            ? 'text-[var(--token-interactive-primary)]'
+                            : 'text-[var(--token-text-primary)]'
+                        }`}
                       >
                         {tier.name}
                       </span>
@@ -46,8 +52,10 @@ export function FeatureComparisonTable({ isVisible }: FeatureComparisonTableProp
               </thead>
               <tbody>
                 {(PREMIUM_TIERS[0]?.features ?? []).map((feature, index) => (
-                  <tr key={index} className="border-b border-dark-800">
-                    <td className="px-4 py-4 text-gray-300">{feature.name}</td>
+                  <tr key={index} className="border-b border-[var(--token-border-muted)]">
+                    <td className="px-4 py-4 text-[var(--token-text-secondary)]">
+                      {feature.name}
+                    </td>
                     {PREMIUM_TIERS.map((tier) => {
                       const tierFeature = tier.features[index];
                       return (
@@ -55,7 +63,7 @@ export function FeatureComparisonTable({ isVisible }: FeatureComparisonTableProp
                           {tierFeature?.included ? (
                             <CheckIcon className="mx-auto h-5 w-5 text-green-400" />
                           ) : (
-                            <XMarkIcon className="mx-auto h-5 w-5 text-gray-600" />
+                            <XMarkIcon className="mx-auto h-5 w-5 text-[var(--token-text-disabled)]" />
                           )}
                         </td>
                       );

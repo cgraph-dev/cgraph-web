@@ -55,11 +55,22 @@ vi.mock('@/lib/api-client', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
-    warn: vi.fn(),
-  }),
-}));
+vi.mock('@/lib/logger', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/logger')>();
+  return {
+    ...actual,
+    createLogger: () => ({
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      log: vi.fn(),
+      time: vi.fn(),
+      timeEnd: vi.fn(),
+      breadcrumb: vi.fn(),
+    }),
+  };
+});
 
 import { ConnectedAccounts } from '../connected-accounts';
 
@@ -141,7 +152,7 @@ describe('ConnectedAccounts', () => {
     render(<ConnectedAccounts />);
 
     expect(
-      await screen.findByText('No external account providers are available right now.')
+      await screen.findByText('External sign-in providers are unavailable right now.')
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /connect/i })).not.toBeInTheDocument();
   });

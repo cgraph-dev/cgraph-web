@@ -5,9 +5,7 @@
  * Production-ready with free and premium tiers and Stripe integration ready.
  */
 
-import { durations } from '@cgraph-dev/animation-constants';
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { SparklesIcon, CurrencyDollarIcon, GiftIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
@@ -24,8 +22,6 @@ import { PREMIUM_TIERS } from './constants';
 import { PricingCard } from './pricing-card';
 import { FeatureComparisonTable } from './feature-comparison-table';
 import { FAQSection } from './faq-section';
-import { tweens } from '@/lib/animation-presets';
-import { FADE_IN, FADE_UP } from '@/lib/animations/transitions';
 
 const logger = createLogger('PremiumPage');
 
@@ -67,104 +63,64 @@ export default function PremiumPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
-      {/* Ambient particles */}
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="pointer-events-none fixed h-1 w-1 rounded-full bg-primary-400"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            opacity: 0.1,
-          }}
-          animate={{
-            y: [0, -50, 0],
-            opacity: [0.1, 0.3, 0.1],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: durations.epic.ms / 1000 + Math.random() * 5,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-          }}
-        />
-      ))}
-
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-12 text-center"
-        >
-          <motion.div
-            className="border-primary-500/30 bg-primary-500/20 mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-2"
-            whileHover={{ opacity: 0.9 }}
-          >
-            <SparklesIcon className="h-5 w-5 text-primary-400" />
-            <span className="font-semibold text-primary-400">Unlock Your Potential</span>
-          </motion.div>
-
-          <h1 className="mb-4 bg-gradient-to-r from-white via-primary-200 to-purple-200 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-            Upgrade to Premium
-          </h1>
-          <p className="mx-auto max-w-2xl text-lg text-gray-400">
-            Get access to exclusive features, unlimited customization, and the best CGraph
-            experience.
-          </p>
-
-          {/* Node Balance */}
-          <motion.div
-            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/20 px-4 py-2"
-            whileHover={{ opacity: 0.9 }}
-          >
-            <CurrencyDollarIcon className="h-5 w-5 text-yellow-400" />
-            <span className="font-semibold text-yellow-400">
+    <div className="cgraph-workspace flex-1 overflow-y-auto">
+      <div className="cgraph-content mx-auto max-w-6xl space-y-10 py-10">
+        <header className="cgraph-page-header">
+          <div className="flex items-start gap-3">
+            <div className="cgraph-empty-icon mb-0 h-11 w-11 shrink-0">
+              <SparklesIcon className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="cgraph-eyebrow">Subscription</p>
+              <h1 className="text-3xl font-semibold text-[var(--token-text-primary)]">
+                Upgrade to Premium
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-[var(--token-text-muted)]">
+                Unlock expanded groups, customization, uploads, history, and AI features.
+              </p>
+            </div>
+          </div>
+          <div className="cgraph-card flex items-center gap-2 px-3 py-2" data-cgraph-material="recessed">
+            <CurrencyDollarIcon className="h-5 w-5 text-amber-400" />
+            <span className="font-medium text-[var(--token-text-primary)]">
               {(nodeBalance ?? 0).toLocaleString()} Nodes
             </span>
             <Button
               variant="ghost"
               size="sm"
+              animated={false}
               onClick={() => navigate('/me/wallet/shop')}
-              className="ml-2 text-xs"
             >
-              Get More
+              Get more
             </Button>
-          </motion.div>
-        </motion.div>
+          </div>
+        </header>
 
-        {/* Billing Toggle */}
-        <motion.div {...FADE_UP} transition={{ delay: 0.1 }} className="mb-10 flex justify-center">
-          <div className="inline-flex items-center gap-4 rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-1">
+        <div className="flex justify-center">
+          <div className="cgraph-segmented">
             <button
+              type="button"
               onClick={() => setBillingInterval('month')}
-              className={`rounded-lg px-6 py-2 text-sm font-medium transition-all ${
-                billingInterval === 'month'
-                  ? 'bg-primary-500 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              aria-pressed={billingInterval === 'month'}
+              className="px-6 text-sm font-medium"
             >
               Monthly
             </button>
             <button
+              type="button"
               onClick={() => setBillingInterval('year')}
-              className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-medium transition-all ${
-                billingInterval === 'year'
-                  ? 'bg-primary-500 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              aria-pressed={billingInterval === 'year'}
+              className="flex items-center gap-2 px-6 text-sm font-medium"
             >
               Yearly
-              <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">
+              <span className="rounded-md bg-green-500/10 px-2 py-0.5 text-xs text-green-400">
                 Save 20%
               </span>
             </button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Pricing Cards */}
-        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-2">
           {PREMIUM_TIERS.map((tier, index) => (
             <PricingCard
               key={tier.id}
@@ -181,49 +137,36 @@ export default function PremiumPage() {
           ))}
         </div>
 
-        {/* Feature Comparison Toggle */}
-        <motion.div {...FADE_IN} transition={{ delay: 0.5 }} className="mb-8 text-center">
-          <button
+        <div className="text-center">
+          <Button
+            variant="secondary"
+            animated={false}
             onClick={() => {
               setShowFeatureComparison(!showFeatureComparison);
               HapticFeedback.light();
             }}
-            className="mx-auto flex items-center gap-2 font-medium text-primary-400 hover:text-primary-300"
           >
             {showFeatureComparison ? 'Hide' : 'Show'} full feature comparison
-            <motion.div
-              animate={{ rotate: showFeatureComparison ? 180 : 0 }}
-              transition={tweens.standard}
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </motion.div>
-          </button>
-        </motion.div>
+          </Button>
+        </div>
 
-        {/* Feature Comparison Table */}
         <FeatureComparisonTable isVisible={showFeatureComparison} />
-
-        {/* FAQ Section */}
         <FAQSection />
 
-        {/* Bottom CTA */}
-        <motion.div {...FADE_UP} transition={{ delay: 0.7 }} className="mt-16 text-center">
-          <GlassCard variant="holographic" glow borderGradient className="inline-block p-8">
-            <GiftIcon className="mx-auto mb-4 h-12 w-12 text-primary-400" />
-            <h3 className="mb-2 text-xl font-bold text-white">Not ready for Premium?</h3>
-            <p className="mb-4 text-gray-400">
+        <div className="text-center">
+          <GlassCard className="inline-block max-w-xl p-6" data-cgraph-emphasis="true">
+            <GiftIcon className="mx-auto mb-3 h-9 w-9 text-[var(--token-interactive-primary)]" />
+            <h2 className="mb-2 text-lg font-semibold text-[var(--token-text-primary)]">
+              Not ready for Premium?
+            </h2>
+            <p className="mb-4 text-sm text-[var(--token-text-muted)]">
               Get nodes to unlock individual features and rewards!
             </p>
-            <Button onClick={() => navigate('/me/wallet/shop')}>Explore Node Shop</Button>
+            <Button animated={false} onClick={() => navigate('/me/wallet/shop')}>
+              Explore Node Shop
+            </Button>
           </GlassCard>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
