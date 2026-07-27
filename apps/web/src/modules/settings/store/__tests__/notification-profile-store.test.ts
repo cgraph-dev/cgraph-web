@@ -6,9 +6,13 @@ import type {
 } from '@cgraph-dev/shared-types';
 
 const notificationProfilesApi = vi.hoisted(() => ({
+  list: vi.fn(),
+  getActive: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   setMembers: vi.fn(),
+  activate: vi.fn(),
+  deactivate: vi.fn(),
 }));
 
 vi.mock('@/lib/api-client', () => ({
@@ -107,11 +111,48 @@ beforeEach(() => {
     profiles: [],
     activeProfile: null,
     isLoading: false,
+    isMutating: false,
     error: null,
   });
 });
 
 describe('NotificationProfileStore', () => {
+  it('loads the profile list and active profile as one authoritative snapshot', async () => {
+    const active = notificationProfile();
+    notificationProfilesApi.list.mockResolvedValueOnce(ok([active]));
+    notificationProfilesApi.getActive.mockResolvedValueOnce(ok(active));
+
+    await useNotificationProfileStore.getState().fetchProfiles();
+
+    expect(notificationProfilesApi.list).toHaveBeenCalledOnce();
+    expect(notificationProfilesApi.getActive).toHaveBeenCalledOnce();
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      profiles: [active],
+      activeProfile: active,
+      isLoading: false,
+      error: null,
+    });
+  });
+
+  it('keeps the prior snapshot when either profile read fails', async () => {
+    const existing = notificationProfile();
+    useNotificationProfileStore.setState({
+      profiles: [existing],
+      activeProfile: existing,
+    });
+    notificationProfilesApi.list.mockResolvedValueOnce(ok([notificationProfile({ name: 'New' })]));
+    notificationProfilesApi.getActive.mockResolvedValueOnce(failure('Active profile unavailable'));
+
+    await useNotificationProfileStore.getState().fetchProfiles();
+
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      profiles: [existing],
+      activeProfile: existing,
+      isLoading: false,
+      error: 'Active profile unavailable',
+    });
+  });
+
   it('forwards a complete create command to the typed API client and projects its result', async () => {
     const saved = notificationProfile();
     notificationProfilesApi.create.mockResolvedValueOnce(ok(saved));
@@ -199,6 +240,77 @@ describe('NotificationProfileStore', () => {
       profiles: [existing],
       isLoading: false,
       error: 'Allowed contacts must be friends',
+    });
+  });
+
+  it('activates a profile only after the typed command succeeds', async () => {
+    const existing = notificationProfile();
+    notificationProfilesApi.activate.mockResolvedValueOnce(ok(existing));
+
+    await expect(
+      useNotificationProfileStore.getState().activateProfile(existing.id, 60)
+    ).resolves.toBe(true);
+
+    expect(notificationProfilesApi.activate).toHaveBeenCalledWith({
+      profile_id: existing.id,
+      duration_minutes: 60,
+    });
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      activeProfile: existing,
+      isMutating: false,
+      error: null,
+    });
+  });
+
+  it('keeps the prior active profile when activation is rejected', async () => {
+    const existing = notificationProfile();
+    useNotificationProfileStore.setState({ activeProfile: existing });
+    notificationProfilesApi.activate.mockResolvedValueOnce(failure('Activation rejected'));
+
+    await expect(
+      useNotificationProfileStore.getState().activateProfile('profile-2', null)
+    ).resolves.toBe(false);
+
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      activeProfile: existing,
+      isMutating: false,
+      error: 'Activation rejected',
+    });
+  });
+
+  it('prevents overlapping activation commands', async () => {
+    let resolveActivation:
+      | ((value: { readonly ok: true; readonly data: NotificationProfile }) => void)
+      | undefined;
+    notificationProfilesApi.activate.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveActivation = resolve;
+      })
+    );
+    const profile = notificationProfile();
+
+    const first = useNotificationProfileStore.getState().activateProfile(profile.id, 60);
+    await expect(
+      useNotificationProfileStore.getState().activateProfile(profile.id, 480)
+    ).resolves.toBe(false);
+    resolveActivation?.(ok(profile));
+    await expect(first).resolves.toBe(true);
+
+    expect(notificationProfilesApi.activate).toHaveBeenCalledOnce();
+  });
+
+  it('deactivates only after the typed command succeeds', async () => {
+    const existing = notificationProfile();
+    useNotificationProfileStore.setState({ activeProfile: existing });
+    notificationProfilesApi.deactivate.mockResolvedValueOnce(ok(null));
+
+    await expect(useNotificationProfileStore.getState().deactivateProfile()).resolves.toBe(true);
+
+    expect(notificationProfilesApi.deactivate).toHaveBeenCalledOnce();
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      activeProfile: null,
+      isMutating: false,
+      error: null,
     });
   });
 });

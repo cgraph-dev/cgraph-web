@@ -22,12 +22,12 @@ interface NotificationProfileState {
   readonly profiles: readonly NotificationProfile[];
   readonly activeProfile: NotificationProfile | null;
   readonly isLoading: boolean;
+  readonly isMutating: boolean;
   readonly error: string | null;
 }
 
 interface NotificationProfileActions {
   fetchProfiles(): Promise<void>;
-  fetchActiveProfile(): Promise<void>;
   createProfile(params: CreateNotificationProfileRequest): Promise<NotificationProfile | null>;
   updateProfile(
     profileId: string,
@@ -35,26 +35,11 @@ interface NotificationProfileActions {
   ): Promise<NotificationProfile | null>;
   deleteProfile(profileId: string): Promise<void>;
   setAllowedMembers(profileId: string, userIds: readonly string[]): Promise<NotificationProfile | null>;
-  activateProfile(profileId: string, durationMinutes?: number | null): Promise<void>;
-  deactivateProfile(): Promise<void>;
+  activateProfile(profileId: string, durationMinutes?: number | null): Promise<boolean>;
+  deactivateProfile(): Promise<boolean>;
 }
 
 type NotificationProfileStore = NotificationProfileState & NotificationProfileActions;
-
-/** Envelope shape returned by CGraph API. */
-interface ApiEnvelope<T> {
-  readonly data: T;
-}
-
-async function apiGet<T>(path: string): Promise<ApiEnvelope<T>> {
-  const response: { data: ApiEnvelope<T> } = await httpClient.get(path);
-  return response.data;
-}
-
-async function apiPost<T>(path: string, data?: unknown): Promise<ApiEnvelope<T>> {
-  const response: { data: ApiEnvelope<T> } = await httpClient.post(path, data);
-  return response.data;
-}
 
 async function apiDelete(path: string): Promise<unknown> {
   const response = await httpClient.delete(path);
@@ -67,26 +52,35 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
   profiles: [],
   activeProfile: null,
   isLoading: false,
+  isMutating: false,
   error: null,
 
   async fetchProfiles() {
     set({ isLoading: true, error: null });
     try {
-      const result = await apiGet<NotificationProfile[]>(BASE_PATH);
-      set({ profiles: result.data, isLoading: false });
+      const [profilesResult, activeResult] = await Promise.all([
+        apiClient.notificationProfiles.list(),
+        apiClient.notificationProfiles.getActive(),
+      ]);
+
+      if (!profilesResult.ok) {
+        set({ error: profilesResult.error.message, isLoading: false });
+        return;
+      }
+      if (!activeResult.ok) {
+        set({ error: activeResult.error.message, isLoading: false });
+        return;
+      }
+
+      set({
+        profiles: profilesResult.data,
+        activeProfile: activeResult.data,
+        isLoading: false,
+      });
     } catch (err) {
       const message = extractErrorMessage(err);
       logger.error('Failed to fetch profiles', err);
       set({ error: message, isLoading: false });
-    }
-  },
-
-  async fetchActiveProfile() {
-    try {
-      const result = await apiGet<NotificationProfile | null>(`${BASE_PATH}/active`);
-      set({ activeProfile: result.data });
-    } catch (err) {
-      logger.error('Failed to fetch active profile', err);
     }
   },
 
@@ -185,30 +179,61 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
   },
 
   async activateProfile(profileId, durationMinutes) {
+    if (get().isMutating) {
+      return false;
+    }
+
+    set({ isMutating: true, error: null });
     try {
-      const result = await apiPost<NotificationProfile | null>(`${BASE_PATH}/activate`, {
+      const result = await apiClient.notificationProfiles.activate({
         profile_id: profileId,
         duration_minutes: durationMinutes ?? null,
       });
-      set({ activeProfile: result.data });
-      await get().fetchProfiles();
+
+      if (!result.ok) {
+        logger.error('Failed to activate profile', result.error);
+        toast.error(result.error.message);
+        set({ error: result.error.message, isMutating: false });
+        return false;
+      }
+
+      set({ activeProfile: result.data, isMutating: false });
       toast.success('Profile activated');
+      return true;
     } catch (err) {
       const message = extractErrorMessage(err);
       logger.error('Failed to activate profile', err);
       toast.error(message);
+      set({ error: message, isMutating: false });
+      return false;
     }
   },
 
   async deactivateProfile() {
+    if (get().isMutating) {
+      return false;
+    }
+
+    set({ isMutating: true, error: null });
     try {
-      await apiPost<null>(`${BASE_PATH}/deactivate`);
-      set({ activeProfile: null });
+      const result = await apiClient.notificationProfiles.deactivate();
+
+      if (!result.ok) {
+        logger.error('Failed to deactivate profile', result.error);
+        toast.error(result.error.message);
+        set({ error: result.error.message, isMutating: false });
+        return false;
+      }
+
+      set({ activeProfile: null, isMutating: false });
       toast.success('Profile deactivated');
+      return true;
     } catch (err) {
       const message = extractErrorMessage(err);
       logger.error('Failed to deactivate profile', err);
       toast.error(message);
+      set({ error: message, isMutating: false });
+      return false;
     }
   },
 }));
@@ -233,6 +258,9 @@ function extractErrorMessage(err: unknown): string {
     if (message) {
       return message;
     }
+  }
+  if (err instanceof Error && err.message) {
+    return err.message;
   }
   return 'An unexpected error occurred';
 }

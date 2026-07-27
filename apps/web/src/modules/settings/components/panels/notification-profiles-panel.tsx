@@ -8,7 +8,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeftIcon, PlusIcon, BellSlashIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowLeftIcon,
+  PlusIcon,
+  BellSlashIcon,
+  EllipsisVerticalIcon,
+} from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { tweens } from '@/lib/animation-presets';
@@ -47,8 +52,9 @@ export function NotificationProfilesPanel(): React.ReactNode {
     profiles,
     activeProfile,
     isLoading,
+    isMutating,
+    error,
     fetchProfiles,
-    fetchActiveProfile,
     deleteProfile,
     activateProfile,
     deactivateProfile,
@@ -58,9 +64,8 @@ export function NotificationProfilesPanel(): React.ReactNode {
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    fetchProfiles();
-    fetchActiveProfile();
-  }, [fetchProfiles, fetchActiveProfile]);
+    void fetchProfiles();
+  }, [fetchProfiles]);
 
   function handleProfileClick(profile: NotificationProfile): void {
     HapticFeedback.light();
@@ -73,16 +78,20 @@ export function NotificationProfilesPanel(): React.ReactNode {
     setMenuTarget(profile);
   }
 
-  function handleQuickEnable(durationMinutes: number | null): void {
+  async function handleQuickEnable(durationMinutes: number | null): Promise<void> {
     if (menuTarget) {
-      activateProfile(menuTarget.id, durationMinutes);
-      setMenuTarget(null);
+      const activated = await activateProfile(menuTarget.id, durationMinutes);
+      if (activated) {
+        setMenuTarget(null);
+      }
     }
   }
 
-  function handleDeactivate(): void {
-    deactivateProfile();
-    setMenuTarget(null);
+  async function handleDeactivate(): Promise<void> {
+    const deactivated = await deactivateProfile();
+    if (deactivated) {
+      setMenuTarget(null);
+    }
   }
 
   function handleDeleteProfile(profileId: string): void {
@@ -94,6 +103,8 @@ export function NotificationProfilesPanel(): React.ReactNode {
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} transition={tweens.standard}>
       <div className="mb-6 flex items-center gap-4">
         <button
+          type="button"
+          aria-label="Back to notification settings"
           onClick={() => {
             HapticFeedback.light();
             navigate('/me/settings/notifications');
@@ -139,11 +150,13 @@ export function NotificationProfilesPanel(): React.ReactNode {
                   </div>
                 </div>
                 <button
+                  type="button"
+                  disabled={isMutating}
                   onClick={() => {
                     HapticFeedback.medium();
-                    handleDeactivate();
+                    void handleDeactivate();
                   }}
-                  className="aurora-social-button rounded-lg px-4 py-1.5 text-sm font-bold"
+                  className="aurora-social-button rounded-lg px-4 py-1.5 text-sm font-bold disabled:cursor-wait disabled:opacity-50"
                 >
                   Disable
                 </button>
@@ -152,6 +165,23 @@ export function NotificationProfilesPanel(): React.ReactNode {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      {error ? (
+        <div
+          className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+          role="alert"
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            className="shrink-0 font-semibold text-red-100 underline underline-offset-2 disabled:cursor-wait disabled:opacity-50"
+            disabled={isLoading || isMutating}
+            onClick={() => void fetchProfiles()}
+          >
+            Retry
+          </button>
+        </div>
+      ) : null}
 
       {/* Profile List */}
       <div className="space-y-3">
@@ -174,12 +204,16 @@ export function NotificationProfilesPanel(): React.ReactNode {
             <GlassCard
               key={profile.id}
               variant="default"
-              className="aurora-social-panel cursor-pointer p-4 transition-transform hover:scale-[1.01] active:scale-[0.99]"
-              onClick={() => handleProfileClick(profile)}
+              className="aurora-social-panel p-4"
               onContextMenu={(e: React.MouseEvent) => handleContextMenu(e, profile)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focus-ring)]"
+                  onClick={() => handleProfileClick(profile)}
+                  aria-label={`Edit ${profile.name}`}
+                >
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
                     style={{ backgroundColor: `${profile.color}20`, color: profile.color }}
@@ -197,7 +231,7 @@ export function NotificationProfilesPanel(): React.ReactNode {
                         : ''}
                     </p>
                   </div>
-                </div>
+                </button>
                 <div className="flex items-center gap-2">
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium text-white ${getScheduleStatusColor(profile, activeProfile?.id ?? null)}`}
@@ -207,6 +241,22 @@ export function NotificationProfilesPanel(): React.ReactNode {
                     />
                     {getScheduleStatusLabel(profile, activeProfile?.id ?? null)}
                   </span>
+                  <button
+                    type="button"
+                    aria-label={`Actions for ${profile.name}`}
+                    aria-haspopup="menu"
+                    aria-expanded={menuTarget?.id === profile.id}
+                    disabled={isMutating}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[var(--token-text-muted)] hover:bg-[var(--token-surface-hover)] hover:text-[var(--token-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focus-ring)] disabled:cursor-wait disabled:opacity-50"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      const bounds = event.currentTarget.getBoundingClientRect();
+                      setMenuPosition({ x: bounds.right, y: bounds.bottom });
+                      setMenuTarget(profile);
+                    }}
+                  >
+                    <EllipsisVerticalIcon className="h-5 w-5" aria-hidden="true" />
+                  </button>
                 </div>
               </div>
             </GlassCard>
@@ -217,6 +267,7 @@ export function NotificationProfilesPanel(): React.ReactNode {
       {/* Create Button */}
       <div className="mt-6 flex justify-center">
         <button
+          type="button"
           onClick={() => {
             HapticFeedback.medium();
             navigate('/me/settings/notification-profiles/new');
@@ -235,8 +286,9 @@ export function NotificationProfilesPanel(): React.ReactNode {
             profile={menuTarget}
             position={menuPosition}
             isActive={activeProfile?.id === menuTarget.id}
-            onQuickEnable={handleQuickEnable}
-            onDeactivate={handleDeactivate}
+            disabled={isMutating}
+            onQuickEnable={(durationMinutes) => void handleQuickEnable(durationMinutes)}
+            onDeactivate={() => void handleDeactivate()}
             onDelete={() => handleDeleteProfile(menuTarget.id)}
             onClose={() => setMenuTarget(null)}
           />

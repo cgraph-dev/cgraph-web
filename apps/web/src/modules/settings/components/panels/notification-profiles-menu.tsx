@@ -29,6 +29,7 @@ interface NotificationProfilesMenuProps {
   readonly profile: NotificationProfile;
   readonly position: { readonly x: number; readonly y: number };
   readonly isActive: boolean;
+  readonly disabled: boolean;
   readonly onQuickEnable: (durationMinutes: number | null) => void;
   readonly onDeactivate: () => void;
   readonly onDelete: () => void;
@@ -40,6 +41,7 @@ export function NotificationProfilesMenu({
   profile,
   position,
   isActive,
+  disabled,
   onQuickEnable,
   onDeactivate,
   onDelete,
@@ -48,6 +50,8 @@ export function NotificationProfilesMenu({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    menuRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+
     function handleClickOutside(e: MouseEvent): void {
       if (menuRef.current && e.target instanceof Node && !menuRef.current.contains(e.target)) {
         onClose();
@@ -86,6 +90,9 @@ export function NotificationProfilesMenu({
         exit={{ opacity: 0, scale: 0.95 }}
         transition={tweens.fast}
         className="aurora-social-panel fixed z-50 w-64 overflow-hidden rounded-xl border border-[var(--token-border)] bg-[var(--token-surface)] shadow-xl"
+        role="menu"
+        aria-label={`Actions for ${profile.name}`}
+        aria-busy={disabled}
         style={{
           left: Math.min(position.x, window.innerWidth - 280),
           top: Math.min(position.y, window.innerHeight - 300),
@@ -101,8 +108,11 @@ export function NotificationProfilesMenu({
         <div className="p-1.5">
           {isActive ? (
             <button
+              type="button"
+              role="menuitem"
               onClick={onDeactivate}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-[var(--token-text-primary)] hover:bg-[var(--token-surface-hover)]"
+              disabled={disabled}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-[var(--token-text-primary)] hover:bg-[var(--token-surface-hover)] disabled:cursor-wait disabled:opacity-50"
             >
               <XMarkIcon className="h-4 w-4 text-[var(--token-text-muted)]" />
               Disable profile
@@ -111,8 +121,11 @@ export function NotificationProfilesMenu({
             DURATION_OPTIONS.map((option) => (
               <button
                 key={option.label}
+                type="button"
+                role="menuitem"
                 onClick={() => onQuickEnable(option.minutes)}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-[var(--token-text-primary)] hover:bg-[var(--token-surface-hover)]"
+                disabled={disabled}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-[var(--token-text-primary)] hover:bg-[var(--token-surface-hover)] disabled:cursor-wait disabled:opacity-50"
               >
                 <ClockIcon className="h-4 w-4 text-[var(--token-text-muted)]" />
                 {option.label}
@@ -123,8 +136,11 @@ export function NotificationProfilesMenu({
           <div className="my-1 border-t border-[var(--token-border)]" />
 
           <button
+            type="button"
+            role="menuitem"
             onClick={onDelete}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10"
+            disabled={disabled}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 disabled:cursor-wait disabled:opacity-50"
           >
             <TrashIcon className="h-4 w-4" />
             Delete profile
