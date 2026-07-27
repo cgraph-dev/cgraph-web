@@ -2,25 +2,21 @@
  * ChannelList component
  */
 
-import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
   XMarkIcon,
   UserGroupIcon,
-  PlusIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { http } from '@/lib/api-client';
-import { Button, IconButton } from '@/components/ui/button';
-import { useGroupStore } from '@/modules/groups/store';
+import { IconButton } from '@/components/ui/button';
 import type { ChannelListProps } from './types';
 import { ChannelItem } from './channel-item';
 
 /**
- * Channel List component with category creation.
+ * Channel list renderer and navigation.
  */
 export function ChannelList({
   activeGroup,
@@ -31,9 +27,6 @@ export function ChannelList({
   onCloseMobile,
   onBackToGroups,
 }: ChannelListProps) {
-  const [showCategoryInput, setShowCategoryInput] = useState(false);
-  const [categoryName, setCategoryName] = useState('');
-  const { fetchGroup } = useGroupStore();
   if (!activeGroup) {
     return (
       <div
@@ -167,47 +160,6 @@ export function ChannelList({
               onSelect={onCloseMobile}
             />
           ))}
-
-        <div className="mt-2 px-2">
-          {showCategoryInput ? (
-            <div className="flex items-center gap-1">
-              <input
-                type="text"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                placeholder="Category name"
-                autoFocus
-                onKeyDown={async (e) => {
-                  if (e.key === 'Enter' && categoryName.trim()) {
-                    await http.post(`/api/v1/groups/${activeGroup.id}/categories`, {
-                      name: categoryName.trim(),
-                    });
-                    setCategoryName('');
-                    setShowCategoryInput(false);
-                    fetchGroup(activeGroup.id);
-                  } else if (e.key === 'Escape') {
-                    setShowCategoryInput(false);
-                    setCategoryName('');
-                  }
-                }}
-                aria-label="Category name"
-                className="min-h-11 min-w-0 flex-1 rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] px-2 py-1 text-sm text-[var(--token-text-primary)] outline-none placeholder:text-[var(--token-text-muted)] focus:border-[var(--token-interactive-primary)] focus:ring-2 focus:ring-[var(--token-interactive-primary)]/20 lg:min-h-9 lg:text-xs"
-              />
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              fullWidth
-              animated={false}
-              leftIcon={<PlusIcon />}
-              onClick={() => setShowCategoryInput(true)}
-              className="min-h-11 !justify-start px-1.5 text-[11px] font-bold uppercase lg:min-h-8"
-            >
-              Create Category
-            </Button>
-          )}
-        </div>
       </div>
     </div>
   );

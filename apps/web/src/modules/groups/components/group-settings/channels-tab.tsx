@@ -1,11 +1,10 @@
 import { useCallback, useState, useEffect } from 'react';
-import { motion, AnimatePresence, Reorder } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { apiClient, http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
-
-const logger = createLogger('ChannelsTab');
+import { getGroupPermissionError } from '../../permission-errors';
 import { CreateChannelForm } from './create-channel-form';
 import { ChannelListItem } from './channel-list-item';
 import type { ChannelItem } from './channel-list-item';
@@ -14,6 +13,8 @@ import { ChannelPermissionsPanel } from './channel-permissions-panel';
 import { ChannelCategoriesPanel } from './channel-categories-panel';
 import type { ChannelsTabProps } from './types';
 import { FADE_UP } from '@/lib/animations/transitions';
+
+const logger = createLogger('ChannelsTab');
 
 /**
  * Channels Tab component.
@@ -25,6 +26,8 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [permissionsChannelId, setPermissionsChannelId] = useState<string | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
+  const [reorderError, setReorderError] = useState<string | null>(null);
 
   // Create form state
   const [newName, setNewName] = useState('');
@@ -124,6 +127,38 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
     setEditTopic(channel.topic || '');
   };
 
+  const handleMoveChannel = async (index: number, offset: -1 | 1) => {
+    const targetIndex = index + offset;
+    if (isReordering || targetIndex < 0 || targetIndex >= channels.length) return;
+
+    const previousOrder = channels;
+    const nextOrder = [...channels];
+    [nextOrder[index], nextOrder[targetIndex]] = [nextOrder[targetIndex]!, nextOrder[index]!];
+
+    setChannels(nextOrder);
+    setIsReordering(true);
+    setReorderError(null);
+
+    try {
+      await http.put(`/api/v1/groups/${groupId}/channels/reorder`, {
+        channel_ids: nextOrder.map((channel) => channel.id),
+      });
+    } catch (error) {
+      logger.warn('Failed to reorder channels, reverting', error);
+      setChannels(previousOrder);
+      setReorderError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to reorder channels.',
+          'Could not save the channel order.'
+        )
+      );
+      await fetchChannels();
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   return (
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
@@ -161,6 +196,14 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
 
       {/* Channels List */}
       <GlassCard variant="frosted" className="divide-y divide-gray-700/50">
+        {reorderError && (
+          <p
+            role="alert"
+            className="border-b border-[var(--token-border-muted)] px-4 py-3 text-sm text-[var(--token-feedback-error)]"
+          >
+            {reorderError}
+          </p>
+        )}
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
@@ -170,31 +213,29 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
             No channels yet. Create one to get started.
           </div>
         ) : (
-          <Reorder.Group
-            axis="y"
-            values={channels}
-            onReorder={setChannels}
-            className="divide-y divide-gray-700/50"
-          >
+          <div role="list" aria-label="Channels" className="divide-y divide-gray-700/50">
             {channels.map((channel, index) => (
-              <Reorder.Item key={channel.id} value={channel}>
-                <ChannelListItem
-                  channel={channel}
-                  index={index}
-                  editingId={editingId}
-                  editName={editName}
-                  editTopic={editTopic}
-                  onEditNameChange={setEditName}
-                  onEditTopicChange={setEditTopic}
-                  onSave={handleUpdate}
-                  onCancelEdit={() => setEditingId(null)}
-                  onStartEdit={startEdit}
-                  onDelete={(id) => setDeleteConfirmId(id)}
-                  onPermissions={(id) => setPermissionsChannelId(id)}
-                />
-              </Reorder.Item>
+              <ChannelListItem
+                key={channel.id}
+                channel={channel}
+                index={index}
+                totalCount={channels.length}
+                editingId={editingId}
+                editName={editName}
+                editTopic={editTopic}
+                reorderDisabled={isReordering}
+                onEditNameChange={setEditName}
+                onEditTopicChange={setEditTopic}
+                onSave={handleUpdate}
+                onCancelEdit={() => setEditingId(null)}
+                onStartEdit={startEdit}
+                onDelete={(id) => setDeleteConfirmId(id)}
+                onPermissions={(id) => setPermissionsChannelId(id)}
+                onMoveUp={() => handleMoveChannel(index, -1)}
+                onMoveDown={() => handleMoveChannel(index, 1)}
+              />
             ))}
-          </Reorder.Group>
+          </div>
         )}
       </GlassCard>
 

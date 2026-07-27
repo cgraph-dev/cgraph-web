@@ -77,19 +77,6 @@ const mockChannel2: Channel = {
   lastMessageAt: '2026-01-30T11:00:00Z',
 };
 
-const mockChannel3: Channel = {
-  id: 'channel-3',
-  name: 'off-topic',
-  type: 'text',
-  topic: null,
-  categoryId: 'cat-2',
-  position: 2,
-  isNsfw: false,
-  slowModeSeconds: 0,
-  unreadCount: 0,
-  lastMessageAt: null,
-};
-
 const mockMember: Member = {
   id: 'member-1',
   userId: 'user-123',
@@ -886,38 +873,6 @@ describe('groupStore (modules)', () => {
       useGroupStore.getState().setTypingUser('channel-1', 'user-123', true);
 
       expect(useGroupStore.getState().typingUsers['channel-1']).toHaveLength(1);
-    });
-  });
-
-  // updateChannelOrder
-  describe('updateChannelOrder', () => {
-    it('should reorder channels locally after API call', async () => {
-      const groupWithChannels: Group = {
-        ...mockGroup,
-        channels: [mockChannel, mockChannel2, mockChannel3],
-      };
-      useGroupStore.setState({ groups: [groupWithChannels] });
-      mockedApi.put.mockResolvedValue({});
-
-      await useGroupStore
-        .getState()
-        .updateChannelOrder('group-1', ['channel-3', 'channel-1', 'channel-2']);
-
-      const { channels } = useGroupStore.getState().groups[0]!;
-      expect(channels[0]!.id).toBe('channel-3');
-      expect(channels[1]!.id).toBe('channel-1');
-      expect(channels[2]!.id).toBe('channel-2');
-    });
-
-    it('should call the correct API endpoint with channel_ids', async () => {
-      useGroupStore.setState({ groups: [mockGroup] });
-      mockedApi.put.mockResolvedValue({});
-
-      await useGroupStore.getState().updateChannelOrder('group-1', ['channel-2', 'channel-1']);
-
-      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/groups/group-1/channels/reorder', {
-        channel_ids: ['channel-2', 'channel-1'],
-      });
     });
   });
 

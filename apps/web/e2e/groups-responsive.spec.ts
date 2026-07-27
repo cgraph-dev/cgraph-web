@@ -163,10 +163,7 @@ test.describe('Responsive Groups navigation', () => {
       await expect(
         page.getByRole('link', { name: 'Open CGraph Builders settings' })
       ).toHaveAttribute('data-cgraph-surface', 'control');
-      await expect(page.getByRole('button', { name: 'Create Category' })).toHaveAttribute(
-        'data-cgraph-surface',
-        'control'
-      );
+      await expect(page.getByRole('button', { name: 'Create Category' })).toHaveCount(0);
       expect((await page.getByRole('link', { name: 'News' }).boundingBox())?.height).toBeGreaterThanOrEqual(
         44
       );

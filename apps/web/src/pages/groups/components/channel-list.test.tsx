@@ -35,18 +35,6 @@ vi.mock('@/lib/animations/animation-engine', () => ({
   },
 }));
 
-vi.mock('@/modules/groups/store', async () => {
-  const actual = await vi.importActual<typeof import('@/modules/groups/store')>(
-    '@/modules/groups/store'
-  );
-  return {
-    ...actual,
-    useGroupStore: () => ({
-      fetchGroup: vi.fn(),
-    }),
-  };
-});
-
 const group = {
   id: 'group-1',
   name: 'Alpha Team',
@@ -139,6 +127,7 @@ describe('ChannelList', () => {
     expect(categoryButton).toHaveAttribute('aria-expanded', 'true');
     expect(unreadChannel).toHaveTextContent('7');
     expect(channelList.queryByText('You')).not.toBeInTheDocument();
+    expect(channelList.queryByRole('button', { name: 'Create Category' })).not.toBeInTheDocument();
 
     fireEvent.click(backButton);
     expect(onBackToGroups).toHaveBeenCalledTimes(1);

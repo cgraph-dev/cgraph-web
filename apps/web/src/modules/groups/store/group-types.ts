@@ -220,7 +220,6 @@ export interface GroupState {
     >
   ) => Promise<Group>;
   deleteGroup: (groupId: string) => Promise<void>;
-  updateChannelOrder: (groupId: string, channelIds: string[]) => Promise<void>;
   createInvite: (
     groupId: string,
     options?: { maxUses?: number; expiresIn?: number }

@@ -711,20 +711,6 @@ export function createGroupActions(
       }));
     },
 
-    updateChannelOrder: async (groupId: string, channelIds: string[]) => {
-      await http.put(`/api/v1/groups/${groupId}/channels/reorder`, { channel_ids: channelIds });
-      // Optimistic update - reorder channels locally
-      set((state) => ({
-        groups: state.groups.map((g) => {
-          if (g.id !== groupId) return g;
-          const orderedChannels = channelIds
-            .map((id) => g.channels.find((c) => c.id === id))
-            .filter((c): c is Channel => c !== undefined);
-          return { ...g, channels: orderedChannels };
-        }),
-      }));
-    },
-
     createInvite: async (groupId: string, options = {}) => {
       const result = await apiClient.groups.createInvite(groupId, {
         max_uses: options.maxUses,

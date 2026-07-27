@@ -6,8 +6,11 @@ import {
   TrashIcon,
   PencilIcon,
   ShieldCheckIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { entranceVariants } from '@/lib/animation-presets';
+import { IconButton } from '@/components/ui/button';
 
 const channelIcons = {
   text: HashtagIcon,
@@ -33,9 +36,11 @@ interface ChannelItem {
 interface ChannelListItemProps {
   channel: ChannelItem;
   index: number;
+  totalCount: number;
   editingId: string | null;
   editName: string;
   editTopic: string;
+  reorderDisabled: boolean;
   onEditNameChange: (name: string) => void;
   onEditTopicChange: (topic: string) => void;
   onSave: (channelId: string) => void;
@@ -43,6 +48,8 @@ interface ChannelListItemProps {
   onStartEdit: (channel: ChannelItem) => void;
   onDelete: (channelId: string) => void;
   onPermissions: (channelId: string) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }
 
 export type { ChannelItem };
@@ -53,9 +60,11 @@ export type { ChannelItem };
 export function ChannelListItem({
   channel,
   index,
+  totalCount,
   editingId,
   editName,
   editTopic,
+  reorderDisabled,
   onEditNameChange,
   onEditTopicChange,
   onSave,
@@ -63,6 +72,8 @@ export function ChannelListItem({
   onStartEdit,
   onDelete,
   onPermissions,
+  onMoveUp,
+  onMoveDown,
 }: ChannelListItemProps) {
   const Icon: React.ElementType = hasChannelIcon(channel.type)
     ? channelIcons[channel.type]
@@ -70,6 +81,8 @@ export function ChannelListItem({
 
   return (
     <motion.div
+      role="listitem"
+      data-testid={`channel-settings-row-${channel.id}`}
       variants={entranceVariants.fadeUp}
       initial="hidden"
       animate="visible"
@@ -124,6 +137,20 @@ export function ChannelListItem({
             )}
           </div>
           <div className="flex items-center gap-1">
+            <IconButton
+              icon={<ChevronUpIcon />}
+              label={`Move ${channel.name} up`}
+              size="sm"
+              onClick={onMoveUp}
+              disabled={reorderDisabled || index === 0}
+            />
+            <IconButton
+              icon={<ChevronDownIcon />}
+              label={`Move ${channel.name} down`}
+              size="sm"
+              onClick={onMoveDown}
+              disabled={reorderDisabled || index === totalCount - 1}
+            />
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => onPermissions(channel.id)}

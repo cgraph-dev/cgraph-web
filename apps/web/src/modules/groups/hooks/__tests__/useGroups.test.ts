@@ -102,7 +102,6 @@ const mockGroupState: Record<string, unknown> = {
   leaveGroup: vi.fn().mockResolvedValue(undefined),
   updateGroup: vi.fn().mockResolvedValue(makeGroup()),
   deleteGroup: vi.fn().mockResolvedValue(undefined),
-  updateChannelOrder: vi.fn().mockResolvedValue(undefined),
   createInvite: vi.fn().mockResolvedValue({ code: 'ABC123', expiresAt: '2025-12-31' }),
 };
 
