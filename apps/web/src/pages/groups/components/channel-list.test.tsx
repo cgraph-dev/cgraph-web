@@ -58,7 +58,27 @@ const group = {
   memberCount: 12,
   onlineMemberCount: 3,
   ownerId: 'owner-1',
-  categories: [],
+  categories: [
+    {
+      id: 'product',
+      name: 'Product',
+      position: 0,
+      channels: [
+        {
+          id: 'news',
+          name: 'News',
+          type: 'announcement',
+          topic: null,
+          categoryId: 'product',
+          position: 0,
+          isNsfw: false,
+          slowModeSeconds: 0,
+          unreadCount: 7,
+          lastMessageAt: null,
+        },
+      ],
+    },
+  ],
   channels: [
     {
       id: 'general',
@@ -85,14 +105,15 @@ describe('ChannelList', () => {
   it('provides explicit narrow back, close, settings, and channel transitions', () => {
     const onBackToGroups = vi.fn();
     const onCloseMobile = vi.fn();
+    const toggleCategory = vi.fn();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/groups/group-1/channels/general']}>
         <ChannelList
           activeGroup={group}
           channelId="general"
-          expandedCategories={new Set()}
-          toggleCategory={vi.fn()}
+          expandedCategories={new Set(['product'])}
+          toggleCategory={toggleCategory}
           mobileVisible
           onBackToGroups={onBackToGroups}
           onCloseMobile={onCloseMobile}
@@ -102,19 +123,33 @@ describe('ChannelList', () => {
 
     const channelList = within(screen.getByTestId('groups-channel-list'));
     const mobileHeader = within(screen.getByTestId('groups-channel-list-mobile-header'));
+    const backButton = mobileHeader.getByRole('button', { name: 'Back to groups' });
+    const closeButton = mobileHeader.getByRole('button', { name: 'Close channel list' });
+    const settingsLink = mobileHeader.getByRole('link', { name: 'Open Alpha Team settings' });
+    const categoryButton = channelList.getByRole('button', { name: 'Product' });
+    const activeChannel = channelList.getByRole('link', { name: 'General' });
+    const unreadChannel = channelList.getByRole('link', { name: /News/ });
 
-    expect(mobileHeader.getByRole('link', { name: 'Open Alpha Team settings' })).toHaveAttribute(
-      'href',
-      '/groups/group-1/settings'
-    );
+    expect(settingsLink).toHaveAttribute('href', '/groups/group-1/settings');
+    for (const control of [backButton, closeButton, settingsLink, categoryButton, activeChannel]) {
+      expect(control).toHaveAttribute('data-cgraph-surface', 'control');
+    }
+    expect(activeChannel).toHaveAttribute('aria-current', 'page');
+    expect(activeChannel).toHaveAttribute('data-cgraph-state', 'selected');
+    expect(categoryButton).toHaveAttribute('aria-expanded', 'true');
+    expect(unreadChannel).toHaveTextContent('7');
+    expect(channelList.queryByText('You')).not.toBeInTheDocument();
 
-    fireEvent.click(mobileHeader.getByRole('button', { name: 'Back to groups' }));
+    fireEvent.click(backButton);
     expect(onBackToGroups).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(mobileHeader.getByRole('button', { name: 'Close channel list' }));
+    fireEvent.click(closeButton);
     expect(onCloseMobile).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(channelList.getByRole('link', { name: 'General' }));
+    fireEvent.click(activeChannel);
     expect(onCloseMobile).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(categoryButton);
+    expect(toggleCategory).toHaveBeenCalledWith('product');
   });
 });

@@ -138,6 +138,13 @@ test.describe('Responsive Groups navigation', () => {
       await expect(page.getByTestId('mobile-group-toolbar')).toBeVisible();
       await expect(page.getByTestId('group-content-pane')).toBeVisible();
       await expect(page.getByTestId('groups-channel-list')).toBeHidden();
+      await expect(page.getByRole('button', { name: 'Back to groups' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expect(
+        page.getByRole('button', { name: 'Open CGraph Builders channels' })
+      ).toHaveAttribute('data-cgraph-surface', 'control');
       expect((await page.getByTestId('group-content-pane').boundingBox())?.width).toBe(
         viewport.width
       );
@@ -149,9 +156,29 @@ test.describe('Responsive Groups navigation', () => {
       expect((await page.getByTestId('groups-channel-list').boundingBox())?.width).toBe(
         viewport.width
       );
+      await expect(page.getByRole('button', { name: 'Close channel list' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expect(
+        page.getByRole('link', { name: 'Open CGraph Builders settings' })
+      ).toHaveAttribute('data-cgraph-surface', 'control');
+      await expect(page.getByRole('button', { name: 'Create Category' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
       expect((await page.getByRole('link', { name: 'News' }).boundingBox())?.height).toBeGreaterThanOrEqual(
         44
       );
+      await expect(page.getByRole('link', { name: 'News' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+
+      await testInfo.attach(`groups-channel-${viewport.width}x${viewport.height}`, {
+        body: await page.screenshot({ fullPage: true }),
+        contentType: 'image/png',
+      });
 
       await page.getByRole('link', { name: 'News' }).click();
       await expect(page).toHaveURL(
@@ -159,11 +186,6 @@ test.describe('Responsive Groups navigation', () => {
       );
       await expect(page.getByTestId('groups-channel-list')).toBeHidden();
       await expect(page.getByTestId('group-content-pane')).toBeVisible();
-
-      await testInfo.attach(`groups-channel-${viewport.width}x${viewport.height}`, {
-        body: await page.screenshot({ fullPage: true }),
-        contentType: 'image/png',
-      });
 
       await page.getByRole('button', { name: 'Back to groups' }).click();
       await expect(page).toHaveURL(/\/groups$/);
@@ -184,6 +206,13 @@ test.describe('Responsive Groups navigation', () => {
 
     expect((await page.getByTestId('groups-server-rail').boundingBox())?.width).toBe(72);
     expect((await page.getByTestId('groups-channel-list').boundingBox())?.width).toBe(240);
+    await expect(
+      page.getByRole('link', { name: 'Open CGraph Builders settings' })
+    ).toHaveAttribute('data-cgraph-surface', 'control');
+    await expect(page.getByRole('link', { name: 'general' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
     await expectNoHorizontalOverflow(page);
 
     await testInfo.attach('groups-desktop-1440x900', {

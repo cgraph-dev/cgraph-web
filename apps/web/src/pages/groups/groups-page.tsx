@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, List } from 'lucide-react';
+import { IconButton } from '@/components/ui/button';
 import { useGroupStore } from '@/modules/groups/store';
 import {
   ServerList,
@@ -119,21 +120,24 @@ export default function Groups() {
             data-testid="mobile-group-toolbar"
             className="flex h-14 shrink-0 items-center gap-1 border-b border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] px-2 lg:hidden"
           >
-            <button
-              type="button"
+            <IconButton
+              icon={<ArrowLeft />}
+              label="Back to groups"
+              size="md"
               onClick={() => navigate('/groups')}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
-              aria-label="Back to groups"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
+              className="h-11 w-11 shrink-0"
+            />
             <button
               type="button"
               onClick={() => setShowMobileChannels(true)}
-              className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+              className="cgraph-control cgraph-control-ghost flex h-11 min-w-0 flex-1 items-center gap-2 px-2 text-left"
               aria-label={`Open ${activeGroup.name} channels`}
+              data-cgraph-material="solid"
+              data-cgraph-surface="control"
+              data-cgraph-state="idle"
+              data-cgraph-variant="ghost"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary-600 text-xs font-bold text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--token-interactive-primary)] text-xs font-bold text-[var(--token-text-on-primary)]">
                 {activeGroup.iconUrl ? (
                   <img
                     src={activeGroup.iconUrl}
@@ -146,14 +150,14 @@ export default function Groups() {
                 )}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-white">
+                <span className="block truncate text-sm font-semibold text-[var(--token-text-primary)]">
                   {activeGroup.name}
                 </span>
-                <span className="block truncate text-[11px] text-white/45">
+                <span className="block truncate text-[11px] text-[var(--token-text-muted)]">
                   {activeChannel ? `# ${activeChannel.name}` : 'Channels'}
                 </span>
               </span>
-              <List className="h-5 w-5 shrink-0 text-white/50" />
+              <List className="h-5 w-5 shrink-0 text-[var(--token-text-secondary)]" />
             </button>
           </header>
         )}

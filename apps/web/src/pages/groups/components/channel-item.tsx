@@ -2,9 +2,7 @@
  * ChannelItem component
  */
 
-import { motion, AnimatePresence } from 'motion/react';
 import { NavLink } from 'react-router-dom';
-import { springs } from '@/lib/animation-presets';
 import {
   HashtagIcon,
   SpeakerWaveIcon,
@@ -46,41 +44,26 @@ export function ChannelItem({ channel, groupId, isActive, onSelect }: ChannelIte
         HapticFeedback.light();
         onSelect?.();
       }}
-      className="relative mx-2"
+      aria-current={isActive ? 'page' : undefined}
+      data-cgraph-material="solid"
+      data-cgraph-surface="control"
+      data-cgraph-state={isActive ? 'selected' : 'idle'}
+      data-cgraph-variant="ghost"
+      className={`cgraph-control cgraph-control-ghost relative mx-2 flex min-h-11 items-center gap-1.5 px-2 py-1.5 lg:min-h-9 ${
+        isActive
+          ? '!border-[var(--token-card-border)] !bg-[var(--token-bg-tertiary)] !text-[var(--token-text-primary)]'
+          : 'text-[var(--token-text-secondary)]'
+      }`}
     >
-      <motion.div
-        whileTap={{ scale: 0.98 }}
-        className={`relative z-10 flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-1.5 transition-all lg:min-h-0 ${
-          isActive
-            ? 'bg-primary-500/10 border-primary-500/20 border text-primary-300 shadow-[0_4px_16px_rgba(0,0,0,0.2),color-mix(in_srgb,var(--color-brand-purple)_16%,transparent)_0px_1px_1px_inset]'
-            : 'border border-transparent text-white/50 hover:bg-[var(--token-bg-primary)/0.3] hover:text-white/80'
-        }`}
-      >
-        {isActive && (
-          <motion.div
-            layoutId={`activeChannel-${groupId}`}
-            className="absolute -left-2 top-1/2 h-full w-[3px] -translate-y-1/2 rounded-r-full bg-primary-400 shadow-[0_0_10px_color-mix(in_srgb,var(--color-brand-purple)_35%,transparent)]"
-            transition={springs.bouncy}
-          />
-        )}
-        <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-primary-300' : ''}`} />
-        <span className={`truncate text-[13px] ${isActive ? 'font-semibold' : 'font-medium'}`}>
-          {channel.name}
+      <Icon className="h-5 w-5 flex-shrink-0 text-current" />
+      <span className={`truncate text-[13px] ${isActive ? 'font-semibold' : 'font-medium'}`}>
+        {channel.name}
+      </span>
+      {channel.unreadCount > 0 && (
+        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--token-interactive-primary)] px-1 text-[10px] font-bold text-[var(--token-text-on-primary)]">
+          {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
         </span>
-        <AnimatePresence>
-          {channel.unreadCount > 0 && (
-            <motion.span
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={springs.bouncy}
-              className="ml-auto flex h-4 min-w-[16px] items-center justify-center rounded-full border border-white/20 bg-white/[0.1] px-1 text-[10px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.5),rgba(255,255,255,0.1)_0px_1px_1px_inset]"
-            >
-              {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.div>
+      )}
     </NavLink>
   );
 }
