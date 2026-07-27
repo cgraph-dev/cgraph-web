@@ -1,4 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TOKEN_REGISTRY as SHARED_TOKEN_REGISTRY } from '@cgraph-dev/design-tokens';
 
 import { THEME_LIGHT } from '../../lib/theme/themes';
 import { TOKEN_REGISTRY, injectSemanticTokens } from '../../lib/theme/tokens';
@@ -84,6 +85,10 @@ afterAll(() => {
 });
 
 describe('professional theme switching', () => {
+  it('uses the shared cross-platform semantic-token registry', () => {
+    expect(TOKEN_REGISTRY).toBe(SHARED_TOKEN_REGISTRY);
+  });
+
   it.each([
     ['aurora', 'dark', 'theme-aurora'],
     ['dark', 'dark', 'theme-dark'],

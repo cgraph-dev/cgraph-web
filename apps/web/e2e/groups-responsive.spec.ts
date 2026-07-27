@@ -1,10 +1,11 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { TOKEN_REGISTRY } from '../src/lib/theme/tokens';
+import visualTokenDocument from '@cgraph-dev/design-tokens/visual-tokens.json' with { type: 'json' };
 
 const GROUP_ID = 'responsive-group';
 const GENERAL_CHANNEL_ID = 'responsive-general';
 const NEWS_CHANNEL_ID = 'responsive-news';
 const APP_THEMES = ['aurora', 'dark', 'light', 'bubble'] as const;
+const TOKEN_REGISTRY = visualTokenDocument.semanticThemes;
 const THEME_RUNTIME = {
   aurora: { category: 'dark', variant: 'aurora', colorScheme: 'dark' },
   dark: { category: 'dark', variant: 'dark', colorScheme: 'dark' },
