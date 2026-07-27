@@ -2,18 +2,14 @@
  * Search input component for emoji picker
  */
 
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Search, X } from 'lucide-react';
+import { IconButton } from '@/components/ui/button';
 
 interface EmojiSearchProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
-/**
- */
-/**
- * Emoji Search component.
- */
 export function EmojiSearch({ searchQuery, onSearchChange }: EmojiSearchProps) {
   return (
     <div className="border-b border-[var(--token-card-border)] p-3">
@@ -23,16 +19,20 @@ export function EmojiSearch({ searchQuery, onSearchChange }: EmojiSearchProps) {
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search emojis..."
-          className="peer w-full rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] py-2 pl-9 pr-8 text-sm text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:border-primary-500/40 focus:bg-[var(--token-card-bg)/0.6] focus:outline-none focus:ring-4 focus:ring-primary-500/10"
+          aria-label="Search emoji"
+          className="peer w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] py-2 pl-9 pr-9 text-sm text-[var(--token-text-primary)] transition-colors placeholder:text-[var(--token-text-muted)] focus:border-[var(--token-interactive-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--token-interactive-primary)]"
         />
-        <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--token-text-muted)] transition-colors peer-focus:text-[var(--token-interactive-primary)]" />
         {searchQuery && (
-          <button
-            onClick={() => onSearchChange('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
-          >
-            <XMarkIcon className="h-4 w-4" />
-          </button>
+          <span className="absolute right-1 top-1/2 -translate-y-1/2">
+            <IconButton
+              icon={<X />}
+              label="Clear emoji search"
+              size="sm"
+              onClick={() => onSearchChange('')}
+              className="h-8 w-8 border-transparent shadow-none"
+            />
+          </span>
         )}
       </div>
     </div>

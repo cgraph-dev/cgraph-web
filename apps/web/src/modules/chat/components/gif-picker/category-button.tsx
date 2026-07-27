@@ -1,27 +1,18 @@
-import { motion } from 'motion/react';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import type { CategoryButtonProps } from './types';
 
-/**
- */
-/**
- * Category Button component.
- */
 export function CategoryButton({ category, isActive, onClick }: CategoryButtonProps) {
   return (
-    <motion.button
-      whileHover={{ opacity: 0.9 }}
-      whileTap={{ scale: 0.98 }}
+    <Button
       onClick={onClick}
-      className={cn(
-        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-        isActive
-          ? 'bg-primary-600 text-white'
-          : 'bg-[var(--token-card-bg)/0.6] text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-white'
-      )}
+      variant={isActive ? 'secondary' : 'ghost'}
+      size="sm"
+      animated={false}
+      leftIcon={category.icon}
+      aria-pressed={isActive}
+      className="min-h-9 whitespace-nowrap rounded-md border-transparent px-3 py-2 shadow-none"
     >
-      {category.icon}
-      <span>{category.name}</span>
-    </motion.button>
+      {category.name}
+    </Button>
   );
 }

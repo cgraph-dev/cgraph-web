@@ -1,3 +1,4 @@
+import { createRef } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { describe, expect, it, vi } from 'vitest';
@@ -13,6 +14,7 @@ function renderToolbar(overrides: Partial<React.ComponentProps<typeof InputToolb
     disabled: false,
     isViewOnce: false,
     hasAttachments: false,
+    emojiTriggerRef: createRef<HTMLButtonElement>(),
     onToggleMode: vi.fn(),
     onToggleRecording: vi.fn(),
     onToggleVideoRecording: vi.fn(),
@@ -57,6 +59,15 @@ describe('InputToolbar', () => {
     expect(screen.getByRole('button', { name: 'Video note recorder active' })).toHaveAttribute(
       'data-cgraph-variant',
       'danger'
+    );
+  });
+
+  it('owns the emoji trigger ref used by the anchored picker', () => {
+    const emojiTriggerRef = createRef<HTMLButtonElement>();
+    renderToolbar({ emojiTriggerRef });
+
+    expect(emojiTriggerRef.current).toBe(
+      screen.getByRole('button', { name: 'Open emoji picker' })
     );
   });
 

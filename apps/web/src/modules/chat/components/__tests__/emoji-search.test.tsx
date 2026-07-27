@@ -6,15 +6,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-vi.mock('@heroicons/react/24/outline', () => ({
-  MagnifyingGlassIcon: ({ className }: { className?: string }) => (
-    <span data-testid="search-icon" className={className} />
-  ),
-  XMarkIcon: ({ className }: { className?: string }) => (
-    <span data-testid="clear-icon" className={className} />
-  ),
-}));
-
 import { EmojiSearch } from '../emoji-picker/emoji-search';
 
 describe('EmojiSearch', () => {
@@ -24,8 +15,8 @@ describe('EmojiSearch', () => {
   });
 
   it('renders search icon', () => {
-    render(<EmojiSearch searchQuery="" onSearchChange={vi.fn()} />);
-    expect(screen.getByTestId('search-icon')).toBeInTheDocument();
+    const { container } = render(<EmojiSearch searchQuery="" onSearchChange={vi.fn()} />);
+    expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
   it('displays current search query', () => {
@@ -44,21 +35,22 @@ describe('EmojiSearch', () => {
 
   it('shows clear button when search query is present', () => {
     render(<EmojiSearch searchQuery="hello" onSearchChange={vi.fn()} />);
-    expect(screen.getByTestId('clear-icon')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear emoji search' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
   });
 
   it('does not show clear button when search query is empty', () => {
     render(<EmojiSearch searchQuery="" onSearchChange={vi.fn()} />);
-    expect(screen.queryByTestId('clear-icon')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear emoji search' })).not.toBeInTheDocument();
   });
 
   it('clears search query when clear button is clicked', async () => {
     const user = userEvent.setup();
     const onSearchChange = vi.fn();
     render(<EmojiSearch searchQuery="hello" onSearchChange={onSearchChange} />);
-    // The clear button wraps the XMarkIcon — click the button parent
-    const clearIcon = screen.getByTestId('clear-icon');
-    await user.click(clearIcon.closest('button')!);
+    await user.click(screen.getByRole('button', { name: 'Clear emoji search' }));
     expect(onSearchChange).toHaveBeenCalledWith('');
   });
 

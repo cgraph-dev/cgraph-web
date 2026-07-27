@@ -2,10 +2,13 @@
  * Type definitions for EmojiPicker component
  */
 
+import type { RefObject } from 'react';
+
 export interface EmojiPickerProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (emoji: string) => void;
+  anchorRef?: RefObject<HTMLElement | null>;
   className?: string;
 }
 

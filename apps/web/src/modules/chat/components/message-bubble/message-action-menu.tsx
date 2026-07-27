@@ -1,17 +1,20 @@
-/**
- * Message Action Menu Component
- *
- * Dropdown menu for message actions (edit, pin, forward, delete).
- */
-
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  CircleDot,
+  EllipsisVertical,
+  Forward,
+  Pencil,
+  Pin,
+  Reply,
+  SquareCheckBig,
+  Trash2,
+} from 'lucide-react';
+import { Button, IconButton } from '@/components/ui/button';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { EllipsisVerticalIcon } from '@heroicons/react/24/outline';
 import type { MessageActionMenuProps } from './types';
-import { ReplyIcon, EditIcon, PinIcon, ForwardIcon, DeleteIcon, SelectIcon } from './icons';
 
-const MENU_WIDTH = 128;
+const MENU_WIDTH = 176;
 const MENU_GAP = 4;
 
 interface MenuPosition {
@@ -19,9 +22,6 @@ interface MenuPosition {
   left: number;
 }
 
-/**
- * Message Action Menu component.
- */
 export function MessageActionMenu({
   onReply,
   onEdit,
@@ -76,68 +76,94 @@ export function MessageActionMenu({
           <div
             role="menu"
             aria-label="Message actions"
-            className="fixed z-[1000] w-32 rounded-lg bg-[var(--token-card-bg)] py-1 shadow-lg ring-1 ring-white/10"
+            data-cgraph-material="floating"
+            data-cgraph-surface="card"
+            className="fixed z-[1000] w-44 border p-1"
             style={{ top: menuPosition.top, left: menuPosition.left }}
           >
             {onSelect && (
-              <button
+              <Button
                 role="menuitem"
                 onClick={onSelect}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+                variant="ghost"
+                size="sm"
+                animated={false}
+                fullWidth
+                leftIcon={<SquareCheckBig />}
+                className="min-h-9 justify-start rounded-md border-transparent px-2 shadow-none"
               >
-                <SelectIcon />
                 Select
-              </button>
+              </Button>
             )}
             {isOwn && onEdit && (
-              <button
+              <Button
                 role="menuitem"
                 onClick={onEdit}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+                variant="ghost"
+                size="sm"
+                animated={false}
+                fullWidth
+                leftIcon={<Pencil />}
+                className="min-h-9 justify-start rounded-md border-transparent px-2 shadow-none"
               >
-                <EditIcon />
                 Edit
-              </button>
+              </Button>
             )}
             {onPin && (
-              <button
+              <Button
                 role="menuitem"
                 onClick={onPin}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+                variant="ghost"
+                size="sm"
+                animated={false}
+                fullWidth
+                leftIcon={<Pin />}
+                className="min-h-9 justify-start rounded-md border-transparent px-2 shadow-none"
               >
-                <PinIcon />
                 Pin
-              </button>
+              </Button>
             )}
             {onForward && (
-              <button
+              <Button
                 role="menuitem"
                 onClick={onForward}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
+                variant="ghost"
+                size="sm"
+                animated={false}
+                fullWidth
+                leftIcon={<Forward />}
+                className="min-h-9 justify-start rounded-md border-transparent px-2 shadow-none"
               >
-                <ForwardIcon />
                 Forward
-              </button>
+              </Button>
             )}
             {!isOwn && dmTipping.enabled && onTip && (
-              <button
+              <Button
                 role="menuitem"
                 onClick={onTip}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-purple-400 hover:bg-[var(--token-card-bg)]"
+                variant="secondary"
+                size="sm"
+                animated={false}
+                fullWidth
+                leftIcon={<CircleDot />}
+                className="min-h-9 justify-start rounded-md px-2 shadow-none"
               >
-                <span className="flex h-4 w-4 items-center justify-center text-sm">{'\u2115'}</span>
                 Tip
-              </button>
+              </Button>
             )}
             {onDelete && (
-              <button
+              <Button
                 role="menuitem"
                 onClick={onDelete}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-[var(--token-card-bg)]"
+                variant="danger"
+                size="sm"
+                animated={false}
+                fullWidth
+                leftIcon={<Trash2 />}
+                className="min-h-9 justify-start rounded-md px-2 shadow-none"
               >
-                <DeleteIcon />
                 Delete
-              </button>
+              </Button>
             )}
           </div>,
           document.body
@@ -146,25 +172,24 @@ export function MessageActionMenu({
 
   return (
     <div className="relative flex items-center gap-1">
-      <button
+      <IconButton
+        icon={<Reply />}
+        label="Reply to message"
+        size="sm"
         onClick={onReply}
-        className="rounded p-1 text-gray-500 hover:bg-[var(--token-card-bg)] hover:text-white"
-        title="Reply"
-        aria-label="Reply to message"
-      >
-        <ReplyIcon />
-      </button>
-      <button
+        className="h-8 w-8 flex-none"
+      />
+      <IconButton
         ref={triggerRef}
+        icon={<EllipsisVertical />}
+        label="More message actions"
+        size="sm"
+        variant={isMenuOpen ? 'secondary' : 'ghost'}
         onClick={onToggleMenu}
-        className="rounded p-1 text-gray-500 hover:bg-[var(--token-card-bg)] hover:text-white"
-        title="More"
-        aria-label="More message actions"
+        className="h-8 w-8 flex-none"
         aria-haspopup="menu"
         aria-expanded={isMenuOpen}
-      >
-        <EllipsisVerticalIcon className="h-4 w-4" />
-      </button>
+      />
       {menu}
     </div>
   );

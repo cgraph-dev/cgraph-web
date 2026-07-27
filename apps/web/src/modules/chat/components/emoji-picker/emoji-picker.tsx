@@ -1,24 +1,12 @@
-/**
- * EmojiPicker Component
- *
- * A comprehensive emoji picker for message input with search and categories.
- *
- * Features:
- * - Categorized emoji selection
- * - Search functionality
- * - Frequently used tracking
- * - Smooth animations
- * - Glassmorphism design
- * - Animated Noto emojis via Lottie (hover-to-play)
- *
- */
-
-import { useState, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { Sparkles, X } from 'lucide-react';
 
+import { Button, IconButton } from '@/components/ui/button';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { cn } from '@/lib/utils';
 
 import type { EmojiPickerProps, EmojiCategory } from './types';
 import { useRecentEmojis, useFilteredEmojis, useAnimatedEmojiCatalog } from './useEmojiPicker';
@@ -27,14 +15,16 @@ import { CategoryTabs } from './category-tabs';
 import { EmojiGrid } from './emoji-grid';
 import { springs } from '@/lib/animation-presets';
 
-/**
- * Emoji Picker with Lottie animated emoji support.
- */
+const PICKER_WIDTH = 320;
+const VIEWPORT_MARGIN = 8;
+const TRIGGER_GAP = 8;
+
 export function EmojiPicker({
   isOpen,
   onClose,
   onSelect,
-  className: _className = '',
+  anchorRef,
+  className,
 }: EmojiPickerProps) {
   const [activeCategory, setActiveCategory] = useState<EmojiCategory>('Frequently Used');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,22 +36,37 @@ export function EmojiPicker({
   const filteredEmojis = useFilteredEmojis(searchQuery, activeCategory);
   const { catalog, loading } = useAnimatedEmojiCatalog(isOpen);
 
-  // Compute position by finding the emoji button in the DOM
-  useEffect(() => {
-    if (!isOpen) return;
-    // Find the emoji button (the one with title="Add emoji")
-    const btn = document.querySelector('button[title="Add emoji"]');
-    if (btn) {
-      const rect = btn.getBoundingClientRect();
-      // Place picker above the button, aligned to the right edge
-      setPickerPos({
-        bottom: window.innerHeight - rect.top + 8,
-        left: Math.max(8, rect.right - 320), // 320 = picker width (w-80)
-      });
+  const updatePickerPosition = useCallback(() => {
+    const anchor = anchorRef?.current;
+    if (!anchor) {
+      setPickerPos(null);
+      return;
     }
-  }, [isOpen]);
 
-  // Close on Escape key
+    const rect = anchor.getBoundingClientRect();
+    const availableWidth = Math.max(0, window.innerWidth - VIEWPORT_MARGIN * 2);
+    const pickerWidth = Math.min(PICKER_WIDTH, availableWidth);
+    const maximumLeft = Math.max(VIEWPORT_MARGIN, window.innerWidth - pickerWidth - VIEWPORT_MARGIN);
+
+    setPickerPos({
+      bottom: window.innerHeight - rect.top + TRIGGER_GAP,
+      left: Math.min(Math.max(VIEWPORT_MARGIN, rect.right - pickerWidth), maximumLeft),
+    });
+  }, [anchorRef]);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return undefined;
+
+    updatePickerPosition();
+    window.addEventListener('resize', updatePickerPosition);
+    window.addEventListener('scroll', updatePickerPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePickerPosition);
+      window.removeEventListener('scroll', updatePickerPosition, true);
+    };
+  }, [isOpen, updatePickerPosition]);
+
   useEffect(() => {
     if (!isOpen) return undefined;
     const handleEsc = (e: KeyboardEvent) => {
@@ -72,17 +77,16 @@ export function EmojiPicker({
   }, [isOpen, onClose]);
 
   const handleEmojiClick = (emoji: string) => {
-      onSelect(emoji);
-      HapticFeedback.light();
-      addRecentEmoji(emoji);
-      onClose();
-    };
+    onSelect(emoji);
+    HapticFeedback.light();
+    addRecentEmoji(emoji);
+    onClose();
+  };
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop — closes picker on click outside */}
           <div
             className="fixed inset-0 z-[9998]"
             onClick={(e) => {
@@ -97,35 +101,50 @@ export function EmojiPicker({
             ref={pickerRef}
             role="dialog"
             aria-label="Emoji picker"
+            aria-modal="true"
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 10 }}
             transition={springs.stiff}
-            className="fixed z-[9999]"
+            className={cn('fixed z-[9999]', className)}
             style={
               pickerPos
                 ? { bottom: pickerPos.bottom, left: pickerPos.left }
-                : { bottom: 96, left: 280 }
+                : { bottom: 96, left: VIEWPORT_MARGIN }
             }
           >
-            <GlassCard className="w-80 p-0">
+            <GlassCard className="w-[min(20rem,calc(100vw-1rem))] overflow-hidden p-0">
+              <div className="flex min-h-12 items-center justify-between border-b border-[var(--token-border-muted)] px-3">
+                <h2 className="text-sm font-semibold text-[var(--token-text-primary)]">Emoji</h2>
+                <IconButton
+                  icon={<X />}
+                  label="Close emoji picker"
+                  size="sm"
+                  onClick={onClose}
+                  className="h-8 w-8 flex-none"
+                />
+              </div>
+
               <EmojiSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
-              {/* Animated filter toggle */}
               <div className="flex items-center justify-between border-b border-[var(--token-border-muted)] px-3 py-1">
-                <button
-                  type="button"
+                <Button
                   onClick={() => setAnimatedOnly(!animatedOnly)}
-                  className={`rounded-md px-2 py-0.5 text-[10px] font-medium transition-colors ${
-                    animatedOnly
-                      ? 'bg-primary-500/20 text-primary-300'
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}
+                  variant={animatedOnly ? 'secondary' : 'ghost'}
+                  size="sm"
+                  animated={false}
+                  leftIcon={<Sparkles />}
+                  aria-pressed={animatedOnly}
+                  className="min-h-8 rounded-md border-transparent px-2 py-1 text-xs shadow-none"
                 >
-                  ✨ Animated
-                </button>
+                  Animated
+                </Button>
                 {loading && (
-                  <div className="h-3 w-3 animate-spin rounded-full border border-primary-500 border-t-transparent" />
+                  <span
+                    role="status"
+                    aria-label="Loading animated emoji"
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--token-interactive-primary)] border-t-transparent"
+                  />
                 )}
               </div>
 

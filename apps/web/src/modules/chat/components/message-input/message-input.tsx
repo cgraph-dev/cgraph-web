@@ -15,7 +15,7 @@
  * - Slash commands
  */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { VoiceMessageRecorder } from '@/components/media/voice-message-recorder';
 import { VideoMessageRecorder } from '@/components/media/video-message-recorder';
@@ -109,6 +109,7 @@ export function MessageInput({
 
   const hasContent = message.trim().length > 0 || attachments.length > 0;
   const canSend = hasContent && !slowMode.cooldownActive;
+  const emojiTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div
@@ -169,6 +170,7 @@ export function MessageInput({
           disabled={disabled}
           isViewOnce={isViewOnce}
           hasAttachments={attachments.length > 0}
+          emojiTriggerRef={emojiTriggerRef}
           onToggleMode={toggleAttachmentMode}
           onToggleRecording={() => {
             setIsVideoRecording(false);
@@ -247,6 +249,7 @@ export function MessageInput({
         {attachmentMode === 'emoji' ? (
           <EmojiPicker
             isOpen
+            anchorRef={emojiTriggerRef}
             onSelect={handleEmojiSelect}
             onClose={() => setAttachmentMode('none')}
           />

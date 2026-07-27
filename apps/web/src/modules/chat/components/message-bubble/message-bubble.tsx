@@ -3,7 +3,8 @@
 import { useState, memo } from 'react';
 import type { Achievement, AchievementRarity } from '@cgraph-dev/shared-types';
 import { ClockIcon } from '@heroicons/react/24/outline';
-import { Lock, ShieldAlert } from 'lucide-react';
+import { Lock, Reply, ShieldAlert } from 'lucide-react';
+import { IconButton } from '@/components/ui/button';
 import { countIsolatedAnimatedEmojis } from '@/lib/lottie/emoji-text-renderer';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
@@ -27,7 +28,6 @@ import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
 import type { MessageBubbleProps } from './types';
 import { formatMessageTime, handleAddReaction, areMessageBubblePropsEqual } from './utils';
-import { ReplyIcon } from './icons';
 import { ReadReceipts } from './read-receipts';
 import { MessageStatusIndicator } from './message-status-indicator';
 import { MessageEditForm } from './message-edit-form';
@@ -552,14 +552,13 @@ export const MessageBubble = memo(function MessageBubble({
                   isOwn={false}
                 />
               ) : (
-                <button
+                <IconButton
+                  icon={<Reply />}
+                  label="Reply to message"
+                  size="sm"
                   onClick={onReply}
-                  className="rounded p-1 text-gray-500 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white dark:hover:bg-[var(--token-card-bg)/0.8]"
-                  title="Reply"
-                  aria-label="Reply to message"
-                >
-                  <ReplyIcon />
-                </button>
+                  className="h-8 w-8 flex-none"
+                />
               )}
             </div>
           )}

@@ -179,6 +179,7 @@ vi.mock('@/stores/theme', () => ({
 
 vi.mock('@/lib/logger', () => ({
   createLogger: () => ({ debug: vi.fn(), error: vi.fn(), warn: vi.fn() }),
+  authLogger: { debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
   chatLogger: { debug: vi.fn() },
 }));
 
@@ -211,14 +212,14 @@ describe('CategoryTabs', () => {
 
   it('highlights the active category tab', () => {
     render(<CategoryTabs activeCategory="Smileys & People" onCategoryChange={onCategoryChange} />);
-    const activeTab = screen.getByText('Smileys & People');
-    expect(activeTab.className).toContain('bg-primary-500/20');
+    const activeTab = screen.getByRole('tab', { name: 'Smileys & People' });
+    expect(activeTab).toHaveAttribute('data-cgraph-variant', 'secondary');
   });
 
   it('does not highlight inactive category tabs', () => {
     render(<CategoryTabs activeCategory="Smileys & People" onCategoryChange={onCategoryChange} />);
-    const inactiveTab = screen.getByText('Frequently Used');
-    expect(inactiveTab.className).not.toContain('bg-primary-500/20');
+    const inactiveTab = screen.getByRole('tab', { name: 'Frequently Used' });
+    expect(inactiveTab).toHaveAttribute('data-cgraph-variant', 'ghost');
   });
 
   it('calls onCategoryChange when a tab is clicked', () => {
@@ -250,7 +251,7 @@ describe('CategoryTabs', () => {
 
   it('applies inactive hover styles to non-active tabs', () => {
     render(<CategoryTabs activeCategory="Frequently Used" onCategoryChange={onCategoryChange} />);
-    const inactiveTab = screen.getByText('Animals & Nature');
-    expect(inactiveTab.className).toContain('text-gray-400');
+    const inactiveTab = screen.getByRole('tab', { name: 'Animals & Nature' });
+    expect(inactiveTab).toHaveAttribute('data-cgraph-state', 'idle');
   });
 });

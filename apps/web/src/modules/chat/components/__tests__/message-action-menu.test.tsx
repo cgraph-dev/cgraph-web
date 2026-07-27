@@ -2,18 +2,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-vi.mock('@heroicons/react/24/outline', () => ({
-  EllipsisVerticalIcon: () => <span data-testid="ellipsis-icon" />,
-}));
-
-vi.mock('../message-bubble/icons', () => ({
-  ReplyIcon: () => <span data-testid="reply-icon" />,
-  EditIcon: () => <span data-testid="edit-icon" />,
-  PinIcon: () => <span data-testid="pin-icon" />,
-  ForwardIcon: () => <span data-testid="forward-icon" />,
-  DeleteIcon: () => <span data-testid="delete-icon" />,
-}));
-
 import { MessageActionMenu } from '../message-bubble/message-action-menu';
 
 describe('MessageActionMenu', () => {
@@ -23,6 +11,7 @@ describe('MessageActionMenu', () => {
     onPin: vi.fn(),
     onForward: vi.fn(),
     onDelete: vi.fn(),
+    onSelect: vi.fn(),
     isMenuOpen: false,
     onToggleMenu: vi.fn(),
     isOwn: true,
@@ -32,36 +21,52 @@ describe('MessageActionMenu', () => {
     vi.clearAllMocks();
   });
 
-  it('renders reply button', () => {
+  it('uses canonical controls for reply and menu triggers', () => {
     render(<MessageActionMenu {...defaultProps} />);
-    expect(screen.getByTestId('reply-icon')).toBeInTheDocument();
-  });
 
-  it('renders ellipsis more button', () => {
-    render(<MessageActionMenu {...defaultProps} />);
-    expect(screen.getByTestId('ellipsis-icon')).toBeInTheDocument();
+    for (const name of ['Reply to message', 'More message actions']) {
+      const button = screen.getByRole('button', { name });
+      expect(button).toHaveAttribute('type', 'button');
+      expect(button).toHaveAttribute('data-cgraph-surface', 'control');
+      expect(button).toHaveClass('cgraph-control', 'cgraph-control-icon');
+    }
   });
 
   it('calls onReply when reply button clicked', () => {
     render(<MessageActionMenu {...defaultProps} />);
-    const replyBtn = screen.getByTestId('reply-icon').closest('button');
-    if (replyBtn) fireEvent.click(replyBtn);
+    fireEvent.click(screen.getByRole('button', { name: 'Reply to message' }));
     expect(defaultProps.onReply).toHaveBeenCalled();
   });
 
   it('calls onToggleMenu when more button clicked', () => {
     render(<MessageActionMenu {...defaultProps} />);
-    const moreBtn = screen.getByTestId('ellipsis-icon').closest('button');
-    if (moreBtn) fireEvent.click(moreBtn);
+    fireEvent.click(screen.getByRole('button', { name: 'More message actions' }));
     expect(defaultProps.onToggleMenu).toHaveBeenCalled();
   });
 
   it('shows dropdown actions when menu is open', () => {
     render(<MessageActionMenu {...defaultProps} isMenuOpen={true} />);
+    expect(screen.getByText('Select')).toBeInTheDocument();
     expect(screen.getByText('Edit')).toBeInTheDocument();
     expect(screen.getByText('Pin')).toBeInTheDocument();
     expect(screen.getByText('Forward')).toBeInTheDocument();
     expect(screen.getByText('Delete')).toBeInTheDocument();
+  });
+
+  it('uses canonical menu items and a destructive delete variant', () => {
+    render(<MessageActionMenu {...defaultProps} isMenuOpen />);
+
+    const items = screen.getAllByRole('menuitem');
+    expect(items).toHaveLength(5);
+    for (const item of items) {
+      expect(item).toHaveAttribute('type', 'button');
+      expect(item).toHaveAttribute('data-cgraph-surface', 'control');
+      expect(item).toHaveClass('cgraph-control');
+    }
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveAttribute(
+      'data-cgraph-variant',
+      'danger'
+    );
   });
 
   it('hides dropdown when menu is closed', () => {

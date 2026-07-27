@@ -1,17 +1,8 @@
-/**
- * GifPicker Component
- *
- * A comprehensive GIF selection interface for chat messaging.
- * Features GIF search via Klipy API, trending GIFs, categories,
- * favorites, and recently used GIFs.
- *
- */
-
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Clock, Heart, Search, X } from 'lucide-react';
+import { Button, IconButton } from '@/components/ui/button';
 import { createLogger } from '@/lib/logger';
-import { XMarkIcon, MagnifyingGlassIcon, ClockIcon } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 import { http } from '@/lib/api-client';
 import { GIF_CATEGORIES } from './constants';
@@ -25,11 +16,6 @@ import { tweens, loop } from '@/lib/animation-presets';
 
 const logger = createLogger('GifPicker');
 
-/**
- */
-/**
- * Gif Picker component.
- */
 export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('trending');
@@ -45,14 +31,12 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
 
   const { favorites, recentlyUsed, toggleFavorite, addToRecent, isFavorite } = useGifStorage();
 
-  // Focus search input when opened
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       setTimeout(() => searchInputRef.current?.focus(), 100);
     }
   }, [isOpen]);
 
-  // Fetch GIFs from API
   const fetchGifs = useCallback(async (query: string) => {
     requestRef.current?.abort();
     const request = new AbortController();
@@ -87,7 +71,6 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
     []
   );
 
-  // Search with debounce
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -111,7 +94,6 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
     };
   }, [searchQuery, activeCategory, fetchGifs, showFavorites, showRecent]);
 
-  // Handle category change
   function handleCategoryChange(categoryId: string) {
     setActiveCategory(categoryId);
     setSearchQuery('');
@@ -119,21 +101,18 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
     setShowRecent(false);
   }
 
-  // Handle GIF selection
   function handleSelect(gif: GifResult) {
     addToRecent(gif);
     onSelect(gif);
     onClose();
   }
 
-  // Current display list
   const displayGifs = useMemo(() => {
     if (showFavorites) return favorites;
     if (showRecent) return recentlyUsed;
     return gifs;
   }, [showFavorites, showRecent, favorites, recentlyUsed, gifs]);
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
@@ -152,27 +131,29 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
   return (
     <AnimatePresence>
       <motion.div
+        role="dialog"
+        aria-label="GIF picker"
+        data-cgraph-material="floating"
+        data-cgraph-surface="card"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
         className={cn(
-          'z-50 w-full max-w-[420px] overflow-hidden rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] shadow-2xl',
+          'z-50 w-full max-w-[420px] overflow-hidden border',
           positionClassName
         )}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--token-card-border)] px-4 py-3">
-          <h3 className="font-semibold text-white">Choose a GIF</h3>
-          <button
+          <h2 className="font-semibold text-[var(--token-text-primary)]">Choose a GIF</h2>
+          <IconButton
+            icon={<X />}
+            label="Close GIF picker"
+            size="sm"
             onClick={onClose}
-            aria-label="Close GIF picker"
-            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+            className="h-8 w-8 flex-none"
+          />
         </div>
 
-        {/* Search bar */}
         <div className="border-b border-[var(--token-card-border)] px-4 py-3">
           <div className="relative">
             <input
@@ -181,47 +162,44 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search KLIPY..."
-              className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2"
+              aria-label="Search GIFs"
+              className="peer w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] py-2.5 pl-10 pr-4 text-sm text-[var(--token-text-primary)] transition-colors placeholder:text-[var(--token-text-muted)] focus:border-[var(--token-interactive-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--token-interactive-primary)]"
             />
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--token-text-muted)] transition-colors peer-focus:text-[var(--token-interactive-primary)]" />
           </div>
         </div>
 
-        {/* Quick actions (Favorites & Recent) */}
         <div className="flex gap-2 border-b border-[var(--token-card-border)] px-4 py-2">
-          <button
+          <Button
             onClick={() => {
               setShowFavorites(!showFavorites);
               setShowRecent(false);
             }}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-              showFavorites
-                ? 'bg-red-500/20 text-red-400'
-                : 'bg-[var(--token-bg-secondary)] text-gray-400 hover:text-white'
-            )}
+            variant={showFavorites ? 'secondary' : 'ghost'}
+            size="sm"
+            animated={false}
+            leftIcon={<Heart />}
+            aria-pressed={showFavorites}
+            className="min-h-8 rounded-md border-transparent px-3 py-1.5 text-xs shadow-none"
           >
-            <HeartSolidIcon className="h-3.5 w-3.5" />
             Favorites ({favorites.length})
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => {
               setShowRecent(!showRecent);
               setShowFavorites(false);
             }}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-              showRecent
-                ? 'bg-primary-500/20 text-primary-400'
-                : 'bg-[var(--token-bg-secondary)] text-gray-400 hover:text-white'
-            )}
+            variant={showRecent ? 'secondary' : 'ghost'}
+            size="sm"
+            animated={false}
+            leftIcon={<Clock />}
+            aria-pressed={showRecent}
+            className="min-h-8 rounded-md border-transparent px-3 py-1.5 text-xs shadow-none"
           >
-            <ClockIcon className="h-3.5 w-3.5" />
             Recent ({recentlyUsed.length})
-          </button>
+          </Button>
         </div>
 
-        {/* Categories */}
         {!showFavorites && !showRecent && !searchQuery && (
           <div className="scrollbar-hide flex gap-2 overflow-x-auto border-b border-[var(--token-card-border)] px-4 py-2">
             {GIF_CATEGORIES.map((category) => (
@@ -235,7 +213,6 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
           </div>
         )}
 
-        {/* GIF Grid */}
         <div className="scrollbar-thin scrollbar-track-dark-700 scrollbar-thumb-dark-500 h-[350px] overflow-y-auto p-4">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
@@ -247,9 +224,8 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
             </div>
           ) : loadError && !showFavorites && !showRecent ? (
             <div role="alert" className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-              <p className="text-sm text-white/65">{loadError}</p>
-              <button
-                type="button"
+              <p className="text-sm text-[var(--token-text-secondary)]">{loadError}</p>
+              <Button
                 onClick={() =>
                   void fetchGifs(
                     searchQuery.trim() ||
@@ -257,10 +233,13 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
                       ''
                   )
                 }
-                className="h-9 rounded-lg border border-[var(--token-border-muted)] px-4 text-sm font-medium text-white/80 hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+                variant="secondary"
+                size="sm"
+                animated={false}
+                className="h-9"
               >
                 Retry
-              </button>
+              </Button>
             </div>
           ) : displayGifs.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-gray-500">
@@ -281,15 +260,14 @@ export function GifPicker({ onSelect, onClose, isOpen, className }: GifPickerPro
           )}
         </div>
 
-        {/* Footer - Powered by */}
         <div className="border-t border-[var(--token-card-border)] px-4 py-2">
-          <p className="text-center text-xs text-gray-500">
+          <p className="text-center text-xs text-[var(--token-text-muted)]">
             Powered by{' '}
             <a
               href="https://klipy.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-400 hover:underline"
+              className="text-[var(--token-interactive-primary)] hover:underline"
             >
               KLIPY
             </a>

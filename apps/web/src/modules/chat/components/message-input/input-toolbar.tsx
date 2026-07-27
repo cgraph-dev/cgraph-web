@@ -2,6 +2,7 @@
  * InputToolbar component - emoji, sticker, voice, send buttons
  */
 
+import type { Ref } from 'react';
 import { Eye, FileImage, Mic, Send, Smile, Sticker, Video } from 'lucide-react';
 import { IconButton } from '@/components/ui/button';
 import type { AttachmentMode } from './types';
@@ -14,6 +15,7 @@ interface InputToolbarProps {
   disabled?: boolean;
   isViewOnce: boolean;
   hasAttachments: boolean;
+  emojiTriggerRef: Ref<HTMLButtonElement>;
   onToggleMode: (mode: AttachmentMode) => void;
   onToggleRecording: () => void;
   onToggleVideoRecording: () => void;
@@ -30,6 +32,7 @@ export function InputToolbar({
   disabled = false,
   isViewOnce,
   hasAttachments,
+  emojiTriggerRef,
   onToggleMode,
   onToggleRecording,
   onToggleVideoRecording,
@@ -39,6 +42,7 @@ export function InputToolbar({
   return (
     <div role="toolbar" aria-label="Message tools" className="flex shrink-0 items-center gap-0.5">
       <IconButton
+        ref={emojiTriggerRef}
         icon={<Smile />}
         label="Open emoji picker"
         size="sm"

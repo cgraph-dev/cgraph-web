@@ -6,28 +6,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-vi.mock('motion/react', () => ({
-  motion: {
-    button: ({
-      children,
-      className,
-      onClick,
-    }: {
-      children: React.ReactNode;
-      className?: string;
-      onClick?: () => void;
-    }) => (
-      <button className={className} onClick={onClick}>
-        {children}
-      </button>
-    ),
-  },
-}));
-
-vi.mock('@/lib/utils', () => ({
-  cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
-}));
-
 import { CategoryButton } from '../gif-picker/category-button';
 import type { CategoryButtonProps } from '../gif-picker/types';
 
@@ -64,16 +42,19 @@ describe('CategoryButton', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('applies active styles when isActive is true', () => {
+  it('uses the secondary canonical variant when active', () => {
     render(<CategoryButton {...makeProps({ isActive: true })} />);
     const button = screen.getByRole('button');
-    expect(button.className).toContain('bg-primary-600');
+    expect(button).toHaveAttribute('aria-pressed', 'true');
+    expect(button).toHaveAttribute('data-cgraph-variant', 'secondary');
   });
 
-  it('applies inactive styles when isActive is false', () => {
+  it('uses the ghost canonical variant when inactive', () => {
     render(<CategoryButton {...makeProps({ isActive: false })} />);
     const button = screen.getByRole('button');
-    expect(button.className).toContain('bg-[var(--token-card-bg)/0.6]');
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+    expect(button).toHaveAttribute('data-cgraph-variant', 'ghost');
+    expect(button).toHaveClass('cgraph-control');
   });
 
   it('renders different category names', () => {

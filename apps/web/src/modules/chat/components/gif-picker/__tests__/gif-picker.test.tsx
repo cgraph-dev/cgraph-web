@@ -60,6 +60,25 @@ describe('GifPicker', () => {
     vi.restoreAllMocks();
   });
 
+  it('uses canonical controls for picker actions', async () => {
+    vi.mocked(http.get).mockResolvedValue(response('trending', 'Trending'));
+
+    render(<GifPicker isOpen onClose={vi.fn()} onSelect={vi.fn()} className="relative" />);
+
+    await waitFor(() => expect(http.get).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('dialog', { name: 'GIF picker' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'card'
+    );
+
+    for (const name of ['Close GIF picker', 'Favorites (0)', 'Recent (0)']) {
+      const button = screen.getByRole('button', { name });
+      expect(button).toHaveAttribute('type', 'button');
+      expect(button).toHaveAttribute('data-cgraph-surface', 'control');
+      expect(button).toHaveClass('cgraph-control');
+    }
+  });
+
   it('keeps a stale request from replacing the latest search results', async () => {
     const trending = deferred<ReturnType<typeof response>>();
     const cats = deferred<ReturnType<typeof response>>();
