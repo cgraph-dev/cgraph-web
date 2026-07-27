@@ -1,6 +1,6 @@
-/** @module save-bar tests */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { SaveBar } from '../save-bar';
 
 describe('SaveBar', () => {
@@ -18,31 +18,68 @@ describe('SaveBar', () => {
 
   it('shows Save Changes button', () => {
     render(<SaveBar hasChanges={true} isSaving={false} onSave={vi.fn()} onReset={vi.fn()} />);
-    expect(screen.getByText('Save Changes')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save changes' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
   });
 
-  it('shows Saving... when isSaving', () => {
+  it('preserves the save label and exposes pending state while saving', () => {
     render(<SaveBar hasChanges={true} isSaving={true} onSave={vi.fn()} onReset={vi.fn()} />);
-    expect(screen.getByText('Saving...')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save changes' })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
   });
 
-  it('calls onSave when Save clicked', () => {
+  it('calls onSave when Save clicked', async () => {
+    const user = userEvent.setup();
     const onSave = vi.fn();
     render(<SaveBar hasChanges={true} isSaving={false} onSave={onSave} onReset={vi.fn()} />);
-    fireEvent.click(screen.getByText('Save Changes'));
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
     expect(onSave).toHaveBeenCalled();
   });
 
-  it('calls onReset when Reset clicked', () => {
+  it('calls onReset when Reset clicked', async () => {
+    const user = userEvent.setup();
     const onReset = vi.fn();
     render(<SaveBar hasChanges={true} isSaving={false} onSave={vi.fn()} onReset={onReset} />);
-    fireEvent.click(screen.getByText('Reset'));
+    await user.click(screen.getByRole('button', { name: 'Reset' }));
     expect(onReset).toHaveBeenCalled();
   });
 
-  it('disables save button when isSaving', () => {
+  it('disables both actions while saving', () => {
     render(<SaveBar hasChanges={true} isSaving={true} onSave={vi.fn()} onReset={vi.fn()} />);
-    const btn = screen.getByText('Saving...').closest('button');
-    expect(btn?.disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeDisabled();
+  });
+
+  it('keeps reset available but disables an invalid save', () => {
+    render(
+      <SaveBar
+        hasChanges={true}
+        isSaving={false}
+        canSave={false}
+        onSave={vi.fn()}
+        onReset={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeEnabled();
+  });
+
+  it('renders the route-owned error as an alert', () => {
+    render(
+      <SaveBar
+        hasChanges={true}
+        isSaving={false}
+        errorMessage="Could not save group settings."
+        onSave={vi.fn()}
+        onReset={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not save group settings.');
   });
 });

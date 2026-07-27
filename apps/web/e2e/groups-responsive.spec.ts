@@ -287,7 +287,7 @@ test.describe('Responsive Groups navigation', () => {
     { width: 768, height: 1024 },
     { width: 1440, height: 900 },
   ]) {
-    test(`keeps channel settings usable at ${viewport.width}x${viewport.height}`, async ({
+    test(`keeps group settings usable at ${viewport.width}x${viewport.height}`, async ({
       page,
     }, testInfo) => {
       await page.setViewportSize(viewport);
@@ -296,6 +296,56 @@ test.describe('Responsive Groups navigation', () => {
 
       const settingsNav = page.getByRole('navigation', { name: 'Group settings' });
       await expect(settingsNav).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Change banner' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expect(page.getByRole('button', { name: 'Upload icon' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expect(page.getByRole('switch', { name: 'Public group' })).toBeVisible();
+
+      const groupName = page.getByRole('textbox', { name: /^Group name/ });
+      await groupName.fill('CGraph Builders Lab');
+      const saveBar = page.getByRole('region', { name: 'Unsaved group settings' });
+      await expect(saveBar).toBeVisible();
+      await expect(saveBar.getByRole('button', { name: 'Reset' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expect(saveBar.getByRole('button', { name: 'Save changes' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+
+      if (viewport.width < 1024) {
+        await expect
+          .poll(async () => {
+            const saveBarBox = await saveBar.boundingBox();
+            const mobileNavBox = await page
+              .getByRole('navigation', { name: 'Mobile navigation' })
+              .boundingBox();
+            return Boolean(
+              saveBarBox &&
+                mobileNavBox &&
+                saveBarBox.y + saveBarBox.height <= mobileNavBox.y
+            );
+          })
+          .toBe(true);
+      } else {
+        await expect
+          .poll(async () => {
+            const saveBarBox = await saveBar.boundingBox();
+            return saveBarBox ? Math.round(saveBarBox.y + saveBarBox.height) : null;
+          })
+          .toBe(viewport.height);
+      }
+
+      await saveBar.getByRole('button', { name: 'Reset' }).click();
+      await expect(saveBar).toBeHidden();
+
       const channelsTab = settingsNav.getByRole('button', { name: 'Channels', exact: true });
       await channelsTab.click();
 

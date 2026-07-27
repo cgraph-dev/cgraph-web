@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGroupStore } from '@/modules/groups/store';
 import { useAuthStore } from '@/modules/auth/store';
@@ -7,6 +7,12 @@ import { createLogger } from '@/lib/logger';
 import type { TabId, OverviewFormData } from './types';
 import { PERMISSIONS } from '../role-manager/constants';
 import { getGroupPermissionError } from '../../permission-errors';
+import {
+  GROUP_DESCRIPTION_MAX_LENGTH,
+  GROUP_NAME_MAX_LENGTH,
+  GROUP_NAME_MIN_LENGTH,
+} from './constants';
+import type { Group } from '@/modules/groups/store';
 
 const logger = createLogger('GroupSettings');
 const ADMINISTRATOR = PERMISSIONS.ADMINISTRATOR?.value ?? 0;
@@ -16,6 +22,22 @@ const MANAGE_CHANNELS = PERMISSIONS.MANAGE_CHANNELS?.value ?? 0;
 const KICK_MEMBERS = PERMISSIONS.KICK_MEMBERS?.value ?? 0;
 const BAN_MEMBERS = PERMISSIONS.BAN_MEMBERS?.value ?? 0;
 const VIEW_AUDIT_LOG = PERMISSIONS.VIEW_AUDIT_LOG?.value ?? 0;
+
+function getOverviewFormData(group: Group | undefined): OverviewFormData {
+  return {
+    name: group?.name ?? '',
+    description: group?.description ?? '',
+    isPublic: group?.isPublic ?? false,
+  };
+}
+
+function isSameOverviewForm(left: OverviewFormData, right: OverviewFormData) {
+  return (
+    left.name === right.name &&
+    left.description === right.description &&
+    left.isPublic === right.isPublic
+  );
+}
 
 /**
  * Hook for managing group settings.
@@ -54,28 +76,49 @@ export function useGroupSettings(groupId: string) {
     canManageAutomod: hasPermission(MANAGE_GROUP),
   };
 
-  const [formData, setFormData] = useState<OverviewFormData>({
-    name: activeGroup?.name || '',
-    description: activeGroup?.description || '',
-    isPublic: activeGroup?.isPublic || false,
-  });
+  const [formData, setFormData] = useState<OverviewFormData>(() =>
+    getOverviewFormData(activeGroup)
+  );
+  const trimmedName = formData.name.trim();
+  const canSave =
+    trimmedName.length >= GROUP_NAME_MIN_LENGTH &&
+    trimmedName.length <= GROUP_NAME_MAX_LENGTH &&
+    formData.description.length <= GROUP_DESCRIPTION_MAX_LENGTH;
+
+  useEffect(() => {
+    if (!hasChanges && !isSaving) {
+      setFormData(getOverviewFormData(activeGroup));
+    }
+  }, [activeGroup, hasChanges, isSaving]);
 
   const handleFormChange = (data: OverviewFormData) => {
     setFormData(data);
-    setHasChanges(true);
+    setHasChanges(!isSameOverviewForm(data, getOverviewFormData(activeGroup)));
     setSaveError(null);
     setDangerError(null);
   };
 
   const handleSave = async () => {
+    if (!canSave) {
+      setSaveError(
+        `Group name must be ${GROUP_NAME_MIN_LENGTH}-${GROUP_NAME_MAX_LENGTH} characters and the description cannot exceed ${GROUP_DESCRIPTION_MAX_LENGTH} characters.`
+      );
+      return;
+    }
+
     setIsSaving(true);
     setSaveError(null);
     try {
       await updateGroup(groupId, {
-        name: formData.name,
-        description: formData.description || null,
+        name: trimmedName,
+        description: formData.description.trim() || null,
         isPublic: formData.isPublic,
       });
+      setFormData((current) => ({
+        ...current,
+        name: trimmedName,
+        description: current.description.trim(),
+      }));
       setHasChanges(false);
       HapticFeedback.success();
     } catch (error) {
@@ -94,11 +137,7 @@ export function useGroupSettings(groupId: string) {
   };
 
   const handleReset = () => {
-    setFormData({
-      name: activeGroup?.name || '',
-      description: activeGroup?.description || '',
-      isPublic: activeGroup?.isPublic || false,
-    });
+    setFormData(getOverviewFormData(activeGroup));
     setHasChanges(false);
     setSaveError(null);
   };
@@ -152,6 +191,7 @@ export function useGroupSettings(groupId: string) {
     formData,
     handleFormChange,
     hasChanges,
+    canSave,
     isSaving,
     handleSave,
     saveError,

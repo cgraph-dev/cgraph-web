@@ -149,6 +149,25 @@ describe('useGroupSettings', () => {
     expect(result.current.formData.name).toBe('Changed');
   });
 
+  it('clears hasChanges when fields return to the persisted values', () => {
+    mockGroups.push(makeGroup({ name: 'Original', description: 'Saved', isPublic: true }));
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    act(() => {
+      result.current.handleFormChange({ name: 'Changed', description: 'Saved', isPublic: true });
+    });
+    expect(result.current.hasChanges).toBe(true);
+
+    act(() => {
+      result.current.handleFormChange({
+        name: 'Original',
+        description: 'Saved',
+        isPublic: true,
+      });
+    });
+    expect(result.current.hasChanges).toBe(false);
+  });
+
   it('handleSave calls updateGroup and clears hasChanges', async () => {
     mockGroups.push(makeGroup());
     const { result } = renderHook(() => useGroupSettings('g-1'));
@@ -173,6 +192,56 @@ describe('useGroupSettings', () => {
     expect(result.current.hasChanges).toBe(false);
     expect(result.current.isSaving).toBe(false);
     expect(mockHapticFeedback.success).toHaveBeenCalled();
+  });
+
+  it('trims overview text before saving', async () => {
+    const storedGroup = makeGroup();
+    mockGroups.push(storedGroup);
+    mockUpdateGroup.mockImplementationOnce(async (_groupId, data) => {
+      Object.assign(storedGroup, data);
+    });
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    act(() => {
+      result.current.handleFormChange({
+        name: '  Updated group  ',
+        description: '  Description  ',
+        isPublic: true,
+      });
+    });
+
+    await act(async () => {
+      await result.current.handleSave();
+    });
+
+    expect(mockUpdateGroup).toHaveBeenCalledWith('g-1', {
+      name: 'Updated group',
+      description: 'Description',
+      isPublic: true,
+    });
+    expect(result.current.formData).toEqual({
+      name: 'Updated group',
+      description: 'Description',
+      isPublic: true,
+    });
+  });
+
+  it('keeps invalid names local and does not call updateGroup', async () => {
+    mockGroups.push(makeGroup());
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    act(() => {
+      result.current.handleFormChange({ name: ' ', description: '', isPublic: true });
+    });
+    expect(result.current.canSave).toBe(false);
+
+    await act(async () => {
+      await result.current.handleSave();
+    });
+
+    expect(mockUpdateGroup).not.toHaveBeenCalled();
+    expect(result.current.saveError).toContain('Group name must be 2-100 characters');
+    expect(result.current.isSaving).toBe(false);
   });
 
   it('handleSave triggers error haptic on failure', async () => {

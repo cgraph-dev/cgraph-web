@@ -1,14 +1,20 @@
 import { useRef, useState } from 'react';
-import { motion } from 'motion/react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { toast } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
+import { Input, Textarea } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import type { OverviewTabProps } from './types';
-import { FADE_UP } from '@/lib/animations/transitions';
 import { NodeGatingSection } from './node-gating-section';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { useGroupStore } from '@/modules/groups/store';
+import {
+  GROUP_DESCRIPTION_MAX_LENGTH,
+  GROUP_NAME_MAX_LENGTH,
+  GROUP_NAME_MIN_LENGTH,
+} from './constants';
 
 const logger = createLogger('OverviewTab');
 
@@ -72,6 +78,7 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
       toast.error('Failed to upload icon. Please try again.');
       setIconPreview(null);
     } finally {
+      URL.revokeObjectURL(preview);
       setIsUploadingIcon(false);
     }
   }
@@ -111,15 +118,21 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
       toast.error('Failed to upload banner. Please try again.');
       setBannerPreview(null);
     } finally {
+      URL.revokeObjectURL(preview);
       setIsUploadingBanner(false);
     }
   }
 
   const displayIconUrl = iconPreview ?? group.iconUrl;
   const displayBannerUrl = bannerPreview ?? group.bannerUrl;
+  const trimmedNameLength = formData.name.trim().length;
+  const nameError =
+    trimmedNameLength > 0 && trimmedNameLength < GROUP_NAME_MIN_LENGTH
+      ? `Group name must be at least ${GROUP_NAME_MIN_LENGTH} characters.`
+      : undefined;
 
   return (
-    <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="max-w-2xl space-y-6">
+    <div className="max-w-2xl space-y-6">
       <div>
         <h2 className="mb-2 text-2xl font-bold text-white">Overview</h2>
         <p className="text-gray-400">Configure your group's basic settings</p>
@@ -162,16 +175,16 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
             </div>
           )}
           {isAdmin && (
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.95 }}
+            <Button
+              variant="glass"
+              size="sm"
+              leftIcon={<PhotoIcon />}
               onClick={handleBannerClick}
-              disabled={isUploadingBanner}
-              className="bg-[var(--token-bg-secondary)]/80 hover:bg-[var(--token-bg-tertiary)]/90 absolute bottom-3 right-3 flex items-center gap-2 rounded-xl border border-[var(--token-card-border)] px-4 py-2 text-[13px] font-bold text-white shadow-lg backdrop-blur-md transition-all hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+              isLoading={isUploadingBanner}
+              className="absolute bottom-3 right-3"
             >
-              <PhotoIcon className="h-4 w-4" />
-              {isUploadingBanner ? 'Uploading…' : 'Change Banner'}
-            </motion.button>
+              Change banner
+            </Button>
           )}
         </div>
 
@@ -194,16 +207,16 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
             )}
           </div>
           {isAdmin && (
-            <div>
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.98 }}
+            <div className="min-w-0">
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<PhotoIcon />}
                 onClick={handleIconClick}
-                disabled={isUploadingIcon}
-                className="rounded-xl border border-[color-mix(in_srgb,var(--color-brand-purple)_20%,transparent)] bg-[color-mix(in_srgb,var(--color-brand-purple)_10%,transparent)] px-5 py-2.5 text-[13px] font-bold text-[var(--color-brand-purple)] shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all hover:bg-[color-mix(in_srgb,var(--color-brand-purple)_20%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+                isLoading={isUploadingIcon}
               >
-                {isUploadingIcon ? 'Uploading…' : 'Upload Icon'}
-              </motion.button>
+                Upload icon
+              </Button>
               <p className="mt-1 text-xs text-gray-500">Recommended: 512x512 · Max 5MB</p>
             </div>
           )}
@@ -214,49 +227,48 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
       <GlassCard variant="frosted" className="space-y-4 p-6">
         <h3 className="font-semibold text-white">Basic Information</h3>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-300">Group Name</label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => onChange({ ...formData, name: e.target.value })}
-            className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
-          />
-        </div>
+        <Input
+          id="group-settings-name"
+          label="Group name"
+          required
+          minLength={GROUP_NAME_MIN_LENGTH}
+          maxLength={GROUP_NAME_MAX_LENGTH}
+          value={formData.name}
+          error={nameError}
+          hint={`${formData.name.length}/${GROUP_NAME_MAX_LENGTH} characters`}
+          onChange={(event) => onChange({ ...formData, name: event.target.value })}
+        />
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-300">Description</label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => onChange({ ...formData, description: e.target.value })}
-            rows={4}
-            className="w-full resize-none rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:border-primary-500 focus:outline-none"
-          />
-        </div>
+        <Textarea
+          id="group-settings-description"
+          label="Description"
+          rows={4}
+          maxLength={GROUP_DESCRIPTION_MAX_LENGTH}
+          value={formData.description}
+          hint={`${formData.description.length}/${GROUP_DESCRIPTION_MAX_LENGTH} characters`}
+          onChange={(event) => onChange({ ...formData, description: event.target.value })}
+        />
 
         <div className="flex items-center justify-between rounded-lg bg-[var(--token-card-bg)/0.4] p-4">
-          <div>
-            <span className="font-medium text-white">Public Group</span>
-            <p className="text-xs text-gray-400">Anyone can discover and join</p>
+          <div className="min-w-0 pr-4">
+            <label htmlFor="group-settings-public" className="font-medium text-white">
+              Public group
+            </label>
+            <p id="group-settings-public-description" className="text-xs text-gray-400">
+              Anyone can discover and join
+            </p>
           </div>
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onChange({ ...formData, isPublic: !formData.isPublic })}
-            className={`h-6 w-12 rounded-full transition-colors ${
-              formData.isPublic ? 'bg-primary-600' : 'bg-[var(--token-card-bg)]'
-            }`}
-          >
-            <motion.div
-              animate={{ x: formData.isPublic ? 24 : 0 }}
-              className="h-6 w-6 rounded-full bg-white shadow-lg"
-            />
-          </motion.button>
+          <Switch
+            id="group-settings-public"
+            checked={formData.isPublic}
+            onCheckedChange={(isPublic) => onChange({ ...formData, isPublic })}
+            className="shrink-0"
+          />
         </div>
       </GlassCard>
 
       {/* Node Gating */}
       <NodeGatingSection group={group} isOwner={isAdmin} />
-    </motion.div>
+    </div>
   );
 }
