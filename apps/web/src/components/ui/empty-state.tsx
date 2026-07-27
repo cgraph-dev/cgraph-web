@@ -2,7 +2,6 @@
  * Empty state placeholder component.
  */
 import { motion } from 'motion/react';
-import { springs, tweens, staggerConfigs } from '@/lib/animation-presets';
 import {
   InboxIcon,
   ChatBubbleLeftRightIcon,
@@ -10,23 +9,7 @@ import {
   DocumentTextIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
-
-const containerVariants = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: staggerConfigs.standard.staggerChildren },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: tweens.standard },
-};
-
-const iconVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  show: { opacity: 1, scale: 1, transition: springs.gentle },
-};
+import { Button } from './button';
 
 interface EmptyStateProps {
   title?: string;
@@ -53,33 +36,25 @@ export default function EmptyState({
     <motion.div
       role="status"
       aria-label={title}
-      className={`flex flex-col items-center justify-center px-4 py-12 text-center ${className}`}
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
+      className={`cgraph-empty-state ${className}`}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
     >
-      <motion.div
-        variants={iconVariants}
-        className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--token-card-bg)]"
-      >
-        {icon || <InboxIcon className="h-8 w-8 text-gray-500" />}
-      </motion.div>
-      <motion.h3 variants={itemVariants} className="mb-2 text-lg font-semibold text-white">
-        {title}
-      </motion.h3>
-      <motion.p variants={itemVariants} className="mb-6 max-w-md text-sm text-gray-400">
-        {message}
-      </motion.p>
+      <div className="cgraph-empty-icon">
+        {icon || <InboxIcon className="h-7 w-7" />}
+      </div>
+      <h3>{title}</h3>
+      <p>{message}</p>
       {action && (
-        <motion.button
-          variants={itemVariants}
-          whileTap={{ scale: 0.88 }}
+        <Button
+          className="mt-5"
+          leftIcon={<PlusIcon />}
           onClick={action.onClick}
-          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-[rgb(30,32,40)]"
+          animated={false}
         >
-          <PlusIcon className="h-4 w-4" />
-          <span>{action.label}</span>
-        </motion.button>
+          {action.label}
+        </Button>
       )}
     </motion.div>
   );

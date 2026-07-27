@@ -486,13 +486,14 @@ describe('AppLayout', () => {
     expect(screen.queryByTestId('mobile-navigation')).not.toBeInTheDocument();
   });
 
-  it('renders the non-light ambient background layer', () => {
+  it('uses the product shell without decorative ambient orbs', () => {
     mockUseAppLayout.mockReturnValue({
       ...baseLayout,
       theme: { ...baseLayout.theme, category: 'dark' },
     });
     const { container } = render(<AppLayout />);
-    expect(container.querySelector('.absolute.inset-0.z-0.overflow-hidden')).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass('cgraph-app-shell');
+    expect(container.querySelector('.blur-\\[120px\\]')).not.toBeInTheDocument();
   });
 
   it('uses the theme background style for light themes', () => {

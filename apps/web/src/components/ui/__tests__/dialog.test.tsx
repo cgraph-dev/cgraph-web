@@ -79,11 +79,7 @@ describe('Dialog', () => {
       </Dialog>
     );
 
-    // The backdrop is the first child with bg-black/50
-    const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/60');
-    if (backdrop) {
-      fireEvent.click(backdrop);
-    }
+    fireEvent.click(screen.getByTestId('dialog-backdrop'));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 

@@ -36,7 +36,8 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <motion.div
             key="dialog-backdrop"
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            data-testid="dialog-backdrop"
+            className="cgraph-dialog-backdrop fixed inset-0"
             initial={reducedMotion ? undefined : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -45,10 +46,10 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
           />
           <motion.div
             key="dialog-content"
-            className="relative z-50"
-            initial={reducedMotion ? undefined : { opacity: 0, y: 20, scale: 0.95 }}
+            className="relative z-50 flex w-full justify-center"
+            initial={reducedMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={
               reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 240, damping: 26 }
             }
@@ -84,12 +85,9 @@ export function DialogContent({
       aria-label={ariaLabel}
       aria-labelledby={ariaLabelledBy}
       aria-describedby={ariaDescribedBy}
-      className={`mx-4 w-full max-w-md rounded-2xl border border-[var(--token-card-border)] p-6 shadow-card ${className} `}
-      style={{
-        backdropFilter: 'blur(48px)',
-        WebkitBackdropFilter: 'blur(48px)',
-        background: 'rgba(15, 19, 40, 0.92)',
-      }}
+      className={`cgraph-dialog-content mx-4 w-full max-w-md p-5 ${className}`}
+      data-cgraph-material="floating"
+      data-cgraph-surface="dialog"
       onClick={(e) => e.stopPropagation()}
     >
       {children}
@@ -103,7 +101,9 @@ interface DialogHeaderProps {
 }
 /** Dialog Header. */
 export function DialogHeader({ children, className = '' }: DialogHeaderProps) {
-  return <div className={`mb-4 ${className}`}>{children}</div>;
+  return (
+    <div className={`border-b border-[var(--product-line)] pb-4 ${className}`}>{children}</div>
+  );
 }
 
 interface DialogTitleProps {
@@ -112,7 +112,11 @@ interface DialogTitleProps {
 }
 /** Dialog Title. */
 export function DialogTitle({ children, className = '' }: DialogTitleProps) {
-  return <h2 className={`text-textPrimary text-lg font-semibold ${className}`}>{children}</h2>;
+  return (
+    <h2 className={`text-lg font-semibold text-[var(--token-text-primary)] ${className}`}>
+      {children}
+    </h2>
+  );
 }
 
 interface DialogDescriptionProps {
@@ -121,7 +125,9 @@ interface DialogDescriptionProps {
 }
 /** Dialog Description. */
 export function DialogDescription({ children, className = '' }: DialogDescriptionProps) {
-  return <p className={`text-textMuted mt-1 text-sm ${className}`}>{children}</p>;
+  return (
+    <p className={`mt-1 text-sm text-[var(--token-text-muted)] ${className}`}>{children}</p>
+  );
 }
 
 interface DialogFooterProps {
@@ -130,7 +136,13 @@ interface DialogFooterProps {
 }
 /** Dialog Footer. */
 export function DialogFooter({ children, className = '' }: DialogFooterProps) {
-  return <div className={`mt-6 flex justify-end gap-3 ${className}`}>{children}</div>;
+  return (
+    <div
+      className={`mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-[var(--product-line)] pt-4 ${className}`}
+    >
+      {children}
+    </div>
+  );
 }
 
 export default Dialog;

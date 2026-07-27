@@ -29,9 +29,9 @@ describe('EmptyState', () => {
     expect(screen.getByTestId('icon')).toBeInTheDocument();
   });
 
-  it('does not render icon container when no icon is provided', () => {
+  it('renders the shared fallback icon container when no icon is provided', () => {
     const { container } = render(<EmptyState title="Empty" />);
-    const iconWrappers = container.querySelectorAll('.w-16.h-16');
+    const iconWrappers = container.querySelectorAll('.cgraph-empty-icon');
     expect(iconWrappers).toHaveLength(1);
   });
 
@@ -122,6 +122,6 @@ describe('EmptySearchResults', () => {
 describe('EmptyNotifications', () => {
   it('renders the default fallback icon wrapper', () => {
     const { container } = render(<EmptyState title="Empty" />);
-    expect(container.querySelector('.h-16.w-16')).not.toBeNull();
+    expect(container.querySelector('.cgraph-empty-icon')).not.toBeNull();
   });
 });

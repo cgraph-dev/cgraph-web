@@ -33,22 +33,11 @@ export default function AppLayout() {
 
   return (
     <div
-      className={`relative flex h-dvh min-h-dvh flex-col text-[var(--token-text-primary)] lg:h-screen lg:min-h-screen lg:flex-row ${
-        theme.category !== 'light' ? 'bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950' : ''
-      }`}
+      className="cgraph-app-shell relative flex h-dvh min-h-dvh flex-col text-[var(--token-text-primary)] lg:h-screen lg:min-h-screen lg:flex-row"
       style={{
         background: theme.category === 'light' ? theme.colors.background : undefined,
       }}
     >
-      {/* Brand ambient background — replacing defaults with Social Hub mesh aesthetic */}
-      {theme.category !== 'light' && (
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          {/* Background mesh gradient */}
-          <div className="bg-primary-500/[0.04] absolute left-1/4 top-0 h-[500px] w-[500px] rounded-full blur-[120px]" />
-          <div className="bg-purple-500/[0.04] absolute bottom-0 right-1/4 h-[400px] w-[400px] rounded-full blur-[120px]" />
-        </div>
-      )}
-
       {/* Skip to content link for keyboard users */}
       <a
         href="#main-content"
@@ -70,7 +59,7 @@ export default function AppLayout() {
       {/* Main Content */}
       <main
         id="main-content"
-        className="z-0 flex min-h-0 min-w-0 flex-1 overflow-hidden bg-transparent"
+        className="cgraph-workspace z-0 flex min-h-0 min-w-0 flex-1 overflow-hidden"
         role="main"
       >
         <AnimatedOutlet />
