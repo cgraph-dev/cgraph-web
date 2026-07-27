@@ -142,9 +142,10 @@ export function MemberList({ groupId, className = '' }: MemberListProps) {
               name: 'Online',
               color: '#10b981',
               position: -1,
-              permissions: 0,
-              isDefault: false,
-              isMentionable: false,
+            permissions: 0,
+            isDefault: false,
+            isHoisted: false,
+            isMentionable: false,
             }}
             members={membersByRole.noRoleMembers.filter((m) => m.user.status !== 'offline')}
             onMemberClick={handleMemberClick}

@@ -42,6 +42,7 @@ const mockRole: Role = {
   position: 1,
   permissions: 0,
   isDefault: true,
+  isHoisted: false,
   isMentionable: false,
 };
 
@@ -334,6 +335,50 @@ describe('group-actions (extended)', () => {
 
       const groups = useGroupStore.getState().groups;
       expect(groups.length).toBeLessThanOrEqual(201);
+    });
+  });
+  describe('role contracts', () => {
+    it('normalizes hoisting and sends reorder through the store owner', async () => {
+      useGroupStore.setState({ groups: [mockGroup] });
+      mockedApi.put.mockResolvedValue({
+        data: {
+          data: [
+            {
+              id: 'role-2',
+              name: 'Moderator',
+              color: '#22c55e',
+              position: 1,
+              permissions: 128,
+              is_default: false,
+              is_hoisted: true,
+              is_mentionable: true,
+            },
+            {
+              id: 'role-1',
+              name: 'Member',
+              color: '#ffffff',
+              position: 0,
+              permissions: 0,
+              is_default: true,
+              is_hoisted: false,
+              is_mentionable: false,
+            },
+          ],
+        },
+      });
+
+      await useGroupStore.getState().reorderRoles('group-1', ['role-2', 'role-1']);
+
+      expect(mockedApi.put).toHaveBeenCalledWith('/api/v1/groups/group-1/roles/reorder', {
+        role_ids: ['role-2', 'role-1'],
+      });
+      expect(useGroupStore.getState().groups[0]?.roles[0]).toEqual(
+        expect.objectContaining({
+          id: 'role-2',
+          isHoisted: true,
+          isMentionable: true,
+        })
+      );
     });
   });
 });

@@ -155,6 +155,7 @@ function normalizeRole(raw: Record<string, unknown>): Role {
     position: Number(raw.position ?? 0),
     permissions: normalizeRolePermissions(raw.permissions ?? raw.permission_map),
     isDefault: raw.is_default === true || raw.isDefault === true,
+    isHoisted: raw.is_hoisted === true || raw.isHoisted === true,
     isMentionable:
       raw.is_mentionable === true || raw.mentionable === true || raw.isMentionable === true,
   };
@@ -771,7 +772,13 @@ export function createGroupActions(
 
     createRole: async (
       groupId: string,
-      data: { name: string; color: string; permissions: number; is_mentionable?: boolean }
+      data: {
+        name: string;
+        color: string;
+        permissions: number;
+        is_hoisted?: boolean;
+        is_mentionable?: boolean;
+      }
     ) => {
       const res = await http.post(`/api/v1/groups/${groupId}/roles`, data);
       const roleRaw = ensureObject<Record<string, unknown>>(res.data?.data ?? res.data);
@@ -806,6 +813,20 @@ export function createGroupActions(
         ),
       }));
       return role;
+    },
+
+    reorderRoles: async (groupId: string, roleIds: readonly string[]) => {
+      const res = await http.put(`/api/v1/groups/${groupId}/roles/reorder`, {
+        role_ids: roleIds,
+      });
+      const roleRecords = ensureArray<Record<string, unknown>>(res.data, 'data');
+      const reorderedRoles = roleRecords.map(normalizeRole);
+
+      set((state) => ({
+        groups: state.groups.map((group) =>
+          group.id === groupId ? { ...group, roles: reorderedRoles } : group
+        ),
+      }));
     },
 
     deleteRole: async (groupId: string, roleId: string) => {

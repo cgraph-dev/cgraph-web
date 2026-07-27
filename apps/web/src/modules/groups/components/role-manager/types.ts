@@ -32,15 +32,6 @@ export interface RoleEditorProps {
 }
 
 /**
- * Toggle component props
- */
-export interface ToggleProps {
-  value: boolean;
-  disabled?: boolean;
-  onChange: (value: boolean) => void;
-}
-
-/**
  * RoleListItem component props
  */
 export interface RoleListItemProps {

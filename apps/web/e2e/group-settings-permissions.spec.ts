@@ -71,6 +71,7 @@ const ordinaryMemberGroup = {
       position: 0,
       permissions: 0,
       is_default: true,
+      is_hoisted: false,
       is_mentionable: false,
     },
   ],
@@ -86,6 +87,7 @@ const ordinaryMemberGroup = {
         position: 0,
         permissions: 0,
         is_default: true,
+        is_hoisted: false,
         is_mentionable: false,
       },
     ],
@@ -108,6 +110,7 @@ const ownerGroup = {
         position: 0,
         permissions: 1,
         is_default: false,
+        is_hoisted: true,
         is_mentionable: true,
       },
     ],
@@ -122,6 +125,7 @@ const roleManagementRoles = [
     position: 2,
     permissions: 0x80000000,
     is_default: false,
+    is_hoisted: true,
     is_mentionable: true,
   },
   {
@@ -131,6 +135,7 @@ const roleManagementRoles = [
     position: 1,
     permissions: 128,
     is_default: false,
+    is_hoisted: true,
     is_mentionable: true,
   },
   {
@@ -140,6 +145,7 @@ const roleManagementRoles = [
     position: 0,
     permissions: 3,
     is_default: true,
+    is_hoisted: false,
     is_mentionable: false,
   },
 ];
@@ -261,8 +267,11 @@ async function installGroupPermissionMocks(
     inviteCreates: [] as unknown[],
     inviteDeletes: [] as string[],
     memberKicks: [] as string[],
+    memberKickBodies: [] as unknown[],
     memberBans: [] as string[],
+    memberBanBodies: [] as unknown[],
     memberMutes: [] as string[],
+    memberMuteBodies: [] as unknown[],
     memberUnmutes: [] as string[],
     memberRoleUpdates: [] as Array<{ memberId: string; body: unknown }>,
     automodLists: 0,
@@ -393,6 +402,7 @@ async function installGroupPermissionMocks(
         position: roleState.length,
         permissions: typeof body.permissions === 'number' ? body.permissions : 0,
         is_default: false,
+        is_hoisted: body.is_hoisted === true,
         is_mentionable: body.is_mentionable === true,
       };
       roleState = [createdRole, ...roleState].sort((a, b) => b.position - a.position);
@@ -417,12 +427,15 @@ async function installGroupPermissionMocks(
           position: 0,
           permissions: 0,
           is_default: false,
+          is_hoisted: false,
           is_mentionable: false,
         }),
         name: typeof body.name === 'string' ? body.name : existingRole?.name,
         color: typeof body.color === 'string' ? body.color : existingRole?.color,
         permissions:
           typeof body.permissions === 'number' ? body.permissions : existingRole?.permissions,
+        is_hoisted:
+          typeof body.is_hoisted === 'boolean' ? body.is_hoisted : existingRole?.is_hoisted,
         is_mentionable:
           typeof body.is_mentionable === 'boolean'
             ? body.is_mentionable
@@ -457,6 +470,7 @@ async function installGroupPermissionMocks(
 
     if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend` && method === 'DELETE') {
       requests.memberKicks.push('member-friend');
+      requests.memberKickBodies.push(request.postDataJSON());
       if (denyMemberKick) {
         await fulfillJson(route, { message: 'Forbidden' }, 403);
         return;
@@ -469,6 +483,7 @@ async function installGroupPermissionMocks(
 
     if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/ban` && method === 'POST') {
       requests.memberBans.push('member-friend');
+      requests.memberBanBodies.push(request.postDataJSON());
       if (denyMemberBan) {
         await fulfillJson(route, { message: 'Forbidden' }, 403);
         return;
@@ -488,6 +503,7 @@ async function installGroupPermissionMocks(
 
     if (path === `/api/v1/groups/${GROUP_ID}/members/member-friend/mute` && method === 'POST') {
       requests.memberMutes.push('member-friend');
+      requests.memberMuteBodies.push(request.postDataJSON());
       if (denyMemberMute) {
         await fulfillJson(route, { message: 'Forbidden' }, 403);
         return;
@@ -842,7 +858,9 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByRole('button', { name: /^Audit Log$/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /^AutoMod$/ })).toBeVisible();
 
-    await page.locator('input[type="text"]').first().fill('Permission Edge Hub Verified');
+    await page
+      .getByRole('textbox', { name: /^Group name/ })
+      .fill('Permission Edge Hub Verified');
     await page.getByRole('button', { name: /save changes/i }).click();
 
     await expect
@@ -1124,26 +1142,32 @@ test.describe('Group settings permissions', () => {
 
     await page.getByRole('button', { name: /create role/i }).click();
     await page.getByLabel('Role name').fill('Ops Lead');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await page.getByRole('button', { name: /^Create role$/ }).last().click();
 
     await expect
       .poll(() => requests.roleCreates, { message: 'role create endpoint received payload' })
       .toContainEqual(
         expect.objectContaining({
           name: 'Ops Lead',
+          is_hoisted: false,
           is_mentionable: false,
         })
       );
     await expect(page.getByText('Ops Lead').first()).toBeVisible();
 
     await page.getByLabel('Role name').fill('Ops Captain');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await page.getByRole('switch', { name: /^Display separately/ }).click();
+    await page.getByRole('button', { name: /^Save changes$/ }).click();
     await expect
       .poll(() => requests.roleUpdates, { message: 'role update endpoint received payload' })
       .toContainEqual(
         expect.objectContaining({
           roleId: 'role-ops',
-          body: expect.objectContaining({ name: 'Ops Captain' }),
+          body: expect.objectContaining({
+            name: 'Ops Captain',
+            is_hoisted: true,
+            is_mentionable: false,
+          }),
         })
       );
     await expect(page.getByText('Ops Captain').first()).toBeVisible();
@@ -1158,6 +1182,9 @@ test.describe('Group settings permissions', () => {
       );
 
     await page.getByRole('button', { name: /^Delete$/ }).click();
+    const deleteDialog = page.getByRole('dialog', { name: 'Delete role' });
+    await expect(deleteDialog).toBeVisible();
+    await deleteDialog.getByRole('button', { name: /^Delete$/ }).click();
     await expect
       .poll(() => requests.roleDeletes, { message: 'role delete endpoint received role id' })
       .toContain('role-ops');
@@ -1175,7 +1202,7 @@ test.describe('Group settings permissions', () => {
 
     await page.getByRole('button', { name: /create role/i }).click();
     await page.getByLabel('Role name').fill('   ');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await page.getByRole('button', { name: /^Create role$/ }).last().click();
 
     await expect(page.getByText('Role name is required.')).toBeVisible();
     await expect
@@ -1193,7 +1220,9 @@ test.describe('Group settings permissions', () => {
     await page.goto(`/groups/${GROUP_ID}/settings`);
     await expect(page.getByRole('heading', { name: /^Overview$/ })).toBeVisible();
 
-    await page.locator('input[type="text"]').first().fill('Permission Edge Hub Blocked');
+    await page
+      .getByRole('textbox', { name: /^Group name/ })
+      .fill('Permission Edge Hub Blocked');
     await page.getByRole('button', { name: /save changes/i }).click();
 
     await expect
@@ -1277,7 +1306,7 @@ test.describe('Group settings permissions', () => {
 
     await page.getByRole('button', { name: /create role/i }).click();
     await page.getByLabel('Role name').fill('Blocked Role');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await page.getByRole('button', { name: /^Create role$/ }).last().click();
 
     await expect
       .poll(() => requests.roleCreates, { message: 'role create reached backend' })
@@ -1301,7 +1330,7 @@ test.describe('Group settings permissions', () => {
 
     await page.getByText('Moderator').first().click();
     await page.getByLabel('Role name').fill('Blocked Moderator');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await page.getByRole('button', { name: /^Save changes$/ }).click();
 
     await expect
       .poll(() => requests.roleUpdates, { message: 'role update reached backend' })
@@ -1316,6 +1345,9 @@ test.describe('Group settings permissions', () => {
     ).toBeVisible();
 
     await page.getByRole('button', { name: /^Delete$/ }).click();
+    const deleteDialog = page.getByRole('dialog', { name: 'Delete role' });
+    await expect(deleteDialog).toBeVisible();
+    await deleteDialog.getByRole('button', { name: /^Delete$/ }).click();
 
     await expect
       .poll(() => requests.roleDeletes, { message: 'role delete reached backend' })
@@ -1339,7 +1371,7 @@ test.describe('Group settings permissions', () => {
 
     await page.getByText('Admin').first().click();
     await page.getByLabel('Role name').fill('Blocked Admin');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await page.getByRole('button', { name: /^Save changes$/ }).click();
 
     await expect
       .poll(() => requests.roleUpdates, { message: 'admin role update reached backend' })
@@ -1378,33 +1410,23 @@ test.describe('Group settings permissions', () => {
     ).toBeVisible();
   });
 
-  test('shows backend default-role copy and hides destructive default controls', async ({
-    page,
-  }) => {
+  test('keeps the backend-owned default role read-only', async ({ page }) => {
     const requests = await installGroupPermissionMocks(page, {
       groupFixture: roleManagementGroup,
-      denyRoleUpdate: true,
-      roleUpdateErrorMessage: 'The default role cannot be modified.',
     });
 
     await page.goto(`/groups/${GROUP_ID}/settings`);
     await page.getByRole('button', { name: /^Roles$/ }).click();
     await expect(page.getByRole('heading', { name: /^Roles$/ })).toBeVisible();
-    await page.getByRole('button', { name: /^Member DEFAULT$/ }).click();
-    await page.getByLabel('Role name').fill('Renamed Member');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
-
-    await expect
-      .poll(() => requests.roleUpdates, {
-        message: 'default role update reached backend',
-      })
-      .toContainEqual(
-        expect.objectContaining({
-          roleId: 'role-member',
-          body: expect.objectContaining({ name: 'Renamed Member' }),
-        })
-      );
-    await expect(page.getByText('The default role cannot be modified.')).toBeVisible();
+    await page.getByRole('button', { name: /^Member\s*DEFAULT$/ }).click();
+    await expect(page.getByLabel('Role name')).toBeDisabled();
+    await expect(
+      page.getByText(
+        'The default role is managed by the group and cannot be edited, reordered, or deleted.'
+      )
+    ).toBeVisible();
+    expect(requests.roleUpdates).toHaveLength(0);
+    await expect(page.getByRole('button', { name: /^Save changes$/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Delete$/ })).toHaveCount(0);
   });
 
@@ -1430,7 +1452,7 @@ test.describe('Group settings permissions', () => {
 
     await page.getByText('Moderator').first().click();
     await page.getByLabel('Role name').fill('Validation Edge');
-    await page.getByRole('button', { name: /^Save Changes$/ }).click();
+    await page.getByRole('button', { name: /^Save changes$/ }).click();
 
     await expect
       .poll(() => requests.roleUpdates, { message: 'role validation update reached backend' })
@@ -1602,9 +1624,9 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Change Role$/ }).click();
-    await expect(page.getByRole('heading', { name: /^Assign Roles$/ })).toBeVisible();
-    await page.getByRole('button', { name: /^Save Roles$/ }).click();
+    await page.getByRole('menuitem', { name: /^Change roles$/ }).click();
+    await expect(page.getByRole('heading', { name: /^Assign roles$/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Save roles$/ }).click();
 
     await expect
       .poll(() => requests.memberRoleUpdates, {
@@ -1631,21 +1653,29 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Mute$/ }).click();
-    await page.getByRole('button', { name: /^Confirm Mute$/ }).click();
+    await page.getByRole('menuitem', { name: /^Mute$/ }).click();
+    await page.getByLabel('Reason').fill('Temporary cooldown');
+    await page
+      .getByRole('dialog', { name: 'Mute member' })
+      .getByRole('button', { name: 'Mute' })
+      .click();
 
     await expect
       .poll(() => requests.memberMutes, { message: 'member mute reached backend' })
       .toContain('member-friend');
-    await expect(page.getByText('muted', { exact: true })).toBeVisible();
+    expect(requests.memberMuteBodies.at(-1)).toEqual({
+      duration: 600,
+      reason: 'Temporary cooldown',
+    });
+    await expect(page.getByText('Muted', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Unmute$/ }).click();
+    await page.getByRole('menuitem', { name: /^Unmute$/ }).click();
 
     await expect
       .poll(() => requests.memberUnmutes, { message: 'member unmute reached backend' })
       .toContain('member-friend');
-    await expect(page.getByText('muted', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Muted', { exact: true })).toHaveCount(0);
   });
 
   test('reconciles successful member kick on the routed members tab', async ({ page }) => {
@@ -1658,12 +1688,17 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Kick$/ }).click();
-    await page.getByRole('button', { name: /^Confirm Kick$/ }).click();
+    await page.getByRole('menuitem', { name: /^Kick$/ }).click();
+    await page.getByLabel('Reason').fill('Repeated disruption');
+    await page
+      .getByRole('dialog', { name: 'Kick member' })
+      .getByRole('button', { name: 'Kick' })
+      .click();
 
     await expect
       .poll(() => requests.memberKicks, { message: 'member kick reached backend' })
       .toContain('member-friend');
+    expect(requests.memberKickBodies.at(-1)).toEqual({ reason: 'Repeated disruption' });
     await expect(page.getByText('Permission Friend')).toHaveCount(0);
   });
 
@@ -1677,12 +1712,21 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Ban$/ }).click();
-    await page.getByRole('button', { name: /^Confirm Ban$/ }).click();
+    await page.getByRole('menuitem', { name: /^Ban$/ }).click();
+    await page.getByLabel('Ban duration').selectOption('24');
+    await page.getByLabel('Reason').fill('Repeated abuse');
+    await page
+      .getByRole('dialog', { name: 'Ban member' })
+      .getByRole('button', { name: 'Ban' })
+      .click();
 
     await expect
       .poll(() => requests.memberBans, { message: 'member ban reached backend' })
       .toContain('member-friend');
+    expect(requests.memberBanBodies.at(-1)).toEqual({
+      duration_hours: 24,
+      reason: 'Repeated abuse',
+    });
     await expect(page.getByText('Permission Friend')).toHaveCount(0);
   });
 
@@ -1699,8 +1743,9 @@ test.describe('Group settings permissions', () => {
     await expect(page.getByRole('heading', { name: /^Members$/ })).toBeVisible();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Kick$/ }).click();
-    await page.getByRole('button', { name: /^Confirm Kick$/ }).click();
+    await page.getByRole('menuitem', { name: /^Kick$/ }).click();
+    const kickDialog = page.getByRole('dialog', { name: 'Kick member' });
+    await kickDialog.getByRole('button', { name: 'Kick' }).click();
     await expect
       .poll(() => requests.memberKicks, { message: 'member kick reached backend' })
       .toContain('member-friend');
@@ -1708,10 +1753,12 @@ test.describe('Group settings permissions', () => {
       page.getByText('You do not have permission to kick members from this group.')
     ).toBeVisible();
     await expect(page.getByText('Permission Friend')).toBeVisible();
+    await kickDialog.getByRole('button', { name: 'Cancel' }).click();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Ban$/ }).click();
-    await page.getByRole('button', { name: /^Confirm Ban$/ }).click();
+    await page.getByRole('menuitem', { name: /^Ban$/ }).click();
+    const banDialog = page.getByRole('dialog', { name: 'Ban member' });
+    await banDialog.getByRole('button', { name: 'Ban' }).click();
     await expect
       .poll(() => requests.memberBans, { message: 'member ban reached backend' })
       .toContain('member-friend');
@@ -1719,10 +1766,14 @@ test.describe('Group settings permissions', () => {
       page.getByText('You do not have permission to ban members from this group.')
     ).toBeVisible();
     await expect(page.getByText('Permission Friend')).toBeVisible();
+    await banDialog.getByRole('button', { name: 'Cancel' }).click();
 
     await page.getByRole('button', { name: /member actions for permission friend/i }).click();
-    await page.getByRole('button', { name: /^Mute$/ }).click();
-    await page.getByRole('button', { name: /^Confirm Mute$/ }).click();
+    await page.getByRole('menuitem', { name: /^Mute$/ }).click();
+    await page
+      .getByRole('dialog', { name: 'Mute member' })
+      .getByRole('button', { name: 'Mute' })
+      .click();
     await expect
       .poll(() => requests.memberMutes, { message: 'member mute reached backend' })
       .toContain('member-friend');
@@ -1730,6 +1781,6 @@ test.describe('Group settings permissions', () => {
       page.getByText('You do not have permission to mute members in this group.')
     ).toBeVisible();
     await expect(page.getByText('Permission Friend')).toBeVisible();
-    await expect(page.getByText('muted')).toHaveCount(0);
+    await expect(page.getByText('Muted')).toHaveCount(0);
   });
 });

@@ -21,6 +21,7 @@ const MANAGE_ROLES = PERMISSIONS.MANAGE_ROLES?.value ?? 0;
 const MANAGE_CHANNELS = PERMISSIONS.MANAGE_CHANNELS?.value ?? 0;
 const KICK_MEMBERS = PERMISSIONS.KICK_MEMBERS?.value ?? 0;
 const BAN_MEMBERS = PERMISSIONS.BAN_MEMBERS?.value ?? 0;
+const MUTE_MEMBERS = PERMISSIONS.MUTE_MEMBERS?.value ?? 0;
 const VIEW_AUDIT_LOG = PERMISSIONS.VIEW_AUDIT_LOG?.value ?? 0;
 
 function getOverviewFormData(group: Group | undefined): OverviewFormData {
@@ -64,13 +65,19 @@ export function useGroupSettings(groupId: string) {
   const isAdministrator = Boolean(permissionMask & ADMINISTRATOR);
   const hasPermission = (permission: number) =>
     Boolean(isOwner || isAdministrator || permissionMask & permission);
+  const canManageRoles = hasPermission(MANAGE_ROLES);
+  const canKickMembers = hasPermission(KICK_MEMBERS);
+  const canBanMembers = hasPermission(BAN_MEMBERS);
+  const canMuteMembers = hasPermission(MUTE_MEMBERS);
   const permissions = {
     isOwner,
     canManageGroup: hasPermission(MANAGE_GROUP),
-    canManageRoles: hasPermission(MANAGE_ROLES),
+    canManageRoles,
     canManageChannels: hasPermission(MANAGE_CHANNELS),
-    canManageMembers:
-      hasPermission(KICK_MEMBERS) || hasPermission(BAN_MEMBERS) || hasPermission(MANAGE_ROLES),
+    canManageMembers: canKickMembers || canBanMembers || canMuteMembers || canManageRoles,
+    canKickMembers,
+    canBanMembers,
+    canMuteMembers,
     canManageInvites: hasPermission(MANAGE_GROUP),
     canViewAuditLog: hasPermission(VIEW_AUDIT_LOG),
     canManageAutomod: hasPermission(MANAGE_GROUP),

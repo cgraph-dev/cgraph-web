@@ -48,6 +48,7 @@ const mockRole: Role = {
   position: 1,
   permissions: 0,
   isDefault: true,
+  isHoisted: false,
   isMentionable: false,
 };
 

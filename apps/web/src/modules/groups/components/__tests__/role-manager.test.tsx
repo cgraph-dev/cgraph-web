@@ -1,34 +1,25 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom/vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { RoleManager } from '../role-manager/role-manager';
-const { mockCreateRole, mockUpdateRole, mockDeleteRole } = vi.hoisted(() => ({
-  mockCreateRole: vi.fn().mockResolvedValue({ id: 'role-new' }),
-  mockUpdateRole: vi.fn().mockResolvedValue(undefined),
-  mockDeleteRole: vi.fn().mockResolvedValue(undefined),
+import type { Role } from '@/modules/groups/store';
+
+const mocks = vi.hoisted(() => ({
+  createRole: vi.fn(),
+  updateRole: vi.fn(),
+  reorderRoles: vi.fn(),
+  deleteRole: vi.fn(),
 }));
 
-vi.mock('@heroicons/react/24/outline', () => ({
-  ShieldCheckIcon: (props: Record<string, unknown>) => (
-    <svg data-testid="icon-ShieldCheckIcon" {...props} />
-  ),
-  PlusIcon: (props: Record<string, unknown>) => <svg data-testid="icon-PlusIcon" {...props} />,
-  ChevronUpIcon: (props: Record<string, unknown>) => (
-    <svg data-testid="icon-ChevronUpIcon" {...props} />
-  ),
-  ChevronDownIcon: (props: Record<string, unknown>) => (
-    <svg data-testid="icon-ChevronDownIcon" {...props} />
-  ),
-}));
-
-const mockRoles = [
+const roles: Role[] = [
   {
     id: 'role-admin',
     name: 'Admin',
     color: '#ef4444',
     position: 2,
-    permissions: 1,
+    permissions: 0x80000000,
     isDefault: false,
+    isHoisted: true,
     isMentionable: true,
   },
   {
@@ -36,8 +27,9 @@ const mockRoles = [
     name: 'Moderator',
     color: '#3b82f6',
     position: 1,
-    permissions: 0,
+    permissions: 1 << 7,
     isDefault: false,
+    isHoisted: false,
     isMentionable: true,
   },
   {
@@ -47,150 +39,128 @@ const mockRoles = [
     position: 0,
     permissions: 0,
     isDefault: true,
+    isHoisted: false,
     isMentionable: false,
   },
 ];
 
-const mockGroups = [{ id: 'grp-1', name: 'My Group', roles: mockRoles }];
-
 vi.mock('@/modules/groups/store', () => ({
-  useGroupStore: vi.fn(() => ({
-    groups: mockGroups,
-    createRole: mockCreateRole,
-    updateRole: mockUpdateRole,
-    deleteRole: mockDeleteRole,
-  })),
+  useGroupStore: () => ({
+    groups: [{ id: 'grp-1', name: 'My Group', roles }],
+    ...mocks,
+  }),
 }));
 
-vi.mock('@/lib/animations/AnimationEngine', () => ({
-  HapticFeedback: { light: vi.fn(), success: vi.fn(), warning: vi.fn() },
-}));
-
-vi.mock('@/lib/animations/animation-engine', () => ({
-  HapticFeedback: { light: vi.fn(), success: vi.fn(), warning: vi.fn() },
-}));
-
-vi.mock('@/lib/api', () => ({
-  api: {
-    post: vi.fn(() => Promise.resolve({ data: {} })),
-    put: vi.fn(() => Promise.resolve({ data: {} })),
-    delete: vi.fn(() => Promise.resolve({ data: {} })),
-    patch: vi.fn(() => Promise.resolve({ data: {} })),
-  },
-}));
-
-vi.mock('../role-manager/RoleEditor', () => ({
-  RoleEditor: ({
-    role,
-    isNew,
-    onDelete,
-  }: {
-    role: { name: string };
-    isNew?: boolean;
-    onDelete?: () => void;
-  }) => (
-    <div data-testid="role-editor">
-      <span data-testid="editing-role">{role.name}</span>
-      {isNew && <span data-testid="is-new">new</span>}
-      <button data-testid="delete-role" onClick={onDelete}>
-        Delete
-      </button>
-    </div>
-  ),
-}));
-
-vi.mock('../role-manager/role-editor', () => ({
-  RoleEditor: ({
-    role,
-    isNew,
-    onDelete,
-  }: {
-    role: { name: string };
-    isNew?: boolean;
-    onDelete?: () => void;
-  }) => (
-    <div data-testid="role-editor">
-      <span data-testid="editing-role">{role.name}</span>
-      {isNew && <span data-testid="is-new">new</span>}
-      <button data-testid="delete-role" onClick={onDelete}>
-        Delete
-      </button>
-    </div>
-  ),
-}));
-
-vi.mock('../role-manager/constants', () => ({
-  PERMISSIONS: {
-    SEND_MESSAGES: { value: 1 << 13, label: 'Send Messages', description: 'Send messages' },
-    ADD_REACTIONS: { value: 1 << 16, label: 'Add Reactions', description: 'Add reactions' },
-  },
-  ROLE_COLORS: ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7'],
-}));
 describe('RoleManager', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.createRole.mockImplementation(async (_groupId: string, payload: Record<string, unknown>) => ({
+      ...roles[1],
+      ...payload,
+      id: 'role-new',
+      name: String(payload.name),
+      isHoisted: payload.is_hoisted === true,
+      isMentionable: payload.is_mentionable === true,
+    }));
+    mocks.updateRole.mockImplementation(
+      async (_groupId: string, roleId: string, payload: Record<string, unknown>) => ({
+        ...roles.find((role) => role.id === roleId),
+        ...payload,
+        id: roleId,
+        name: String(payload.name),
+        isHoisted: payload.is_hoisted === true,
+        isMentionable: payload.is_mentionable === true,
+      })
+    );
+    mocks.reorderRoles.mockResolvedValue(undefined);
+    mocks.deleteRole.mockResolvedValue(undefined);
+  });
 
-  it('renders the Roles heading', () => {
+  it('renders roles in hierarchy order and keeps the default role read-only', async () => {
     render(<RoleManager groupId="grp-1" />);
-    expect(screen.getByText('Roles')).toBeInTheDocument();
+
+    expect(within(screen.getByRole('list', { name: 'Roles' })).getAllByRole('listitem')).toHaveLength(
+      3
+    );
+    await userEvent.click(screen.getByRole('button', { name: /Member DEFAULT/i }));
+
+    expect(screen.getByRole('textbox', { name: 'Role name' })).toBeDisabled();
+    expect(
+      screen.getByText('The default role is managed by the group and cannot be edited, reordered, or deleted.')
+    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save changes' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move Member up' })).toBeDisabled();
   });
 
-  it('renders all existing roles from the group', () => {
+  it('maps display separation to is_hoisted and saves one role draft', async () => {
     render(<RoleManager groupId="grp-1" />);
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-    expect(screen.getByText('Moderator')).toBeInTheDocument();
-    expect(screen.getByText('Member')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Moderator' }));
+    await userEvent.click(screen.getByRole('switch', { name: /Display separately/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    await waitFor(() =>
+      expect(mocks.updateRole).toHaveBeenCalledWith(
+        'grp-1',
+        'role-mod',
+        expect.objectContaining({
+          name: 'Moderator',
+          is_hoisted: true,
+          is_mentionable: true,
+          permissions: 1 << 7,
+        })
+      )
+    );
+    expect(mocks.updateRole).toHaveBeenCalledTimes(1);
   });
 
-  it('marks default role with DEFAULT label', () => {
+  it('serializes explicit hierarchy moves through the group store', async () => {
     render(<RoleManager groupId="grp-1" />);
-    expect(screen.getByText('DEFAULT')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Move Moderator up' }));
+
+    await waitFor(() =>
+      expect(mocks.reorderRoles).toHaveBeenCalledWith('grp-1', [
+        'role-mod',
+        'role-admin',
+        'role-default',
+      ])
+    );
+    expect(mocks.reorderRoles).toHaveBeenCalledTimes(1);
   });
 
-  it('shows empty editor prompt when no role selected', () => {
+  it('requires confirmation before deleting a persisted role', async () => {
     render(<RoleManager groupId="grp-1" />);
-    expect(screen.getByText('Select a role to edit')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Moderator' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Delete role' });
+    expect(mocks.deleteRole).not.toHaveBeenCalled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(mocks.deleteRole).toHaveBeenCalledWith('grp-1', 'role-mod'));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Delete role' })).not.toBeInTheDocument()
+    );
   });
 
-  it('opens role editor when a role is clicked', () => {
+  it('creates a deterministic draft and sends the complete role contract', async () => {
     render(<RoleManager groupId="grp-1" />);
-    fireEvent.click(screen.getByText('Admin'));
-    expect(screen.getByTestId('role-editor')).toBeInTheDocument();
-    expect(screen.getByTestId('editing-role')).toHaveTextContent('Admin');
-  });
+    await userEvent.click(screen.getByRole('button', { name: 'Create role' }));
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Role name' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Role name' }), 'Ops');
+    const createButtons = screen.getAllByRole('button', { name: 'Create role' });
+    await userEvent.click(createButtons.at(-1)!);
 
-  it('creates a new role on plus button click', () => {
-    render(<RoleManager groupId="grp-1" />);
-    const plusBtn = screen.getByTestId('icon-PlusIcon').closest('button')!;
-    fireEvent.click(plusBtn);
-    expect(screen.getByTestId('role-editor')).toBeInTheDocument();
-    expect(screen.getByTestId('is-new')).toBeInTheDocument();
-    expect(screen.getAllByText('New Role').length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('deletes selected role when delete is clicked', () => {
-    render(<RoleManager groupId="grp-1" />);
-    fireEvent.click(screen.getByText('Admin'));
-    expect(screen.getByTestId('editing-role')).toHaveTextContent('Admin');
-    fireEvent.click(screen.getByTestId('delete-role'));
-    // Admin should be removed, editor should close
-    expect(screen.queryByTestId('role-editor')).not.toBeInTheDocument();
-    expect(screen.queryByText('Admin')).not.toBeInTheDocument();
-  });
-
-  it('applies custom className', () => {
-    const { container } = render(<RoleManager groupId="grp-1" className="custom-cls" />);
-    expect(container.firstChild).toHaveClass('custom-cls');
-  });
-
-  it('renders role sidebar and editor area', () => {
-    const { container } = render(<RoleManager groupId="grp-1" />);
-    const roleList = container.querySelector('.w-64');
-    expect(roleList).toBeTruthy();
-  });
-
-  it('switching between roles updates editor', () => {
-    render(<RoleManager groupId="grp-1" />);
-    fireEvent.click(screen.getByText('Admin'));
-    expect(screen.getByTestId('editing-role')).toHaveTextContent('Admin');
+    await waitFor(() =>
+      expect(mocks.createRole).toHaveBeenCalledWith(
+        'grp-1',
+        expect.objectContaining({
+          name: 'Ops',
+          color: '#f59e0b',
+          is_hoisted: false,
+          is_mentionable: false,
+        })
+      )
+    );
   });
 });

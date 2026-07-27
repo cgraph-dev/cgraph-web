@@ -18,6 +18,7 @@ function makeRole(overrides: Partial<Role> = {}): Role {
     position: 0,
     permissions: 0,
     isDefault: true,
+    isHoisted: false,
     isMentionable: false,
     ...overrides,
   };

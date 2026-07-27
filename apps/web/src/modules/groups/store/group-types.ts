@@ -61,6 +61,7 @@ export interface Role {
   position: number;
   permissions: number;
   isDefault: boolean;
+  isHoisted: boolean;
   isMentionable: boolean;
 }
 
@@ -233,7 +234,13 @@ export interface GroupState {
   joinPublicGroup: (groupId: string) => Promise<Group | null>;
   createRole: (
     groupId: string,
-    data: { name: string; color: string; permissions: number; is_mentionable?: boolean }
+    data: {
+      name: string;
+      color: string;
+      permissions: number;
+      is_hoisted?: boolean;
+      is_mentionable?: boolean;
+    }
   ) => Promise<Role>;
   updateRole: (
     groupId: string,
@@ -246,6 +253,7 @@ export interface GroupState {
       is_mentionable: boolean;
     }>
   ) => Promise<Role>;
+  reorderRoles: (groupId: string, roleIds: readonly string[]) => Promise<void>;
   deleteRole: (groupId: string, roleId: string) => Promise<void>;
   clearJoinCelebration: () => void;
   reset: () => void;

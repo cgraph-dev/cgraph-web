@@ -157,7 +157,9 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
             </motion.div>
           )}
 
-          {effectiveActiveTab === 'members' && <MembersTab key="members" groupId={groupId} />}
+          {effectiveActiveTab === 'members' && (
+            <MembersTab key="members" group={activeGroup} permissions={permissions} />
+          )}
 
           {effectiveActiveTab === 'invites' && (
             <InvitesTab key="invites" groupId={groupId} groupName={activeGroup.name} />

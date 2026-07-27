@@ -19,7 +19,11 @@ export interface OverviewTabProps {
 }
 
 export interface MembersTabProps {
-  groupId: string;
+  group: Group;
+  permissions: Pick<
+    GroupSettingsPermissions,
+    'canManageRoles' | 'canKickMembers' | 'canBanMembers' | 'canMuteMembers'
+  >;
 }
 
 export interface InvitesTabProps {
@@ -58,6 +62,9 @@ export interface GroupSettingsPermissions {
   canManageRoles: boolean;
   canManageChannels: boolean;
   canManageMembers: boolean;
+  canKickMembers: boolean;
+  canBanMembers: boolean;
+  canMuteMembers: boolean;
   canManageInvites: boolean;
   canViewAuditLog: boolean;
   canManageAutomod: boolean;

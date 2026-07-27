@@ -1,16 +1,19 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { TrashIcon, ChevronDownIcon, ChevronUpIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { useState, type ReactNode } from 'react';
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { GlassCard } from '@/shared/components/ui';
 import { PERMISSIONS, ROLE_COLORS } from './constants';
-import { Toggle } from './toggle';
 import type { RoleEditorProps } from './types';
 
-/**
- */
-/**
- * Role Editor component.
- */
+type SectionId = 'general' | 'permissions';
+
 export function RoleEditor({
   role,
   isNew,
@@ -20,233 +23,219 @@ export function RoleEditor({
   onDelete,
   onSave,
 }: RoleEditorProps) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+  const [expandedSections, setExpandedSections] = useState<Set<SectionId>>(
     new Set(['general', 'permissions'])
   );
+  const isReadOnly = role.isDefault;
 
-  const toggleSection = (section: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(section)) {
-        next.delete(section);
-      } else {
-        next.add(section);
-      }
+  const toggleSection = (section: SectionId) => {
+    setExpandedSections((current) => {
+      const next = new Set(current);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
       return next;
     });
   };
 
-  const hasPermission = (permission: number) => (role.permissions & permission) !== 0;
-
   const togglePermission = (permission: number) => {
-    const newPermissions = hasPermission(permission)
-      ? role.permissions & ~permission
-      : role.permissions | permission;
-    onUpdate({ permissions: newPermissions });
+    const permissions =
+      (role.permissions & permission) !== 0
+        ? role.permissions & ~permission
+        : role.permissions | permission;
+    onUpdate({ permissions });
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl"
-            style={{ backgroundColor: role.color + '33' }}
+            aria-hidden="true"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${role.color}33` }}
           >
-            <div className="h-6 w-6 rounded-full" style={{ backgroundColor: role.color }} />
+            <span className="h-6 w-6 rounded-full" style={{ backgroundColor: role.color }} />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-white">{isNew ? 'Create Role' : 'Edit Role'}</h2>
-            <p className="text-sm text-gray-400">{role.name}</p>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-white">
+              {isNew ? 'Create role' : isReadOnly ? 'Default role' : 'Edit role'}
+            </h2>
+            <p className="truncate text-sm text-gray-400">{role.name}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {!role.isDefault && (
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.95 }}
+        {!isReadOnly && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="danger"
+              leftIcon={<TrashIcon />}
               disabled={isSaving}
               onClick={onDelete}
-              className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2 text-red-400 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <TrashIcon className="h-4 w-4" />
               Delete
-            </motion.button>
-          )}
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95 }}
-            disabled={isSaving}
-            aria-busy={isSaving}
-            onClick={onSave}
-            className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-white disabled:cursor-wait disabled:opacity-70"
-          >
-            <CheckIcon className="h-4 w-4" />
-            Save Changes
-          </motion.button>
+            </Button>
+            <Button
+              leftIcon={<CheckIcon />}
+              isLoading={isSaving}
+              disabled={isSaving}
+              onClick={onSave}
+            >
+              {isNew ? 'Create role' : 'Save changes'}
+            </Button>
+          </div>
+        )}
+      </header>
+
+      {isReadOnly && (
+        <p
+          role="status"
+          className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3 text-sm text-[var(--token-text-secondary)]"
+        >
+          The default role is managed by the group and cannot be edited, reordered, or deleted.
+        </p>
+      )}
+
+      <RoleSection
+        title="General"
+        expanded={expandedSections.has('general')}
+        onToggle={() => toggleSection('general')}
+      >
+        <div className="space-y-4">
+          <Input
+            label="Role name"
+            maxLength={100}
+            error={nameError ?? undefined}
+            disabled={isReadOnly || isSaving}
+            value={role.name}
+            onChange={(event) => onUpdate({ name: event.target.value })}
+          />
+
+          <fieldset disabled={isReadOnly || isSaving}>
+            <legend className="mb-2 text-sm font-medium text-gray-300">Role color</legend>
+            <div className="flex flex-wrap gap-2">
+              {ROLE_COLORS.map((color) => (
+                <button
+                  type="button"
+                  key={color}
+                  disabled={isReadOnly || isSaving}
+                  onClick={() => onUpdate({ color })}
+                  aria-label={`Set role color ${color}`}
+                  aria-pressed={role.color === color}
+                  className="h-9 w-9 rounded-full border border-white/15 focus:outline-none focus:ring-2 focus:ring-white disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:ring-2 aria-pressed:ring-white aria-pressed:ring-offset-2 aria-pressed:ring-offset-[var(--token-bg-secondary)]"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          </fieldset>
+
+          <RoleSwitch
+            id="role-hoisted"
+            label="Display separately"
+            description="Show members with this role in a separate group"
+            checked={role.isHoisted}
+            disabled={isReadOnly || isSaving}
+            onCheckedChange={(checked) => onUpdate({ isHoisted: checked })}
+          />
+          <RoleSwitch
+            id="role-mentionable"
+            label="Mentionable"
+            description="Allow members to mention this role"
+            checked={role.isMentionable}
+            disabled={isReadOnly || isSaving}
+            onCheckedChange={(checked) => onUpdate({ isMentionable: checked })}
+          />
         </div>
-      </div>
+      </RoleSection>
 
-      {/* General Section */}
-      <GlassCard variant="frosted" className="overflow-hidden">
-        <button
-          type="button"
-          onClick={() => toggleSection('general')}
-          className="flex w-full items-center justify-between p-4 transition-colors hover:bg-[var(--token-card-bg)/0.6]"
-        >
-          <span className="font-semibold text-white">General</span>
-          {expandedSections.has('general') ? (
-            <ChevronUpIcon className="h-5 w-5 text-gray-400" />
-          ) : (
-            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-          )}
-        </button>
+      <RoleSection
+        title="Permissions"
+        expanded={expandedSections.has('permissions')}
+        onToggle={() => toggleSection('permissions')}
+      >
+        <div className="space-y-2">
+          {Object.entries(PERMISSIONS).map(([key, permission]) => (
+            <RoleSwitch
+              key={key}
+              id={`role-permission-${key.toLowerCase()}`}
+              label={permission.label}
+              description={permission.description}
+              danger={permission.danger}
+              checked={(role.permissions & permission.value) !== 0}
+              disabled={isReadOnly || isSaving}
+              onCheckedChange={() => togglePermission(permission.value)}
+            />
+          ))}
+        </div>
+      </RoleSection>
+    </div>
+  );
+}
 
-        <AnimatePresence>
-          {expandedSections.has('general') && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-[var(--token-border-muted)]"
-            >
-              <div className="space-y-4 p-4">
-                {/* Role Name */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-300">Role Name</label>
-                  <input
-                    type="text"
-                    aria-label="Role name"
-                    aria-invalid={nameError ? true : undefined}
-                    aria-describedby={nameError ? 'role-name-error' : undefined}
-                    disabled={isSaving}
-                    value={role.name}
-                    onChange={(e) => onUpdate({ name: e.target.value })}
-                    className={`w-full rounded-lg border bg-[var(--token-card-bg)/0.4] px-4 py-2 text-white focus:outline-none disabled:cursor-wait disabled:opacity-70 ${
-                      nameError
-                        ? 'border-red-500/70 focus:border-red-400'
-                        : 'border-[var(--token-card-border)] focus:border-primary-500'
-                    }`}
-                  />
-                  {nameError && (
-                    <p id="role-name-error" role="alert" className="mt-2 text-sm text-red-300">
-                      {nameError}
-                    </p>
-                  )}
-                </div>
+interface RoleSectionProps {
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}
 
-                {/* Role Color */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-300">Role Color</label>
-                  <div className="flex flex-wrap gap-2">
-                    {ROLE_COLORS.map((color) => (
-                      <motion.button
-                        type="button"
-                        key={color}
-                        whileTap={{ scale: 0.9 }}
-                        disabled={isSaving}
-                        onClick={() => onUpdate({ color })}
-                        aria-label={`Set role color ${color}`}
-                        className={`h-8 w-8 rounded-full ${
-                          role.color === color
-                            ? 'ring-2 ring-white ring-offset-2 ring-offset-dark-800'
-                            : ''
-                        } disabled:cursor-wait disabled:opacity-70`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
+function RoleSection({ title, expanded, onToggle, children }: RoleSectionProps) {
+  return (
+    <GlassCard variant="frosted" className="overflow-hidden">
+      <Button
+        variant="ghost"
+        animated={false}
+        aria-expanded={expanded}
+        onClick={onToggle}
+        className="w-full justify-between rounded-none p-4"
+        rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+      >
+        {title}
+      </Button>
+      {expanded && (
+        <div className="border-t border-[var(--token-border-muted)] p-4">{children}</div>
+      )}
+    </GlassCard>
+  );
+}
 
-                {/* Toggles */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-lg bg-[var(--token-card-bg)/0.4] p-3">
-                    <div>
-                      <span className="font-medium text-white">Display separately</span>
-                      <p className="text-xs text-gray-400">
-                        Show members with this role in a separate group
-                      </p>
-                    </div>
-                    <Toggle
-                      value={!role.isDefault}
-                      disabled={isSaving}
-                      onChange={(v) => onUpdate({ isDefault: !v })}
-                    />
-                  </div>
+interface RoleSwitchProps {
+  id: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  disabled: boolean;
+  danger?: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}
 
-                  <div className="flex items-center justify-between rounded-lg bg-[var(--token-card-bg)/0.4] p-3">
-                    <div>
-                      <span className="font-medium text-white">Mentionable</span>
-                      <p className="text-xs text-gray-400">Anyone can @mention this role</p>
-                    </div>
-                    <Toggle
-                      value={role.isMentionable}
-                      disabled={isSaving}
-                      onChange={(v) => onUpdate({ isMentionable: v })}
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </GlassCard>
-
-      {/* Permissions Section */}
-      <GlassCard variant="frosted" className="overflow-hidden">
-        <button
-          type="button"
-          onClick={() => toggleSection('permissions')}
-          className="flex w-full items-center justify-between p-4 transition-colors hover:bg-[var(--token-card-bg)/0.6]"
-        >
-          <span className="font-semibold text-white">Permissions</span>
-          {expandedSections.has('permissions') ? (
-            <ChevronUpIcon className="h-5 w-5 text-gray-400" />
-          ) : (
-            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-          )}
-        </button>
-
-        <AnimatePresence>
-          {expandedSections.has('permissions') && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden border-t border-[var(--token-border-muted)]"
-            >
-              <div className="space-y-2 p-4">
-                {Object.entries(PERMISSIONS).map(([key, perm]) => (
-                  <div
-                    key={key}
-                    className={`flex items-center justify-between rounded-lg p-3 ${
-                      perm.danger
-                        ? 'border border-red-500/20 bg-red-500/5'
-                        : 'bg-[var(--token-card-bg)/0.4]'
-                    }`}
-                  >
-                    <div>
-                      <span
-                        className={`font-medium ${perm.danger ? 'text-red-400' : 'text-white'}`}
-                      >
-                        {perm.label}
-                      </span>
-                      <p className="text-xs text-gray-400">{perm.description}</p>
-                    </div>
-                    <Toggle
-                      value={hasPermission(perm.value)}
-                      disabled={isSaving}
-                      onChange={() => togglePermission(perm.value)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </GlassCard>
+function RoleSwitch({
+  id,
+  label,
+  description,
+  checked,
+  disabled,
+  danger = false,
+  onCheckedChange,
+}: RoleSwitchProps) {
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 rounded-lg border p-3 ${
+        danger
+          ? 'border-red-500/20 bg-red-500/5'
+          : 'border-transparent bg-[var(--token-bg-secondary)]'
+      }`}
+    >
+      <label htmlFor={id} className="min-w-0 cursor-pointer">
+        <span className={`font-medium ${danger ? 'text-red-400' : 'text-white'}`}>{label}</span>
+        <span className="block text-xs text-gray-400">{description}</span>
+      </label>
+      <Switch
+        id={id}
+        checked={checked}
+        disabled={disabled}
+        onCheckedChange={onCheckedChange}
+        className="shrink-0"
+      />
     </div>
   );
 }

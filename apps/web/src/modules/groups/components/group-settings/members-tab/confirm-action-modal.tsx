@@ -1,120 +1,118 @@
-import { motion, AnimatePresence } from 'motion/react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Select, Textarea } from '@/components/ui/input';
 import type { MemberAction } from './types';
-import { FADE_IN } from '@/lib/animations/transitions';
 
 interface ConfirmActionModalProps {
   action: MemberAction;
   memberId: string;
   banDuration: string;
   reason: string;
+  isSubmitting: boolean;
   onBanDurationChange: (value: string) => void;
   onReasonChange: (value: string) => void;
   onConfirm: (memberId: string, action: MemberAction) => void;
   onClose: () => void;
 }
 
-const ACTION_TITLES: Record<MemberAction, string> = {
-  none: '',
-  kick: 'Kick Member',
-  ban: 'Ban Member',
-  mute: 'Mute Member',
+const ACTION_COPY: Record<
+  Exclude<MemberAction, 'none'>,
+  { title: string; description: string; label: string }
+> = {
+  kick: {
+    title: 'Kick member',
+    description: 'This member will be removed from the group. They can rejoin with an invite.',
+    label: 'Kick',
+  },
+  ban: {
+    title: 'Ban member',
+    description: 'This member cannot rejoin until the ban expires or is removed.',
+    label: 'Ban',
+  },
+  mute: {
+    title: 'Mute member',
+    description: 'This member will be unable to send messages for 10 minutes.',
+    label: 'Mute',
+  },
 };
 
-const ACTION_DESCRIPTIONS: Record<MemberAction, string> = {
-  none: '',
-  kick: 'This member will be removed from the group. They can rejoin via invite.',
-  ban: 'This member will be banned. They cannot rejoin until unbanned.',
-  mute: 'This member will be muted for 10 minutes.',
-};
+const BAN_DURATION_OPTIONS = [
+  { value: 'permanent', label: 'Permanent' },
+  { value: '1', label: '1 hour' },
+  { value: '24', label: '24 hours' },
+  { value: '168', label: '7 days' },
+  { value: '720', label: '30 days' },
+];
 
-const ACTION_BUTTON_COLORS: Record<MemberAction, string> = {
-  none: '',
-  kick: 'bg-yellow-600 hover:bg-yellow-700',
-  ban: 'bg-red-600 hover:bg-red-700',
-  mute: 'bg-orange-600 hover:bg-orange-700',
-};
-
-const ACTION_LABELS: Record<MemberAction, string> = {
-  none: '',
-  kick: 'Kick',
-  ban: 'Ban',
-  mute: 'Mute',
-};
-
-/**
- * Confirm Action Modal dialog component.
- */
 export function ConfirmActionModal({
   action,
   memberId,
   banDuration,
   reason,
+  isSubmitting,
   onBanDurationChange,
   onReasonChange,
   onConfirm,
   onClose,
 }: ConfirmActionModalProps) {
+  const copy = action === 'none' ? null : ACTION_COPY[action];
+
   return (
-    <AnimatePresence>
-      {action !== 'none' && (
-        <motion.div
-          {...FADE_IN}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md space-y-4 rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)] p-6 shadow-2xl"
-          >
-            <h3 className="text-lg font-semibold text-white">{ACTION_TITLES[action]}</h3>
-            <p className="text-sm text-gray-400">{ACTION_DESCRIPTIONS[action]}</p>
+    <Dialog
+      open={copy !== null}
+      onOpenChange={(open) => {
+        if (!open && !isSubmitting) onClose();
+      }}
+    >
+      {copy && (
+        <DialogContent ariaLabel={copy.title}>
+          <DialogHeader>
+            <DialogTitle>{copy.title}</DialogTitle>
+            <DialogDescription>{copy.description}</DialogDescription>
+          </DialogHeader>
 
+          <div className="space-y-4">
             {action === 'ban' && (
-              <select
+              <Select
+                label="Ban duration"
                 value={banDuration}
-                onChange={(e) => onBanDurationChange(e.target.value)}
-                className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-3 py-2 text-sm text-white"
-              >
-                <option value="permanent">Permanent</option>
-                <option value="1h">1 Hour</option>
-                <option value="24h">24 Hours</option>
-                <option value="7d">7 Days</option>
-                <option value="30d">30 Days</option>
-              </select>
-            )}
-
-            {(action === 'kick' || action === 'ban') && (
-              <textarea
-                value={reason}
-                onChange={(e) => onReasonChange(e.target.value)}
-                placeholder="Reason (optional)"
-                rows={2}
-                className="w-full resize-none rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-3 py-2 text-sm text-white placeholder-white/30"
+                disabled={isSubmitting}
+                options={BAN_DURATION_OPTIONS}
+                onChange={(event) => onBanDurationChange(event.target.value)}
               />
             )}
+            <Textarea
+              label="Reason"
+              hint="Optional. This is saved in the group audit log."
+              value={reason}
+              rows={3}
+              disabled={isSubmitting}
+              onChange={(event) => onReasonChange(event.target.value)}
+              className="min-h-20"
+            />
+          </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm text-gray-400 hover:text-white"
-              >
-                Cancel
-              </button>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => onConfirm(memberId, action)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium text-white ${ACTION_BUTTON_COLORS[action]}`}
-              >
-                Confirm {ACTION_LABELS[action]}
-              </motion.button>
-            </div>
-          </motion.div>
-        </motion.div>
+          <DialogFooter>
+            <Button variant="ghost" disabled={isSubmitting} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              variant={action === 'mute' ? 'secondary' : 'danger'}
+              isLoading={isSubmitting}
+              onClick={() => onConfirm(memberId, action)}
+            >
+              {copy.label}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       )}
-    </AnimatePresence>
+    </Dialog>
   );
 }

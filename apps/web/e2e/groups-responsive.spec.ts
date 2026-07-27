@@ -50,6 +50,7 @@ const group = {
       position: 0,
       permissions: 0x80000000,
       is_default: false,
+      is_hoisted: true,
       is_mentionable: true,
     },
   ],
@@ -64,6 +65,7 @@ const group = {
         position: 0,
         permissions: 0x80000000,
         is_default: false,
+        is_hoisted: true,
         is_mentionable: true,
       },
     ],
@@ -403,6 +405,22 @@ test.describe('Responsive Groups navigation', () => {
         body: await page.screenshot({ fullPage: true }),
         contentType: 'image/png',
       });
+
+      const rolesTab = settingsNav.getByRole('button', { name: 'Roles', exact: true });
+      await rolesTab.click();
+      await expect(page.getByRole('heading', { name: 'Roles', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Create role' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expectNoHorizontalOverflow(page);
+
+      const membersTab = settingsNav.getByRole('button', { name: 'Members', exact: true });
+      await membersTab.click();
+      await expect(page.getByRole('heading', { name: 'Members', exact: true })).toBeVisible();
+      await expect(page.getByRole('searchbox', { name: 'Search members' })).toBeVisible();
+      await expect(page.getByRole('combobox', { name: 'Filter members by role' })).toBeVisible();
+      await expectNoHorizontalOverflow(page);
     });
   }
 });

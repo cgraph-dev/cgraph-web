@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useGroupSettings } from '../useGroupSettings';
+import { PERMISSIONS } from '../../role-manager/constants';
 import type { Group } from '@/modules/groups/store';
 
 // --- Mock dependencies ---
@@ -121,6 +122,49 @@ describe('useGroupSettings', () => {
     mockGroups.push(makeGroup({ id: 'g-1', ownerId: 'u-other' }));
     const { result } = renderHook(() => useGroupSettings('g-1'));
     expect(result.current.isOwner).toBe(false);
+  });
+
+  it('exposes exact member moderation permissions instead of one broad manager flag', () => {
+    mockGroups.push(
+      makeGroup({
+        ownerId: 'u-other',
+        myMember: {
+          id: 'member-current',
+          userId: 'u-current',
+          nickname: null,
+          user: {
+            id: 'u-current',
+            username: 'current',
+            displayName: 'Current User',
+            avatarUrl: null,
+            status: 'online',
+          },
+          roles: [
+            {
+              id: 'mute-role',
+              name: 'Timeout moderator',
+              color: '#3b82f6',
+              position: 1,
+              permissions: PERMISSIONS.MUTE_MEMBERS.value,
+              isDefault: false,
+              isHoisted: true,
+              isMentionable: false,
+            },
+          ],
+          joinedAt: '2026-01-01T00:00:00Z',
+        },
+      })
+    );
+
+    const { result } = renderHook(() => useGroupSettings('g-1'));
+
+    expect(result.current.permissions).toMatchObject({
+      canManageMembers: true,
+      canManageRoles: false,
+      canKickMembers: false,
+      canBanMembers: false,
+      canMuteMembers: true,
+    });
   });
 
   it('initializes form data from group', () => {

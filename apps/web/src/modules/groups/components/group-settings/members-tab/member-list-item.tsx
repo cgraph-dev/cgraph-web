@@ -1,152 +1,195 @@
-import { motion, AnimatePresence } from 'motion/react';
+import type { ReactNode } from 'react';
 import {
+  ArrowRightStartOnRectangleIcon,
   EllipsisVerticalIcon,
+  NoSymbolIcon,
   ShieldCheckIcon,
   SpeakerXMarkIcon,
-  NoSymbolIcon,
-  ArrowRightStartOnRectangleIcon,
 } from '@heroicons/react/24/outline';
-import { entranceVariants } from '@/lib/animation-presets';
+import { Button, IconButton } from '@/components/ui/button';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { getAvatarBorderId } from '@/lib/utils';
-import type { GroupMember, MemberAction } from './types';
-import { ROLE_COLORS } from './types';
+import type { GroupMember, MemberAction, MemberCapabilities } from './types';
 
 interface MemberListItemProps {
   member: GroupMember;
-  index: number;
+  isOwner: boolean;
+  isCurrentUser: boolean;
+  capabilities: MemberCapabilities;
   isMenuOpen: boolean;
+  isPending: boolean;
   onToggleMenu: (memberId: string | null) => void;
   onAction: (memberId: string, action: MemberAction) => void;
   onOpenRoleModal: (memberId: string) => void;
   onUnmute: (memberId: string) => void;
 }
 
-/**
- * Member List Item component.
- */
 export function MemberListItem({
   member,
-  index,
+  isOwner,
+  isCurrentUser,
+  capabilities,
   isMenuOpen,
+  isPending,
   onToggleMenu,
   onAction,
   onOpenRoleModal,
   onUnmute,
 }: MemberListItemProps) {
+  const displayName = member.displayName || member.username;
+  const primaryRole = [...member.roles].sort(
+    (left, right) => right.position - left.position || left.name.localeCompare(right.name)
+  )[0];
+  const hasActions =
+    !isCurrentUser &&
+    !isOwner &&
+    (capabilities.canManageRoles ||
+      capabilities.canMute ||
+      capabilities.canKick ||
+      capabilities.canBan);
+
   return (
-    <motion.div
-      key={member.id}
-      variants={entranceVariants.fadeUp}
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      transition={{ delay: index * 0.03 }}
-      className="relative flex items-center justify-between px-4 py-3"
-    >
-      <div className="flex items-center gap-3">
-        {/* Avatar */}
+    <li className="relative flex min-w-0 items-center justify-between gap-3 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
         <ThemedAvatar
           src={member.avatarUrl}
-          alt={member.displayName || member.username}
+          alt={displayName}
           size="small"
           avatarBorderId={getAvatarBorderId(member)}
         />
-        {/* Info */}
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-white">{member.displayName || member.username}</span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_COLORS[member.role] ?? ROLE_COLORS.member}`}
-            >
-              {member.role}
-            </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="truncate font-medium text-white">{displayName}</span>
+            <RoleBadge
+              label={isOwner ? 'Owner' : primaryRole?.name ?? 'Member'}
+              color={isOwner ? '#eab308' : primaryRole?.color ?? '#94a3b8'}
+            />
+            {isCurrentUser && (
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-gray-300">You</span>
+            )}
             {member.isMuted && (
-              <span className="rounded-full bg-orange-400/10 px-2 py-0.5 text-xs text-orange-400">
-                muted
+              <span className="rounded-full bg-orange-400/10 px-2 py-0.5 text-xs text-orange-300">
+                Muted
               </span>
             )}
           </div>
-          <span className="text-xs text-gray-500">@{member.username}</span>
+          <span className="block truncate text-xs text-gray-500">@{member.username}</span>
         </div>
       </div>
 
-      {/* Actions Menu */}
-      <div className="relative">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => onToggleMenu(isMenuOpen ? null : member.id)}
-          aria-label={`Member actions for ${member.displayName || member.username}`}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white"
-        >
-          <EllipsisVerticalIcon className="h-5 w-5" />
-        </motion.button>
-
-        <AnimatePresence>
+      {hasActions && (
+        <div className="relative shrink-0">
+          <IconButton
+            icon={<EllipsisVerticalIcon />}
+            label={`Member actions for ${displayName}`}
+            size="sm"
+            disabled={isPending}
+            aria-expanded={isMenuOpen}
+            onClick={() => onToggleMenu(isMenuOpen ? null : member.id)}
+          />
           {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -4 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -4 }}
-              className="absolute right-0 top-full z-50 mt-1 w-48 overflow-hidden rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] shadow-xl"
+            <div
+              role="menu"
+              aria-label={`Actions for ${displayName}`}
+              className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-1 shadow-card"
             >
-              <button
-                onClick={() => {
-                  onToggleMenu(null);
-                  onOpenRoleModal(member.id);
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-300 hover:bg-[var(--token-card-bg)]"
-              >
-                <ShieldCheckIcon className="h-4 w-4" />
-                Change Role
-              </button>
-              {member.isMuted ? (
-                <button
+              {capabilities.canManageRoles && (
+                <MenuAction
+                  icon={<ShieldCheckIcon />}
+                  label="Change roles"
                   onClick={() => {
                     onToggleMenu(null);
-                    onUnmute(member.id);
+                    onOpenRoleModal(member.id);
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-orange-400 hover:bg-[var(--token-card-bg)]"
-                >
-                  <SpeakerXMarkIcon className="h-4 w-4" />
-                  Unmute
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    onToggleMenu(null);
-                    onAction(member.id, 'mute');
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-orange-400 hover:bg-[var(--token-card-bg)]"
-                >
-                  <SpeakerXMarkIcon className="h-4 w-4" />
-                  Mute
-                </button>
+                />
               )}
-              <button
-                onClick={() => {
-                  onToggleMenu(null);
-                  onAction(member.id, 'kick');
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-yellow-400 hover:bg-[var(--token-card-bg)]"
-              >
-                <ArrowRightStartOnRectangleIcon className="h-4 w-4" />
-                Kick
-              </button>
-              <button
-                onClick={() => {
-                  onToggleMenu(null);
-                  onAction(member.id, 'ban');
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-400 hover:bg-[var(--token-card-bg)]"
-              >
-                <NoSymbolIcon className="h-4 w-4" />
-                Ban
-              </button>
-            </motion.div>
+              {capabilities.canMute &&
+                (member.isMuted ? (
+                  <MenuAction
+                    icon={<SpeakerXMarkIcon />}
+                    label="Unmute"
+                    onClick={() => {
+                      onToggleMenu(null);
+                      onUnmute(member.id);
+                    }}
+                  />
+                ) : (
+                  <MenuAction
+                    icon={<SpeakerXMarkIcon />}
+                    label="Mute"
+                    onClick={() => {
+                      onToggleMenu(null);
+                      onAction(member.id, 'mute');
+                    }}
+                  />
+                ))}
+              {capabilities.canKick && (
+                <MenuAction
+                  icon={<ArrowRightStartOnRectangleIcon />}
+                  label="Kick"
+                  onClick={() => {
+                    onToggleMenu(null);
+                    onAction(member.id, 'kick');
+                  }}
+                />
+              )}
+              {capabilities.canBan && (
+                <MenuAction
+                  icon={<NoSymbolIcon />}
+                  label="Ban"
+                  danger
+                  onClick={() => {
+                    onToggleMenu(null);
+                    onAction(member.id, 'ban');
+                  }}
+                />
+              )}
+            </div>
           )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
+        </div>
+      )}
+    </li>
+  );
+}
+
+function RoleBadge({ label, color }: { label: string; color: string }) {
+  return (
+    <span
+      className="rounded-full border px-2 py-0.5 text-xs font-medium"
+      style={{
+        borderColor: `${color}66`,
+        backgroundColor: `${color}1a`,
+        color,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function MenuAction({
+  icon,
+  label,
+  danger = false,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  danger?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      role="menuitem"
+      variant={danger ? 'danger' : 'ghost'}
+      size="sm"
+      fullWidth
+      animated={false}
+      leftIcon={icon}
+      onClick={onClick}
+      className="justify-start"
+    >
+      {label}
+    </Button>
   );
 }

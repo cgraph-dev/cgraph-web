@@ -249,6 +249,7 @@ describe('useGroupMembers', () => {
       position: 0,
       permissions: 0,
       isDefault: false,
+      isHoisted: false,
       isMentionable: true,
     };
     mockGroupState.members = {

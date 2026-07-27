@@ -213,6 +213,7 @@ vi.mock('@/modules/groups/store', () => ({
             position: 10,
             permissions: 0,
             isDefault: false,
+            isHoisted: false,
             isMentionable: false,
           },
         ],
