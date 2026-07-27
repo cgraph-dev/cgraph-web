@@ -6,6 +6,8 @@ import {
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { Button, IconButton } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface Category {
   id: string;
@@ -52,29 +54,24 @@ export function CategoryListItem({
       {isEditing ? (
         <div className="flex items-center gap-2">
           <FolderIcon className="h-5 w-5 shrink-0 text-gray-400" />
-          <input
-            type="text"
+          <Input
+            aria-label={`Category name for ${category.name}`}
             value={editName}
             onChange={(e) => onEditNameChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') onSave(category.id);
               if (e.key === 'Escape') onCancelEdit();
             }}
-            className="flex-1 rounded border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-2 py-1 text-sm text-white focus:border-primary-500 focus:outline-none"
+            size="sm"
+            className="min-h-9 flex-1"
             autoFocus
           />
-          <button
-            onClick={() => onSave(category.id)}
-            className="rounded px-2 py-1 text-xs text-primary-400 hover:bg-primary-500/10"
-          >
+          <Button size="sm" onClick={() => onSave(category.id)}>
             Save
-          </button>
-          <button
-            onClick={onCancelEdit}
-            className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-[var(--token-card-bg)]"
-          >
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onCancelEdit}>
             Cancel
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="flex items-center justify-between">
@@ -89,32 +86,33 @@ export function CategoryListItem({
             </span>
           </div>
           <div className="flex items-center gap-0.5">
-            <button
+            <IconButton
+              icon={<ChevronUpIcon />}
+              label={`Move ${category.name} up`}
+              size="sm"
               onClick={() => onMoveUp(index)}
               disabled={index === 0}
-              className="rounded p-1 text-gray-500 hover:bg-[var(--token-card-bg)] hover:text-white disabled:opacity-30"
-            >
-              <ChevronUpIcon className="h-3.5 w-3.5" />
-            </button>
-            <button
+            />
+            <IconButton
+              icon={<ChevronDownIcon />}
+              label={`Move ${category.name} down`}
+              size="sm"
               onClick={() => onMoveDown(index)}
               disabled={index === totalCount - 1}
-              className="rounded p-1 text-gray-500 hover:bg-[var(--token-card-bg)] hover:text-white disabled:opacity-30"
-            >
-              <ChevronDownIcon className="h-3.5 w-3.5" />
-            </button>
-            <button
+            />
+            <IconButton
+              icon={<PencilIcon />}
+              label={`Edit ${category.name}`}
+              size="sm"
               onClick={() => onStartEdit(category)}
-              className="rounded p-1 text-gray-500 hover:bg-[var(--token-card-bg)] hover:text-white"
-            >
-              <PencilIcon className="h-3.5 w-3.5" />
-            </button>
-            <button
+            />
+            <IconButton
+              icon={<TrashIcon />}
+              label={`Delete ${category.name}`}
+              variant="danger"
+              size="sm"
               onClick={() => onDeleteRequest(category.id)}
-              className="rounded p-1 text-gray-500 hover:bg-[var(--token-card-bg)] hover:text-red-400"
-            >
-              <TrashIcon className="h-3.5 w-3.5" />
-            </button>
+            />
           </div>
         </div>
       )}

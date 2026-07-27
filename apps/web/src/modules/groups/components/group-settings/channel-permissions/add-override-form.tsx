@@ -1,6 +1,8 @@
-import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheckIcon, UserIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import Select from '@/components/ui/select';
 import type { RoleOption } from './types';
 
 interface AddOverrideFormProps {
@@ -27,82 +29,56 @@ export function AddOverrideForm({
   onAdd,
   onCancel,
 }: AddOverrideFormProps) {
+  if (!show) return null;
+
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
+    <GlassCard variant="frosted" className="space-y-3 p-4">
+      <div className="flex gap-3">
+        <Button
+          variant={addType === 'role' ? 'secondary' : 'outline'}
+          size="sm"
+          leftIcon={<ShieldCheckIcon />}
+          onClick={() => onTypeChange('role')}
+          aria-pressed={addType === 'role'}
         >
-          <GlassCard variant="frosted" className="space-y-3 p-4">
-            <div className="flex gap-3">
-              <button
-                onClick={() => onTypeChange('role')}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm ${
-                  addType === 'role'
-                    ? 'border border-primary-500 bg-primary-500/10 text-primary-400'
-                    : 'border border-[var(--token-card-border)] text-gray-400'
-                }`}
-              >
-                <ShieldCheckIcon className="h-4 w-4" />
-                Role
-              </button>
-              <button
-                onClick={() => onTypeChange('member')}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm ${
-                  addType === 'member'
-                    ? 'border border-primary-500 bg-primary-500/10 text-primary-400'
-                    : 'border border-[var(--token-card-border)] text-gray-400'
-                }`}
-              >
-                <UserIcon className="h-4 w-4" />
-                Member
-              </button>
-            </div>
+          Role
+        </Button>
+        <Button
+          variant={addType === 'member' ? 'secondary' : 'outline'}
+          size="sm"
+          leftIcon={<UserIcon />}
+          onClick={() => onTypeChange('member')}
+          aria-pressed={addType === 'member'}
+        >
+          Member
+        </Button>
+      </div>
 
-            {addType === 'role' ? (
-              <select
-                value={selectedTargetId}
-                onChange={(e) => onTargetChange(e.target.value)}
-                className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-3 py-2 text-sm text-white focus:border-primary-500 focus:outline-none"
-              >
-                <option value="">Select a role...</option>
-                {availableRoles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                placeholder="Enter member ID..."
-                value={selectedTargetId}
-                onChange={(e) => onTargetChange(e.target.value)}
-                className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary-500 focus:outline-none"
-              />
-            )}
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={onCancel}
-                className="rounded-lg px-3 py-1.5 text-sm text-gray-400 hover:text-white"
-              >
-                Cancel
-              </button>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={onAdd}
-                disabled={!selectedTargetId}
-                className="rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-              >
-                Add
-              </motion.button>
-            </div>
-          </GlassCard>
-        </motion.div>
+      {addType === 'role' ? (
+        <Select
+          label="Role"
+          value={selectedTargetId}
+          onChange={onTargetChange}
+          placeholder="Select a role..."
+          options={availableRoles.map((role) => ({ value: role.id, label: role.name }))}
+        />
+      ) : (
+        <Input
+          label="Member ID"
+          placeholder="Enter member ID..."
+          value={selectedTargetId}
+          onChange={(e) => onTargetChange(e.target.value)}
+        />
       )}
-    </AnimatePresence>
+
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button size="sm" onClick={onAdd} disabled={!selectedTargetId}>
+          Add
+        </Button>
+      </div>
+    </GlassCard>
   );
 }

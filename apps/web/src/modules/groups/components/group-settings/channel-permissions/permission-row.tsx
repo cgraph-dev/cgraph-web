@@ -1,4 +1,5 @@
 import { CheckIcon, XCircleIcon, MinusIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
 import type { PermState } from './types';
 
 interface PermissionRowProps {
@@ -19,21 +20,25 @@ export function PermissionRow({ bit, label, description, state, onToggle }: Perm
         <p className="text-sm font-medium text-white">{label}</p>
         <p className="text-xs text-gray-500">{description}</p>
       </div>
-      <button
+      <Button
+        variant={state === 'allow' ? 'success' : state === 'deny' ? 'danger' : 'secondary'}
+        size="sm"
+        animated={false}
         onClick={() => onToggle(bit)}
-        className={`flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-          state === 'allow'
-            ? 'bg-green-500/10 text-green-400'
-            : state === 'deny'
-              ? 'bg-red-500/10 text-red-400'
-              : 'bg-[var(--token-card-bg)/0.6]/50 text-gray-400'
-        }`}
+        aria-label={`${label}: ${state}`}
+        data-permission-state={state}
+        leftIcon={
+          state === 'allow' ? (
+            <CheckIcon />
+          ) : state === 'deny' ? (
+            <XCircleIcon />
+          ) : (
+            <MinusIcon />
+          )
+        }
       >
-        {state === 'allow' && <CheckIcon className="h-3.5 w-3.5" />}
-        {state === 'deny' && <XCircleIcon className="h-3.5 w-3.5" />}
-        {state === 'inherit' && <MinusIcon className="h-3.5 w-3.5" />}
         {state === 'inherit' ? 'Inherit' : state === 'allow' ? 'Allow' : 'Deny'}
-      </button>
+      </Button>
     </div>
   );
 }

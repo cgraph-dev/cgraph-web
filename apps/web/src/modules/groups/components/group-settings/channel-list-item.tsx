@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import {
   HashtagIcon,
   SpeakerWaveIcon,
@@ -9,8 +8,8 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
-import { entranceVariants } from '@/lib/animation-presets';
-import { IconButton } from '@/components/ui/button';
+import { Button, IconButton } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const channelIcons = {
   text: HashtagIcon,
@@ -80,47 +79,46 @@ export function ChannelListItem({
     : HashtagIcon;
 
   return (
-    <motion.div
+    <div
       role="listitem"
       data-testid={`channel-settings-row-${channel.id}`}
-      variants={entranceVariants.fadeUp}
-      initial="hidden"
-      animate="visible"
-      transition={{ delay: index * 0.03 }}
       className="flex items-center justify-between px-4 py-3"
     >
       {editingId === channel.id ? (
         // Edit mode
         <div className="flex flex-1 items-center gap-3">
           <Icon className="h-5 w-5 shrink-0 text-gray-400" />
-          <div className="flex flex-1 gap-2">
-            <input
-              type="text"
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
+            <Input
+              aria-label={`Channel name for ${channel.name}`}
               value={editName}
               onChange={(e) => onEditNameChange(e.target.value)}
-              className="rounded border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-2 py-1 text-sm text-white focus:border-primary-500 focus:outline-none"
+              size="sm"
+              className="min-h-9"
             />
-            <input
-              type="text"
+            <Input
+              aria-label={`Channel topic for ${channel.name}`}
               value={editTopic}
               onChange={(e) => onEditTopicChange(e.target.value)}
               placeholder="Topic"
-              className="flex-1 rounded border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-2 py-1 text-sm text-white placeholder-gray-600 focus:border-primary-500 focus:outline-none"
+              size="sm"
+              className="min-h-9"
             />
           </div>
           <div className="flex gap-1">
-            <button
+            <Button
+              size="sm"
               onClick={() => onSave(channel.id)}
-              className="hover:bg-primary-500/10 rounded px-2 py-1 text-xs text-primary-400"
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onCancelEdit}
-              className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-[var(--token-card-bg)]"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -151,34 +149,28 @@ export function ChannelListItem({
               onClick={onMoveDown}
               disabled={reorderDisabled || index === totalCount - 1}
             />
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            <IconButton
+              icon={<ShieldCheckIcon />}
+              label={`Permissions for ${channel.name}`}
+              size="sm"
               onClick={() => onPermissions(channel.id)}
-              aria-label={`Permissions for ${channel.name}`}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-primary-400"
-              title="Permissions"
-            >
-              <ShieldCheckIcon className="h-4 w-4" />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            />
+            <IconButton
+              icon={<PencilIcon />}
+              label={`Edit ${channel.name}`}
+              size="sm"
               onClick={() => onStartEdit(channel)}
-              aria-label={`Edit ${channel.name}`}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white"
-            >
-              <PencilIcon className="h-4 w-4" />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            />
+            <IconButton
+              icon={<TrashIcon />}
+              label={`Delete ${channel.name}`}
+              variant="danger"
+              size="sm"
               onClick={() => onDelete(channel.id)}
-              aria-label={`Delete ${channel.name}`}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-red-400"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </motion.button>
+            />
           </div>
         </>
       )}
-    </motion.div>
+    </div>
   );
 }

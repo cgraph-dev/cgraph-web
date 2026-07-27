@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from 'motion/react';
 import {
   XMarkIcon,
   HashtagIcon,
@@ -6,6 +5,8 @@ import {
   MegaphoneIcon,
 } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { Button, IconButton } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const channelIcons = {
   text: HashtagIcon,
@@ -39,69 +40,55 @@ export function CreateChannelForm({
   onClose,
   onCreate,
 }: CreateChannelFormProps) {
+  if (!show) return null;
+
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-        >
-          <GlassCard variant="frosted" className="space-y-4 p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-white">New Channel</h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-white">
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
+    <GlassCard
+      variant="frosted"
+      className="space-y-4 p-4 sm:p-6"
+      data-testid="new-channel-form"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-white">New Channel</h3>
+        <IconButton icon={<XMarkIcon />} label="Close channel form" onClick={onClose} />
+      </div>
 
-            <div className="flex gap-3">
-              {(['text', 'voice', 'announcement'] as const).map((type) => {
-                const Icon: React.ElementType = channelIcons[type];
-                return (
-                  <button
-                    key={type}
-                    onClick={() => onTypeChange(type)}
-                    className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm ${
-                      newType === type
-                        ? 'border-primary-500 bg-primary-500/10 text-primary-400'
-                        : 'border-[var(--token-card-border)] text-gray-400 hover:border-[var(--token-card-border)]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {type}
-                  </button>
-                );
-              })}
-            </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" aria-label="Channel type">
+        {(['text', 'voice', 'announcement'] as const).map((type) => {
+          const Icon: React.ElementType = channelIcons[type];
+          return (
+            <Button
+              key={type}
+              variant={newType === type ? 'secondary' : 'outline'}
+              size="sm"
+              leftIcon={<Icon />}
+              onClick={() => onTypeChange(type)}
+              aria-pressed={newType === type}
+              className="min-h-11 capitalize lg:min-h-9"
+            >
+              {type}
+            </Button>
+          );
+        })}
+      </div>
 
-            <input
-              type="text"
-              placeholder="channel-name"
-              value={newName}
-              onChange={(e) => onNameChange(e.target.value)}
-              className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-sm text-white placeholder-white/30 focus:border-primary-500 focus:outline-none"
-            />
-            <input
-              type="text"
-              placeholder="Channel topic (optional)"
-              value={newTopic}
-              onChange={(e) => onTopicChange(e.target.value)}
-              className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.4] px-4 py-2 text-sm text-white placeholder-white/30 focus:border-primary-500 focus:outline-none"
-            />
-            <div className="flex justify-end">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={onCreate}
-                disabled={!newName.trim()}
-                className="rounded-lg bg-primary-600 px-6 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-              >
-                Create
-              </motion.button>
-            </div>
-          </GlassCard>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      <Input
+        label="Channel name"
+        placeholder="channel-name"
+        value={newName}
+        onChange={(e) => onNameChange(e.target.value)}
+      />
+      <Input
+        label="Topic"
+        placeholder="Channel topic (optional)"
+        value={newTopic}
+        onChange={(e) => onTopicChange(e.target.value)}
+      />
+      <div className="flex justify-end">
+        <Button onClick={onCreate} disabled={!newName.trim()}>
+          Create
+        </Button>
+      </div>
+    </GlassCard>
   );
 }

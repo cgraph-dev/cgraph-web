@@ -2,6 +2,8 @@ import { useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
+import Skeleton from '@/components/ui/skeleton';
 import { apiClient, http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { getGroupPermissionError } from '../../permission-errors';
@@ -168,14 +170,15 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
             Create and manage channels. {channels.length} channel{channels.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
+        <Button
+          size="sm"
+          leftIcon={<PlusIcon />}
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+          aria-expanded={showCreate}
+          className="min-h-11 lg:min-h-10"
         >
-          <PlusIcon className="h-4 w-4" />
           Create Channel
-        </motion.button>
+        </Button>
       </div>
 
       {/* Create Channel Form */}
@@ -205,8 +208,10 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
           </p>
         )}
         {loading ? (
-          <div className="flex items-center justify-center p-12">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+          <div className="space-y-3 p-4" aria-label="Loading channels" role="status">
+            <Skeleton variant="rectangular" height={56} />
+            <Skeleton variant="rectangular" height={56} />
+            <Skeleton variant="rectangular" height={56} />
           </div>
         ) : channels.length === 0 ? (
           <div className="p-8 text-center text-gray-500">

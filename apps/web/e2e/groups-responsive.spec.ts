@@ -42,8 +42,33 @@ const group = {
     },
   ],
   categories: [],
-  roles: [],
-  my_member: null,
+  roles: [
+    {
+      id: 'responsive-admin',
+      name: 'Admin',
+      color: '#ffffff',
+      position: 0,
+      permissions: 0x80000000,
+      is_default: false,
+      is_mentionable: true,
+    },
+  ],
+  my_member: {
+    id: 'responsive-member',
+    user_id: 'e2e-user',
+    roles: [
+      {
+        id: 'responsive-admin',
+        name: 'Admin',
+        color: '#ffffff',
+        position: 0,
+        permissions: 0x80000000,
+        is_default: false,
+        is_mentionable: true,
+      },
+    ],
+    joined_at: '2026-01-01T00:00:00.000Z',
+  },
   created_at: '2026-01-01T00:00:00.000Z',
 };
 
@@ -61,17 +86,56 @@ async function installGroupMocks(page: Page): Promise<void> {
     const method = request.method();
 
     if (path === '/api/v1/groups' && method === 'GET') {
-      await fulfillJson(route, { groups: [group] });
+      await fulfillJson(route, { data: [group] });
       return;
     }
 
     if (path === `/api/v1/groups/${GROUP_ID}` && method === 'GET') {
-      await fulfillJson(route, { group });
+      await fulfillJson(route, { data: group });
       return;
     }
 
     if (path === `/api/v1/groups/${GROUP_ID}/members` && method === 'GET') {
       await fulfillJson(route, { members: [] });
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/channels` && method === 'GET') {
+      await fulfillJson(route, [
+        {
+          id: 'core-category',
+          name: 'Core',
+          position: 0,
+          is_collapsed: false,
+          channels: group.channels,
+        },
+      ]);
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/categories` && method === 'GET') {
+      await fulfillJson(route, [
+        {
+          id: 'core-category',
+          name: 'Core',
+          position: 0,
+          is_collapsed: false,
+        },
+      ]);
+      return;
+    }
+
+    if (path === `/api/v1/groups/${GROUP_ID}/roles` && method === 'GET') {
+      await fulfillJson(route, []);
+      return;
+    }
+
+    if (
+      path ===
+        `/api/v1/groups/${GROUP_ID}/channels/${GENERAL_CHANNEL_ID}/permissions` &&
+      method === 'GET'
+    ) {
+      await fulfillJson(route, []);
       return;
     }
 
@@ -217,4 +281,78 @@ test.describe('Responsive Groups navigation', () => {
       contentType: 'image/png',
     });
   });
+
+  for (const viewport of [
+    { width: 400, height: 874 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`keeps channel settings usable at ${viewport.width}x${viewport.height}`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize(viewport);
+      await installGroupMocks(page);
+      await page.goto(`/groups/${GROUP_ID}/settings`);
+
+      const settingsNav = page.getByRole('navigation', { name: 'Group settings' });
+      await expect(settingsNav).toBeVisible();
+      const channelsTab = settingsNav.getByRole('button', { name: 'Channels', exact: true });
+      await channelsTab.click();
+
+      await expect(page.getByRole('heading', { name: 'Channels', exact: true })).toBeVisible();
+      await expect(page.getByLabel('Loading channels')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Create Channel' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expect(page.getByRole('button', { name: 'Add Category' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      await expect(page.getByRole('button', { name: 'Edit Core' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+
+      if (viewport.width < 1024) {
+        expect((await channelsTab.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+        expect(
+          (await page.getByRole('button', { name: 'Create Channel' }).boundingBox())?.height
+        ).toBeGreaterThanOrEqual(44);
+      }
+
+      await page.getByRole('button', { name: 'Create Channel' }).click();
+      await expect(page.getByRole('textbox', { name: 'Channel name' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Close channel form' })).toHaveAttribute(
+        'data-cgraph-surface',
+        'control'
+      );
+      const formBox = await page.getByTestId('new-channel-form').boundingBox();
+      const categoriesBox = await page
+        .getByRole('heading', { name: 'Categories', exact: true })
+        .boundingBox();
+      expect(formBox).not.toBeNull();
+      expect(categoriesBox).not.toBeNull();
+      expect(categoriesBox!.y).toBeGreaterThanOrEqual(formBox!.y + formBox!.height);
+
+      if (viewport.width < 1024) {
+        const lastChannelAction = page.getByRole('button', { name: 'Delete News' });
+        await lastChannelAction.scrollIntoViewIfNeeded();
+        const actionBox = await lastChannelAction.boundingBox();
+        const mobileNavBox = await page
+          .getByRole('navigation', { name: 'Mobile navigation' })
+          .boundingBox();
+        expect(actionBox).not.toBeNull();
+        expect(mobileNavBox).not.toBeNull();
+        expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(mobileNavBox!.y);
+      }
+
+      await expectNoHorizontalOverflow(page);
+
+      await testInfo.attach(`groups-settings-${viewport.width}x${viewport.height}`, {
+        body: await page.screenshot({ fullPage: true }),
+        contentType: 'image/png',
+      });
+    });
+  }
 });

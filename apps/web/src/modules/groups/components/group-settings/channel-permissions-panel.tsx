@@ -9,11 +9,18 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'motion/react';
 import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
 import { asString, asNumber, asOptionalString } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
+import { Button, IconButton } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import Skeleton from '@/components/ui/skeleton';
 
 const logger = createLogger('ChannelPermissions');
 
@@ -24,7 +31,6 @@ import {
   cyclePermState,
   applyPermChange,
 } from './channel-permissions/permission-utils';
-import { FADE_IN } from '@/lib/animations/transitions';
 import type {
   PermissionOverwrite,
   RoleOption,
@@ -172,48 +178,40 @@ export function ChannelPermissionsPanel({
   );
 
   return (
-    <motion.div
-      {...FADE_IN}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="max-h-[85vh] w-full max-w-2xl overflow-hidden rounded-xl border border-[var(--token-card-border)] bg-[var(--token-card-bg)] shadow-2xl"
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        ariaLabel="Channel Permissions"
+        className="max-h-[85dvh] !max-w-2xl overflow-hidden p-0"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--token-card-border)] px-6 py-4">
+        <DialogHeader className="mb-0 flex items-center justify-between border-b border-[var(--token-card-border)] px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold text-white">Channel Permissions</h2>
+            <DialogTitle>Channel Permissions</DialogTitle>
             <p className="text-sm text-gray-400">#{channelName}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-        </div>
+          <IconButton icon={<XMarkIcon />} label="Close channel permissions" onClick={onClose} />
+        </DialogHeader>
 
         {/* Content */}
-        <div className="max-h-[calc(85vh-130px)] overflow-y-auto p-6">
+        <div className="max-h-[calc(85dvh-78px)] overflow-y-auto p-6">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+            <div className="space-y-3" aria-label="Loading channel permissions" role="status">
+              <Skeleton variant="rectangular" height={44} />
+              <Skeleton variant="rectangular" height={96} />
+              <Skeleton variant="rectangular" height={96} />
             </div>
           ) : (
             <div className="space-y-4">
               {/* Add Overwrite Button */}
               <div className="flex justify-end">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
+                <Button
+                  size="sm"
+                  leftIcon={<PlusIcon />}
                   onClick={() => setShowAddForm(true)}
-                  className="flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700"
+                  aria-expanded={showAddForm}
                 >
-                  <PlusIcon className="h-4 w-4" />
                   Add Override
-                </motion.button>
+                </Button>
               </div>
 
               {/* Add Override Form */}
@@ -264,7 +262,7 @@ export function ChannelPermissionsPanel({
             </div>
           )}
         </div>
-      </motion.div>
-    </motion.div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -8,11 +8,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, Reorder } from 'motion/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { apiClient, http } from '@/lib/api-client';
-import { asString, asNumber } from '@/lib/api-utils';
+import { asString, asNumber, ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
+import { Button } from '@/components/ui/button';
+import Skeleton from '@/components/ui/skeleton';
 
 const logger = createLogger('ChannelCategories');
 import { CreateCategoryForm } from './create-category-form';
@@ -44,12 +45,15 @@ export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps)
         http.get(`/api/v1/groups/${groupId}/channels`),
       ]);
 
-      const catData = catRes.data?.data ?? catRes.data ?? [];
-      const chanData = chanRes.data?.data ?? chanRes.data ?? [];
-      const channels = Array.isArray(chanData) ? chanData : [];
+      const categoryRecords = ensureArray<Record<string, unknown>>(catRes.data);
+      const channelRecords = ensureArray<Record<string, unknown>>(chanRes.data).flatMap((record) =>
+        Array.isArray(record.channels)
+          ? ensureArray<Record<string, unknown>>(record.channels)
+          : [record]
+      );
 
       const countMap: Record<string, number> = {};
-      for (const ch of channels) {
+      for (const ch of channelRecords) {
         const catId = asString(ch.category_id) || asString(ch.categoryId);
         if (catId) {
           countMap[catId] = (countMap[catId] ?? 0) + 1;
@@ -57,7 +61,7 @@ export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps)
       }
 
       setCategories(
-        (Array.isArray(catData) ? catData : [])
+        categoryRecords
           .map((c: Record<string, unknown>) => ({
             id: asString(c.id),
             name: asString(c.name),
@@ -156,14 +160,16 @@ export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps)
           <h3 className="text-lg font-semibold text-white">Categories</h3>
           <p className="text-sm text-gray-400">Group channels into collapsible categories</p>
         </div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
+        <Button
+          variant="secondary"
+          size="sm"
+          leftIcon={<PlusIcon />}
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-[var(--token-card-bg)/0.6] px-3 py-1.5 text-sm text-gray-300 hover:bg-[var(--token-card-bg)/0.8]"
+          aria-expanded={showCreate}
+          className="min-h-11 lg:min-h-10"
         >
-          <PlusIcon className="h-4 w-4" />
           Add Category
-        </motion.button>
+        </Button>
       </div>
 
       {/* Create Form */}
@@ -177,17 +183,18 @@ export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps)
 
       {/* Categories List */}
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+        <div className="space-y-2 py-2" aria-label="Loading categories" role="status">
+          <Skeleton variant="rectangular" height={52} />
+          <Skeleton variant="rectangular" height={52} />
         </div>
       ) : categories.length === 0 ? (
         <div className="py-6 text-center text-sm text-gray-500">
           No categories. Channels will appear ungrouped.
         </div>
       ) : (
-        <Reorder.Group axis="y" values={categories} onReorder={handleReorder} className="space-y-2">
+        <div className="space-y-2" role="list" aria-label="Channel categories">
           {categories.map((category, index) => (
-            <Reorder.Item key={category.id} value={category}>
+            <div key={category.id} role="listitem">
               <CategoryListItem
                 category={category}
                 index={index}
@@ -202,9 +209,9 @@ export function ChannelCategoriesPanel({ groupId }: ChannelCategoriesPanelProps)
                 onMoveUp={handleMoveUp}
                 onMoveDown={handleMoveDown}
               />
-            </Reorder.Item>
+            </div>
           ))}
-        </Reorder.Group>
+        </div>
       )}
 
       {/* Delete Confirmation */}

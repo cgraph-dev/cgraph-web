@@ -15,6 +15,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useMemo } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { IconButton } from '@/components/ui/button';
 import { RoleManager } from '../role-manager';
 import type { GroupSettingsProps } from './types';
 import { useGroupSettings } from './useGroupSettings';
@@ -117,7 +118,7 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
   }
 
   return (
-    <div className="flex h-full bg-[var(--token-card-bg)]">
+    <div className="flex h-full min-w-0 flex-col bg-[var(--token-card-bg)] lg:flex-row">
       {/* Sidebar */}
       <SettingsSidebar
         group={activeGroup}
@@ -127,17 +128,14 @@ export function GroupSettings({ groupId, onClose }: GroupSettingsProps) {
       />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="min-w-0 flex-1 overflow-y-auto p-4 pb-24 lg:p-6">
         {onClose && (
           <div className="mb-4 flex justify-end">
-            <button
-              type="button"
+            <IconButton
+              icon={<XMarkIcon />}
+              label="Close group settings"
               onClick={onClose}
-              aria-label="Close group settings"
-              className="rounded-lg p-2 text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
+            />
           </div>
         )}
 

@@ -1,6 +1,6 @@
-import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheckIcon, UserIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
 import { PermissionRow } from './permission-row';
 import { getPermState } from './permission-utils';
 import { PERMISSION_FLAGS } from './types';
@@ -68,62 +68,44 @@ export function OverwriteCard({
           <span className="text-xs text-gray-500">({overwrite.type})</span>
         </div>
         <div className="flex gap-1">
-          <button
-            onClick={onToggleEdit}
-            className="rounded px-2 py-1 text-xs text-primary-400 hover:bg-primary-500/10"
-          >
+          <Button variant="ghost" size="sm" onClick={onToggleEdit} aria-expanded={isEditing}>
             {isEditing ? 'Collapse' : 'Edit'}
-          </button>
-          <button
-            onClick={onDelete}
-            className="rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
-          >
+          </Button>
+          <Button variant="danger" size="sm" onClick={onDelete}>
             Remove
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Permissions Grid */}
-      <AnimatePresence>
-        {isEditing && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="mt-3 space-y-2"
-          >
-            <div className="grid gap-1.5">
-              {PERMISSION_FLAGS.map(({ bit, label: flagLabel, description }) => {
-                const state = getPermState(pendingAllow, pendingDeny, bit);
-                return (
-                  <PermissionRow
-                    key={bit}
-                    bit={bit}
-                    label={flagLabel}
-                    description={description}
-                    state={state}
-                    onToggle={onPermToggle}
-                  />
-                );
-              })}
-            </div>
+      {isEditing && (
+        <div className="mt-3 space-y-2">
+          <div className="grid gap-1.5">
+            {PERMISSION_FLAGS.map(({ bit, label: flagLabel, description }) => {
+              const state = getPermState(pendingAllow, pendingDeny, bit);
+              return (
+                <PermissionRow
+                  key={bit}
+                  bit={bit}
+                  label={flagLabel}
+                  description={description}
+                  state={state}
+                  onToggle={onPermToggle}
+                />
+              );
+            })}
+          </div>
 
-            {/* Save button for this overwrite */}
-            {hasPendingChanges && (
-              <div className="flex justify-end pt-2">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onSave}
-                  disabled={saving}
-                  className="rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </motion.button>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Save button for this overwrite */}
+          {hasPendingChanges && (
+            <div className="flex justify-end pt-2">
+              <Button size="sm" onClick={onSave} isLoading={saving}>
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
     </GlassCard>
   );
 }
