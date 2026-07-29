@@ -25,6 +25,8 @@ import { buildMessageAttachmentSendPayload } from '@cgraph-dev/shared-types';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
 import { ScrollToBottomButton } from '@/modules/chat/components/scroll-to-bottom-button';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { IconButton } from '@/components/ui/button';
+import Skeleton from '@/components/ui/skeleton';
 
 import { ChannelHeader } from './channel-header';
 import { MessagesArea } from './messages-area';
@@ -950,8 +952,12 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
 
   if (!channel) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+      <div
+        className="flex flex-1 items-center justify-center"
+        role="status"
+        aria-label="Loading channel"
+      >
+        <Skeleton variant="circular" width={32} height={32} />
       </div>
     );
   }
@@ -977,16 +983,28 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
         />
 
         {showSearch && (
-          <div className="bg-[var(--token-bg-secondary)]/70 flex h-12 items-center gap-2 border-b border-[var(--token-border-muted)] px-4">
-            <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={`Search #${channel.name}`}
-              autoFocus
-              className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
-            />
-            <span className="min-w-[92px] text-right text-xs text-gray-400">
+          <div className="flex h-12 items-center gap-1 border-b border-[var(--token-border-muted)] bg-[var(--product-surface-pane)] px-2 sm:gap-2 sm:px-3">
+            <div className="relative min-w-0 flex-1">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--token-text-muted)]" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={`Search #${channel.name}`}
+                aria-label={`Search #${channel.name}`}
+                autoFocus
+                className="cgraph-field h-9 w-full min-w-0 pl-9 pr-3 text-sm"
+              />
+            </div>
+            <span
+              className={`sr-only min-w-[92px] text-right text-xs sm:not-sr-only ${
+                searchError
+                  ? 'text-[var(--token-feedback-error)]'
+                  : 'text-[var(--token-text-muted)]'
+              }`}
+              role="status"
+              aria-live="polite"
+            >
               {searchQuery.trim().length < 2
                 ? 'Type 2+ chars'
                 : isSearchingChannel
@@ -997,33 +1015,33 @@ export default function GroupChannel({ surface = 'text' }: GroupChannelProps) {
                       ? `${activeSearchIndex + 1}/${searchMatches.length}`
                       : 'No results'}
             </span>
-            <button
+            <IconButton
+              icon={<ChevronUpIcon />}
+              label="Previous result"
+              size="sm"
               onClick={() => moveSearch(-1)}
               disabled={searchMatches.length === 0}
-              className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white disabled:opacity-40"
-              title="Previous result"
-            >
-              <ChevronUpIcon className="h-4 w-4" />
-            </button>
-            <button
+              className="h-10 w-10 shrink-0"
+            />
+            <IconButton
+              icon={<ChevronDownIcon />}
+              label="Next result"
+              size="sm"
               onClick={() => moveSearch(1)}
               disabled={searchMatches.length === 0}
-              className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white disabled:opacity-40"
-              title="Next result"
-            >
-              <ChevronDownIcon className="h-4 w-4" />
-            </button>
-            <button
+              className="h-10 w-10 shrink-0"
+            />
+            <IconButton
+              icon={<XMarkIcon />}
+              label="Close search"
+              size="sm"
               onClick={() => {
                 setShowSearch(false);
                 setSearchQuery('');
                 setHighlightedMessageId(null);
               }}
-              className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white"
-              title="Close search"
-            >
-              <XMarkIcon className="h-4 w-4" />
-            </button>
+              className="h-10 w-10 shrink-0"
+            />
           </div>
         )}
 

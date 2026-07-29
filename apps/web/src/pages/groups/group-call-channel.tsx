@@ -43,17 +43,25 @@ export default function GroupCallChannel() {
     : null;
 
   return (
-    <div className="flex flex-1 flex-col bg-[var(--token-bg-primary)]">
-      <header className="flex h-12 items-center gap-3 border-b border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4">
-        <Icon className="h-5 w-5 text-gray-400" />
+    <div className="cgraph-workspace flex flex-1 flex-col">
+      <header
+        className="cgraph-pane flex h-14 items-center gap-3 border-x-0 border-t-0 px-4"
+        data-cgraph-material="pane"
+        data-cgraph-surface="pane"
+      >
+        <Icon className="h-5 w-5 text-[var(--token-text-muted)]" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate font-semibold text-white">{channel?.name ?? label}</span>
-            <span className="rounded bg-white/[0.08] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/60">
+            <span className="truncate font-semibold text-[var(--token-text-primary)]">
+              {channel?.name ?? label}
+            </span>
+            <span className="cgraph-label-badge">
               {label}
             </span>
           </div>
-          {channel?.topic && <p className="truncate text-xs text-gray-400">{channel.topic}</p>}
+          {channel?.topic && (
+            <p className="truncate text-xs text-[var(--token-text-muted)]">{channel.topic}</p>
+          )}
         </div>
       </header>
 
