@@ -6,6 +6,7 @@ import { NavLink, type Location, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogoIcon } from '@/components/logo/logo-icon';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
+import Tooltip from '@/components/ui/tooltip';
 import { getAvatarBorderId } from '@/lib/utils';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
@@ -129,7 +130,7 @@ function SidebarNavItem({
   const Icon: IconComponent = iconRaw satisfies IconComponent;
 
   return (
-    <div>
+    <Tooltip content={item.label} side="right" delay={150}>
       <NavLink
         to={item.path}
         aria-label={item.label}
@@ -190,7 +191,7 @@ function SidebarNavItem({
           )}
         </motion.div>
       </NavLink>
-    </div>
+    </Tooltip>
   );
 }
 
@@ -304,18 +305,19 @@ export default function Sidebar({
         aria-label="Bottom actions"
       >
         {/* Logout */}
-        <button
-          type="button"
-          onClick={() => {
-            HapticFeedback.medium();
-            setLogoutOpen(true);
-          }}
-          className="cgraph-control cgraph-control-icon cgraph-control-ghost relative flex h-10 w-10 items-center justify-center text-[var(--token-text-muted)] hover:text-[var(--token-feedback-error)]"
-          title="Logout"
-          aria-label="Logout from your account"
-        >
-          <LogOut className="relative z-10 h-5 w-5" aria-hidden="true" />
-        </button>
+        <Tooltip content="Log out" side="right" delay={150}>
+          <button
+            type="button"
+            onClick={() => {
+              HapticFeedback.medium();
+              setLogoutOpen(true);
+            }}
+            className="cgraph-control cgraph-control-icon cgraph-control-ghost relative flex h-10 w-10 items-center justify-center text-[var(--token-text-muted)] hover:text-[var(--token-feedback-error)]"
+            aria-label="Logout from your account"
+          >
+            <LogOut className="relative z-10 h-5 w-5" aria-hidden="true" />
+          </button>
+        </Tooltip>
 
         {/* Logo */}
         <a

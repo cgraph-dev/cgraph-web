@@ -8,6 +8,7 @@ const materialsCss = readFileSync(
 );
 const bubbleCss = readFileSync(join(process.cwd(), 'src/styles/bubble-theme.css'), 'utf8');
 const indexCss = readFileSync(join(process.cwd(), 'src/index.css'), 'utf8');
+const productCss = readFileSync(join(process.cwd(), 'src/styles/product-ui.css'), 'utf8');
 
 describe('built-in app-theme material ownership', () => {
   it('loads the shared material contract before the expressive Bubble owner', () => {
@@ -32,6 +33,18 @@ describe('built-in app-theme material ownership', () => {
     expect(materialsCss).toContain("[data-cgraph-state='disabled']");
     expect(materialsCss).not.toMatch(/:hover\s*\{[^}]*transform\s*:/s);
     expect(materialsCss).not.toContain('transition: all');
+  });
+
+  it('balances Aurora with the CGraph logo green without leaking it into other themes', () => {
+    const auroraScope = materialsCss.match(/\.theme-aurora\s*\{(?<body>[^}]*)\}/)?.groups?.body;
+    const darkScope = materialsCss.match(/\.theme-dark\s*\{(?<body>[^}]*)\}/)?.groups?.body;
+    const lightScope = materialsCss.match(/\.theme-light\s*\{(?<body>[^}]*)\}/)?.groups?.body;
+
+    expect(auroraScope).toContain('--app-material-brand-secondary: #40c458');
+    expect(darkScope).not.toContain('#40c458');
+    expect(lightScope).not.toContain('#40c458');
+    expect(bubbleCss).not.toContain('#40c458');
+    expect(productCss).toContain('var(--product-brand-secondary)');
   });
 
   it('preserves control intent in the Bubble material owner', () => {

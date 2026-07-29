@@ -9,6 +9,7 @@
   --app-material-border: var(--token-card-border);
   --app-material-muted-border: var(--token-border-muted);
   --app-material-focus: var(--token-focusRing, var(--token-interactive-primary));
+  --app-material-brand-secondary: var(--token-interactive-primary);
   --app-material-radius: 8px;
   --app-material-blur: 0px;
   --app-material-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
@@ -16,6 +17,7 @@
 }
 
 .theme-aurora {
+  --app-material-brand-secondary: #40c458;
   --app-material-solid: rgba(18, 22, 42, 0.88);
   --app-material-recessed: rgba(10, 13, 27, 0.78);
   --app-material-floating: rgba(20, 25, 48, 0.92);
@@ -27,6 +29,46 @@
   --app-material-shadow-lg:
     0 22px 52px rgba(4, 8, 22, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.theme-aurora .cgraph-control-primary {
+  border-color: color-mix(
+    in srgb,
+    var(--app-material-brand-secondary) 34%,
+    var(--token-border-muted)
+  );
+  background: linear-gradient(
+    135deg,
+    var(--token-interactive-primary) 0%,
+    var(--token-interactive-primary) 68%,
+    color-mix(
+      in srgb,
+      var(--app-material-brand-secondary) 68%,
+      var(--token-bg-primary)
+    )
+    100%
+  );
+}
+
+.theme-aurora .cgraph-control-primary:hover:not(:disabled) {
+  background: linear-gradient(
+    135deg,
+    var(--token-interactive-hover) 0%,
+    var(--token-interactive-hover) 64%,
+    color-mix(
+      in srgb,
+      var(--app-material-brand-secondary) 74%,
+      var(--token-bg-primary)
+    )
+    100%
+  );
+}
+
+.theme-aurora .cgraph-navigation-rail .cgraph-control-primary {
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--token-interactive-primary) 18%, transparent),
+    inset -2px 0 0 color-mix(in srgb, var(--app-material-brand-secondary) 82%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .theme-dark {

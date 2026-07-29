@@ -1,6 +1,6 @@
 import type React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 const { mockUseAppLayout } = vi.hoisted(() => ({
   mockUseAppLayout: vi.fn(),
@@ -547,6 +547,26 @@ describe('Sidebar', () => {
     render(<Sidebar {...sidebarProps} />);
     expect(screen.getByLabelText('Messages')).toBeInTheDocument();
     expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
+  });
+
+  it('shows primary navigation labels on pointer hover and keyboard focus', () => {
+    vi.useFakeTimers();
+
+    try {
+      render(<Sidebar {...sidebarProps} />);
+
+      fireEvent.mouseEnter(screen.getByLabelText('Messages'));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole('tooltip', { name: 'Messages' })).toBeVisible();
+
+      fireEvent.mouseLeave(screen.getByLabelText('Messages'));
+      fireEvent.focus(screen.getByLabelText('Notifications'));
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.getByRole('tooltip', { name: 'Notifications' })).toBeVisible();
+    } finally {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    }
   });
 
   it('shows unread badge on messages when totalUnread > 0', () => {
