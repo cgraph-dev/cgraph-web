@@ -35,7 +35,7 @@ export function RarityBadge({ rarity, size = 'sm' }: RarityBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full font-semibold uppercase tracking-wider ${colors.bg} ${colors.text} ${sizeClasses}`}
+      className={`inline-flex items-center rounded-full font-semibold uppercase ${colors.bg} ${colors.text} ${sizeClasses}`}
       style={{ borderColor: colors.hex, borderWidth: 1 }}
     >
       {rarity}

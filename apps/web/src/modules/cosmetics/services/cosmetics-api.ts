@@ -53,7 +53,7 @@ interface ApiUserBorder {
 
 interface ApiProfileTheme {
   id: string;
-  slug: string;
+  slug?: string | null;
   name: string | null;
   description: string | null;
   preset?: string;
@@ -73,7 +73,7 @@ interface ApiProfileTheme {
   coin_cost?: number;
   gemCost?: number;
   gem_cost?: number;
-  previewUrl: string | null;
+  previewUrl?: string | null;
   preview_url?: string | null;
   animationType?: string;
   animation_type?: string;
@@ -104,8 +104,8 @@ interface ApiUserProfileTheme {
 
 interface ApiInventoryItem {
   id: string;
-  itemType?: CosmeticType;
-  item_type?: CosmeticType;
+  itemType?: string;
+  item_type?: string;
   itemId?: string;
   item_id?: string;
   itemSlug?: string | null;
@@ -120,10 +120,52 @@ interface ApiInventoryItem {
   obtained_via?: string;
 }
 
+interface ApiCatalogueItem {
+  id: string;
+  slug?: string | null;
+  name?: string | null;
+  description?: string | null;
+  type?: string;
+  itemType?: string;
+  rarity?: RarityTier | null;
+  unlockType?: string;
+  nodesCost?: number;
+  nodeCost?: number;
+  previewUrl?: string | null;
+  iconUrl?: string | null;
+  backgroundUrl?: string | null;
+  animationType?: string;
+  lottieUrl?: string | null;
+  available?: boolean;
+}
+
 type BorderInventoryEntry = ApiUserBorder | ApiInventoryItem;
 type ThemeInventoryEntry = ApiUserProfileTheme | ApiInventoryItem | ApiProfileTheme;
 
 const DEFAULT_ACQUIRED_AT = '';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter(isString) : [];
+}
+
+function recordList(value: unknown): unknown[] {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
+}
+
+function unwrapData<T>(body: T | { data: T }): T {
+  if (isRecord(body) && 'data' in body) {
+    return body['data'];
+  }
+  return body;
+}
 
 function firstDefined<T>(...values: readonly (T | null | undefined)[]): T | undefined {
   return values.find((value): value is T => value !== undefined && value !== null);
@@ -140,6 +182,193 @@ function titleFromKey(value: string | null | undefined, fallback: string): strin
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function normalizeCatalogueType(value: string | undefined): CosmeticType | null {
+  switch (value) {
+    case 'avatar_border':
+    case 'border':
+    case 'animated_border':
+      return 'avatar_border';
+    case 'profile_effect':
+      return 'profile_effect';
+    case 'avatar_frame':
+    case 'profile_frame':
+      return 'avatar_frame';
+    case 'badge':
+      return 'badge';
+    case 'nameplate':
+      return 'nameplate';
+    case 'title':
+      return 'title';
+    case 'profile_theme':
+    case 'theme':
+      return 'profile_theme';
+    default:
+      return null;
+  }
+}
+
+function surfaceForType(type: CosmeticType): CosmeticItem['surface'] {
+  switch (type) {
+    case 'badge':
+      return 'badge';
+    case 'nameplate':
+      return 'nameplate';
+    case 'title':
+      return 'title';
+    case 'profile_theme':
+    case 'theme':
+    case 'profile_effect':
+      return 'profile_theme';
+    default:
+      return 'avatar_border';
+  }
+}
+
+function catalogueItemToCosmeticItem(raw: ApiCatalogueItem): CosmeticItem | null {
+  const type = normalizeCatalogueType(raw.itemType ?? raw.type);
+  if (!type) return null;
+
+  const slug = raw.slug ?? raw.id;
+  const source = validateUnlockType(raw.unlockType);
+  const threshold = raw.nodesCost ?? raw.nodeCost ?? null;
+
+  return {
+    id: raw.id,
+    slug,
+    name: raw.name ?? titleFromKey(slug, 'Untitled cosmetic'),
+    description: raw.description ?? '',
+    surface: surfaceForType(type),
+    type,
+    rarity: validateRarityTier(raw.rarity),
+    unlockType: source,
+    unlockCondition: {
+      type: unlockConditionTypeForSource(source),
+      threshold,
+    },
+    animationType: validateAnimationType(raw.animationType),
+    lottieFile: raw.lottieUrl ?? null,
+    previewUrl: raw.previewUrl ?? raw.iconUrl ?? raw.backgroundUrl ?? null,
+    colors: [],
+    available: raw.available ?? true,
+    createdAt: '',
+  };
+}
+
+function catalogueItems(payload: unknown, key?: string): ApiCatalogueItem[] {
+  const data = unwrapData<unknown>(payload);
+  if (Array.isArray(data)) return data.filter(isCatalogueItem);
+  if (!isRecord(data)) return [];
+  const value = key ? data[key] : data['listings'];
+  return recordList(value).filter(isCatalogueItem);
+}
+
+function isCatalogueItem(value: unknown): value is ApiCatalogueItem {
+  return isRecord(value) && isString(value['id']);
+}
+
+function isBorder(value: unknown): value is ApiBorder {
+  if (!isRecord(value)) return false;
+  return (
+    isString(value['id']) &&
+    isString(value['slug']) &&
+    isString(value['name']) &&
+    isString(value['description']) &&
+    isString(value['theme']) &&
+    isString(value['rarity']) &&
+    isString(value['borderStyle']) &&
+    isString(value['animationType']) &&
+    typeof value['animationSpeed'] === 'number' &&
+    typeof value['animationIntensity'] === 'number' &&
+    Array.isArray(value['colors']) &&
+    typeof value['isPurchasable'] === 'boolean' &&
+    typeof value['nodeCost'] === 'number' &&
+    typeof value['gemCost'] === 'number' &&
+    (value['previewUrl'] === null || isString(value['previewUrl']))
+  );
+}
+
+function isInventoryItem(value: unknown): value is ApiInventoryItem {
+  return isRecord(value) && isString(value['id']);
+}
+
+function isUserBorder(value: unknown): value is ApiUserBorder {
+  if (!isRecord(value)) return false;
+  return (
+    isString(value['id']) &&
+    isString(value['borderId']) &&
+    typeof value['isEquipped'] === 'boolean' &&
+    isString(value['unlockSource'])
+  );
+}
+
+function isUserProfileTheme(value: unknown): value is ApiUserProfileTheme {
+  if (!isRecord(value)) return false;
+  return (
+    isString(value['id']) &&
+    isString(value['themeId']) &&
+    typeof value['isActive'] === 'boolean' &&
+    isString(value['unlockSource'])
+  );
+}
+
+function isProfileTheme(value: unknown): value is ApiProfileTheme {
+  return isRecord(value) && isString(value['id']);
+}
+
+function parseBorderEntry(value: unknown): BorderInventoryEntry {
+  if (isRecord(value) && (isUserBorder(value) || isInventoryItem(value))) {
+    return value;
+  }
+  throw new Error('Cosmetics API returned an invalid border inventory item');
+}
+
+function parseThemeEntry(value: unknown): ThemeInventoryEntry {
+  if (
+    isRecord(value) &&
+    (isUserProfileTheme(value) || isInventoryItem(value) || isProfileTheme(value))
+  ) {
+    return value;
+  }
+  throw new Error('Cosmetics API returned an invalid profile theme item');
+}
+
+function parseInventoryItem(value: unknown): ApiInventoryItem {
+  if (isRecord(value) && isInventoryItem(value)) return value;
+  throw new Error('Cosmetics API returned an invalid inventory item');
+}
+
+type CatalogItemSummary = NonNullable<EquippedCosmetics['avatar_border']>;
+
+function isCatalogItemSummary(value: CatalogItemSummary | null): value is CatalogItemSummary {
+  return value !== null;
+}
+
+function catalogItemSummary(value: unknown): CatalogItemSummary | null {
+  if (!isRecord(value) || !isString(value['id'])) return null;
+  return {
+    id: value['id'],
+    name: isString(value['name']) ? value['name'] : 'Untitled cosmetic',
+    slug: isString(value['slug']) ? value['slug'] : value['id'],
+    rarity: validateRarityTier(isString(value['rarity']) ? value['rarity'] : null),
+    description: isString(value['description']) ? value['description'] : null,
+    animationType: validateAnimationType(
+      isString(value['animationType']) ? value['animationType'] : null
+    ),
+    lottieUrl: isString(value['lottieUrl']) ? value['lottieUrl'] : null,
+    lottieConfig: isRecord(value['lottieConfig']) ? value['lottieConfig'] : {},
+    ...(isString(value['iconUrl']) ? { iconUrl: value['iconUrl'] } : {}),
+    ...(isString(value['backgroundLottieUrl'])
+      ? { backgroundLottieUrl: value['backgroundLottieUrl'] }
+      : {}),
+    ...(isString(value['particleLottieUrl'])
+      ? { particleLottieUrl: value['particleLottieUrl'] }
+      : {}),
+    ...(isString(value['overlayLottieUrl'])
+      ? { overlayLottieUrl: value['overlayLottieUrl'] }
+      : {}),
+  };
 }
 
 // Transformers — convert API responses to shared types
@@ -189,19 +418,19 @@ function themeToCosmeticItem(t: ApiProfileTheme): CosmeticItem {
 }
 
 function userBorderToInventory(ub: ApiUserBorder): UserCosmeticInventory {
-  const cosmetic = ub.border
+  const cosmetic: CosmeticItem = ub.border
     ? borderToCosmeticItem(ub.border)
     : {
         id: ub.borderId,
         slug: '',
         name: 'Unknown Border',
         description: '',
-        surface: 'avatar_border' as const,
-        type: 'avatar_border' as const,
-        rarity: 'common' as const,
-        unlockType: 'free' as const,
-        unlockCondition: { type: 'free' as const, threshold: null },
-        animationType: 'none' as const,
+        surface: 'avatar_border',
+        type: 'avatar_border',
+        rarity: 'common',
+        unlockType: 'free',
+        unlockCondition: { type: 'free', threshold: null },
+        animationType: 'none',
         lottieFile: null,
         previewUrl: null,
         colors: [],
@@ -218,19 +447,19 @@ function userBorderToInventory(ub: ApiUserBorder): UserCosmeticInventory {
 }
 
 function userThemeToInventory(ut: ApiUserProfileTheme): UserCosmeticInventory {
-  const cosmetic = ut.theme
+  const cosmetic: CosmeticItem = ut.theme
     ? themeToCosmeticItem(ut.theme)
     : {
         id: ut.themeId,
         slug: '',
         name: 'Unknown Theme',
         description: '',
-        surface: 'profile_theme' as const,
-        type: 'profile_theme' as const,
-        rarity: 'common' as const,
-        unlockType: 'free' as const,
-        unlockCondition: { type: 'free' as const, threshold: null },
-        animationType: 'none' as const,
+        surface: 'profile_theme',
+        type: 'profile_theme',
+        rarity: 'common',
+        unlockType: 'free',
+        unlockCondition: { type: 'free', threshold: null },
+        animationType: 'none',
         lottieFile: null,
         previewUrl: null,
         colors: [],
@@ -246,7 +475,7 @@ function userThemeToInventory(ut: ApiUserProfileTheme): UserCosmeticInventory {
   };
 }
 
-function inventoryItemType(item: ApiInventoryItem): CosmeticType {
+function inventoryItemType(item: ApiInventoryItem): string {
   return firstDefined(item.itemType, item.item_type) ?? 'avatar_border';
 }
 
@@ -346,14 +575,13 @@ function summaryToCosmeticItem(
 
 function inventoryItemToCosmeticInventory(
   item: ApiInventoryItem,
-  fallbackType: Extract<CosmeticType, 'avatar_border' | 'profile_theme'>
+  fallbackType: CosmeticType
 ): UserCosmeticInventory {
   const rawType = inventoryItemType(item);
-  const type: Extract<CosmeticType, 'avatar_border' | 'profile_theme'> =
-    rawType === 'profile_theme' || rawType === 'theme' ? 'profile_theme' : fallbackType;
+  const type = normalizeCatalogueType(rawType) ?? fallbackType;
   const itemId = inventoryItemId(item);
   const slug = inventoryItemSlug(item);
-  const fallbackName = type === 'profile_theme' ? 'Unknown Theme' : 'Unknown Border';
+  const fallbackName = `Unknown ${titleFromKey(type, 'Cosmetic')}`;
   const source = validateUnlockType(inventoryItemObtainedVia(item));
 
   return {
@@ -362,7 +590,7 @@ function inventoryItemToCosmeticInventory(
       slug,
       name: titleFromKey(slug || itemId, fallbackName),
       description: '',
-      surface: type,
+      surface: surfaceForType(type),
       type,
       rarity: 'common',
       unlockType: source,
@@ -466,12 +694,43 @@ export const cosmeticsApi = {
   }> {
     // Backend route is /cosmetics/borders (Animated Borders scope) —
     // see apps/backend/lib/cgraph_web/router/cosmetics_routes.ex.
-    const { data } = await http.get('/api/v1/cosmetics/borders', { params });
+    const response = await http.get('/api/v1/cosmetics/borders', { params });
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    const borderData = data['borders'] ?? data['data'] ?? [];
     return {
-      borders: (data.borders ?? data.data ?? []).map(borderToCosmeticItem),
-      themes: data.themes ?? [],
-      rarities: data.rarities ?? [],
+      borders: recordList(borderData).filter(isBorder).map(borderToCosmeticItem),
+      themes: stringList(data['themes']),
+      rarities: stringList(data['rarities']),
     };
+  },
+
+  async listCatalogue(): Promise<CosmeticItem[]> {
+    const [marketplaceResponse, badgesResponse, nameplatesResponse] = await Promise.all([
+      http.get('/api/v1/marketplace/listings'),
+      http.get('/api/v1/badges'),
+      http.get('/api/v1/nameplates'),
+    ]);
+
+    const rawItems = [
+      ...catalogueItems(marketplaceResponse.data),
+      ...catalogueItems(badgesResponse.data, 'badges').map((item) => ({
+        ...item,
+        type: 'badge',
+        previewUrl: item.iconUrl,
+      })),
+      ...catalogueItems(nameplatesResponse.data, 'nameplates').map((item) => ({
+        ...item,
+        type: 'nameplate',
+        previewUrl: item.backgroundUrl,
+      })),
+    ];
+
+    const deduplicated = new Map<string, CosmeticItem>();
+    for (const rawItem of rawItems) {
+      const item = catalogueItemToCosmeticItem(rawItem);
+      if (item) deduplicated.set(`${item.type}:${item.id}`, item);
+    }
+    return [...deduplicated.values()];
   },
 
   async getUnlockedBorders(): Promise<{
@@ -480,29 +739,28 @@ export const cosmeticsApi = {
   }> {
     // Public API callers use the semantic avatar-border type; the backend
     // normalizes it to the legacy storage type during the migration.
-    const { data } = await http.get('/api/v1/cosmetics/inventory', {
+    const response = await http.get('/api/v1/cosmetics/inventory', {
       params: { item_type: 'avatar_border' },
     });
-    const entries: BorderInventoryEntry[] = data.items ?? data.unlocked ?? [];
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    const entries = recordList(data['items'] ?? data['unlocked']).filter(
+      (entry): entry is BorderInventoryEntry => isUserBorder(entry) || isInventoryItem(entry)
+    );
     const inventory = entries.map(borderEntryToInventory);
     return {
       inventory,
-      equippedId: data.equipped_id ?? inventory.find((item) => item.equipped)?.cosmetic.id ?? null,
+      equippedId:
+        (isString(data['equippedId']) ? data['equippedId'] : undefined) ??
+        (isString(data['equipped_id']) ? data['equipped_id'] : undefined) ??
+        inventory.find((item) => item.equipped)?.cosmetic.id ??
+        null,
     };
   },
 
   async equipBorder(borderId: string): Promise<UserCosmeticInventory> {
     const response = await http.post('/api/v1/cosmetics/borders/equip', { id: borderId });
-    return borderEntryToInventory(response.data.equipped ?? response.data);
-  },
-
-  async purchaseBorder(borderId: string): Promise<UserCosmeticInventory> {
-    // Purchases route through the unified marketplace endpoint.
-    const response = await http.post('/api/v1/marketplace/purchase', {
-      listing_id: borderId,
-      type: 'avatar_border',
-    });
-    return borderEntryToInventory(response.data.unlocked ?? response.data.item ?? response.data);
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    return borderEntryToInventory(parseBorderEntry(data['equipped'] ?? data));
   },
   async listProfileThemes(params?: { preset?: string; rarity?: RarityTier }): Promise<{
     themes: CosmeticItem[];
@@ -513,13 +771,16 @@ export const cosmeticsApi = {
     // marketplace listings filtered by type. This keeps the shop page
     // functional while the dedicated catalogue endpoint is missing.
     try {
-      const { data } = await http.get('/api/v1/marketplace/listings', {
+      const response = await http.get('/api/v1/marketplace/listings', {
         params: { ...params, type: 'theme' },
       });
+      const data = unwrapData<Record<string, unknown>>(response.data);
       return {
-        themes: (data.listings ?? data.themes ?? data.data ?? []).map(themeToCosmeticItem),
-        presets: data.presets ?? [],
-        rarities: data.rarities ?? [],
+        themes: recordList(data['listings'] ?? data['themes'] ?? data['data'])
+          .filter(isProfileTheme)
+          .map(themeToCosmeticItem),
+        presets: stringList(data['presets']),
+        rarities: stringList(data['rarities']),
       };
     } catch {
       // Empty fallback so the shop page renders the rest of the catalogue
@@ -530,9 +791,10 @@ export const cosmeticsApi = {
 
   async getActiveTheme(): Promise<UserCosmeticInventory | null> {
     // Active profile-theme is part of the equipped cosmetics bundle.
-    const { data } = await http.get('/api/v1/cosmetics/equipped');
-    const theme = data.profile_theme ?? data.theme ?? null;
-    return theme ? themeEntryToInventory(theme) : null;
+    const response = await http.get('/api/v1/cosmetics/equipped');
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    const theme = data['profile_theme'] ?? data['theme'] ?? null;
+    return theme ? themeEntryToInventory(parseThemeEntry(theme)) : null;
   },
 
   async activateTheme(themeId: string): Promise<UserCosmeticInventory> {
@@ -541,32 +803,41 @@ export const cosmeticsApi = {
       item_type: 'profile_theme',
       item_id: themeId,
     });
-    return themeEntryToInventory(response.data.equipped ?? response.data);
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    return themeEntryToInventory(parseThemeEntry(data['equipped'] ?? data));
   },
   async getEquipped(): Promise<EquippedCosmetics> {
-    const { data } = await http.get('/api/v1/cosmetics/equipped');
+    const response = await http.get('/api/v1/cosmetics/equipped');
+    const data = unwrapData<Record<string, unknown>>(response.data);
     return {
-      avatar_border: data.avatar_border ?? null,
-      nameplate: data.nameplate ?? null,
-      title: data.title ?? null,
-      badges: data.badges ?? [],
-      profile_theme: data.profile_theme ?? null,
-      name_style: data.name_style ?? null,
-      profile_effect: data.profile_effect ?? null,
-      avatar_frame: data.avatar_frame ?? null,
+      avatar_border: catalogItemSummary(data['avatar_border']),
+      nameplate: catalogItemSummary(data['nameplate']),
+      title: catalogItemSummary(data['title']),
+      badges: recordList(data['badges']).map(catalogItemSummary).filter(isCatalogItemSummary),
+      profile_theme: catalogItemSummary(data['profile_theme']),
+      name_style: catalogItemSummary(data['name_style']),
+      profile_effect: catalogItemSummary(data['profile_effect']),
+      avatar_frame: catalogItemSummary(data['avatar_frame']),
     };
   },
 
   async getInventory(itemType?: CosmeticType): Promise<{
-    items: ApiInventoryItem[];
+    inventory: UserCosmeticInventory[];
     total: number;
   }> {
-    const { data } = await http.get('/api/v1/cosmetics/inventory', {
+    const response = await http.get('/api/v1/cosmetics/inventory', {
       params: itemType ? { item_type: itemType } : undefined,
     });
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    const items = recordList(data['items']).filter(isInventoryItem);
     return {
-      items: data.items ?? [],
-      total: data.total ?? 0,
+      inventory: items.map((item) =>
+        inventoryItemToCosmeticInventory(
+          item,
+          normalizeCatalogueType(inventoryItemType(item)) ?? 'avatar_border'
+        )
+      ),
+      total: Number(data['total'] ?? items.length),
     };
   },
 
@@ -575,14 +846,16 @@ export const cosmeticsApi = {
       item_type: itemType,
       item_id: itemId,
     });
-    return response.data.equipped;
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    return parseInventoryItem(data['equipped']);
   },
 
   async unequip(itemType: CosmeticType, itemId: string): Promise<ApiInventoryItem> {
     const response = await http.delete('/api/v1/cosmetics/unequip', {
       data: { item_type: itemType, item_id: itemId },
     });
-    return response.data.item ?? response.data.unequipped;
+    const data = unwrapData<Record<string, unknown>>(response.data);
+    return parseInventoryItem(data['item'] ?? data['unequipped']);
   },
   async updateAccentColor(hex: string): Promise<{ accentColor: string }> {
     const response = await http.put<{ accentColor: string }>('/api/v1/me/accent-color', {

@@ -100,11 +100,11 @@ describe('RarityBadge', () => {
     }
   });
 
-  it('applies font-semibold and tracking-wider classes', () => {
+  it('applies a compact text treatment', () => {
     render(<RarityBadge rarity="uncommon" />);
 
     const badge = screen.getByText('uncommon');
     expect(badge.className).toContain('font-semibold');
-    expect(badge.className).toContain('tracking-wider');
+    expect(badge.className).not.toContain('tracking-wider');
   });
 });

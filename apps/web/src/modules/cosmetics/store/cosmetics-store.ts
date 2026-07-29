@@ -98,7 +98,6 @@ interface CosmeticsState {
   fetchInventory: () => Promise<void>;
   equipItem: (item: CosmeticItem) => Promise<void>;
   unequipItem: (item: CosmeticItem) => Promise<void>;
-  purchaseItem: (item: CosmeticItem) => Promise<void>;
 
   // Entitlement actions
   fetchEntitlements: () => Promise<void>;
@@ -152,7 +151,6 @@ type ActionKeys =
   | 'fetchInventory'
   | 'equipItem'
   | 'unequipItem'
-  | 'purchaseItem'
   | 'fetchEntitlements'
   | 'isEntitled'
   | 'purchaseEntitlement'
@@ -223,20 +221,14 @@ export const useCosmeticsStore = create<CosmeticsState>()((set, get) => ({
   fetchCatalogue: async () => {
     set({ isLoadingCatalogue: true, error: null });
     try {
-      const [bordersResult, themesResult] = await Promise.all([
-        cosmeticsApi.listBorders(),
-        cosmeticsApi.listProfileThemes(),
-      ]);
-
-      const catalogue = [...bordersResult.borders, ...themesResult.themes].slice(
-        0,
-        MAX_COSMETICS_CATALOGUE
-      );
+      const catalogue = (await cosmeticsApi.listCatalogue()).slice(0, MAX_COSMETICS_CATALOGUE);
+      const availableThemes = [...new Set(catalogue.map((item) => item.surface))];
+      const availableRarities = [...new Set(catalogue.map((item) => item.rarity))];
 
       set({
         catalogue,
-        availableThemes: bordersResult.themes,
-        availableRarities: bordersResult.rarities,
+        availableThemes,
+        availableRarities,
         isLoadingCatalogue: false,
       });
     } catch (err) {
@@ -250,23 +242,8 @@ export const useCosmeticsStore = create<CosmeticsState>()((set, get) => ({
   fetchInventory: async () => {
     set({ isLoadingInventory: true, error: null });
     try {
-      const bordersResult = await cosmeticsApi.getUnlockedBorders();
-
-      // Also attempt to get active theme
-      let themeInventory: UserCosmeticInventory[] = [];
-      try {
-        const activeTheme = await cosmeticsApi.getActiveTheme();
-        if (activeTheme) {
-          themeInventory = [activeTheme];
-        }
-      } catch {
-        // Theme endpoint may not return data — that's fine
-      }
-
-      const inventory = [...bordersResult.inventory, ...themeInventory].slice(
-        0,
-        MAX_COSMETICS_INVENTORY
-      );
+      const result = await cosmeticsApi.getInventory();
+      const inventory = result.inventory.slice(0, MAX_COSMETICS_INVENTORY);
 
       set({ inventory, isLoadingInventory: false });
     } catch (err) {
@@ -282,7 +259,7 @@ export const useCosmeticsStore = create<CosmeticsState>()((set, get) => ({
     try {
       if (item.type === 'avatar_border') {
         await cosmeticsApi.equipBorder(item.id);
-      } else if (item.type === 'theme') {
+      } else if (item.type === 'theme' || item.type === 'profile_theme') {
         await cosmeticsApi.activateTheme(item.id);
       } else {
         await cosmeticsApi.equip(item.type, item.id);
@@ -329,37 +306,6 @@ export const useCosmeticsStore = create<CosmeticsState>()((set, get) => ({
     }
   },
 
-  purchaseItem: async (item: CosmeticItem) => {
-    set({ isEquipping: true, error: null });
-    try {
-      let newEntry: UserCosmeticInventory | undefined;
-
-      if (item.type === 'avatar_border') {
-        newEntry = await cosmeticsApi.purchaseBorder(item.id);
-      } else {
-        // For other types, use the unified equip endpoint
-        await cosmeticsApi.equip(item.type, item.id);
-        newEntry = {
-          cosmetic: item,
-          equipped: false,
-          acquiredAt: new Date().toISOString(),
-          source: 'purchase',
-        };
-      }
-
-      if (newEntry) {
-        const { inventory } = get();
-        set({ inventory: [...inventory, newEntry], isEquipping: false });
-      } else {
-        set({ isEquipping: false });
-      }
-    } catch (err) {
-      set({
-        isEquipping: false,
-        error: err instanceof Error ? err.message : 'Failed to purchase item',
-      });
-    }
-  },
   fetchEntitlements: async () => {
     set({ isLoadingEntitlements: true, error: null });
     try {

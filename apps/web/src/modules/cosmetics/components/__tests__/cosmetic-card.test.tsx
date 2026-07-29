@@ -1,27 +1,25 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import type { CosmeticItem, CosmeticSku, Entitlement } from '@cgraph-dev/shared-types';
 import { CosmeticCard } from '../cosmetic-card';
-import type { CosmeticItem, Entitlement, CosmeticSku } from '@cgraph-dev/shared-types';
-
-// Helpers
 
 function makeItem(overrides: Partial<CosmeticItem> = {}): CosmeticItem {
   return {
     id: 'item-1',
-    slug: 'test-item',
+    slug: 'cosmic-border',
     name: 'Cosmic Border',
     description: 'A cosmic border',
-    surface: 'avatar',
-    type: 'badge',
+    surface: 'avatar_border',
+    type: 'avatar_border',
     rarity: 'rare',
     unlockType: 'purchase',
-    unlockCondition: { type: 'none', threshold: null },
+    unlockCondition: { type: 'purchase', threshold: 100 },
     animationType: 'none',
     lottieFile: null,
     previewUrl: null,
     colors: ['#3b82f6'],
     available: true,
-    createdAt: '2025-01-01T00:00:00Z',
+    createdAt: '2026-01-01T00:00:00Z',
     ...overrides,
   } as CosmeticItem;
 }
@@ -29,177 +27,111 @@ function makeItem(overrides: Partial<CosmeticItem> = {}): CosmeticItem {
 function makeSku(overrides: Partial<CosmeticSku> = {}): CosmeticSku {
   return {
     id: 'sku-1',
-    slug: 'test-sku',
-    name: 'Test SKU',
-    type: 'badge',
+    slug: 'cosmic-border',
+    name: 'Cosmic Border',
+    type: 'avatar_border',
     assetHash: null,
     cosmeticId: 'item-1',
     priceNodes: 100,
     stripePriceId: null,
     isPremiumOnly: false,
     isAvailable: true,
+    collection: null,
+    version: 1,
     ...overrides,
   } as CosmeticSku;
 }
 
 function makeEntitlement(overrides: Partial<Entitlement> = {}): Entitlement {
   return {
-    id: 'ent-1',
+    id: 'entitlement-1',
     sku: makeSku(),
     type: 'purchase',
     source: 'shop_purchase',
-    grantedAt: '2025-01-01T00:00:00Z',
+    grantedAt: '2026-01-01T00:00:00Z',
     expiresAt: null,
     active: true,
     ...overrides,
-  } as Entitlement;
+  };
 }
 
-// Tests
-
 describe('CosmeticCard', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it('renders the item, category, and rarity as one accessible preview action', () => {
+    render(<CosmeticCard item={makeItem()} owned equipped={false} />);
+
+    expect(screen.getByRole('button', { name: 'View Cosmic Border' })).toBeInTheDocument();
+    expect(screen.getByText('avatar border')).toBeInTheDocument();
+    expect(screen.getByText('rare')).toBeInTheDocument();
+    expect(screen.getByText('Owned')).toBeInTheDocument();
   });
 
-  it('renders item name', () => {
-    render(<CosmeticCard item={makeItem()} owned={true} equipped={false} />);
-
-    expect(screen.getByText('Cosmic Border')).toBeInTheDocument();
-  });
-
-  it('renders RarityBadge', () => {
-    render(<CosmeticCard item={makeItem({ rarity: 'legendary' })} owned={true} equipped={false} />);
-
-    expect(screen.getByText('legendary')).toBeInTheDocument();
-  });
-
-  it('shows checkmark indicator when equipped', () => {
-    render(<CosmeticCard item={makeItem()} owned={true} equipped={true} />);
-
-    expect(screen.getByText('✓')).toBeInTheDocument();
-  });
-
-  it('calls onSelect when clicked', () => {
+  it('calls onSelect with the selected item', () => {
     const item = makeItem();
     const onSelect = vi.fn();
-    render(<CosmeticCard item={item} owned={true} equipped={false} onSelect={onSelect} />);
+    render(<CosmeticCard item={item} owned equipped={false} onSelect={onSelect} />);
 
-    const button = screen.getByRole('button', { name: 'Select Cosmic Border' });
-    fireEvent.click(button);
+    fireEvent.click(screen.getByRole('button', { name: 'View Cosmic Border' }));
 
     expect(onSelect).toHaveBeenCalledWith(item);
   });
 
-  it('renders preview image when previewUrl exists', () => {
-    const item = makeItem({ previewUrl: 'https://cdn.example.com/preview.png' });
-    render(<CosmeticCard item={item} owned={true} equipped={false} />);
-
-    expect(screen.getByAltText('Cosmic Border')).toBeInTheDocument();
-  });
-
-  it('renders fallback type icon when no previewUrl', () => {
-    const item = makeItem({ type: 'badge', previewUrl: null });
-    render(<CosmeticCard item={item} owned={true} equipped={false} />);
-
-    // Badge type shows 🎁 (fallback) since 'badge' is not in TYPE_ICONS (TYPE_ICONS uses 'border' key)
-    // Actually TYPE_ICONS has 'badge': '🛡️'
-    expect(screen.getByText('🛡️')).toBeInTheDocument();
-  });
-
-  it('shows "Expired" overlay for expired entitlements', () => {
-    const entitlement = makeEntitlement({
-      expiresAt: '2020-01-01T00:00:00Z',
-    });
-    render(
-      <CosmeticCard item={makeItem()} owned={true} equipped={false} entitlement={entitlement} />
-    );
-
-    // Multiple "Expired" texts may appear (overlay + badge)
-    expect(screen.getAllByText('Expired').length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('shows lock overlay for premium-only locked items', () => {
-    const item = makeItem({
-      unlockType: 'subscription',
-      unlockCondition: { type: 'subscription_tier', threshold: null },
-    });
-    render(<CosmeticCard item={item} owned={false} equipped={false} />);
-
-    expect(screen.getByText('🔒')).toBeInTheDocument();
-  });
-
-  it('shows purchase button for purchasable items', () => {
-    const item = makeItem({ available: true, unlockType: 'purchase' });
-    const onPurchase = vi.fn();
-    render(<CosmeticCard item={item} owned={false} equipped={false} onPurchase={onPurchase} />);
-
-    expect(screen.getByText('Get')).toBeInTheDocument();
-  });
-
-  it('calls onPurchase and stops propagation when purchase button clicked', () => {
-    const item = makeItem({ available: true, unlockType: 'purchase' });
-    const onPurchase = vi.fn();
-    const onSelect = vi.fn();
-    render(
+  it('uses decorative lazy-loaded preview media when available', () => {
+    const { container } = render(
       <CosmeticCard
-        item={item}
-        owned={false}
+        item={makeItem({ previewUrl: 'https://cdn.example.com/preview.png' })}
+        owned
         equipped={false}
-        onPurchase={onPurchase}
-        onSelect={onSelect}
       />
     );
 
-    fireEvent.click(screen.getByText('Get'));
-
-    expect(onPurchase).toHaveBeenCalledWith(item);
-    // onSelect should NOT be called because stopPropagation
-    expect(onSelect).not.toHaveBeenCalled();
+    const image = container.querySelector('img');
+    expect(image).toHaveAttribute('src', 'https://cdn.example.com/preview.png');
+    expect(image).toHaveAttribute('alt', '');
+    expect(image).toHaveAttribute('loading', 'lazy');
   });
 
-  it('shows threshold-based price when unlockCondition has threshold', () => {
-    const item = makeItem({
-      available: true,
-      unlockType: 'purchase',
-      unlockCondition: { type: 'free', threshold: 500 },
-    });
-    render(<CosmeticCard item={item} owned={false} equipped={false} onPurchase={vi.fn()} />);
-
-    expect(screen.getByText('500 Nodes')).toBeInTheDocument();
-  });
-
-  it('applies equipped card classes when equipped', () => {
-    const { container } = render(<CosmeticCard item={makeItem()} owned={true} equipped={true} />);
-
-    const card = container.querySelector('[data-testid="cosmetic-card"]');
-    expect(card?.className).toContain('border-cyan-500/60');
-  });
-
-  it('applies expired card classes with grayscale when expired', () => {
-    const entitlement = makeEntitlement({
-      expiresAt: '2020-01-01T00:00:00Z',
-    });
+  it('uses the shared category icon when preview media is absent', () => {
     const { container } = render(
-      <CosmeticCard item={makeItem()} owned={true} equipped={false} entitlement={entitlement} />
+      <CosmeticCard item={makeItem({ type: 'badge' })} owned equipped={false} />
     );
 
-    const card = container.querySelector('[data-testid="cosmetic-card"]');
-    expect(card?.className).toContain('grayscale');
+    expect(container.querySelector('svg')).toBeInTheDocument();
+    expect(container.textContent).not.toContain('🛡️');
   });
 
-  it('does not show purchase button when item is not purchasable', () => {
-    render(<CosmeticCard item={makeItem()} owned={true} equipped={false} onPurchase={vi.fn()} />);
+  it('exposes equipped state without changing the card dimensions', () => {
+    render(<CosmeticCard item={makeItem()} owned equipped />);
 
+    expect(screen.getByText('Equipped')).toBeInTheDocument();
+    expect(screen.getByTestId('cosmetic-card')).toHaveAttribute('data-state', 'equipped');
+  });
+
+  it('shows locked premium state without a fake purchase control', () => {
+    render(
+      <CosmeticCard
+        item={makeItem({
+          unlockType: 'subscription',
+          unlockCondition: { type: 'subscription_tier', threshold: null },
+        })}
+        owned={false}
+        equipped={false}
+      />
+    );
+
+    expect(screen.getByText('Premium')).toBeInTheDocument();
     expect(screen.queryByText('Get')).not.toBeInTheDocument();
   });
 
-  it('renders entitlement type as capitalized text when entitlement exists', () => {
-    const entitlement = makeEntitlement({ type: 'purchase' });
+  it('shows expired entitlement state', () => {
     render(
-      <CosmeticCard item={makeItem()} owned={true} equipped={false} entitlement={entitlement} />
+      <CosmeticCard
+        item={makeItem()}
+        owned
+        equipped={false}
+        entitlement={makeEntitlement({ expiresAt: '2020-01-01T00:00:00Z' })}
+      />
     );
 
-    expect(screen.getByText('purchase')).toBeInTheDocument();
+    expect(screen.getByText('Expired')).toBeInTheDocument();
   });
 });

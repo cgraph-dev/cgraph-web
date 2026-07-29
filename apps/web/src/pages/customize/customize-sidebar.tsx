@@ -2,7 +2,6 @@
  * Customization sidebar navigation.
  */
 import { memo } from 'react';
-import { motion } from 'motion/react';
 import { SparklesIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
 import { categories, type CategoryId } from '@/pages/customize/customizeCategories';
@@ -50,37 +49,24 @@ export const Sidebar = memo(function Sidebar({ activeCategory, onCategoryChange 
             const Icon = cat.icon;
 
             return (
-              <motion.button
+              <button
                 key={cat.id}
+                type="button"
                 onClick={() => onCategoryChange(cat.id)}
-                initial={false}
-                animate={{ opacity: 1, x: 0 }}
-                whileTap={{ scale: 0.98 }}
-                className={`group relative w-full overflow-hidden rounded-2xl border text-left transition-all duration-500 ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`group relative w-full overflow-hidden rounded-lg border text-left transition-colors duration-150 ${
                   isActive
-                    ? 'border-[var(--token-card-border)] text-white shadow-lg shadow-primary-500/5'
-                    : 'border-transparent text-white/30 hover:bg-[var(--token-bg-primary)] hover:text-white/80'
+                    ? 'border-[color-mix(in_srgb,var(--color-brand-green)_62%,var(--token-card-border))] bg-[color-mix(in_srgb,var(--color-brand-purple)_12%,var(--product-surface-raised))] text-[var(--token-text-primary)] shadow-[var(--product-shadow-control)]'
+                    : 'border-transparent text-[var(--token-text-secondary)] hover:border-[var(--product-line)] hover:bg-[var(--product-surface-recessed)] hover:text-[var(--token-text-primary)]'
                 }`}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="customizeActiveTab"
-                    initial={false}
-                    className="absolute inset-0 rounded-2xl border border-[var(--token-card-border)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 10%, transparent) 0%, rgba(59,130,246,0.08) 100%)',
-                    }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 35 }}
-                  />
-                )}
                 <div className={`relative z-10 flex items-center gap-3 p-3`}>
                   {/* Category Icon Container */}
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-500 ${
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border transition-colors duration-150 ${
                       isActive
-                        ? 'border-primary-500/30 bg-primary-500/10 text-primary-400'
-                        : 'border-transparent bg-[var(--token-bg-primary)] text-white/10 group-hover:bg-[var(--token-bg-secondary)]'
+                        ? 'border-[color-mix(in_srgb,var(--color-brand-purple)_48%,var(--product-line))] bg-[color-mix(in_srgb,var(--color-brand-purple)_18%,var(--product-surface-recessed))] text-[var(--color-brand-purple)]'
+                        : 'border-transparent bg-[var(--product-surface-recessed)] text-[var(--token-text-muted)] group-hover:text-[var(--token-text-primary)]'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -90,8 +76,8 @@ export const Sidebar = memo(function Sidebar({ activeCategory, onCategoryChange 
                     <div
                       className={`text-sm font-bold transition-colors ${
                         isActive
-                          ? 'text-[var(--token-text-primary)]'
-                          : 'text-[var(--token-text-secondary)] group-hover:text-[var(--token-text-primary)]'
+                        ? 'text-[var(--token-text-primary)]'
+                        : 'text-[var(--token-text-secondary)] group-hover:text-[var(--token-text-primary)]'
                       }`}
                     >
                       {cat.label}
@@ -101,7 +87,7 @@ export const Sidebar = memo(function Sidebar({ activeCategory, onCategoryChange 
                     </div>
                   </div>
                 </div>
-              </motion.button>
+              </button>
             );
           })}
         </nav>

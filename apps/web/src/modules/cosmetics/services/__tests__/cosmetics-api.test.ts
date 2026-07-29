@@ -70,6 +70,83 @@ describe('cosmeticsApi', () => {
     });
   });
 
+  it('combines marketplace, badge, and nameplate envelopes into one catalogue', async () => {
+    mockApi.get
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            listings: [
+              {
+                id: 'effect-1',
+                slug: 'aurora-trail',
+                name: 'Aurora Trail',
+                type: 'profile_effect',
+                rarity: 'epic',
+                unlockType: 'subscription',
+                previewUrl: '/effects/aurora.png',
+              },
+            ],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            badges: [
+              {
+                id: 'badge-1',
+                slug: 'founder',
+                name: 'Founder',
+                rarity: 'rare',
+                iconUrl: '/badges/founder.png',
+              },
+            ],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: {
+            nameplates: [
+              {
+                id: 'nameplate-1',
+                slug: 'signal',
+                name: 'Signal',
+                rarity: 'common',
+                backgroundUrl: '/nameplates/signal.png',
+              },
+            ],
+          },
+        },
+      });
+
+    const result = await cosmeticsApi.listCatalogue();
+
+    expect(mockApi.get).toHaveBeenNthCalledWith(1, '/api/v1/marketplace/listings');
+    expect(mockApi.get).toHaveBeenNthCalledWith(2, '/api/v1/badges');
+    expect(mockApi.get).toHaveBeenNthCalledWith(3, '/api/v1/nameplates');
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 'effect-1',
+        type: 'profile_effect',
+        surface: 'profile_theme',
+        unlockType: 'subscription',
+      }),
+      expect.objectContaining({
+        id: 'badge-1',
+        type: 'badge',
+        surface: 'badge',
+        previewUrl: '/badges/founder.png',
+      }),
+      expect.objectContaining({
+        id: 'nameplate-1',
+        type: 'nameplate',
+        surface: 'nameplate',
+        previewUrl: '/nameplates/signal.png',
+      }),
+    ]);
+  });
+
   it('maps unified border inventory and legacy border fallbacks', async () => {
     mockApi.get.mockResolvedValue({
       data: {
@@ -276,43 +353,27 @@ describe('cosmeticsApi', () => {
     expect(mockApi.delete).toHaveBeenCalledWith('/api/v1/cosmetics/unequip', {
       data: { item_type: 'theme', item_id: 'theme-1' },
     });
-    expect(allItems).toEqual({ items: [{ id: 'inventory-1' }], total: 1 });
-    expect(borderItems).toEqual({ items: [], total: 0 });
+    expect(allItems).toEqual({
+      inventory: [
+        expect.objectContaining({
+          cosmetic: expect.objectContaining({
+            id: 'inventory-1',
+            type: 'avatar_border',
+          }),
+        }),
+      ],
+      total: 1,
+    });
+    expect(borderItems).toEqual({ inventory: [], total: 0 });
     expect(equipped).toEqual({ id: 'inventory-1' });
     expect(unequipped).toEqual({ id: 'inventory-1' });
   });
 
-  it('handles border purchase and accent color customization endpoints', async () => {
-    mockApi.post.mockResolvedValue({
-      data: {
-        item: {
-          id: 'purchase-1',
-          itemType: 'border',
-          itemId: 'border-9',
-          itemSlug: 'aurora-ring',
-          itemKey: 'aurora-ring',
-          equippedAt: null,
-          obtainedAt: '2026-05-30T11:00:00Z',
-          obtainedVia: 'purchase',
-        },
-      },
-    });
+  it('updates accent color customization', async () => {
     mockApi.put.mockResolvedValueOnce({ data: { accentColor: '#112233' } });
 
-    const purchase = await cosmeticsApi.purchaseBorder('border-9');
     const accent = await cosmeticsApi.updateAccentColor('#112233');
 
-    expect(mockApi.post).toHaveBeenCalledWith('/api/v1/marketplace/purchase', {
-      listing_id: 'border-9',
-      type: 'avatar_border',
-    });
-    expect(purchase).toEqual(
-      expect.objectContaining({
-        source: 'purchase',
-        acquiredAt: '2026-05-30T11:00:00Z',
-        cosmetic: expect.objectContaining({ id: 'border-9', name: 'Aurora Ring' }),
-      })
-    );
     expect(mockApi.put).toHaveBeenCalledWith('/api/v1/me/accent-color', {
       accent_color: '#112233',
     });

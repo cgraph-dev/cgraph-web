@@ -2,15 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockCosmeticsApi, mockEntitlementsApi } = vi.hoisted(() => ({
   mockCosmeticsApi: {
-    listBorders: vi.fn(),
-    listProfileThemes: vi.fn(),
-    getUnlockedBorders: vi.fn(),
-    getActiveTheme: vi.fn(),
+    listCatalogue: vi.fn(),
+    getInventory: vi.fn(),
     equipBorder: vi.fn(),
     activateTheme: vi.fn(),
     equip: vi.fn(),
     unequip: vi.fn(),
-    purchaseBorder: vi.fn(),
     updateAccentColor: vi.fn(),
   },
   mockEntitlementsApi: {
@@ -48,7 +45,7 @@ const themeItem = {
   slug: 'midnight',
   name: 'Midnight',
   description: 'Theme item',
-  surface: 'avatar_border' as const,
+  surface: 'profile_theme' as const,
   type: 'theme' as const,
   rarity: 'rare' as const,
   unlockType: 'free' as const,
@@ -124,30 +121,21 @@ describe('useCosmeticsStore', () => {
     useCosmeticsStore.getState().reset();
   });
 
-  it('fetches catalogue and combines border and theme results', async () => {
-    mockCosmeticsApi.listBorders.mockResolvedValue({
-      borders: [borderItem],
-      themes: ['cosmic'],
-      rarities: ['epic'],
-    });
-    mockCosmeticsApi.listProfileThemes.mockResolvedValue({
-      themes: [themeItem],
-      presets: ['midnight'],
-      rarities: ['rare'],
-    });
+  it('fetches the normalized catalogue and derives available filters', async () => {
+    mockCosmeticsApi.listCatalogue.mockResolvedValue([borderItem, themeItem]);
 
     await useCosmeticsStore.getState().fetchCatalogue();
 
     const state = useCosmeticsStore.getState();
     expect(state.catalogue).toEqual([borderItem, themeItem]);
-    expect(state.availableThemes).toEqual(['cosmic']);
-    expect(state.availableRarities).toEqual(['epic']);
+    expect(state.availableThemes).toEqual(['avatar_border', 'profile_theme']);
+    expect(state.availableRarities).toEqual(['epic', 'rare']);
     expect(state.isLoadingCatalogue).toBe(false);
     expect(state.error).toBeNull();
   });
 
   it('records a catalogue fetch error', async () => {
-    mockCosmeticsApi.listBorders.mockRejectedValue(new Error('catalogue failed'));
+    mockCosmeticsApi.listCatalogue.mockRejectedValue(new Error('catalogue failed'));
 
     await useCosmeticsStore.getState().fetchCatalogue();
 
@@ -156,12 +144,11 @@ describe('useCosmeticsStore', () => {
     expect(state.error).toBe('catalogue failed');
   });
 
-  it('fetches inventory and appends the active theme when available', async () => {
-    mockCosmeticsApi.getUnlockedBorders.mockResolvedValue({
-      inventory: [borderInventoryEntry],
-      equippedId: null,
+  it('fetches the normalized inventory without duplicate legacy lookups', async () => {
+    mockCosmeticsApi.getInventory.mockResolvedValue({
+      inventory: [borderInventoryEntry, themeInventoryEntry],
+      total: 2,
     });
-    mockCosmeticsApi.getActiveTheme.mockResolvedValue(themeInventoryEntry);
 
     await useCosmeticsStore.getState().fetchInventory();
 
@@ -170,17 +157,13 @@ describe('useCosmeticsStore', () => {
     expect(state.isLoadingInventory).toBe(false);
   });
 
-  it('ignores active theme lookup failure when inventory still loads', async () => {
-    mockCosmeticsApi.getUnlockedBorders.mockResolvedValue({
-      inventory: [borderInventoryEntry],
-      equippedId: null,
-    });
-    mockCosmeticsApi.getActiveTheme.mockRejectedValue(new Error('theme lookup failed'));
+  it('records an inventory fetch error', async () => {
+    mockCosmeticsApi.getInventory.mockRejectedValue(new Error('inventory failed'));
 
     await useCosmeticsStore.getState().fetchInventory();
 
-    expect(useCosmeticsStore.getState().inventory).toEqual([borderInventoryEntry]);
-    expect(useCosmeticsStore.getState().error).toBeNull();
+    expect(useCosmeticsStore.getState().inventory).toEqual([]);
+    expect(useCosmeticsStore.getState().error).toBe('inventory failed');
   });
 
   it('routes equipItem by cosmetic type and updates equipped flags optimistically', async () => {
@@ -223,37 +206,12 @@ describe('useCosmeticsStore', () => {
     expect(mockCosmeticsApi.equip).toHaveBeenCalledWith('badge', 'badge-1');
   });
 
-  it('handles unequip and purchase flows, including optimistic purchase for non-borders', async () => {
+  it('unequips an owned cosmetic without fabricating a purchase', async () => {
     useCosmeticsStore.setState({ inventory: [{ ...borderInventoryEntry, equipped: true }] });
 
     await useCosmeticsStore.getState().unequipItem(borderItem);
     expect(mockCosmeticsApi.unequip).toHaveBeenCalledWith('avatar_border', 'border-1');
     expect(useCosmeticsStore.getState().inventory[0]?.equipped).toBe(false);
-
-    const purchasedBorder = {
-      ...borderInventoryEntry,
-      cosmetic: { ...borderItem, id: 'border-9' },
-    };
-    mockCosmeticsApi.purchaseBorder.mockResolvedValue(purchasedBorder);
-    await useCosmeticsStore.getState().purchaseItem({ ...borderItem, id: 'border-9' });
-    expect(mockCosmeticsApi.purchaseBorder).toHaveBeenCalledWith('border-9');
-    expect(useCosmeticsStore.getState().inventory).toContainEqual(purchasedBorder);
-
-    const badgeItem = {
-      ...themeItem,
-      id: 'badge-1',
-      type: 'badge' as const,
-      surface: 'avatar_border' as const,
-    };
-    await useCosmeticsStore.getState().purchaseItem(badgeItem);
-    expect(mockCosmeticsApi.equip).toHaveBeenCalledWith('badge', 'badge-1');
-    expect(useCosmeticsStore.getState().inventory).toContainEqual(
-      expect.objectContaining({
-        cosmetic: badgeItem,
-        equipped: false,
-        source: 'purchase',
-      })
-    );
   });
 
   it('loads entitlements, checks access, paginates inventory, and rolls back failed purchases', async () => {

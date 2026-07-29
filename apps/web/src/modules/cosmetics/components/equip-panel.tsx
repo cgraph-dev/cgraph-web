@@ -1,178 +1,124 @@
-/**
- * EquipPanel — slide-out panel for previewing and equipping cosmetic items.
- *
- * Entitlement-aware: filters to valid (non-expired) entitlements,
- * shows expired message, client-side validation before equip,
- * and unequip option for equipped slots.
- *
- */
-
-import { motion, AnimatePresence } from 'motion/react';
-
+import { Check, LockKeyhole, X } from 'lucide-react';
 import type { CosmeticItem, Entitlement } from '@cgraph-dev/shared-types';
-import { RarityBadge } from './rarity-badge';
+import { Button, IconButton } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { CosmeticTypeIcon } from './cosmetic-type-icon';
 import { EntitlementBadge } from './entitlement-badge';
-import { FADE_IN } from '@/lib/animations/transitions';
+import { RarityBadge } from './rarity-badge';
 
-// Helpers
-
-function equipButtonStyle(isEquipped: boolean, canEquip: boolean): string {
-  if (isEquipped) return 'bg-red-500/20 text-red-400 hover:bg-red-500/30';
-  if (canEquip) return 'bg-cyan-500 text-white hover:bg-cyan-600';
-  return 'cursor-not-allowed bg-gray-800 text-gray-500';
+function entitlementExpired(entitlement: Entitlement | undefined): boolean {
+  return Boolean(
+    entitlement?.expiresAt && new Date(entitlement.expiresAt).getTime() < Date.now()
+  );
 }
-
-const TYPE_ICONS: Readonly<Record<string, string>> = {
-  border: '🔲',
-  title: '🏷️',
-  badge: '🛡️',
-  nameplate: '📛',
-  chat_bubble: '💬',
-  emoji_pack: '😀',
-  sound_pack: '🔊',
-  theme: '🎨',
-};
-
-function isEntitlementExpired(ent: Entitlement | undefined): boolean {
-  if (!ent?.expiresAt) return false;
-  return new Date(ent.expiresAt).getTime() < Date.now();
-}
-
-// Props
 
 interface EquipPanelProps {
   readonly item: CosmeticItem | null;
+  readonly owned: boolean;
   readonly isEquipped: boolean;
+  readonly isWorking?: boolean;
   readonly entitlement?: Entitlement | undefined;
   readonly onToggleEquip: (item: CosmeticItem) => void;
   readonly onClose: () => void;
 }
 
-// Component
-
-/** Detail panel for equipping/unequipping a cosmetic item. */
 export function EquipPanel({
   item,
+  owned,
   isEquipped,
+  isWorking = false,
   entitlement,
   onToggleEquip,
   onClose,
 }: EquipPanelProps) {
-  const expired = isEntitlementExpired(entitlement);
-
-  const canEquip = !entitlement ? true : entitlement.active && !expired;
-
-  function handleToggle() {
-    if (!item || (!isEquipped && !canEquip)) return;
-    onToggleEquip(item);
-  }
+  const expired = entitlementExpired(entitlement);
+  const canEquip = owned && !expired && (entitlement?.active ?? true);
+  const premium =
+    item?.unlockType === 'subscription' ||
+    item?.unlockCondition.type === 'subscription_tier' ||
+    false;
 
   return (
-    <AnimatePresence>
-      {item && (
-        <>
-          <motion.div
-            key="backdrop"
-            {...FADE_IN}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/60"
-            onClick={onClose}
-          />
+    <Dialog open={item !== null} onOpenChange={(open) => !open && onClose()}>
+      {item ? (
+        <DialogContent className="max-w-lg" ariaLabel="Cosmetic details">
+          <DialogHeader className="flex flex-row items-center justify-between gap-3">
+            <DialogTitle>Cosmetic details</DialogTitle>
+            <IconButton
+              icon={<X />}
+              label="Close cosmetic details"
+              size="sm"
+              onClick={onClose}
+            />
+          </DialogHeader>
 
-          <motion.div
-            key="panel"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-[var(--token-border-muted)] bg-gray-950"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-[var(--token-border-muted)] px-6 py-4">
-              <h2 className="text-lg font-semibold text-white">Item Details</h2>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Preview */}
-            <div className="flex flex-1 flex-col items-center gap-6 overflow-y-auto px-6 py-8">
-              <div className="flex aspect-square w-48 items-center justify-center rounded-2xl bg-white/5">
-                {item.previewUrl ? (
-                  <img
-                    src={item.previewUrl}
-                    alt={item.name}
-                    className="h-full w-full rounded-2xl object-contain"
-                  />
-                ) : (
-                  <span className="text-6xl">{TYPE_ICONS[item.type] ?? '🎁'}</span>
-                )}
-              </div>
-
-              <div className="flex w-full flex-col items-center gap-3 text-center">
-                <h3 className="text-xl font-bold text-white">{item.name}</h3>
-                <RarityBadge rarity={item.rarity} size="md" />
-                <p className="text-sm text-gray-400">{item.description}</p>
-
-                <div className="mt-2 flex flex-wrap justify-center gap-2 text-xs text-gray-500">
-                  <span className="rounded-md bg-white/5 px-2 py-1 capitalize">
-                    {item.type.replace('_', ' ')}
-                  </span>
-                  {entitlement && (
-                    <EntitlementBadge
-                      entitled={entitlement.active && !expired}
-                      isPremiumOnly={entitlement.sku.isPremiumOnly}
-                      expired={expired}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {isEquipped && (
-                <div className="flex items-center gap-2 rounded-full bg-cyan-500/10 px-4 py-2 text-sm text-cyan-400">
-                  <span>✓</span>
-                  <span>Currently Equipped</span>
-                </div>
-              )}
-
-              {/* Expired message */}
-              {expired && (
-                <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 px-4 py-3 text-center text-sm text-amber-400">
-                  This item has expired. Visit the shop to renew.
-                </div>
-              )}
-            </div>
-
-            {/* Action footer */}
-            <div className="border-t border-[var(--token-border-muted)] px-6 py-4">
-              {expired ? (
-                <button
-                  type="button"
-                  disabled
-                  className="w-full cursor-not-allowed rounded-xl bg-gray-800 py-3 text-sm font-semibold text-gray-500"
-                >
-                  Expired
-                </button>
+          <div className="grid gap-5 py-5 sm:grid-cols-[9rem_minmax(0,1fr)]">
+            <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-[var(--product-line)] bg-[var(--product-surface-recessed)] p-4">
+              {item.previewUrl ? (
+                <img src={item.previewUrl} alt="" className="h-full w-full object-contain" />
               ) : (
-                <button
-                  type="button"
-                  onClick={handleToggle}
-                  disabled={!isEquipped && !canEquip}
-                  className={`w-full rounded-xl py-3 text-sm font-semibold transition-all ${equipButtonStyle(isEquipped, canEquip)}`}
-                >
-                  {isEquipped && 'Unequip'}
-                  {!isEquipped && canEquip && 'Equip'}
-                  {!isEquipped && !canEquip && 'Not Available'}
-                </button>
+                <CosmeticTypeIcon
+                  type={item.type}
+                  className="h-10 w-10 text-[var(--token-interactive-primary)]"
+                />
               )}
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+
+            <div className="min-w-0">
+              <h3 className="text-lg font-semibold text-[var(--token-text-primary)]">{item.name}</h3>
+              <p className="mt-1 text-sm leading-6 text-[var(--token-text-secondary)]">
+                {item.description || `A ${item.type.replaceAll('_', ' ')} cosmetic for your profile.`}
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <RarityBadge rarity={item.rarity} size="md" />
+                <EntitlementBadge
+                  entitled={owned && !expired}
+                  isPremiumOnly={premium}
+                  expired={expired}
+                />
+              </div>
+            </div>
+          </div>
+
+          {isEquipped ? (
+            <div className="cgraph-section-surface flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-brand-green)]">
+              <Check className="h-4 w-4" aria-hidden="true" />
+              Currently equipped
+            </div>
+          ) : !owned ? (
+            <div className="cgraph-section-surface flex items-start gap-2 px-3 py-2 text-sm text-[var(--token-text-secondary)]">
+              <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                Preview only. Marketplace checkout remains unavailable until the production
+                payment flow is enabled.
+              </span>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button variant="ghost" animated={false} onClick={onClose}>
+              Close
+            </Button>
+            {owned ? (
+              <Button
+                variant={isEquipped ? 'outline' : 'primary'}
+                animated={false}
+                isLoading={isWorking}
+                disabled={!isEquipped && !canEquip}
+                onClick={() => onToggleEquip(item)}
+              >
+                {isEquipped ? 'Unequip' : expired ? 'Expired' : 'Equip'}
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      ) : null}
+    </Dialog>
   );
 }

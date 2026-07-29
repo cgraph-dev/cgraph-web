@@ -1,212 +1,259 @@
-/**
- * Shop Page — browse and purchase cosmetic items organized by type.
- *
- * Fetches entitlements alongside catalogue. Items show entitlement state.
- * Filter tabs: All | Owned | Available | Premium.
- * Purchase handler uses optimistic updates via store.
- *
- */
-
-import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { RefreshCw, Search, ShoppingBag } from 'lucide-react';
 import type { CosmeticItem, CosmeticType, Entitlement } from '@cgraph-dev/shared-types';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import Skeleton from '@/components/ui/skeleton';
 import { CosmeticCard } from '../components/cosmetic-card';
+import { CosmeticTypeIcon } from '../components/cosmetic-type-icon';
 import { EquipPanel } from '../components/equip-panel';
 import { useCosmeticsStore } from '../store/cosmetics-store';
-import { useEntitlements } from '../hooks/use-entitlements';
-import { FADE_UP } from '@/lib/animations/transitions';
-// Constants
-const SHOP_SECTIONS: readonly { type: CosmeticType; label: string; icon: string }[] = [
-  { type: 'badge', label: 'Badges', icon: '🛡️' },
-  { type: 'nameplate', label: 'Nameplates', icon: '📛' },
-  { type: 'name_style', label: 'Name Styles', icon: '✍️' },
-  { type: 'avatar_border', label: 'Avatar Borders', icon: '🔲' },
-  { type: 'title', label: 'Titles', icon: '🏷️' },
-  { type: 'chat_bubble', label: 'Chat Bubbles', icon: '💬' },
-  { type: 'theme', label: 'Themes', icon: '🎨' },
-];
 
-type FilterTab = 'all' | 'owned' | 'available' | 'premium';
+type ShopFilter = 'all' | 'owned' | 'available' | 'premium';
 
-const FILTER_TABS: readonly { id: FilterTab; label: string }[] = [
+const FILTERS: readonly { id: ShopFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'owned', label: 'Owned' },
   { id: 'available', label: 'Available' },
   { id: 'premium', label: 'Premium' },
 ];
-// Filter helper (module-level, pure function)
-function filterItems(
-  items: readonly CosmeticItem[],
-  tab: FilterTab,
-  entitledIds: ReadonlySet<string>
-): CosmeticItem[] {
-  switch (tab) {
-    case 'owned':
-      return items.filter((i) => entitledIds.has(i.id));
-    case 'available':
-      return items.filter(
-        (i) => !entitledIds.has(i.id) && i.available && i.unlockType !== 'subscription'
-      );
-    case 'premium':
-      return items.filter(
-        (i) => i.unlockType === 'subscription' || i.unlockCondition.type === 'subscription_tier'
-      );
-    default:
-      return [...items];
-  }
+
+const CATEGORY_LABELS: Partial<Record<CosmeticType, string>> = {
+  avatar_border: 'Avatar borders',
+  avatar_frame: 'Avatar frames',
+  badge: 'Badges',
+  nameplate: 'Nameplates',
+  title: 'Titles',
+  profile_effect: 'Profile effects',
+  profile_theme: 'Themes',
+};
+
+function entitlementForItem(
+  item: CosmeticItem,
+  entitlements: readonly Entitlement[]
+): Entitlement | undefined {
+  return entitlements.find(
+    (entitlement) =>
+      entitlement.sku.cosmeticId === item.id ||
+      entitlement.sku.id === item.id ||
+      entitlement.sku.slug === item.slug
+  );
 }
 
-/** Cosmetics shop — browse, filter, purchase, and equip cosmetic items. */
-export function ShopPage() {
-  const catalogue = useCosmeticsStore((s) => s.catalogue);
-  const inventory = useCosmeticsStore((s) => s.inventory);
-  const isLoadingCatalogue = useCosmeticsStore((s) => s.isLoadingCatalogue);
-  const error = useCosmeticsStore((s) => s.error);
-  const fetchCatalogue = useCosmeticsStore((s) => s.fetchCatalogue);
-  const fetchInventory = useCosmeticsStore((s) => s.fetchInventory);
-  const equipItem = useCosmeticsStore((s) => s.equipItem);
-  const unequipItem = useCosmeticsStore((s) => s.unequipItem);
-  const purchaseItem = useCosmeticsStore((s) => s.purchaseItem);
+function filterCatalogue(
+  catalogue: readonly CosmeticItem[],
+  filter: ShopFilter,
+  ownedIds: ReadonlySet<string>,
+  query: string
+): CosmeticItem[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  return catalogue.filter((item) => {
+    const owned = ownedIds.has(item.id);
+    const premium =
+      item.unlockType === 'subscription' || item.unlockCondition.type === 'subscription_tier';
+    const matchesFilter =
+      filter === 'all' ||
+      (filter === 'owned' && owned) ||
+      (filter === 'available' && !owned && item.available && !premium) ||
+      (filter === 'premium' && premium);
+    const matchesQuery =
+      normalizedQuery.length === 0 ||
+      item.name.toLocaleLowerCase().includes(normalizedQuery) ||
+      item.type.replaceAll('_', ' ').includes(normalizedQuery);
+    return matchesFilter && matchesQuery;
+  });
+}
 
-  const { entitlements, entitledSkuIds } = useEntitlements();
+function ShopSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-10 w-full" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div key={index} className="overflow-hidden rounded-lg border border-[var(--product-line)]">
+            <Skeleton className="aspect-[4/3] rounded-none" />
+            <div className="space-y-2 p-3">
+              <Skeleton variant="text" width="72%" />
+              <Skeleton variant="text" width="44%" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ShopPage() {
+  const catalogue = useCosmeticsStore((state) => state.catalogue);
+  const inventory = useCosmeticsStore((state) => state.inventory);
+  const entitlements = useCosmeticsStore((state) => state.entitlements);
+  const isLoading = useCosmeticsStore(
+    (state) =>
+      state.isLoadingCatalogue || state.isLoadingInventory || state.isLoadingEntitlements
+  );
+  const isEquipping = useCosmeticsStore((state) => state.isEquipping);
+  const error = useCosmeticsStore((state) => state.error);
+  const fetchCatalogue = useCosmeticsStore((state) => state.fetchCatalogue);
+  const fetchInventory = useCosmeticsStore((state) => state.fetchInventory);
+  const fetchEntitlements = useCosmeticsStore((state) => state.fetchEntitlements);
+  const equipItem = useCosmeticsStore((state) => state.equipItem);
+  const unequipItem = useCosmeticsStore((state) => state.unequipItem);
+  const [activeFilter, setActiveFilter] = useState<ShopFilter>('all');
+  const [query, setQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<CosmeticItem | null>(null);
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+
+  const refresh = useCallback(
+    () => Promise.all([fetchCatalogue(), fetchInventory(), fetchEntitlements()]),
+    [fetchCatalogue, fetchEntitlements, fetchInventory]
+  );
 
   useEffect(() => {
-    fetchCatalogue();
-    fetchInventory();
-  }, [fetchCatalogue, fetchInventory]);
+    void refresh();
+  }, [refresh]);
 
-  // Build entitlement lookup by SKU ID
-  const entitlementsBySkuId = (() => {
-    const map = new Map<string, Entitlement>();
-    for (const ent of entitlements) {
-      map.set(ent.sku.id, ent);
+  const ownedIds = useMemo(
+    () => new Set(inventory.map((entry) => entry.cosmetic.id)),
+    [inventory]
+  );
+  const equippedIds = useMemo(
+    () => new Set(inventory.filter((entry) => entry.equipped).map((entry) => entry.cosmetic.id)),
+    [inventory]
+  );
+  const visibleItems = useMemo(
+    () => filterCatalogue(catalogue, activeFilter, ownedIds, query),
+    [activeFilter, catalogue, ownedIds, query]
+  );
+  const sections = useMemo(() => {
+    const grouped = new Map<CosmeticType, CosmeticItem[]>();
+    for (const item of visibleItems) {
+      grouped.set(item.type, [...(grouped.get(item.type) ?? []), item]);
     }
-    return map;
-  })();
+    return [...grouped.entries()];
+  }, [visibleItems]);
 
-  const equippedIds = new Set(inventory.filter((e) => e.equipped).map((e) => e.cosmetic.id));
+  const selectedInventory = selectedItem
+    ? inventory.find((entry) => entry.cosmetic.id === selectedItem.id)
+    : undefined;
+  const selectedEntitlement = selectedItem
+    ? entitlementForItem(selectedItem, entitlements)
+    : undefined;
 
-  // Group catalogue by type, apply filter tab
-  const itemsByType = (() => {
-    const map = new Map<CosmeticType, CosmeticItem[]>();
-    const filtered = filterItems(catalogue, activeTab, entitledSkuIds);
-    for (const item of filtered) {
-      const list = map.get(item.type) ?? [];
-      list.push(item);
-      map.set(item.type, list);
-    }
-    return map;
-  })();
+  const toggleEquip = (item: CosmeticItem) => {
+    void (equippedIds.has(item.id) ? unequipItem(item) : equipItem(item));
+  };
 
-  const handleToggleEquip = (item: CosmeticItem) => {
-      if (equippedIds.has(item.id)) {
-        unequipItem(item);
-      } else {
-        equipItem(item);
-      }
-      setSelectedItem(null);
-    };
-
-  const handlePurchase = (item: CosmeticItem) => {
-      void purchaseItem(item);
-    };
-
-  if (isLoadingCatalogue && catalogue.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black/95">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
-          <p className="mt-4 text-gray-400">Loading cosmetics...</p>
-        </div>
-      </div>
-    );
+  if (isLoading && catalogue.length === 0) {
+    return <ShopSkeleton />;
   }
 
   return (
-    <div className="min-h-screen bg-black/95 text-white">
-      {/* Header */}
-      <div className="border-b border-white/10 bg-black/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-6 py-6">
-          <h1 className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-3xl font-bold text-transparent">
-            Cosmetics Shop
-          </h1>
-          <p className="mt-1 text-sm text-gray-400">Discover and equip unique cosmetic items</p>
-          {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3">
+        <label className="relative block">
+          <span className="sr-only">Search cosmetics</span>
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-brand-green)]"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search cosmetics"
+            className="h-10 w-full rounded-lg border border-[var(--product-line)] bg-[var(--product-surface-recessed)] pl-10 pr-3 text-sm text-[var(--token-text-primary)] outline-none transition-[border-color,box-shadow] placeholder:text-[var(--token-text-muted)] focus:border-[var(--token-interactive-primary)] focus:ring-1 focus:ring-[var(--color-brand-green)]"
+          />
+        </label>
 
-        {/* Filter tabs */}
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex gap-1 pb-2">
-            {FILTER_TABS.map((tab) => (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="cgraph-segmented scrollbar-hide max-w-full overflow-x-auto" role="tablist">
+            {FILTERS.map((filter) => (
               <button
-                key={tab.id}
+                key={filter.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative whitespace-nowrap px-4 py-2 text-sm font-medium transition-all ${
-                  activeTab === tab.id ? 'text-purple-400' : 'text-gray-400 hover:text-white'
-                }`}
+                role="tab"
+                aria-selected={activeFilter === filter.id}
+                className="cgraph-segmented-item shrink-0 px-3 text-sm font-medium"
+                onClick={() => setActiveFilter(filter.id)}
               >
-                {tab.label}
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="shopFilterTab"
-                    className="absolute inset-x-0 -bottom-px h-0.5 bg-purple-400"
-                  />
-                )}
+                {filter.label}
               </button>
             ))}
           </div>
+          <span className="text-sm text-[var(--token-text-muted)]">
+            {visibleItems.length} item{visibleItems.length === 1 ? '' : 's'}
+          </span>
         </div>
       </div>
 
-      {/* Sections */}
-      <div className="mx-auto max-w-7xl space-y-10 px-6 py-8">
-        {SHOP_SECTIONS.map((section) => {
-          const items = itemsByType.get(section.type) ?? [];
-          if (items.length === 0 && activeTab !== 'all') return null;
+      {error ? (
+        <div
+          role="alert"
+          className="cgraph-section-surface flex flex-wrap items-center justify-between gap-3 border-[color-mix(in_srgb,var(--token-feedback-error)_35%,transparent)] px-4 py-3"
+        >
+          <p className="text-sm text-[var(--token-feedback-error)]">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            animated={false}
+            leftIcon={<RefreshCw />}
+            onClick={() => void refresh()}
+          >
+            Retry
+          </Button>
+        </div>
+      ) : null}
 
-          return (
-            <motion.section key={section.type} {...FADE_UP} className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{section.icon}</span>
-                <h2 className="text-xl font-semibold text-white">{section.label}</h2>
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-gray-400">
-                  {items.length}
-                </span>
+      {sections.length > 0 ? (
+        <div className="space-y-7">
+          {sections.map(([type, items]) => (
+            <section key={type} aria-labelledby={`shop-${type}`}>
+              <div className="mb-3 flex items-center gap-2">
+                <CosmeticTypeIcon
+                  type={type}
+                  className="h-4 w-4 text-[var(--token-interactive-primary)]"
+                />
+                <h3
+                  id={`shop-${type}`}
+                  className="text-sm font-semibold text-[var(--token-text-primary)]"
+                >
+                  {CATEGORY_LABELS[type] ?? type.replaceAll('_', ' ')}
+                </h3>
+                <span className="text-xs text-[var(--token-text-muted)]">{items.length}</span>
               </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                {items.map((item) => (
+                  <CosmeticCard
+                    key={`${item.type}:${item.id}`}
+                    item={item}
+                    owned={ownedIds.has(item.id)}
+                    equipped={equippedIds.has(item.id)}
+                    entitlement={entitlementForItem(item, entitlements)}
+                    onSelect={setSelectedItem}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={<ShoppingBag className="h-7 w-7" />}
+          title={query ? 'No cosmetics found' : 'No cosmetics in this view'}
+          message={
+            query
+              ? 'Try another name or cosmetic category.'
+              : 'Choose another filter to browse the available catalogue.'
+          }
+        />
+      )}
 
-              {items.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                  {items.map((item) => (
-                    <CosmeticCard
-                      key={item.id}
-                      item={item}
-                      owned={entitledSkuIds.has(item.id)}
-                      equipped={equippedIds.has(item.id)}
-                      entitlement={entitlementsBySkuId.get(item.id)}
-                      onSelect={setSelectedItem}
-                      onPurchase={handlePurchase}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-gray-600">
-                  No {section.label.toLowerCase()} available yet
-                </div>
-              )}
-            </motion.section>
-          );
-        })}
-      </div>
-
-      {/* Equip panel */}
       <EquipPanel
         item={selectedItem}
-        isEquipped={selectedItem ? equippedIds.has(selectedItem.id) : false}
-        onToggleEquip={handleToggleEquip}
+        owned={Boolean(selectedInventory)}
+        isEquipped={selectedInventory?.equipped ?? false}
+        isWorking={isEquipping}
+        entitlement={selectedEntitlement}
+        onToggleEquip={toggleEquip}
         onClose={() => setSelectedItem(null)}
       />
     </div>

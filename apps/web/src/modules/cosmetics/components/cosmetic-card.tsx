@@ -1,44 +1,21 @@
-/**
- * CosmeticCard — grid card for displaying a single cosmetic item.
- *
- * Shows: thumbnail, name, RarityBadge, entitlement state, expiry countdown.
- * Entitlement-aware: owned → green, expired → grey, premium → lock, purchasable → price.
- *
- */
-
+import { Check, Clock3 } from 'lucide-react';
 import type { CosmeticItem, Entitlement } from '@cgraph-dev/shared-types';
-import { RarityBadge } from './rarity-badge';
 import { EntitlementBadge } from './entitlement-badge';
+import { CosmeticTypeIcon } from './cosmetic-type-icon';
+import { RarityBadge } from './rarity-badge';
 
-// Helpers
-
-const TYPE_ICONS: Readonly<Record<string, string>> = {
-  border: '🔲',
-  title: '🏷️',
-  badge: '🛡️',
-  nameplate: '📛',
-  chat_bubble: '💬',
-  emoji_pack: '😀',
-  sound_pack: '🔊',
-  theme: '🎨',
-};
-
-function isExpired(ent: Entitlement): boolean {
-  if (!ent.expiresAt) return false;
-  return new Date(ent.expiresAt).getTime() < Date.now();
+function entitlementExpired(entitlement: Entitlement | undefined): boolean {
+  return Boolean(
+    entitlement?.expiresAt && new Date(entitlement.expiresAt).getTime() < Date.now()
+  );
 }
 
-function formatCountdown(expiresAt: string): string {
-  const diff = new Date(expiresAt).getTime() - Date.now();
-  if (diff <= 0) return 'Expired';
-  const hours = Math.floor(diff / 3_600_000);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d ${hours % 24}h left`;
-  const mins = Math.floor((diff % 3_600_000) / 60_000);
-  return `${hours}h ${mins}m left`;
+function expiryLabel(expiresAt: string): string {
+  const remainingHours = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 3_600_000);
+  if (remainingHours <= 0) return 'Expired';
+  if (remainingHours < 24) return `${remainingHours}h left`;
+  return `${Math.floor(remainingHours / 24)}d left`;
 }
-
-// Props
 
 interface CosmeticCardProps {
   readonly item: CosmeticItem;
@@ -46,119 +23,73 @@ interface CosmeticCardProps {
   readonly equipped: boolean;
   readonly entitlement?: Entitlement | undefined;
   readonly onSelect?: (item: CosmeticItem) => void;
-  readonly onPurchase?: (item: CosmeticItem) => void;
 }
 
-// Component
-
-/** Cosmetic Card. */
 export function CosmeticCard({
   item,
   owned,
   equipped,
   entitlement,
   onSelect,
-  onPurchase,
 }: CosmeticCardProps) {
-  const expired = entitlement ? isExpired(entitlement) : false;
-  const entitled = entitlement ? entitlement.active && !expired : owned;
-  const isPremiumOnly =
+  const expired = entitlementExpired(entitlement);
+  const premium =
     item.unlockType === 'subscription' || item.unlockCondition.type === 'subscription_tier';
-  const isLocked = !entitled;
-  const purchasable = !entitled && !expired && item.available && !isPremiumOnly;
-
-  const expiryText =
-    !entitlement?.expiresAt || expired ? null : formatCountdown(entitlement.expiresAt);
-
-  const cardClasses = equipped
-    ? 'border-cyan-500/60 bg-cyan-950/20 shadow-lg shadow-cyan-500/10'
-    : expired
-      ? 'border-white/5 bg-[var(--token-bg-primary)] opacity-50 grayscale'
-      : isLocked
-        ? 'border-white/5 bg-[var(--token-bg-primary)] opacity-60 hover:opacity-80'
-        : 'border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] hover:border-white/20 hover:bg-[var(--token-card-bg)]';
 
   return (
-    <div
+    <button
+      type="button"
       data-testid="cosmetic-card"
-      className={`group relative flex flex-col overflow-hidden rounded-xl border transition-all duration-200 ${cardClasses}`}
+      data-state={equipped ? 'equipped' : owned ? 'owned' : 'locked'}
+      onClick={() => onSelect?.(item)}
+      className="group flex min-w-0 flex-col overflow-hidden rounded-lg border border-[var(--product-line)] bg-[var(--product-surface-raised)] text-left transition-[border-color,background-color] duration-150 hover:border-[var(--product-line-strong)] hover:bg-[var(--product-surface-selected)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-interactive-primary)] disabled:cursor-default"
+      aria-label={`View ${item.name}`}
     >
-      <button
-        type="button"
-        onClick={() => onSelect?.(item)}
-        className="flex flex-1 flex-col text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-        aria-label={`Select ${item.name}`}
-      >
-        {/* Thumbnail area */}
-        <div className="relative flex aspect-square items-center justify-center bg-gradient-to-br from-white/5 to-transparent p-4">
-          {item.previewUrl ? (
-            <img
-              src={item.previewUrl}
-              alt={item.name}
-              className="h-full w-full object-contain"
-              loading="lazy"
-            />
+      <span className="relative flex aspect-[4/3] w-full items-center justify-center border-b border-[var(--product-line)] bg-[var(--product-surface-recessed)] p-4">
+        {item.previewUrl ? (
+          <img
+            src={item.previewUrl}
+            alt=""
+            className="h-full w-full object-contain"
+            loading="lazy"
+          />
+        ) : (
+          <span className="flex h-12 w-12 items-center justify-center rounded-md border border-[var(--product-line)] bg-[var(--product-surface-raised)] text-[var(--token-interactive-primary)]">
+            <CosmeticTypeIcon type={item.type} className="h-6 w-6" />
+          </span>
+        )}
+
+        <span className="absolute right-2 top-2">
+          {equipped ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--color-brand-green)_36%,transparent)] bg-[color-mix(in_srgb,var(--color-brand-green)_12%,var(--product-surface-raised))] px-2 py-0.5 text-[11px] font-medium text-[var(--color-brand-green)]">
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+              Equipped
+            </span>
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 text-2xl">
-              {TYPE_ICONS[item.type] ?? '🎁'}
-            </div>
+            <EntitlementBadge entitled={owned && !expired} isPremiumOnly={premium} expired={expired} />
           )}
+        </span>
+      </span>
 
-          {/* Top-right: equipped or entitlement badge */}
-          <div className="absolute right-2 top-2">
-            {equipped ? (
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500 text-xs text-white shadow-lg">
-                ✓
-              </div>
-            ) : (
-              <EntitlementBadge
-                entitled={entitled}
-                isPremiumOnly={isPremiumOnly}
-                expired={expired}
-              />
-            )}
-          </div>
-
-          {/* Locked / expired overlay */}
-          {expired && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <span className="text-sm font-medium text-gray-400">Expired</span>
-            </div>
-          )}
-          {isLocked && !expired && isPremiumOnly && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="text-2xl">🔒</span>
-            </div>
-          )}
-        </div>
-
-        {/* Info area */}
-        <div className="flex flex-1 flex-col gap-1 px-3 py-2">
-          <span className="truncate text-sm font-medium text-white">{item.name}</span>
-          <div className="flex items-center justify-between">
-            <RarityBadge rarity={item.rarity} />
-            {entitlement && (
-              <span className="text-[10px] capitalize text-gray-500">{entitlement.type}</span>
-            )}
-          </div>
-
-          {/* Expiry countdown */}
-          {expiryText && <span className="text-[10px] text-amber-400">{expiryText}</span>}
-        </div>
-      </button>
-
-      {/* Purchase button */}
-      {purchasable && onPurchase && (
-        <div className="px-3 pb-2">
-          <button
-            type="button"
-            onClick={() => onPurchase(item)}
-            className="w-full rounded-lg bg-purple-600 px-2 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-purple-500"
-          >
-            {item.unlockCondition.threshold ? `${item.unlockCondition.threshold} Nodes` : 'Get'}
-          </button>
-        </div>
-      )}
-    </div>
+      <span className="flex min-h-[5.25rem] w-full flex-col gap-2 p-3">
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-semibold text-[var(--token-text-primary)]">
+            {item.name}
+          </span>
+          <span className="mt-0.5 block truncate text-xs capitalize text-[var(--token-text-muted)]">
+            {item.type.replaceAll('_', ' ')}
+          </span>
+        </span>
+        <span className="mt-auto flex items-center justify-between gap-2">
+          <RarityBadge rarity={item.rarity} />
+          {entitlement?.expiresAt && !expired ? (
+            <span className="inline-flex items-center gap-1 text-[11px] text-[var(--token-status-warning)]">
+              <Clock3 className="h-3 w-3" aria-hidden="true" />
+              {expiryLabel(entitlement.expiresAt)}
+            </span>
+          ) : null}
+        </span>
+      </span>
+    </button>
   );
 }

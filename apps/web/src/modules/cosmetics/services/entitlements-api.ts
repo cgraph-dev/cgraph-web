@@ -20,14 +20,14 @@ interface ApiCosmeticSku {
   readonly slug: string;
   readonly name: string;
   readonly type: string;
-  readonly assetHash: string | null;
-  readonly cosmeticId: string | null;
-  readonly priceNodes: number;
-  readonly stripePriceId: string | null;
-  readonly isPremiumOnly: boolean;
-  readonly isAvailable: boolean;
-  readonly collection: string | null;
-  readonly version: number;
+  readonly assetHash?: string | null;
+  readonly cosmeticId?: string | null;
+  readonly priceNodes?: number;
+  readonly stripePriceId?: string | null;
+  readonly isPremiumOnly?: boolean;
+  readonly isAvailable?: boolean;
+  readonly collection?: string | null;
+  readonly version?: number;
 }
 
 interface ApiEntitlement {
@@ -42,8 +42,13 @@ interface ApiEntitlement {
 
 interface ApiPaginatedEntitlements {
   readonly data: readonly ApiEntitlement[];
-  readonly nextCursor: string | null;
-  readonly hasMore: boolean;
+  readonly meta?: {
+    readonly cursor?: string | null;
+    readonly hasMore?: boolean;
+    readonly has_more?: boolean;
+  };
+  readonly nextCursor?: string | null;
+  readonly hasMore?: boolean;
 }
 // Transformers
 const VALID_ENTITLEMENT_TYPES: readonly EntitlementType[] = [
@@ -84,14 +89,14 @@ function toSku(raw: ApiCosmeticSku): CosmeticSku {
     slug: raw.slug,
     name: raw.name,
     type: validateCosmeticType(raw.type),
-    assetHash: raw.assetHash,
-    cosmeticId: raw.cosmeticId,
-    priceNodes: raw.priceNodes,
-    stripePriceId: raw.stripePriceId,
-    isPremiumOnly: raw.isPremiumOnly,
-    isAvailable: raw.isAvailable,
-    collection: raw.collection,
-    version: raw.version,
+    assetHash: raw.assetHash ?? null,
+    cosmeticId: raw.cosmeticId ?? null,
+    priceNodes: raw.priceNodes ?? 0,
+    stripePriceId: raw.stripePriceId ?? null,
+    isPremiumOnly: raw.isPremiumOnly ?? false,
+    isAvailable: raw.isAvailable ?? true,
+    collection: raw.collection ?? null,
+    version: raw.version ?? 1,
   };
 }
 
@@ -129,8 +134,8 @@ export const entitlementsApi = {
 
     return {
       data: raw.data.map(toEntitlement),
-      nextCursor: raw.nextCursor,
-      hasMore: raw.hasMore,
+      nextCursor: raw.meta?.cursor ?? raw.nextCursor ?? null,
+      hasMore: raw.meta?.hasMore ?? raw.meta?.has_more ?? raw.hasMore ?? false,
     };
   },
 
