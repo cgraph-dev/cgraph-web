@@ -1,15 +1,34 @@
-/**
- * Forum Moderation Dashboard
- *
- * Tabbed interface: Queue, Warnings, Automod, Stats.
- *
- */
-import { useState, useEffect } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+  BarChart3,
+  Check,
+  CheckCircle2,
+  Clock3,
+  Inbox,
+  ListChecks,
+  ShieldCheck,
+  Trash2,
+  TriangleAlert,
+} from 'lucide-react';
+import { createLogger } from '@/lib/logger';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  Card,
+  EmptyState,
+  Skeleton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  toast,
+} from '@/shared/components/ui';
 import { useForumModerationStore } from '../../store/use-forum-moderation-store';
+import type { ModerationQueueItem } from '../../store/forumStore.types';
 import ForumAutomodSettings from './forum-automod-settings';
 import WarningPanel from './warning-panel';
-import { createLogger } from '@/lib/logger';
-import type { ModerationQueueItem } from '../../store/forumStore.types';
 
 const logger = createLogger('ForumModDashboard');
 
@@ -18,188 +37,293 @@ interface ForumModDashboardProps {
 }
 
 type TabId = 'queue' | 'warnings' | 'automod' | 'stats';
+type ForumModAction = 'approve' | 'remove' | 'hide';
+type PendingModerationAction = {
+  itemId: string;
+  action: ForumModAction;
+};
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'queue', label: 'Queue' },
-  { id: 'warnings', label: 'Warnings' },
-  { id: 'automod', label: 'Automod' },
-  { id: 'stats', label: 'Stats' },
+const TABS: ReadonlyArray<{ id: TabId; label: string; icon: ReactNode }> = [
+  { id: 'queue', label: 'Queue', icon: <ListChecks aria-hidden="true" /> },
+  { id: 'warnings', label: 'Warnings', icon: <TriangleAlert aria-hidden="true" /> },
+  { id: 'automod', label: 'Automod', icon: <ShieldCheck aria-hidden="true" /> },
+  { id: 'stats', label: 'Stats', icon: <BarChart3 aria-hidden="true" /> },
 ];
 
-type ForumModAction = 'approve' | 'remove' | 'hide';
+function isTabId(value: string): value is TabId {
+  return TABS.some((tab) => tab.id === value);
+}
 
-/**
- * Forum moderation dashboard with tabbed navigation.
- */
 export default function ForumModDashboard({ forumId }: ForumModDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabId>('queue');
 
   return (
-    <div className="space-y-4">
-      {/* Tab Navigation */}
-      <div className="flex border-b dark:border-gray-700">
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => {
+        if (isTabId(value)) setActiveTab(value);
+      }}
+      className="space-y-4"
+    >
+      <TabsList className="w-full justify-start overflow-x-auto">
         {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-          >
+          <TabsTrigger key={tab.id} value={tab.id} className="inline-flex items-center gap-2">
+            <span className="[&_svg]:h-4 [&_svg]:w-4">{tab.icon}</span>
             {tab.label}
-          </button>
+          </TabsTrigger>
         ))}
-      </div>
+      </TabsList>
 
-      {/* Tab Content */}
       <div className="min-h-[400px]">
-        {activeTab === 'queue' && <ModQueueTab forumId={forumId} />}
-        {activeTab === 'warnings' && <WarningPanel forumId={forumId} />}
-        {activeTab === 'automod' && <ForumAutomodSettings forumId={forumId} />}
-        {activeTab === 'stats' && <ModStatsTab forumId={forumId} />}
+        <TabsContent value="queue">
+          <ModQueueTab forumId={forumId} />
+        </TabsContent>
+        <TabsContent value="warnings">
+          <WarningPanel forumId={forumId} />
+        </TabsContent>
+        <TabsContent value="automod">
+          <ForumAutomodSettings forumId={forumId} />
+        </TabsContent>
+        <TabsContent value="stats">
+          <ModStatsTab forumId={forumId} />
+        </TabsContent>
       </div>
-    </div>
+    </Tabs>
   );
 }
+
 function ModQueueTab({ forumId }: { forumId: string }) {
   const [items, setItems] = useState<ModerationQueueItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [pendingAction, setPendingAction] = useState<PendingModerationAction | null>(null);
   const fetchForumModQueue = useForumModerationStore().fetchForumModQueue;
   const takeForumModAction = useForumModerationStore().takeForumModAction;
 
   useEffect(() => {
     let cancelled = false;
-    const loadQueue = async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchForumModQueue(forumId);
+
+    setIsLoading(true);
+    setLoadFailed(false);
+    void fetchForumModQueue(forumId)
+      .then((data) => {
         if (!cancelled) setItems([...data]);
-      } catch (error) {
+      })
+      .catch((error: unknown) => {
         logger.error(error instanceof Error ? error : new Error(String(error)), 'loadQueue');
-      } finally {
+        if (!cancelled) setLoadFailed(true);
+      })
+      .finally(() => {
         if (!cancelled) setIsLoading(false);
-      }
-    };
-    loadQueue();
+      });
+
     return () => {
       cancelled = true;
     };
-  }, [forumId, fetchForumModQueue]);
+  }, [forumId, fetchForumModQueue, reloadKey]);
 
   const handleAction = async (postId: string, action: ForumModAction) => {
+    if (pendingAction) return;
+
+    setPendingAction({ itemId: postId, action });
     try {
       await takeForumModAction(forumId, postId, action);
-      setItems((prev) => prev.filter((i) => i.id !== postId));
+      setItems((current) => current.filter((item) => item.id !== postId));
+      toast.success(action === 'approve' ? 'Post approved' : 'Post removed');
     } catch (error) {
       logger.error(error instanceof Error ? error : new Error(String(error)), 'handleAction');
+      toast.error('Moderation action failed');
+    } finally {
+      setPendingAction(null);
     }
   };
 
   if (isLoading) {
-    return <div className="p-4 text-sm text-gray-500">Loading queue…</div>;
+    return (
+      <div className="space-y-3" role="status" aria-label="Loading moderation queue">
+        {Array.from({ length: 3 }, (_, index) => (
+          <Skeleton key={index} shape="card" />
+        ))}
+      </div>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <Alert variant="error">
+        <AlertTitle>Moderation queue unavailable</AlertTitle>
+        <AlertDescription>
+          <p>Check the connection and load the queue again.</p>
+          <Button
+            className="mt-3"
+            variant="secondary"
+            onClick={() => setReloadKey((value) => value + 1)}
+          >
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   if (items.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500">
-        <p className="text-lg">No items in moderation queue</p>
-        <p className="mt-1 text-sm">All clear!</p>
-      </div>
+      <EmptyState
+        title="Moderation queue is clear"
+        message="There are no pending items to review."
+        icon={<Inbox className="h-7 w-7" />}
+      />
     );
   }
 
   return (
     <div className="space-y-3">
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className="flex items-start justify-between rounded-lg border p-4 dark:border-gray-700"
-        >
-          <div className="flex-1">
-            <p className="text-sm text-gray-900 dark:text-white">{item.content}</p>
-            <p className="mt-1 text-xs text-gray-500">
-              Reason: {item.reason || 'N/A'} · {item.createdAt}
-            </p>
-          </div>
-          <div className="ml-4 flex gap-2">
-            <button
-              onClick={() => handleAction(item.id, 'approve')}
-              className="rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-700"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => handleAction(item.id, 'remove')}
-              className="rounded bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700"
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      ))}
+      {items.map((item) => {
+        const isApprovePending =
+          pendingAction?.itemId === item.id && pendingAction.action === 'approve';
+        const isRemovePending =
+          pendingAction?.itemId === item.id && pendingAction.action === 'remove';
+        return (
+          <Card key={item.id}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm text-[var(--token-text-primary)]">
+                  {item.content}
+                </p>
+                <p className="mt-2 text-xs text-[var(--token-text-muted)]">
+                  Reason: {item.reason || 'Not provided'} · {item.createdAt}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  size="sm"
+                  variant="success"
+                  leftIcon={<Check aria-hidden="true" />}
+                  disabled={pendingAction !== null}
+                  isLoading={isApprovePending}
+                  onClick={() => void handleAction(item.id, 'approve')}
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  leftIcon={<Trash2 aria-hidden="true" />}
+                  disabled={pendingAction !== null}
+                  isLoading={isRemovePending}
+                  onClick={() => void handleAction(item.id, 'remove')}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
+
+interface ModerationStats {
+  pending_count: number;
+  resolved_count: number;
+}
+
 function ModStatsTab({ forumId }: { forumId: string }) {
-  const [stats, setStats] = useState<{ pending_count: number; resolved_count: number } | null>(
-    null
-  );
+  const [stats, setStats] = useState<ModerationStats | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const fetchForumModStats = useForumModerationStore().fetchForumModStats;
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const data = await fetchForumModStats(forumId);
-        if (!cancelled) {
-          setStats({
-            pending_count: typeof data.pending_count === 'number' ? data.pending_count : 0,
-            resolved_count: typeof data.resolved_count === 'number' ? data.resolved_count : 0,
-          });
-        }
-      } catch (error) {
+
+    setStats(null);
+    setLoadFailed(false);
+    void fetchForumModStats(forumId)
+      .then((data) => {
+        if (cancelled) return;
+        setStats({
+          pending_count: typeof data.pending_count === 'number' ? data.pending_count : 0,
+          resolved_count: typeof data.resolved_count === 'number' ? data.resolved_count : 0,
+        });
+      })
+      .catch((error: unknown) => {
         logger.error(error instanceof Error ? error : new Error(String(error)), 'loadStats');
-      }
-    })();
+        if (!cancelled) setLoadFailed(true);
+      });
+
     return () => {
       cancelled = true;
     };
-  }, [forumId, fetchForumModStats]);
+  }, [forumId, fetchForumModStats, reloadKey]);
+
+  if (loadFailed) {
+    return (
+      <Alert variant="error">
+        <AlertTitle>Moderation statistics unavailable</AlertTitle>
+        <AlertDescription>
+          <p>Check the connection and load the statistics again.</p>
+          <Button
+            className="mt-3"
+            variant="secondary"
+            onClick={() => setReloadKey((value) => value + 1)}
+          >
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (!stats) {
-    return <div className="p-4 text-sm text-gray-500">Loading stats…</div>;
+    return (
+      <div
+        className="grid gap-4 sm:grid-cols-2"
+        role="status"
+        aria-label="Loading moderation statistics"
+      >
+        <Skeleton shape="card" />
+        <Skeleton shape="card" />
+      </div>
+    );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <StatCard label="Pending Items" value={stats.pending_count} color="amber" />
-      <StatCard label="Resolved Items" value={stats.resolved_count} color="green" />
+    <div className="grid gap-4 sm:grid-cols-2">
+      <StatCard
+        label="Pending items"
+        value={stats.pending_count}
+        icon={<Clock3 aria-hidden="true" />}
+      />
+      <StatCard
+        label="Resolved items"
+        value={stats.resolved_count}
+        icon={<CheckCircle2 aria-hidden="true" />}
+      />
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: 'amber' | 'green' | 'red' | 'blue';
-}) {
-  const colorClasses = {
-    amber: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
-    green: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400',
-    red: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-    blue: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
-  };
-
+function StatCard({ label, value, icon }: { label: string; value: number; icon: ReactNode }) {
   return (
-    <div className={`rounded-lg p-4 ${colorClasses[color]}`}>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="mt-1 text-sm">{label}</p>
-    </div>
+    <Card>
+      <div className="flex items-center gap-3">
+        <div
+          className="cgraph-card flex h-10 w-10 items-center justify-center text-[var(--token-interactive-primary)]"
+          data-cgraph-material="recessed"
+          aria-hidden="true"
+        >
+          <span className="[&_svg]:h-5 [&_svg]:w-5">{icon}</span>
+        </div>
+        <div>
+          <p className="text-2xl font-semibold tabular-nums text-[var(--token-text-primary)]">
+            {value}
+          </p>
+          <p className="text-sm text-[var(--token-text-muted)]">{label}</p>
+        </div>
+      </div>
+    </Card>
   );
 }
