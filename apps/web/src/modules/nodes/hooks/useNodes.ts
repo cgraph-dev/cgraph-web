@@ -11,7 +11,7 @@ import { nodesApi } from '../services/nodesApi';
 import type { TransactionType } from '../types';
 import { useNodesStore, getSpendableNodeBalance } from '../store/nodesStore';
 import type { Wallet } from '../services/nodesApi';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 
 const nodesMoneyMutationOptions = {
   retry: false,

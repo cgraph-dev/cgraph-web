@@ -17,15 +17,15 @@ vi.mock('@cgraph-dev/shared-types/nodes', () => ({
   MIN_TIP: 10,
 }));
 
-vi.mock('react-hot-toast', () => ({
-  default: {
+vi.mock('@/shared/components/ui', () => ({
+  toast: {
     success: vi.fn(),
     error: vi.fn(),
   },
 }));
 
 import { TipModal } from '../tip-modal';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 const makeDefaultProps = (overrides?: Record<string, unknown>) => ({
   recipientId: 'user-2',
   recipientName: 'alice',

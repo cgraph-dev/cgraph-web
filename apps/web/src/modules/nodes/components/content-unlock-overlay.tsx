@@ -8,10 +8,9 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { GlassCard } from '@/shared/components/ui';
+import { GlassCard, toast } from '@/shared/components/ui';
 import { useUnlockContent } from '@/modules/nodes/hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '@/modules/nodes/utils/nodes-error-feedback';
-import toast from 'react-hot-toast';
 
 export interface ContentUnlockOverlayProps {
   postId: string;

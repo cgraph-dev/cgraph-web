@@ -42,11 +42,12 @@ vi.mock('@/modules/settings/store/customization/customizationStore', () => ({
   }),
 }));
 
-vi.mock('react-hot-toast', () => ({
-  default: Object.assign(mockToast, {
+vi.mock('@/shared/components/ui', () => ({
+  toast: {
     error: mockToastError,
+    info: mockToast,
     success: mockToastSuccess,
-  }),
+  },
 }));
 
 function wrapper({ children }: { children: ReactNode }) {

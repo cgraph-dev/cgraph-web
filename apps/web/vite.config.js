@@ -266,10 +266,6 @@ export default defineConfig(({ mode }) => {
             return 'i18n';
           }
 
-          if (packageName === 'react-hot-toast' || packageName === 'goober') {
-            return 'toast-vendor';
-          }
-
           if (
             packageName === 'tailwind-merge' ||
             packageName === 'clsx' ||

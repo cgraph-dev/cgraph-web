@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 import {
   ChevronDownIcon,
   ChevronUpIcon,

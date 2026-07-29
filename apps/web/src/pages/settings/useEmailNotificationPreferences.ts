@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 import { useAuthStore } from '@/modules/auth/store';
 import { apiClient, http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';

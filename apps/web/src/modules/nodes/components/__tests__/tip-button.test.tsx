@@ -17,13 +17,6 @@ vi.mock('@cgraph-dev/shared-types/nodes', () => ({
   MIN_TIP: 10,
 }));
 
-vi.mock('react-hot-toast', () => ({
-  default: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
 import { TipButton } from '../tip-button';
 
 const makeDefaultProps = (overrides?: Record<string, unknown>) => ({

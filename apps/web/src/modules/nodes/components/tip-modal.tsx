@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useSendTip, useNodeWallet, useSpendableNodeBalance } from '../hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
 import { MIN_TIP } from '@cgraph-dev/shared-types/nodes';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 
 interface TipModalProps {
   recipientId: string;

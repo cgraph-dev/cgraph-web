@@ -23,17 +23,14 @@ vi.mock('@/shared/components/ui', () => ({
       {children}
     </div>
   ),
-}));
-
-vi.mock('react-hot-toast', () => ({
-  default: {
+  toast: {
     success: vi.fn(),
     error: vi.fn(),
   },
 }));
 
 import { ContentUnlockOverlay } from '../content-unlock-overlay';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 
 const makeDefaultProps = (overrides?: Record<string, unknown>) => ({
   postId: 'thread-42',

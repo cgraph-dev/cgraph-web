@@ -19,6 +19,10 @@ interface ToastStore {
   readonly removeToast: (id: string) => void;
 }
 
+interface ToastOptions {
+  readonly duration?: number;
+}
+
 const DEFAULT_DURATION = 5000;
 const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
 let toastSequence = 0;
@@ -52,15 +56,28 @@ export const useToastStore = create<ToastStore>((set) => ({
   },
 }));
 
+function addToast(
+  type: ToastType,
+  title: string,
+  messageOrOptions?: string | ToastOptions,
+  options?: ToastOptions
+): void {
+  const message = typeof messageOrOptions === 'string' ? messageOrOptions : undefined;
+  const duration =
+    typeof messageOrOptions === 'string' ? options?.duration : messageOrOptions?.duration;
+
+  useToastStore.getState().addToast({ type, title, message, duration });
+}
+
 export const toast = {
-  success: (title: string, message?: string) =>
-    useToastStore.getState().addToast({ type: 'success', title, message }),
-  error: (title: string, message?: string) =>
-    useToastStore.getState().addToast({ type: 'error', title, message }),
-  warning: (title: string, message?: string) =>
-    useToastStore.getState().addToast({ type: 'warning', title, message }),
-  info: (title: string, message?: string) =>
-    useToastStore.getState().addToast({ type: 'info', title, message }),
+  success: (title: string, messageOrOptions?: string | ToastOptions, options?: ToastOptions) =>
+    addToast('success', title, messageOrOptions, options),
+  error: (title: string, messageOrOptions?: string | ToastOptions, options?: ToastOptions) =>
+    addToast('error', title, messageOrOptions, options),
+  warning: (title: string, messageOrOptions?: string | ToastOptions, options?: ToastOptions) =>
+    addToast('warning', title, messageOrOptions, options),
+  info: (title: string, messageOrOptions?: string | ToastOptions, options?: ToastOptions) =>
+    addToast('info', title, messageOrOptions, options),
 };
 
 const TYPE_CONFIG = {

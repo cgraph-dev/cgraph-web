@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createLogger } from '@/lib/logger';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 
 const logger = createLogger('WarningPanel');
 

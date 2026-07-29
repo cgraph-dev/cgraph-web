@@ -18,8 +18,8 @@ vi.mock('@cgraph-dev/shared-types/nodes', () => ({
   PLATFORM_CUT_PERCENT: 20,
 }));
 
-vi.mock('react-hot-toast', () => ({
-  default: {
+vi.mock('@/shared/components/ui', () => ({
+  toast: {
     success: vi.fn(),
     error: vi.fn(),
   },
@@ -50,7 +50,7 @@ vi.mock('motion/react', () => ({
 }));
 
 import { GiftModal } from '../gift-modal';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 
 function makeDefaultProps(overrides?: Partial<Parameters<typeof GiftModal>[0]>) {
   return {

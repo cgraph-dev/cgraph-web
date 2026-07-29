@@ -106,6 +106,20 @@ describe('Toast', () => {
     expect(screen.getByText('Persistent')).toBeInTheDocument();
   });
 
+  it('accepts a duration option without treating it as message content', () => {
+    render(<ToastContainer />);
+
+    act(() => {
+      toast.error('Premium access required', { duration: 4000 });
+      vi.advanceTimersByTime(3999);
+    });
+    expect(screen.getByText('Premium access required')).toBeInTheDocument();
+    expect(screen.queryByText('[object Object]')).not.toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(useToastStore.getState().toasts).toHaveLength(0);
+  });
+
   it('honors the duration supplied through the shared hook', () => {
     const { result } = renderHook(() => useToast());
 

@@ -11,7 +11,7 @@ import { FocusTrap } from '@/shared/components/accessibility';
 import { useSendGift, useNodeWallet, useSpendableNodeBalance } from '../hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
 import { MIN_TIP, PLATFORM_CUT_PERCENT } from '@cgraph-dev/shared-types/nodes';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 
 const MIN_GIFT = MIN_TIP;
 const PLATFORM_CUT_RATIO = PLATFORM_CUT_PERCENT / 100;

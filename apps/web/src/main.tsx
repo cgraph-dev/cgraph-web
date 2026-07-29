@@ -48,7 +48,6 @@ import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { Toaster } from 'react-hot-toast';
 import App from './App';
 import ErrorBoundary from './components/error-boundary';
 import { RouteSkeleton } from './components/ui/skeletons';
@@ -177,17 +176,6 @@ try {
                 <NotificationProvider>
                   <App />
                 </NotificationProvider>
-                <Toaster
-                  position="bottom-right"
-                  toastOptions={{
-                    className: 'bg-white/[0.04] text-white border border-white/[0.06]',
-                    duration: 4000,
-                    style: {
-                      background: '#1f2937',
-                      color: '#fff',
-                    },
-                  }}
-                />
                 <SpeedInsights />
               </BrowserRouter>
             </QueryClientProvider>

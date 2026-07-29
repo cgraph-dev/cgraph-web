@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/modules/auth/store';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 import {
   ALL_PROFILE_THEMES,
   DEFAULT_PROFILE_THEME_ID,
@@ -156,7 +156,7 @@ export function useThemeCustomization() {
 
     if (isLocked) {
       setPreviewingTheme(theme.id);
-      toast('Previewing theme — Unlock to save', {
+      toast.info('Previewing theme — Unlock to save', {
         duration: durations.cinematic.ms,
       });
       return;

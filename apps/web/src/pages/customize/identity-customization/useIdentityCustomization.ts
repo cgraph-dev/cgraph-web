@@ -18,7 +18,7 @@ import { useAuthStore, type User } from '@/modules/auth/store';
 import { getApiErrorMessage } from '@/modules/auth/store/authStore.utils';
 import { useCustomizationStore } from '@/modules/settings/store/customization/customizationStore';
 import { userHasPremiumAccess } from '@/modules/settings/store/customization/customizationStore.schema';
-import toast from 'react-hot-toast';
+import { toast } from '@/shared/components/ui';
 import {
   ALL_BORDERS,
   getAvatarBorderDisplayTypeById,
@@ -808,7 +808,7 @@ export function useIdentityCustomization() {
       });
     }
 
-    toast('Previewing item — Purchase premium to save', {
+    toast.info('Previewing item — Purchase premium to save', {
       duration: durations.cinematic.ms,
     });
   }
@@ -947,7 +947,7 @@ export function useIdentityCustomization() {
       !ownedNameplateIds.includes(normalizedNameplateId)
     ) {
       setPreviewState(normalizedNameplateId, { equippedNameplate: normalizedNameplateId });
-      toast('Previewing nameplate — unlock it to save', {
+      toast.info('Previewing nameplate — unlock it to save', {
         duration: durations.cinematic.ms,
       });
       return;
