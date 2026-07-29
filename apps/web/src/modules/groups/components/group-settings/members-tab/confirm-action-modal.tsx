@@ -15,6 +15,7 @@ interface ConfirmActionModalProps {
   memberId: string;
   banDuration: string;
   reason: string;
+  error: string | null;
   isSubmitting: boolean;
   onBanDurationChange: (value: string) => void;
   onReasonChange: (value: string) => void;
@@ -56,6 +57,7 @@ export function ConfirmActionModal({
   memberId,
   banDuration,
   reason,
+  error,
   isSubmitting,
   onBanDurationChange,
   onReasonChange,
@@ -79,6 +81,14 @@ export function ConfirmActionModal({
           </DialogHeader>
 
           <div className="space-y-4">
+            {error && (
+              <p
+                role="alert"
+                className="cgraph-section-surface border-[var(--token-feedback-error)] px-3 py-2 text-sm text-[var(--token-feedback-error)]"
+              >
+                {error}
+              </p>
+            )}
             {action === 'ban' && (
               <Select
                 label="Ban duration"

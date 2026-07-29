@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import {
   ArrowRightStartOnRectangleIcon,
   EllipsisVerticalIcon,
@@ -40,6 +40,7 @@ export function MemberListItem({
   const primaryRole = [...member.roles].sort(
     (left, right) => right.position - left.position || left.name.localeCompare(right.name)
   )[0];
+  const menuRef = useRef<HTMLDivElement>(null);
   const hasActions =
     !isCurrentUser &&
     !isOwner &&
@@ -48,8 +49,27 @@ export function MemberListItem({
       capabilities.canKick ||
       capabilities.canBan);
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const closeOnPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node) || !menuRef.current?.contains(target)) onToggleMenu(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onToggleMenu(null);
+    };
+
+    document.addEventListener('pointerdown', closeOnPointerDown);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnPointerDown);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isMenuOpen, onToggleMenu]);
+
   return (
-    <li className="relative flex min-w-0 items-center justify-between gap-3 px-4 py-3">
+    <li className="cgraph-list-row relative flex min-w-0 items-center justify-between gap-3 rounded-none border-0 px-4 py-3">
       <div className="flex min-w-0 items-center gap-3">
         <ThemedAvatar
           src={member.avatarUrl}
@@ -59,26 +79,32 @@ export function MemberListItem({
         />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate font-medium text-white">{displayName}</span>
+            <span className="truncate font-medium text-[var(--token-text-primary)]">
+              {displayName}
+            </span>
             <RoleBadge
               label={isOwner ? 'Owner' : primaryRole?.name ?? 'Member'}
-              color={isOwner ? '#eab308' : primaryRole?.color ?? '#94a3b8'}
+              color={isOwner ? 'var(--token-feedback-warning)' : primaryRole?.color}
             />
             {isCurrentUser && (
-              <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-gray-300">You</span>
+              <span className="rounded-full border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] px-2 py-0.5 text-xs text-[var(--token-text-secondary)]">
+                You
+              </span>
             )}
             {member.isMuted && (
-              <span className="rounded-full bg-orange-400/10 px-2 py-0.5 text-xs text-orange-300">
+              <span className="rounded-full border border-[var(--token-feedback-warning)] bg-[color-mix(in_srgb,var(--token-feedback-warning)_10%,transparent)] px-2 py-0.5 text-xs text-[var(--token-feedback-warning)]">
                 Muted
               </span>
             )}
           </div>
-          <span className="block truncate text-xs text-gray-500">@{member.username}</span>
+          <span className="block truncate text-xs text-[var(--token-text-muted)]">
+            @{member.username}
+          </span>
         </div>
       </div>
 
       {hasActions && (
-        <div className="relative shrink-0">
+        <div ref={menuRef} className="relative shrink-0">
           <IconButton
             icon={<EllipsisVerticalIcon />}
             label={`Member actions for ${displayName}`}
@@ -91,7 +117,9 @@ export function MemberListItem({
             <div
               role="menu"
               aria-label={`Actions for ${displayName}`}
-              className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-1 shadow-card"
+              data-cgraph-material="floating"
+              data-cgraph-surface="menu"
+              className="cgraph-section-surface absolute right-0 top-full z-50 mt-1 w-48 p-1 shadow-card"
             >
               {capabilities.canManageRoles && (
                 <MenuAction
@@ -152,14 +180,12 @@ export function MemberListItem({
   );
 }
 
-function RoleBadge({ label, color }: { label: string; color: string }) {
+function RoleBadge({ label, color }: { label: string; color?: string }) {
   return (
     <span
-      className="rounded-full border px-2 py-0.5 text-xs font-medium"
+      className="rounded-full border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] px-2 py-0.5 text-xs font-medium"
       style={{
-        borderColor: `${color}66`,
-        backgroundColor: `${color}1a`,
-        color,
+        color: color || 'var(--token-text-muted)',
       }}
     >
       {label}

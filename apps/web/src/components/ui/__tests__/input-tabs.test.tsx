@@ -68,13 +68,13 @@ describe('Input', () => {
   it('error message has error color', () => {
     render(<Input error="Invalid" />);
     const errorMsg = screen.getByText('Invalid');
-    expect(errorMsg.className).toContain('text-red-600');
+    expect(errorMsg.className).toContain('text-[var(--token-feedback-error)]');
   });
 
   it('hint text has muted color', () => {
     render(<Input hint="Hint" />);
     const hint = screen.getByText('Hint');
-    expect(hint.className).toContain('text-gray-500');
+    expect(hint.className).toContain('text-[var(--token-text-muted)]');
   });
 
   it('applies custom className', () => {

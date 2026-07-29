@@ -10,9 +10,6 @@ interface MemberSearchBarProps {
   roles: readonly GroupRole[];
 }
 
-/**
- * Member Search Bar component.
- */
 export function MemberSearchBar({
   search,
   onSearchChange,

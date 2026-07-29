@@ -43,12 +43,14 @@ export function Input({
           className="mb-1 block text-sm font-medium text-[var(--token-text-secondary)]"
         >
           {label}
-          {props.required && <span className="ml-1 text-red-500">*</span>}
+          {props.required && (
+            <span className="ml-1 text-[var(--token-feedback-error)]">*</span>
+          )}
         </label>
       )}
       <div className="relative">
         {leftIcon && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[var(--token-text-muted)]">
             {leftIcon}
           </div>
         )}
@@ -64,18 +66,18 @@ export function Input({
           {...props}
         />
         {rightIcon && (
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-[var(--token-text-muted)]">
             {rightIcon}
           </div>
         )}
       </div>
       {error && (
-        <p id={`${inputId}-error`} className="mt-1 text-sm text-red-600 dark:text-red-400">
+        <p id={`${inputId}-error`} className="mt-1 text-sm text-[var(--token-feedback-error)]">
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${inputId}-hint`} className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p id={`${inputId}-hint`} className="mt-1 text-sm text-[var(--token-text-muted)]">
           {hint}
         </p>
       )}
@@ -110,7 +112,9 @@ export function Textarea({
           className="mb-1 block text-sm font-medium text-[var(--token-text-secondary)]"
         >
           {label}
-          {props.required && <span className="ml-1 text-red-500">*</span>}
+          {props.required && (
+            <span className="ml-1 text-[var(--token-feedback-error)]">*</span>
+          )}
         </label>
       )}
       <textarea
@@ -125,12 +129,15 @@ export function Textarea({
         {...props}
       />
       {error && (
-        <p id={`${textareaId}-error`} className="mt-1 text-sm text-red-600 dark:text-red-400">
+        <p
+          id={`${textareaId}-error`}
+          className="mt-1 text-sm text-[var(--token-feedback-error)]"
+        >
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${textareaId}-hint`} className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p id={`${textareaId}-hint`} className="mt-1 text-sm text-[var(--token-text-muted)]">
           {hint}
         </p>
       )}
@@ -169,7 +176,9 @@ export function Select({
           className="mb-1 block text-sm font-medium text-[var(--token-text-secondary)]"
         >
           {label}
-          {props.required && <span className="ml-1 text-red-500">*</span>}
+          {props.required && (
+            <span className="ml-1 text-[var(--token-feedback-error)]">*</span>
+          )}
         </label>
       )}
       <select
@@ -195,12 +204,12 @@ export function Select({
         ))}
       </select>
       {error && (
-        <p id={`${selectId}-error`} className="mt-1 text-sm text-red-600 dark:text-red-400">
+        <p id={`${selectId}-error`} className="mt-1 text-sm text-[var(--token-feedback-error)]">
           {error}
         </p>
       )}
       {hint && !error && (
-        <p id={`${selectId}-hint`} className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p id={`${selectId}-hint`} className="mt-1 text-sm text-[var(--token-text-muted)]">
           {hint}
         </p>
       )}
