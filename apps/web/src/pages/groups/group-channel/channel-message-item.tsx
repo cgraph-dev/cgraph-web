@@ -26,7 +26,7 @@ import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
 import { cn } from '@/lib/utils';
 import type { ChannelMessageItemProps } from './types';
 import type { Role } from '@/modules/groups/store';
-import { formatMessageTime, getAvatarInitial, getDisplayName } from './utils';
+import { formatMessageTime, getAvatarInitial, getDisplayName, getTopRole } from './utils';
 import { Button, IconButton } from '@/components/ui/button';
 
 const EmojiPicker = lazy(() =>
@@ -429,17 +429,6 @@ function MessageMenuItem({
       {label}
     </Button>
   );
-}
-
-/**
- * Returns the highest non-default role from the roles array, or null if none.
- */
-function getTopRole(roles: Role[] | null | undefined): Role | null {
-  if (!roles || roles.length === 0) return null;
-  const nonDefault = roles.filter((r) => !r.isDefault);
-  if (nonDefault.length === 0) return null;
-  // Roles are sorted highest-position-first by the backend
-  return nonDefault[0] ?? null;
 }
 
 /**

@@ -5,6 +5,7 @@
  */
 
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
+import type { Role } from '@/modules/groups/store';
 import type { ChannelMessage, GroupedMessages } from './types';
 
 /**
@@ -55,4 +56,15 @@ export function getAvatarInitial(username?: string | null, displayName?: string 
  */
 export function getDisplayName(username?: string | null, displayName?: string | null): string {
   return displayName || username || 'Unknown User';
+}
+
+/** Highest-positioned non-default role without mutating the source collection. */
+export function getTopRole(roles: readonly Role[] | null | undefined): Role | null {
+  if (!roles) return null;
+
+  return roles.reduce<Role | null>((topRole, role) => {
+    if (role.isDefault) return topRole;
+    if (!topRole || role.position > topRole.position) return role;
+    return topRole;
+  }, null);
 }
