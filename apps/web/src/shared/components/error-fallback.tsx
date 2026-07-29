@@ -1,17 +1,22 @@
 import type { ReactElement } from 'react';
 import { AlertTriangle, ArrowLeft, Flag, RotateCcw } from 'lucide-react';
-import { Button, Card } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 
 interface ErrorFallbackProps {
   error: Error;
   resetErrorBoundary: () => void;
   componentName?: string;
+  recoveryLabel?: string;
+  showSecondaryActions?: boolean;
 }
 
 export function ErrorFallback({
   error,
   resetErrorBoundary,
   componentName,
+  recoveryLabel = 'Try again',
+  showSecondaryActions = true,
 }: ErrorFallbackProps): ReactElement {
   function handleGoBack(): void {
     window.history.back();
@@ -54,26 +59,33 @@ export function ErrorFallback({
             <Button
               onClick={resetErrorBoundary}
               leftIcon={<RotateCcw aria-hidden="true" />}
+              animated={false}
               className="w-full sm:w-auto"
             >
-              Try again
+              {recoveryLabel}
             </Button>
-            <Button
-              variant="secondary"
-              onClick={handleGoBack}
-              leftIcon={<ArrowLeft aria-hidden="true" />}
-              className="w-full sm:w-auto"
-            >
-              Go back
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={handleReport}
-              leftIcon={<Flag aria-hidden="true" />}
-              className="w-full sm:w-auto"
-            >
-              Report issue
-            </Button>
+            {showSecondaryActions ? (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={handleGoBack}
+                  leftIcon={<ArrowLeft aria-hidden="true" />}
+                  animated={false}
+                  className="w-full sm:w-auto"
+                >
+                  Go back
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleReport}
+                  leftIcon={<Flag aria-hidden="true" />}
+                  animated={false}
+                  className="w-full sm:w-auto"
+                >
+                  Report issue
+                </Button>
+              </>
+            ) : null}
           </div>
 
           {import.meta.env.DEV && (

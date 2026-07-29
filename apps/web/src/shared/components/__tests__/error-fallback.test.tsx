@@ -1,18 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/shared/components/ui', async () => {
-  const [button, card] = await Promise.all([
-    vi.importActual<typeof import('@/components/ui/button')>('@/components/ui/button'),
-    vi.importActual<typeof import('@/components/ui/card')>('@/components/ui/card'),
-  ]);
-
-  return {
-    Button: button.Button,
-    Card: card.default,
-  };
-});
-
 import { ErrorFallback } from '../error-fallback';
 
 describe('ErrorFallback', () => {
@@ -49,6 +37,21 @@ describe('ErrorFallback', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
 
     expect(resetErrorBoundary).toHaveBeenCalledOnce();
+  });
+
+  it('supports a bounded root recovery action without route controls', () => {
+    render(
+      <ErrorFallback
+        error={new Error('Application failed')}
+        resetErrorBoundary={vi.fn()}
+        recoveryLabel="Reload page"
+        showSecondaryActions={false}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Reload page' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Go back' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Report issue' })).not.toBeInTheDocument();
   });
 
   it('returns to browser history from the secondary action', () => {

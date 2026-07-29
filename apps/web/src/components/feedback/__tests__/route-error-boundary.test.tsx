@@ -21,18 +21,6 @@ vi.mock('@/lib/logger', async () => {
   };
 });
 
-vi.mock('@/shared/components/ui', async () => {
-  const [button, card] = await Promise.all([
-    vi.importActual<typeof import('@/components/ui/button')>('@/components/ui/button'),
-    vi.importActual<typeof import('@/components/ui/card')>('@/components/ui/card'),
-  ]);
-
-  return {
-    Button: button.Button,
-    Card: card.default,
-  };
-});
-
 import { RouteErrorBoundary } from '../route-error-boundary';
 
 describe('RouteErrorBoundary', () => {

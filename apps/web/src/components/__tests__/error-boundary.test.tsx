@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 
@@ -6,27 +6,26 @@ const { mockLoggerError } = vi.hoisted(() => ({
   mockLoggerError: vi.fn(),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  logger: { error: mockLoggerError },
-}));
+vi.mock('@/lib/logger', async () => {
+  const loggerModule = await vi.importActual<typeof import('@/lib/logger')>('@/lib/logger');
 
-import ErrorBoundary from '../error-boundary';
-
-// Suppress React error boundary console errors during tests
-const originalConsoleError = console.error;
-beforeEach(() => {
-  mockLoggerError.mockClear();
-  console.error = (...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('Error Boundary')) return;
-    if (typeof args[0] === 'string' && args[0].includes('The above error')) return;
-    originalConsoleError(...args);
-  };
-  return () => {
-    console.error = originalConsoleError;
+  return {
+    ...loggerModule,
+    logger: { ...loggerModule.logger, error: mockLoggerError },
   };
 });
 
-// Helper component that throws
+import ErrorBoundary from '../error-boundary';
+
+beforeEach(() => {
+  mockLoggerError.mockClear();
+  vi.spyOn(console, 'error').mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 function ThrowingComponent({ shouldThrow = true }: { shouldThrow?: boolean }) {
   if (shouldThrow) {
     throw new Error('Test error');
@@ -51,7 +50,7 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByText(/unexpected error/)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Test error');
   });
 
   it('renders custom fallback when provided', () => {
@@ -73,13 +72,17 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText('Test error')).toBeInTheDocument();
   });
 
-  it('renders Reload Page button', () => {
+  it('renders the shared root recovery control', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent />
       </ErrorBoundary>
     );
-    expect(screen.getByRole('button', { name: 'Reload Page' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reload page' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
+    expect(document.querySelector('[data-cgraph-surface="card"]')).toBeInTheDocument();
   });
 
   it('logs error via logger in componentDidCatch', () => {
@@ -95,13 +98,14 @@ describe('ErrorBoundary', () => {
     expect(mockLoggerError.mock.calls[0]![1]).toMatchObject({ source: 'ErrorBoundary' });
   });
 
-  it('does not render Try Again or Report Issue buttons', () => {
+  it('keeps route-only recovery actions out of the root fallback', () => {
     render(
       <ErrorBoundary>
         <ThrowingComponent />
       </ErrorBoundary>
     );
-    expect(screen.queryByRole('button', { name: 'Try Again' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Report Issue' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Go back' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Report issue' })).toBeNull();
   });
 });
