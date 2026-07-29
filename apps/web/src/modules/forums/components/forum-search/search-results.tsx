@@ -1,11 +1,10 @@
-/**
- * SearchResults Component
- *
- * Dropdown showing search results, loading state, and suggestions.
- */
-
-import { motion, AnimatePresence } from 'motion/react';
-import { MagnifyingGlassIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { ClockIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { AnimatePresence, motion } from 'motion/react';
+import { InlineLoadingSpinner } from '@/components/feedback/loading-spinner';
+import { staggerConfigs } from '@/lib/animation-presets';
+import { GlassCard } from '@/shared/components/ui';
+import { SearchResultItem } from './search-result-item';
+import type { SearchResult } from './types';
 
 const resultContainer = {
   hidden: {},
@@ -18,26 +17,19 @@ const resultItem = {
   hidden: { opacity: 0, y: 8 },
   show: { opacity: 1, y: 0, transition: { duration: 0.18 } },
 };
-import { GlassCard } from '@/shared/components/ui';
-import { SearchResultItem } from './search-result-item';
-import type { SearchResult } from './types';
-import { tweens, loop, staggerConfigs } from '@/lib/animation-presets';
 
 interface SearchResultsProps {
-  isOpen: boolean;
-  isLoading: boolean;
-  query: string;
-  results: SearchResult[];
-  suggestions: string[];
-  selectedIndex: number;
-  primaryColor: string;
-  onResultClick: (result: SearchResult) => void;
-  onSuggestionClick: (suggestion: string) => void;
+  readonly isOpen: boolean;
+  readonly isLoading: boolean;
+  readonly query: string;
+  readonly results: readonly SearchResult[];
+  readonly suggestions: readonly string[];
+  readonly selectedIndex: number;
+  readonly primaryColor: string;
+  readonly onResultClick: (result: SearchResult) => void;
+  readonly onSuggestionClick: (suggestion: string) => void;
 }
 
-/**
- * Search Results component.
- */
 export function SearchResults({
   isOpen,
   isLoading,
@@ -62,10 +54,10 @@ export function SearchResults({
         >
           <GlassCard variant="frosted" className="max-h-96 overflow-y-auto">
             {isLoading ? (
-              <LoadingState primaryColor={primaryColor} />
+              <LoadingState />
             ) : results.length > 0 ? (
               <motion.div
-                className="divide-y divide-white/[0.06]"
+                className="divide-y divide-[var(--token-border-subtle)]"
                 variants={resultContainer}
                 initial="hidden"
                 animate="show"
@@ -94,58 +86,47 @@ export function SearchResults({
   );
 }
 
-/**
- * Loading spinner state
- */
-function LoadingState({ primaryColor }: { primaryColor: string }) {
+function LoadingState() {
   return (
-    <div className="p-4 text-center text-gray-400">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={loop(tweens.slow)}
-        className="mx-auto h-6 w-6 rounded-full border-2 border-t-transparent"
-        style={{ borderColor: primaryColor, borderTopColor: 'transparent' }}
-      />
-      <p className="mt-2 text-sm">Searching...</p>
+    <div className="flex flex-col items-center gap-2 p-4 text-[var(--token-text-secondary)]">
+      <InlineLoadingSpinner label="Searching forums" />
+      <p className="text-sm">Searching...</p>
     </div>
   );
 }
 
-/**
- * No results found state
- */
-function NoResultsState({ query }: { query: string }) {
+function NoResultsState({ query }: { readonly query: string }) {
   return (
-    <div className="p-6 text-center text-gray-400">
+    <div className="p-6 text-center text-[var(--token-text-secondary)]">
       <MagnifyingGlassIcon className="mx-auto mb-2 h-10 w-10 opacity-50" />
       <p>No results found for "{query}"</p>
-      <p className="mt-1 text-sm">Try different keywords or filters</p>
+      <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+        Try different keywords or filters
+      </p>
     </div>
   );
 }
 
-/**
- * Recent searches suggestions state
- */
 function SuggestionsState({
   suggestions,
   onSuggestionClick,
 }: {
-  suggestions: string[];
-  onSuggestionClick: (suggestion: string) => void;
+  readonly suggestions: readonly string[];
+  readonly onSuggestionClick: (suggestion: string) => void;
 }) {
   return (
     <div>
-      <div className="px-3 py-2 text-xs uppercase tracking-wider text-gray-500">
+      <div className="px-3 py-2 text-xs uppercase text-[var(--token-text-muted)]">
         Recent Searches
       </div>
       {suggestions.map((suggestion, index) => (
         <button
-          key={index}
+          key={`${suggestion}-${index}`}
+          type="button"
           onClick={() => onSuggestionClick(suggestion)}
-          className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-[var(--token-card-bg)]"
+          className="flex w-full items-center gap-3 px-3 py-2 text-left text-[var(--token-text-primary)] transition-colors hover:bg-[var(--token-interactive-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--token-focus-ring)]"
         >
-          <ClockIcon className="h-4 w-4 text-gray-500" />
+          <ClockIcon className="h-4 w-4 text-[var(--token-text-muted)]" aria-hidden="true" />
           <span>{suggestion}</span>
         </button>
       ))}

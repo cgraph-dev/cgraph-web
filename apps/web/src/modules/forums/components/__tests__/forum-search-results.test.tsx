@@ -5,9 +5,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 vi.mock('@/lib/animation-presets', () => ({
-  tweens: { standard: {}, slow: {} },
-  springs: { snappy: {}, bouncy: {} },
-  loop: () => ({}),
   staggerConfigs: { fast: { staggerChildren: 0.03 } },
 }));
 
@@ -89,6 +86,7 @@ describe('SearchResults', () => {
       />
     );
     expect(screen.getByText('Searching...')).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: 'Searching forums' })).toBeInTheDocument();
   });
 
   it('renders search results', () => {
