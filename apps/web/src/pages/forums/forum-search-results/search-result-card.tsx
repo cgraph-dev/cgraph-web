@@ -1,21 +1,22 @@
-/**
- * Search Result Card
- *
- * Displays a single forum search result with type badge,
- * title, content preview, author info, and metadata.
- *
- */
-
-import type { ForumSearchResult } from '@/modules/forums/store/forumStore.types';
 import { Link } from 'react-router-dom';
+import type { ForumSearchResult } from '@/modules/forums/store/forumStore.types';
 
 const TYPE_BADGE_STYLES: Record<
   ForumSearchResult['type'],
-  { bg: string; text: string; label: string }
+  { readonly className: string; readonly label: string }
 > = {
-  thread: { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'Thread' },
-  post: { bg: 'bg-green-500/20', text: 'text-green-400', label: 'Post' },
-  comment: { bg: 'bg-gray-500/20', text: 'text-gray-400', label: 'Comment' },
+  thread: {
+    className: 'bg-[var(--token-bg-tertiary)] text-[var(--token-feedback-info)]',
+    label: 'Thread',
+  },
+  post: {
+    className: 'bg-[var(--token-bg-tertiary)] text-[var(--token-feedback-success)]',
+    label: 'Post',
+  },
+  comment: {
+    className: 'bg-[var(--token-bg-tertiary)] text-[var(--token-text-secondary)]',
+    label: 'Comment',
+  },
 };
 
 function highlightText(text: string, highlights?: string[]): React.ReactNode {
@@ -61,7 +62,7 @@ function highlightText(text: string, highlights?: string[]): React.ReactNode {
     parts.push(
       <mark
         key={`${range.start}-${range.end}`}
-        className="rounded bg-yellow-500/30 px-0.5 text-yellow-200"
+        className="rounded bg-[var(--token-bg-tertiary)] px-0.5 text-[var(--token-status-warning)]"
       >
         {text.slice(range.start, range.end)}
       </mark>
@@ -91,81 +92,66 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 interface SearchResultCardProps {
-  result: ForumSearchResult;
+  readonly result: ForumSearchResult;
 }
 
-/** Description. */
-/** Search Result Card component. */
 export function SearchResultCard({ result }: SearchResultCardProps) {
   const badge = TYPE_BADGE_STYLES[result.type];
   const preview =
     result.contentPreview.length > 200
-      ? result.contentPreview.slice(0, 200) + '…'
+      ? `${result.contentPreview.slice(0, 200)}…`
       : result.contentPreview;
-
-  const linkTo =
-    result.type === 'thread' || result.type === 'post'
-      ? `/forums/${result.forum.slug}/post/${result.id}`
-      : `/forums/${result.forum.slug}/post/${result.id}`;
 
   return (
     <Link
-      to={linkTo}
-      className="block rounded-lg border border-[var(--token-border-muted)] bg-white/5 p-4 transition-colors hover:bg-white/10"
+      to={`/forums/${result.forum.slug}/post/${result.id}`}
+      className="cgraph-card block border border-[var(--token-border-default)] bg-[var(--token-card-bg)] p-4 transition-colors hover:bg-[var(--token-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focus-ring)]"
     >
       <div className="flex items-start gap-3">
-        {/* Type Badge */}
-        <span
-          className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}
-        >
+        <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${badge.className}`}>
           {badge.label}
         </span>
 
         <div className="min-w-0 flex-1">
-          {/* Title */}
           {result.title && (
-            <h3 className="mb-1 truncate text-sm font-semibold text-white">
+            <h3 className="mb-1 truncate text-sm font-semibold text-[var(--token-text-primary)]">
               {highlightText(result.title, result.highlights)}
             </h3>
           )}
 
-          {/* Content Preview */}
-          <p className="mb-2 text-sm leading-relaxed text-gray-400">
+          <p className="mb-2 text-sm leading-relaxed text-[var(--token-text-secondary)]">
             {highlightText(preview, result.highlights)}
           </p>
 
-          {/* Meta Row */}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-            {/* Author */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--token-text-muted)]">
             <div className="flex items-center gap-1.5">
               {result.author.avatar ? (
                 <img src={result.author.avatar} alt="" className="h-4 w-4 rounded-full" />
               ) : (
-                <div className="h-4 w-4 rounded-full bg-gray-600" />
+                <span
+                  className="h-4 w-4 rounded-full bg-[var(--token-bg-tertiary)]"
+                  aria-hidden="true"
+                />
               )}
               <span>{result.author.username}</span>
             </div>
 
-            {/* Forum */}
-            <span className="text-gray-600">in</span>
-            <span className="text-blue-400">{result.forum.name}</span>
+            <span>in</span>
+            <span className="text-[var(--token-interactive-primary)]">{result.forum.name}</span>
 
-            {/* Board */}
             {result.board && (
               <>
-                <span className="text-gray-600">›</span>
+                <span aria-hidden="true">›</span>
                 <span>{result.board.name}</span>
               </>
             )}
 
-            {/* Score */}
             <span className="ml-auto tabular-nums">
               {result.score > 0 ? '+' : ''}
               {result.score} pts
             </span>
 
-            {/* Timestamp */}
-            <span>{formatRelativeTime(result.createdAt)}</span>
+            <time dateTime={result.createdAt}>{formatRelativeTime(result.createdAt)}</time>
           </div>
         </div>
       </div>
