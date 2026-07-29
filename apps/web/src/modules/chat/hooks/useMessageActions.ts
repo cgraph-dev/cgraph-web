@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
 import { http } from '@/lib/api-client';
-import { toast } from '@/components/feedback/toast';
+import { toast } from '@/shared/components/ui';
 import { createLogger } from '@/lib/logger';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 

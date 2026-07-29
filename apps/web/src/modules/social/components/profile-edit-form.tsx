@@ -10,7 +10,7 @@
 
 import { useRef, useState } from 'react';
 import { http } from '@/lib/api-client';
-import { toast } from '@/components/feedback/toast';
+import { toast } from '@/shared/components/ui';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
 import {

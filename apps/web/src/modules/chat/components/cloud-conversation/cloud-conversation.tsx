@@ -24,7 +24,7 @@ import {
   getConversationName,
   getConversationOnlineStatus,
 } from '@/modules/chat/components/conversation-list/utils';
-import { toast } from '@/components/feedback/toast';
+import { toast } from '@/shared/components/ui';
 
 async function writeClipboardText(text: string): Promise<void> {
   if (navigator.clipboard?.writeText) {

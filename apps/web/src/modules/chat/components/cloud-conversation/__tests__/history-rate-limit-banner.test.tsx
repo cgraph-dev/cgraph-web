@@ -115,7 +115,8 @@ vi.mock('@/modules/chat/components/conversation-list/utils', () => ({
   getConversationName: () => 'Alice',
   getConversationOnlineStatus: () => true,
 }));
-vi.mock('@/components/feedback/toast', () => ({
+vi.mock('@/shared/components/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/components/ui')>()),
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 

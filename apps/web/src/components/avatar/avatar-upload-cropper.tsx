@@ -11,7 +11,7 @@ import {
   PlusIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { toast } from '@/components/feedback/toast';
+import { toast } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 
 export interface CroppedAvatarPayload {

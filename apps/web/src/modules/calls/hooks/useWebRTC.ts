@@ -9,7 +9,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSocket } from '@/lib/socket';
 import { WebRTCManager, CallState, CallEventHandler } from '@/lib/webrtc/webrtcService';
-import { toast } from '@/components/feedback/toast';
+import { toast } from '@/shared/components/ui';
 import { logger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
 import { useSettingsStore } from '@/modules/settings/store';

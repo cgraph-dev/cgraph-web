@@ -85,7 +85,7 @@ vi.mock('@/modules/settings/store', () => ({
     }),
 }));
 
-vi.mock('@/components/feedback/toast', () => ({
+vi.mock('@/shared/components/ui', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
@@ -222,7 +222,7 @@ describe('useWebRTC', () => {
   });
 
   it('shows toast error when answerCall fails', async () => {
-    const { toast } = await import('@/components/feedback/toast');
+    const { toast } = await import('@/shared/components/ui');
     mockAnswerCall.mockResolvedValueOnce(false);
 
     const { result } = renderHook(() => useWebRTC());

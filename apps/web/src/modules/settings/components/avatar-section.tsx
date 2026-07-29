@@ -7,7 +7,7 @@ import {
   AvatarUploadCropper,
   type CroppedAvatarPayload,
 } from '@/components/avatar/avatar-upload-cropper';
-import { toast } from '@/components/feedback/toast';
+import { toast } from '@/shared/components/ui';
 import { getAvatarBorderId } from '@/lib/utils';
 import { uploadCurrentUserAvatarAndSync } from '@/lib/avatar-upload';
 import { applyOwnIdentityPatch } from '@/lib/identity/ownIdentitySync';

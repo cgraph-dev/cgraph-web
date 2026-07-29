@@ -1,57 +1,57 @@
-/**
- * Toast notification component.
- */
+import { CircleCheck, CircleX, Info, TriangleAlert, X } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { create } from 'zustand';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import {
-  CheckCircleIcon,
-  XCircleIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+import { IconButton } from './button';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface Toast {
-  id: string;
-  type: ToastType;
-  title: string;
-  message?: string;
-  duration?: number;
+  readonly id: string;
+  readonly type: ToastType;
+  readonly title: string;
+  readonly message?: string;
+  readonly duration?: number;
 }
 
 interface ToastStore {
-  toasts: Toast[];
-  addToast: (toast: Omit<Toast, 'id'>) => void;
-  removeToast: (id: string) => void;
+  readonly toasts: readonly Toast[];
+  readonly addToast: (toast: Omit<Toast, 'id'>) => void;
+  readonly removeToast: (id: string) => void;
+}
+
+const DEFAULT_DURATION = 5000;
+const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+let toastSequence = 0;
+
+function createToastId(): string {
+  toastSequence += 1;
+  return `toast-${Date.now()}-${toastSequence}`;
 }
 
 export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
   addToast: (toast) => {
-    const id = Math.random().toString(36).substring(7);
-    set((state) => ({
-      toasts: [...state.toasts, { ...toast, id }],
-    }));
+    const id = createToastId();
+    set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }));
 
-    // Auto-remove after duration
-    const duration = toast.duration ?? 5000;
+    const duration = toast.duration ?? DEFAULT_DURATION;
     if (duration > 0) {
-      setTimeout(() => {
-        set((state) => ({
-          toasts: state.toasts.filter((t) => t.id !== id),
-        }));
-      }, duration);
+      toastTimers.set(
+        id,
+        setTimeout(() => useToastStore.getState().removeToast(id), duration)
+      );
     }
   },
-  removeToast: (id) =>
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    })),
+  removeToast: (id) => {
+    const timer = toastTimers.get(id);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      toastTimers.delete(id);
+    }
+    set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }));
+  },
 }));
 
-// Toast helper functions
 export const toast = {
   success: (title: string, message?: string) =>
     useToastStore.getState().addToast({ type: 'success', title, message }),
@@ -63,99 +63,71 @@ export const toast = {
     useToastStore.getState().addToast({ type: 'info', title, message }),
 };
 
-const typeConfig = {
-  success: {
-    icon: CheckCircleIcon,
-    bgColor: 'bg-[var(--token-card-bg)]',
-    borderColor: 'border-[var(--token-card-border)] border-l-2 border-l-emerald-500',
-    iconColor: 'text-emerald-400',
-  },
-  error: {
-    icon: XCircleIcon,
-    bgColor: 'bg-[var(--token-card-bg)]',
-    borderColor: 'border-[var(--token-card-border)] border-l-2 border-l-red-500',
-    iconColor: 'text-red-400',
-  },
-  warning: {
-    icon: ExclamationTriangleIcon,
-    bgColor: 'bg-[var(--token-card-bg)]',
-    borderColor: 'border-[var(--token-card-border)] border-l-2 border-l-amber-500',
-    iconColor: 'text-amber-400',
-  },
-  info: {
-    icon: InformationCircleIcon,
-    bgColor: 'bg-[var(--token-card-bg)]',
-    borderColor:
-      'border-[var(--token-card-border)] border-l-2 border-l-[var(--color-brand-purple)]',
-    iconColor: 'text-[var(--color-brand-purple)]',
-  },
-};
+const TYPE_CONFIG = {
+  success: { icon: CircleCheck, role: 'status', live: 'polite' },
+  error: { icon: CircleX, role: 'alert', live: 'assertive' },
+  warning: { icon: TriangleAlert, role: 'alert', live: 'assertive' },
+  info: { icon: Info, role: 'status', live: 'polite' },
+} as const;
 
-function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) {
-  const config = typeConfig[toast.type];
+interface ToastItemProps {
+  readonly toast: Toast;
+  readonly onRemove: () => void;
+}
+
+function ToastItem({ toast, onRemove }: ToastItemProps) {
+  const config = TYPE_CONFIG[toast.type];
   const Icon = config.icon;
   const prefersReducedMotion = useReducedMotion();
 
-  const springTransition = prefersReducedMotion
-    ? { duration: 0 }
-    : { type: 'spring' as const, stiffness: 320, damping: 28 };
-
   return (
     <motion.div
-      layout
-      initial={prefersReducedMotion ? false : { opacity: 0, x: 60, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={
+      layout="position"
+      initial={prefersReducedMotion ? false : { opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24 }}
+      transition={
         prefersReducedMotion
-          ? { opacity: 0 }
-          : { opacity: 0, x: 60, scale: 0.9, height: 0, marginBottom: 0 }
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 360, damping: 32, mass: 0.8 }
       }
-      transition={springTransition}
-      role="alert"
-      aria-live="assertive"
-      className={`flex items-start gap-3 rounded-xl border p-4 backdrop-blur-xl ${config.bgColor} ${config.borderColor} shadow-card`}
+      className="cgraph-toast"
+      data-cgraph-material="raised"
+      data-cgraph-surface="toast"
+      data-cgraph-variant={toast.type}
     >
-      <Icon className={`h-5 w-5 ${config.iconColor} mt-0.5 flex-shrink-0`} />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-[var(--token-text-primary)]">{toast.title}</p>
-        {toast.message && (
-          <p className="mt-1 text-sm text-[var(--token-text-secondary)]">{toast.message}</p>
-        )}
-      </div>
-      <button
-        onClick={onRemove}
-        className="flex-shrink-0 text-gray-400 transition-colors hover:text-white"
-        aria-label="Dismiss notification"
+      <Icon className="cgraph-toast-icon" aria-hidden="true" />
+      <div
+        className="min-w-0"
+        role={config.role}
+        aria-live={config.live}
+        aria-atomic="true"
       >
-        <XMarkIcon className="h-5 w-5" />
-      </button>
+        <p className="cgraph-toast-title">{toast.title}</p>
+        {toast.message ? <p className="cgraph-toast-message">{toast.message}</p> : null}
+      </div>
+      <IconButton
+        className="cgraph-toast-dismiss"
+        icon={<X />}
+        label="Dismiss notification"
+        size="sm"
+        onClick={onRemove}
+      />
     </motion.div>
   );
 }
 
-/**
- */
-/**
- * Toast Container wrapper component.
- */
 export function ToastContainer() {
   const { toasts, removeToast } = useToastStore();
 
   return (
-    <div
-      role="status"
-      aria-label="Notifications"
-      aria-live="polite"
-      className="pointer-events-none fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2"
-    >
-      <AnimatePresence mode="popLayout">
-        {toasts.map((t) => (
-          <div key={t.id} className="pointer-events-auto">
-            <ToastItem toast={t} onRemove={() => removeToast(t.id)} />
-          </div>
+    <section className="cgraph-toast-stack" aria-label="Notifications">
+      <AnimatePresence initial={false} mode="popLayout">
+        {toasts.map((item) => (
+          <ToastItem key={item.id} toast={item} onRemove={() => removeToast(item.id)} />
         ))}
       </AnimatePresence>
-    </div>
+    </section>
   );
 }
 

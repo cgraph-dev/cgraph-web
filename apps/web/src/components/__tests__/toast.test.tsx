@@ -1,237 +1,121 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { ToastProvider, useToast } from '../feedback/toast';
-function ToastConsumer() {
-  const { showToast, toasts, hideToast } = useToast();
-  return (
-    <div>
-      <button onClick={() => showToast('success', 'Saved!')}>Show Success</button>
-      <button onClick={() => showToast('error', 'Failed!')}>Show Error</button>
-      <button onClick={() => showToast('warning', 'Careful!')}>Show Warning</button>
-      <button onClick={() => showToast('info', 'FYI')}>Show Info</button>
-      <button onClick={() => showToast('success', 'No auto', 0)}>No Auto</button>
-      {toasts.length > 0 && <button onClick={() => hideToast(toasts[0]!.id)}>Hide First</button>}
-      <span data-testid="count">{toasts.length}</span>
-    </div>
-  );
-}
-describe('Toast system', () => {
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useToast } from '../../hooks/useToast';
+import ToastContainer, { toast, useToastStore } from '../ui/toast';
+
+describe('Toast', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.clearAllMocks();
+    useToastStore.setState({ toasts: [] });
   });
 
   afterEach(() => {
+    vi.clearAllTimers();
     vi.useRealTimers();
   });
-  it('renders children inside the provider', () => {
-    render(
-      <ToastProvider>
-        <p>Hello</p>
-      </ToastProvider>
-    );
-    expect(screen.getByText('Hello')).toBeInTheDocument();
-  });
 
-  it('renders no toasts initially', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    expect(screen.getByTestId('count').textContent).toBe('0');
-  });
-  it('shows a success toast', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    expect(screen.getByText('Saved!')).toBeInTheDocument();
-    expect(screen.getByTestId('count').textContent).toBe('1');
-  });
-
-  it('shows an error toast', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Error'));
-    expect(screen.getByText('Failed!')).toBeInTheDocument();
-  });
-
-  it('shows a warning toast', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Warning'));
-    expect(screen.getByText('Careful!')).toBeInTheDocument();
-  });
-
-  it('shows an info toast', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Info'));
-    expect(screen.getByText('FYI')).toBeInTheDocument();
-  });
-
-  it('can show multiple toasts', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    fireEvent.click(screen.getByText('Show Error'));
-    expect(screen.getByTestId('count').textContent).toBe('2');
-  });
-  it('renders toast items with role="alert"', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-  });
-  it('hides a toast when hideToast is called', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    expect(screen.getByText('Saved!')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('Hide First'));
-    expect(screen.queryByText('Saved!')).not.toBeInTheDocument();
-    expect(screen.getByTestId('count').textContent).toBe('0');
-  });
-
-  it('dismisses a toast when the dismiss button is clicked', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    const dismissBtn = screen.getByLabelText('Dismiss');
-    fireEvent.click(dismissBtn);
-    expect(screen.queryByText('Saved!')).not.toBeInTheDocument();
-  });
-  it('auto-dismisses after the default duration (5000ms)', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    expect(screen.getByText('Saved!')).toBeInTheDocument();
+  it('announces success and info messages politely', () => {
+    render(<ToastContainer />);
 
     act(() => {
-      vi.advanceTimersByTime(5000);
+      toast.success('Saved', 'Your settings are current.');
+      toast.info('Connected');
     });
 
-    expect(screen.queryByText('Saved!')).not.toBeInTheDocument();
+    const statuses = screen.getAllByRole('status');
+    expect(statuses).toHaveLength(2);
+    expect(statuses[0]).toHaveTextContent('SavedYour settings are current.');
+    expect(statuses[1]).toHaveTextContent('Connected');
   });
 
-  it('does not auto-dismiss before the duration elapses', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
+  it('announces error and warning messages assertively', () => {
+    render(<ToastContainer />);
 
     act(() => {
-      vi.advanceTimersByTime(4999);
+      toast.error('Message not sent');
+      toast.warning('Connection is unstable');
     });
 
-    expect(screen.getByText('Saved!')).toBeInTheDocument();
+    const alerts = screen.getAllByRole('alert');
+    expect(alerts).toHaveLength(2);
+    expect(alerts[0]).toHaveAttribute('aria-live', 'assertive');
+    expect(alerts[1]).toHaveAttribute('aria-live', 'assertive');
   });
 
-  it('does not auto-dismiss when duration is 0', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('No Auto'));
+  it('exposes semantic variants without hardcoded color classes', () => {
+    render(<ToastContainer />);
 
     act(() => {
-      vi.advanceTimersByTime(60000);
+      toast.success('Success');
+      toast.error('Error');
+      toast.warning('Warning');
+      toast.info('Info');
     });
 
-    expect(screen.getByTestId('count').textContent).toBe('1');
-  });
-  it('applies success color classes', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    const alert = screen.getByRole('alert');
-    expect(alert.className).toContain('green');
+    expect(document.querySelector('[data-cgraph-variant="success"]')).not.toBeNull();
+    expect(document.querySelector('[data-cgraph-variant="error"]')).not.toBeNull();
+    expect(document.querySelector('[data-cgraph-variant="warning"]')).not.toBeNull();
+    expect(document.querySelector('[data-cgraph-variant="info"]')).not.toBeNull();
   });
 
-  it('applies error color classes', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Error'));
-    const alert = screen.getByRole('alert');
-    expect(alert.className).toContain('red');
+  it('creates distinct IDs for rapid notifications', () => {
+    act(() => {
+      toast.success('First');
+      toast.success('Second');
+    });
+
+    const ids = useToastStore.getState().toasts.map((item) => item.id);
+    expect(new Set(ids).size).toBe(2);
   });
 
-  it('applies warning color classes', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Warning'));
-    const alert = screen.getByRole('alert');
-    expect(alert.className).toContain('yellow');
+  it('dismisses one notification without removing its neighbors', () => {
+    render(<ToastContainer />);
+
+    act(() => {
+      toast.success('First');
+      toast.error('Second');
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Dismiss notification' })[0]!);
+
+    expect(useToastStore.getState().toasts.map((item) => item.title)).toEqual(['Second']);
   });
 
-  it('applies info color classes', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Info'));
-    const alert = screen.getByRole('alert');
-    expect(alert.className).toContain('blue');
+  it('auto-dismisses after the default five-second duration', () => {
+    render(<ToastContainer />);
+
+    act(() => toast.success('Saved'));
+    act(() => vi.advanceTimersByTime(4999));
+    expect(screen.getByText('Saved')).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(useToastStore.getState().toasts).toHaveLength(0);
   });
-  it('throws when useToast is used outside ToastProvider', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => render(<ToastConsumer />)).toThrow('useToast must be used within a ToastProvider');
-    spy.mockRestore();
+
+  it('keeps a notification when duration is zero', () => {
+    render(<ToastContainer />);
+
+    act(() => {
+      useToastStore
+        .getState()
+        .addToast({ type: 'info', title: 'Persistent', duration: 0 });
+      vi.advanceTimersByTime(60_000);
+    });
+
+    expect(screen.getByText('Persistent')).toBeInTheDocument();
   });
-  it('handles rapid add and remove correctly', () => {
-    render(
-      <ToastProvider>
-        <ToastConsumer />
-      </ToastProvider>
-    );
-    fireEvent.click(screen.getByText('Show Success'));
-    fireEvent.click(screen.getByText('Show Error'));
-    fireEvent.click(screen.getByText('Hide First'));
-    // One removed, one remains
-    expect(screen.getByTestId('count').textContent).toBe('1');
-    expect(screen.queryByText('Saved!')).not.toBeInTheDocument();
-    expect(screen.getByText('Failed!')).toBeInTheDocument();
+
+  it('honors the duration supplied through the shared hook', () => {
+    const { result } = renderHook(() => useToast());
+
+    act(() => {
+      result.current.showToast({ type: 'success', message: 'Brief update', duration: 1200 });
+      vi.advanceTimersByTime(1199);
+    });
+    expect(useToastStore.getState().toasts).toHaveLength(1);
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(useToastStore.getState().toasts).toHaveLength(0);
   });
 });

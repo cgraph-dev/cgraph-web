@@ -18,6 +18,10 @@ vi.mock('@/shared/components/ui', () => ({
       {children}
     </div>
   ),
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 vi.mock('@/components/theme/themed-avatar', () => ({
@@ -30,13 +34,6 @@ vi.mock('@/lib/animations/animation-engine', () => ({
 
 vi.mock('@/modules/auth/store', () => ({
   useAuthStore: vi.fn(() => vi.fn()),
-}));
-
-vi.mock('@/components/feedback/toast', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
 }));
 
 vi.mock('@/lib/avatar-upload', () => ({

@@ -5,7 +5,7 @@
  * Provides a simple interface for showing toast notifications.
  */
 
-import { toast as toastActions } from '@/components/ui/toast';
+import { useToastStore } from '@/components/ui/toast';
 
 export interface ToastOptions {
   type: 'success' | 'error' | 'warning' | 'info';
@@ -29,7 +29,11 @@ export interface UseToastReturn {
  */
 export function useToast(): UseToastReturn {
   function showToast(options: ToastOptions) {
-    toastActions[options.type](options.message);
+    useToastStore.getState().addToast({
+      type: options.type,
+      title: options.message,
+      duration: options.duration,
+    });
   }
 
   return { showToast };
