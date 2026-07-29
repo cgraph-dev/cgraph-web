@@ -1,32 +1,16 @@
-/**
- * Comment input section with textarea and submit button.
- */
-/**
- * Comment Input Section
- *
- * Renders either a locked-post notice or the comment textarea
- * with submit button. Used at the bottom of the ForumPost page.
- *
- */
-
-import { LockClosedIcon } from '@heroicons/react/24/outline';
+import { LockKeyhole } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/input';
 
 export interface CommentInputProps {
-  /** Whether the post is locked (disables commenting) */
-  isLocked: boolean;
-  /** Current user's display name */
-  username?: string;
-  /** Current comment text */
-  value: string;
-  /** Update comment text */
-  onChange: (value: string) => void;
-  /** Submit handler */
-  onSubmit: () => void;
-  /** Whether submission is in progress */
-  isSubmitting: boolean;
+  readonly isLocked: boolean;
+  readonly username?: string;
+  readonly value: string;
+  readonly onChange: (value: string) => void;
+  readonly onSubmit: () => void;
+  readonly isSubmitting: boolean;
 }
 
-/** Comment input area or locked notice */
 export function CommentInput({
   isLocked,
   username,
@@ -37,9 +21,9 @@ export function CommentInput({
 }: CommentInputProps) {
   if (isLocked) {
     return (
-      <div className="mt-4 rounded-lg border border-yellow-600/50 bg-[var(--token-bg-secondary)] p-4">
-        <div className="flex items-center gap-3 text-yellow-400">
-          <LockClosedIcon className="h-5 w-5" />
+      <div className="cgraph-card mt-4 border border-[var(--token-status-warning)] p-4">
+        <div className="flex items-center gap-3 text-[var(--token-status-warning)]">
+          <LockKeyhole className="h-5 w-5" aria-hidden="true" />
           <p className="text-sm">This post is locked. New comments are disabled.</p>
         </div>
       </div>
@@ -47,25 +31,29 @@ export function CommentInput({
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] p-4">
-      <p className="mb-2 text-sm text-gray-400">
-        Comment as <span className="text-primary-400">{username}</span>
+    <div className="cgraph-card mt-4 border border-[var(--token-border-default)] p-4">
+      <p className="mb-2 text-sm text-[var(--token-text-secondary)]">
+        Comment as{' '}
+        <span className="font-medium text-[var(--token-interactive-primary)]">
+          {username ?? 'your account'}
+        </span>
       </p>
-      <textarea
+      <Textarea
+        aria-label="Comment"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="What are your thoughts?"
         rows={4}
-        className="w-full resize-none rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-4 py-3 text-white placeholder-white/30 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="min-h-28 resize-none"
       />
       <div className="mt-2 flex justify-end">
-        <button
+        <Button
           onClick={onSubmit}
           disabled={!value.trim() || isSubmitting}
-          className="rounded-full bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          isLoading={isSubmitting}
         >
-          {isSubmitting ? 'Submitting...' : 'Comment'}
-        </button>
+          {isSubmitting ? 'Posting…' : 'Comment'}
+        </Button>
       </div>
     </div>
   );

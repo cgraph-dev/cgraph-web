@@ -1,24 +1,14 @@
-/**
- * CreatePost Component - Forum post creation page with markdown editor
- */
 import { Link } from 'react-router-dom';
+import { ArrowLeft, Paperclip, Tag, X } from 'lucide-react';
+import { Button, IconButton } from '@/components/ui/button';
+import { Input, Select } from '@/components/ui/input';
 import MarkdownEditor from '@/components/content/markdown-editor';
 import type { PostAttachment } from '@/modules/forums/store';
 import AttachmentUploader from '@/modules/forums/components/attachment-uploader';
 import { ForumPageLoadingState } from '@/pages/forums/forum-page-loading-state';
-import {
-  ArrowLeftIcon,
-  PhotoIcon,
-  XMarkIcon,
-  TagIcon,
-  PaperClipIcon,
-} from '@heroicons/react/24/outline';
 import { useCreatePost } from './hooks';
 import PostTypeTabs from './post-type-tabs';
 
-/**
- * Create Post component.
- */
 export default function CreatePost() {
   const {
     forumSlug,
@@ -49,95 +39,114 @@ export default function CreatePost() {
     return <ForumPageLoadingState label="Loading post composer" />;
   }
 
+  const prefixOptions = [
+    { value: '', label: 'No prefix' },
+    ...threadPrefixes.map((prefix) => ({ value: prefix.id, label: prefix.name })),
+  ];
+
+  const addAttachment = (attachment: PostAttachment) => {
+    setAttachments([...attachments, attachment]);
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(attachments.filter((attachment) => attachment.id !== id));
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto bg-[var(--token-card-bg)]">
+    <div className="flex-1 overflow-y-auto bg-[var(--token-bg-primary)]">
       <div className="animate-fadeIn mx-auto max-w-3xl px-4 py-8">
-        {/* Header */}
         <div className="mb-6 flex items-center gap-4">
           <Link
             to={`/forums/${forumSlug}`}
-            className="rounded-lg p-2 transition-colors hover:bg-[var(--token-card-bg)]"
+            aria-label={`Back to ${forum.name}`}
+            title={`Back to ${forum.name}`}
+            className="cgraph-control cgraph-control-icon cgraph-control-ghost inline-flex p-2 text-[var(--token-text-secondary)]"
           >
-            <ArrowLeftIcon className="h-5 w-5 text-gray-400" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-white">Create a Post</h1>
-            <p className="text-sm text-gray-400">
+            <h1 className="text-2xl font-bold text-[var(--token-text-primary)]">Create a post</h1>
+            <p className="text-sm text-[var(--token-text-secondary)]">
               in{' '}
-              <Link to={`/forums/${forumSlug}`} className="text-primary-400 hover:text-primary-300">
+              <Link
+                to={`/forums/${forumSlug}`}
+                className="font-medium text-[var(--token-interactive-primary)] hover:text-[var(--token-interactive-hover)]"
+              >
                 c/{forum.name}
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Error Message */}
         {error && (
-          <div className="mb-6 flex items-center justify-between rounded-lg border border-red-500 bg-red-500/20 p-4">
-            <span className="text-red-400">{error}</span>
-            <button onClick={() => setError(null)}>
-              <XMarkIcon className="h-5 w-5 text-red-400" />
-            </button>
+          <div
+            className="cgraph-section-surface mb-6 flex items-center justify-between gap-3 border-[var(--token-feedback-error)] p-4"
+            role="alert"
+          >
+            <span className="text-sm text-[var(--token-feedback-error)]">{error}</span>
+            <IconButton
+              icon={<X aria-hidden="true" />}
+              label="Dismiss error"
+              variant="danger"
+              size="sm"
+              onClick={() => setError(null)}
+            />
           </div>
         )}
 
-        {/* Not a member warning */}
         {!canPost && (
-          <div className="mb-6 rounded-lg border border-yellow-500 bg-yellow-500/20 p-4">
-            <p className="text-yellow-400">
-              You must join this forum to create posts.{' '}
-              <button
-                onClick={handleJoinForum}
-                disabled={isJoining}
-                className="underline hover:text-yellow-300 disabled:opacity-50"
-              >
-                {isJoining ? 'Joining...' : 'Join now'}
-              </button>
+          <div className="cgraph-section-surface mb-6 flex flex-wrap items-center justify-between gap-3 border-[var(--token-status-warning)] p-4">
+            <p className="text-sm text-[var(--token-status-warning)]">
+              Join this forum before creating a post.
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleJoinForum}
+              isLoading={isJoining}
+            >
+              {isJoining ? 'Joining…' : 'Join forum'}
+            </Button>
           </div>
         )}
 
         <PostTypeTabs postType={postType} setPostType={setPostType} />
 
-        {/* Post Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
           <div>
-            <input
+            <Input
+              label="Title"
               type="text"
-              placeholder="Title"
+              placeholder="Give your post a clear title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={300}
-              className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-4 py-3 text-white placeholder-white/30 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
+              size="lg"
               required
             />
-            <div className="mt-1 text-right text-xs text-gray-500">{title.length}/300</div>
+            <div
+              className="mt-1 text-right text-xs text-[var(--token-text-muted)]"
+              aria-live="polite"
+            >
+              {title.length}/300
+            </div>
           </div>
 
-          {/* Thread Prefix Selector */}
           {threadPrefixes.length > 0 && (
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-300">
-                <TagIcon className="h-4 w-4" />
-                Thread Prefix (Optional)
-              </label>
-              <select
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[var(--token-text-secondary)]">
+                <Tag className="h-4 w-4" aria-hidden="true" />
+                <span className="text-sm font-medium">Thread organization</span>
+              </div>
+              <Select
+                label="Prefix"
                 value={selectedPrefix}
-                onChange={(e) => setSelectedPrefix(e.target.value)}
-                className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-4 py-3 text-white focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">No Prefix</option>
-                {threadPrefixes.map((prefix) => (
-                  <option key={prefix.id} value={prefix.id}>
-                    {prefix.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(event) => setSelectedPrefix(event.target.value)}
+                options={prefixOptions}
+              />
             </div>
           )}
 
-          {/* Content based on type */}
           {postType === 'text' && (
             <div>
               <MarkdownEditor
@@ -150,67 +159,59 @@ export default function CreatePost() {
           )}
 
           {postType === 'image' && (
-            <div className="rounded-lg border-2 border-dashed border-[var(--token-card-border)] p-8 text-center">
-              <PhotoIcon className="mx-auto mb-4 h-12 w-12 text-gray-500" />
-              <p className="mb-2 text-gray-400">Drag and drop images or</p>
-              <button
-                type="button"
-                className="rounded-lg bg-[var(--token-card-bg)] px-4 py-2 text-white transition-colors hover:bg-[var(--token-hover)]"
-              >
-                Upload
-              </button>
-              <p className="mt-2 text-xs text-gray-500">
-                Max file size: 10MB. Supported formats: JPG, PNG, GIF
-              </p>
-            </div>
-          )}
-
-          {postType === 'link' && (
-            <div>
-              <input
-                type="url"
-                placeholder="URL"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="w-full rounded-lg border border-[var(--token-card-border)] bg-[var(--token-card-bg)] px-4 py-3 text-white placeholder-white/30 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
-                required={postType === 'link'}
-              />
-            </div>
-          )}
-
-          {/* Attachments for text/link/poll posts */}
-          {(postType === 'text' || postType === 'link' || postType === 'poll') && (
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-300">
-                <PaperClipIcon className="h-4 w-4" />
-                Attachments (Optional)
-              </label>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-[var(--token-text-secondary)]">Images</p>
               <AttachmentUploader
                 attachments={attachments}
-                onUpload={(attachment: PostAttachment) =>
-                  setAttachments([...attachments, attachment])
-                }
-                onDelete={(id: string) => setAttachments(attachments.filter((a) => a.id !== id))}
+                onUpload={addAttachment}
+                onDelete={removeAttachment}
                 maxFiles={5}
               />
             </div>
           )}
 
-          {/* Submit Buttons */}
+          {postType === 'link' && (
+            <Input
+              label="Link"
+              type="url"
+              placeholder="https://example.com"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              size="lg"
+              required
+            />
+          )}
+
+          {(postType === 'text' || postType === 'link' || postType === 'poll') && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-[var(--token-text-secondary)]">
+                <Paperclip className="h-4 w-4" aria-hidden="true" />
+                <span className="text-sm font-medium">Attachments</span>
+              </div>
+              <AttachmentUploader
+                attachments={attachments}
+                onUpload={addAttachment}
+                onDelete={removeAttachment}
+                maxFiles={5}
+              />
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-4">
             <Link
               to={`/forums/${forumSlug}`}
-              className="rounded-lg bg-[var(--token-card-bg)] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[var(--token-card-bg)]"
+              className="cgraph-control cgraph-control-outline inline-flex items-center justify-center px-6 py-3 text-base font-medium"
             >
               Cancel
             </Link>
-            <button
+            <Button
               type="submit"
+              size="lg"
               disabled={isSubmitting || !title.trim() || !canPost}
-              className="rounded-lg bg-primary-600 px-6 py-2.5 font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-primary-600/50"
+              isLoading={isSubmitting}
             >
-              {isSubmitting ? 'Posting...' : 'Post'}
-            </button>
+              {isSubmitting ? 'Posting…' : 'Post'}
+            </Button>
           </div>
         </form>
       </div>
