@@ -12,7 +12,7 @@
 import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { springPreset } from '@/components/liquid-glass/shared';
+import { springs } from '@/lib/animations/transitions';
 import { useConversationSearch } from '../../hooks/useConversationSearch';
 import { FilterChips } from './filter-chips';
 import { SearchResultItem } from './search-result-item';
@@ -93,8 +93,8 @@ export function InConversationSearchPanel({
           initial={{ x: '100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
-          transition={springPreset}
-          className="bg-[var(--token-card-bg)]/[0.82] absolute inset-y-0 right-0 z-30 flex w-80 flex-col border-l border-[var(--token-card-border)] shadow-[−8px_0_32px_rgba(0,0,0,0.3)] backdrop-blur-[20px] backdrop-saturate-[1.6] lg:w-96"
+          transition={springs.default}
+          className="cgraph-pane absolute inset-y-0 right-0 z-30 flex w-80 flex-col lg:w-96"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--token-card-border)] px-4 py-3">

@@ -14,6 +14,7 @@ import { PageTransition } from '@/shared/components/page-transition';
 import { AuthInitializer } from '@/routes/auth-initializer';
 import { AppRoutes } from '@/routes/app-routes';
 import { ReconnectBanner } from '@/components/socket/reconnect-banner';
+import { RouteSkeleton } from '@/components/ui/skeletons';
 import { useGroupStore } from '@/modules/groups/store';
 import { initErrorTracking, reportWebVitals } from '@/lib/error-tracking';
 import { startPeriodicCheck, stopPeriodicCheck } from '@/lib/client-version-check';
@@ -227,7 +228,7 @@ export default function App() {
       </Suspense>
       <AnimatePresence mode="wait">
         <PageTransition>
-          <Suspense fallback={null}>
+          <Suspense fallback={<RouteSkeleton />}>
             <AppRoutes />
           </Suspense>
         </PageTransition>

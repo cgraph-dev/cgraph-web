@@ -6,7 +6,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { entranceVariants, springs } from '@/lib/animation-presets';
-import { glassSurfaceElevated } from '@/components/liquid-glass/shared';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { FADE_IN } from '@/lib/animations/transitions';
 
@@ -122,7 +121,8 @@ export function KeyboardShortcutsModal() {
             exit="initial"
             transition={springs.gentle}
             onClick={(e) => e.stopPropagation()}
-            className={`relative mx-4 max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6 ${glassSurfaceElevated}`}
+            className="cgraph-dialog-content relative mx-4 w-full max-w-2xl overflow-y-auto p-6"
+            data-cgraph-material="floating"
           >
             {/* Header */}
             <div className="mb-6 flex items-center justify-between">

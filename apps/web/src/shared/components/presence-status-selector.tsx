@@ -12,7 +12,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { http } from '@/lib/api-client';
-import { springPreset, glassSurfaceElevated } from '@/components/liquid-glass/shared';
+import { springs } from '@/lib/animations/transitions';
 
 type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible';
 
@@ -131,9 +131,10 @@ export function PresenceStatusSelector({
                 initial={{ opacity: 0, x: -6, scale: 0.92 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -6, scale: 0.92 }}
-                transition={springPreset}
+                transition={springs.default}
                 style={{ top: menuPos.top, left: menuPos.left }}
-                className={`fixed z-[9999] w-56 overflow-hidden rounded-xl border border-[var(--token-card-border)] shadow-2xl shadow-black/40 ${glassSurfaceElevated}`}
+                className="cgraph-dialog-content fixed z-[9999] w-56"
+                data-cgraph-material="floating"
               >
                 <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                   Set Status

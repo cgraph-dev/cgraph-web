@@ -1,6 +1,5 @@
 /** Card — reusable card container with variant, padding, and animation options. */
 import { ReactNode } from 'react';
-import { glassSurface } from '@/components/liquid-glass/shared';
 
 interface CardProps {
   children: ReactNode;
@@ -25,7 +24,7 @@ export default function Card({
   padding = 'md',
   animate = false,
 }: CardProps) {
-  const baseStyles = `rounded-lg ${glassSurface}`;
+  const baseStyles = 'cgraph-card';
 
   const variantStyles = {
     default: '',

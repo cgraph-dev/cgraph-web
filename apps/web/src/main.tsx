@@ -51,6 +51,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import ErrorBoundary from './components/error-boundary';
+import { RouteSkeleton } from './components/ui/skeletons';
 import { ThemeProvider } from './providers/theme-context';
 import { NotificationProvider } from './providers/notification-provider';
 import { logger } from './lib/logger';
@@ -136,16 +137,9 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Global loading fallback — plain dark background only (no spinner, instant feel)
+// Preserve application geometry while the root bundle and providers initialize.
 function GlobalLoadingFallback() {
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #030712 0%, #0f0a1f 50%, #030712 100%)',
-      }}
-    />
-  );
+  return <RouteSkeleton />;
 }
 
 // Root element validation

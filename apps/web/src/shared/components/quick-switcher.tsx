@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { springPreset, glassSurfaceElevated } from '@/components/liquid-glass/shared';
+import { springs } from '@/lib/animations/transitions';
 import {
   MagnifyingGlassIcon,
   ChatBubbleLeftRightIcon,
@@ -239,9 +239,10 @@ export function QuickSwitcher({ isOpen, onClose, items = [] }: QuickSwitcherProp
           initial={{ opacity: 0, scale: 0.95, y: -20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
-          transition={springPreset}
+          transition={springs.default}
           onClick={(e) => e.stopPropagation()}
-          className={`w-full max-w-lg overflow-hidden rounded-xl ${glassSurfaceElevated}`}
+          className="cgraph-dialog-content w-full max-w-lg"
+          data-cgraph-material="floating"
         >
           {/* Search input */}
           <div className="border-b border-[var(--token-card-border)] px-4 py-4">
@@ -292,7 +293,7 @@ export function QuickSwitcher({ isOpen, onClose, items = [] }: QuickSwitcherProp
                       <motion.button
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: currentFlatIndex * 0.03, ...springPreset }}
+                        transition={{ delay: currentFlatIndex * 0.03, ...springs.default }}
                         onClick={() => handleSelect(item)}
                         onMouseEnter={() => setSelectedIndex(currentFlatIndex)}
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${

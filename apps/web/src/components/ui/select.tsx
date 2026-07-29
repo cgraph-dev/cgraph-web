@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/24/outline';
-import { glassSurfaceElevated } from '@/components/liquid-glass/shared';
 
 interface Option {
   value: string;
@@ -102,7 +101,8 @@ export default function Select({
 
       {isOpen && (
         <div
-          className={`aurora-social-panel absolute z-20 mt-2 max-h-60 w-full overflow-hidden rounded-xl ${glassSurfaceElevated} shadow-xl`}
+          className="cgraph-dialog-content aurora-social-panel absolute z-20 mt-2 max-h-60 w-full"
+          data-cgraph-material="floating"
         >
           {searchable && (
             <div className="border-b border-[var(--token-card-border)] p-2">

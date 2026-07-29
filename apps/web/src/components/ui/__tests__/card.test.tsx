@@ -20,9 +20,7 @@ describe('Card', () => {
   it('applies base styles', () => {
     const { container } = render(<Card>C</Card>);
     const el = container.firstElementChild!;
-    expect(el.className).toContain('rounded-lg');
-    expect(el.className).toContain('bg-white/[0.72]');
-    expect(el.className).toContain('border');
+    expect(el).toHaveClass('cgraph-card');
     expect(el).toHaveAttribute('data-cgraph-material', 'solid');
     expect(el).toHaveAttribute('data-cgraph-surface', 'card');
   });
