@@ -1,19 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import {
-  BellIcon,
-  BellSlashIcon,
-  ChatBubbleLeftIcon,
-  AtSymbolIcon,
-} from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
-import { entranceVariants } from '@/lib/animation-presets';
+import { BellSlashIcon, ChatBubbleLeftIcon, AtSymbolIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
+import Card, { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { useGroupStore } from '@/modules/groups/store';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { FADE_UP } from '@/lib/animations/transitions';
 
 const logger = createLogger('NotificationsTab');
-import { FADE_UP } from '@/lib/animations/transitions';
 
 type NotificationLevel = 'all' | 'mentions' | 'none';
 
@@ -30,7 +26,6 @@ export function NotificationsTab({ groupId }: NotificationsTabProps) {
   const myMember = activeGroup?.myMember;
 
   const [suppressEveryone, setSuppressEveryone] = useState(myMember?.suppressEveryone ?? false);
-  const [suppressRoles, setSuppressRoles] = useState(false);
   const [notifLevel, setNotifLevel] = useState<NotificationLevel>(
     myMember?.notifications ?? 'mentions'
   );
@@ -50,7 +45,7 @@ export function NotificationsTab({ groupId }: NotificationsTabProps) {
     level: NotificationLevel;
     label: string;
     desc: string;
-    icon: typeof BellIcon;
+    icon: typeof ChatBubbleLeftIcon;
   }> = [
     {
       level: 'all',
@@ -92,133 +87,118 @@ export function NotificationsTab({ groupId }: NotificationsTabProps) {
 
   return (
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="max-w-2xl space-y-6">
-      <div>
-        <h2 className="mb-2 text-2xl font-bold text-white">Notifications</h2>
-        <p className="text-gray-400">Configure notification preferences for this group.</p>
+      <div className="cgraph-page-header">
+        <div>
+          <p className="cgraph-eyebrow">Group settings</p>
+          <h2 className="text-2xl font-bold text-[var(--token-text-primary)]">Notifications</h2>
+          <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+            Configure notification preferences for this group.
+          </p>
+        </div>
       </div>
 
       {/* Notification Level */}
-      <GlassCard variant="frosted" className="space-y-4 p-6">
-        <h3 className="font-semibold text-white">Notification Level</h3>
-        <div className="space-y-2">
-          {notifOptions.map((opt, index) => {
+      <Card padding="lg">
+        <CardHeader>
+          <CardTitle>Notification level</CardTitle>
+          <CardDescription>Choose which group activity should notify you.</CardDescription>
+        </CardHeader>
+        <fieldset className="space-y-2">
+          <legend className="sr-only">Notification level</legend>
+          {notifOptions.map((opt) => {
             const Icon = opt.icon;
+            const selected = notifLevel === opt.level;
             return (
-              <motion.button
+              <label
                 key={opt.level}
-                variants={entranceVariants.fadeUp}
-                initial="hidden"
-                animate="visible"
-                transition={{ delay: index * 0.05 }}
-                onClick={() => setNotifLevel(opt.level)}
-                className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors ${
-                  notifLevel === opt.level
-                    ? 'bg-primary-500/10 border-primary-500'
-                    : 'border-[var(--token-border-muted)] hover:border-[var(--token-card-border)]'
-                }`}
+                className="cgraph-list-row flex min-h-16 cursor-pointer items-center gap-3 px-3 py-2.5"
+                data-selected={selected || undefined}
               >
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                    notifLevel === opt.level ? 'bg-primary-500/20' : 'bg-[var(--token-card-bg)/0.6]'
+                <input
+                  type="radio"
+                  name="group-notification-level"
+                  value={opt.level}
+                  checked={selected}
+                  onChange={() => setNotifLevel(opt.level)}
+                  className="sr-only"
+                />
+                <span className="cgraph-empty-icon mb-0 h-10 w-10 shrink-0">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-[var(--token-text-primary)]">
+                    {opt.label}
+                  </span>
+                  <span className="block text-sm text-[var(--token-text-muted)]">{opt.desc}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+                    selected
+                      ? 'border-[var(--token-interactive-primary)]'
+                      : 'border-[var(--product-line-strong)]'
                   }`}
                 >
-                  <Icon
-                    className={`h-5 w-5 ${notifLevel === opt.level ? 'text-primary-400' : 'text-gray-400'}`}
-                  />
-                </div>
-                <div>
-                  <div
-                    className={`font-medium ${notifLevel === opt.level ? 'text-primary-400' : 'text-white'}`}
-                  >
-                    {opt.label}
-                  </div>
-                  <div className="text-sm text-gray-500">{opt.desc}</div>
-                </div>
-                <div className="ml-auto">
-                  <div
-                    className={`h-5 w-5 rounded-full border-2 ${
-                      notifLevel === opt.level
-                        ? 'border-primary-500 bg-primary-500'
-                        : 'border-[var(--token-card-border)]'
-                    }`}
-                  >
-                    {notifLevel === opt.level && (
-                      <div className="flex h-full items-center justify-center">
-                        <div className="h-2 w-2 rounded-full bg-white" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.button>
+                  {selected && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--token-interactive-primary)]" />
+                  )}
+                </span>
+              </label>
             );
           })}
-        </div>
-      </GlassCard>
+        </fieldset>
+      </Card>
 
       {/* Suppression Settings */}
-      <GlassCard variant="frosted" className="space-y-4 p-6">
-        <h3 className="font-semibold text-white">Suppression</h3>
-
-        <label className="flex cursor-pointer items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AtSymbolIcon className="h-5 w-5 text-gray-400" />
+      <Card padding="lg">
+        <CardHeader>
+          <CardTitle>Suppression</CardTitle>
+          <CardDescription>
+            Reduce broad group mentions without muting direct mentions.
+          </CardDescription>
+        </CardHeader>
+        <div className="flex min-h-14 items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <AtSymbolIcon className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]" />
             <div>
-              <div className="text-sm font-medium text-white">Suppress @everyone</div>
-              <div className="text-xs text-gray-500">Ignore mass mentions</div>
+              <label
+                htmlFor="group-suppress-everyone"
+                className="text-sm font-medium text-[var(--token-text-primary)]"
+              >
+                Suppress @everyone
+              </label>
+              <p className="text-xs text-[var(--token-text-muted)]">Ignore mass mentions</p>
             </div>
           </div>
-          <button
-            onClick={() => setSuppressEveryone(!suppressEveryone)}
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              suppressEveryone ? 'bg-primary-600' : 'bg-[var(--token-card-bg)/0.6]'
-            }`}
-          >
-            <motion.div
-              animate={{ x: suppressEveryone ? 20 : 2 }}
-              className="absolute top-1 h-4 w-4 rounded-full bg-white shadow"
-            />
-          </button>
-        </label>
+          <Switch
+            id="group-suppress-everyone"
+            checked={suppressEveryone}
+            onCheckedChange={setSuppressEveryone}
+            disabled={saving}
+          />
+        </div>
+      </Card>
 
-        <label className="flex cursor-pointer items-center justify-between">
-          <div className="flex items-center gap-3">
-            <BellIcon className="h-5 w-5 text-gray-400" />
-            <div>
-              <div className="text-sm font-medium text-white">Suppress Role Mentions</div>
-              <div className="text-xs text-gray-500">Ignore role-based mentions</div>
-            </div>
-          </div>
-          <button
-            onClick={() => setSuppressRoles(!suppressRoles)}
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              suppressRoles ? 'bg-primary-600' : 'bg-[var(--token-card-bg)/0.6]'
-            }`}
-          >
-            <motion.div
-              animate={{ x: suppressRoles ? 20 : 2 }}
-              className="absolute top-1 h-4 w-4 rounded-full bg-white shadow"
-            />
-          </button>
-        </label>
-      </GlassCard>
-
-      {/* Error Message */}
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div
+          role="alert"
+          className="rounded-[var(--product-radius-md)] border border-[color-mix(in_srgb,var(--token-feedback-error)_35%,transparent)] bg-[color-mix(in_srgb,var(--token-feedback-error)_10%,transparent)] px-3 py-2 text-sm text-[var(--token-feedback-error)]"
+        >
           {error}
         </div>
       )}
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-lg bg-primary-600 px-6 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+      <div className="flex items-center justify-end gap-3">
+        <span
+          className="text-sm text-[var(--token-feedback-success)]"
+          role="status"
+          aria-live="polite"
         >
-          {saved ? 'Saved!' : saving ? 'Saving...' : 'Save Preferences'}
-        </motion.button>
+          {saved ? 'Preferences saved.' : ''}
+        </span>
+        <Button onClick={handleSave} disabled={saving} isLoading={saving}>
+          Save preferences
+        </Button>
       </div>
     </motion.div>
   );
