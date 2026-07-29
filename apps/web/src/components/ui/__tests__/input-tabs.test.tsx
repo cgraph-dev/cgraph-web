@@ -8,7 +8,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import { Input } from '../input';
+import { Input, Textarea } from '../input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../tabs';
 
 // INPUT COMPONENT
@@ -102,6 +102,26 @@ describe('Input', () => {
 
   it('has the correct function name', () => {
     expect(Input.name).toBe('Input');
+  });
+});
+
+describe('Textarea', () => {
+  it('uses the canonical recessed field contract', () => {
+    render(<Textarea label="Message" hint="0/200" />);
+
+    const textarea = screen.getByLabelText('Message');
+    expect(textarea).toHaveClass('cgraph-field');
+    expect(textarea).toHaveAttribute('data-cgraph-material', 'recessed');
+    expect(textarea).toHaveAttribute('data-cgraph-surface', 'field');
+    expect(screen.getByText('0/200')).toHaveAttribute('id', `${textarea.id}-hint`);
+  });
+
+  it('associates errors with the textarea', () => {
+    render(<Textarea label="Message" error="Message is too long" />);
+
+    const textarea = screen.getByLabelText('Message');
+    expect(textarea).toHaveAttribute('aria-invalid', 'true');
+    expect(textarea).toHaveAttribute('aria-describedby', `${textarea.id}-error`);
   });
 });
 

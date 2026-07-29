@@ -17,12 +17,22 @@ vi.mock('@cgraph-dev/shared-types/nodes', () => ({
   MIN_TIP: 10,
 }));
 
-vi.mock('@/shared/components/ui', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+vi.mock('@/shared/components/ui', async () => {
+  const [button, dialog, input] = await Promise.all([
+    vi.importActual<typeof import('@/components/ui/button')>('@/components/ui/button'),
+    vi.importActual<typeof import('@/components/ui/dialog')>('@/components/ui/dialog'),
+    vi.importActual<typeof import('@/components/ui/input')>('@/components/ui/input'),
+  ]);
+  return {
+    ...button,
+    ...dialog,
+    ...input,
+    toast: {
+      success: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
 
 import { TipModal } from '../tip-modal';
 import { toast } from '@/shared/components/ui';
@@ -59,6 +69,10 @@ describe('TipModal', () => {
   it('renders the modal with recipient name in title', () => {
     render(<TipModal {...makeDefaultProps()} />);
     expect(screen.getByText('Tip @alice')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Tip @alice' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'dialog'
+    );
   });
 
   it('renders all preset amount buttons', () => {
@@ -84,13 +98,12 @@ describe('TipModal', () => {
   it('displays creator receives calculation (80%)', () => {
     render(<TipModal {...makeDefaultProps()} />);
 
-    // Default preset is 10, 80% of 10 = 8
-    expect(screen.getByText(/Creator receives.*8.*80%/)).toBeInTheDocument();
+    expect(screen.getByText('Creator receives').parentElement).toHaveTextContent('\u2115 8 (80%)');
   });
 
   it('displays user balance', () => {
     render(<TipModal {...makeDefaultProps()} />);
-    expect(screen.getByText(/Your balance:.*5,000/)).toBeInTheDocument();
+    expect(screen.getByText('Your balance').parentElement).toHaveTextContent('\u2115 5,000');
   });
 
   it('uses spendable balance after local reservations', () => {
@@ -103,8 +116,8 @@ describe('TipModal', () => {
 
     fireEvent.click(screen.getByText(/100$/));
 
-    expect(screen.getByText(/Your balance:.*60/)).toBeInTheDocument();
-    expect(screen.getByText(/Send.*100/)).toBeDisabled();
+    expect(screen.getByText('Your balance').parentElement).toHaveTextContent('\u2115 60');
+    expect(screen.getByRole('button', { name: /Send.*100/ })).toBeDisabled();
   });
 
   it('selects a preset amount when clicked', () => {
@@ -112,16 +125,24 @@ describe('TipModal', () => {
 
     fireEvent.click(screen.getByText(/100$/));
 
-    // Creator receives 80 for amount 100
-    expect(screen.getByText(/Creator receives.*80.*80%/)).toBeInTheDocument();
+    expect(screen.getByText('Creator receives').parentElement).toHaveTextContent(
+      '\u2115 80 (80%)'
+    );
     expect(screen.getByText(/Send.*100/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '\u2115 100' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
   });
   it('shows custom input when Custom Amount is clicked', () => {
     render(<TipModal {...makeDefaultProps()} />);
 
     fireEvent.click(screen.getByText('Custom Amount'));
 
-    expect(screen.getByPlaceholderText('Enter amount')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter amount')).toHaveAttribute(
+      'data-cgraph-surface',
+      'field'
+    );
   });
 
   it('updates amount via custom input', () => {
@@ -132,8 +153,9 @@ describe('TipModal', () => {
       target: { value: '250' },
     });
 
-    // Creator receives 80% of 250 = 200
-    expect(screen.getByText(/Creator receives.*200.*80%/)).toBeInTheDocument();
+    expect(screen.getByText('Creator receives').parentElement).toHaveTextContent(
+      '\u2115 200 (80%)'
+    );
   });
 
   it('resets to preset mode when a preset button is clicked after custom', () => {
@@ -167,9 +189,9 @@ describe('TipModal', () => {
 
     fireEvent.click(screen.getByText(/100$/));
 
-    const sendButton = screen.getByText(/Send.*100/);
+    const sendButton = screen.getByRole('button', { name: /Send.*100/ });
     expect(sendButton).toBeDisabled();
-    expect(screen.getByText(/insufficient/)).toBeInTheDocument();
+    expect(screen.getByText(/insufficient/i)).toBeInTheDocument();
   });
 
   it('disables send button when amount is below minimum', () => {
@@ -180,7 +202,7 @@ describe('TipModal', () => {
       target: { value: '3' },
     });
 
-    const sendButton = screen.getByText(/Send/);
+    const sendButton = screen.getByRole('button', { name: /Send/ });
     expect(sendButton).toBeDisabled();
   });
   it('calls mutate with recipientId and amount on send', () => {
@@ -188,7 +210,7 @@ describe('TipModal', () => {
     render(<TipModal {...makeDefaultProps()} />);
 
     fireEvent.click(screen.getByText(/50$/));
-    fireEvent.click(screen.getByText(/Send.*50/));
+    fireEvent.click(screen.getByRole('button', { name: /Send.*50/ }));
 
     expect(mutate).toHaveBeenCalledWith(
       { recipientId: 'user-2', amount: 50 },
@@ -212,7 +234,7 @@ describe('TipModal', () => {
 
     render(<TipModal {...makeDefaultProps()} />);
 
-    expect(screen.getByText('Sending\u2026')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Sending\u2026' })).toBeDisabled();
   });
 
   it('calls onSuccess callback which triggers toast and onClose', () => {
@@ -222,7 +244,7 @@ describe('TipModal', () => {
 
     render(<TipModal {...makeDefaultProps({ onClose })} />);
 
-    fireEvent.click(screen.getByText(/Send/));
+    fireEvent.click(screen.getByRole('button', { name: /Send/ }));
 
     // Simulate onSuccess
     const { onSuccess } = mutate.mock.calls[0]![1];
@@ -236,7 +258,7 @@ describe('TipModal', () => {
     mockUseSendTip.mockReturnValue({ mutate, isPending: false });
 
     render(<TipModal {...makeDefaultProps()} />);
-    fireEvent.click(screen.getByText(/Send/));
+    fireEvent.click(screen.getByRole('button', { name: /Send/ }));
 
     const { onError } = mutate.mock.calls[0]![1];
     onError({
@@ -260,7 +282,7 @@ describe('TipModal', () => {
     mockUseSendTip.mockReturnValue({ mutate, isPending: false });
 
     render(<TipModal {...makeDefaultProps()} />);
-    fireEvent.click(screen.getByText(/Send/));
+    fireEvent.click(screen.getByRole('button', { name: /Send/ }));
 
     const { onError } = mutate.mock.calls[0]![1];
     onError({
@@ -286,14 +308,21 @@ describe('TipModal', () => {
 
     expect(onClose).toHaveBeenCalled();
   });
+  it('calls onClose when Escape is pressed', () => {
+    const onClose = vi.fn();
+
+    render(<TipModal {...makeDefaultProps({ onClose })} />);
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(onClose).toHaveBeenCalled();
+  });
   it('handles null wallet gracefully (balance defaults to 0)', () => {
     mockUseNodeWallet.mockReturnValue({ data: null });
 
     render(<TipModal {...makeDefaultProps()} />);
 
-    expect(screen.getByText(/Your balance:.*0/)).toBeInTheDocument();
-    // Default preset 10 should exceed balance of 0
-    const sendButton = screen.getByText(/Send/);
+    expect(screen.getByText('Your balance').parentElement).toHaveTextContent('\u2115 0');
+    const sendButton = screen.getByRole('button', { name: /Send/ });
     expect(sendButton).toBeDisabled();
   });
 
@@ -305,7 +334,6 @@ describe('TipModal', () => {
       target: { value: 'abc' },
     });
 
-    // Should default to 0 (parseInt returns NaN, || 0)
-    expect(screen.getByText(/Creator receives.*0.*80%/)).toBeInTheDocument();
+    expect(screen.getByText('Creator receives').parentElement).toHaveTextContent('\u2115 0 (80%)');
   });
 });

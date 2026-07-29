@@ -1,14 +1,6 @@
-/**
- * Content Unlock Overlay
- *
- * Frosted overlay shown over gated content. Displays a lock icon
- * and an "Unlock for X Nodes" button. Handles insufficient balance
- * by redirecting to the Nodes shop.
- *
- */
-
 import { useNavigate } from 'react-router-dom';
-import { GlassCard, toast } from '@/shared/components/ui';
+import { LockKeyhole } from 'lucide-react';
+import { Button, GlassCard, toast } from '@/shared/components/ui';
 import { useUnlockContent } from '@/modules/nodes/hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '@/modules/nodes/utils/nodes-error-feedback';
 
@@ -18,7 +10,6 @@ export interface ContentUnlockOverlayProps {
   onUnlocked?: () => void;
 }
 
-/** Frosted overlay for gated forum content with unlock-for-Nodes CTA. */
 export function ContentUnlockOverlay({ postId, price, onUnlocked }: ContentUnlockOverlayProps) {
   const navigate = useNavigate();
   const unlockMutation = useUnlockContent();
@@ -54,19 +45,25 @@ export function ContentUnlockOverlay({ postId, price, onUnlocked }: ContentUnloc
   return (
     <GlassCard variant="frosted" className="mb-4 p-6 text-center">
       <div className="flex flex-col items-center gap-3 py-4">
-        <span className="text-3xl">🔒</span>
-        <h3 className="text-lg font-semibold text-white">Content Gated</h3>
-        <p className="max-w-sm text-sm text-white/50">
+        <div
+          className="cgraph-card flex h-12 w-12 items-center justify-center text-[var(--token-interactive-primary)]"
+          data-cgraph-material="recessed"
+          aria-hidden="true"
+        >
+          <LockKeyhole className="h-5 w-5" />
+        </div>
+        <h3 className="text-lg font-semibold text-[var(--token-text-primary)]">Content Gated</h3>
+        <p className="max-w-sm text-sm text-[var(--token-text-muted)]">
           This thread's full content is gated. Unlock it to read the complete post and join the
           discussion.
         </p>
-        <button
-          className="mt-2 rounded-lg bg-indigo-500 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={unlockMutation.isPending}
+        <Button
+          className="mt-2"
+          isLoading={unlockMutation.isPending}
           onClick={handleUnlock}
         >
           {unlockMutation.isPending ? 'Unlocking…' : `Unlock for ${price ?? '?'} Nodes`}
-        </button>
+        </Button>
       </div>
     </GlassCard>
   );

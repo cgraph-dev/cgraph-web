@@ -1,5 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+vi.mock('@/shared/components/ui', async () => {
+  const [button, dialog, input] = await Promise.all([
+    vi.importActual<typeof import('@/components/ui/button')>('@/components/ui/button'),
+    vi.importActual<typeof import('@/components/ui/dialog')>('@/components/ui/dialog'),
+    vi.importActual<typeof import('@/components/ui/input')>('@/components/ui/input'),
+  ]);
+  return {
+    ...button,
+    ...dialog,
+    ...input,
+    toast: {
+      success: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
 
 const { mockUseSendTip, mockUseNodeWallet, mockUseSpendableNodeBalance } = vi.hoisted(() => ({
   mockUseSendTip: vi.fn(),
@@ -53,7 +69,8 @@ describe('TipButton', () => {
   it('applies default className when no custom className', () => {
     render(<TipButton {...makeDefaultProps()} />);
     const button = screen.getByTitle('Tip @alice');
-    expect(button).toHaveClass('text-purple-400');
+    expect(button).toHaveAttribute('data-cgraph-surface', 'control');
+    expect(button).toHaveAttribute('data-cgraph-variant', 'ghost');
   });
   it('does not show the tip modal initially', () => {
     render(<TipButton {...makeDefaultProps()} />);

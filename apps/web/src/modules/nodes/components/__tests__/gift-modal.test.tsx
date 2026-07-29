@@ -18,36 +18,24 @@ vi.mock('@cgraph-dev/shared-types/nodes', () => ({
   PLATFORM_CUT_PERCENT: 20,
 }));
 
-vi.mock('@/shared/components/ui', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
-vi.mock('motion/react', () => ({
-  motion: new Proxy(
-    {},
-    {
-      get: (_target, prop) => {
-        if (typeof prop === 'string') {
-          return ({
-            children,
-            ...rest
-          }: {
-            children?: React.ReactNode;
-            [key: string]: unknown;
-          }) => {
-            const Element = prop as React.ElementType;
-            return <Element {...rest}>{children}</Element>;
-          };
-        }
-        return undefined;
-      },
-    }
-  ),
-  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-}));
+vi.mock('@/shared/components/ui', async () => {
+  const [avatar, button, dialog, input] = await Promise.all([
+    vi.importActual<typeof import('@/components/ui/avatar')>('@/components/ui/avatar'),
+    vi.importActual<typeof import('@/components/ui/button')>('@/components/ui/button'),
+    vi.importActual<typeof import('@/components/ui/dialog')>('@/components/ui/dialog'),
+    vi.importActual<typeof import('@/components/ui/input')>('@/components/ui/input'),
+  ]);
+  return {
+    Avatar: avatar.default,
+    ...button,
+    ...dialog,
+    ...input,
+    toast: {
+      success: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
 
 import { GiftModal } from '../gift-modal';
 import { toast } from '@/shared/components/ui';
@@ -85,6 +73,10 @@ describe('GiftModal', () => {
   it('shows recipient username', () => {
     render(<GiftModal {...makeDefaultProps()} />);
     expect(screen.getAllByText(/@alice/).length).toBeGreaterThan(0);
+    expect(screen.getByRole('dialog', { name: 'Gift Nodes to @alice' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'dialog'
+    );
   });
 
   it('shows avatar fallback when no avatar URL', () => {
@@ -128,7 +120,7 @@ describe('GiftModal', () => {
     const input = screen.getByLabelText(/Amount/);
     fireEvent.change(input, { target: { value: '5' } });
 
-    const sendButton = screen.getByText('Send Gift');
+    const sendButton = screen.getByRole('button', { name: 'Send Gift' });
     expect(sendButton).toBeDisabled();
   });
 
@@ -137,12 +129,15 @@ describe('GiftModal', () => {
     const input = screen.getByLabelText(/Amount/);
     fireEvent.change(input, { target: { value: '10' } });
 
-    const sendButton = screen.getByText('Send Gift');
+    const sendButton = screen.getByRole('button', { name: 'Send Gift' });
     expect(sendButton).not.toBeDisabled();
   });
   it('renders optional message textarea', () => {
     render(<GiftModal {...makeDefaultProps()} />);
-    expect(screen.getByPlaceholderText(/Add a personal message/)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Add a personal message/)).toHaveAttribute(
+      'data-cgraph-surface',
+      'field'
+    );
   });
 
   it('shows character count for message', () => {
@@ -164,7 +159,7 @@ describe('GiftModal', () => {
     const textarea = screen.getByPlaceholderText(/Add a personal message/);
     fireEvent.change(textarea, { target: { value: 'Enjoy!' } });
 
-    fireEvent.click(screen.getByText('Send Gift'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send Gift' }));
 
     expect(mutateFn).toHaveBeenCalledWith(
       { recipientId: 'user-2', amount: 50, message: 'Enjoy!' },
@@ -177,7 +172,7 @@ describe('GiftModal', () => {
 
   it('does not include message when textarea is empty', () => {
     render(<GiftModal {...makeDefaultProps()} />);
-    fireEvent.click(screen.getByText('Send Gift'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send Gift' }));
 
     expect(mutateFn).toHaveBeenCalledWith(
       { recipientId: 'user-2', amount: 10, message: undefined },
@@ -194,7 +189,7 @@ describe('GiftModal', () => {
   it('disables send button when mutation is pending', () => {
     mockUseSendGift.mockReturnValue({ mutate: mutateFn, isPending: true });
     render(<GiftModal {...makeDefaultProps()} />);
-    expect(screen.getByText(/Sending/)).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Sending\u2026' })).toBeDisabled();
   });
   it('shows insufficient balance error when amount exceeds balance', () => {
     mockUseNodeWallet.mockReturnValue({
@@ -218,7 +213,7 @@ describe('GiftModal', () => {
     fireEvent.change(input, { target: { value: '50' } });
 
     expect(screen.getByText(/Insufficient balance.*25.*available/)).toBeInTheDocument();
-    expect(screen.getByText('Send Gift')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Send Gift' })).toBeDisabled();
   });
 
   it('disables send button when balance is insufficient', () => {
@@ -229,7 +224,7 @@ describe('GiftModal', () => {
     const input = screen.getByLabelText(/Amount/);
     fireEvent.change(input, { target: { value: '10' } });
 
-    const sendButton = screen.getByText('Send Gift');
+    const sendButton = screen.getByRole('button', { name: 'Send Gift' });
     expect(sendButton).toBeDisabled();
   });
   it('calls onClose when Cancel is clicked', () => {
@@ -238,11 +233,19 @@ describe('GiftModal', () => {
     fireEvent.click(screen.getByText('Cancel'));
     expect(onClose).toHaveBeenCalled();
   });
+  it('calls onClose when Escape is pressed', () => {
+    const onClose = vi.fn();
+    render(<GiftModal {...makeDefaultProps({ onClose })} />);
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(onClose).toHaveBeenCalled();
+  });
 
   it('shows self-gift copy when the server rejects sending Nodes to yourself', () => {
     render(<GiftModal {...makeDefaultProps()} />);
 
-    fireEvent.click(screen.getByText('Send Gift'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send Gift' }));
 
     const { onError } = mutateFn.mock.calls[0]![1];
     onError({
@@ -264,7 +267,7 @@ describe('GiftModal', () => {
   it('shows rate-limit copy when the server throttles gifts', () => {
     render(<GiftModal {...makeDefaultProps()} />);
 
-    fireEvent.click(screen.getByText('Send Gift'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send Gift' }));
 
     const { onError } = mutateFn.mock.calls[0]![1];
     onError({

@@ -1,7 +1,6 @@
-/**
- * Tip button — small inline button that opens the tip modal.
- */
 import { useState } from 'react';
+import { Coins } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
 import { TipModal } from './tip-modal';
 
 interface TipButtonProps {
@@ -10,24 +9,21 @@ interface TipButtonProps {
   className?: string;
 }
 
-/** Description. */
-/** Tip Button component. */
 export function TipButton({ recipientId, recipientName, className }: TipButtonProps) {
   const [showTip, setShowTip] = useState(false);
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="sm"
+        leftIcon={<Coins aria-hidden="true" />}
         onClick={() => setShowTip(true)}
-        className={
-          className ??
-          'rounded-md px-2 py-1 text-xs font-medium text-purple-400 transition-colors hover:bg-purple-500/10 hover:text-purple-300'
-        }
+        className={className}
         title={`Tip @${recipientName}`}
       >
-        {'\u2115'} Tip
-      </button>
+        Tip
+      </Button>
 
       <TipModal
         recipientId={recipientId}

@@ -14,20 +14,20 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-vi.mock('@/shared/components/ui', () => ({
-  GlassCard: ({
-    children,
-    className,
-  }: React.PropsWithChildren<{ variant?: string; className?: string }>) => (
-    <div data-testid="glass-card" className={className}>
-      {children}
-    </div>
-  ),
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+vi.mock('@/shared/components/ui', async () => {
+  const [button, glassCard] = await Promise.all([
+    vi.importActual<typeof import('@/components/ui/button')>('@/components/ui/button'),
+    vi.importActual<typeof import('@/components/ui/glass-card')>('@/components/ui/glass-card'),
+  ]);
+  return {
+    ...button,
+    GlassCard: glassCard.default,
+    toast: {
+      success: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
 
 import { ContentUnlockOverlay } from '../content-unlock-overlay';
 import { toast } from '@/shared/components/ui';
@@ -64,13 +64,16 @@ describe('ContentUnlockOverlay', () => {
   it('renders unlock button with price', () => {
     render(<ContentUnlockOverlay {...makeDefaultProps({ price: 150 })} />);
 
-    expect(screen.getByText('Unlock for 150 Nodes')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Unlock for 150 Nodes' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
   });
 
   it('wraps content in GlassCard', () => {
-    render(<ContentUnlockOverlay {...makeDefaultProps()} />);
+    const { container } = render(<ContentUnlockOverlay {...makeDefaultProps()} />);
 
-    expect(screen.getByTestId('glass-card')).toBeInTheDocument();
+    expect(container.querySelector('[data-cgraph-surface="card"]')).toBeInTheDocument();
   });
   it('calls mutate with postId and price when unlock button is clicked', () => {
     const mutate = makeMutateFn();
@@ -100,7 +103,7 @@ describe('ContentUnlockOverlay', () => {
 
     render(<ContentUnlockOverlay {...makeDefaultProps()} />);
 
-    expect(screen.getByText('Unlocking\u2026')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Unlocking\u2026' })).toBeDisabled();
   });
   it('shows success toast on successful unlock', () => {
     const mutate = vi.fn();

@@ -71,7 +71,7 @@ export {
   DialogDescription,
   DialogFooter,
 } from './dialog';
-export { Input } from './input';
+export { Input, Textarea } from './input';
 export { Label } from './label';
 export { Alert, AlertDescription, AlertTitle } from './alert';
 export { Popover, PopoverTrigger, PopoverContent } from './popover';

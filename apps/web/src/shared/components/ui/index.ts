@@ -67,6 +67,7 @@ export {
   DialogFooter,
   // Form
   Input,
+  Textarea,
   Label,
   Alert,
   AlertDescription,

@@ -1,17 +1,23 @@
-/**
- * Gift modal -- send Nodes as a gift to a friend with an optional message.
- *
- * 20% platform cut, minimum 10 Nodes.
- */
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { GiftIcon, XMarkIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+import { CircleCheck, Gift, Send, X } from 'lucide-react';
 import { FocusTrap } from '@/shared/components/accessibility';
+import {
+  Avatar,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  IconButton,
+  Input,
+  Textarea,
+  toast,
+} from '@/shared/components/ui';
 import { useSendGift, useNodeWallet, useSpendableNodeBalance } from '../hooks/useNodes';
 import { formatNodesToast, getNodesActionFeedback } from '../utils/nodes-error-feedback';
 import { MIN_TIP, PLATFORM_CUT_PERCENT } from '@cgraph-dev/shared-types/nodes';
-import { toast } from '@/shared/components/ui';
 
 const MIN_GIFT = MIN_TIP;
 const PLATFORM_CUT_RATIO = PLATFORM_CUT_PERCENT / 100;
@@ -25,7 +31,6 @@ interface GiftModalProps {
   readonly recipientAvatarUrl: string | null;
 }
 
-/** Gift modal -- lets the user send Nodes as a gift to a friend. */
 export function GiftModal({
   isOpen,
   onClose,
@@ -48,6 +53,12 @@ export function GiftModal({
   const recipientReceives = amount - platformCut;
   const insufficientBalance = amount > available;
   const canSend = amount >= MIN_GIFT && !insufficientBalance;
+  const amountError =
+    belowMinimum && amount > 0
+      ? `Minimum gift is ${MIN_GIFT} Nodes`
+      : insufficientBalance
+        ? `Insufficient balance (\u2115 ${available.toLocaleString()} available)`
+        : undefined;
 
   function handleAmountChange(value: string): void {
     const parsed = parseInt(value, 10);
@@ -78,198 +89,146 @@ export function GiftModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Gift Nodes to ${recipientUsername}`}
-    >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <FocusTrap>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.15 }}
-        className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl"
-      >
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={handleClose}
-          data-close
-          className="absolute right-3 top-3 rounded-md p-1 text-zinc-500 hover:text-zinc-300"
-          aria-label="Close"
-        >
-          <XMarkIcon className="h-5 w-5" />
-        </button>
+        <DialogContent className="max-w-sm" ariaLabelledBy="gift-dialog-title">
+          <IconButton
+            className="absolute right-3 top-3"
+            icon={<X aria-hidden="true" />}
+            label="Close gift dialog"
+            onClick={handleClose}
+          />
 
-        <AnimatePresence mode="wait">
           {showSuccess ? (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-4 py-6 text-center"
-            >
-              <div className="relative">
-                <CheckCircleIcon className="h-16 w-16 text-violet-400" />
-                {/* Confetti-like sparkle dots */}
-                <span className="absolute -right-1 -top-1 h-2 w-2 animate-ping rounded-full bg-violet-400" />
-                <span className="absolute -left-2 top-3 h-1.5 w-1.5 animate-ping rounded-full bg-fuchsia-400 delay-100" />
-                <span className="absolute bottom-0 right-1 h-1.5 w-1.5 animate-ping rounded-full bg-pink-400 delay-200" />
+            <div className="flex flex-col items-center gap-4 py-6 text-center">
+              <div
+                className="cgraph-card flex h-16 w-16 items-center justify-center text-[var(--token-feedback-success)]"
+                data-cgraph-material="recessed"
+                aria-hidden="true"
+              >
+                <CircleCheck className="h-8 w-8" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-100">Gift sent!</h3>
-              <p className="text-sm text-zinc-400">
+              <DialogTitle>
+                <span id="gift-dialog-title">Gift sent</span>
+              </DialogTitle>
+              <p className="text-sm text-[var(--token-text-muted)]">
                 @{recipientUsername} received {'\u2115'} {recipientReceives}
               </p>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="mt-2 rounded-lg bg-violet-600 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-500"
-              >
+              <Button className="mt-2 min-w-28" onClick={handleClose}>
                 Done
-              </button>
-            </motion.div>
+              </Button>
+            </div>
           ) : (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {/* Header */}
-              <div className="flex items-center gap-3">
-                <GiftIcon className="h-6 w-6 text-violet-400" />
-                <h3 className="text-base font-bold text-zinc-100">
-                  Gift Nodes to @{recipientUsername}
-                </h3>
-              </div>
-
-              {/* Recipient info */}
-              <div className="mt-4 flex items-center gap-3 rounded-lg bg-zinc-800/60 p-3">
-                {recipientAvatarUrl ? (
-                  <img
-                    src={recipientAvatarUrl}
-                    alt={recipientUsername}
-                    className="h-10 w-10 rounded-full object-cover"
+            <>
+              <DialogHeader className="pr-10">
+                <div className="flex items-center gap-3">
+                  <Gift
+                    className="h-5 w-5 text-[var(--token-interactive-primary)]"
+                    aria-hidden="true"
                   />
-                ) : (
-                  <div className="bg-violet-600/30 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-violet-300">
-                    {recipientUsername.charAt(0).toUpperCase()}
+                  <div>
+                    <DialogTitle>
+                      <span id="gift-dialog-title">Gift Nodes to @{recipientUsername}</span>
+                    </DialogTitle>
+                    <DialogDescription>Add an optional note before sending.</DialogDescription>
                   </div>
-                )}
+                </div>
+              </DialogHeader>
+
+              <div
+                className="cgraph-card mt-4 flex items-center gap-3 p-3"
+                data-cgraph-material="recessed"
+              >
+                <Avatar
+                  src={recipientAvatarUrl}
+                  name={recipientUsername}
+                  alt={recipientUsername}
+                  size="lg"
+                />
                 <div>
-                  <p className="text-sm font-medium text-zinc-200">@{recipientUsername}</p>
-                  <p className="text-xs text-zinc-500">Will receive your gift</p>
+                  <p className="text-sm font-medium text-[var(--token-text-primary)]">
+                    @{recipientUsername}
+                  </p>
+                  <p className="text-xs text-[var(--token-text-muted)]">Gift recipient</p>
                 </div>
               </div>
 
-              {/* Amount input */}
               <div className="mt-4">
-                <label
-                  htmlFor="gift-amount"
-                  className="mb-1 block text-xs font-medium text-zinc-400"
-                >
-                  Amount (min {MIN_GIFT} Nodes)
-                </label>
-                <input
+                <Input
                   id="gift-amount"
+                  label={`Amount (minimum ${MIN_GIFT} Nodes)`}
                   type="number"
                   min={MIN_GIFT}
                   max={available}
                   value={amount}
-                  onChange={(e) => handleAmountChange(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-violet-500 focus:outline-none"
+                  onChange={(event) => handleAmountChange(event.target.value)}
+                  error={amountError}
                   placeholder="Enter amount"
                 />
               </div>
 
-              {/* Optional message */}
               <div className="mt-3">
-                <label
-                  htmlFor="gift-message"
-                  className="mb-1 block text-xs font-medium text-zinc-400"
-                >
-                  Message (optional)
-                </label>
-                <textarea
+                <Textarea
                   id="gift-message"
+                  label="Message (optional)"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
+                  onChange={(event) =>
+                    setMessage(event.target.value.slice(0, MAX_MESSAGE_LENGTH))
+                  }
                   maxLength={MAX_MESSAGE_LENGTH}
                   rows={2}
-                  className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500 focus:outline-none"
+                  className="min-h-20 resize-none"
                   placeholder="Add a personal message..."
+                  hint={`${message.length}/${MAX_MESSAGE_LENGTH}`}
                 />
-                <p className="mt-0.5 text-right text-xs text-zinc-600">
-                  {message.length}/{MAX_MESSAGE_LENGTH}
-                </p>
               </div>
 
-              {/* Fee breakdown */}
-              <div className="mt-3 space-y-1 rounded-lg bg-zinc-800/40 p-3 text-xs text-zinc-400">
+              <div
+                className="cgraph-card mt-3 space-y-2 p-3 text-sm text-[var(--token-text-muted)]"
+                data-cgraph-material="recessed"
+              >
                 <div className="flex justify-between">
                   <span>Gift amount</span>
-                  <span className="text-zinc-200">
+                  <span className="font-medium text-[var(--token-text-primary)]">
                     {'\u2115'} {amount}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Platform fee ({PLATFORM_CUT_PERCENT}%)</span>
-                  <span className="text-zinc-400">
+                  <span>
                     -{'\u2115'} {platformCut}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-zinc-700 pt-1 font-medium">
+                <div className="flex justify-between border-t border-[var(--product-line)] pt-2 font-medium">
                   <span>Recipient receives</span>
-                  <span className="text-violet-300">
+                  <span className="text-[var(--token-interactive-primary)]">
                     {'\u2115'} {recipientReceives}
                   </span>
                 </div>
               </div>
 
-              {/* Validation messages */}
-              {belowMinimum && amount > 0 && (
-                <p className="mt-2 text-xs text-red-400">Minimum gift is {MIN_GIFT} Nodes</p>
-              )}
-              {insufficientBalance && !belowMinimum && (
-                <p className="mt-2 text-xs text-red-400">
-                  Insufficient balance ({'\u2115'} {available.toLocaleString()} available)
-                </p>
-              )}
-
-              {/* Balance display */}
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-sm text-[var(--token-text-muted)]">
                 Your balance: {'\u2115'} {available.toLocaleString()}
               </p>
 
-              {/* Actions */}
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="flex-1 rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800"
-                >
+              <DialogFooter>
+                <Button variant="secondary" className="min-w-28 flex-1" onClick={handleClose}>
                   Cancel
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  className="min-w-28 flex-1"
+                  leftIcon={<Send aria-hidden="true" />}
                   onClick={handleSend}
-                  disabled={!canSend || giftMutation.isPending}
-                  className={cn(
-                    'flex-1 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-colors',
-                    'hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-500'
-                  )}
+                  disabled={!canSend}
+                  isLoading={giftMutation.isPending}
                 >
-                  {giftMutation.isPending ? 'Sending\u2026' : `Send Gift`}
-                </button>
-              </div>
-            </motion.div>
+                  {giftMutation.isPending ? 'Sending\u2026' : 'Send Gift'}
+                </Button>
+              </DialogFooter>
+            </>
           )}
-        </AnimatePresence>
-      </motion.div>
+        </DialogContent>
       </FocusTrap>
-    </div>
+    </Dialog>
   );
 }
