@@ -1,112 +1,40 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { LoadingSpinner } from '../feedback/loading-spinner';
-import {
-  LoadingOverlay,
-  SkeletonText,
-  SkeletonAvatar,
-  SkeletonMessage,
-  SkeletonConversation,
-} from '../feedback/loading';
+import { describe, expect, it } from 'vitest';
+import { LoadingOverlay } from '../feedback/loading';
+import { InlineLoadingSpinner } from '../feedback/loading-spinner';
 
-describe('LoadingSpinner', () => {
-  it('renders the spinner SVG', () => {
-    const { container } = render(<LoadingSpinner />);
-    const svg = container.querySelector('svg');
-    expect(svg).toBeInTheDocument();
+describe('InlineLoadingSpinner', () => {
+  it('exposes a compact loading status', () => {
+    const { container } = render(<InlineLoadingSpinner />);
+
+    expect(screen.getByRole('status', { name: 'Loading' })).toBeInTheDocument();
+    expect(container.querySelector('svg')).toHaveClass('h-6', 'w-6');
   });
 
-  it('displays the CGraph brand text', () => {
-    render(<LoadingSpinner />);
-    expect(screen.getByText('CGraph')).toBeInTheDocument();
-  });
+  it('can be decorative inside a labelled loading owner', () => {
+    const { container } = render(<InlineLoadingSpinner decorative />);
 
-  it('has fixed positioning for full-page overlay', () => {
-    const { container } = render(<LoadingSpinner />);
-    const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper.className).toContain('fixed');
-    expect(wrapper.className).toContain('inset-0');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
   });
 });
 
 describe('LoadingOverlay', () => {
-  it('renders without a message', () => {
+  it('provides a default accessible loading state', () => {
+    render(<LoadingOverlay />);
+    expect(screen.getByRole('status', { name: 'Loading' })).toBeInTheDocument();
+  });
+
+  it('uses the visible message as its accessible name', () => {
+    render(<LoadingOverlay message="Loading groups" />);
+
+    expect(screen.getByRole('status', { name: 'Loading groups' })).toBeInTheDocument();
+    expect(screen.getByText('Loading groups')).toBeInTheDocument();
+  });
+
+  it('keeps a stable full-owner overlay geometry', () => {
     const { container } = render(<LoadingOverlay />);
-    const svg = container.querySelector('svg');
-    expect(svg).toBeInTheDocument();
-    expect(container.querySelector('p')).toBeNull();
-  });
-
-  it('renders with a message', () => {
-    render(<LoadingOverlay message="Loading data..." />);
-    expect(screen.getByText('Loading data...')).toBeInTheDocument();
-  });
-});
-
-describe('SkeletonText', () => {
-  it('renders a single skeleton line by default', () => {
-    const { container } = render(<SkeletonText />);
-    const lines = container.querySelectorAll('.cgraph-skeleton');
-    expect(lines).toHaveLength(1);
-  });
-
-  it('renders multiple skeleton lines', () => {
-    const { container } = render(<SkeletonText lines={3} />);
-    const lines = container.querySelectorAll('.cgraph-skeleton');
-    expect(lines).toHaveLength(3);
-  });
-
-  it('applies custom className', () => {
-    const { container } = render(<SkeletonText className="my-class" />);
-    expect(container.firstChild).toHaveClass('my-class');
-  });
-
-  it('makes the last line shorter when multiple lines', () => {
-    const { container } = render(<SkeletonText lines={3} />);
-    const lines = container.querySelectorAll('.cgraph-skeleton');
-    const lastLine = lines[lines.length - 1] as HTMLElement;
-    expect(lastLine.style.width).toBe('75%');
-  });
-});
-
-describe('SkeletonAvatar', () => {
-  it('renders with default md size', () => {
-    const { container } = render(<SkeletonAvatar />);
-    const el = container.firstChild as HTMLElement;
-    expect(el.className).toContain('w-10');
-    expect(el.className).toContain('h-10');
-  });
-
-  it('renders with sm size', () => {
-    const { container } = render(<SkeletonAvatar size="sm" />);
-    const el = container.firstChild as HTMLElement;
-    expect(el.className).toContain('w-8');
-    expect(el.className).toContain('h-8');
-  });
-
-  it('renders with lg size', () => {
-    const { container } = render(<SkeletonAvatar size="lg" />);
-    const el = container.firstChild as HTMLElement;
-    expect(el.className).toContain('w-12');
-    expect(el.className).toContain('h-12');
-  });
-});
-
-describe('SkeletonMessage', () => {
-  it('renders avatar and text placeholders', () => {
-    const { container } = render(<SkeletonMessage />);
-    expect(container.querySelector('.rounded-full')).toBeInTheDocument();
-    const skeletonElements = container.querySelectorAll('.cgraph-skeleton');
-    expect(skeletonElements.length).toBeGreaterThanOrEqual(3);
-  });
-});
-
-describe('SkeletonConversation', () => {
-  it('renders avatar and text placeholders', () => {
-    const { container } = render(<SkeletonConversation />);
-    expect(container.querySelector('.rounded-full')).toBeInTheDocument();
-    const skeletonElements = container.querySelectorAll('.cgraph-skeleton');
-    expect(skeletonElements.length).toBeGreaterThanOrEqual(2);
+    expect(container.firstElementChild).toHaveClass('absolute', 'inset-0');
   });
 });

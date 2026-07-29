@@ -31,7 +31,6 @@ export {
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
   CardDescription,
   // Skeleton
   Skeleton,

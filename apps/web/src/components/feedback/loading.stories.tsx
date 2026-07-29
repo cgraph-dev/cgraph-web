@@ -1,88 +1,32 @@
-/**
- * Storybook stories for loading feedback components.
- */
 import type { Meta, StoryObj } from '@storybook/react';
-import { LoadingOverlay, SkeletonText, SkeletonAvatar, SkeletonMessage } from './loading';
-import { LoadingSpinner } from './loading-spinner';
+import Card from '@/components/ui/card';
+import Skeleton from '@/components/ui/skeleton';
+import { LoadingOverlay } from './loading';
 
-/**
- * Loading Component Stories
- *
- * Various loading indicators and states for async operations,
- * page transitions, and skeleton loading patterns.
- *
- * For full-page loading, use the LoadingSpinner component.
- *
- */
-const meta: Meta<typeof LoadingOverlay> = {
-  title: 'Components/Loading',
+const meta = {
+  title: 'Feedback/LoadingOverlay',
   component: LoadingOverlay,
   parameters: {
     layout: 'centered',
-    docs: {
-      description: {
-        component:
-          'Reusable loading components including skeletons, overlays, and the full-page LoadingSpinner.',
-      },
-    },
   },
   tags: ['autodocs'],
-};
+} satisfies Meta<typeof LoadingOverlay>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Loading overlay for async operations
- */
-export const Overlay: Story = {
-  render: () => (
-    <div className="relative h-60 w-80 rounded-lg bg-[var(--token-bg-secondary)]">
-      <div className="space-y-4 p-4">
-        <div className="h-4 w-3/4 rounded bg-[var(--token-card-bg)]" />
-        <div className="h-4 w-1/2 rounded bg-[var(--token-card-bg)]" />
-        <div className="h-4 w-2/3 rounded bg-[var(--token-card-bg)]" />
+export const Default: Story = {
+  args: {
+    message: 'Saving changes',
+  },
+  render: (args) => (
+    <Card className="relative h-60 w-80" padding="lg">
+      <div className="space-y-3" aria-hidden="true">
+        <Skeleton variant="text" width="75%" />
+        <Skeleton variant="text" width="50%" />
+        <Skeleton variant="text" width="66%" />
       </div>
-      <LoadingOverlay message="Saving changes..." />
-    </div>
-  ),
-};
-
-/**
- * Skeleton text loader
- */
-export const Skeleton: Story = {
-  render: () => (
-    <div className="w-80 space-y-4 rounded-lg bg-[var(--token-bg-secondary)] p-4">
-      <SkeletonAvatar />
-      <SkeletonText lines={3} />
-    </div>
-  ),
-};
-
-/**
- * Message skeleton for conversation lists
- */
-export const MessageSkeleton: Story = {
-  render: () => (
-    <div className="w-96 rounded-lg bg-[var(--token-card-bg)]">
-      <SkeletonMessage />
-      <SkeletonMessage />
-      <SkeletonMessage />
-    </div>
-  ),
-};
-
-/**
- * Full-page LoadingSpinner (scaled down)
- *
- * This is the main loading component for page transitions.
- * Features a simple spinning animation with brand colors.
- */
-export const FullPageSpinner: Story = {
-  render: () => (
-    <div className="relative h-[500px] w-[800px] overflow-hidden rounded-lg border border-[var(--token-card-border)]">
-      <LoadingSpinner />
-    </div>
+      <LoadingOverlay {...args} />
+    </Card>
   ),
 };

@@ -22,7 +22,6 @@ export {
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
   CardDescription,
 } from './card';
 export {

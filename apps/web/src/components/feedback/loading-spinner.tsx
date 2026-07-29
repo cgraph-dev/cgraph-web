@@ -1,38 +1,34 @@
+import type { ReactElement } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
-function SpinnerMark({ className }: { className: string }) {
+interface InlineLoadingSpinnerProps {
+  decorative?: boolean;
+}
+
+function SpinnerMark(): ReactElement {
   return (
     <LoaderCircle
-      className={`${className} text-[var(--token-interactive-primary)] motion-safe:animate-spin`}
+      className="h-6 w-6 text-[var(--token-interactive-primary)] motion-safe:animate-spin"
       strokeWidth={1.75}
       aria-hidden="true"
     />
   );
 }
 
-export function InlineLoadingSpinner() {
+export function InlineLoadingSpinner({
+  decorative = false,
+}: InlineLoadingSpinnerProps): ReactElement {
+  if (decorative) {
+    return (
+      <span className="inline-flex" aria-hidden="true">
+        <SpinnerMark />
+      </span>
+    );
+  }
+
   return (
     <span role="status" aria-label="Loading" className="inline-flex">
-      <SpinnerMark className="h-6 w-6" />
+      <SpinnerMark />
     </span>
   );
 }
-
-export function LoadingSpinner() {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--token-bg-primary)]"
-      role="status"
-      aria-label="Loading CGraph"
-    >
-      <div className="flex flex-col items-center gap-4">
-        <SpinnerMark className="h-10 w-10" />
-        <span className="text-lg font-semibold text-[var(--token-text-secondary)]">
-          CGraph
-        </span>
-      </div>
-    </div>
-  );
-}
-
-export default LoadingSpinner;

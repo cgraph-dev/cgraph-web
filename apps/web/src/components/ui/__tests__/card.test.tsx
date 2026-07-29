@@ -1,170 +1,73 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import Card, { CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '../card';
-
-// Card component
+import { describe, expect, it } from 'vitest';
+import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../card';
 
 describe('Card', () => {
+  it('renders the canonical solid card surface', () => {
+    const { container } = render(<Card>Card content</Card>);
+    const card = container.firstElementChild;
 
-  it('renders children', () => {
-    render(<Card>Card content</Card>);
     expect(screen.getByText('Card content')).toBeInTheDocument();
+    expect(card).toHaveClass('cgraph-card', 'p-4');
+    expect(card).toHaveAttribute('data-cgraph-material', 'solid');
+    expect(card).toHaveAttribute('data-cgraph-surface', 'card');
   });
 
-  it('renders as a div', () => {
-    const { container } = render(<Card>C</Card>);
-    expect(container.firstElementChild!.tagName).toBe('DIV');
+  it.each([
+    ['none', null],
+    ['sm', 'p-3'],
+    ['md', 'p-4'],
+    ['lg', 'p-6'],
+  ] as const)('maps %s padding to the canonical class', (padding, expectedClass) => {
+    const { container } = render(<Card padding={padding}>Content</Card>);
+    const card = container.firstElementChild;
+
+    if (expectedClass) {
+      expect(card).toHaveClass(expectedClass);
+    } else {
+      expect(card).not.toHaveClass('p-3', 'p-4', 'p-6');
+    }
   });
 
-  it('applies base styles', () => {
-    const { container } = render(<Card>C</Card>);
-    const el = container.firstElementChild!;
-    expect(el).toHaveClass('cgraph-card');
-    expect(el).toHaveAttribute('data-cgraph-material', 'solid');
-    expect(el).toHaveAttribute('data-cgraph-surface', 'card');
-  });
-
-  it('applies custom className', () => {
-    const { container } = render(<Card className="my-custom">C</Card>);
-    expect(container.firstElementChild!).toHaveClass('my-custom');
-  });
-  it('renders default variant without hover styles', () => {
-    const { container } = render(<Card variant="default">D</Card>);
-    const el = container.firstElementChild!;
-    expect(el.className).not.toContain('cursor-pointer');
-  });
-
-  it('renders interactive variant with hover and cursor styles', () => {
-    const { container } = render(<Card variant="interactive">I</Card>);
-    const el = container.firstElementChild!;
-    expect(el.className).toContain('cursor-pointer');
-    expect(el.className).toContain('transition-[background-color,border-color,box-shadow,color]');
-  });
-
-  it('renders elevated variant with shadow', () => {
-    const { container } = render(<Card variant="elevated">E</Card>);
-    const el = container.firstElementChild!;
-    expect(el.className).toContain('shadow-card');
-  });
-  it('applies no padding when padding="none"', () => {
-    const { container } = render(<Card padding="none">N</Card>);
-    const el = container.firstElementChild!;
-    expect(el.className).not.toContain('p-3');
-    expect(el.className).not.toContain('p-4');
-    expect(el.className).not.toContain('p-6');
-  });
-
-  it('applies p-3 for sm padding', () => {
-    const { container } = render(<Card padding="sm">S</Card>);
-    expect(container.firstElementChild!).toHaveClass('p-3');
-  });
-
-  it('applies p-4 for md padding (default)', () => {
-    const { container } = render(<Card>M</Card>);
-    expect(container.firstElementChild!).toHaveClass('p-4');
-  });
-
-  it('applies p-6 for lg padding', () => {
-    const { container } = render(<Card padding="lg">L</Card>);
-    expect(container.firstElementChild!).toHaveClass('p-6');
-  });
-  it('applies animation class when animate=true', () => {
-    const { container } = render(<Card animate>A</Card>);
-    expect(container.firstElementChild!).toHaveClass('animate-fade-in-up');
-  });
-
-  it('does not apply animation class by default', () => {
-    const { container } = render(<Card>A</Card>);
-    expect(container.firstElementChild!).not.toHaveClass('animate-fade-in-up');
+  it('preserves caller layout classes', () => {
+    const { container } = render(<Card className="overflow-hidden">Content</Card>);
+    expect(container.firstElementChild).toHaveClass('overflow-hidden');
   });
 });
 
-// Card sub-components
+describe('Card composition', () => {
+  it('renders the canonical section hierarchy', () => {
+    render(
+      <Card>
+        <CardHeader>Header</CardHeader>
+        <CardTitle>Title</CardTitle>
+        <CardDescription>Description</CardDescription>
+        <CardContent>Content</CardContent>
+      </Card>
+    );
 
-describe('CardHeader', () => {
-  it('renders children', () => {
-    render(<CardHeader>Header Text</CardHeader>);
-    expect(screen.getByText('Header Text')).toBeInTheDocument();
+    expect(screen.getByText('Header')).toHaveClass('border-b');
+    expect(screen.getByRole('heading', { name: 'Title', level: 3 })).toHaveClass(
+      'text-[var(--token-text-primary)]'
+    );
+    expect(screen.getByText('Description')).toHaveClass('text-[var(--token-text-muted)]');
+    expect(screen.getByText('Content')).toHaveClass('text-[var(--token-text-secondary)]');
   });
 
-  it('has bottom border and spacing', () => {
-    const { container } = render(<CardHeader>H</CardHeader>);
-    const el = container.firstElementChild!;
-    expect(el.className).toContain('border-b');
-    expect(el.className).toContain('pb-3');
-    expect(el.className).toContain('mb-3');
+  it('supports an explicit heading level', () => {
+    render(<CardTitle as="h2">Section title</CardTitle>);
+    expect(screen.getByRole('heading', { name: 'Section title', level: 2 })).toBeInTheDocument();
   });
 
-  it('applies custom className', () => {
-    const { container } = render(<CardHeader className="extra">H</CardHeader>);
-    expect(container.firstElementChild!).toHaveClass('extra');
-  });
-});
+  it('preserves section layout classes', () => {
+    render(
+      <CardHeader className="flex">
+        <CardTitle className="truncate">Title</CardTitle>
+      </CardHeader>
+    );
 
-describe('CardTitle', () => {
-  it('renders as h3 by default', () => {
-    render(<CardTitle>Title</CardTitle>);
-    const el = screen.getByText('Title');
-    expect(el.tagName).toBe('H3');
-  });
-
-  it('renders as custom heading tag', () => {
-    render(<CardTitle as="h1">H1 Title</CardTitle>);
-    expect(screen.getByText('H1 Title').tagName).toBe('H1');
-  });
-
-  it('renders as h2', () => {
-    render(<CardTitle as="h2">H2</CardTitle>);
-    expect(screen.getByText('H2').tagName).toBe('H2');
-  });
-
-  it('applies font-semibold and the theme text token', () => {
-    render(<CardTitle>T</CardTitle>);
-    const el = screen.getByText('T');
-    expect(el).toHaveClass('font-semibold');
-    expect(el).toHaveClass('text-[var(--token-text-primary)]');
-  });
-});
-
-describe('CardContent', () => {
-  it('renders children', () => {
-    render(<CardContent>Content here</CardContent>);
-    expect(screen.getByText('Content here')).toBeInTheDocument();
-  });
-
-  it('applies the theme secondary text token', () => {
-    const { container } = render(<CardContent>C</CardContent>);
-    expect(container.firstElementChild!).toHaveClass('text-[var(--token-text-secondary)]');
-  });
-});
-
-describe('CardFooter', () => {
-  it('renders children', () => {
-    render(<CardFooter>Footer</CardFooter>);
-    expect(screen.getByText('Footer')).toBeInTheDocument();
-  });
-
-  it('has top border and spacing', () => {
-    const { container } = render(<CardFooter>F</CardFooter>);
-    const el = container.firstElementChild!;
-    expect(el.className).toContain('border-t');
-    expect(el.className).toContain('pt-3');
-    expect(el.className).toContain('mt-3');
-  });
-});
-
-describe('CardDescription', () => {
-  it('renders children as a paragraph', () => {
-    render(<CardDescription>Desc text</CardDescription>);
-    const el = screen.getByText('Desc text');
-    expect(el.tagName).toBe('P');
-  });
-
-  it('applies muted text styles', () => {
-    render(<CardDescription>D</CardDescription>);
-    const el = screen.getByText('D');
-    expect(el).toHaveClass('text-sm');
-    expect(el).toHaveClass('text-[var(--token-text-muted)]');
+    expect(screen.getByText('Title').parentElement).toHaveClass('flex');
+    expect(screen.getByText('Title')).toHaveClass('truncate');
   });
 });

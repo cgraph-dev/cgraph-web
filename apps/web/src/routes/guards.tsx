@@ -29,7 +29,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // During rehydration, show nothing (or a global spinner) rather than redirecting
   if (isLoading) {
-    return null; // Or return <LoadingOverlay />
+    return null;
   }
 
   if (!isAuthenticated && !isE2EAuthBypass) {

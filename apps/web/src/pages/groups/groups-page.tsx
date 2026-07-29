@@ -6,13 +6,9 @@ import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, List } from 'lucide-react';
 import { Button, IconButton } from '@/components/ui/button';
+import { LoadingOverlay } from '@/components/feedback/loading';
 import { useGroupStore } from '@/modules/groups/store';
-import {
-  ServerList,
-  ChannelList,
-  ContentArea,
-  LoadingOverlay,
-} from './components';
+import { ServerList, ChannelList, ContentArea } from './components';
 import { findGroupChannel, getGroupRoute } from '@/modules/groups/routing';
 
 /**
@@ -84,7 +80,7 @@ export default function Groups() {
   return (
     <div className="aurora-hub-shell cgraph-workspace max-h-screen flex-1">
       {/* Loading state */}
-      {isLoadingGroups && groups.length === 0 && <LoadingOverlay />}
+      {isLoadingGroups && groups.length === 0 && <LoadingOverlay message="Loading groups" />}
 
       {/* Server List */}
       <ServerList
