@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Bell, Search, Users } from 'lucide-react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { toast } from '@/components/ui';
 import { captureError } from '@/lib/error-tracking';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { getGroupRoute } from '@/modules/groups/routing';
@@ -112,11 +113,15 @@ function SocialHub({ tab }: { readonly tab: SocialTab }) {
     users: searchUsers,
     groups: searchGroups,
     forums: searchForums,
+    isLoading: isSearchLoading,
     isLoadingMore: isSearchLoadingMore,
+    error: searchError,
+    hasSearched,
     hasMore: hasMoreSearchResults,
     search: performSearch,
     loadMore: loadMoreSearchResults,
     setQuery: setSearchStoreQuery,
+    clearError: clearSearchError,
   } = useSearchStore();
   const { joinPublicGroup } = useGroupStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -214,6 +219,7 @@ function SocialHub({ tab }: { readonly tab: SocialTab }) {
   function handleSearch(query: string) {
     setSearchQuery(query);
     setSearchStoreQuery(query);
+    clearSearchError();
     if (query.length >= 2) void performSearch(query);
   }
 
@@ -235,6 +241,7 @@ function SocialHub({ tab }: { readonly tab: SocialTab }) {
       navigate(joinedGroup ? getGroupRoute(joinedGroup) : getDiscoverResultRoute(result));
     } catch (joinError: unknown) {
       HapticFeedback.error();
+      toast.error('Could not join group', 'Please try again.');
       captureError(
         joinError instanceof Error ? joinError : new Error('Failed to join social group'),
         {
@@ -334,8 +341,12 @@ function SocialHub({ tab }: { readonly tab: SocialTab }) {
                 searchQuery={searchQuery}
                 searchResults={searchResults}
                 hasMore={hasMoreSearchResults}
+                hasSearched={hasSearched}
+                isLoading={isSearchLoading}
                 isLoadingMore={isSearchLoadingMore}
+                error={searchError}
                 onSearchChange={handleSearch}
+                onRetry={() => void performSearch(searchQuery)}
                 onLoadMore={() => void loadMoreSearchResults()}
                 onJoinGroup={handleJoinGroupResult}
                 joiningGroupId={joiningGroupId}

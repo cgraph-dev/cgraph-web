@@ -91,8 +91,12 @@ export interface DiscoverTabProps {
   searchQuery: string;
   searchResults: SearchResult[];
   hasMore: boolean;
+  hasSearched: boolean;
+  isLoading: boolean;
   isLoadingMore: boolean;
+  error: string | null;
   onSearchChange: (query: string) => void;
+  onRetry: () => void;
   onLoadMore: () => void;
   onJoinGroup: (result: SearchResult) => Promise<void>;
   joiningGroupId: string | null;

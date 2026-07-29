@@ -1,5 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import type { ComponentProps } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Friend, FriendRequest } from '@/modules/social/store';
@@ -64,6 +66,29 @@ const userResult: SearchResult = {
   username: 'alice',
 };
 
+const defaultProps: ComponentProps<typeof DiscoverTab> = {
+  searchQuery: 'design',
+  searchResults: [groupResult],
+  hasMore: false,
+  hasSearched: true,
+  isLoading: false,
+  isLoadingMore: false,
+  error: null,
+  onSearchChange: vi.fn(),
+  onRetry: vi.fn(),
+  onLoadMore: vi.fn(),
+  onJoinGroup: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+  joiningGroupId: null,
+};
+
+function renderDiscover(overrides: Partial<ComponentProps<typeof DiscoverTab>> = {}) {
+  return render(
+    <MemoryRouter>
+      <DiscoverTab {...defaultProps} {...overrides} />
+    </MemoryRouter>
+  );
+}
+
 describe('DiscoverTab', () => {
   beforeEach(() => {
     navigate.mockClear();
@@ -77,18 +102,7 @@ describe('DiscoverTab', () => {
   it('joins unjoined group results without treating Open as a fake action', () => {
     const onJoinGroup = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
 
-    render(
-      <DiscoverTab
-        searchQuery="design"
-        searchResults={[groupResult]}
-        hasMore={false}
-        isLoadingMore={false}
-        onSearchChange={vi.fn()}
-        onLoadMore={vi.fn()}
-        onJoinGroup={onJoinGroup}
-        joiningGroupId={null}
-      />
-    );
+    renderDiscover({ onJoinGroup });
 
     fireEvent.click(screen.getByRole('button', { name: 'Join Design Guild' }));
 
@@ -99,40 +113,22 @@ describe('DiscoverTab', () => {
   it('keeps joined group results as route-open entries', () => {
     const onJoinGroup = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
 
-    render(
-      <DiscoverTab
-        searchQuery="design"
-        searchResults={[{ ...groupResult, isJoined: true }]}
-        hasMore={false}
-        isLoadingMore={false}
-        onSearchChange={vi.fn()}
-        onLoadMore={vi.fn()}
-        onJoinGroup={onJoinGroup}
-        joiningGroupId={null}
-      />
+    renderDiscover({
+      searchResults: [{ ...groupResult, isJoined: true }],
+      onJoinGroup,
+    });
+
+    expect(screen.getByRole('link', { name: 'Open Design Guild' })).toHaveAttribute(
+      'href',
+      '/groups/group-1/channels/channel-1'
     );
-
-    fireEvent.click(screen.getByText('Design Guild'));
-
     expect(onJoinGroup).not.toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith('/groups/group-1/channels/channel-1');
   });
 
   it('loads more discover results through the provided search action', () => {
     const onLoadMore = vi.fn();
 
-    render(
-      <DiscoverTab
-        searchQuery="design"
-        searchResults={[groupResult]}
-        hasMore
-        isLoadingMore={false}
-        onSearchChange={vi.fn()}
-        onLoadMore={onLoadMore}
-        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
-        joiningGroupId={null}
-      />
-    );
+    renderDiscover({ hasMore: true, onLoadMore });
 
     fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
 
@@ -149,18 +145,7 @@ describe('DiscoverTab', () => {
       },
     ];
 
-    render(
-      <DiscoverTab
-        searchQuery="alice"
-        searchResults={[userResult]}
-        hasMore={false}
-        isLoadingMore={false}
-        onSearchChange={vi.fn()}
-        onLoadMore={vi.fn()}
-        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
-        joiningGroupId={null}
-      />
-    );
+    renderDiscover({ searchQuery: 'alice', searchResults: [userResult] });
 
     fireEvent.click(screen.getByRole('button', { name: 'Review' }));
 
@@ -169,18 +154,10 @@ describe('DiscoverTab', () => {
   });
 
   it('routes backend incoming user status to the request center', () => {
-    render(
-      <DiscoverTab
-        searchQuery="alice"
-        searchResults={[{ ...userResult, friendshipStatus: 'pending_received' }]}
-        hasMore={false}
-        isLoadingMore={false}
-        onSearchChange={vi.fn()}
-        onLoadMore={vi.fn()}
-        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
-        joiningGroupId={null}
-      />
-    );
+    renderDiscover({
+      searchQuery: 'alice',
+      searchResults: [{ ...userResult, friendshipStatus: 'pending_received' }],
+    });
 
     fireEvent.click(screen.getByRole('button', { name: 'Review' }));
 
@@ -198,36 +175,74 @@ describe('DiscoverTab', () => {
       },
     ];
 
-    render(
-      <DiscoverTab
-        searchQuery="alice"
-        searchResults={[userResult]}
-        hasMore={false}
-        isLoadingMore={false}
-        onSearchChange={vi.fn()}
-        onLoadMore={vi.fn()}
-        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
-        joiningGroupId={null}
-      />
-    );
+    renderDiscover({ searchQuery: 'alice', searchResults: [userResult] });
 
     expect(screen.getByRole('button', { name: 'Pending' })).toBeDisabled();
   });
 
   it('keeps resolved outgoing user status as a disabled Pending action', () => {
-    render(
-      <DiscoverTab
-        searchQuery="alice"
-        searchResults={[{ ...userResult, friendshipStatus: 'pending_sent' }]}
-        hasMore={false}
-        isLoadingMore={false}
-        onSearchChange={vi.fn()}
-        onLoadMore={vi.fn()}
-        onJoinGroup={vi.fn<() => Promise<void>>().mockResolvedValue(undefined)}
-        joiningGroupId={null}
-      />
-    );
+    renderDiscover({
+      searchQuery: 'alice',
+      searchResults: [{ ...userResult, friendshipStatus: 'pending_sent' }],
+    });
 
     expect(screen.getByRole('button', { name: 'Pending' })).toBeDisabled();
+  });
+
+  it('renders minimum-query guidance and forwards search changes', () => {
+    const onSearchChange = vi.fn();
+
+    renderDiscover({
+      searchQuery: 'a',
+      searchResults: [],
+      hasSearched: false,
+      onSearchChange,
+    });
+
+    expect(screen.getByText('Keep typing')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'alice' } });
+    expect(onSearchChange).toHaveBeenCalledWith('alice');
+  });
+
+  it('shows stable skeleton rows while a search is loading', () => {
+    renderDiscover({
+      searchQuery: 'alice',
+      searchResults: [],
+      hasSearched: false,
+      isLoading: true,
+    });
+
+    const loadingState = screen.getByRole('status', { name: 'Searching' });
+    expect(loadingState.querySelectorAll('.cgraph-list-row')).toHaveLength(4);
+  });
+
+  it('shows search failures with an explicit retry action', () => {
+    const onRetry = vi.fn();
+
+    renderDiscover({
+      searchQuery: 'alice',
+      searchResults: [],
+      error: 'Search is temporarily unavailable.',
+      onRetry,
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Search is temporarily unavailable.');
+    expect(screen.queryByText('No results found')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows friend-request failures instead of swallowing them', async () => {
+    sendRequest.mockRejectedValueOnce(new Error('offline'));
+
+    renderDiscover({ searchQuery: 'alice', searchResults: [userResult] });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Could not send a friend request to Alice Example.'
+      );
+    });
   });
 });
