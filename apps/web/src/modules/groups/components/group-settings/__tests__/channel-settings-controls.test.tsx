@@ -27,13 +27,6 @@ vi.mock('@/lib/api-client', () => ({
   },
 }));
 
-vi.mock('@/shared/components/ui', () => ({
-  GlassCard: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => {
-    const { variant: _variant, ...elementProps } = props;
-    return <div {...elementProps}>{children}</div>;
-  },
-}));
-
 function withoutMotionProps(props: Record<string, unknown>) {
   const nextProps = { ...props };
   delete nextProps.animate;
@@ -196,6 +189,47 @@ describe('ChannelCategoriesPanel controls', () => {
     await waitFor(() =>
       expect(apiMocks.delete).toHaveBeenCalledWith('/api/v1/groups/group-1/categories/core')
     );
+  });
+
+  it('keeps destructive confirmation open and reports a rejected category deletion', async () => {
+    apiMocks.delete.mockRejectedValueOnce(new Error('delete failed'));
+    render(<ChannelCategoriesPanel groupId="group-1" />);
+    await screen.findByText('Core');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Core' }));
+    const dialog = screen.getByRole('dialog', { name: 'Delete Category' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('delete failed');
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByText('Core')).toBeInTheDocument();
+  });
+
+  it('restores authoritative categories and reports a failed reorder', async () => {
+    apiMocks.put.mockRejectedValueOnce(new Error('reorder failed'));
+    render(<ChannelCategoriesPanel groupId="group-1" />);
+    await screen.findByText('Core');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move Core down' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('reorder failed');
+    await waitFor(() => expect(apiMocks.get).toHaveBeenCalledTimes(4));
+    const list = screen.getByRole('list', { name: 'Channel categories' });
+    expect(within(list).getAllByRole('listitem').map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Core'),
+      expect.stringContaining('Updates'),
+    ]);
+  });
+
+  it('shows a recoverable category load failure', async () => {
+    apiMocks.get.mockRejectedValue(new Error('offline'));
+    render(<ChannelCategoriesPanel groupId="group-1" />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not load channel categories. Please try again.'
+    );
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.queryByText('No categories.')).not.toBeInTheDocument();
   });
 });
 

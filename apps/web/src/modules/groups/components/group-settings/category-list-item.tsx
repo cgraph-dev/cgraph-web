@@ -5,15 +5,14 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
 import { Button, IconButton } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 export interface Category {
   id: string;
   name: string;
   position: number;
-  isCollapsed: boolean;
   channelCount: number;
 }
 
@@ -30,11 +29,10 @@ interface CategoryListItemProps {
   onDeleteRequest: (categoryId: string) => void;
   onMoveUp: (index: number) => void;
   onMoveDown: (index: number) => void;
+  disabled?: boolean;
+  saving?: boolean;
 }
 
-/**
- * Category List Item component.
- */
 export function CategoryListItem({
   category,
   index,
@@ -48,12 +46,17 @@ export function CategoryListItem({
   onDeleteRequest,
   onMoveUp,
   onMoveDown,
+  disabled = false,
+  saving = false,
 }: CategoryListItemProps) {
   return (
-    <GlassCard variant="frosted" className="px-4 py-3">
+    <Card>
       {isEditing ? (
-        <div className="flex items-center gap-2">
-          <FolderIcon className="h-5 w-5 shrink-0 text-gray-400" />
+        <div className="flex flex-wrap items-center gap-2">
+          <FolderIcon
+            aria-hidden="true"
+            className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]"
+          />
           <Input
             aria-label={`Category name for ${category.name}`}
             value={editName}
@@ -63,59 +66,70 @@ export function CategoryListItem({
               if (e.key === 'Escape') onCancelEdit();
             }}
             size="sm"
-            className="min-h-9 flex-1"
+            className="min-h-9 min-w-48 flex-1"
+            disabled={disabled}
             autoFocus
           />
-          <Button size="sm" onClick={() => onSave(category.id)}>
+          <Button
+            size="sm"
+            onClick={() => onSave(category.id)}
+            disabled={disabled || !editName.trim()}
+            isLoading={saving}
+          >
             Save
           </Button>
-          <Button variant="ghost" size="sm" onClick={onCancelEdit}>
+          <Button variant="ghost" size="sm" onClick={onCancelEdit} disabled={disabled}>
             Cancel
           </Button>
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FolderIcon className="h-5 w-5 text-gray-400" />
-            <span className="text-sm font-medium uppercase tracking-wider text-gray-300">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <FolderIcon
+              aria-hidden="true"
+              className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]"
+            />
+            <span className="truncate text-sm font-medium text-[var(--token-text-primary)]">
               {category.name}
             </span>
-            <span className="text-xs text-gray-600">
+            <span className="whitespace-nowrap text-xs text-[var(--token-text-muted)]">
               {category.channelCount} channel
               {category.channelCount !== 1 ? 's' : ''}
             </span>
           </div>
           <div className="flex items-center gap-0.5">
             <IconButton
-              icon={<ChevronUpIcon />}
+              icon={<ChevronUpIcon aria-hidden="true" />}
               label={`Move ${category.name} up`}
               size="sm"
               onClick={() => onMoveUp(index)}
-              disabled={index === 0}
+              disabled={disabled || index === 0}
             />
             <IconButton
-              icon={<ChevronDownIcon />}
+              icon={<ChevronDownIcon aria-hidden="true" />}
               label={`Move ${category.name} down`}
               size="sm"
               onClick={() => onMoveDown(index)}
-              disabled={index === totalCount - 1}
+              disabled={disabled || index === totalCount - 1}
             />
             <IconButton
-              icon={<PencilIcon />}
+              icon={<PencilIcon aria-hidden="true" />}
               label={`Edit ${category.name}`}
               size="sm"
+              disabled={disabled}
               onClick={() => onStartEdit(category)}
             />
             <IconButton
-              icon={<TrashIcon />}
+              icon={<TrashIcon aria-hidden="true" />}
               label={`Delete ${category.name}`}
               variant="danger"
               size="sm"
+              disabled={disabled}
               onClick={() => onDeleteRequest(category.id)}
             />
           </div>
         </div>
       )}
-    </GlassCard>
+    </Card>
   );
 }

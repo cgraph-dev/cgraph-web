@@ -12,15 +12,14 @@ interface DeleteCategoryModalProps {
   deleteConfirmId: string | null;
   onConfirm: (categoryId: string) => void;
   onCancel: () => void;
+  isDeleting?: boolean;
 }
 
-/**
- * Delete Category Modal dialog component.
- */
 export function DeleteCategoryModal({
   deleteConfirmId,
   onConfirm,
   onCancel,
+  isDeleting = false,
 }: DeleteCategoryModalProps) {
   return (
     <Dialog open={deleteConfirmId !== null} onOpenChange={(open) => !open && onCancel()}>
@@ -32,13 +31,14 @@ export function DeleteCategoryModal({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="ghost" onClick={onCancel}>
+          <Button variant="ghost" onClick={onCancel} disabled={isDeleting}>
             Cancel
           </Button>
           <Button
             variant="danger"
             onClick={() => deleteConfirmId && onConfirm(deleteConfirmId)}
-            disabled={!deleteConfirmId}
+            disabled={!deleteConfirmId || isDeleting}
+            isLoading={isDeleting}
           >
             Delete
           </Button>

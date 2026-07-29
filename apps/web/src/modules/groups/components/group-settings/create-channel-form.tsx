@@ -4,8 +4,8 @@ import {
   SpeakerWaveIcon,
   MegaphoneIcon,
 } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
 import { Button, IconButton } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 const channelIcons = {
@@ -24,11 +24,9 @@ interface CreateChannelFormProps {
   onTopicChange: (topic: string) => void;
   onClose: () => void;
   onCreate: () => void;
+  disabled?: boolean;
 }
 
-/**
- * Create Channel Form component.
- */
 export function CreateChannelForm({
   show,
   newName,
@@ -39,18 +37,20 @@ export function CreateChannelForm({
   onTopicChange,
   onClose,
   onCreate,
+  disabled = false,
 }: CreateChannelFormProps) {
   if (!show) return null;
 
   return (
-    <GlassCard
-      variant="frosted"
-      className="space-y-4 p-4 sm:p-6"
-      data-testid="new-channel-form"
-    >
+    <Card className="space-y-4 sm:p-6">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-white">New Channel</h3>
-        <IconButton icon={<XMarkIcon />} label="Close channel form" onClick={onClose} />
+        <h3 className="font-semibold text-[var(--token-text-primary)]">New Channel</h3>
+        <IconButton
+          icon={<XMarkIcon aria-hidden="true" />}
+          label="Close channel form"
+          disabled={disabled}
+          onClick={onClose}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" aria-label="Channel type">
@@ -61,7 +61,8 @@ export function CreateChannelForm({
               key={type}
               variant={newType === type ? 'secondary' : 'outline'}
               size="sm"
-              leftIcon={<Icon />}
+              leftIcon={<Icon aria-hidden="true" />}
+              disabled={disabled}
               onClick={() => onTypeChange(type)}
               aria-pressed={newType === type}
               className="min-h-11 capitalize lg:min-h-9"
@@ -77,18 +78,20 @@ export function CreateChannelForm({
         placeholder="channel-name"
         value={newName}
         onChange={(e) => onNameChange(e.target.value)}
+        disabled={disabled}
       />
       <Input
         label="Topic"
         placeholder="Channel topic (optional)"
         value={newTopic}
         onChange={(e) => onTopicChange(e.target.value)}
+        disabled={disabled}
       />
       <div className="flex justify-end">
-        <Button onClick={onCreate} disabled={!newName.trim()}>
+        <Button onClick={onCreate} isLoading={disabled} disabled={disabled || !newName.trim()}>
           Create
         </Button>
       </div>
-    </GlassCard>
+    </Card>
   );
 }

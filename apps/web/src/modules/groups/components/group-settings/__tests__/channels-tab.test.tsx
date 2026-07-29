@@ -5,29 +5,18 @@ import '@testing-library/jest-dom/vitest';
 import { ChannelsTab } from '../channels-tab';
 
 const apiMocks = vi.hoisted(() => ({
-  createChannel: vi.fn(),
-  getChannels: vi.fn(),
   delete: vi.fn(),
+  get: vi.fn(),
+  post: vi.fn(),
   put: vi.fn(),
 }));
 
 vi.mock('@/lib/api-client', () => ({
-  apiClient: {
-    groups: {
-      createChannel: apiMocks.createChannel,
-      getChannels: apiMocks.getChannels,
-    },
-  },
   http: {
     delete: apiMocks.delete,
+    get: apiMocks.get,
+    post: apiMocks.post,
     put: apiMocks.put,
-  },
-}));
-
-vi.mock('@/shared/components/ui', () => ({
-  GlassCard: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => {
-    const { variant: _variant, ...elementProps } = props;
-    return <div {...elementProps}>{children}</div>;
   },
 }));
 
@@ -37,10 +26,6 @@ vi.mock('../channel-categories-panel', () => ({
 
 vi.mock('../channel-permissions-panel', () => ({
   ChannelPermissionsPanel: () => <div data-testid="channel-permissions-panel" />,
-}));
-
-vi.mock('../delete-channel-modal', () => ({
-  DeleteChannelModal: () => null,
 }));
 
 function withoutMotionProps(props: Record<string, unknown>) {
@@ -67,49 +52,47 @@ vi.mock('motion/react', () => ({
   AnimatePresence: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
-const channelResponse = [
-  {
-    id: 'category-1',
-    name: 'Core',
-    position: 0,
-    channels: [
-      {
-        id: 'general',
-        name: 'general',
-        type: 'text',
-        topic: 'General discussion',
-        position: 0,
-        category_id: 'category-1',
-        is_nsfw: false,
-        slow_mode_seconds: 0,
-      },
-      {
-        id: 'news',
-        name: 'news',
-        type: 'announcement',
-        topic: null,
-        position: 1,
-        category_id: 'category-1',
-        is_nsfw: false,
-        slow_mode_seconds: 0,
-      },
-    ],
-  },
-];
+const channelResponse = {
+  data: [
+    {
+      id: 'general',
+      name: 'general',
+      type: 'text',
+      topic: 'General discussion',
+      position: 0,
+      category_id: 'category-1',
+      nsfw: false,
+      slowmode_seconds: 0,
+    },
+    {
+      id: 'news',
+      name: 'news',
+      type: 'announcement',
+      topic: null,
+      position: 1,
+      category_id: 'category-1',
+      nsfw: false,
+      slowmode_seconds: 0,
+    },
+  ],
+  meta: { total: 2 },
+};
 
 describe('ChannelsTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    apiMocks.getChannels.mockResolvedValue({ ok: true, data: channelResponse });
-    apiMocks.createChannel.mockResolvedValue({ ok: true, data: {} });
+    apiMocks.get.mockResolvedValue({ data: channelResponse });
+    apiMocks.post.mockResolvedValue({});
+    apiMocks.delete.mockResolvedValue({});
     apiMocks.put.mockResolvedValue({});
   });
 
-  it('loads the mounted channel owner with explicit reorder boundaries', async () => {
+  it('loads the flat backend channel response with explicit reorder boundaries', async () => {
     render(<ChannelsTab groupId="group-1" />);
 
     await screen.findByText('general');
 
+    expect(apiMocks.get).toHaveBeenCalledWith('/api/v1/groups/group-1/channels');
     expect(screen.getByTestId('channel-categories-panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Move general up' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Move general down' })).toBeEnabled();
@@ -117,7 +100,7 @@ describe('ChannelsTab', () => {
     expect(screen.getByRole('button', { name: 'Move news down' })).toBeDisabled();
   });
 
-  it('normalizes and creates a channel through the typed group client', async () => {
+  it('normalizes and creates a channel with the backend topic contract', async () => {
     render(<ChannelsTab groupId="group-1" />);
     await screen.findByText('general');
 
@@ -126,17 +109,68 @@ describe('ChannelsTab', () => {
       target: { value: 'Product Updates' },
     });
     fireEvent.change(screen.getByPlaceholderText('Channel topic (optional)'), {
-      target: { value: 'Release notes' },
+      target: { value: ' Release notes ' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     await waitFor(() => {
-      expect(apiMocks.createChannel).toHaveBeenCalledWith('group-1', {
+      expect(apiMocks.post).toHaveBeenCalledWith('/api/v1/groups/group-1/channels', {
         name: 'product-updates',
         type: 'text',
-        description: 'Release notes',
+        topic: 'Release notes',
       });
     });
+  });
+
+  it('updates a channel through the exact backend fields', async () => {
+    render(<ChannelsTab groupId="group-1" />);
+    await screen.findByText('general');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit general' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Channel name for general' }), {
+      target: { value: 'Team Chat' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Channel topic for general' }), {
+      target: { value: ' Team discussion ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(apiMocks.put).toHaveBeenCalledWith('/api/v1/groups/group-1/channels/general', {
+        name: 'team-chat',
+        topic: 'Team discussion',
+      })
+    );
+  });
+
+  it('retains the channel edit draft and reports a rejected update', async () => {
+    apiMocks.put.mockRejectedValueOnce(new Error('update failed'));
+    render(<ChannelsTab groupId="group-1" />);
+    await screen.findByText('general');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit general' }));
+    const nameInput = screen.getByRole('textbox', { name: 'Channel name for general' });
+    fireEvent.change(nameInput, { target: { value: 'team-chat' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('update failed');
+    expect(nameInput).toHaveValue('team-chat');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  });
+
+  it('uses destructive confirmation and removes only after server success', async () => {
+    render(<ChannelsTab groupId="group-1" />);
+    await screen.findByText('general');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete general' }));
+    const dialog = screen.getByRole('dialog', { name: 'Delete Channel' });
+    expect(dialog).toHaveTextContent('permanently delete the channel and all its messages');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() =>
+      expect(apiMocks.delete).toHaveBeenCalledWith('/api/v1/groups/group-1/channels/general')
+    );
+    expect(screen.queryByText('general')).not.toBeInTheDocument();
   });
 
   it('persists the complete channel ID order after an explicit move', async () => {
@@ -167,7 +201,7 @@ describe('ChannelsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Move general down' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Network unavailable');
-    await waitFor(() => expect(apiMocks.getChannels).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(apiMocks.get).toHaveBeenCalledTimes(2));
 
     const list = screen.getByRole('list', { name: 'Channels' });
     expect(
@@ -175,5 +209,16 @@ describe('ChannelsTab', () => {
         .getAllByRole('listitem')
         .map((row) => row.getAttribute('data-testid'))
     ).toEqual(['channel-settings-row-general', 'channel-settings-row-news']);
+  });
+
+  it('shows a recoverable channel load failure', async () => {
+    apiMocks.get.mockRejectedValue(new Error('offline'));
+    render(<ChannelsTab groupId="group-1" />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not load channels. Please try again.'
+    );
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(screen.queryByText('No channels yet.')).not.toBeInTheDocument();
   });
 });

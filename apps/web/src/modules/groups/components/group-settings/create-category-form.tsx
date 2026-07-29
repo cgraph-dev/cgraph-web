@@ -1,6 +1,6 @@
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
 import { Button, IconButton } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 interface CreateCategoryFormProps {
@@ -9,28 +9,28 @@ interface CreateCategoryFormProps {
   onNameChange: (name: string) => void;
   onSubmit: () => void;
   onClose: () => void;
+  disabled?: boolean;
 }
 
-/**
- * Create Category Form component.
- */
 export function CreateCategoryForm({
   show,
   name,
   onNameChange,
   onSubmit,
   onClose,
+  disabled = false,
 }: CreateCategoryFormProps) {
   if (!show) return null;
 
   return (
-    <GlassCard variant="frosted" className="space-y-3 p-4">
+    <Card className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium text-white">New Category</h4>
+        <h4 className="text-sm font-medium text-[var(--token-text-primary)]">New Category</h4>
         <IconButton
-          icon={<XMarkIcon />}
+          icon={<XMarkIcon aria-hidden="true" />}
           label="Close category form"
           size="sm"
+          disabled={disabled}
           onClick={onClose}
         />
       </div>
@@ -40,13 +40,14 @@ export function CreateCategoryForm({
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+        disabled={disabled}
         autoFocus
       />
       <div className="flex justify-end">
-        <Button size="sm" onClick={onSubmit} disabled={!name.trim()}>
+        <Button size="sm" onClick={onSubmit} isLoading={disabled} disabled={disabled || !name.trim()}>
           Create
         </Button>
       </div>
-    </GlassCard>
+    </Card>
   );
 }

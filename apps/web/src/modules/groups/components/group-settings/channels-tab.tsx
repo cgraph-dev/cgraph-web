@@ -1,10 +1,11 @@
 import { useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
 import { Button } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import Skeleton from '@/components/ui/skeleton';
-import { apiClient, http } from '@/lib/api-client';
+import { http } from '@/lib/api-client';
+import { asNumber, asOptionalString, asString, ensureArray } from '@/lib/api-utils';
 import { createLogger } from '@/lib/logger';
 import { getGroupPermissionError } from '../../permission-errors';
 import { CreateChannelForm } from './create-channel-form';
@@ -18,9 +19,37 @@ import { FADE_UP } from '@/lib/animations/transitions';
 
 const logger = createLogger('ChannelsTab');
 
-/**
- * Channels Tab component.
- */
+function normalizeChannelName(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+function parseChannels(payload: unknown): ChannelItem[] {
+  return ensureArray<Record<string, unknown>>(payload)
+    .flatMap((record) =>
+      Array.isArray(record.channels)
+        ? ensureArray<Record<string, unknown>>(record.channels)
+        : [record]
+    )
+    .map((channel) => {
+      const type = asString(channel.type, 'text');
+      return {
+        id: asString(channel.id),
+        name: asString(channel.name),
+        type:
+          type === 'voice' ? 'voice' : type === 'announcement' ? 'announcement' : ('text' as const),
+        topic: asOptionalString(channel.topic) ?? null,
+        position: asNumber(channel.position),
+        categoryId:
+          asOptionalString(channel.category_id) ?? asOptionalString(channel.categoryId) ?? null,
+        nsfw: Boolean(channel.nsfw ?? channel.is_nsfw ?? channel.isNsfw),
+        slowmodeSeconds: asNumber(
+          channel.slowmode_seconds ?? channel.slow_mode_seconds ?? channel.slowModeSeconds
+        ),
+      } satisfies ChannelItem;
+    })
+    .sort((left, right) => left.position - right.position);
+}
+
 export function ChannelsTab({ groupId }: ChannelsTabProps) {
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,50 +57,27 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [permissionsChannelId, setPermissionsChannelId] = useState<string | null>(null);
-  const [isReordering, setIsReordering] = useState(false);
-  const [reorderError, setReorderError] = useState<string | null>(null);
-
-  // Create form state
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+  const [mutationKey, setMutationKey] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState<'text' | 'voice' | 'announcement'>('text');
   const [newTopic, setNewTopic] = useState('');
 
-  // Edit form state
   const [editName, setEditName] = useState('');
   const [editTopic, setEditTopic] = useState('');
 
-  const fetchChannels = useCallback(async () => {
+  const fetchChannels = useCallback(async (): Promise<boolean> => {
     try {
       setLoading(true);
-      const result = await apiClient.groups.getChannels(groupId);
-      if (!result.ok) throw new Error(result.error.message);
-      // getChannels returns GroupCategory[] with nested channels
-      const allChannels: ChannelItem[] = [];
-      for (const cat of result.data) {
-        if (Array.isArray(cat.channels)) {
-          for (const c of cat.channels) {
-            const channelType = c.type ?? 'text';
-            allChannels.push({
-              id: c.id,
-              name: c.name,
-              type:
-                channelType === 'voice'
-                  ? 'voice'
-                  : channelType === 'announcement'
-                    ? 'announcement'
-                    : 'text',
-              topic: c.topic ?? null,
-              position: c.position ?? 0,
-              categoryId: c.category_id ?? c.categoryId ?? null,
-              nsfw: c.is_nsfw ?? c.isNsfw ?? false,
-              slowmodeSeconds: c.slow_mode_seconds ?? c.slowModeSeconds ?? 0,
-            });
-          }
-        }
-      }
-      setChannels(allChannels.sort((a, b) => a.position - b.position));
+      setLoadError(null);
+      const response = await http.get(`/api/v1/groups/${groupId}/channels`);
+      setChannels(parseChannels(response.data));
+      return true;
     } catch (error) {
       logger.error('Failed to fetch channels', error);
+      setLoadError('Could not load channels. Please try again.');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -82,44 +88,78 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
   }, [fetchChannels]);
 
   const handleCreate = async () => {
-    if (!newName.trim()) return;
+    if (!newName.trim() || mutationKey) return;
+    setMutationKey('create');
+    setMutationError(null);
     try {
-      const result = await apiClient.groups.createChannel(groupId, {
-        name: newName.trim().toLowerCase().replace(/\s+/g, '-'),
+      await http.post(`/api/v1/groups/${groupId}/channels`, {
+        name: normalizeChannelName(newName),
         type: newType,
-        description: newTopic || undefined,
+        topic: newTopic.trim() || undefined,
       });
-      if (!result.ok) throw new Error(result.error.message);
       setNewName('');
       setNewType('text');
       setNewTopic('');
       setShowCreate(false);
-      fetchChannels();
+      await fetchChannels();
     } catch (error) {
       logger.error('Failed to create channel', error);
+      setMutationError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to create channels.',
+          'Could not create the channel. Please try again.'
+        )
+      );
+    } finally {
+      setMutationKey(null);
     }
   };
 
   const handleUpdate = async (channelId: string) => {
+    if (!editName.trim() || mutationKey) return;
+    setMutationKey(`save:${channelId}`);
+    setMutationError(null);
     try {
       await http.put(`/api/v1/groups/${groupId}/channels/${channelId}`, {
-        name: editName.trim().toLowerCase().replace(/\s+/g, '-'),
-        topic: editTopic || undefined,
+        name: normalizeChannelName(editName),
+        topic: editTopic.trim() || undefined,
       });
       setEditingId(null);
-      fetchChannels();
+      await fetchChannels();
     } catch (error) {
       logger.error('Failed to update channel', error);
+      setMutationError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to update channels.',
+          'Could not update the channel. Please try again.'
+        )
+      );
+    } finally {
+      setMutationKey(null);
     }
   };
 
   const handleDelete = async (channelId: string) => {
+    if (mutationKey) return;
+    setMutationKey(`delete:${channelId}`);
+    setMutationError(null);
     try {
       await http.delete(`/api/v1/groups/${groupId}/channels/${channelId}`);
       setChannels((prev) => prev.filter((c) => c.id !== channelId));
       setDeleteConfirmId(null);
     } catch (error) {
       logger.error('Failed to delete channel', error);
+      setMutationError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to delete channels.',
+          'Could not delete the channel. Please try again.'
+        )
+      );
+    } finally {
+      setMutationKey(null);
     }
   };
 
@@ -131,15 +171,15 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
 
   const handleMoveChannel = async (index: number, offset: -1 | 1) => {
     const targetIndex = index + offset;
-    if (isReordering || targetIndex < 0 || targetIndex >= channels.length) return;
+    if (mutationKey || targetIndex < 0 || targetIndex >= channels.length) return;
 
     const previousOrder = channels;
     const nextOrder = [...channels];
     [nextOrder[index], nextOrder[targetIndex]] = [nextOrder[targetIndex]!, nextOrder[index]!];
 
     setChannels(nextOrder);
-    setIsReordering(true);
-    setReorderError(null);
+    setMutationKey('reorder');
+    setMutationError(null);
 
     try {
       await http.put(`/api/v1/groups/${groupId}/channels/reorder`, {
@@ -148,7 +188,7 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
     } catch (error) {
       logger.warn('Failed to reorder channels, reverting', error);
       setChannels(previousOrder);
-      setReorderError(
+      setMutationError(
         getGroupPermissionError(
           error,
           'You do not have permission to reorder channels.',
@@ -157,7 +197,7 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
       );
       await fetchChannels();
     } finally {
-      setIsReordering(false);
+      setMutationKey(null);
     }
   };
 
@@ -165,14 +205,15 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
     <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="mb-2 text-2xl font-bold text-white">Channels</h2>
-          <p className="text-gray-400">
+          <h2 className="mb-2 text-2xl font-bold text-[var(--token-text-primary)]">Channels</h2>
+          <p className="text-[var(--token-text-muted)]">
             Create and manage channels. {channels.length} channel{channels.length !== 1 ? 's' : ''}
           </p>
         </div>
         <Button
           size="sm"
-          leftIcon={<PlusIcon />}
+          leftIcon={<PlusIcon aria-hidden="true" />}
+          disabled={mutationKey !== null}
           onClick={() => setShowCreate(true)}
           aria-expanded={showCreate}
           className="min-h-11 lg:min-h-10"
@@ -181,7 +222,15 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
         </Button>
       </div>
 
-      {/* Create Channel Form */}
+      {mutationError && (
+        <div
+          role="alert"
+          className="cgraph-section-surface border-[var(--token-feedback-error)] px-4 py-3 text-sm text-[var(--token-feedback-error)]"
+        >
+          {mutationError}
+        </div>
+      )}
+
       <CreateChannelForm
         show={showCreate}
         newName={newName}
@@ -192,33 +241,35 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
         onTopicChange={setNewTopic}
         onClose={() => setShowCreate(false)}
         onCreate={handleCreate}
+        disabled={mutationKey !== null}
       />
 
-      {/* Channel Categories */}
       <ChannelCategoriesPanel groupId={groupId} />
 
-      {/* Channels List */}
-      <GlassCard variant="frosted" className="divide-y divide-gray-700/50">
-        {reorderError && (
-          <p
-            role="alert"
-            className="border-b border-[var(--token-border-muted)] px-4 py-3 text-sm text-[var(--token-feedback-error)]"
-          >
-            {reorderError}
-          </p>
-        )}
+      <Card padding="none" className="overflow-hidden">
         {loading ? (
           <div className="space-y-3 p-4" aria-label="Loading channels" role="status">
             <Skeleton variant="rectangular" height={56} />
             <Skeleton variant="rectangular" height={56} />
             <Skeleton variant="rectangular" height={56} />
           </div>
+        ) : loadError ? (
+          <div className="px-4 py-6 text-center" role="alert">
+            <p className="text-sm text-[var(--token-feedback-error)]">{loadError}</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={fetchChannels}>
+              Retry
+            </Button>
+          </div>
         ) : channels.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-sm text-[var(--token-text-muted)]">
             No channels yet. Create one to get started.
           </div>
         ) : (
-          <div role="list" aria-label="Channels" className="divide-y divide-gray-700/50">
+          <div
+            role="list"
+            aria-label="Channels"
+            className="divide-y divide-[var(--token-border-muted)]"
+          >
             {channels.map((channel, index) => (
               <ChannelListItem
                 key={channel.id}
@@ -228,7 +279,9 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
                 editingId={editingId}
                 editName={editName}
                 editTopic={editTopic}
-                reorderDisabled={isReordering}
+                reorderDisabled={mutationKey === 'reorder'}
+                disabled={mutationKey !== null}
+                saving={mutationKey === `save:${channel.id}`}
                 onEditNameChange={setEditName}
                 onEditTopicChange={setEditTopic}
                 onSave={handleUpdate}
@@ -242,16 +295,15 @@ export function ChannelsTab({ groupId }: ChannelsTabProps) {
             ))}
           </div>
         )}
-      </GlassCard>
+      </Card>
 
-      {/* Delete Confirmation Modal */}
       <DeleteChannelModal
         deleteConfirmId={deleteConfirmId}
         onDelete={handleDelete}
         onClose={() => setDeleteConfirmId(null)}
+        isDeleting={mutationKey === `delete:${deleteConfirmId}`}
       />
 
-      {/* Permissions Panel Modal */}
       <AnimatePresence>
         {permissionsChannelId && (
           <ChannelPermissionsPanel

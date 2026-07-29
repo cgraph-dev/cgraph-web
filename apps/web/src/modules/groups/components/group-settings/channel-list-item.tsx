@@ -49,13 +49,12 @@ interface ChannelListItemProps {
   onPermissions: (channelId: string) => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  disabled?: boolean;
+  saving?: boolean;
 }
 
 export type { ChannelItem };
 
-/**
- * Channel List Item component.
- */
 export function ChannelListItem({
   channel,
   index,
@@ -73,6 +72,8 @@ export function ChannelListItem({
   onPermissions,
   onMoveUp,
   onMoveDown,
+  disabled = false,
+  saving = false,
 }: ChannelListItemProps) {
   const Icon: React.ElementType = hasChannelIcon(channel.type)
     ? channelIcons[channel.type]
@@ -82,12 +83,14 @@ export function ChannelListItem({
     <div
       role="listitem"
       data-testid={`channel-settings-row-${channel.id}`}
-      className="flex items-center justify-between px-4 py-3"
+      className="cgraph-list-row flex flex-wrap items-center justify-between gap-3 rounded-none border-0 px-4 py-3"
     >
       {editingId === channel.id ? (
-        // Edit mode
-        <div className="flex flex-1 items-center gap-3">
-          <Icon className="h-5 w-5 shrink-0 text-gray-400" />
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+          <Icon
+            aria-hidden="true"
+            className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]"
+          />
           <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
             <Input
               aria-label={`Channel name for ${channel.name}`}
@@ -95,6 +98,7 @@ export function ChannelListItem({
               onChange={(e) => onEditNameChange(e.target.value)}
               size="sm"
               className="min-h-9"
+              disabled={disabled}
             />
             <Input
               aria-label={`Channel topic for ${channel.name}`}
@@ -103,69 +107,79 @@ export function ChannelListItem({
               placeholder="Topic"
               size="sm"
               className="min-h-9"
+              disabled={disabled}
             />
           </div>
           <div className="flex gap-1">
             <Button
               size="sm"
               onClick={() => onSave(channel.id)}
+              disabled={disabled || !editName.trim()}
+              isLoading={saving}
             >
               Save
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCancelEdit}
-            >
+            <Button variant="ghost" size="sm" onClick={onCancelEdit} disabled={disabled}>
               Cancel
             </Button>
           </div>
         </div>
       ) : (
-        // View mode
         <>
-          <div className="flex items-center gap-3">
-            <Icon className="h-5 w-5 text-gray-400" />
-            <div>
-              <span className="font-medium text-white">{channel.name}</span>
-              {channel.topic && <p className="text-xs text-gray-500">{channel.topic}</p>}
+          <div className="flex min-w-0 items-center gap-3">
+            <Icon
+              aria-hidden="true"
+              className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]"
+            />
+            <div className="min-w-0">
+              <span className="block truncate font-medium text-[var(--token-text-primary)]">
+                {channel.name}
+              </span>
+              {channel.topic && (
+                <p className="truncate text-xs text-[var(--token-text-muted)]">{channel.topic}</p>
+              )}
             </div>
             {channel.nsfw && (
-              <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-xs text-red-400">NSFW</span>
+              <span className="rounded border border-[var(--token-feedback-error)] px-1.5 py-0.5 text-xs text-[var(--token-feedback-error)]">
+                NSFW
+              </span>
             )}
           </div>
           <div className="flex items-center gap-1">
             <IconButton
-              icon={<ChevronUpIcon />}
+              icon={<ChevronUpIcon aria-hidden="true" />}
               label={`Move ${channel.name} up`}
               size="sm"
               onClick={onMoveUp}
-              disabled={reorderDisabled || index === 0}
+              disabled={disabled || reorderDisabled || index === 0}
             />
             <IconButton
-              icon={<ChevronDownIcon />}
+              icon={<ChevronDownIcon aria-hidden="true" />}
               label={`Move ${channel.name} down`}
               size="sm"
               onClick={onMoveDown}
-              disabled={reorderDisabled || index === totalCount - 1}
+              disabled={disabled || reorderDisabled || index === totalCount - 1}
             />
             <IconButton
-              icon={<ShieldCheckIcon />}
+              icon={<ShieldCheckIcon aria-hidden="true" />}
               label={`Permissions for ${channel.name}`}
               size="sm"
+              disabled={disabled}
               onClick={() => onPermissions(channel.id)}
             />
             <IconButton
-              icon={<PencilIcon />}
+              icon={<PencilIcon aria-hidden="true" />}
               label={`Edit ${channel.name}`}
               size="sm"
+              disabled={disabled}
               onClick={() => onStartEdit(channel)}
             />
             <IconButton
-              icon={<TrashIcon />}
+              icon={<TrashIcon aria-hidden="true" />}
               label={`Delete ${channel.name}`}
               variant="danger"
               size="sm"
+              disabled={disabled}
               onClick={() => onDelete(channel.id)}
             />
           </div>
