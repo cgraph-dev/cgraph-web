@@ -1,33 +1,51 @@
-/**
- * Social Component
- * Main orchestrator for the Social Hub
- */
-
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  UsersIcon,
-  BellIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
-import { useFriendStore } from '@/modules/social/store';
-import type { Friend, FriendRequest } from '@/modules/social/store';
-import { useNotificationStore } from '@/modules/social/store';
-import { useSearchStore } from '@/modules/search/store';
+import { useEffect, useMemo, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Bell, Search, Users } from 'lucide-react';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { captureError } from '@/lib/error-tracking';
+import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { getGroupRoute } from '@/modules/groups/routing';
 import { useGroupStore } from '@/modules/groups/store';
+import { useSearchStore } from '@/modules/search/store';
+import { ContactsPresenceList } from '@/modules/social/components/contacts-presence-list';
+import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
+import { useFriendStore, useNotificationStore } from '@/modules/social/store';
+import { DiscoverTab } from './discover-tab';
+import { getDiscoverResultRoute } from './discover-routing';
 import { FriendsTab } from './friends-tab';
 import { NotificationsTab } from './notifications-tab';
-import { DiscoverTab } from './discover-tab';
-import { ContactsPresenceList } from '@/modules/social/components/contacts-presence-list';
 import { getNotificationActionUrl } from './notification-routing';
-import { getDiscoverResultRoute } from './discover-routing';
-import type { SocialTab, Notification, NotificationType, SearchResult } from './types';
-import { getGroupRoute } from '@/modules/groups/routing';
-import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { captureError } from '@/lib/error-tracking';
-import { tweens } from '@/lib/animation-presets';
-import { resolveFriendshipStatus } from '@/modules/social/friendship-status';
+import type { Notification, NotificationType, SearchResult, SocialTab } from './types';
+
+interface SocialTabDefinition {
+  readonly label: string;
+  readonly description: string;
+  readonly icon: LucideIcon;
+}
+
+const SOCIAL_TABS: Readonly<Record<SocialTab, SocialTabDefinition>> = {
+  friends: {
+    label: 'Friends',
+    description: 'Requests, contacts, and presence',
+    icon: Users,
+  },
+  notifications: {
+    label: 'Notifications',
+    description: 'Messages, mentions, and activity',
+    icon: Bell,
+  },
+  discover: {
+    label: 'Discover',
+    description: 'Find people and communities',
+    icon: Search,
+  },
+};
+
+const SOCIAL_TAB_ORDER: readonly SocialTab[] = ['friends', 'notifications', 'discover'];
+
+function isSocialTab(value: string | undefined): value is SocialTab {
+  return value === 'friends' || value === 'notifications' || value === 'discover';
+}
 
 function isNotificationType(value: string): value is NotificationType {
   return (
@@ -57,170 +75,15 @@ function toNotificationType(value: string): NotificationType {
   return isNotificationType(value) ? value : 'system';
 }
 
-interface SocialMainPaneProps {
-  tab: SocialTab;
-  friends: readonly Friend[];
-  pendingRequests: readonly FriendRequest[];
-  sentRequests: readonly FriendRequest[];
-  notifications: readonly Notification[];
-  searchResults: readonly SearchResult[];
-  isFriendLoading: boolean;
-  friendError: string | null;
-  onOpenRoute: (route: string) => void;
-  onJoinGroup: (result: SearchResult) => Promise<void>;
-  joiningGroupId: string | null;
-  onAcceptRequest: (requestId: string) => Promise<void>;
-  onDeclineRequest: (requestId: string) => Promise<void>;
-  onCancelRequest: (requestId: string) => Promise<void>;
-  onRemoveFriend: (friendshipId: string) => Promise<void>;
-  onBlockUser: (userId: string) => Promise<void>;
-  onRetryFriends: () => void;
-  friendSearchQuery: string;
-  onFriendSearchChange: (query: string) => void;
-  onMarkNotificationRead: (notificationId: string) => void;
-}
-
-function SocialMainPane({
-  tab,
-  friends,
-  pendingRequests,
-  sentRequests,
-  notifications,
-  searchResults,
-  isFriendLoading,
-  friendError,
-  onOpenRoute,
-  onJoinGroup,
-  joiningGroupId,
-  onAcceptRequest,
-  onDeclineRequest,
-  onCancelRequest,
-  onRemoveFriend,
-  onBlockUser,
-  onRetryFriends,
-  friendSearchQuery,
-  onFriendSearchChange,
-  onMarkNotificationRead,
-}: SocialMainPaneProps) {
-  if (tab === 'friends') {
-    return (
-      <div className="h-full overflow-hidden px-8 py-6">
-        <FriendsTab
-          friends={[...friends]}
-          pendingRequests={[...pendingRequests]}
-          sentRequests={[...sentRequests]}
-          searchQuery={friendSearchQuery}
-          onSearchChange={onFriendSearchChange}
-          onAcceptRequest={onAcceptRequest}
-          onDeclineRequest={onDeclineRequest}
-          onCancelRequest={onCancelRequest}
-          onRemoveFriend={onRemoveFriend}
-          onBlockUser={onBlockUser}
-          isLoading={isFriendLoading}
-          error={friendError}
-          onRetry={onRetryFriends}
-        />
-      </div>
-    );
-  }
-
-  if (tab === 'notifications') {
-    const unread = notifications.filter((notification) => !notification.read);
-    const visible = (unread.length > 0 ? unread : notifications).slice(0, 8);
-
-    return (
-      <div className="flex h-full flex-col px-10 py-8">
-        <div className="mb-6 flex items-center gap-3">
-          <BellIcon className="h-6 w-6 text-primary-400" />
-          <h2 className="text-xl font-black tracking-tight text-white">Notifications</h2>
-        </div>
-        <div className="grid max-w-3xl gap-3">
-          {visible.map((notification) => (
-            <button
-              key={notification.id}
-              type="button"
-              onClick={() => {
-                onMarkNotificationRead(notification.id);
-                if (notification.actionUrl) onOpenRoute(notification.actionUrl);
-              }}
-              className="bg-[var(--token-card-bg)]/45 rounded-2xl border border-[var(--token-card-border)] px-4 py-3 text-left transition-colors hover:bg-[var(--token-bg-secondary)]"
-            >
-              <span className="block text-sm font-bold text-white">{notification.title}</span>
-              <span className="mt-1 line-clamp-2 block text-xs leading-relaxed text-white/45">
-                {notification.message}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (tab === 'discover') {
-    return (
-      <div className="flex h-full flex-col px-10 py-8">
-        <div className="mb-6 flex items-center gap-3">
-          <MagnifyingGlassIcon className="h-6 w-6 text-primary-400" />
-          <h2 className="text-xl font-black tracking-tight text-white">Discover</h2>
-        </div>
-        <div className="grid max-w-3xl gap-3">
-          {searchResults.slice(0, 10).map((result) => (
-            <div
-              key={`${result.type}-${result.id}`}
-              className="bg-[var(--token-card-bg)]/45 flex items-center justify-between gap-4 rounded-2xl border border-[var(--token-card-border)] px-4 py-3 transition-colors hover:bg-[var(--token-bg-secondary)]"
-            >
-              <button
-                type="button"
-                onClick={() => onOpenRoute(getDiscoverResultRoute(result))}
-                className="min-w-0 flex-1 text-left"
-              >
-                <span className="block truncate text-sm font-bold text-white">{result.name}</span>
-                <span className="mt-1 block truncate text-xs text-white/40">
-                  {result.description || result.type}
-                </span>
-              </button>
-              {result.type === 'group' && !result.isJoined ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void onJoinGroup(result);
-                  }}
-                  disabled={joiningGroupId === result.id}
-                  className="bg-primary-500/10 hover:bg-primary-500/20 disabled:bg-primary-500/5 disabled:text-primary-300/60 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-300 transition-colors disabled:cursor-wait"
-                >
-                  {joiningGroupId === result.id ? 'Joining' : 'Join'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onOpenRoute(getDiscoverResultRoute(result))}
-                  className="bg-primary-500/10 hover:bg-primary-500/20 shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-primary-300 transition-colors"
-                >
-                  Open
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-/**
- * Social Hub - Unified Social Interface
- *
- * Consolidates 3 major social features into one tab:
- * 1. Friends - Friend list, requests, online status
- * 2. Notifications - All app notifications in one place
- * 3. Discover - Global search for users, forums, groups
- *
- * This replaces the old /friends, /notifications, and /search routes.
- */
 export function Social() {
-  const { tab = 'friends' } = useParams<{ tab: SocialTab }>();
+  const { tab } = useParams<{ tab?: string }>();
+
+  if (!isSocialTab(tab)) return <Navigate to="/social/friends" replace />;
+
+  return <SocialHub tab={tab} />;
+}
+
+function SocialHub({ tab }: { readonly tab: SocialTab }) {
   const navigate = useNavigate();
   const {
     friends,
@@ -238,11 +101,6 @@ export function Social() {
     blockUser,
     clearError,
   } = useFriendStore();
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
-
-  // Wire real notification store
   const {
     notifications: storeNotifications,
     unreadCount,
@@ -250,13 +108,10 @@ export function Social() {
     markAsRead: markNotificationRead,
     markAllAsRead: markAllNotificationsRead,
   } = useNotificationStore();
-
-  // Wire real search store
   const {
     users: searchUsers,
     groups: searchGroups,
     forums: searchForums,
-    isLoading: _isSearching,
     isLoadingMore: isSearchLoadingMore,
     hasMore: hasMoreSearchResults,
     search: performSearch,
@@ -264,33 +119,34 @@ export function Social() {
     setQuery: setSearchStoreQuery,
   } = useSearchStore();
   const { joinPublicGroup } = useGroupStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchFriends();
-    fetchPendingRequests();
-    fetchSentRequests();
-    fetchNotifications();
+    void fetchFriends();
+    void fetchPendingRequests();
+    void fetchSentRequests();
+    void fetchNotifications();
   }, [fetchFriends, fetchPendingRequests, fetchSentRequests, fetchNotifications]);
 
-  // Adapt store notifications → UI Notification type
   const notifications: Notification[] = useMemo(
     () =>
-      storeNotifications.map((n) => ({
-        id: n.id,
-        type: toNotificationType(n.type),
-        title: n.title,
-        message: n.body,
-        timestamp: new Date(n.createdAt),
-        read: n.isRead,
-        actionUrl: getNotificationActionUrl(n),
-        avatarUrl: n.sender?.avatarUrl ?? undefined,
+      storeNotifications.map((notification) => ({
+        id: notification.id,
+        type: toNotificationType(notification.type),
+        title: notification.title,
+        message: notification.body,
+        timestamp: new Date(notification.createdAt),
+        read: notification.isRead,
+        actionUrl: getNotificationActionUrl(notification),
+        avatarUrl: notification.sender?.avatarUrl ?? undefined,
       })),
     [storeNotifications]
   );
 
-  // Adapt store search results → UI SearchResult type
   const searchResults: SearchResult[] = useMemo(() => {
     const results: SearchResult[] = [];
+
     for (const user of searchUsers) {
       results.push({
         id: user.id,
@@ -313,6 +169,7 @@ export function Social() {
         ),
       });
     }
+
     for (const group of searchGroups) {
       results.push({
         id: group.id,
@@ -326,6 +183,7 @@ export function Social() {
         isJoined: group.is_member,
       });
     }
+
     for (const forum of searchForums) {
       results.push({
         id: forum.id,
@@ -338,35 +196,25 @@ export function Social() {
         memberCount: forum.post_count,
       });
     }
+
     return results;
-  }, [searchUsers, searchGroups, searchForums]);
+  }, [searchForums, searchGroups, searchUsers]);
 
-  // Filter friends by search
-  const filteredFriends = friends.filter(
-    (friend) =>
-      friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.displayName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFriends = friends.filter((friend) => {
+    const normalizedQuery = searchQuery.toLowerCase();
+    return (
+      friend.username.toLowerCase().includes(normalizedQuery) ||
+      friend.displayName?.toLowerCase().includes(normalizedQuery)
+    );
+  });
 
-  // Handle search via real search store
+  const activeTab = SOCIAL_TABS[tab];
+  const ActiveIcon = activeTab.icon;
+
   function handleSearch(query: string) {
     setSearchQuery(query);
     setSearchStoreQuery(query);
-    if (query.length >= 2) {
-      performSearch(query);
-    }
-  }
-
-  function handleLoadMoreSearchResults() {
-    void loadMoreSearchResults();
-  }
-
-  function handleMarkAsRead(notificationId: string) {
-    markNotificationRead(notificationId);
-  }
-
-  function handleMarkAllAsRead() {
-    markAllNotificationsRead();
+    if (query.length >= 2) void performSearch(query);
   }
 
   function refreshFriendCenter() {
@@ -385,188 +233,128 @@ export function Social() {
       const joinedGroup = await joinPublicGroup(result.id);
       HapticFeedback.success();
       navigate(joinedGroup ? getGroupRoute(joinedGroup) : getDiscoverResultRoute(result));
-    } catch (error: unknown) {
+    } catch (joinError: unknown) {
       HapticFeedback.error();
-      captureError(error instanceof Error ? error : new Error('Failed to join social group'), {
-        source: 'social_discover_join',
-        groupId: result.id,
-      });
+      captureError(
+        joinError instanceof Error ? joinError : new Error('Failed to join social group'),
+        {
+          source: 'social_discover_join',
+          groupId: result.id,
+        }
+      );
     } finally {
       setJoiningGroupId(null);
     }
   }
 
-  const tabs: {
-    id: SocialTab;
-    label: string;
-    icon: typeof UsersIcon;
-    count: number;
-  }[] = [
-    {
-      id: 'friends',
-      label: 'Friends',
-      icon: UsersIcon,
-      count: pendingRequests.length,
-    },
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: BellIcon,
-      count: unreadCount,
-    },
-    { id: 'discover', label: 'Discover', icon: MagnifyingGlassIcon, count: 0 },
-  ];
-
   return (
-    <div className="relative flex h-full w-full flex-1 overflow-hidden bg-transparent">
-      {/* Sidebar - Navigation & Lists */}
-      <aside className="bg-[var(--token-card-bg)]/40 relative z-10 flex w-[380px] shrink-0 flex-col border-r border-[var(--token-card-border)] backdrop-blur-3xl transition-all duration-300">
-        {/* Sidebar Header */}
-        <div className="flex-shrink-0 border-b border-[var(--token-border-muted)] px-6 py-8">
-          <motion.h1
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-gradient-to-r from-white via-primary-200 to-purple-200 bg-clip-text text-2xl font-black tracking-tighter text-transparent"
-          >
-            Social Hub
-          </motion.h1>
+    <div className="cgraph-workspace flex h-full min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+      <aside className="cgraph-pane z-10 shrink-0 border-b md:w-64 md:border-b-0 md:border-r">
+        <div className="cgraph-pane-header hidden px-5 py-4 md:block">
+          <h1 className="text-lg font-semibold text-[var(--token-text-primary)]">Social</h1>
+          <p className="text-xs text-[var(--token-text-muted)]">People and activity</p>
+        </div>
 
-          {/* Tabs - Sidebar Navigation */}
-          <div className="mt-8 flex flex-col gap-1.5">
-            {tabs.map((tabItem) => {
-              const Icon = tabItem.icon;
-              const isActive = tab === tabItem.id;
-              return (
-                <button
-                  key={tabItem.id}
-                  onClick={() => navigate(`/social/${tabItem.id}`)}
-                  className={`group relative flex items-center gap-3 rounded-2xl px-4 py-3.5 font-bold transition-all duration-200 active:scale-[0.98] ${
-                    isActive
-                      ? 'shadow-primary-500/5 text-white shadow-lg'
-                      : 'text-white/30 hover:bg-[var(--token-bg-primary)] hover:text-white/80'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="socialActiveTab"
-                      className="absolute inset-0 rounded-2xl border border-[var(--token-card-border)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, color-mix(in srgb, var(--color-brand-purple) 10%, transparent) 0%, rgba(59,130,246,0.08) 100%)',
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 380,
-                        damping: 35,
-                      }}
-                    />
-                  )}
+        <nav
+          className="cgraph-segmented scrollbar-hide m-3 flex max-w-full overflow-x-auto md:m-4 md:grid"
+          aria-label="Social"
+        >
+          {SOCIAL_TAB_ORDER.map((id) => {
+            const { label, icon: Icon } = SOCIAL_TABS[id];
+            const count =
+              id === 'friends' ? pendingRequests.length : id === 'notifications' ? unreadCount : 0;
 
-                  <div
-                    className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-500 ${
-                      isActive
-                        ? 'border-primary-500/30 bg-primary-500/10 text-primary-400'
-                        : 'border-transparent bg-[var(--token-bg-primary)] text-white/10 group-hover:bg-[var(--token-bg-secondary)]'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
-
-                  <span className="relative z-10 flex-1 text-left text-sm tracking-wide">
-                    {tabItem.label}
+            return (
+              <Link
+                key={id}
+                to={`/social/${id}`}
+                aria-current={tab === id ? 'page' : undefined}
+                className="cgraph-segmented-item flex min-w-max items-center gap-2 px-3 text-sm font-medium md:min-w-0"
+              >
+                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="min-w-0 flex-1 truncate">{label}</span>
+                {count > 0 ? (
+                  <span className="min-w-5 rounded-full bg-[var(--token-feedback-error)] px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none text-[var(--token-text-on-primary)]">
+                    {count > 99 ? '99+' : count}
                   </span>
-
-                  {tabItem.count > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="h-5.5 shadow-primary-500/20 relative z-10 flex min-w-[22px] items-center justify-center rounded-full bg-primary-500 px-1 text-[10px] font-black text-white shadow-lg ring-2 ring-dark-950"
-                    >
-                      {tabItem.count > 99 ? '99+' : tabItem.count}
-                    </motion.span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Sidebar Content (Scrollable List) */}
-        <div className="scrollbar-thin scrollbar-thumb-white/5 flex-1 overflow-y-auto px-4 py-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={tweens.standard}
-            >
-              {tab === 'notifications' && (
-                <NotificationsTab
-                  notifications={notifications}
-                  onMarkAsRead={handleMarkAsRead}
-                  onMarkAllAsRead={handleMarkAllAsRead}
-                />
-              )}
-
-              {tab === 'discover' && (
-                <DiscoverTab
-                  searchQuery={searchQuery}
-                  searchResults={searchResults}
-                  hasMore={hasMoreSearchResults}
-                  isLoadingMore={isSearchLoadingMore}
-                  onSearchChange={handleSearch}
-                  onLoadMore={handleLoadMoreSearchResults}
-                  onJoinGroup={handleJoinGroupResult}
-                  joiningGroupId={joiningGroupId}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
       </aside>
 
-      {/* Main Content Pane */}
-      <main className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
-        <SocialMainPane
-          tab={tab}
-          friends={filteredFriends}
-          pendingRequests={pendingRequests}
-          sentRequests={sentRequests}
-          notifications={notifications}
-          searchResults={searchResults}
-          isFriendLoading={isLoading}
-          friendError={error}
-          onOpenRoute={navigate}
-          onJoinGroup={handleJoinGroupResult}
-          joiningGroupId={joiningGroupId}
-          onAcceptRequest={acceptRequest}
-          onDeclineRequest={declineRequest}
-          onCancelRequest={cancelRequest}
-          onRemoveFriend={removeFriend}
-          onBlockUser={blockUser}
-          onRetryFriends={refreshFriendCenter}
-          friendSearchQuery={searchQuery}
-          onFriendSearchChange={setSearchQuery}
-          onMarkNotificationRead={handleMarkAsRead}
-        />
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+        <div className="cgraph-content">
+          <header className="cgraph-page-header">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="cgraph-empty-icon shrink-0" aria-hidden="true">
+                <ActiveIcon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold text-[var(--token-text-primary)]">
+                  {activeTab.label}
+                </h2>
+                <p className="text-sm text-[var(--token-text-muted)]">
+                  {activeTab.description}
+                </p>
+              </div>
+            </div>
+          </header>
+
+          <div className="pt-5">
+            {tab === 'friends' ? (
+              <FriendsTab
+                friends={filteredFriends}
+                pendingRequests={[...pendingRequests]}
+                sentRequests={[...sentRequests]}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onAcceptRequest={acceptRequest}
+                onDeclineRequest={declineRequest}
+                onCancelRequest={cancelRequest}
+                onRemoveFriend={removeFriend}
+                onBlockUser={blockUser}
+                isLoading={isLoading}
+                error={error}
+                onRetry={refreshFriendCenter}
+              />
+            ) : null}
+
+            {tab === 'notifications' ? (
+              <NotificationsTab
+                notifications={notifications}
+                onMarkAsRead={(notificationId) => void markNotificationRead(notificationId)}
+                onMarkAllAsRead={() => void markAllNotificationsRead()}
+              />
+            ) : null}
+
+            {tab === 'discover' ? (
+              <DiscoverTab
+                searchQuery={searchQuery}
+                searchResults={searchResults}
+                hasMore={hasMoreSearchResults}
+                isLoadingMore={isSearchLoadingMore}
+                onSearchChange={handleSearch}
+                onLoadMore={() => void loadMoreSearchResults()}
+                onJoinGroup={handleJoinGroupResult}
+                joiningGroupId={joiningGroupId}
+              />
+            ) : null}
+          </div>
+        </div>
       </main>
 
-      {/* Right Sidebar - Presence */}
-      <aside className="hidden w-80 shrink-0 border-l border-[var(--token-card-border)] bg-black/10 backdrop-blur-md xl:block">
-        <div className="flex h-full flex-col">
-          <div className="px-6 py-8">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-white/20">
-              {' '}
-              Global Active{' '}
-            </h2>
-          </div>
-          <div className="flex-1 overflow-y-auto px-3">
-            <ContactsPresenceList
-              onContactClick={(friend) => navigate(`/messages?userId=${friend.id}`)}
-              className="space-y-1"
-            />
-          </div>
+      <aside className="cgraph-pane hidden w-72 shrink-0 flex-col border-l xl:flex">
+        <div className="cgraph-pane-header px-5 py-4">
+          <h2 className="text-sm font-semibold text-[var(--token-text-primary)]">Active now</h2>
+          <p className="text-xs text-[var(--token-text-muted)]">Friends currently available</p>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <ContactsPresenceList
+            onContactClick={(friend) => navigate(`/messages?userId=${friend.id}`)}
+            className="space-y-1"
+          />
         </div>
       </aside>
     </div>

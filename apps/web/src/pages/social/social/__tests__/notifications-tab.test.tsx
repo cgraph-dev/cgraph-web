@@ -14,20 +14,6 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigate };
 });
 
-vi.mock('motion/react', () => ({
-  motion: {
-    li: ({ children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => {
-      const {
-        initial: _initial,
-        animate: _animate,
-        transition: _transition,
-        ...domProps
-      } = rest;
-      return <li {...domProps}>{children}</li>;
-    },
-  },
-}));
-
 function makeNotification(overrides: Partial<Notification> = {}): Notification {
   return {
     id: 'notification-1',
@@ -72,7 +58,7 @@ describe('NotificationsTab', () => {
     });
 
     expect(screen.getByRole('list', { name: 'Notifications list' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Mark All as Read' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mark all as read' })).toBeInTheDocument();
     expect(container.querySelector('img[src="https://cdn.example.com/alice.png"]')).toBeTruthy();
 
     fireEvent.click(
@@ -81,6 +67,14 @@ describe('NotificationsTab', () => {
 
     expect(onMarkAsRead).toHaveBeenCalledWith('notification-1');
     expect(navigate).toHaveBeenCalledWith('/social/friends');
+  });
+
+  it('marks every unread notification from the shared action', () => {
+    const { onMarkAllAsRead } = renderNotifications();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mark all as read' }));
+
+    expect(onMarkAllAsRead).toHaveBeenCalledTimes(1);
   });
 
   it('does not re-mark already-read notifications before navigating', () => {

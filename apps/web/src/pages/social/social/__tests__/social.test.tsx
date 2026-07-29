@@ -1,21 +1,24 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { SearchGroup, SearchForum, SearchUser } from '@/modules/search/store';
+import type { SearchForum, SearchGroup, SearchUser } from '@/modules/search/store';
 import type { Friend, FriendRequest } from '@/modules/social/store';
 import { Social } from '../social';
 import type { DiscoverTabProps } from '../types';
 
 const {
-  navigate,
   discoverTabState,
   friendStoreState,
   notificationStoreState,
   searchStoreState,
   groupStoreState,
 } = vi.hoisted(() => ({
-  navigate: vi.fn(),
   discoverTabState: {
     latestProps: null as DiscoverTabProps | null,
   },
@@ -55,40 +58,6 @@ const {
   },
   groupStoreState: {
     joinPublicGroup: vi.fn(() => Promise.resolve(null)),
-  },
-}));
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => navigate,
-    useParams: () => ({ tab: 'discover' }),
-  };
-});
-
-vi.mock('motion/react', () => ({
-  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-  motion: {
-    div: ({ children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => {
-      const {
-        initial: _initial,
-        animate: _animate,
-        exit: _exit,
-        transition: _transition,
-        layoutId: _layoutId,
-        ...domProps
-      } = rest;
-      return <div {...domProps}>{children}</div>;
-    },
-    h1: ({ children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => {
-      const { initial: _initial, animate: _animate, transition: _transition, ...domProps } = rest;
-      return <h1 {...domProps}>{children}</h1>;
-    },
-    span: ({ children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => {
-      const { initial: _initial, animate: _animate, transition: _transition, ...domProps } = rest;
-      return <span {...domProps}>{children}</span>;
-    },
   },
 }));
 
@@ -140,6 +109,29 @@ vi.mock('@/lib/error-tracking', () => ({
   captureError: vi.fn(),
 }));
 
+function LocationProbe() {
+  const location = useLocation();
+  return <output aria-label="Current route">{location.pathname}</output>;
+}
+
+function renderSocial(path: string) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route
+          path="/social/:tab"
+          element={
+            <>
+              <Social />
+              <LocationProbe />
+            </>
+          }
+        />
+      </Routes>
+    </MemoryRouter>
+  );
+}
+
 function searchUser(overrides: Partial<SearchUser>): SearchUser {
   return {
     id: 'user-1',
@@ -159,11 +151,35 @@ describe('Social', () => {
     friendStoreState.pendingRequests = [];
     friendStoreState.sentRequests = [];
     friendStoreState.error = null;
+    notificationStoreState.notifications = [];
+    notificationStoreState.unreadCount = 0;
     searchStoreState.users = [];
     searchStoreState.groups = [];
     searchStoreState.forums = [];
     searchStoreState.isLoadingMore = false;
     searchStoreState.hasMore = false;
+  });
+
+  it.each([
+    ['/social/friends', 'Friends', 'friends-tab'],
+    ['/social/notifications', 'Notifications', 'notifications-tab'],
+    ['/social/discover', 'Discover', 'discover-tab'],
+  ])('mounts one owner for %s', (path, label, testId) => {
+    renderSocial(path);
+
+    expect(screen.getAllByTestId(testId)).toHaveLength(1);
+    expect(screen.getByRole('link', { name: label })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('redirects unknown social tabs to Friends', async () => {
+    renderSocial('/social/unknown');
+
+    await waitFor(() =>
+      expect(screen.getByRole('status', { name: 'Current route' })).toHaveTextContent(
+        '/social/friends'
+      )
+    );
+    expect(screen.getByTestId('friends-tab')).toBeInTheDocument();
   });
 
   it('passes resolved backend relationship state into discover user results', () => {
@@ -187,9 +203,8 @@ describe('Social', () => {
       }),
     ];
 
-    render(<Social />);
+    renderSocial('/social/discover');
 
-    expect(screen.getByTestId('discover-tab')).toBeInTheDocument();
     expect(screen.getByTestId('result-blocked-user')).toHaveTextContent('blocked');
     expect(screen.getByTestId('result-incoming-user')).toHaveTextContent('pending_received');
     expect(screen.getByTestId('result-outgoing-user')).toHaveTextContent('pending_sent');
