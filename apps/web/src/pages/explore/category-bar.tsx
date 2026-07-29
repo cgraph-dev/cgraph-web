@@ -20,15 +20,16 @@ interface CategoryBarProps {
  */
 export default function CategoryBar({ categories, selected, onSelect }: CategoryBarProps) {
   return (
-    <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
-      {/* "All" chip */}
+    <div
+      className="cgraph-segmented scrollbar-hide max-w-full overflow-x-auto"
+      role="group"
+      aria-label="Community categories"
+    >
       <button
+        type="button"
         onClick={() => onSelect(null)}
-        className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-          selected === null
-            ? 'bg-primary-600 text-white'
-            : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-        }`}
+        className="cgraph-segmented-item shrink-0 px-3 text-sm font-medium"
+        aria-pressed={selected === null}
       >
         All
       </button>
@@ -36,12 +37,10 @@ export default function CategoryBar({ categories, selected, onSelect }: Category
       {categories.map((cat) => (
         <button
           key={cat}
+          type="button"
           onClick={() => onSelect(cat === selected ? null : cat)}
-          className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
-            selected === cat
-              ? 'bg-primary-600 text-white'
-              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-          }`}
+          className="cgraph-segmented-item shrink-0 px-3 text-sm font-medium capitalize"
+          aria-pressed={selected === cat}
         >
           {cat}
         </button>

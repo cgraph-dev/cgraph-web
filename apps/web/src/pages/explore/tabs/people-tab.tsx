@@ -18,6 +18,7 @@ import {
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { publicProfilePath } from '@/lib/profile-route';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import EmptyState from '@/components/ui/empty-state';
 import Skeleton from '@/components/ui/skeleton';
 
@@ -37,17 +38,17 @@ export function PeopleTab() {
 
   return (
     <div className="cgraph-content max-w-2xl">
-      <div className="relative mb-6">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search people..."
-          autoFocus
-          className="cgraph-field peer w-full pl-11 pr-4 text-sm"
-        />
-        <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
-      </div>
+      <Input
+        aria-label="Search people"
+        type="search"
+        value={query}
+        onChange={(event) => handleSearch(event.target.value)}
+        placeholder="Search people..."
+        leftIcon={<MagnifyingGlassIcon className="h-5 w-5" />}
+        className="mb-6 text-sm"
+        autoFocus
+        fullWidth
+      />
 
       {/* Empty state */}
       {query.length === 0 && (
@@ -67,20 +68,22 @@ export function PeopleTab() {
       )}
 
       {query.length >= 2 && !isLoading && error && (
-        <div className="py-10 text-center text-sm text-red-300/80">
+        <div className="py-10 text-center text-sm text-[var(--token-feedback-error)]">
           Could not search people right now.
         </div>
       )}
 
       {/* No results */}
       {query.length >= 2 && !isLoading && !error && users.length === 0 && (
-        <div className="py-10 text-center text-sm text-white/40">No people found for "{query}"</div>
+        <div className="py-10 text-center text-sm text-[var(--token-text-muted)]">
+          No people found for "{query}"
+        </div>
       )}
 
       {/* Results */}
       {users.length > 0 && (
         <div className="space-y-2">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-white/20">
+          <p className="mb-3 text-[11px] font-semibold uppercase text-[var(--token-text-muted)]">
             {users.length} {users.length === 1 ? 'person' : 'people'} found
           </p>
           {users.map((user) => {

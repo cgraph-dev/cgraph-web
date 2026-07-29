@@ -5,15 +5,13 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  MagnifyingGlassIcon,
-  SparklesIcon,
-  AdjustmentsHorizontalIcon,
-} from '@heroicons/react/24/outline';
+import { SparklesIcon } from '@heroicons/react/24/outline';
 import CommunityCard, { type Community } from '../community-card';
 import CategoryBar from '../category-bar';
+import { ExploreFilterBar } from '../explore-filter-bar';
 import EmptyState from '@/components/ui/empty-state';
 import Skeleton from '@/components/ui/skeleton';
+import { InlineLoadingSpinner } from '@/components/feedback/loading-spinner';
 import { http } from '@/lib/api-client';
 import { captureError } from '@/lib/error-tracking';
 
@@ -129,36 +127,18 @@ export function DiscoverTab() {
     <div className="flex flex-col">
       {/* Search + filters */}
       <div className="cgraph-pane border-b px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search communities..."
-              className="cgraph-field peer w-full py-2 pl-10 pr-4 text-sm"
-            />
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
-          </div>
-
-          <div className="relative">
-            <AdjustmentsHorizontalIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-            <select
-              aria-label="Sort communities"
-              value={sort}
-              onChange={(e) => {
-                if (isSortOption(e.target.value)) setSort(e.target.value);
-              }}
-              className="cgraph-field appearance-none py-2 pl-9 pr-8 text-sm"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <ExploreFilterBar
+          search={search}
+          searchLabel="Search communities"
+          searchPlaceholder="Search communities..."
+          sort={sort}
+          sortLabel="Sort communities"
+          sortOptions={SORT_OPTIONS}
+          onSearchChange={handleSearch}
+          onSortChange={(value) => {
+            if (isSortOption(value)) setSort(value);
+          }}
+        />
 
         <div className="mt-3">
           <CategoryBar categories={categories} selected={category} onSelect={setCategory} />
@@ -168,7 +148,11 @@ export function DiscoverTab() {
       {/* Community grid */}
       <div className="cgraph-content flex-1">
         {isLoading && communities.length === 0 ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading communities">
+          <div
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            role="status"
+            aria-label="Loading communities"
+          >
             <span className="sr-only">Loading communities</span>
             <Skeleton shape="card" count={6} />
           </div>
@@ -188,9 +172,7 @@ export function DiscoverTab() {
 
             {hasMore && (
               <div ref={observerRef} className="flex items-center justify-center py-8">
-                {isLoading && (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-                )}
+                {isLoading && <InlineLoadingSpinner />}
               </div>
             )}
           </>

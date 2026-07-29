@@ -141,7 +141,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   readonly label?: string;
   readonly error?: string;
   readonly hint?: string;
-  readonly options: Array<{ value: string; label: string; disabled?: boolean }>;
+  readonly options: ReadonlyArray<{ value: string; label: string; disabled?: boolean }>;
   readonly placeholder?: string;
   readonly fullWidth?: boolean;
 }

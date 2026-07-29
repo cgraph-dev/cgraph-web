@@ -8,6 +8,10 @@ import { useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FeedModeTabs, useFeed, useDiscoveryStore } from '@/modules/discovery';
 import { FeedPostCard } from '@/pages/feed/feed-post-card';
+import EmptyState from '@/components/ui/empty-state';
+import Skeleton from '@/components/ui/skeleton';
+import { InlineLoadingSpinner } from '@/components/feedback/loading-spinner';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 /** Feed tab — ranked discovery feed with 5 modes. */
 export function FeedTab() {
@@ -45,10 +49,10 @@ export function FeedTab() {
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white">Your Feed</h2>
+        <h2 className="text-lg font-semibold text-[var(--token-text-primary)]">Your Feed</h2>
         <Link
           to="/me/settings/discovery"
-          className="text-xs text-white/40 transition-colors hover:text-white/60"
+          className="text-xs font-medium text-[var(--token-interactive-primary)] hover:underline"
         >
           Customize
         </Link>
@@ -59,22 +63,16 @@ export function FeedTab() {
 
       {/* Feed content */}
       {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl bg-white/5" />
-          ))}
+        <div className="space-y-3" role="status" aria-label="Loading feed">
+          <span className="sr-only">Loading feed</span>
+          <Skeleton shape="card" count={5} />
         </div>
       ) : allThreads.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <span className="text-4xl">🔍</span>
-          <p className="text-sm text-white/40">No posts found for this mode</p>
-          <Link
-            to="/me/settings/discovery"
-            className="text-sm text-indigo-400 hover:text-indigo-300"
-          >
-            Follow topics to see your feed
-          </Link>
-        </div>
+        <EmptyState
+          icon={<MagnifyingGlassIcon className="h-7 w-7" />}
+          title="No posts found"
+          message="Follow topics or choose another feed mode."
+        />
       ) : (
         <div className="space-y-3">
           {allThreads.map((thread) => (
@@ -87,7 +85,7 @@ export function FeedTab() {
 
       {isFetchingNextPage && (
         <div className="flex justify-center py-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/60" />
+          <InlineLoadingSpinner />
         </div>
       )}
     </div>
