@@ -3,7 +3,7 @@
  */
 import { Link } from 'react-router-dom';
 import { ChatBubbleLeftRightIcon, FolderIcon, UserIcon } from '@heroicons/react/24/outline';
-
+import { ForumPageLoadingState } from '../forum-page-loading-state';
 import { useForumBoardView } from './useForumBoardView';
 import { ForumBoardBanner } from './forum-board-banner';
 import { BoardsList } from './boards-list';
@@ -53,11 +53,7 @@ export function ForumBoardView() {
   } = useForumBoardView();
 
   if (isLoadingForum) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500/30 border-t-primary-500" />
-      </div>
-    );
+    return <ForumPageLoadingState label="Loading forum" />;
   }
 
   if (!forum) {

@@ -11,6 +11,7 @@ import {
   DangerZone,
 } from '@/pages/forums/forum-settings/settings-sections';
 import { SubmitButton } from '@/components/ui/submit-button';
+import { ForumPageLoadingState } from '@/pages/forums/forum-page-loading-state';
 
 /**
  * Forum Settings component.
@@ -39,11 +40,7 @@ export default function ForumSettings() {
   } = useForumSettings();
 
   if (!forum) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-      </div>
-    );
+    return <ForumPageLoadingState label="Loading forum settings" />;
   }
 
   if (!isOwner) {

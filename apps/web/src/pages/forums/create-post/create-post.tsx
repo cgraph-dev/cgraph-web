@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import MarkdownEditor from '@/components/content/markdown-editor';
 import type { PostAttachment } from '@/modules/forums/store';
 import AttachmentUploader from '@/modules/forums/components/attachment-uploader';
+import { ForumPageLoadingState } from '@/pages/forums/forum-page-loading-state';
 import {
   ArrowLeftIcon,
   PhotoIcon,
@@ -45,11 +46,7 @@ export default function CreatePost() {
   } = useCreatePost();
 
   if (!forum) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-      </div>
-    );
+    return <ForumPageLoadingState label="Loading post composer" />;
   }
 
   return (

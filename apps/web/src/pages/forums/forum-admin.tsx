@@ -16,6 +16,7 @@
 
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { GlassCard } from '@/shared/components/ui';
+import { ForumPageLoadingState } from './forum-page-loading-state';
 import { useForumAdmin } from './forum-admin/useForumAdmin';
 import { Sidebar } from './forum-admin/sidebar';
 import { AdminContent } from './forum-admin/admin-content';
@@ -104,13 +105,8 @@ export default function ForumAdmin() {
     handleDelete,
   } = useForumAdmin();
 
-  // Loading state
   if (!forum) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-[var(--token-card-bg)]">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-      </div>
-    );
+    return <ForumPageLoadingState label="Loading forum administration" />;
   }
 
   // Access denied
