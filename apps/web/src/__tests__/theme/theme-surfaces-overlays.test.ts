@@ -26,4 +26,23 @@ describe('theme surface overlay guards', () => {
       'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent)'
     );
   });
+
+  it('keeps shared buttons and toggles on flat state materials', () => {
+    const flatButtonSelectors = [
+      /\.theme-aurora \.btn-themed\s*\{[^}]*\}/s,
+      /\.theme-aurora \.aurora-social-button\s*\{[^}]*\}/s,
+      /\.theme-light \.btn-themed\s*\{[^}]*\}/s,
+      /\.theme-light \.aurora-social-button\s*\{[^}]*\}/s,
+    ];
+
+    for (const selector of flatButtonSelectors) {
+      expect(themeSurfacesCss).toMatch(selector);
+      expect(themeSurfacesCss.match(selector)?.[0]).not.toContain('linear-gradient');
+    }
+
+    expect(themeSurfacesCss).not.toContain('transform: scale(0.98)');
+    expect(themeSurfacesCss).not.toContain('scale(1.04)');
+    expect(themeSurfacesCss).not.toContain('aurora-social-toggle-thumb::before');
+    expect(themeSurfacesCss).not.toContain('aurora-social-toggle-thumb::after');
+  });
 });

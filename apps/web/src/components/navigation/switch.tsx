@@ -1,7 +1,6 @@
 /**
  * Toggle switch component.
  */
-import { motion } from 'motion/react';
 
 interface SwitchProps {
   checked: boolean;
@@ -45,20 +44,19 @@ export default function Switch({
     <label
       className={`flex items-start gap-3 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${className}`}
     >
-      <motion.button
+      <button
         type="button"
         role="switch"
         aria-checked={checked}
         data-checked={checked}
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
-        whileTap={disabled ? undefined : { scale: 1 }}
         className={`aurora-social-toggle relative inline-flex flex-shrink-0 ${size === 'sm' ? 'aurora-social-toggle--compact' : size === 'lg' ? 'aurora-social-toggle--large' : ''} ${currentSize.track} rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-900`}
       >
-        <motion.span
+        <span
           className={`aurora-social-toggle-thumb absolute left-0.5 top-0.5 ${currentSize.thumb} inline-block rounded-full`}
         />
-      </motion.button>
+      </button>
 
       {(label || description) && (
         <div className="flex flex-col">

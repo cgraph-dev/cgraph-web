@@ -47,6 +47,19 @@ describe('built-in app-theme material ownership', () => {
     expect(productCss).toContain('var(--product-brand-secondary)');
   });
 
+  it('keeps Aurora primary controls flat while preserving the separate green accent', () => {
+    const auroraPrimary = materialsCss.match(
+      /\.theme-aurora \.cgraph-control-primary\s*\{(?<body>[^}]*)\}/
+    )?.groups?.body;
+    const auroraRailPrimary = materialsCss.match(
+      /\.theme-aurora \.cgraph-navigation-rail \.cgraph-control-primary\s*\{(?<body>[^}]*)\}/
+    )?.groups?.body;
+
+    expect(auroraPrimary).toContain('background: var(--token-interactive-primary)');
+    expect(auroraPrimary).not.toContain('linear-gradient');
+    expect(auroraRailPrimary).toContain('var(--app-material-brand-secondary)');
+  });
+
   it('preserves control intent in the Bubble material owner', () => {
     for (const variant of ['primary', 'danger', 'success', 'secondary', 'outline', 'ghost', 'glass']) {
       expect(bubbleCss).toContain(`[data-cgraph-variant='${variant}']`);

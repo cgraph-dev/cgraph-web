@@ -37,37 +37,16 @@
     var(--app-material-brand-secondary) 34%,
     var(--token-border-muted)
   );
-  background: linear-gradient(
-    135deg,
-    var(--token-interactive-primary) 0%,
-    var(--token-interactive-primary) 68%,
-    color-mix(
-      in srgb,
-      var(--app-material-brand-secondary) 68%,
-      var(--token-bg-primary)
-    )
-    100%
-  );
+  background: var(--token-interactive-primary);
 }
 
 .theme-aurora .cgraph-control-primary:hover:not(:disabled) {
-  background: linear-gradient(
-    135deg,
-    var(--token-interactive-hover) 0%,
-    var(--token-interactive-hover) 64%,
-    color-mix(
-      in srgb,
-      var(--app-material-brand-secondary) 74%,
-      var(--token-bg-primary)
-    )
-    100%
-  );
+  background: var(--token-interactive-hover);
 }
 
 .theme-aurora .cgraph-navigation-rail .cgraph-control-primary {
   box-shadow:
-    0 8px 18px color-mix(in srgb, var(--token-interactive-primary) 18%, transparent),
-    inset -2px 0 0 color-mix(in srgb, var(--app-material-brand-secondary) 82%, transparent),
+    inset -2px 0 0 var(--app-material-brand-secondary),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 

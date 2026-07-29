@@ -1,10 +1,4 @@
-/**
- * Switch Component
- *
- * Toggle switch for boolean settings with spring physics.
- */
-
-import { motion } from 'motion/react';
+/** Toggle switch for boolean settings. */
 
 export interface SwitchProps {
   checked?: boolean;
@@ -25,7 +19,7 @@ export function Switch({
   ariaLabel,
 }: SwitchProps) {
   return (
-    <motion.button
+    <button
       type="button"
       role="switch"
       aria-checked={checked}
@@ -38,11 +32,10 @@ export function Switch({
       data-cgraph-surface="control"
       data-cgraph-state={disabled ? 'disabled' : 'idle'}
       data-cgraph-variant="secondary"
-      whileTap={{ scale: 0.95 }}
       className={`aurora-social-toggle focus:ring-offset-background focus:ring-primary/50 relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className} `}
     >
-      <motion.span className="aurora-social-toggle-thumb absolute left-1 top-1 inline-block h-4 w-4 rounded-full" />
-    </motion.button>
+      <span className="aurora-social-toggle-thumb absolute left-1 top-1 inline-block h-4 w-4 rounded-full" />
+    </button>
   );
 }
 
