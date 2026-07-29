@@ -6,9 +6,9 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { GlassCard } from '@/shared/components/ui';
 import { PERMISSIONS, ROLE_COLORS } from './constants';
 import type { RoleEditorProps } from './types';
 
@@ -27,6 +27,9 @@ export function RoleEditor({
     new Set(['general', 'permissions'])
   );
   const isReadOnly = role.isDefault;
+  const availableRoleColors = ROLE_COLORS.includes(role.color)
+    ? ROLE_COLORS
+    : [role.color, ...ROLE_COLORS];
 
   const toggleSection = (section: SectionId) => {
     setExpandedSections((current) => {
@@ -57,10 +60,10 @@ export function RoleEditor({
             <span className="h-6 w-6 rounded-full" style={{ backgroundColor: role.color }} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-[var(--token-text-primary)]">
               {isNew ? 'Create role' : isReadOnly ? 'Default role' : 'Edit role'}
             </h2>
-            <p className="truncate text-sm text-gray-400">{role.name}</p>
+            <p className="truncate text-sm text-[var(--token-text-muted)]">{role.name}</p>
           </div>
         </div>
 
@@ -68,14 +71,14 @@ export function RoleEditor({
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="danger"
-              leftIcon={<TrashIcon />}
+              leftIcon={<TrashIcon aria-hidden="true" />}
               disabled={isSaving}
               onClick={onDelete}
             >
               Delete
             </Button>
             <Button
-              leftIcon={<CheckIcon />}
+              leftIcon={<CheckIcon aria-hidden="true" />}
               isLoading={isSaving}
               disabled={isSaving}
               onClick={onSave}
@@ -89,7 +92,7 @@ export function RoleEditor({
       {isReadOnly && (
         <p
           role="status"
-          className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-4 py-3 text-sm text-[var(--token-text-secondary)]"
+          className="cgraph-section-surface px-4 py-3 text-sm text-[var(--token-text-secondary)]"
         >
           The default role is managed by the group and cannot be edited, reordered, or deleted.
         </p>
@@ -111,9 +114,11 @@ export function RoleEditor({
           />
 
           <fieldset disabled={isReadOnly || isSaving}>
-            <legend className="mb-2 text-sm font-medium text-gray-300">Role color</legend>
+            <legend className="mb-2 text-sm font-medium text-[var(--token-text-secondary)]">
+              Role color
+            </legend>
             <div className="flex flex-wrap gap-2">
-              {ROLE_COLORS.map((color) => (
+              {availableRoleColors.map((color) => (
                 <button
                   type="button"
                   key={color}
@@ -121,7 +126,11 @@ export function RoleEditor({
                   onClick={() => onUpdate({ color })}
                   aria-label={`Set role color ${color}`}
                   aria-pressed={role.color === color}
-                  className="h-9 w-9 rounded-full border border-white/15 focus:outline-none focus:ring-2 focus:ring-white disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:ring-2 aria-pressed:ring-white aria-pressed:ring-offset-2 aria-pressed:ring-offset-[var(--token-bg-secondary)]"
+                  title={`Role color ${color}`}
+                  data-cgraph-material="control"
+                  data-cgraph-surface="control"
+                  data-cgraph-state={role.color === color ? 'selected' : 'idle'}
+                  className="h-9 w-9 rounded-full border border-[var(--token-border-muted)] shadow-[var(--product-shadow-control)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focusRing)] disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:ring-2 aria-pressed:ring-[var(--token-focusRing)] aria-pressed:ring-offset-2 aria-pressed:ring-offset-[var(--token-bg-secondary)]"
                   style={{ backgroundColor: color }}
                 />
               ))}
@@ -180,7 +189,7 @@ interface RoleSectionProps {
 
 function RoleSection({ title, expanded, onToggle, children }: RoleSectionProps) {
   return (
-    <GlassCard variant="frosted" className="overflow-hidden">
+    <Card padding="none" className="overflow-hidden">
       <Button
         variant="ghost"
         animated={false}
@@ -194,7 +203,7 @@ function RoleSection({ title, expanded, onToggle, children }: RoleSectionProps) 
       {expanded && (
         <div className="border-t border-[var(--token-border-muted)] p-4">{children}</div>
       )}
-    </GlassCard>
+    </Card>
   );
 }
 
@@ -219,15 +228,21 @@ function RoleSwitch({
 }: RoleSwitchProps) {
   return (
     <div
-      className={`flex items-center justify-between gap-4 rounded-lg border p-3 ${
+      className={`cgraph-list-row flex items-center justify-between gap-4 px-3 py-3 ${
         danger
-          ? 'border-red-500/20 bg-red-500/5'
-          : 'border-transparent bg-[var(--token-bg-secondary)]'
+          ? 'border-[var(--token-feedback-error)] bg-[var(--token-bg-secondary)]'
+          : 'bg-[var(--token-bg-secondary)]'
       }`}
     >
       <label htmlFor={id} className="min-w-0 cursor-pointer">
-        <span className={`font-medium ${danger ? 'text-red-400' : 'text-white'}`}>{label}</span>
-        <span className="block text-xs text-gray-400">{description}</span>
+        <span
+          className={`font-medium ${
+            danger ? 'text-[var(--token-feedback-error)]' : 'text-[var(--token-text-primary)]'
+          }`}
+        >
+          {label}
+        </span>
+        <span className="block text-xs text-[var(--token-text-muted)]">{description}</span>
       </label>
       <Switch
         id={id}

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RoleManager } from '../role-manager/role-manager';
+import { ROLE_COLORS } from '../role-manager/constants';
 import type { Role } from '@/modules/groups/store';
 
 const mocks = vi.hoisted(() => ({
@@ -96,6 +97,16 @@ describe('RoleManager', () => {
   it('maps display separation to is_hoisted and saves one role draft', async () => {
     render(<RoleManager groupId="grp-1" />);
     await userEvent.click(screen.getByRole('button', { name: 'Moderator' }));
+
+    expect(document.querySelectorAll('[data-cgraph-surface="card"]')).toHaveLength(2);
+    const colorSwatches = screen.getAllByRole('button', { name: /Set role color/i });
+    expect(colorSwatches).toHaveLength(ROLE_COLORS.length + 1);
+    expect(colorSwatches.every((swatch) => swatch.dataset.cgraphSurface === 'control')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Set role color #3b82f6' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+
     await userEvent.click(screen.getByRole('switch', { name: /Display separately/i }));
     await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 
@@ -126,6 +137,30 @@ describe('RoleManager', () => {
       ])
     );
     expect(mocks.reorderRoles).toHaveBeenCalledTimes(1);
+  });
+
+  it('restores hierarchy order and reports an unsuccessful move', async () => {
+    mocks.reorderRoles.mockRejectedValueOnce(new Error('Role order could not be saved'));
+    render(<RoleManager groupId="grp-1" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move Moderator up' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Role order could not be saved');
+    expect(
+      within(screen.getByRole('list', { name: 'Roles' }))
+        .getAllByRole('listitem')
+        .map((item) => within(item).getAllByRole('button')[0]?.textContent)
+    ).toEqual(['Admin', 'Moderator', 'MemberDEFAULT']);
+  });
+
+  it('requires a non-empty name before updating a role', async () => {
+    render(<RoleManager groupId="grp-1" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Moderator' }));
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Role name' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(screen.getByText('Role name is required.')).toBeVisible();
+    expect(mocks.updateRole).not.toHaveBeenCalled();
   });
 
   it('requires confirmation before deleting a persisted role', async () => {

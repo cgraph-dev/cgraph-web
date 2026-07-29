@@ -237,8 +237,11 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
     <div className={`flex h-full min-w-0 flex-col lg:flex-row ${className}`}>
       <aside className="shrink-0 border-b border-[var(--token-border-muted)] p-4 lg:w-72 lg:border-b-0 lg:border-r">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-            <ShieldCheckIcon className="h-5 w-5 text-primary-400" />
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--token-text-primary)]">
+            <ShieldCheckIcon
+              aria-hidden="true"
+              className="h-5 w-5 text-[var(--token-interactive-primary)]"
+            />
             Roles
           </h2>
           <IconButton
@@ -257,11 +260,8 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
             return (
               <li
                 key={role.id}
-                className={`flex items-center gap-1 rounded-lg border px-1 py-1 ${
-                  selectedRole?.id === role.id
-                    ? 'border-primary-500/50 bg-primary-600/20'
-                    : 'border-transparent'
-                }`}
+                data-selected={selectedRole?.id === role.id ? 'true' : undefined}
+                className="cgraph-list-row flex items-center gap-1 px-1 py-1"
               >
                 <Button
                   variant="ghost"
@@ -277,7 +277,11 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
                     style={{ backgroundColor: role.color }}
                   />
                   <span className="min-w-0 flex-1 truncate text-left">{role.name}</span>
-                  {role.isDefault && <span className="text-[10px] text-gray-500">DEFAULT</span>}
+                  {role.isDefault && (
+                    <span className="text-[10px] font-semibold text-[var(--token-text-muted)]">
+                      DEFAULT
+                    </span>
+                  )}
                 </Button>
                 <IconButton
                   icon={<ChevronUpIcon />}
@@ -304,7 +308,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
         </ul>
 
         {roles.length === 0 && (
-          <p className="py-8 text-center text-sm text-gray-500">No roles yet</p>
+          <p className="py-8 text-center text-sm text-[var(--token-text-muted)]">No roles yet</p>
         )}
       </aside>
 
@@ -312,7 +316,7 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
         {mutationError && (
           <div
             role="alert"
-            className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+            className="cgraph-section-surface mb-4 border-[var(--token-feedback-error)] px-4 py-3 text-sm text-[var(--token-feedback-error)]"
           >
             {mutationError}
           </div>
@@ -331,8 +335,11 @@ export function RoleManager({ groupId, className = '' }: RoleManagerProps) {
         ) : (
           <div className="flex min-h-64 items-center justify-center text-center">
             <div>
-              <ShieldCheckIcon className="mx-auto mb-4 h-12 w-12 text-gray-700" />
-              <p className="text-gray-500">Select a role to edit</p>
+              <ShieldCheckIcon
+                aria-hidden="true"
+                className="mx-auto mb-4 h-12 w-12 text-[var(--token-text-muted)]"
+              />
+              <p className="text-[var(--token-text-muted)]">Select a role to edit</p>
             </div>
           </div>
         )}
