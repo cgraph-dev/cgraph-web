@@ -4,7 +4,6 @@
 // Feedback components - Loading, errors, empty states, toasts, progress
 export { default as ErrorBoundary } from './error-boundary';
 export { default as RouteErrorBoundary } from './route-error-boundary';
-export { QueryBoundary } from './query-boundary';
 export { LoadingSpinner } from './loading-spinner';
 export {
   LoadingOverlay,
@@ -13,4 +12,3 @@ export {
   SkeletonMessage,
   SkeletonConversation,
 } from './loading';
-export { default as ProgressBar } from './progress-bar';
