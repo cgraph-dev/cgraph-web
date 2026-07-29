@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, List } from 'lucide-react';
-import { IconButton } from '@/components/ui/button';
+import { Button, IconButton } from '@/components/ui/button';
 import { useGroupStore } from '@/modules/groups/store';
 import {
   ServerList,
@@ -123,29 +123,31 @@ export default function Groups() {
               onClick={() => navigate('/groups')}
               className="h-11 w-11 shrink-0"
             />
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              fullWidth
+              animated={false}
               onClick={() => setShowMobileChannels(true)}
-              className="cgraph-control cgraph-control-ghost flex h-11 min-w-0 flex-1 items-center gap-2 px-2 text-left"
+              className="h-11 min-w-0 flex-1 justify-start px-2 text-left"
               aria-label={`Open ${activeGroup.name} channels`}
-              data-cgraph-material="solid"
-              data-cgraph-surface="control"
-              data-cgraph-state="idle"
-              data-cgraph-variant="ghost"
+              leftIcon={
+                <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-[var(--token-interactive-primary)] text-xs font-bold text-[var(--token-text-on-primary)]">
+                  {activeGroup.iconUrl ? (
+                    <img
+                      src={activeGroup.iconUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    activeGroup.name.charAt(0).toLocaleUpperCase()
+                  )}
+                </span>
+              }
+              rightIcon={<List />}
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--token-interactive-primary)] text-xs font-bold text-[var(--token-text-on-primary)]">
-                {activeGroup.iconUrl ? (
-                  <img
-                    src={activeGroup.iconUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  activeGroup.name.charAt(0).toLocaleUpperCase()
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
+              <span className="block min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-[var(--token-text-primary)]">
                   {activeGroup.name}
                 </span>
@@ -153,8 +155,7 @@ export default function Groups() {
                   {activeChannel ? `# ${activeChannel.name}` : 'Channels'}
                 </span>
               </span>
-              <List className="h-5 w-5 shrink-0 text-[var(--token-text-secondary)]" />
-            </button>
+            </Button>
           </header>
         )}
         <ContentArea activeGroup={activeGroup} groupId={groupId} channelId={channelId} />

@@ -11,7 +11,7 @@ import {
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { IconButton } from '@/components/ui/button';
+import { Button, IconButton } from '@/components/ui/button';
 import type { ChannelListProps } from './types';
 import { ChannelItem } from './channel-item';
 
@@ -112,26 +112,27 @@ export function ChannelList({
       <div className="flex-1 space-y-0.5 overflow-y-auto py-3">
         {activeGroup.categories?.map((category) => (
           <div key={category.id}>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              fullWidth
+              animated={false}
               onClick={() => {
                 toggleCategory(category.id);
                 HapticFeedback.light();
               }}
               aria-expanded={expandedCategories.has(category.id)}
-              className="cgraph-control cgraph-control-ghost flex min-h-11 w-full items-center gap-1 rounded-none px-2 py-1.5 text-left text-[11px] font-bold uppercase text-[var(--token-text-muted)] lg:min-h-8"
-              data-cgraph-material="solid"
-              data-cgraph-surface="control"
-              data-cgraph-state="idle"
-              data-cgraph-variant="ghost"
+              className="min-h-11 justify-start rounded-none px-2 py-1.5 text-left text-[11px] font-bold uppercase text-[var(--token-text-muted)] lg:min-h-8"
+              leftIcon={
+                <ChevronDownIcon
+                  className={`transition-transform duration-150 ${
+                    expandedCategories.has(category.id) ? '' : '-rotate-90'
+                  }`}
+                />
+              }
             >
-              <ChevronDownIcon
-                className={`h-3 w-3 transition-transform duration-150 ${
-                  expandedCategories.has(category.id) ? '' : '-rotate-90'
-                }`}
-              />
               {category.name}
-            </button>
+            </Button>
 
             {expandedCategories.has(category.id) && (
               <div className="mt-0.5">

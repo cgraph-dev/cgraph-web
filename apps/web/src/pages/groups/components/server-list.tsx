@@ -3,8 +3,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   PlusIcon,
@@ -19,10 +18,17 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { CreateGroupModal } from '@/modules/groups/components/group-list/create-group-modal';
 import { useGroupStore } from '@/modules/groups/store';
 import { Button, IconButton } from '@/components/ui/button';
-import Card from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import type { ServerListProps } from './types';
 import { ServerIcon } from './server-icon';
-import { FADE_IN } from '@/lib/animations/transitions';
 import { getGroupRoute } from '@/modules/groups/routing';
 
 /**
@@ -242,8 +248,8 @@ export function ServerList({
                           `${group.memberCount.toLocaleString()} member${group.memberCount === 1 ? '' : 's'}`}
                       </p>
                       {group.onlineMemberCount > 0 && (
-                        <p className="mt-1 flex items-center gap-1.5 text-[11px] text-emerald-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <p className="mt-1 flex items-center gap-1.5 text-[11px] text-[var(--token-feedback-success)]">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[var(--token-feedback-success)]" />
                           {group.onlineMemberCount.toLocaleString()} online
                         </p>
                       )}
@@ -277,83 +283,47 @@ export function ServerList({
       </AnimatePresence>
 
       {/* Join by Invite Code Modal */}
-      {createPortal(
-        <AnimatePresence>
-          {showJoinModal && (
-            <motion.div
-              {...FADE_IN}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-              onClick={() => setShowJoinModal(false)}
+      <Dialog open={showJoinModal} onOpenChange={setShowJoinModal}>
+        <DialogContent ariaLabel="Join a Server">
+          <DialogHeader className="text-center">
+            <TicketIcon className="mx-auto mb-3 h-10 w-10 text-[var(--token-interactive-primary)]" />
+            <DialogTitle>Join a Server</DialogTitle>
+            <DialogDescription>Enter an invite link or code</DialogDescription>
+          </DialogHeader>
+
+          {joinError && (
+            <div
+              role="alert"
+              className="mt-4 rounded-[var(--product-radius-md)] border border-[color-mix(in_srgb,var(--token-feedback-error)_35%,transparent)] bg-[color-mix(in_srgb,var(--token-feedback-error)_10%,transparent)] px-3 py-2 text-sm text-[var(--token-feedback-error)]"
             >
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ opacity: { duration: 0.16 } }}
-                className="w-full max-w-md"
-                onClick={(e) => e.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="join-server-title"
-              >
-                <Card variant="elevated" padding="lg">
-                  <div className="mb-6 text-center">
-                    <TicketIcon className="mx-auto mb-3 h-10 w-10 text-[var(--token-interactive-primary)]" />
-                    <h2
-                      id="join-server-title"
-                      className="text-xl font-bold text-[var(--token-text-primary)]"
-                    >
-                      Join a Server
-                    </h2>
-                    <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
-                      Enter an invite link or code
-                    </p>
-                  </div>
-
-                  {joinError && (
-                    <div
-                      role="alert"
-                      className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"
-                    >
-                      {joinError}
-                    </div>
-                  )}
-
-                  <input
-                    type="text"
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    placeholder="https://cgraph.org/invite/abc123 or abc123"
-                    aria-label="Invite link or code"
-                    className="mb-6 w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] px-4 py-3 text-sm text-[var(--token-text-primary)] outline-none placeholder:text-[var(--token-text-muted)] focus:border-[var(--token-interactive-primary)] focus:ring-2 focus:ring-[var(--token-interactive-primary)]/20"
-                    onKeyDown={(e) => e.key === 'Enter' && handleJoinByInvite()}
-                  />
-
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setShowJoinModal(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      onClick={handleJoinByInvite}
-                      disabled={!inviteCode.trim() || isJoining}
-                      isLoading={isJoining}
-                    >
-                      {isJoining ? 'Joining...' : 'Join Server'}
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            </motion.div>
+              {joinError}
+            </div>
           )}
-        </AnimatePresence>,
-        document.body
-      )}
+
+          <Input
+            type="text"
+            value={inviteCode}
+            onChange={(event) => setInviteCode(event.target.value)}
+            placeholder="https://cgraph.org/invite/abc123 or abc123"
+            label="Invite link or code"
+            className="mt-4"
+            onKeyDown={(event) => event.key === 'Enter' && handleJoinByInvite()}
+          />
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowJoinModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleJoinByInvite}
+              disabled={!inviteCode.trim() || isJoining}
+              isLoading={isJoining}
+            >
+              {isJoining ? 'Joining...' : 'Join Server'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

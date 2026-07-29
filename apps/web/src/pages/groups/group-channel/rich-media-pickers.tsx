@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { Button } from '@/components/ui/button';
 import type { GifResult } from '@/modules/chat/components/gif-picker';
 import type { StickerSelection } from './types';
 
@@ -70,21 +71,20 @@ export function RichMediaPickers({
           className="cgraph-dialog-content fixed bottom-24 left-3 right-3 z-50 grid grid-cols-3 gap-2 p-3 sm:left-24 sm:right-auto sm:w-64 lg:left-36"
         >
           {STICKERS.map((sticker) => (
-            <button
+            <Button
               key={sticker.id}
-              type="button"
+              variant="secondary"
+              size="sm"
+              fullWidth
+              animated={false}
               role="menuitem"
               onClick={() => onStickerSelect(sticker)}
-              className="cgraph-control cgraph-control-secondary flex min-h-12 items-center justify-center p-2 text-2xl"
-              data-cgraph-material="control"
-              data-cgraph-surface="control"
-              data-cgraph-state="idle"
-              data-cgraph-variant="secondary"
+              className="min-h-12 p-2 text-2xl"
               aria-label={`Send sticker ${sticker.label}`}
               title={sticker.label}
             >
               {sticker.emoji}
-            </button>
+            </Button>
           ))}
         </div>
       )}
