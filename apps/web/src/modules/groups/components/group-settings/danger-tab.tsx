@@ -1,70 +1,72 @@
-import { motion } from 'motion/react';
 import { ArrowRightOnRectangleIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
+import { Button } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import type { DangerTabProps } from './types';
-import { FADE_UP } from '@/lib/animations/transitions';
 
-/**
- * Danger Tab component.
- */
 export function DangerTab({ isOwner, errorMessage, onLeave, onDelete }: DangerTabProps) {
   return (
-    <motion.div {...FADE_UP} exit={{ opacity: 0, y: -20 }} className="max-w-2xl">
-      <h2 className="mb-2 text-2xl font-bold text-red-400">Danger Zone</h2>
-      <p className="mb-6 text-gray-400">
-        These actions are irreversible. Please proceed with caution.
-      </p>
+    <div className="max-w-2xl space-y-6">
+      <header>
+        <h2 className="text-2xl font-bold text-[var(--token-feedback-error)]">Danger Zone</h2>
+        <p className="mt-2 text-[var(--token-text-secondary)]">
+          These actions are irreversible. Please proceed with caution.
+        </p>
+      </header>
+
+      {errorMessage && (
+        <div
+          role="alert"
+          className="rounded-[var(--product-radius-md)] border border-[color-mix(in_srgb,var(--token-feedback-error)_35%,transparent)] bg-[color-mix(in_srgb,var(--token-feedback-error)_10%,transparent)] px-4 py-3 text-sm text-[var(--token-feedback-error)]"
+        >
+          {errorMessage}
+        </div>
+      )}
 
       <div className="space-y-4">
-        {errorMessage && (
-          <div
-            role="alert"
-            className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
-          >
-            {errorMessage}
-          </div>
-        )}
-
-        <GlassCard variant="frosted" className="border border-red-500/30 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-white">Leave Group</h3>
-              <p className="text-sm text-gray-400">You will need an invite to rejoin.</p>
+        <Card
+          padding="lg"
+          className="border-[color-mix(in_srgb,var(--token-feedback-error)_35%,var(--token-card-border))]"
+        >
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-[var(--token-text-primary)]">Leave Group</h3>
+              <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+                You will need an invite to rejoin.
+              </p>
             </div>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.98 }}
+            <Button
+              variant="danger"
+              leftIcon={<ArrowRightOnRectangleIcon aria-hidden="true" />}
               onClick={onLeave}
-              className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-2 text-red-400 hover:bg-red-500/20"
             >
-              <ArrowRightOnRectangleIcon className="h-5 w-5" />
               Leave
-            </motion.button>
+            </Button>
           </div>
-        </GlassCard>
+        </Card>
 
         {isOwner && (
-          <GlassCard variant="frosted" className="border border-red-500/50 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-white">Delete Group</h3>
-                <p className="text-sm text-gray-400">
+          <Card
+            padding="lg"
+            className="border-[color-mix(in_srgb,var(--token-feedback-error)_50%,var(--token-card-border))]"
+          >
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-[var(--token-text-primary)]">Delete Group</h3>
+                <p className="mt-1 text-sm text-[var(--token-text-muted)]">
                   Permanently delete this group and all its data.
                 </p>
               </div>
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.98 }}
+              <Button
+                variant="danger"
+                leftIcon={<TrashIcon aria-hidden="true" />}
                 onClick={onDelete}
-                className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
               >
-                <TrashIcon className="h-5 w-5" />
                 Delete
-              </motion.button>
+              </Button>
             </div>
-          </GlassCard>
+          </Card>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
