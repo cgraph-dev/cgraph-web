@@ -1,6 +1,17 @@
 import { useState } from 'react';
+import { AlertTriangle, Search, Send } from 'lucide-react';
 import { createLogger } from '@/lib/logger';
-import { toast } from '@/shared/components/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  Card,
+  Input,
+  Textarea,
+  toast,
+} from '@/shared/components/ui';
 
 const logger = createLogger('WarningPanel');
 
@@ -19,30 +30,46 @@ interface ForumWarning {
   inserted_at: string;
 }
 
-/**
- * Warning panel — issue warnings and view history.
- */
+function getWarningSummary(totalPoints: number): {
+  variant: 'default' | 'warning' | 'error';
+  threshold?: string;
+} {
+  if (totalPoints >= 10) {
+    return { variant: 'error', threshold: 'Permanent ban threshold' };
+  }
+  if (totalPoints >= 6) {
+    return { variant: 'warning', threshold: 'Temporary ban threshold (7 days)' };
+  }
+  if (totalPoints >= 3) {
+    return { variant: 'warning', threshold: 'Mute threshold (24 hours)' };
+  }
+  return { variant: 'default' };
+}
+
 export default function WarningPanel({ forumId }: WarningPanelProps) {
   const [userId, setUserId] = useState('');
   const [warnings, setWarnings] = useState<ForumWarning[]>([]);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Warning form state
   const [warnReason, setWarnReason] = useState('');
   const [warnPoints, setWarnPoints] = useState(1);
   const [isIssuing, setIsIssuing] = useState(false);
 
+  const normalizedUserId = userId.trim();
+
   const loadWarnings = async () => {
-    if (!userId.trim()) return;
+    if (!normalizedUserId) return;
+
     setIsLoading(true);
     try {
       const { api: http } = await import('@/lib/api');
       const response = await http.get(
-        `/api/v1/forums/${forumId}/moderation/warnings?user_id=${userId}`
+        `/api/v1/forums/${forumId}/moderation/warnings?user_id=${encodeURIComponent(normalizedUserId)}`
       );
-      setWarnings(response.data?.data || []);
-      setTotalPoints(response.data?.total_points || 0);
+      setWarnings(response.data?.data ?? []);
+      setTotalPoints(response.data?.total_points ?? 0);
+      setHasLoaded(true);
     } catch (error) {
       logger.error(error instanceof Error ? error : new Error(String(error)), 'loadWarnings');
       toast.error('Failed to load warnings');
@@ -52,22 +79,24 @@ export default function WarningPanel({ forumId }: WarningPanelProps) {
   };
 
   const issueWarning = async () => {
-    if (!userId.trim() || !warnReason.trim()) {
+    const normalizedReason = warnReason.trim();
+    if (!normalizedUserId || !normalizedReason) {
       toast.error('User ID and reason are required');
       return;
     }
+
     setIsIssuing(true);
     try {
       const { api: http } = await import('@/lib/api');
       await http.post(`/api/v1/forums/${forumId}/moderation/warn`, {
-        user_id: userId,
-        reason: warnReason,
+        user_id: normalizedUserId,
+        reason: normalizedReason,
         points: warnPoints,
       });
       toast.success('Warning issued');
       setWarnReason('');
       setWarnPoints(1);
-      loadWarnings();
+      await loadWarnings();
     } catch (error) {
       logger.error(error instanceof Error ? error : new Error(String(error)), 'issueWarning');
       toast.error('Failed to issue warning');
@@ -76,112 +105,122 @@ export default function WarningPanel({ forumId }: WarningPanelProps) {
     }
   };
 
+  const summary = getWarningSummary(totalPoints);
+
   return (
     <div className="space-y-6">
-      {/* User Lookup */}
-      <div className="flex gap-2">
-        <input
-          type="text"
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          label="User ID"
           value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder="Enter user ID…"
-          className="flex-1 rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
+          onChange={(event) => setUserId(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void loadWarnings();
+          }}
+          placeholder="Enter user ID"
+          leftIcon={<Search className="h-4 w-4" aria-hidden="true" />}
         />
-        <button
-          onClick={loadWarnings}
-          disabled={isLoading}
-          className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+        <Button
+          className="self-end sm:min-w-28"
+          disabled={!normalizedUserId}
+          isLoading={isLoading}
+          onClick={() => void loadWarnings()}
         >
           {isLoading ? 'Loading…' : 'Look Up'}
-        </button>
+        </Button>
       </div>
 
-      {/* Warning Points Summary */}
-      {totalPoints > 0 && (
-        <div
-          className={`rounded-lg p-3 text-sm font-medium ${
-            totalPoints >= 10
-              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              : totalPoints >= 6
-                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                : totalPoints >= 3
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                  : 'bg-gray-100 text-gray-700 dark:bg-[var(--token-bg-secondary)] dark:text-gray-300'
-          }`}
-        >
-          Active warning points: {totalPoints}
-          {totalPoints >= 10 && ' — Permanent ban threshold'}
-          {totalPoints >= 6 && totalPoints < 10 && ' — Temp ban threshold (7d)'}
-          {totalPoints >= 3 && totalPoints < 6 && ' — Mute threshold (24h)'}
-        </div>
+      {hasLoaded && totalPoints > 0 && (
+        <Alert variant={summary.variant}>
+          <AlertTitle>Active warning points: {totalPoints}</AlertTitle>
+          {summary.threshold && <AlertDescription>{summary.threshold}</AlertDescription>}
+        </Alert>
       )}
 
-      {/* Issue Warning Form */}
-      {userId.trim() && (
-        <div className="space-y-3 rounded-lg border p-4 dark:border-[var(--token-card-border)]">
-          <h4 className="font-medium text-gray-900 dark:text-white">Issue Warning</h4>
-          <textarea
-            value={warnReason}
-            onChange={(e) => setWarnReason(e.target.value)}
-            placeholder="Warning reason…"
-            rows={3}
-            className="w-full rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
-          />
-          <div className="flex items-center gap-4">
-            <div>
-              <label className="text-xs text-gray-500">Points (1–5)</label>
-              <input
+      {normalizedUserId && (
+        <Card>
+          <div className="mb-4 flex items-center gap-2">
+            <AlertTriangle
+              className="h-5 w-5 text-[var(--token-feedback-warning)]"
+              aria-hidden="true"
+            />
+            <h4 className="font-semibold text-[var(--token-text-primary)]">Issue warning</h4>
+          </div>
+          <div className="space-y-3">
+            <Textarea
+              label="Reason"
+              value={warnReason}
+              onChange={(event) => setWarnReason(event.target.value)}
+              placeholder="Describe the moderation reason"
+              rows={3}
+              required
+            />
+            <div className="flex flex-col items-end gap-3 sm:flex-row">
+              <Input
+                className="sm:max-w-28"
+                label="Points (1–5)"
                 type="number"
                 min={1}
                 max={5}
                 value={warnPoints}
-                onChange={(e) => setWarnPoints(Math.min(5, Math.max(1, Number(e.target.value))))}
-                className="w-20 rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
+                onChange={(event) =>
+                  setWarnPoints(Math.min(5, Math.max(1, Number(event.target.value))))
+                }
               />
+              <Button
+                className="sm:min-w-36"
+                variant="danger"
+                leftIcon={<Send aria-hidden="true" />}
+                disabled={!warnReason.trim()}
+                isLoading={isIssuing}
+                onClick={() => void issueWarning()}
+              >
+                {isIssuing ? 'Issuing…' : 'Issue Warning'}
+              </Button>
             </div>
-            <button
-              onClick={issueWarning}
-              disabled={isIssuing}
-              className="rounded bg-amber-600 px-4 py-2 text-sm text-white hover:bg-amber-700 disabled:opacity-50"
-            >
-              {isIssuing ? 'Issuing…' : 'Issue Warning'}
-            </button>
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Warning History */}
+      {hasLoaded && warnings.length === 0 && (
+        <Card className="text-center">
+          <p className="text-sm font-medium text-[var(--token-text-primary)]">No warning history</p>
+          <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+            This user has no forum warnings.
+          </p>
+        </Card>
+      )}
+
       {warnings.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="font-medium text-gray-900 dark:text-white">Warning History</h4>
-          {warnings.map((w) => (
-            <div
-              key={w.id}
-              className={`rounded-lg border p-3 dark:border-[var(--token-card-border)] ${
-                w.revoked ? 'opacity-50' : ''
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {w.reason}
-                </span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                    w.revoked
-                      ? 'bg-gray-200 text-gray-500'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}
-                >
-                  {w.revoked ? 'Revoked' : `${w.points} pt${w.points > 1 ? 's' : ''}`}
-                </span>
+        <section className="space-y-2" aria-labelledby="warning-history-title">
+          <h4
+            id="warning-history-title"
+            className="font-semibold text-[var(--token-text-primary)]"
+          >
+            Warning history
+          </h4>
+          {warnings.map((warning) => (
+            <Card key={warning.id} className={warning.revoked ? 'opacity-60' : ''}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-medium text-[var(--token-text-primary)]">
+                    {warning.reason}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--token-text-muted)]">
+                    {new Date(warning.inserted_at).toLocaleString()}
+                    {warning.expires_at &&
+                      ` · Expires ${new Date(warning.expires_at).toLocaleDateString()}`}
+                  </p>
+                </div>
+                <Badge variant={warning.revoked ? 'secondary' : 'danger'}>
+                  {warning.revoked
+                    ? 'Revoked'
+                    : `${warning.points} point${warning.points === 1 ? '' : 's'}`}
+                </Badge>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                {new Date(w.inserted_at).toLocaleString()}
-                {w.expires_at && ` · Expires ${new Date(w.expires_at).toLocaleDateString()}`}
-              </p>
-            </div>
+            </Card>
           ))}
-        </div>
+        </section>
       )}
     </div>
   );

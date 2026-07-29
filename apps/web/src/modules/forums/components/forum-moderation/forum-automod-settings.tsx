@@ -1,12 +1,20 @@
-/**
- * Forum Automod Settings Panel
- *
- * Word filter editor, link filter, spam thresholds, caps filter.
- *
- */
-import { useState, useEffect} from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Plus, Save, ShieldAlert, X } from 'lucide-react';
 import { createLogger } from '@/lib/logger';
-import { toast } from '@/shared/components/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  Card,
+  IconButton,
+  Input,
+  Skeleton,
+  Switch,
+  toast,
+} from '@/shared/components/ui';
+import { Select as FieldSelect } from '@/components/ui/input';
 
 const logger = createLogger('ForumAutomodSettings');
 
@@ -63,33 +71,49 @@ const ACTION_OPTIONS = [
   { value: 'flag', label: 'Flag for review' },
   { value: 'block', label: 'Block posting' },
   { value: 'shadow_ban', label: 'Shadow ban' },
-];
+] as const;
 
-/**
- * Automod rules editor for a forum.
- */
+type AutomodRuleResponse = {
+  [Key in keyof AutomodRules]?: Partial<AutomodRules[Key]>;
+};
+
+function mergeAutomodRules(response: AutomodRuleResponse): AutomodRules {
+  return {
+    word_filter: { ...DEFAULT_RULES.word_filter, ...response.word_filter },
+    link_filter: { ...DEFAULT_RULES.link_filter, ...response.link_filter },
+    spam_detection: { ...DEFAULT_RULES.spam_detection, ...response.spam_detection },
+    caps_filter: { ...DEFAULT_RULES.caps_filter, ...response.caps_filter },
+  };
+}
+
 export default function ForumAutomodSettings({ forumId }: ForumAutomodSettingsProps) {
   const [rules, setRules] = useState<AutomodRules>(DEFAULT_RULES);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [wordInput, setWordInput] = useState('');
   const [domainInput, setDomainInput] = useState('');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { api: http } = await import('@/lib/api');
-        const response = await http.get(`/api/v1/forums/${forumId}/moderation/automod`);
-        if (response.data?.data) {
-          setRules({ ...DEFAULT_RULES, ...response.data.data });
-        }
-      } catch (error) {
-        logger.error(error instanceof Error ? error : new Error(String(error)), 'loadAutomod');
-      } finally {
-        setIsLoading(false);
+  const loadRules = useCallback(async () => {
+    setIsLoading(true);
+    setLoadFailed(false);
+    try {
+      const { api: http } = await import('@/lib/api');
+      const response = await http.get(`/api/v1/forums/${forumId}/moderation/automod`);
+      if (response.data?.data) {
+        setRules(mergeAutomodRules(response.data.data));
       }
-    })();
+    } catch (error) {
+      logger.error(error instanceof Error ? error : new Error(String(error)), 'loadAutomod');
+      setLoadFailed(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, [forumId]);
+
+  useEffect(() => {
+    void loadRules();
+  }, [loadRules]);
 
   async function handleSave() {
     setIsSaving(true);
@@ -105,210 +129,256 @@ export default function ForumAutomodSettings({ forumId }: ForumAutomodSettingsPr
     }
   }
 
-  const updateFilter = <K extends keyof AutomodRules>(filter: K, updates: Partial<AutomodRules[K]>) => {
-      setRules((prev) => ({
-        ...prev,
-        [filter]: { ...prev[filter], ...updates },
-      }));
-    }
+  function updateFilter<K extends keyof AutomodRules>(
+    filter: K,
+    updates: Partial<AutomodRules[K]>
+  ) {
+    setRules((previous) => ({
+      ...previous,
+      [filter]: { ...previous[filter], ...updates },
+    }));
+  }
 
   function addBannedWord() {
     const word = wordInput.trim().toLowerCase();
-    if (word && !rules.word_filter.banned_words.includes(word)) {
-      updateFilter('word_filter', {
-        banned_words: [...rules.word_filter.banned_words, word],
-      });
-      setWordInput('');
-    }
+    if (!word || rules.word_filter.banned_words.includes(word)) return;
+
+    updateFilter('word_filter', {
+      banned_words: [...rules.word_filter.banned_words, word],
+    });
+    setWordInput('');
   }
 
   function removeBannedWord(word: string) {
-      updateFilter('word_filter', {
-        banned_words: rules.word_filter.banned_words.filter((w) => w !== word),
-      });
-    }
+    updateFilter('word_filter', {
+      banned_words: rules.word_filter.banned_words.filter((item) => item !== word),
+    });
+  }
 
   function addBlacklistDomain() {
     const domain = domainInput.trim().toLowerCase();
-    if (domain && !rules.link_filter.blacklist.includes(domain)) {
-      updateFilter('link_filter', {
-        blacklist: [...rules.link_filter.blacklist, domain],
-      });
-      setDomainInput('');
-    }
+    if (!domain || rules.link_filter.blacklist.includes(domain)) return;
+
+    updateFilter('link_filter', {
+      blacklist: [...rules.link_filter.blacklist, domain],
+    });
+    setDomainInput('');
+  }
+
+  function removeBlacklistDomain(domain: string) {
+    updateFilter('link_filter', {
+      blacklist: rules.link_filter.blacklist.filter((item) => item !== domain),
+    });
   }
 
   if (isLoading) {
-    return <div className="p-4 text-sm text-gray-500">Loading automod settings…</div>;
+    return (
+      <div className="space-y-4" role="status" aria-label="Loading automod settings">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} shape="card" />
+        ))}
+      </div>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <Alert variant="error">
+        <AlertTitle>Automod settings unavailable</AlertTitle>
+        <AlertDescription>
+          <p>Check the connection and try loading the moderation rules again.</p>
+          <Button className="mt-3" variant="secondary" onClick={() => void loadRules()}>
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Word Filter */}
+    <div className="space-y-4">
       <FilterSection
-        title="Word Filter"
-        description="Block or flag posts containing banned words"
+        title="Word filter"
+        description="Flag or block posts containing banned words."
         enabled={rules.word_filter.enabled}
-        onToggle={(v) => updateFilter('word_filter', { enabled: v })}
+        onToggle={(enabled) => updateFilter('word_filter', { enabled })}
         action={rules.word_filter.action}
-        onActionChange={(v) => updateFilter('word_filter', { action: v })}
+        onActionChange={(action) => updateFilter('word_filter', { action })}
       >
-        <div className="flex gap-2">
-          <input
-            type="text"
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
             value={wordInput}
-            onChange={(e) => setWordInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addBannedWord()}
-            placeholder="Add banned word…"
-            className="flex-1 rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
+            onChange={(event) => setWordInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                addBannedWord();
+              }
+            }}
+            placeholder="Add banned word"
           />
-          <button
+          <Button
+            variant="secondary"
+            leftIcon={<Plus aria-hidden="true" />}
+            disabled={!wordInput.trim()}
             onClick={addBannedWord}
-            className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
           >
             Add
-          </button>
+          </Button>
         </div>
-        {rules.word_filter.banned_words.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {rules.word_filter.banned_words.map((word) => (
-              <span
-                key={word}
-                className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs text-red-700 dark:bg-red-900/30 dark:text-red-400"
-              >
-                {word}
-                <button onClick={() => removeBannedWord(word)} className="hover:text-red-900">
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
+        <RuleTags
+          values={rules.word_filter.banned_words}
+          emptyLabel="No banned words"
+          onRemove={removeBannedWord}
+        />
       </FilterSection>
 
-      {/* Link Filter */}
       <FilterSection
-        title="Link Filter"
-        description="Control which links are allowed in posts"
+        title="Link filter"
+        description="Control which links are allowed in posts."
         enabled={rules.link_filter.enabled}
-        onToggle={(v) => updateFilter('link_filter', { enabled: v })}
+        onToggle={(enabled) => updateFilter('link_filter', { enabled })}
         action={rules.link_filter.action}
-        onActionChange={(v) => updateFilter('link_filter', { action: v })}
+        onActionChange={(action) => updateFilter('link_filter', { action })}
       >
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={rules.link_filter.block_all_links}
-            onChange={(e) => updateFilter('link_filter', { block_all_links: e.target.checked })}
-            className="h-4 w-4 rounded text-blue-600"
-          />
-          Block all links
-        </label>
-        {!rules.link_filter.block_all_links && (
-          <div className="mt-2 flex gap-2">
-            <input
-              type="text"
-              value={domainInput}
-              onChange={(e) => setDomainInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addBlacklistDomain()}
-              placeholder="Add blacklisted domain…"
-              className="flex-1 rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
-            />
-            <button
-              onClick={addBlacklistDomain}
-              className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
-            >
-              Add
-            </button>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-[var(--token-text-primary)]">Block all links</p>
+            <p className="text-xs text-[var(--token-text-muted)]">
+              Ignore the domain list and reject every link.
+            </p>
           </div>
+          <Switch
+            checked={rules.link_filter.block_all_links}
+            onCheckedChange={(block_all_links) =>
+              updateFilter('link_filter', { block_all_links })
+            }
+            ariaLabel="Block all links"
+          />
+        </div>
+        {!rules.link_filter.block_all_links && (
+          <>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                value={domainInput}
+                onChange={(event) => setDomainInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addBlacklistDomain();
+                  }
+                }}
+                placeholder="Add blacklisted domain"
+              />
+              <Button
+                variant="secondary"
+                leftIcon={<Plus aria-hidden="true" />}
+                disabled={!domainInput.trim()}
+                onClick={addBlacklistDomain}
+              >
+                Add
+              </Button>
+            </div>
+            <RuleTags
+              values={rules.link_filter.blacklist}
+              emptyLabel="No blacklisted domains"
+              onRemove={removeBlacklistDomain}
+            />
+          </>
         )}
       </FilterSection>
 
-      {/* Spam Detection */}
       <FilterSection
-        title="Spam Detection"
-        description="Rate-limiting and duplicate content detection"
+        title="Spam detection"
+        description="Apply rate and duplicate-content limits."
         enabled={rules.spam_detection.enabled}
-        onToggle={(v) => updateFilter('spam_detection', { enabled: v })}
+        onToggle={(enabled) => updateFilter('spam_detection', { enabled })}
         action={rules.spam_detection.action}
-        onActionChange={(v) => updateFilter('spam_detection', { action: v })}
+        onActionChange={(action) => updateFilter('spam_detection', { action })}
       >
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-gray-500">Max posts per minute</label>
-            <input
-              type="number"
-              value={rules.spam_detection.max_posts_per_minute}
-              onChange={(e) =>
-                updateFilter('spam_detection', {
-                  max_posts_per_minute: Number(e.target.value),
-                })
-              }
-              className="w-full rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500">Max duplicate content</label>
-            <input
-              type="number"
-              value={rules.spam_detection.max_duplicate_content}
-              onChange={(e) =>
-                updateFilter('spam_detection', {
-                  max_duplicate_content: Number(e.target.value),
-                })
-              }
-              className="w-full rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
-            />
-          </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input
+            label="Maximum posts per minute"
+            type="number"
+            min={1}
+            value={rules.spam_detection.max_posts_per_minute}
+            onChange={(event) =>
+              updateFilter('spam_detection', {
+                max_posts_per_minute: Number(event.target.value),
+              })
+            }
+          />
+          <Input
+            label="Maximum duplicate posts"
+            type="number"
+            min={1}
+            value={rules.spam_detection.max_duplicate_content}
+            onChange={(event) =>
+              updateFilter('spam_detection', {
+                max_duplicate_content: Number(event.target.value),
+              })
+            }
+          />
         </div>
       </FilterSection>
 
-      {/* Caps Filter */}
       <FilterSection
-        title="Caps Filter"
-        description="Detect excessive capitalization"
+        title="Caps filter"
+        description="Detect excessive capitalization."
         enabled={rules.caps_filter.enabled}
-        onToggle={(v) => updateFilter('caps_filter', { enabled: v })}
+        onToggle={(enabled) => updateFilter('caps_filter', { enabled })}
         action={rules.caps_filter.action}
-        onActionChange={(v) => updateFilter('caps_filter', { action: v })}
+        onActionChange={(action) => updateFilter('caps_filter', { action })}
       >
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-gray-500">Max caps percentage</label>
-            <input
-              type="number"
-              value={rules.caps_filter.max_caps_percentage}
-              onChange={(e) =>
-                updateFilter('caps_filter', { max_caps_percentage: Number(e.target.value) })
-              }
-              className="w-full rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500">Min text length to check</label>
-            <input
-              type="number"
-              value={rules.caps_filter.min_length}
-              onChange={(e) => updateFilter('caps_filter', { min_length: Number(e.target.value) })}
-              className="w-full rounded border p-2 text-sm dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
-            />
-          </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input
+            label="Maximum caps percentage"
+            type="number"
+            min={0}
+            max={100}
+            value={rules.caps_filter.max_caps_percentage}
+            onChange={(event) =>
+              updateFilter('caps_filter', {
+                max_caps_percentage: Number(event.target.value),
+              })
+            }
+          />
+          <Input
+            label="Minimum text length"
+            type="number"
+            min={1}
+            value={rules.caps_filter.min_length}
+            onChange={(event) =>
+              updateFilter('caps_filter', { min_length: Number(event.target.value) })
+            }
+          />
         </div>
       </FilterSection>
 
-      {/* Save Button */}
-      <div className="flex justify-end border-t pt-4 dark:border-[var(--token-card-border)]">
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="rounded bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      <div className="flex justify-end border-t border-[var(--product-line)] pt-4">
+        <Button
+          className="min-w-44"
+          leftIcon={<Save aria-hidden="true" />}
+          isLoading={isSaving}
+          onClick={() => void handleSave()}
         >
           {isSaving ? 'Saving…' : 'Save Automod Rules'}
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
+
+interface FilterSectionProps {
+  title: string;
+  description: string;
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  action: string;
+  onActionChange: (action: string) => void;
+  children: ReactNode;
+}
+
 function FilterSection({
   title,
   description,
@@ -317,55 +387,72 @@ function FilterSection({
   action,
   onActionChange,
   children,
-}: {
-  title: string;
-  description: string;
-  enabled: boolean;
-  onToggle: (v: boolean) => void;
-  action: string;
-  onActionChange: (v: string) => void;
-  children: React.ReactNode;
-}) {
+}: FilterSectionProps) {
+  const switchLabel = `${enabled ? 'Disable' : 'Enable'} ${title}`;
+
   return (
-    <div className="space-y-3 rounded-lg border p-4 dark:border-[var(--token-card-border)]">
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="font-medium text-gray-900 dark:text-white">{title}</h4>
-          <p className="text-xs text-gray-500">{description}</p>
-        </div>
-        <button
-          onClick={() => onToggle(!enabled)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            enabled ? 'bg-blue-600' : 'bg-gray-300'
-          }`}
-        >
-          <span
-            className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
-              enabled ? 'translate-x-6' : 'translate-x-1'
-            }`}
+    <Card>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 gap-3">
+          <ShieldAlert
+            className="mt-0.5 h-5 w-5 shrink-0 text-[var(--token-interactive-primary)]"
+            aria-hidden="true"
           />
-        </button>
+          <div>
+            <h4 className="font-semibold text-[var(--token-text-primary)]">{title}</h4>
+            <p className="text-sm text-[var(--token-text-muted)]">{description}</p>
+          </div>
+        </div>
+        <Switch
+          checked={enabled}
+          onCheckedChange={onToggle}
+          ariaLabel={switchLabel}
+          className="shrink-0"
+        />
       </div>
 
       {enabled && (
-        <>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Action:</span>
-            <select
-              value={action}
-              onChange={(e) => onActionChange(e.target.value)}
-              className="rounded border px-2 py-1 text-xs dark:border-[var(--token-card-border)] dark:bg-[var(--token-card-bg)]"
-            >
-              {ACTION_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="mt-4 space-y-4 border-t border-[var(--product-line)] pt-4">
+          <FieldSelect
+            label="Action"
+            value={action}
+            onChange={(event) => onActionChange(event.target.value)}
+            options={ACTION_OPTIONS}
+          />
           {children}
-        </>
+        </div>
       )}
+    </Card>
+  );
+}
+
+function RuleTags({
+  values,
+  emptyLabel,
+  onRemove,
+}: {
+  values: readonly string[];
+  emptyLabel: string;
+  onRemove: (value: string) => void;
+}) {
+  if (values.length === 0) {
+    return <p className="text-sm text-[var(--token-text-muted)]">{emptyLabel}</p>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {values.map((value) => (
+        <Badge key={value} variant="secondary" className="gap-1 pl-2.5 pr-1">
+          <span className="max-w-56 truncate">{value}</span>
+          <IconButton
+            size="sm"
+            variant="ghost"
+            icon={<X aria-hidden="true" />}
+            label={`Remove ${value}`}
+            onClick={() => onRemove(value)}
+          />
+        </Badge>
+      ))}
     </div>
   );
 }
