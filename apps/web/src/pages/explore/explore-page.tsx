@@ -1,18 +1,6 @@
-/**
- * Explore Page
- *
- * Unified discovery destination with tab-based navigation.
- * Tabs: Discover (communities), Feed, People, Groups
- *
- * Routes:
- *   /explore           → Discover tab (default)
- *   /explore/feed      → Feed tab
- *   /explore/people    → People search tab
- *   /explore/groups    → Groups-only discovery tab
- */
-
-import { useParams, useNavigate } from 'react-router-dom';
-import { GlobeAltIcon, RssIcon, UsersIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import type { LucideIcon } from 'lucide-react';
+import { Compass, Rss, Users, UsersRound } from 'lucide-react';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { DiscoverTab } from './tabs/discover-tab';
 import { FeedTab } from './tabs/feed-tab';
 import { PeopleTab } from './tabs/people-tab';
@@ -26,63 +14,52 @@ function isExploreTab(value: string): value is ExploreTab {
   return VALID_TABS.has(value);
 }
 
-const TABS: Array<{ id: ExploreTab; label: string; icon: typeof GlobeAltIcon }> = [
-  { id: 'discover', label: 'Discover', icon: GlobeAltIcon },
-  { id: 'feed', label: 'Feed', icon: RssIcon },
-  { id: 'people', label: 'People', icon: UsersIcon },
-  { id: 'groups', label: 'Groups', icon: UserGroupIcon },
+const TABS: ReadonlyArray<{
+  readonly id: ExploreTab;
+  readonly label: string;
+  readonly icon: LucideIcon;
+  readonly to: string;
+}> = [
+  { id: 'discover', label: 'Discover', icon: Compass, to: '/explore' },
+  { id: 'feed', label: 'Feed', icon: Rss, to: '/explore/feed' },
+  { id: 'people', label: 'People', icon: Users, to: '/explore/people' },
+  { id: 'groups', label: 'Groups', icon: UsersRound, to: '/explore/groups' },
 ];
 
-/**
- * Explore page — single discovery destination with tabbed navigation.
- */
 export default function ExplorePage() {
   const { tab: rawTab } = useParams<{ tab?: string }>();
-  const navigate = useNavigate();
+
+  if (rawTab && !isExploreTab(rawTab)) return <Navigate to="/explore" replace />;
 
   const activeTab: ExploreTab = rawTab && isExploreTab(rawTab) ? rawTab : 'discover';
-
-  function handleTabChange(tab: ExploreTab) {
-    if (tab === 'discover') {
-      navigate('/explore');
-    } else {
-      navigate(`/explore/${tab}`);
-    }
-  }
-
   return (
     <div className="cgraph-workspace flex flex-1 flex-col overflow-hidden">
-      {/* Tab bar */}
       <header className="cgraph-pane-header flex shrink-0 items-center gap-5 px-4 sm:px-6">
         <div className="hidden min-w-0 sm:block">
           <h1 className="text-lg font-semibold text-[var(--token-text-primary)]">Explore</h1>
           <p className="text-xs text-[var(--token-text-muted)]">People and communities</p>
         </div>
-        <div
+        <nav
           className="cgraph-segmented scrollbar-hide min-w-0 overflow-x-auto"
-          role="tablist"
           aria-label="Explore"
         >
-          {TABS.map(({ id, label, icon: Icon }) => {
+          {TABS.map(({ id, label, icon: Icon, to }) => {
             const isActive = activeTab === id;
             return (
-              <button
+              <Link
                 key={id}
-                type="button"
-                onClick={() => handleTabChange(id)}
+                to={to}
                 className="cgraph-segmented-item flex shrink-0 items-center gap-2 px-3 text-sm font-medium"
-                role="tab"
-                aria-selected={isActive}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" aria-hidden="true" />
                 {label}
-              </button>
+              </Link>
             );
           })}
-        </div>
+        </nav>
       </header>
 
-      {/* Tab content */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         {activeTab === 'discover' && <DiscoverTab />}
         {activeTab === 'feed' && <FeedTab />}

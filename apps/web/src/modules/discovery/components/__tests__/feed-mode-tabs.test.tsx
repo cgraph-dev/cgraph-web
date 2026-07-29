@@ -1,14 +1,8 @@
-/**
- * FeedModeTabs Component Tests
- *
- * Tests for rendering all 5 feed modes, active state styling,
- * and mode change callbacks.
- */
-
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { FeedModeTabs } from '../feed-mode-tabs';
 import type { FeedMode } from '../../store/discoveryStore';
+
 describe('FeedModeTabs', () => {
   it('renders all 5 mode tabs', () => {
     render(<FeedModeTabs activeMode="pulse" onModeChange={vi.fn()} />);
@@ -20,20 +14,17 @@ describe('FeedModeTabs', () => {
     expect(screen.getByText('Frequency Surf')).toBeTruthy();
   });
 
-  it('applies active styling to the selected tab', () => {
+  it('exposes the selected mode through pressed state', () => {
     render(<FeedModeTabs activeMode="rising" onModeChange={vi.fn()} />);
 
-    const risingButton = screen.getByText('Rising').closest('button')!;
-    expect(risingButton.className).toContain('bg-white/15');
-    expect(risingButton.className).toContain('text-white');
-  });
-
-  it('applies inactive styling to non-selected tabs', () => {
-    render(<FeedModeTabs activeMode="pulse" onModeChange={vi.fn()} />);
-
-    const freshButton = screen.getByText('Fresh').closest('button')!;
-    expect(freshButton.className).toContain('text-white/50');
-    expect(freshButton.className).not.toContain('bg-white/15');
+    expect(screen.getByRole('button', { name: 'Rising' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'Fresh' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
   });
 
   it.each<[string, FeedMode]>([
@@ -59,16 +50,14 @@ describe('FeedModeTabs', () => {
     expect(wrapper.className).toContain('my-custom-class');
   });
 
-  it('renders icons alongside labels', () => {
+  it('uses decorative icons without replacing accessible labels', () => {
     render(<FeedModeTabs activeMode="pulse" onModeChange={vi.fn()} />);
 
-    // Each button should have two span children: icon + label
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(5);
 
     for (const button of buttons) {
-      const spans = button.querySelectorAll('span');
-      expect(spans.length).toBe(2);
+      expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
     }
   });
 });

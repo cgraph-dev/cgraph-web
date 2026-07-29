@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Friend, FriendRequest } from '@/modules/social/store';
@@ -21,9 +22,10 @@ const { navigate, friendStoreState, searchState } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => navigate,
-}));
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return { ...actual, useNavigate: () => navigate };
+});
 
 vi.mock('@/modules/social/hooks/useUserSearch', () => ({
   useUserSearch: (): UseUserSearchReturn => searchState,
@@ -61,6 +63,14 @@ function request(type: FriendRequest['type']): FriendRequest {
   };
 }
 
+function renderPeopleTab() {
+  return render(
+    <MemoryRouter>
+      <PeopleTab />
+    </MemoryRouter>
+  );
+}
+
 describe('PeopleTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -76,7 +86,7 @@ describe('PeopleTab', () => {
   it('routes incoming search-result requests to the request center', () => {
     searchState.results = [userResult({ friend_request_received: true })];
 
-    render(<PeopleTab />);
+    renderPeopleTab();
 
     fireEvent.click(screen.getByRole('button', { name: 'Review' }));
 
@@ -88,7 +98,7 @@ describe('PeopleTab', () => {
     searchState.results = [userResult()];
     friendStoreState.sentRequests = [request('outgoing')];
 
-    render(<PeopleTab />);
+    renderPeopleTab();
 
     expect(screen.getByRole('button', { name: 'Pending' })).toBeDisabled();
   });
@@ -100,7 +110,7 @@ describe('PeopleTab', () => {
       () => new Promise<void>((resolve) => (resolveRequest = resolve))
     );
 
-    render(<PeopleTab />);
+    renderPeopleTab();
 
     const add = screen.getByRole('button', { name: 'Add' });
     fireEvent.click(add);
@@ -114,5 +124,29 @@ describe('PeopleTab', () => {
     });
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument());
+  });
+
+  it('keeps profile navigation separate from the relationship action', () => {
+    searchState.results = [userResult()];
+
+    renderPeopleTab();
+
+    expect(screen.getByRole('link', { name: 'View Alice Example profile' })).toHaveAttribute(
+      'href',
+      '/alice'
+    );
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+  });
+
+  it('shows a visible failure when a friend request cannot be sent', async () => {
+    searchState.results = [userResult()];
+    friendStoreState.sendRequest.mockRejectedValueOnce(new Error('network unavailable'));
+
+    renderPeopleTab();
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not send a friend request to Alice Example.'
+    );
   });
 });

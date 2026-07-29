@@ -1,40 +1,31 @@
-/**
- * People Tab
- *
- * User search and discovery within the Explore page.
- */
-
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MagnifyingGlassIcon, UserIcon } from '@heroicons/react/24/outline';
-import { useFriendStore } from '@/modules/social/store';
+import { Search, SearchX, UserRound } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import Skeleton from '@/components/ui/skeleton';
+import { HapticFeedback } from '@/lib/animations/animation-engine';
+import { publicProfilePath } from '@/lib/profile-route';
 import { useAuthStore } from '@/modules/auth/store';
+import { useFriendStore } from '@/modules/social/store';
 import { useUserSearch } from '@/modules/social/hooks/useUserSearch';
 import {
   friendshipActionLabel,
   isRelationshipActionDisabled,
   resolveFriendshipStatus,
 } from '@/modules/social/friendship-status';
-import { HapticFeedback } from '@/lib/animations/animation-engine';
-import { publicProfilePath } from '@/lib/profile-route';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import EmptyState from '@/components/ui/empty-state';
-import Skeleton from '@/components/ui/skeleton';
 
-/** People tab — search and discover users. */
 export function PeopleTab() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [sendingUserId, setSendingUserId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { results: users, isLoading, error } = useUserSearch(query);
   const { friends, sentRequests, pendingRequests, sendRequest } = useFriendStore();
   const { user: currentUser } = useAuthStore();
-
-  function handleSearch(value: string) {
-    setQuery(value);
-  }
 
   return (
     <div className="cgraph-content max-w-2xl">
@@ -42,46 +33,55 @@ export function PeopleTab() {
         aria-label="Search people"
         type="search"
         value={query}
-        onChange={(event) => handleSearch(event.target.value)}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setActionError(null);
+        }}
         placeholder="Search people..."
-        leftIcon={<MagnifyingGlassIcon className="h-5 w-5" />}
+        leftIcon={<Search className="h-5 w-5" />}
         className="mb-6 text-sm"
         autoFocus
         fullWidth
       />
 
-      {/* Empty state */}
-      {query.length === 0 && (
+      {actionError ? (
+        <Alert variant="error" className="mb-4">
+          <AlertTitle>Request not sent</AlertTitle>
+          <AlertDescription>{actionError}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {query.length === 0 ? (
         <EmptyState
-          icon={<UserIcon className="h-7 w-7" />}
+          icon={<UserRound className="h-7 w-7" />}
           title="Find people"
           message="Search by username or display name to connect."
         />
-      )}
+      ) : null}
 
-      {/* Loading */}
-      {query.length >= 2 && isLoading && (
+      {query.length >= 2 && isLoading ? (
         <div className="space-y-2 py-4" role="status" aria-label="Searching people">
           <span className="sr-only">Searching people</span>
           <Skeleton shape="card" count={4} />
         </div>
-      )}
+      ) : null}
 
-      {query.length >= 2 && !isLoading && error && (
-        <div className="py-10 text-center text-sm text-[var(--token-feedback-error)]">
-          Could not search people right now.
-        </div>
-      )}
+      {query.length >= 2 && !isLoading && error ? (
+        <Alert variant="error">
+          <AlertTitle>Search is unavailable</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      {/* No results */}
-      {query.length >= 2 && !isLoading && !error && users.length === 0 && (
-        <div className="py-10 text-center text-sm text-[var(--token-text-muted)]">
-          No people found for "{query}"
-        </div>
-      )}
+      {query.length >= 2 && !isLoading && !error && users.length === 0 ? (
+        <EmptyState
+          icon={<SearchX className="h-7 w-7" />}
+          title="No people found"
+          message={`No profiles match "${query}".`}
+        />
+      ) : null}
 
-      {/* Results */}
-      {users.length > 0 && (
+      {users.length > 0 ? (
         <div className="space-y-2">
           <p className="mb-3 text-[11px] font-semibold uppercase text-[var(--token-text-muted)]">
             {users.length} {users.length === 1 ? 'person' : 'people'} found
@@ -102,37 +102,37 @@ export function PeopleTab() {
             return (
               <div
                 key={user.id}
-                className="cgraph-list-row flex cursor-pointer items-center gap-3 p-3"
-                onClick={() => navigate(profilePath)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && navigate(profilePath)}
+                className="cgraph-list-row flex min-h-16 items-center gap-3 p-3"
               >
-                {/* Avatar */}
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--product-surface-selected)] text-sm font-bold text-[var(--token-interactive-primary)]">
-                  {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.username}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    displayName.charAt(0).toUpperCase()
-                  )}
-                </div>
+                <Link
+                  to={profilePath}
+                  aria-label={`View ${displayName} profile`}
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focus-ring)]"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--token-card-border)] bg-[var(--product-surface-selected)] text-sm font-bold text-[var(--token-interactive-primary)]">
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      displayName.charAt(0).toUpperCase()
+                    )}
+                  </div>
 
-                {/* Info */}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-[var(--token-text-primary)]">
-                    {displayName}
-                  </p>
-                  <p className="truncate text-xs text-[var(--token-text-muted)]">
-                    @{user.username}
-                  </p>
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[var(--token-text-primary)]">
+                      {displayName}
+                    </p>
+                    <p className="truncate text-xs text-[var(--token-text-muted)]">
+                      @{user.username}
+                    </p>
+                  </div>
+                </Link>
 
-                {/* Action */}
-                {!isSelf && (
+                {!isSelf ? (
                   <Button
                     size="sm"
                     animated={false}
@@ -146,27 +146,29 @@ export function PeopleTab() {
                       }
                       if (friendshipStatus !== 'none' || isSending) return;
 
+                      setActionError(null);
                       setSendingUserId(user.id);
                       try {
                         await sendRequest(user.id);
                         HapticFeedback.success();
                       } catch {
                         HapticFeedback.error();
+                        setActionError(`Could not send a friend request to ${displayName}.`);
                       } finally {
                         setSendingUserId(null);
                       }
                     }}
                     disabled={isDisabled}
-                    className="flex-shrink-0"
+                    className="shrink-0"
                   >
                     {actionLabel}
                   </Button>
-                )}
+                ) : null}
               </div>
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

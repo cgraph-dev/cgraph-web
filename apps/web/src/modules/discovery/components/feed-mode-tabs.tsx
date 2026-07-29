@@ -1,42 +1,42 @@
-/**
- * Feed Mode Tabs — Tab bar for switching between 5 discovery feed modes
- *
- */
-
+import type { LucideIcon } from 'lucide-react';
+import { Gem, HeartPulse, Sparkles, TrendingUp, Waves } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FeedMode } from '../store/discoveryStore';
 
-const MODES: Array<{ key: FeedMode; label: string; icon: string }> = [
-  { key: 'pulse', label: 'Pulse', icon: '💓' },
-  { key: 'fresh', label: 'Fresh', icon: '🆕' },
-  { key: 'rising', label: 'Rising', icon: '🚀' },
-  { key: 'deep_cut', label: 'Deep Cut', icon: '💎' },
-  { key: 'frequency_surf', label: 'Frequency Surf', icon: '🏄' },
+const MODES: ReadonlyArray<{
+  readonly key: FeedMode;
+  readonly label: string;
+  readonly icon: LucideIcon;
+}> = [
+  { key: 'pulse', label: 'Pulse', icon: HeartPulse },
+  { key: 'fresh', label: 'Fresh', icon: Sparkles },
+  { key: 'rising', label: 'Rising', icon: TrendingUp },
+  { key: 'deep_cut', label: 'Deep Cut', icon: Gem },
+  { key: 'frequency_surf', label: 'Frequency Surf', icon: Waves },
 ];
 
 interface FeedModeTabsProps {
-  activeMode: FeedMode;
-  onModeChange: (mode: FeedMode) => void;
-  className?: string;
+  readonly activeMode: FeedMode;
+  readonly onModeChange: (mode: FeedMode) => void;
+  readonly className?: string;
 }
 
-/** Description. */
-/** Feed Mode Tabs component. */
 export function FeedModeTabs({ activeMode, onModeChange, className }: FeedModeTabsProps) {
   return (
-    <div className={cn('flex gap-1 overflow-x-auto rounded-xl bg-white/5 p-1', className)}>
-      {MODES.map(({ key, label, icon }) => (
+    <div
+      className={cn('cgraph-segmented scrollbar-hide max-w-full overflow-x-auto', className)}
+      role="group"
+      aria-label="Feed mode"
+    >
+      {MODES.map(({ key, label, icon: Icon }) => (
         <button
           key={key}
+          type="button"
           onClick={() => onModeChange(key)}
-          className={cn(
-            'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all',
-            activeMode === key
-              ? 'bg-white/15 text-white shadow-sm'
-              : 'text-white/50 hover:bg-white/5 hover:text-white/80'
-          )}
+          className="cgraph-segmented-item flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-sm font-medium"
+          aria-pressed={activeMode === key}
         >
-          <span>{icon}</span>
+          <Icon className="h-4 w-4" aria-hidden="true" />
           <span>{label}</span>
         </button>
       ))}
