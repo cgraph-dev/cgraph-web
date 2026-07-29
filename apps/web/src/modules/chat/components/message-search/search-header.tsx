@@ -1,4 +1,5 @@
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Search } from 'lucide-react';
 import { IconButton } from '@/components/ui/button';
 import type { SearchHeaderProps } from './types';
 
@@ -18,16 +19,19 @@ export function SearchHeader({
         <h2 className="text-lg font-semibold text-[var(--token-text-primary)]">Search messages</h2>
         <IconButton icon={<XMarkIcon />} label="Close search" size="sm" onClick={onClose} />
       </div>
-      <div className="relative">
+      <div className="cgraph-search-field relative">
         <input
           ref={inputRef}
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search in messages..."
-          className="cgraph-field peer w-full pl-10 pr-10 text-sm"
+          className="cgraph-field w-full pl-10 pr-10 text-sm"
         />
-        <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
+        <Search
+          aria-hidden="true"
+          className="cgraph-search-icon pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2"
+        />
         {searchQuery && (
           <IconButton
             icon={<XMarkIcon />}

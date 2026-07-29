@@ -7,14 +7,9 @@
 import { useEffect } from 'react';
 import {
   ArchiveBoxIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  MagnifyingGlassPlusIcon,
-  ChatBubbleLeftRightIcon,
   InboxIcon,
-  UserPlusIcon,
-  UsersIcon,
 } from '@heroicons/react/24/outline';
+import { MessageSquareText, Plus, Search, UserPlus, Users } from 'lucide-react';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { IconButton } from '@/components/ui/button';
 import Skeleton from '@/components/ui/skeleton';
@@ -68,26 +63,31 @@ export function ConversationSidebar({
         activeConversationId ? 'hidden' : 'flex w-full'
       }`}
     >
-      <div className="cgraph-pane-header relative z-10 flex flex-col justify-center px-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="flex min-w-0 items-center gap-2 text-xl font-semibold text-[var(--token-text-primary)]">
-            <ChatBubbleLeftRightIcon className="h-5 w-5 text-[var(--token-interactive-primary)]" />
+      <div className="cgraph-pane-header relative z-10 flex flex-col justify-center px-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <h2 className="flex min-w-0 items-center gap-2 text-lg font-semibold text-[var(--token-text-primary)]">
+            <MessageSquareText
+              aria-hidden="true"
+              className="h-5 w-5 shrink-0 text-[var(--token-interactive-primary)]"
+            />
             Messages
           </h2>
-          <div className="flex items-center gap-1">
+          <div className="grid grid-cols-4 items-center gap-1">
             <IconButton
-              icon={<MagnifyingGlassPlusIcon />}
+              icon={<Search />}
               label="Search messages"
               size="sm"
+              className="h-9 min-h-9 w-9 min-w-9 p-0"
               onClick={() => {
                 onOpenSearch();
                 HapticFeedback.light();
               }}
             />
             <IconButton
-              icon={<UserPlusIcon />}
+              icon={<UserPlus />}
               label="Add friend"
               size="sm"
+              className="h-9 min-h-9 w-9 min-w-9 p-0"
               onClick={() => {
                 onAddFriend();
                 HapticFeedback.medium();
@@ -96,7 +96,7 @@ export function ConversationSidebar({
             <IconButton
               icon={
                 <span className="relative block h-full w-full">
-                  <UsersIcon />
+                  <Users />
                   {friendRequestCount > 0 ? (
                     <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--token-feedback-error)] px-1 text-[10px] font-bold leading-none text-white">
                       {friendRequestCount > 9 ? '9+' : friendRequestCount}
@@ -108,16 +108,18 @@ export function ConversationSidebar({
                 friendRequestCount ? `, ${friendRequestCount} requests` : ''
               }`}
               size="sm"
+              className="h-9 min-h-9 w-9 min-w-9 p-0"
               onClick={() => {
                 onAddFriend();
                 HapticFeedback.light();
               }}
             />
             <IconButton
-              icon={<PlusIcon />}
+              icon={<Plus />}
               label="New conversation"
               size="sm"
               variant="primary"
+              className="h-9 min-h-9 w-9 min-w-9 p-0"
               onClick={() => {
                 onNewConversation();
                 HapticFeedback.medium();
@@ -151,16 +153,19 @@ export function ConversationSidebar({
           </button>
         </div>
 
-        <div className="relative">
+        <div className="cgraph-search-field relative">
           <input
             type="text"
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             aria-label="Search conversations"
-            className="cgraph-field peer w-full pl-10 pr-3 text-[13px]"
+            className="cgraph-field w-full pl-10 pr-3 text-[13px]"
           />
-          <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
+          <Search
+            aria-hidden="true"
+            className="cgraph-search-icon pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2"
+          />
         </div>
       </div>
 

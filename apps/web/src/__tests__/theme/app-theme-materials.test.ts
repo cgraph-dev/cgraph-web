@@ -57,7 +57,16 @@ describe('built-in app-theme material ownership', () => {
 
     expect(auroraPrimary).toContain('background: var(--token-interactive-primary)');
     expect(auroraPrimary).not.toContain('linear-gradient');
+    expect(auroraPrimary).toContain('var(--app-material-brand-secondary)');
     expect(auroraRailPrimary).toContain('var(--app-material-brand-secondary)');
+  });
+
+  it('pairs a purple search focus ring with a separate theme-secondary icon and inset edge', () => {
+    expect(productCss).toContain('.cgraph-search-icon');
+    expect(productCss).toContain('.cgraph-search-field:focus-within .cgraph-search-icon');
+    expect(productCss).toContain('.cgraph-search-field .cgraph-field:focus');
+    expect(productCss).toContain('var(--token-interactive-primary)');
+    expect(productCss).toContain('inset 3px 0 0 var(--product-brand-secondary)');
   });
 
   it('preserves control intent in the Bubble material owner', () => {

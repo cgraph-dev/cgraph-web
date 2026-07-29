@@ -88,4 +88,31 @@ describe('ConversationSidebar friend request ownership', () => {
     );
     expect(screen.getByTestId('conversation-sidebar')).not.toHaveClass('w-full');
   });
+
+  it('keeps every header action in the same fixed control box', () => {
+    renderSidebar();
+
+    for (const name of [
+      'Search messages',
+      'Add friend',
+      'Friend requests, 2 requests',
+      'New conversation',
+    ]) {
+      expect(screen.getByRole('button', { name })).toHaveClass(
+        'h-9',
+        'min-h-9',
+        'w-9',
+        'min-w-9',
+        'p-0',
+      );
+    }
+  });
+
+  it('uses the shared two-color search material', () => {
+    renderSidebar();
+
+    const input = screen.getByRole('textbox', { name: 'Search conversations' });
+    expect(input.parentElement).toHaveClass('cgraph-search-field');
+    expect(input.parentElement?.querySelector('.cgraph-search-icon')).toBeInTheDocument();
+  });
 });
