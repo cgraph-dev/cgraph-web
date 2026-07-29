@@ -33,6 +33,33 @@ vi.mock('@/shared/components/ui', () => ({
   ),
 }));
 
+vi.mock('../notification-profile-delete-dialog', () => ({
+  NotificationProfileDeleteDialog: ({
+    profileName,
+    open,
+    isDeleting,
+    onOpenChange,
+    onConfirm,
+  }: {
+    profileName: string;
+    open: boolean;
+    isDeleting: boolean;
+    onOpenChange: (open: boolean) => void;
+    onConfirm: () => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Delete notification profile">
+        <p>Delete {profileName}?</p>
+        <button type="button" disabled={isDeleting} onClick={() => onOpenChange(false)}>
+          Cancel
+        </button>
+        <button type="button" disabled={isDeleting} onClick={onConfirm}>
+          Delete profile
+        </button>
+      </div>
+    ) : null,
+}));
+
 vi.mock('@/lib/animations/animation-engine', () => ({
   HapticFeedback: {
     light: vi.fn(),
@@ -84,6 +111,7 @@ beforeEach(() => {
   profileStore.isMutating = false;
   profileStore.error = null;
   profileStore.fetchProfiles.mockResolvedValue(undefined);
+  profileStore.deleteProfile.mockResolvedValue(true);
   profileStore.activateProfile.mockResolvedValue(true);
   profileStore.deactivateProfile.mockResolvedValue(true);
 });
@@ -129,6 +157,43 @@ describe('NotificationProfilesPanel', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Enable indefinitely' }));
 
     expect(screen.getByRole('menu', { name: 'Actions for Focus' })).toBeInTheDocument();
+  });
+
+  it('requires confirmation and closes only after deletion succeeds', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByRole('button', { name: 'Actions for Focus' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete profile' }));
+
+    expect(profileStore.deleteProfile).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('dialog', { name: 'Delete notification profile' })
+    ).toHaveTextContent('Delete Focus?');
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Actions for Focus' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete profile' }));
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }));
+
+    expect(profileStore.deleteProfile).toHaveBeenCalledWith('profile-1');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('keeps the confirmation open when deletion is rejected', async () => {
+    const user = userEvent.setup();
+    profileStore.deleteProfile.mockResolvedValueOnce(false);
+    renderPanel();
+
+    await user.click(screen.getByRole('button', { name: 'Actions for Focus' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete profile' }));
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }));
+
+    expect(
+      screen.getByRole('dialog', { name: 'Delete notification profile' })
+    ).toBeInTheDocument();
   });
 
   it('shows a load error and retries the authoritative snapshot', async () => {

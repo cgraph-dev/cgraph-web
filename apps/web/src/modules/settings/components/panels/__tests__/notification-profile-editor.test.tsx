@@ -9,6 +9,7 @@ import { NotificationProfileEditor } from '../notification-profile-editor';
 
 const profileActions = vi.hoisted(() => ({
   profiles: [] as unknown[],
+  isMutating: false,
   fetchProfiles: vi.fn(),
   createProfile: vi.fn(),
   updateProfile: vi.fn(),
@@ -47,10 +48,18 @@ function TestButton({
   children,
   animated: _animated,
   isLoading,
+  leftIcon,
   ...props
-}: PropsWithChildren<ButtonHTMLAttributes<HTMLButtonElement> & { animated?: boolean; isLoading?: boolean }>) {
+}: PropsWithChildren<
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    animated?: boolean;
+    isLoading?: boolean;
+    leftIcon?: React.ReactNode;
+  }
+>) {
   return (
     <button {...props} disabled={props.disabled || isLoading}>
+      {leftIcon}
       {children}
     </button>
   );
@@ -82,6 +91,33 @@ vi.mock('@/shared/components/ui', () => ({
   DialogTitle: ({ children }: PropsWithChildren) => <h2>{children}</h2>,
   GlassCard: ({ children }: PropsWithChildren) => <div>{children}</div>,
   toast: { error: vi.fn(), success: vi.fn() },
+}));
+
+vi.mock('../notification-profile-delete-dialog', () => ({
+  NotificationProfileDeleteDialog: ({
+    profileName,
+    open,
+    isDeleting,
+    onOpenChange,
+    onConfirm,
+  }: {
+    profileName: string;
+    open: boolean;
+    isDeleting: boolean;
+    onOpenChange: (open: boolean) => void;
+    onConfirm: () => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label="Delete notification profile">
+        <p>Delete {profileName}?</p>
+        <button type="button" disabled={isDeleting} onClick={() => onOpenChange(false)}>
+          Cancel
+        </button>
+        <button type="button" disabled={isDeleting} onClick={onConfirm}>
+          Delete profile
+        </button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('@/modules/settings/store/notification-profile-store', () => ({
@@ -137,9 +173,10 @@ function renderEditor(initialEntry: string): void {
 beforeEach(() => {
   vi.clearAllMocks();
   profileActions.profiles = [];
+  profileActions.isMutating = false;
   profileActions.createProfile.mockResolvedValue(notificationProfile());
   profileActions.updateProfile.mockResolvedValue(notificationProfile());
-  profileActions.deleteProfile.mockResolvedValue(undefined);
+  profileActions.deleteProfile.mockResolvedValue(true);
   profileActions.setAllowedMembers.mockResolvedValue(notificationProfile());
   friendActions.friends = [];
   friendActions.fetchFriends.mockResolvedValue(undefined);
@@ -264,5 +301,41 @@ describe('NotificationProfileEditor', () => {
     await user.click(screen.getByRole('button', { name: 'Save allowed contacts' }));
 
     expect(profileActions.setAllowedMembers).toHaveBeenCalledWith('profile-1', ['friend-2']);
+  });
+
+  it('requires confirmation and navigates only after deletion succeeds', async () => {
+    const user = userEvent.setup();
+    profileActions.profiles = [notificationProfile()];
+    renderEditor('/me/settings/notification-profiles/profile-1');
+
+    await user.click(await screen.findByRole('button', { name: 'Delete' }));
+    expect(profileActions.deleteProfile).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('dialog', { name: 'Delete notification profile' })
+    ).toHaveTextContent('Delete Focus?');
+
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }));
+
+    expect(profileActions.deleteProfile).toHaveBeenCalledWith('profile-1');
+    expect(screen.getByTestId('current-location')).toHaveTextContent(
+      '/me/settings/notification-profiles'
+    );
+  });
+
+  it('keeps the editor and confirmation open when deletion is rejected', async () => {
+    const user = userEvent.setup();
+    profileActions.profiles = [notificationProfile()];
+    profileActions.deleteProfile.mockResolvedValueOnce(false);
+    renderEditor('/me/settings/notification-profiles/profile-1');
+
+    await user.click(await screen.findByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }));
+
+    expect(screen.getByTestId('current-location')).toHaveTextContent(
+      '/me/settings/notification-profiles/profile-1'
+    );
+    expect(
+      screen.getByRole('dialog', { name: 'Delete notification profile' })
+    ).toBeInTheDocument();
   });
 });

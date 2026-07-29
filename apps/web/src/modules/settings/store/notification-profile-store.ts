@@ -11,7 +11,6 @@ import type {
   NotificationProfile,
   UpdateNotificationProfileRequest,
 } from '@cgraph-dev/shared-types';
-import { api as httpClient } from '@/lib/api';
 import { apiClient } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import { toast } from '@/shared/components/ui';
@@ -33,7 +32,7 @@ interface NotificationProfileActions {
     profileId: string,
     params: UpdateNotificationProfileRequest
   ): Promise<NotificationProfile | null>;
-  deleteProfile(profileId: string): Promise<void>;
+  deleteProfile(profileId: string): Promise<boolean>;
   setAllowedMembers(profileId: string, userIds: readonly string[]): Promise<NotificationProfile | null>;
   activateProfile(profileId: string, durationMinutes?: number | null): Promise<boolean>;
   deactivateProfile(): Promise<boolean>;
@@ -41,12 +40,36 @@ interface NotificationProfileActions {
 
 type NotificationProfileStore = NotificationProfileState & NotificationProfileActions;
 
-async function apiDelete(path: string): Promise<unknown> {
-  const response = await httpClient.delete(path);
-  return response.data;
+interface ProfileSnapshot {
+  readonly profiles: readonly NotificationProfile[];
+  readonly activeProfile: NotificationProfile | null;
 }
 
-const BASE_PATH = '/api/v1/notification-profiles';
+type ProfileSnapshotResult =
+  | { readonly ok: true; readonly data: ProfileSnapshot }
+  | { readonly ok: false; readonly message: string };
+
+async function readProfileSnapshot(): Promise<ProfileSnapshotResult> {
+  const [profilesResult, activeResult] = await Promise.all([
+    apiClient.notificationProfiles.list(),
+    apiClient.notificationProfiles.getActive(),
+  ]);
+
+  if (!profilesResult.ok) {
+    return { ok: false, message: profilesResult.error.message };
+  }
+  if (!activeResult.ok) {
+    return { ok: false, message: activeResult.error.message };
+  }
+
+  return {
+    ok: true,
+    data: {
+      profiles: profilesResult.data,
+      activeProfile: activeResult.data,
+    },
+  };
+}
 
 export const useNotificationProfileStore = create<NotificationProfileStore>((set, get) => ({
   profiles: [],
@@ -58,23 +81,14 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
   async fetchProfiles() {
     set({ isLoading: true, error: null });
     try {
-      const [profilesResult, activeResult] = await Promise.all([
-        apiClient.notificationProfiles.list(),
-        apiClient.notificationProfiles.getActive(),
-      ]);
-
-      if (!profilesResult.ok) {
-        set({ error: profilesResult.error.message, isLoading: false });
-        return;
-      }
-      if (!activeResult.ok) {
-        set({ error: activeResult.error.message, isLoading: false });
+      const snapshot = await readProfileSnapshot();
+      if (!snapshot.ok) {
+        set({ error: snapshot.message, isLoading: false });
         return;
       }
 
       set({
-        profiles: profilesResult.data,
-        activeProfile: activeResult.data,
+        ...snapshot.data,
         isLoading: false,
       });
     } catch (err) {
@@ -137,17 +151,47 @@ export const useNotificationProfileStore = create<NotificationProfileStore>((set
   },
 
   async deleteProfile(profileId) {
+    if (get().isMutating) {
+      return false;
+    }
+
+    set({ isMutating: true, error: null });
     try {
-      await apiDelete(`${BASE_PATH}/${profileId}`);
-      set((state) => ({
-        profiles: state.profiles.filter((p) => p.id !== profileId),
-        activeProfile: state.activeProfile?.id === profileId ? null : state.activeProfile,
-      }));
+      const deleteResult = await apiClient.notificationProfiles.delete(profileId);
+      if (!deleteResult.ok) {
+        logger.error('Failed to delete profile', deleteResult.error);
+        toast.error(deleteResult.error.message);
+        set({ error: deleteResult.error.message, isMutating: false });
+        return false;
+      }
+      if (!deleteResult.data.deleted) {
+        const message = 'Profile was not deleted';
+        logger.error('Failed to delete profile', message);
+        toast.error(message);
+        set({ error: message, isMutating: false });
+        return false;
+      }
+
+      const snapshot = await readProfileSnapshot();
+      if (!snapshot.ok) {
+        logger.error('Failed to reconcile deleted profile', snapshot.message);
+        toast.error(snapshot.message);
+        set({ error: snapshot.message, isMutating: false });
+        return false;
+      }
+
+      set({
+        ...snapshot.data,
+        isMutating: false,
+      });
       toast.success('Profile deleted');
+      return true;
     } catch (err) {
       const message = extractErrorMessage(err);
       logger.error('Failed to delete profile', err);
       toast.error(message);
+      set({ error: message, isMutating: false });
+      return false;
     }
   },
 

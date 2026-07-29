@@ -32,6 +32,7 @@ import { FADE_UP } from '@/lib/animations/transitions';
 import { createLogger } from '@/lib/logger';
 import { useNotificationProfileStore } from '@/modules/settings/store/notification-profile-store';
 import { useFriendStore } from '@/modules/social/store/friendStore';
+import { NotificationProfileDeleteDialog } from './notification-profile-delete-dialog';
 import type { DayOfWeek } from '@cgraph-dev/shared-types';
 import {
   ALL_DAYS,
@@ -63,8 +64,15 @@ export function NotificationProfileEditor(): React.ReactNode {
   const profileId = id ?? detail;
   const isNew = profileId === 'new';
 
-  const { profiles, fetchProfiles, createProfile, updateProfile, deleteProfile, setAllowedMembers } =
-    useNotificationProfileStore();
+  const {
+    profiles,
+    isMutating,
+    fetchProfiles,
+    createProfile,
+    updateProfile,
+    deleteProfile,
+    setAllowedMembers,
+  } = useNotificationProfileStore();
   const { friends, fetchFriends, error: friendError } = useFriendStore();
 
   // Form state
@@ -199,8 +207,11 @@ export function NotificationProfileEditor(): React.ReactNode {
   async function handleDelete(): Promise<void> {
     if (existingProfile) {
       HapticFeedback.heavy();
-      await deleteProfile(existingProfile.id);
-      navigate('/me/settings/notification-profiles');
+      const deleted = await deleteProfile(existingProfile.id);
+      if (deleted) {
+        setShowDeleteConfirm(false);
+        navigate('/me/settings/notification-profiles');
+      }
     }
   }
 
@@ -432,31 +443,16 @@ export function NotificationProfileEditor(): React.ReactNode {
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-2">
           {!isNew && existingProfile ? (
-            showDeleteConfirm ? (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleDelete}
-                  className="flex items-center gap-1 rounded-xl bg-red-500/20 px-4 py-2 text-sm font-bold text-red-400 hover:bg-red-500/30"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                  Confirm Delete
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="rounded-xl px-4 py-2 text-sm text-[var(--token-text-muted)]"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex items-center gap-1 rounded-xl px-4 py-2 text-sm text-red-400 hover:bg-red-500/10"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Delete
-              </button>
-            )
+            <Button
+              type="button"
+              variant="ghost"
+              leftIcon={<TrashIcon aria-hidden="true" />}
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-red-400"
+              animated={false}
+            >
+              Delete
+            </Button>
           ) : (
             <div />
           )}
@@ -549,6 +545,14 @@ export function NotificationProfileEditor(): React.ReactNode {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <NotificationProfileDeleteDialog
+        profileName={existingProfile?.name ?? ''}
+        open={showDeleteConfirm && existingProfile !== null}
+        isDeleting={isMutating}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={() => void handleDelete()}
+      />
     </motion.div>
   );
 }

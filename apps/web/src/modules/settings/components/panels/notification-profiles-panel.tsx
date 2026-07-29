@@ -19,6 +19,7 @@ import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 import { useNotificationProfileStore } from '@/modules/settings/store/notification-profile-store';
+import { NotificationProfileDeleteDialog } from './notification-profile-delete-dialog';
 import { NotificationProfilesMenu } from './notification-profiles-menu';
 import type { NotificationProfile } from '@cgraph-dev/shared-types';
 import { hhmmToDisplayString } from '@cgraph-dev/shared-types';
@@ -61,6 +62,7 @@ export function NotificationProfilesPanel(): React.ReactNode {
   } = useNotificationProfileStore();
 
   const [menuTarget, setMenuTarget] = useState<NotificationProfile | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<NotificationProfile | null>(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -94,9 +96,13 @@ export function NotificationProfilesPanel(): React.ReactNode {
     }
   }
 
-  function handleDeleteProfile(profileId: string): void {
-    deleteProfile(profileId);
-    setMenuTarget(null);
+  async function handleDeleteProfile(): Promise<void> {
+    if (!deleteTarget) return;
+
+    const deleted = await deleteProfile(deleteTarget.id);
+    if (deleted) {
+      setDeleteTarget(null);
+    }
   }
 
   return (
@@ -289,11 +295,24 @@ export function NotificationProfilesPanel(): React.ReactNode {
             disabled={isMutating}
             onQuickEnable={(durationMinutes) => void handleQuickEnable(durationMinutes)}
             onDeactivate={() => void handleDeactivate()}
-            onDelete={() => handleDeleteProfile(menuTarget.id)}
+            onDelete={() => {
+              setDeleteTarget(menuTarget);
+              setMenuTarget(null);
+            }}
             onClose={() => setMenuTarget(null)}
           />
         ) : null}
       </AnimatePresence>
+
+      <NotificationProfileDeleteDialog
+        profileName={deleteTarget?.name ?? ''}
+        open={deleteTarget !== null}
+        isDeleting={isMutating}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onConfirm={() => void handleDeleteProfile()}
+      />
     </motion.div>
   );
 }

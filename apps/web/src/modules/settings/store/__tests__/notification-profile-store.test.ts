@@ -10,6 +10,7 @@ const notificationProfilesApi = vi.hoisted(() => ({
   getActive: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
+  delete: vi.fn(),
   setMembers: vi.fn(),
   activate: vi.fn(),
   deactivate: vi.fn(),
@@ -18,15 +19,6 @@ const notificationProfilesApi = vi.hoisted(() => ({
 vi.mock('@/lib/api-client', () => ({
   apiClient: {
     notificationProfiles: notificationProfilesApi,
-  },
-}));
-
-vi.mock('@/lib/api', () => ({
-  api: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
   },
 }));
 
@@ -241,6 +233,125 @@ describe('NotificationProfileStore', () => {
       isLoading: false,
       error: 'Allowed contacts must be friends',
     });
+  });
+
+  it('deletes through the typed client and then projects one authoritative snapshot', async () => {
+    const deleted = notificationProfile();
+    const remaining = notificationProfile({ id: 'profile-2', name: 'Sleep' });
+    useNotificationProfileStore.setState({
+      profiles: [deleted, remaining],
+      activeProfile: deleted,
+    });
+    notificationProfilesApi.delete.mockResolvedValueOnce(
+      ok({ id: deleted.id, deleted: true })
+    );
+    notificationProfilesApi.list.mockResolvedValueOnce(ok([remaining]));
+    notificationProfilesApi.getActive.mockResolvedValueOnce(ok(null));
+
+    await expect(
+      useNotificationProfileStore.getState().deleteProfile(deleted.id)
+    ).resolves.toBe(true);
+
+    expect(notificationProfilesApi.delete).toHaveBeenCalledWith(deleted.id);
+    expect(notificationProfilesApi.list).toHaveBeenCalledOnce();
+    expect(notificationProfilesApi.getActive).toHaveBeenCalledOnce();
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      profiles: [remaining],
+      activeProfile: null,
+      isMutating: false,
+      error: null,
+    });
+  });
+
+  it('preserves the current projection when deletion is rejected', async () => {
+    const existing = notificationProfile();
+    useNotificationProfileStore.setState({
+      profiles: [existing],
+      activeProfile: existing,
+    });
+    notificationProfilesApi.delete.mockResolvedValueOnce(failure('Delete rejected'));
+
+    await expect(
+      useNotificationProfileStore.getState().deleteProfile(existing.id)
+    ).resolves.toBe(false);
+
+    expect(notificationProfilesApi.list).not.toHaveBeenCalled();
+    expect(notificationProfilesApi.getActive).not.toHaveBeenCalled();
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      profiles: [existing],
+      activeProfile: existing,
+      isMutating: false,
+      error: 'Delete rejected',
+    });
+  });
+
+  it('treats a negative delete acknowledgement as a rejected deletion', async () => {
+    const existing = notificationProfile();
+    useNotificationProfileStore.setState({ profiles: [existing] });
+    notificationProfilesApi.delete.mockResolvedValueOnce(
+      ok({ id: existing.id, deleted: false })
+    );
+
+    await expect(
+      useNotificationProfileStore.getState().deleteProfile(existing.id)
+    ).resolves.toBe(false);
+
+    expect(notificationProfilesApi.list).not.toHaveBeenCalled();
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      profiles: [existing],
+      isMutating: false,
+      error: 'Profile was not deleted',
+    });
+  });
+
+  it('preserves the current projection when post-delete reconciliation fails', async () => {
+    const existing = notificationProfile();
+    useNotificationProfileStore.setState({
+      profiles: [existing],
+      activeProfile: existing,
+    });
+    notificationProfilesApi.delete.mockResolvedValueOnce(
+      ok({ id: existing.id, deleted: true })
+    );
+    notificationProfilesApi.list.mockResolvedValueOnce(ok([]));
+    notificationProfilesApi.getActive.mockResolvedValueOnce(failure('Active profile unavailable'));
+
+    await expect(
+      useNotificationProfileStore.getState().deleteProfile(existing.id)
+    ).resolves.toBe(false);
+
+    expect(useNotificationProfileStore.getState()).toMatchObject({
+      profiles: [existing],
+      activeProfile: existing,
+      isMutating: false,
+      error: 'Active profile unavailable',
+    });
+  });
+
+  it('prevents overlapping deletion commands', async () => {
+    let resolveDelete:
+      | ((value: {
+          readonly ok: true;
+          readonly data: { readonly id: string; readonly deleted: boolean };
+        }) => void)
+      | undefined;
+    const existing = notificationProfile();
+    notificationProfilesApi.delete.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveDelete = resolve;
+      })
+    );
+    notificationProfilesApi.list.mockResolvedValueOnce(ok([]));
+    notificationProfilesApi.getActive.mockResolvedValueOnce(ok(null));
+
+    const first = useNotificationProfileStore.getState().deleteProfile(existing.id);
+    await expect(
+      useNotificationProfileStore.getState().deleteProfile(existing.id)
+    ).resolves.toBe(false);
+    resolveDelete?.(ok({ id: existing.id, deleted: true }));
+    await expect(first).resolves.toBe(true);
+
+    expect(notificationProfilesApi.delete).toHaveBeenCalledOnce();
   });
 
   it('activates a profile only after the typed command succeeds', async () => {
