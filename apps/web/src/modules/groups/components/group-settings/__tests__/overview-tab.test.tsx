@@ -83,6 +83,7 @@ describe('OverviewTab', () => {
       'data-cgraph-surface',
       'control'
     );
+    expect(document.querySelectorAll('[data-cgraph-surface="card"]')).toHaveLength(2);
   });
 
   it('reports field and visibility changes through the form owner', async () => {

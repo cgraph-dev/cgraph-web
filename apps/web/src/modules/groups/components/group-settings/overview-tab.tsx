@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
 import { toast } from '@/shared/components/ui';
 import { Button } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import { Input, Textarea } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import type { OverviewTabProps } from './types';
@@ -141,7 +141,7 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
         </p>
       </header>
 
-      <GlassCard className="p-6">
+      <Card padding="lg">
         <h3 className="mb-4 font-semibold text-[var(--token-text-primary)]">Group Appearance</h3>
 
         <input
@@ -227,9 +227,9 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
             </div>
           )}
         </div>
-      </GlassCard>
+      </Card>
 
-      <GlassCard className="space-y-4 p-6">
+      <Card padding="lg" className="space-y-4">
         <h3 className="font-semibold text-[var(--token-text-primary)]">Basic Information</h3>
 
         <Input
@@ -279,7 +279,7 @@ export function OverviewTab({ group, formData, onChange, isAdmin }: OverviewTabP
             className="shrink-0"
           />
         </div>
-      </GlassCard>
+      </Card>
 
       <NodeGatingSection group={group} isOwner={isAdmin} />
     </div>
