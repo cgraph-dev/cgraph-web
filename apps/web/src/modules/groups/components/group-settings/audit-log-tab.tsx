@@ -4,6 +4,7 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ArrowPathIcon,
+  ArrowRightIcon,
   HashtagIcon,
   ShieldCheckIcon,
   UsersIcon,
@@ -12,10 +13,14 @@ import {
   FaceSmileIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
-import { entranceVariants } from '@/lib/animation-presets';
+import { Button, IconButton } from '@/components/ui/button';
+import Card from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import Skeleton from '@/components/ui/skeleton';
+import { FADE_UP } from '@/lib/animations/transitions';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
+import { getGroupPermissionError } from '../../permission-errors';
 
 const logger = createLogger('AuditLogTab');
 
@@ -37,27 +42,111 @@ interface AuditLogTabProps {
 
 const ACTION_CATEGORIES: Record<string, { label: string; icon: React.ElementType; color: string }> =
   {
-    group_update: { label: 'Group Updated', icon: Cog6ToothIcon, color: 'text-blue-400' },
-    group_delete: { label: 'Group Deleted', icon: Cog6ToothIcon, color: 'text-red-400' },
-    channel_create: { label: 'Channel Created', icon: HashtagIcon, color: 'text-green-400' },
-    channel_update: { label: 'Channel Updated', icon: HashtagIcon, color: 'text-blue-400' },
-    channel_delete: { label: 'Channel Deleted', icon: HashtagIcon, color: 'text-red-400' },
-    member_kick: { label: 'Member Kicked', icon: UsersIcon, color: 'text-orange-400' },
-    member_ban: { label: 'Member Banned', icon: UsersIcon, color: 'text-red-400' },
-    member_unban: { label: 'Member Unbanned', icon: UsersIcon, color: 'text-green-400' },
-    member_mute: { label: 'Member Muted', icon: UsersIcon, color: 'text-yellow-400' },
-    member_unmute: { label: 'Member Unmuted', icon: UsersIcon, color: 'text-green-400' },
-    member_role_update: { label: 'Role Changed', icon: ShieldCheckIcon, color: 'text-purple-400' },
-    role_create: { label: 'Role Created', icon: ShieldCheckIcon, color: 'text-green-400' },
-    role_update: { label: 'Role Updated', icon: ShieldCheckIcon, color: 'text-blue-400' },
-    role_delete: { label: 'Role Deleted', icon: ShieldCheckIcon, color: 'text-red-400' },
-    message_delete: { label: 'Message Deleted', icon: ChatBubbleLeftIcon, color: 'text-red-400' },
-    message_pin: { label: 'Message Pinned', icon: ChatBubbleLeftIcon, color: 'text-yellow-400' },
-    message_unpin: { label: 'Message Unpinned', icon: ChatBubbleLeftIcon, color: 'text-gray-400' },
-    invite_create: { label: 'Invite Created', icon: LinkIcon, color: 'text-green-400' },
-    invite_delete: { label: 'Invite Deleted', icon: LinkIcon, color: 'text-red-400' },
-    emoji_create: { label: 'Emoji Added', icon: FaceSmileIcon, color: 'text-green-400' },
-    emoji_delete: { label: 'Emoji Removed', icon: FaceSmileIcon, color: 'text-red-400' },
+    group_update: {
+      label: 'Group Updated',
+      icon: Cog6ToothIcon,
+      color: 'text-[var(--token-feedback-info)]',
+    },
+    group_delete: {
+      label: 'Group Deleted',
+      icon: Cog6ToothIcon,
+      color: 'text-[var(--token-feedback-error)]',
+    },
+    channel_create: {
+      label: 'Channel Created',
+      icon: HashtagIcon,
+      color: 'text-[var(--token-feedback-success)]',
+    },
+    channel_update: {
+      label: 'Channel Updated',
+      icon: HashtagIcon,
+      color: 'text-[var(--token-feedback-info)]',
+    },
+    channel_delete: {
+      label: 'Channel Deleted',
+      icon: HashtagIcon,
+      color: 'text-[var(--token-feedback-error)]',
+    },
+    member_kick: {
+      label: 'Member Kicked',
+      icon: UsersIcon,
+      color: 'text-[var(--token-feedback-warning)]',
+    },
+    member_ban: {
+      label: 'Member Banned',
+      icon: UsersIcon,
+      color: 'text-[var(--token-feedback-error)]',
+    },
+    member_unban: {
+      label: 'Member Unbanned',
+      icon: UsersIcon,
+      color: 'text-[var(--token-feedback-success)]',
+    },
+    member_mute: {
+      label: 'Member Muted',
+      icon: UsersIcon,
+      color: 'text-[var(--token-feedback-warning)]',
+    },
+    member_unmute: {
+      label: 'Member Unmuted',
+      icon: UsersIcon,
+      color: 'text-[var(--token-feedback-success)]',
+    },
+    member_role_update: {
+      label: 'Role Changed',
+      icon: ShieldCheckIcon,
+      color: 'text-[var(--token-interactive-primary)]',
+    },
+    role_create: {
+      label: 'Role Created',
+      icon: ShieldCheckIcon,
+      color: 'text-[var(--token-feedback-success)]',
+    },
+    role_update: {
+      label: 'Role Updated',
+      icon: ShieldCheckIcon,
+      color: 'text-[var(--token-feedback-info)]',
+    },
+    role_delete: {
+      label: 'Role Deleted',
+      icon: ShieldCheckIcon,
+      color: 'text-[var(--token-feedback-error)]',
+    },
+    message_delete: {
+      label: 'Message Deleted',
+      icon: ChatBubbleLeftIcon,
+      color: 'text-[var(--token-feedback-error)]',
+    },
+    message_pin: {
+      label: 'Message Pinned',
+      icon: ChatBubbleLeftIcon,
+      color: 'text-[var(--token-feedback-warning)]',
+    },
+    message_unpin: {
+      label: 'Message Unpinned',
+      icon: ChatBubbleLeftIcon,
+      color: 'text-[var(--token-text-muted)]',
+    },
+    invite_create: {
+      label: 'Invite Created',
+      icon: LinkIcon,
+      color: 'text-[var(--token-feedback-success)]',
+    },
+    invite_delete: {
+      label: 'Invite Deleted',
+      icon: LinkIcon,
+      color: 'text-[var(--token-feedback-error)]',
+    },
+    emoji_create: {
+      label: 'Emoji Added',
+      icon: FaceSmileIcon,
+      color: 'text-[var(--token-feedback-success)]',
+    },
+    emoji_delete: {
+      label: 'Emoji Removed',
+      icon: FaceSmileIcon,
+      color: 'text-[var(--token-feedback-error)]',
+    },
   };
 
 const FILTER_OPTIONS = [
@@ -72,6 +161,7 @@ const FILTER_OPTIONS = [
 ];
 
 const PER_PAGE = 25;
+const AUDIT_PERMISSION_COPY = 'You do not have permission to view this group audit log.';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -89,9 +179,9 @@ function renderChanges(changes: Record<string, unknown> | null) {
   return (
     <div className="mt-2 space-y-1">
       {Object.entries(changes).map(([key, value]) => (
-        <div key={key} className="flex items-center gap-2 text-xs text-gray-500">
-          <span className="font-mono text-gray-400">{key}:</span>
-          <span className="text-gray-300">{String(value)}</span>
+        <div key={key} className="flex items-center gap-2 text-xs text-[var(--token-text-muted)]">
+          <span className="font-mono text-[var(--token-text-secondary)]">{key}:</span>
+          <span className="text-[var(--token-text-secondary)]">{String(value)}</span>
         </div>
       ))}
     </div>
@@ -109,20 +199,41 @@ export function AuditLogTab({ groupId }: AuditLogTabProps) {
   const [filterCategory, setFilterCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAuditLog = useCallback(
     async (cursor?: string) => {
       setLoading(true);
+      setError(null);
       try {
         const res = await http.get(`/api/v1/groups/${groupId}/audit-log`, {
           params: { cursor, limit: PER_PAGE },
         });
-        setEntries(res.data.data || []);
-        setNextCursor(res.data.meta?.next_cursor ?? null);
-        setHasNext(res.data.meta?.has_next ?? false);
+        const incoming: AuditLogEntry[] = res.data.data ?? [];
+        const pageInfo = res.data.page_info;
+
+        setEntries((current) => {
+          if (!cursor) return incoming;
+          const entriesById = new Map(current.map((entry) => [entry.id, entry]));
+          incoming.forEach((entry) => entriesById.set(entry.id, entry));
+          return Array.from(entriesById.values());
+        });
+        setNextCursor(pageInfo?.end_cursor ?? null);
+        setHasNext(Boolean(pageInfo?.has_next_page && pageInfo?.end_cursor));
       } catch (error) {
         logger.error('Failed to fetch audit log', error);
-        setEntries([]);
+        setError(
+          getGroupPermissionError(
+            error,
+            AUDIT_PERMISSION_COPY,
+            'Failed to load the audit log. Please try again.'
+          )
+        );
+        if (!cursor) {
+          setEntries([]);
+          setNextCursor(null);
+          setHasNext(false);
+        }
       } finally {
         setLoading(false);
       }
@@ -152,141 +263,165 @@ export function AuditLogTab({ groupId }: AuditLogTabProps) {
   });
 
   return (
-    <motion.div {...entranceVariants.fadeUp} className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">Audit Log</h2>
+    <motion.div {...FADE_UP} className="max-w-3xl space-y-4">
+      <div className="cgraph-page-header">
+        <div>
+          <p className="cgraph-eyebrow">Group settings</p>
+          <h2 className="text-2xl font-bold text-[var(--token-text-primary)]">Audit Log</h2>
+          <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+            Review recent administrative changes in this group.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
-          <button
+          <IconButton
+            icon={<FunnelIcon />}
+            label={showFilters ? 'Hide audit filters' : 'Show audit filters'}
+            variant={showFilters || filterCategory ? 'primary' : 'ghost'}
             onClick={() => setShowFilters(!showFilters)}
-            className={`rounded-lg p-2 transition-colors ${
-              showFilters || filterCategory
-                ? 'bg-primary-600/20 text-primary-400'
-                : 'text-gray-400 hover:bg-[var(--token-card-bg)] hover:text-white'
-            }`}
-          >
-            <FunnelIcon className="h-5 w-5" />
-          </button>
-          <button
+          />
+          <IconButton
+            icon={<ArrowPathIcon className={loading ? 'animate-spin' : ''} />}
+            label="Refresh audit log"
             onClick={() => fetchAuditLog()}
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white"
-          >
-            <ArrowPathIcon className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+            disabled={loading}
+          />
         </div>
       </div>
 
-      {/* Search & Filters */}
-      <GlassCard className="space-y-3 p-4">
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search audit log..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg bg-[var(--token-card-bg)/0.4] py-2 pl-9 pr-4 text-sm text-white placeholder-white/30 outline-none ring-1 ring-gray-700 focus:ring-primary-500"
-          />
+      {error && (
+        <div
+          role="alert"
+          className="rounded-[var(--product-radius-md)] border border-[color-mix(in_srgb,var(--token-feedback-error)_35%,transparent)] bg-[color-mix(in_srgb,var(--token-feedback-error)_10%,transparent)] px-3 py-2 text-sm text-[var(--token-feedback-error)]"
+        >
+          {error}
         </div>
+      )}
+
+      <Card className="space-y-3">
+        <Input
+          aria-label="Search audit log"
+          type="search"
+          placeholder="Search audit log..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          leftIcon={<MagnifyingGlassIcon className="h-4 w-4" />}
+        />
 
         <AnimatePresence>
           {showFilters && (
             <motion.div
+              key="audit-filters"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="flex flex-wrap gap-2 overflow-hidden"
+              className="overflow-hidden"
             >
-              {FILTER_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setFilterCategory(opt.value)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    filterCategory === opt.value
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-[var(--token-card-bg)/0.6] text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-white'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+              <fieldset>
+                <legend className="sr-only">Filter audit log by action category</legend>
+                <div className="flex flex-wrap gap-2">
+                  {FILTER_OPTIONS.map((option) => {
+                    const selected = filterCategory === option.value;
+                    return (
+                      <label
+                        key={option.value}
+                        className="cgraph-list-row min-h-9 cursor-pointer px-3 py-2 text-xs font-medium"
+                        data-selected={selected || undefined}
+                      >
+                        <input
+                          type="radio"
+                          name="audit-action-filter"
+                          value={option.value}
+                          checked={selected}
+                          onChange={() => setFilterCategory(option.value)}
+                          className="sr-only"
+                        />
+                        {option.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
             </motion.div>
           )}
         </AnimatePresence>
-      </GlassCard>
+      </Card>
 
-      {/* Entries */}
-      <GlassCard className="divide-y divide-gray-700/50">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <ArrowPathIcon className="h-6 w-6 animate-spin text-gray-400" />
-          </div>
+      <Card padding="none" className="overflow-hidden">
+        {loading && entries.length === 0 ? (
+          <Skeleton shape="message" count={5} className="p-4" />
         ) : filteredEntries.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">
-            {searchQuery || filterCategory
-              ? 'No matching entries found'
-              : 'No audit log entries yet'}
+          <div className="cgraph-empty-state">
+            <div className="cgraph-empty-icon">
+              <Cog6ToothIcon className="h-6 w-6" />
+            </div>
+            <h3>{searchQuery || filterCategory ? 'No matching entries' : 'No recent actions'}</h3>
+            <p>
+              {searchQuery || filterCategory
+                ? 'Adjust the search or action filter.'
+                : 'Administrative changes will appear here.'}
+            </p>
           </div>
         ) : (
-          filteredEntries.map((entry, index) => {
-            const actionInfo = ACTION_CATEGORIES[entry.action] || {
-              label: entry.action,
-              icon: Cog6ToothIcon,
-              color: 'text-gray-400',
-            };
-            const Icon = actionInfo.icon;
+          <ul className="divide-y divide-[var(--product-line)]">
+            {filteredEntries.map((entry) => {
+              const actionInfo = ACTION_CATEGORIES[entry.action] || {
+                label: entry.action,
+                icon: Cog6ToothIcon,
+                color: 'text-[var(--token-text-muted)]',
+              };
+              const Icon = actionInfo.icon;
 
-            return (
-              <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-                className="flex items-start gap-3 p-4"
-              >
-                <div
-                  className={`mt-0.5 rounded-lg bg-[var(--token-card-bg)/0.6] p-2 ${actionInfo.color}`}
-                >
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-medium text-white">
-                      {entry.actor_username || entry.actor_id?.slice(0, 8)}
-                    </span>
-                    <span className={`text-sm ${actionInfo.color}`}>{actionInfo.label}</span>
-                    {entry.target_user_id && (
-                      <>
-                        <span className="text-xs text-gray-500">→</span>
-                        <span className="text-sm text-gray-300">
-                          {entry.target_username || entry.target_user_id.slice(0, 8)}
-                        </span>
-                      </>
-                    )}
+              return (
+                <li key={entry.id} className="flex items-start gap-3 p-4">
+                  <div className={`cgraph-empty-icon mb-0 h-10 w-10 shrink-0 ${actionInfo.color}`}>
+                    <Icon className="h-4 w-4" />
                   </div>
-                  {entry.reason && (
-                    <p className="mt-1 text-xs text-gray-400">Reason: {entry.reason}</p>
-                  )}
-                  {renderChanges(entry.changes)}
-                </div>
-                <span className="shrink-0 text-xs text-gray-500">
-                  {formatDate(entry.created_at)}
-                </span>
-              </motion.div>
-            );
-          })
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-sm font-medium text-[var(--token-text-primary)]">
+                        {entry.actor_username || entry.actor_id.slice(0, 8)}
+                      </span>
+                      <span className={`text-sm ${actionInfo.color}`}>{actionInfo.label}</span>
+                      {entry.target_user_id && (
+                        <>
+                          <ArrowRightIcon className="h-3.5 w-3.5 text-[var(--token-text-muted)]" />
+                          <span className="text-sm text-[var(--token-text-secondary)]">
+                            {entry.target_username || entry.target_user_id.slice(0, 8)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {entry.reason && (
+                      <p className="mt-1 text-xs text-[var(--token-text-muted)]">
+                        Reason: {entry.reason}
+                      </p>
+                    )}
+                    {renderChanges(entry.changes)}
+                  </div>
+                  <time
+                    dateTime={entry.created_at}
+                    className="shrink-0 text-xs text-[var(--token-text-muted)]"
+                  >
+                    {formatDate(entry.created_at)}
+                  </time>
+                </li>
+              );
+            })}
+          </ul>
         )}
-      </GlassCard>
+      </Card>
 
-      {/* Load more */}
       {hasNext && (
         <div className="flex justify-center">
-          <button
+          <Button
+            variant="secondary"
+            animated={false}
             onClick={handleLoadMore}
             disabled={loading}
-            className="rounded-lg px-4 py-2 text-sm text-gray-400 transition-colors hover:bg-[var(--token-card-bg)] hover:text-white disabled:opacity-30"
+            isLoading={loading}
           >
             Load more
-          </button>
+          </Button>
         </div>
       )}
     </motion.div>
