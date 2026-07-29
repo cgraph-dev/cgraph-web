@@ -1,31 +1,19 @@
-/**
- * Empty state placeholder component.
- */
-import { motion } from 'motion/react';
-import {
-  InboxIcon,
-  ChatBubbleLeftRightIcon,
-  UsersIcon,
-  DocumentTextIcon,
-  PlusIcon,
-} from '@heroicons/react/24/outline';
+import type { ReactNode } from 'react';
+import { FileText, Inbox, MessageCircle, Plus, Users } from 'lucide-react';
 import { Button } from './button';
 
 interface EmptyStateProps {
-  title?: string;
-  message?: string;
-  icon?: React.ReactNode;
-  meta?: React.ReactNode;
-  action?: {
-    label: string;
-    onClick: () => void;
+  readonly title?: string;
+  readonly message?: string;
+  readonly icon?: ReactNode;
+  readonly meta?: ReactNode;
+  readonly action?: {
+    readonly label: string;
+    readonly onClick: () => void;
   };
-  className?: string;
+  readonly className?: string;
 }
 
-/**
- * Empty State — fallback UI for empty data states.
- */
 export default function EmptyState({
   title = 'Nothing here yet',
   message = 'No items to display.',
@@ -35,16 +23,13 @@ export default function EmptyState({
   className = '',
 }: EmptyStateProps) {
   return (
-    <motion.div
+    <div
       role="status"
       aria-label={title}
       className={`cgraph-empty-state ${className}`}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="cgraph-empty-icon">
-        {icon || <InboxIcon className="h-7 w-7" />}
+      <div className="cgraph-empty-icon" aria-hidden="true">
+        {icon ?? <Inbox className="h-7 w-7" />}
       </div>
       <h3>{title}</h3>
       <p>{message}</p>
@@ -52,102 +37,71 @@ export default function EmptyState({
       {action && (
         <Button
           className="mt-5"
-          leftIcon={<PlusIcon />}
+          leftIcon={<Plus />}
           onClick={action.onClick}
           animated={false}
         >
           {action.label}
         </Button>
       )}
-    </motion.div>
+    </div>
   );
 }
 
-// Common empty state variants
-/**
- */
-/**
- * No Posts Empty — fallback UI for empty data states.
- */
-export function NoPostsEmpty({ onCreatePost }: { onCreatePost?: () => void }) {
+export function NoPostsEmpty({ onCreatePost }: { readonly onCreatePost?: () => void }) {
   return (
     <EmptyState
       title="No Posts Yet"
       message="Be the first to share something with the community!"
-      icon={<DocumentTextIcon className="h-8 w-8 text-gray-500" />}
+      icon={<FileText className="h-7 w-7" />}
       action={onCreatePost ? { label: 'Create Post', onClick: onCreatePost } : undefined}
     />
   );
 }
 
-/**
- */
-/**
- * No Comments Empty — fallback UI for empty data states.
- */
 export function NoCommentsEmpty() {
   return (
     <EmptyState
       title="No Comments Yet"
       message="Start the conversation by leaving the first comment!"
-      icon={<ChatBubbleLeftRightIcon className="h-8 w-8 text-gray-500" />}
+      icon={<MessageCircle className="h-7 w-7" />}
     />
   );
 }
 
-/**
- */
-/**
- * No Members Empty — fallback UI for empty data states.
- */
 export function NoMembersEmpty() {
   return (
     <EmptyState
       title="No Members"
       message="This community doesn't have any members yet."
-      icon={<UsersIcon className="h-8 w-8 text-gray-500" />}
+      icon={<Users className="h-7 w-7" />}
     />
   );
 }
 
-/**
- */
-/**
- * No Messages Empty — fallback UI for empty data states.
- */
-export function NoMessagesEmpty({ onStartChat }: { onStartChat?: () => void }) {
+export function NoMessagesEmpty({ onStartChat }: { readonly onStartChat?: () => void }) {
   return (
     <EmptyState
       title="No Messages"
       message="You haven't started any conversations yet."
-      icon={<ChatBubbleLeftRightIcon className="h-8 w-8 text-gray-500" />}
+      icon={<MessageCircle className="h-7 w-7" />}
       action={onStartChat ? { label: 'Start Chat', onClick: onStartChat } : undefined}
     />
   );
 }
 
-/**
- */
-/**
- * No Friends Empty — fallback UI for empty data states.
- */
-export function NoFriendsEmpty({ onAddFriend }: { onAddFriend?: () => void }) {
+export function NoFriendsEmpty({ onAddFriend }: { readonly onAddFriend?: () => void }) {
   return (
     <EmptyState
       title="No Friends Yet"
       message="Connect with others by adding friends."
-      icon={<UsersIcon className="h-8 w-8 text-gray-500" />}
+      icon={<Users className="h-7 w-7" />}
       action={onAddFriend ? { label: 'Add Friends', onClick: onAddFriend } : undefined}
     />
   );
 }
 
-/**
- */
-/**
- * Search No Results component.
- */
-export function SearchNoResults({ query }: { query?: string }) {
+export function SearchNoResults({ query }: { readonly query?: string }) {
   return (
     <EmptyState
       title="No Results Found"
@@ -156,7 +110,7 @@ export function SearchNoResults({ query }: { query?: string }) {
           ? `No results found for "${query}". Try a different search term.`
           : 'Try a different search term.'
       }
-      icon={<InboxIcon className="h-8 w-8 text-gray-500" />}
+      icon={<Inbox className="h-7 w-7" />}
     />
   );
 }
