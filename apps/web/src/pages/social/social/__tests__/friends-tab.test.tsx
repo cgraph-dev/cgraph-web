@@ -64,7 +64,10 @@ vi.mock('@/lib/animations/animation-engine', () => ({
   HapticFeedback: { medium: vi.fn(), success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock('@/lib/utils', () => ({ getAvatarBorderId: () => null }));
+vi.mock('@/lib/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/utils')>();
+  return { ...actual, getAvatarBorderId: () => null };
+});
 
 function makeFriend(overrides: Partial<Friend> = {}): Friend {
   return {
