@@ -1,15 +1,5 @@
-/**
- * Community Card Component
- *
- * Renders a card for a discoverable community (group or forum)
- * in the explore page grid. Shows avatar, name, description,
- * member count, type badge, and category tag.
- *
- */
-
-import { useNavigate } from 'react-router-dom';
-import { UserGroupIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
-import { Button } from '@/components/ui/button';
+import { ArrowRight, BadgeCheck, MessagesSquare, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getCommunityRoute } from './community-routing';
 
 export interface Community {
@@ -22,7 +12,7 @@ export interface Community {
   category: string | null;
   default_channel_id?: string | null;
   defaultChannelId?: string | null;
-  created_at: string;
+  created_at: string | null;
   is_verified: boolean;
 }
 
@@ -30,39 +20,24 @@ interface CommunityCardProps {
   community: Community;
 }
 
-/**
- * A card component displaying a community (group or forum) for the explore page.
- */
 export default function CommunityCard({ community }: CommunityCardProps) {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    navigate(getCommunityRoute(community));
-  };
-
-  const TypeIcon = community.type === 'group' ? UserGroupIcon : ChatBubbleLeftRightIcon;
+  const TypeIcon = community.type === 'group' ? Users : MessagesSquare;
   const typeLabel = community.type === 'group' ? 'Group' : 'Forum';
-  const typeColor =
-    community.type === 'group'
-      ? 'bg-blue-500/20 text-blue-400'
-      : 'bg-[color-mix(in_srgb,var(--color-brand-purple)_20%,transparent)] text-[var(--color-brand-purple)]';
 
   return (
-    <div
-      onClick={handleClick}
-      className="cgraph-card group cursor-pointer p-4"
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && handleClick()}
+    <Link
+      to={getCommunityRoute(community)}
+      aria-label={`View ${community.name} ${typeLabel.toLowerCase()}`}
+      className="cgraph-card group flex min-h-52 flex-col p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focus-ring)]"
     >
-      {/* Header — avatar + name + type */}
       <div className="mb-3 flex items-start gap-3">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--product-surface-selected)] text-lg font-bold text-[var(--token-interactive-primary)]">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-[var(--token-card-border)] bg-[var(--product-surface-selected)] text-lg font-bold text-[var(--token-interactive-primary)]">
           {community.avatar_url ? (
             <img
               src={community.avatar_url}
-              alt={community.name}
+              alt=""
               className="h-full w-full object-cover"
+              loading="lazy"
             />
           ) : (
             community.name.charAt(0).toUpperCase()
@@ -75,21 +50,20 @@ export default function CommunityCard({ community }: CommunityCardProps) {
               {community.name}
             </h3>
             {community.is_verified && (
-              <span className="text-primary-400" title="Verified">
-                ✓
-              </span>
+              <BadgeCheck
+                className="h-4 w-4 shrink-0 text-[var(--token-interactive-primary)]"
+                aria-label="Verified"
+              />
             )}
           </div>
 
           <div className="mt-0.5 flex items-center gap-2 text-xs text-[var(--token-text-muted)]">
-            <span
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${typeColor}`}
-            >
-              <TypeIcon className="h-3 w-3" />
+            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--token-card-border)] bg-[var(--product-surface-recessed)] px-2 py-0.5 text-[10px] font-medium text-[var(--token-text-secondary)]">
+              <TypeIcon className="h-3 w-3" aria-hidden="true" />
               {typeLabel}
             </span>
             <span className="flex items-center gap-1">
-              <UserGroupIcon className="h-3 w-3" />
+              <Users className="h-3 w-3" aria-hidden="true" />
               {community.member_count.toLocaleString()}{' '}
               {community.member_count === 1 ? 'member' : 'members'}
             </span>
@@ -97,15 +71,13 @@ export default function CommunityCard({ community }: CommunityCardProps) {
         </div>
       </div>
 
-      {/* Description */}
       {community.description && (
         <p className="mb-3 line-clamp-2 text-sm text-[var(--token-text-secondary)]">
           {community.description}
         </p>
       )}
 
-      {/* Footer — category + action */}
-      <div className="flex items-center justify-between">
+      <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--token-card-border)] pt-3">
         {community.category ? (
           <span className="rounded-full bg-[var(--product-surface-recessed)] px-2.5 py-0.5 text-xs text-[var(--token-text-muted)]">
             {community.category}
@@ -114,17 +86,14 @@ export default function CommunityCard({ community }: CommunityCardProps) {
           <span />
         )}
 
-        <Button
-          size="sm"
-          animated={false}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
-        >
-          View
-        </Button>
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--token-interactive-primary)]">
+          View {typeLabel.toLowerCase()}
+          <ArrowRight
+            className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }

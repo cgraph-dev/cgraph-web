@@ -1,7 +1,4 @@
-import {
-  AdjustmentsHorizontalIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { Input, Select } from '@/components/ui/input';
 
 interface SortOption {
@@ -32,25 +29,25 @@ export function ExploreFilterBar({
   onSortChange,
 }: ExploreFilterBarProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <Input
         aria-label={searchLabel}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder={searchPlaceholder}
-        leftIcon={<MagnifyingGlassIcon className="h-5 w-5" />}
+        leftIcon={<Search className="h-5 w-5" />}
         className="text-sm"
         fullWidth
       />
 
       <div className="relative shrink-0">
-        <AdjustmentsHorizontalIcon className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[var(--token-text-muted)]" />
+        <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[var(--token-text-muted)]" />
         <Select
           aria-label={sortLabel}
           value={sort}
           onChange={(event) => onSortChange(event.target.value)}
           options={sortOptions}
-          className="appearance-none pl-9 pr-8 text-sm"
+          className="w-full appearance-none pl-9 pr-8 text-sm sm:w-auto"
         />
       </div>
     </div>
