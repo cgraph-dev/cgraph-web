@@ -196,6 +196,63 @@ describe('fetchThreads', () => {
   });
 });
 
+describe('fetchRecentThreads', () => {
+  it('replaces the first page, appends the next page, and removes cursor duplicates', async () => {
+    useForumHostingStore.setState({ threads: [{ id: 'stale-thread' }] as never });
+    mockedApi.get.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        data: [makeThreadApi({ id: 't1' }), makeThreadApi({ id: 't2' })],
+        page_info: {
+          has_next_page: true,
+          has_previous_page: false,
+          start_cursor: 'start',
+          end_cursor: 'next-page',
+        },
+      },
+    });
+
+    await useForumHostingStore.getState().fetchRecentThreads('f1');
+
+    expect(mockedApi.get).toHaveBeenLastCalledWith('/api/v1/forums/f1/threads', {
+      params: { cursor: undefined, limit: 20, sort: 'latest' },
+    });
+    expect(useForumHostingStore.getState().threads.map(({ id }) => id)).toEqual(['t1', 't2']);
+    expect(useForumHostingStore.getState().threadsMeta).toMatchObject({
+      cursor: 'next-page',
+      hasNextPage: true,
+    });
+
+    mockedApi.get.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        data: [makeThreadApi({ id: 't2' }), makeThreadApi({ id: 't3' })],
+        page_info: {
+          has_next_page: false,
+          has_previous_page: true,
+          start_cursor: 'next-page',
+          end_cursor: 'last-page',
+        },
+      },
+    });
+
+    await useForumHostingStore
+      .getState()
+      .fetchRecentThreads('f1', { cursor: 'next-page' });
+
+    expect(useForumHostingStore.getState().threads.map(({ id }) => id)).toEqual([
+      't1',
+      't2',
+      't3',
+    ]);
+    expect(useForumHostingStore.getState().threadsMeta).toMatchObject({
+      cursor: 'last-page',
+      hasNextPage: false,
+      total: 3,
+    });
+  });
+});
+
 describe('createThread', () => {
   it('creates and prepends a thread', async () => {
     mockedApi.post.mockResolvedValueOnce({ data: makeThreadApi({ id: 't2' }) });
@@ -293,5 +350,67 @@ describe('fetchMembers', () => {
     mockedApi.get.mockRejectedValueOnce(new Error('fail'));
     await expect(useForumHostingStore.getState().fetchMembers('f1')).rejects.toThrow();
     expect(useForumHostingStore.getState().isLoadingMembers).toBe(false);
+  });
+
+  it('appends a cursor page without duplicating an existing membership', async () => {
+    const first = {
+      id: 'm1',
+      forum_id: 'f1',
+      user_id: 'u1',
+      display_name: 'First',
+      role: 'member',
+    };
+    const second = {
+      ...first,
+      id: 'm2',
+      user_id: 'u2',
+      display_name: 'Second',
+    };
+    useForumHostingStore.setState({
+      members: [
+        {
+          id: 'm1',
+          forumId: 'f1',
+          userId: 'u1',
+          displayName: 'First',
+          title: null,
+          signature: null,
+          avatarUrl: null,
+          postCount: 0,
+          threadCount: 0,
+          reputation: 0,
+          role: 'member',
+          isBanned: false,
+          joinedAt: null,
+          lastVisitAt: null,
+        },
+      ],
+    });
+    mockedApi.get.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        data: [first, second],
+        page_info: {
+          has_next_page: false,
+          has_previous_page: true,
+          start_cursor: 'next-page',
+          end_cursor: 'last-page',
+        },
+      },
+    });
+
+    await useForumHostingStore
+      .getState()
+      .fetchMembers('f1', { cursor: 'next-page', limit: 25 });
+
+    expect(mockedApi.get).toHaveBeenLastCalledWith('/api/v1/forums/f1/members', {
+      params: { cursor: 'next-page', limit: 25 },
+    });
+    expect(useForumHostingStore.getState().members.map(({ id }) => id)).toEqual(['m1', 'm2']);
+    expect(useForumHostingStore.getState().membersMeta).toMatchObject({
+      cursor: 'last-page',
+      hasNextPage: false,
+      total: 2,
+    });
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Hook for forum board view state and data fetching.
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { createLogger } from '@/lib/logger';
@@ -31,7 +31,9 @@ export function useForumBoardView() {
   const {
     boards,
     threads,
+    threadsMeta,
     members,
+    membersMeta,
     fetchBoards,
     fetchRecentThreads,
     fetchMembers,
@@ -94,6 +96,40 @@ export function useForumBoardView() {
 
   const isOwner = !!(forum && user && forum.ownerId === user.id);
 
+  const refreshThreads = useCallback(() => {
+    if (!forum || isLoadingThreads) return;
+    void fetchRecentThreads(forum.id);
+  }, [fetchRecentThreads, forum, isLoadingThreads]);
+
+  const loadMoreThreads = useCallback(() => {
+    if (!forum || isLoadingThreads || !threadsMeta?.hasNextPage || !threadsMeta.cursor) return;
+    void fetchRecentThreads(forum.id, { cursor: threadsMeta.cursor });
+  }, [fetchRecentThreads, forum, isLoadingThreads, threadsMeta]);
+
+  const refreshMembers = useCallback(() => {
+    if (!forum || isLoadingMembers) return;
+    void fetchMembers(forum.id, {
+      sort: memberSort,
+      search: memberSearch || undefined,
+    });
+  }, [fetchMembers, forum, isLoadingMembers, memberSearch, memberSort]);
+
+  const loadMoreMembers = useCallback(() => {
+    if (!forum || isLoadingMembers || !membersMeta?.hasNextPage || !membersMeta.cursor) return;
+    void fetchMembers(forum.id, {
+      cursor: membersMeta.cursor,
+      sort: memberSort,
+      search: memberSearch || undefined,
+    });
+  }, [
+    fetchMembers,
+    forum,
+    isLoadingMembers,
+    memberSearch,
+    memberSort,
+    membersMeta,
+  ]);
+
   return {
     // Data
     forum,
@@ -118,10 +154,16 @@ export function useForumBoardView() {
     // Derived
     isOwner,
     isAuthenticated,
+    threadsHasNextPage: threadsMeta?.hasNextPage ?? false,
+    membersHasNextPage: membersMeta?.hasNextPage ?? false,
 
     // Actions
     handleSubscribe,
     handleVote,
+    refreshThreads,
+    loadMoreThreads,
+    refreshMembers,
+    loadMoreMembers,
     navigate,
   };
 }

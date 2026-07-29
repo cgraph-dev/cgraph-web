@@ -12,6 +12,11 @@ function toRecord(value: object): Record<string, unknown> {
   return Object.fromEntries(Object.entries(value));
 }
 
+function mergeUniqueById<T extends { id: string }>(current: T[], incoming: T[]): T[] {
+  const seen = new Set(current.map(({ id }) => id));
+  return [...current, ...incoming.filter(({ id }) => !seen.has(id))];
+}
+
 import type {
   PaginationMeta,
   CreateThreadData,
@@ -26,17 +31,33 @@ import type {
 /** Creates thread-related actions for the forum hosting store. */
 export function createThreadActions(set: StoreApi<ForumHostingState>['setState']) {
   return {
-    fetchRecentThreads: async (forumId: string, limit: number = 20) => {
+    fetchRecentThreads: async (forumId: string, opts: ThreadListOptions = {}) => {
       set({ isLoadingThreads: true });
-      const result = await apiClient.forums.listRecentThreads(forumId, { limit });
+      const result = await apiClient.forums.listRecentThreads(forumId, {
+        limit: opts.limit ?? 20,
+        cursor: opts.cursor,
+        sort: opts.sort ?? 'latest',
+      });
       if (!result.ok) {
         set({ isLoadingThreads: false });
-        // Don't throw - forum may not have threads endpoint yet
         logger.warn('Failed to fetch recent threads:', result.error.message);
         return;
       }
-      const threads = result.data.map((t) => mapThreadFromApi(toRecord(t)));
-      set({ threads, isLoadingThreads: false });
+      const page = result.data.map((thread) => mapThreadFromApi(toRecord(thread)));
+      const pageInfo = result.pageInfo;
+
+      set((state) => {
+        const threads = opts.cursor ? mergeUniqueById(state.threads, page) : page;
+        return {
+          threads,
+          threadsMeta: {
+            cursor: pageInfo?.end_cursor ?? null,
+            hasNextPage: pageInfo?.has_next_page ?? page.length >= (opts.limit ?? 20),
+            total: pageInfo?.total_count ?? threads.length,
+          },
+          isLoadingThreads: false,
+        };
+      });
     },
 
     fetchThreads: async (boardId: string, opts?: ThreadListOptions) => {
@@ -243,14 +264,17 @@ export function createMemberActions(set: StoreApi<ForumHostingState>['setState']
       }
       const members = result.data.map((m) => mapMemberFromApi(toRecord(m)));
       const pi = result.pageInfo;
-      set({
-        members,
-        membersMeta: {
-          cursor: pi?.end_cursor ?? null,
-          hasNextPage: pi?.has_next_page ?? members.length >= (opts.limit ?? 25),
-          total: pi?.total_count ?? members.length,
-        },
-        isLoadingMembers: false,
+      set((state) => {
+        const nextMembers = opts.cursor ? mergeUniqueById(state.members, members) : members;
+        return {
+          members: nextMembers,
+          membersMeta: {
+            cursor: pi?.end_cursor ?? null,
+            hasNextPage: pi?.has_next_page ?? members.length >= (opts.limit ?? 25),
+            total: pi?.total_count ?? nextMembers.length,
+          },
+          isLoadingMembers: false,
+        };
       });
     },
   };

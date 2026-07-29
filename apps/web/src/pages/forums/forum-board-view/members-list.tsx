@@ -2,7 +2,9 @@
  * Forum board members list component.
  */
 import { UserIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid';
+import { RefreshCw } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { MemberCard } from './member-card';
 import { SKELETON_COUNTS, MEMBER_SORT_OPTIONS } from './constants';
 import type { MembersListProps, MemberSortOption } from './types';
@@ -21,8 +23,11 @@ export function MembersList({
   onSearchChange,
   sort,
   onSortChange,
+  hasNextPage,
+  onRefresh,
+  onLoadMore,
 }: MembersListProps) {
-  if (isLoading) {
+  if (isLoading && members.length === 0) {
     return (
       <div className="space-y-4">
         {[...Array(SKELETON_COUNTS.members)].map((_, i) => (
@@ -61,6 +66,16 @@ export function MembersList({
             </option>
           ))}
         </select>
+        <Button
+          variant="outline"
+          size="sm"
+          animated={false}
+          leftIcon={<RefreshCw />}
+          onClick={onRefresh}
+          disabled={isLoading}
+        >
+          Refresh
+        </Button>
       </div>
 
       {/* Members Grid */}
@@ -76,6 +91,19 @@ export function MembersList({
           ))}
         </div>
       )}
+
+      {hasNextPage ? (
+        <div className="flex justify-center">
+          <Button
+            variant="secondary"
+            animated={false}
+            onClick={onLoadMore}
+            isLoading={isLoading}
+          >
+            Load more members
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -45,6 +45,9 @@ export interface ThreadsListProps {
   threads: Thread[];
   forumSlug: string;
   isLoading: boolean;
+  hasNextPage: boolean;
+  onRefresh: () => void;
+  onLoadMore: () => void;
 }
 
 /**
@@ -65,6 +68,9 @@ export interface MembersListProps {
   onSearchChange: (search: string) => void;
   sort: MemberSortOption;
   onSortChange: (sort: MemberSortOption) => void;
+  hasNextPage: boolean;
+  onRefresh: () => void;
+  onLoadMore: () => void;
 }
 
 /**

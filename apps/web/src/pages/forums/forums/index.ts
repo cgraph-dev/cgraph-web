@@ -8,5 +8,4 @@ export * from './constants';
 export { ForumHeader } from './forum-header';
 export { SortControls } from './sort-controls';
 export { PostCard } from './post-card';
-export { PostsList } from './posts-list';
 export { ForumSidebar } from './forum-sidebar';

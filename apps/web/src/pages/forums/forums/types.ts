@@ -90,15 +90,3 @@ export interface ForumSidebarProps {
   }>;
   isLoadingForums: boolean;
 }
-
-/**
- * Props for PostsList component
- */
-export interface PostsListProps {
-  posts: Post[];
-  isLoading: boolean;
-  hasMore: boolean;
-  activeForum: { slug: string } | null;
-  onVote: (postId: string, value: 1 | -1, currentVote: 1 | -1 | null) => void;
-  onLoadMore: () => void;
-}

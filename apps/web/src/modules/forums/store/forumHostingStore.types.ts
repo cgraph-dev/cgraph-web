@@ -201,7 +201,7 @@ export interface ForumHostingState {
 
   // Actions - Threads
   fetchThreads: (boardId: string, opts?: ThreadListOptions) => Promise<void>;
-  fetchRecentThreads: (forumId: string, limit?: number) => Promise<void>;
+  fetchRecentThreads: (forumId: string, opts?: ThreadListOptions) => Promise<void>;
   fetchThread: (threadId: string) => Promise<Thread>;
   createThread: (boardId: string, data: CreateThreadData) => Promise<Thread>;
   updateThread: (threadId: string, data: Partial<CreateThreadData>) => Promise<Thread>;

@@ -48,8 +48,14 @@ export function ForumBoardView() {
     setMemberSort,
     isOwner,
     isAuthenticated,
+    threadsHasNextPage,
+    membersHasNextPage,
     handleSubscribe,
     handleVote,
+    refreshThreads,
+    loadMoreThreads,
+    refreshMembers,
+    loadMoreMembers,
   } = useForumBoardView();
 
   if (isLoadingForum) {
@@ -115,7 +121,14 @@ export function ForumBoardView() {
         )}
 
         {activeTab === 'threads' && (
-          <ThreadsList threads={threads} forumSlug={forum.slug} isLoading={isLoadingThreads} />
+          <ThreadsList
+            threads={threads}
+            forumSlug={forum.slug}
+            isLoading={isLoadingThreads}
+            hasNextPage={threadsHasNextPage}
+            onRefresh={refreshThreads}
+            onLoadMore={loadMoreThreads}
+          />
         )}
 
         {activeTab === 'members' && (
@@ -126,6 +139,9 @@ export function ForumBoardView() {
             onSearchChange={setMemberSearch}
             sort={memberSort}
             onSortChange={setMemberSort}
+            hasNextPage={membersHasNextPage}
+            onRefresh={refreshMembers}
+            onLoadMore={loadMoreMembers}
           />
         )}
       </div>
