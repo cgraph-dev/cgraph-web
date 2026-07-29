@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   readonly label?: string;
@@ -23,12 +23,13 @@ export function Input({
   ref,
   ...props
 }: InputProps & { ref?: React.Ref<HTMLInputElement> }) {
-  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const inputId = id ?? `input-${generatedId}`;
 
   const sizeStyles: Record<typeof size, string> = {
-    sm: 'py-1.5 text-sm',
-    md: 'py-2 text-sm',
-    lg: 'py-3 text-base',
+    sm: 'min-h-9 py-1.5 text-sm',
+    md: 'min-h-10 py-2 text-sm',
+    lg: 'min-h-11 py-2.5 text-base',
   };
 
   const paddingLeft = leftIcon ? 'pl-10' : 'pl-3';
@@ -54,11 +55,10 @@ export function Input({
         <input
           ref={ref}
           id={inputId}
-          className={`block rounded-xl border shadow-sm transition-all duration-200 ${sizeStyles[size]} ${paddingLeft} ${paddingRight} ${fullWidth ? 'w-full' : ''} ${
-            error
-              ? 'border-red-500/60 text-red-400 placeholder-red-400/40 focus:border-red-500 focus:shadow-[0_0_0_2px_rgba(239,68,68,0.15),0_0_20px_rgba(239,68,68,0.08)] focus:ring-red-500/20'
-              : 'focus:border-[var(--color-brand-purple)]/50 focus:ring-[var(--color-brand-purple)]/20 border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-white placeholder-[var(--token-text-muted)] hover:border-[var(--token-card-border)] focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--color-brand-purple)_15%,transparent),0_0_20px_color-mix(in_srgb,var(--color-brand-purple)_8%,transparent)] focus:ring-2'
-          } focus:outline-none focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 ${className} `}
+          className={`cgraph-field block ${sizeStyles[size]} ${paddingLeft} ${paddingRight} ${fullWidth ? 'w-full' : ''} disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+          data-cgraph-material="recessed"
+          data-cgraph-state={error ? 'error' : props.disabled ? 'disabled' : 'idle'}
+          data-cgraph-surface="field"
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           {...props}
@@ -99,7 +99,8 @@ export function Textarea({
   ref,
   ...props
 }: TextareaProps & { ref?: React.Ref<HTMLTextAreaElement> }) {
-  const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const textareaId = id ?? `textarea-${generatedId}`;
 
   return (
     <div className={fullWidth ? 'w-full' : ''}>
@@ -115,11 +116,10 @@ export function Textarea({
       <textarea
         ref={ref}
         id={textareaId}
-        className={`block rounded-lg border px-3 py-2 text-sm shadow-sm ${fullWidth ? 'w-full' : ''} ${
-          error
-            ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500 dark:border-red-600 dark:text-red-400'
-            : 'focus:border-[var(--color-brand-purple)]/50 focus:ring-[var(--color-brand-purple)]/20 border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-white'
-        } min-h-[100px] resize-y focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-[var(--token-bg-primary)] disabled:opacity-50 ${className} `}
+        className={`cgraph-field block min-h-[100px] resize-y px-3 py-2 text-sm ${fullWidth ? 'w-full' : ''} disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        data-cgraph-material="recessed"
+        data-cgraph-state={error ? 'error' : props.disabled ? 'disabled' : 'idle'}
+        data-cgraph-surface="field"
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${textareaId}-error` : hint ? `${textareaId}-hint` : undefined}
         {...props}
@@ -158,7 +158,8 @@ export function Select({
   ref,
   ...props
 }: SelectProps & { ref?: React.Ref<HTMLSelectElement> }) {
-  const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const selectId = id ?? `select-${generatedId}`;
 
   return (
     <div className={fullWidth ? 'w-full' : ''}>
@@ -174,11 +175,10 @@ export function Select({
       <select
         ref={ref}
         id={selectId}
-        className={`block rounded-lg border px-3 py-2 text-sm shadow-sm ${fullWidth ? 'w-full' : ''} ${
-          error
-            ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500 dark:border-red-600 dark:text-red-400'
-            : 'focus:border-[var(--color-brand-purple)]/50 focus:ring-[var(--color-brand-purple)]/20 border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] text-white'
-        } focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-[var(--token-bg-primary)] disabled:opacity-50 ${className} `}
+        className={`cgraph-field block min-h-10 px-3 py-2 text-sm ${fullWidth ? 'w-full' : ''} disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        data-cgraph-material="recessed"
+        data-cgraph-state={error ? 'error' : props.disabled ? 'disabled' : 'idle'}
+        data-cgraph-surface="field"
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${selectId}-error` : hint ? `${selectId}-hint` : undefined}
         {...props}

@@ -51,14 +51,18 @@ describe('Input', () => {
   it('applies error styling when error is set', () => {
     render(<Input error="Invalid input" data-testid="err-input" />);
     const input = screen.getByTestId('err-input');
-    expect(input.className).toContain('border-red-500/60');
+    expect(input).toHaveClass('cgraph-field');
+    expect(input).toHaveAttribute('data-cgraph-state', 'error');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('applies normal border when no error', () => {
+  it('applies the canonical recessed field contract when no error', () => {
     render(<Input data-testid="ok-input" />);
     const input = screen.getByTestId('ok-input');
-    expect(input.className).toContain('border-[var(--token-card-border)]');
-    expect(input.className).not.toContain('border-red-500/60');
+    expect(input).toHaveClass('cgraph-field');
+    expect(input).toHaveAttribute('data-cgraph-material', 'recessed');
+    expect(input).toHaveAttribute('data-cgraph-surface', 'field');
+    expect(input).toHaveAttribute('data-cgraph-state', 'idle');
   });
 
   it('error message has error color', () => {
@@ -85,6 +89,15 @@ describe('Input', () => {
       target: { value: 'hello' },
     });
     expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps its generated id stable across rerenders', () => {
+    const { rerender } = render(<Input label="Username" value="" readOnly />);
+    const firstId = screen.getByLabelText('Username').id;
+
+    rerender(<Input label="Username" value="trick" readOnly />);
+
+    expect(screen.getByLabelText('Username')).toHaveAttribute('id', firstId);
   });
 
   it('has the correct function name', () => {

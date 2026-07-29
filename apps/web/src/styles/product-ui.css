@@ -277,6 +277,22 @@
     inset 0 2px 6px rgba(0, 0, 0, 0.16);
 }
 
+.cgraph-field[data-cgraph-state='error'],
+.cgraph-field[aria-invalid='true'] {
+  border-color: color-mix(in srgb, var(--token-feedback-error) 64%, var(--product-line));
+  color: var(--token-feedback-error);
+}
+
+.cgraph-field[data-cgraph-state='error']:focus,
+.cgraph-field[data-cgraph-state='error']:focus-visible,
+.cgraph-field[aria-invalid='true']:focus,
+.cgraph-field[aria-invalid='true']:focus-visible {
+  border-color: var(--token-feedback-error);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--token-feedback-error) 14%, transparent),
+    inset 0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
 .cgraph-segmented {
   display: inline-flex;
   min-height: var(--product-control-height);
