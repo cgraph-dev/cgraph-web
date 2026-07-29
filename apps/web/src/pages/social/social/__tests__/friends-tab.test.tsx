@@ -22,6 +22,14 @@ vi.mock('react-router-dom', async () => {
 vi.mock('motion/react', () => ({
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   motion: {
+    button: ({ children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => {
+      const {
+        whileTap: _whileTap,
+        transition: _transition,
+        ...domProps
+      } = rest;
+      return <button {...domProps}>{children}</button>;
+    },
     div: ({ children, ...rest }: Record<string, unknown> & { children?: React.ReactNode }) => {
       const {
         initial: _initial,
@@ -35,7 +43,10 @@ vi.mock('motion/react', () => ({
   },
 }));
 
-vi.mock('@/hooks/useReducedMotion', () => ({ useReducedMotion: () => true }));
+vi.mock('@/hooks/useReducedMotion', () => ({
+  useReducedMotion: () => true,
+  useAnimationIntensity: () => 0,
+}));
 
 vi.mock('@/modules/social/store', () => ({
   useFriendStore: (selector: (state: typeof friendStoreState) => unknown) => selector(friendStoreState),
@@ -176,6 +187,9 @@ describe('FriendsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Block' }));
     await waitFor(() => expect(onBlockUser).toHaveBeenCalledWith('friend-1'));
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Could not block Alice Example. Try again.'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Block' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
