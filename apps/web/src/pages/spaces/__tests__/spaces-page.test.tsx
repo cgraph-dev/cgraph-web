@@ -46,6 +46,9 @@ vi.mock('motion/react', () => ({
     }: PropsWithChildren<Record<string, unknown>>) => (
       <button {...props}>{children}</button>
     ),
+    span: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => (
+      <span {...props}>{children}</span>
+    ),
   },
 }));
 
@@ -59,10 +62,6 @@ vi.mock('@/modules/auth/store', () => ({
 
 vi.mock('@/modules/chat/store/chatStore.impl', () => ({
   useChatStore: () => ({ conversations: [], fetchConversations: mocks.fetchConversations }),
-}));
-
-vi.mock('@/modules/chat/components/spaces/space-filter-editor', () => ({
-  SpaceFilterEditor: () => <div>Space filters</div>,
 }));
 
 vi.mock('@/modules/chat/components/conversation-list', () => ({
@@ -117,18 +116,59 @@ describe('SpacesPage', () => {
     await user.click(screen.getByRole('button', { name: 'Edit Priority' }));
     await user.clear(screen.getByRole('textbox', { name: 'Space name' }));
     await user.type(screen.getByRole('textbox', { name: 'Space name' }), 'Work');
+    await user.click(screen.getByRole('switch', { name: 'Include direct conversations' }));
+    await user.click(screen.getByRole('switch', { name: 'Include group conversations' }));
+    await user.click(screen.getByRole('switch', { name: 'Show only unread' }));
+    await user.click(screen.getByRole('switch', { name: 'Show muted chats' }));
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
 
     await waitFor(() => {
       expect(mocks.patch).toHaveBeenCalledWith('/api/v1/spaces/space-1', {
         name: 'Work',
         emoji: 'p',
-        include_all_individual: true,
-        include_all_groups: false,
+        include_all_individual: false,
+        include_all_groups: true,
+        show_only_unread: false,
+        show_muted: true,
+      });
+    });
+  });
+
+  it('creates a Space with the exact server filter contract', async () => {
+    mocks.post.mockResolvedValue({
+      data: {
+        ...space,
+        id: 'space-3',
+        name: 'Unread',
+        emoji: 'u',
+        includeAllIndividual: false,
+        includeAllGroups: true,
+        showOnlyUnread: true,
+        showMuted: false,
+      },
+    });
+    renderSpaces();
+    const user = userEvent.setup();
+
+    await screen.findByRole('heading', { name: 'Priority' });
+    await user.type(screen.getByRole('textbox', { name: 'Space icon' }), 'u');
+    await user.type(screen.getByRole('textbox', { name: 'Space name' }), 'Unread');
+    await user.click(screen.getByRole('switch', { name: 'Include direct conversations' }));
+    await user.click(screen.getByRole('switch', { name: 'Show only unread' }));
+    await user.click(screen.getByRole('switch', { name: 'Show muted chats' }));
+    await user.click(screen.getByRole('button', { name: 'Create Space' }));
+
+    await waitFor(() => {
+      expect(mocks.post).toHaveBeenCalledWith('/api/v1/spaces', {
+        name: 'Unread',
+        emoji: 'u',
+        include_all_individual: false,
+        include_all_groups: true,
         show_only_unread: true,
         show_muted: false,
       });
     });
+    expect(screen.getByTestId('location')).toHaveTextContent('/spaces/space-3');
   });
 
   it('requires confirmation before deleting a selected Space', async () => {
