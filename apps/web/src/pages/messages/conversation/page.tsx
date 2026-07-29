@@ -2,9 +2,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MobileOnlyFeature } from '@/components/mobile-only-feature';
-import { CloudConversation } from '@/modules/chat/components/cloud-conversation';
+import {
+  CloudConversation,
+  ConversationLoadingState,
+} from '@/modules/chat/components/cloud-conversation';
 import { useChatStore } from '@/modules/chat/store/chatStore.impl';
-import { LoadingSpinner } from '@/pages/messages/messages/empty-states';
 
 /**
  * Direct-message conversation route.
@@ -65,13 +67,7 @@ export default function Conversation(): ReactNode {
     return (
       <div className="flex h-full min-w-0 flex-1 flex-col">
         {mobileBackHeader}
-        <div
-          className="flex min-h-0 flex-1 items-center justify-center"
-          role="status"
-          aria-label="Loading conversation"
-        >
-          <LoadingSpinner />
-        </div>
+        <ConversationLoadingState />
       </div>
     );
   }

@@ -63,7 +63,9 @@ vi.mock('@/modules/chat/controllers/cloud-conversation', () => ({
 
 vi.mock('../conversation-header', () => ({ ConversationHeader: () => <div>header</div> }));
 vi.mock('../message-input-area', () => ({ MessageInputArea: () => <div>composer</div> }));
-vi.mock('../loading-spinner', () => ({ LoadingSpinner: () => <div>loading</div> }));
+vi.mock('../conversation-loading-state', () => ({
+  ConversationLoadingState: () => <div>loading</div>,
+}));
 vi.mock('@/modules/chat/components', () => ({
   DEFAULT_UI_PREFERENCES: {},
   MessageList: () => <div>messages</div>,

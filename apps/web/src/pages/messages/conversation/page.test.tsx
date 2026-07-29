@@ -5,6 +5,9 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 vi.mock('@/modules/chat/components/cloud-conversation', () => ({
   CloudConversation: () => <div data-testid="cloud-conversation">cloud-ui</div>,
+  ConversationLoadingState: ({ label = 'Loading conversation' }: { readonly label?: string }) => (
+    <div role="status" aria-label={label} />
+  ),
 }));
 
 vi.mock('@/components/mobile-only-feature', () => ({

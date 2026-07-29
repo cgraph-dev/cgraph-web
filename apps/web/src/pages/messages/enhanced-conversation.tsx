@@ -13,7 +13,7 @@ export {
   ConversationHeader,
   MessageInputArea,
   TypingIndicator,
-  LoadingSpinner,
+  ConversationLoadingState,
   useEnhancedConversation,
 } from '@/modules/chat/components/cloud-conversation';
 

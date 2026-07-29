@@ -7,7 +7,7 @@ import { ArrowLeftIcon, ArrowPathIcon, XMarkIcon } from '@heroicons/react/24/out
 import { useCloudConversationController } from '@/modules/chat/controllers/cloud-conversation';
 import { ConversationHeader } from './conversation-header';
 import { MessageInputArea } from './message-input-area';
-import { LoadingSpinner } from './loading-spinner';
+import { ConversationLoadingState } from './conversation-loading-state';
 import { ConversationSurface, MessageList, DEFAULT_UI_PREFERENCES } from '@/modules/chat/components';
 import { BatchActionBar } from '@/modules/chat/components/batch-actions/batch-action-bar';
 import { MessageRequestPanel } from '@/modules/chat/components/message-request-panel';
@@ -260,7 +260,7 @@ export default function CloudConversation() {
             Conversation
           </span>
         </header>
-        <LoadingSpinner />
+        <ConversationLoadingState />
       </div>
     );
   }

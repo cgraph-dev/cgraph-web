@@ -35,7 +35,7 @@ export type { ConversationSurfaceProps } from './conversation-surface';
 export {
   CloudConversation,
   EnhancedConversation,
-  LoadingSpinner as CloudConversationLoadingSpinner,
+  ConversationLoadingState,
 } from './cloud-conversation';
 export { TypingIndicator } from './typing-indicator';
 // Animation Components

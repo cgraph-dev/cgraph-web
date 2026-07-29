@@ -7,7 +7,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { BookmarkIcon } from '@heroicons/react/24/solid';
 import { http } from '@/lib/api-client';
 import { ensureObject } from '@/lib/api-utils';
 import { normalizeConversation } from '@/lib/api-utils/normalizers';
@@ -15,7 +14,7 @@ import { createLogger } from '@/lib/logger';
 import { MobileOnlyFeature } from '@/components/mobile-only-feature';
 import {
   CloudConversation,
-  LoadingSpinner,
+  ConversationLoadingState,
 } from '@/modules/chat/components/cloud-conversation';
 import {
   toConversation,
@@ -106,18 +105,7 @@ export default function VaultPage() {
   }
 
   if (!conversationId || (status === 'loading' && !conversation)) {
-    return (
-      <div
-        className="flex h-full min-h-[60vh] flex-col items-center justify-center gap-4 text-white"
-        role="status"
-        aria-label="Opening Vault"
-      >
-        <div className="border-primary-500/30 bg-primary-500/10 rounded-full border p-4">
-          <BookmarkIcon className="h-8 w-8 text-primary-300" />
-        </div>
-        <LoadingSpinner />
-      </div>
-    );
+    return <ConversationLoadingState label="Opening Vault" />;
   }
 
   if (!conversation?.isNoteToSelf) {
