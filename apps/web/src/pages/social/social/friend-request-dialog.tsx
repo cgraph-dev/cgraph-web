@@ -1,6 +1,7 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
-import { AtSymbolIcon, UserPlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { type FormEvent, useEffect, useState } from 'react';
+import { AtSign, UserPlus, X } from 'lucide-react';
 
+import { Button, IconButton } from '@/components/ui/button';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { useFriendStore } from '@/modules/social/store';
 import {
@@ -11,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 interface FriendRequestDialogProps {
   open: boolean;
@@ -28,7 +30,7 @@ export function FriendRequestDialog({ open, onOpenChange }: FriendRequestDialogP
   const sendRequest = useFriendStore((state) => state.sendRequest);
   const error = useFriendStore((state) => state.error);
   const clearError = useFriendStore((state) => state.clearError);
-  const normalizedIdentifier = useMemo(() => normalizeIdentifier(identifier), [identifier]);
+  const normalizedIdentifier = normalizeIdentifier(identifier);
   const canSubmit = normalizedIdentifier.length >= 2 && !isSubmitting;
 
   useEffect(() => {
@@ -63,8 +65,12 @@ export function FriendRequestDialog({ open, onOpenChange }: FriendRequestDialogP
       >
         <DialogHeader className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-500/12 text-primary-300">
-              <UserPlusIcon className="h-5 w-5" />
+            <span
+              className="cgraph-section-surface flex h-10 w-10 shrink-0 items-center justify-center text-[var(--token-interactive-primary)]"
+              data-cgraph-material="recessed"
+              aria-hidden="true"
+            >
+              <UserPlus className="h-5 w-5" />
             </span>
             <div className="min-w-0">
               <div id="friend-request-title">
@@ -77,40 +83,35 @@ export function FriendRequestDialog({ open, onOpenChange }: FriendRequestDialogP
               </div>
             </div>
           </div>
-          <button
-            type="button"
+          <IconButton
+            icon={<X />}
             onClick={() => onOpenChange(false)}
-            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg text-white/50 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-            aria-label="Close add friend"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+            className="h-11 w-11 shrink-0"
+            label="Close add friend"
+          />
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <label className="block text-sm font-semibold text-white/75" htmlFor="friend-identifier">
-            Friend identifier
-          </label>
-          <div className="relative mt-2">
-            <AtSymbolIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
-            <input
-              id="friend-identifier"
-              type="text"
-              value={identifier}
-              onChange={(event) => {
-                clearError();
-                setIdentifier(event.target.value);
-              }}
-              placeholder="@handle, #UID, email, or account ID"
-              className="h-11 w-full rounded-lg border border-[var(--token-border-muted)] bg-[var(--token-bg-secondary)] pl-10 pr-3 text-sm text-white placeholder:text-white/30 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/25"
-              autoComplete="off"
-              autoFocus
-            />
-          </div>
+        <form className="pt-4" onSubmit={handleSubmit}>
+          <Input
+            id="friend-identifier"
+            type="text"
+            label="Friend identifier"
+            value={identifier}
+            onChange={(event) => {
+              clearError();
+              setIdentifier(event.target.value);
+            }}
+            placeholder="Handle, UID, email, or ID"
+            leftIcon={<AtSign className="h-4 w-4" />}
+            size="lg"
+            autoComplete="off"
+            autoFocus
+          />
 
           {error ? (
             <p
-              className="mt-3 rounded-lg border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-100"
+              className="cgraph-section-surface mt-3 border-[color-mix(in_srgb,var(--token-feedback-error)_35%,transparent)] bg-[color-mix(in_srgb,var(--token-feedback-error)_10%,transparent)] px-3 py-2 text-sm text-[var(--token-feedback-error)]"
+              data-cgraph-material="recessed"
               role="alert"
             >
               {error}
@@ -118,20 +119,18 @@ export function FriendRequestDialog({ open, onOpenChange }: FriendRequestDialogP
           ) : null}
 
           <DialogFooter>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="h-11 rounded-lg border border-[var(--token-border-muted)] px-4 text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
-            >
+            <Button variant="secondary" onClick={() => onOpenChange(false)} animated={false}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={!canSubmit}
-              className="h-11 rounded-lg bg-primary-600 px-4 text-sm font-semibold text-white hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 disabled:cursor-not-allowed disabled:opacity-50"
+              isLoading={isSubmitting}
+              leftIcon={<UserPlus />}
+              animated={false}
             >
               {isSubmitting ? 'Sending...' : 'Send request'}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
