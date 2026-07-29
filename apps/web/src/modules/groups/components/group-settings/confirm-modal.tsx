@@ -24,7 +24,13 @@ export function ConfirmModal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent ariaLabel={title}>
         <DialogHeader>
-          <DialogTitle className={danger ? 'text-red-400' : 'text-white'}>
+          <DialogTitle
+            className={
+              danger
+                ? 'text-[var(--token-feedback-error)]'
+                : 'text-[var(--token-text-primary)]'
+            }
+          >
             {title}
           </DialogTitle>
           <DialogDescription>{message}</DialogDescription>

@@ -53,12 +53,12 @@ describe('ConfirmModal', () => {
   it('applies danger styling when danger is true', () => {
     render(<ConfirmModal {...defaultProps} />);
     const title = screen.getByText('Delete Channel');
-    expect(title.className).toContain('text-red');
+    expect(title.className).toContain('text-[var(--token-feedback-error)]');
   });
 
   it('applies normal styling when danger is false', () => {
     render(<ConfirmModal {...defaultProps} danger={false} />);
     const title = screen.getByText('Delete Channel');
-    expect(title.className).toContain('text-white');
+    expect(title.className).toContain('text-[var(--token-text-primary)]');
   });
 });
