@@ -1,67 +1,6 @@
-/**
- * NodeGatingSection Component Tests
- *
- * Tests for the node-gating configuration section in group settings.
- * Covers: rendering, toggle behavior, gate type selection, price input,
- * save flow, error handling, and owner-only visibility.
- */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-
-// --- Mocks ---
-
-vi.mock('motion/react', () => ({
-  motion: {
-    div: ({
-      children,
-      onClick,
-      className,
-      whileHover: _whileHover,
-      whileTap: _whileTap,
-      ...rest
-    }: Record<string, unknown> & {
-      children?: React.ReactNode;
-      onClick?: (e: unknown) => void;
-      className?: string;
-      whileHover?: unknown;
-      whileTap?: unknown;
-    }) => (
-      <div onClick={onClick} className={className} {...rest}>
-        {children}
-      </div>
-    ),
-    button: ({
-      children,
-      onClick,
-      disabled,
-      className,
-      'aria-label': ariaLabel,
-      whileHover: _whileHover,
-      whileTap: _whileTap,
-      ...rest
-    }: Record<string, unknown> & {
-      children?: React.ReactNode;
-      onClick?: () => void;
-      disabled?: boolean;
-      className?: string;
-      'aria-label'?: string;
-      whileHover?: unknown;
-      whileTap?: unknown;
-    }) => (
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={className}
-        aria-label={ariaLabel}
-        {...rest}
-      >
-        {children}
-      </button>
-    ),
-  },
-  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-}));
 
 vi.mock('@heroicons/react/24/outline', () => ({
   CurrencyDollarIcon: (props: Record<string, unknown>) => (
@@ -72,14 +11,22 @@ vi.mock('@heroicons/react/24/outline', () => ({
   ),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    log: vi.fn(),
-  }),
-}));
+vi.mock('@/lib/logger', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/logger')>();
+  return {
+    ...actual,
+    createLogger: () => ({
+      debug: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      log: vi.fn(),
+      time: vi.fn(),
+      timeEnd: vi.fn(),
+      breadcrumb: vi.fn(),
+    }),
+  };
+});
 
 vi.mock('@/lib/animations/animation-engine', () => ({
   HapticFeedback: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
@@ -95,8 +42,6 @@ vi.mock('@/modules/groups/store', () => ({
 
 import { NodeGatingSection } from '../node-gating-section';
 import type { Group } from '@/modules/groups/store/group-types';
-
-// --- Helpers ---
 
 function createMockGroup(overrides: Partial<Group> = {}): Group {
   return {
@@ -122,8 +67,6 @@ function createMockGroup(overrides: Partial<Group> = {}): Group {
   };
 }
 
-// --- Tests ---
-
 describe('NodeGatingSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -140,29 +83,32 @@ describe('NodeGatingSection', () => {
     const group = createMockGroup();
     render(<NodeGatingSection group={group} isOwner={true} />);
     expect(screen.getByText('Node-Gated Access')).toBeInTheDocument();
+    expect(document.querySelector('[data-cgraph-surface="card"]')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Toggle node gating' })).toHaveAttribute(
+      'data-cgraph-surface',
+      'control'
+    );
   });
 
   it('renders the toggle in off state for non-gated group', () => {
     const group = createMockGroup({ is_node_gated: false });
     render(<NodeGatingSection group={group} isOwner={true} />);
-    expect(screen.getByText('Require Node Payment to Join')).toBeInTheDocument();
-    // Gate type options should not be visible
-    expect(screen.queryByText('Payment Frequency')).not.toBeInTheDocument();
+    expect(screen.getByText('Require Node payment to join')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Payment frequency')).not.toBeInTheDocument();
   });
 
   it('shows gating options when toggle is enabled', () => {
     const group = createMockGroup({ is_node_gated: false });
     render(<NodeGatingSection group={group} isOwner={true} />);
 
-    // Click the toggle
     const toggle = screen.getByLabelText('Toggle node gating');
     fireEvent.click(toggle);
 
-    // Options should now be visible
-    expect(screen.getByText('Payment Frequency')).toBeInTheDocument();
-    expect(screen.getByText('Weekly')).toBeInTheDocument();
-    expect(screen.getByText('Monthly')).toBeInTheDocument();
-    expect(screen.getByText('Forever')).toBeInTheDocument();
+    const frequency = screen.getByLabelText('Payment frequency');
+    expect(frequency).toHaveValue('monthly');
+    expect(screen.getByRole('option', { name: 'Weekly' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Monthly' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Forever' })).toBeInTheDocument();
   });
 
   it('renders with existing gating settings', () => {
@@ -173,17 +119,26 @@ describe('NodeGatingSection', () => {
     });
     render(<NodeGatingSection group={group} isOwner={true} />);
 
-    expect(screen.getByText('Payment Frequency')).toBeInTheDocument();
+    expect(screen.getByLabelText('Payment frequency')).toHaveValue('monthly');
     const priceInput = screen.getByLabelText('Gate price in nodes');
     expect(priceInput).toHaveValue(50);
+    expect(priceInput).toHaveAttribute('min', '10');
   });
 
   it('shows the 80/20 revenue split info when enabled', () => {
     const group = createMockGroup({ is_node_gated: true, gate_price_nodes: 100 });
     render(<NodeGatingSection group={group} isOwner={true} />);
 
-    expect(screen.getByText('Revenue Split: 80/20')).toBeInTheDocument();
+    expect(screen.getByText('Revenue split: 80/20')).toBeInTheDocument();
     expect(screen.getByText(/You receive 80%/)).toBeInTheDocument();
+  });
+
+  it('matches backend floor-cut math for non-divisible prices', () => {
+    const group = createMockGroup({ is_node_gated: true, gate_price_nodes: 11 });
+    render(<NodeGatingSection group={group} isOwner={true} />);
+
+    expect(screen.getByText(/You receive 80% of each payment \(9 Nodes per member\)/)).toBeInTheDocument();
+    expect(screen.getByText(/platform retains 20% \(2 Nodes\)/)).toBeInTheDocument();
   });
 
   it('updates price input and enforces minimum', () => {
@@ -196,7 +151,6 @@ describe('NodeGatingSection', () => {
 
     const priceInput = screen.getByLabelText('Gate price in nodes');
     fireEvent.change(priceInput, { target: { value: '5' } });
-    // Should set to minimum (10)
     expect(priceInput).toHaveValue(10);
   });
 
@@ -206,11 +160,9 @@ describe('NodeGatingSection', () => {
     });
     render(<NodeGatingSection group={group} isOwner={true} />);
 
-    // Enable gating
     fireEvent.click(screen.getByLabelText('Toggle node gating'));
 
-    // Click save
-    fireEvent.click(screen.getByText('Save Gating Settings'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save gating settings' }));
 
     await waitFor(() => {
       expect(mockUpdateGroup).toHaveBeenCalledWith('g-1', {
@@ -221,20 +173,38 @@ describe('NodeGatingSection', () => {
     });
   });
 
+  it('locks controls while the update is pending', async () => {
+    mockUpdateGroup.mockReturnValue(new Promise(() => {}));
+    const group = createMockGroup({ is_node_gated: false });
+    render(<NodeGatingSection group={group} isOwner={true} />);
+
+    const toggle = screen.getByRole('switch', { name: 'Toggle node gating' });
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByRole('button', { name: 'Save gating settings' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save gating settings' })).toHaveAttribute(
+        'aria-busy',
+        'true'
+      );
+      expect(toggle).toBeDisabled();
+      expect(screen.getByLabelText('Payment frequency')).toBeDisabled();
+      expect(screen.getByLabelText('Gate price in nodes')).toBeDisabled();
+    });
+  });
+
   it('shows error state when save fails', async () => {
     mockUpdateGroup.mockRejectedValue(new Error('Server error'));
 
     const group = createMockGroup({ is_node_gated: false });
     render(<NodeGatingSection group={group} isOwner={true} />);
 
-    // Enable gating
     fireEvent.click(screen.getByLabelText('Toggle node gating'));
 
-    // Click save
-    fireEvent.click(screen.getByText('Save Gating Settings'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save gating settings' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Server error')).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('Server error');
     });
   });
 
@@ -242,10 +212,11 @@ describe('NodeGatingSection', () => {
     const group = createMockGroup({ is_node_gated: true, gate_type: 'monthly' });
     render(<NodeGatingSection group={group} isOwner={true} />);
 
-    fireEvent.click(screen.getByText('Weekly'));
+    fireEvent.change(screen.getByLabelText('Payment frequency'), {
+      target: { value: 'weekly' },
+    });
 
-    // Save button should appear since there is a change
-    expect(screen.getByText('Save Gating Settings')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save gating settings' })).toBeInTheDocument();
   });
 
   it('hides save button when there are no changes', () => {
@@ -256,7 +227,8 @@ describe('NodeGatingSection', () => {
     });
     render(<NodeGatingSection group={group} isOwner={true} />);
 
-    // No changes made, so save button should not be visible
-    expect(screen.queryByText('Save Gating Settings')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Save gating settings' })
+    ).not.toBeInTheDocument();
   });
 });
