@@ -7,6 +7,7 @@
 
 import React, { useState, lazy, Suspense, type ReactNode } from 'react';
 import {
+  ArrowUturnLeftIcon,
   BookmarkIcon,
   CheckIcon,
   EllipsisVerticalIcon,
@@ -26,14 +27,13 @@ import { cn } from '@/lib/utils';
 import type { ChannelMessageItemProps } from './types';
 import type { Role } from '@/modules/groups/store';
 import { formatMessageTime, getAvatarInitial, getDisplayName } from './utils';
+import { Button, IconButton } from '@/components/ui/button';
 
 const EmojiPicker = lazy(() =>
   import('@/modules/chat/components/emoji-picker').then((m) => ({ default: m.EmojiPicker }))
 );
 
-/**
- * Channel Message Item component.
- */
+/** A channel message with its available actions and rich content. */
 export function ChannelMessageItem({
   message,
   showHeader,
@@ -105,22 +105,39 @@ export function ChannelMessageItem({
   }
 
   return (
-    <div
+    <article
       id={`group-message-${message.id}`}
-      className={`group relative flex scroll-mt-24 gap-4 rounded-lg px-4 py-0.5 transition-colors hover:bg-[var(--token-bg-secondary)/0.3] ${
-        showHeader ? 'mt-4' : ''
-      } ${isHighlighted ? 'bg-primary-500/10 ring-primary-400/50 ring-1' : ''}`}
+      aria-label={`Message from ${displayName}`}
+      tabIndex={0}
+      className="cgraph-message-row group relative flex scroll-mt-24 gap-4 px-4 py-0.5"
+      data-header={showHeader || undefined}
+      data-highlighted={isHighlighted || undefined}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => {
         setShowActions(false);
         setShowReactionPicker(false);
         setShowMoreMenu(false);
       }}
+      onFocusCapture={() => setShowActions(true)}
+      onBlurCapture={(event) => {
+        const nextTarget = event.relatedTarget;
+        if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+          setShowActions(false);
+          setShowReactionPicker(false);
+          setShowMoreMenu(false);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          setShowReactionPicker(false);
+          setShowMoreMenu(false);
+        }
+      }}
     >
       {/* Avatar or spacer */}
       <div className="w-10 flex-shrink-0">
         {showHeader && (
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-white/[0.08]">
+          <div className="h-10 w-10 overflow-hidden rounded-full bg-[var(--product-surface-recessed)]">
             {message.author.avatarUrl ? (
               <img
                 src={message.author.avatarUrl}
@@ -128,7 +145,7 @@ export function ChannelMessageItem({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-lg font-bold text-gray-400">
+              <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[var(--token-text-muted)]">
                 {initial}
               </div>
             )}
@@ -147,13 +164,13 @@ export function ChannelMessageItem({
               color={
                 message.author.displayNameColor ??
                 message.author.member?.roles?.[0]?.color ??
-                '#ffffff'
+                'var(--token-text-primary)'
               }
               secondaryColor={message.author.displayNameSecondaryColor ?? undefined}
               className="cursor-pointer hover:underline"
             />
             <RoleBadge role={getTopRole(message.author.member?.roles)} />
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-[var(--token-text-muted)]">
               {formatMessageTime(new Date(message.createdAt))}
             </span>
           </div>
@@ -161,9 +178,9 @@ export function ChannelMessageItem({
 
         {/* Reply preview */}
         {message.replyTo && (
-          <div className="mb-1 flex items-center gap-1 text-xs text-gray-400">
-            <ReplyIcon />
-            <span className="text-primary-400">
+          <div className="mb-1 flex items-center gap-1 text-xs text-[var(--token-text-muted)]">
+            <ArrowUturnLeftIcon className="h-4 w-4" />
+            <span className="text-[var(--token-interactive-primary)]">
               {getDisplayName(message.replyTo.author.username, message.replyTo.author.displayName)}
             </span>
             <span className="max-w-xs truncate">{message.replyTo.content}</span>
@@ -185,41 +202,50 @@ export function ChannelMessageItem({
                   void handleSaveEdit();
                 }
               }}
-              className="focus:border-primary-400/60 min-h-20 w-full resize-y rounded border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors"
+              className="cgraph-field min-h-20 w-full resize-y px-3 py-2 text-sm"
               autoFocus
             />
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                size="sm"
+                animated={false}
+                leftIcon={<CheckIcon />}
                 onClick={() => void handleSaveEdit()}
                 disabled={isActionPending || !editDraft.trim()}
-                className="inline-flex items-center gap-1 rounded bg-primary-500 px-2 py-1 text-xs font-medium text-white hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <CheckIcon className="h-3.5 w-3.5" />
                 Save
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                animated={false}
+                leftIcon={<XMarkIcon />}
                 onClick={handleCancelEdit}
                 disabled={isActionPending}
-                className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-300 hover:bg-white/[0.08] hover:text-white disabled:opacity-50"
               >
-                <XMarkIcon className="h-3.5 w-3.5" />
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
           <div
             className={cn(
               nameplateBubble &&
-                'mt-0.5 w-fit max-w-full rounded-2xl px-3 py-2 text-sm leading-relaxed',
+                'mt-0.5 w-fit max-w-full rounded-[var(--product-radius-lg)] px-3 py-2 text-sm leading-relaxed',
               nameplateBubble?.className
             )}
             style={nameplateBubble?.style}
             data-nameplate-bubble-id={nameplateBubble?.entry.id}
           >
             <ChannelMessageContent message={message} />
-            {message.isEdited && <span className="ml-1 text-[11px] text-gray-500">(edited)</span>}
-            {message.isPinned && <span className="ml-2 text-[11px] text-primary-300">Pinned</span>}
+            {message.isEdited && (
+              <span className="ml-1 text-[11px] text-[var(--token-text-muted)]">(edited)</span>
+            )}
+            {message.isPinned && (
+              <span className="ml-2 text-[11px] text-[var(--token-interactive-primary)]">
+                Pinned
+              </span>
+            )}
             {message.messageType !== 'voice' && message.messageType !== 'audio' && (
               <MessageAttachment message={message} />
             )}
@@ -230,145 +256,132 @@ export function ChannelMessageItem({
         {message.reactions.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {message.reactions.map((reaction) => (
-              <button
+              <Button
                 key={reaction.emoji}
+                variant="ghost"
+                size="sm"
+                animated={false}
+                aria-pressed={reaction.hasReacted}
+                aria-label={`${reaction.hasReacted ? 'Remove' : 'Add'} ${reaction.emoji} reaction (${reaction.count})`}
                 onClick={() => onToggleReaction(reaction.emoji, reaction.hasReacted)}
-                className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors ${
-                  reaction.hasReacted
-                    ? 'border-primary-500/50 bg-primary-600/30 border'
-                    : 'bg-[var(--token-card-bg)/0.6] hover:bg-[var(--token-card-bg)/0.8]'
-                }`}
+                className="cgraph-reaction min-h-8 gap-1 px-2 py-0.5 text-xs"
               >
                 <span>{reaction.emoji}</span>
-                <span className={reaction.hasReacted ? 'text-primary-300' : 'text-gray-400'}>
-                  {reaction.count}
-                </span>
-              </button>
+                <span>{reaction.count}</span>
+              </Button>
             ))}
           </div>
         )}
 
         {/* Thread reply count badge */}
         {threadReplyCount != null && threadReplyCount > 0 && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            animated={false}
+            leftIcon={<ChatBubbleLeftRightIcon />}
             onClick={onOpenThread}
-            className="hover:bg-primary-500/10 mt-1 flex items-center gap-1.5 rounded px-2 py-1 text-xs text-primary-400 transition-colors"
+            className="mt-1 min-h-8 px-2 py-1 text-xs text-[var(--token-interactive-primary)]"
           >
-            <ChatBubbleLeftRightIcon className="h-3.5 w-3.5" />
             <span>
               {threadReplyCount} {threadReplyCount === 1 ? 'reply' : 'replies'}
             </span>
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Actions */}
       {showActions && (
-        <div className="absolute -top-4 right-4 flex items-center gap-0.5 rounded border border-[var(--token-card-border)] bg-[var(--token-card-bg)/0.6] shadow-lg">
-          <button
+        <div
+          className="cgraph-message-toolbar absolute -top-5 right-4 z-10 flex items-center gap-0.5 p-0.5"
+          role="toolbar"
+          aria-label="Message shortcuts"
+        >
+          <IconButton
+            icon={<FaceSmileIcon />}
+            label="React"
+            size="sm"
+            variant={showReactionPicker ? 'secondary' : 'ghost'}
             onClick={() => setShowReactionPicker((prev) => !prev)}
-            className={`p-1.5 hover:bg-[var(--token-card-bg)/0.8] ${
-              showReactionPicker ? 'text-primary-400' : 'text-gray-400 hover:text-white'
-            }`}
-            title="React"
-          >
-            <FaceSmileIcon className="h-4 w-4" />
-          </button>
-          <button
+            aria-pressed={showReactionPicker}
+          />
+          <IconButton
+            icon={<ArrowUturnLeftIcon />}
+            label="Reply"
+            size="sm"
             onClick={onReply}
-            className="p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-white"
-            title="Reply"
-          >
-            <ReplyIcon />
-          </button>
-          <button
+          />
+          <IconButton
+            icon={<ChatBubbleLeftRightIcon />}
+            label="Reply in thread"
+            size="sm"
             onClick={onOpenThread}
-            className="p-1.5 text-gray-400 hover:bg-[var(--token-card-bg)/0.8] hover:text-white"
-            title="Reply in Thread"
-          >
-            <ChatBubbleLeftRightIcon className="h-4 w-4" />
-          </button>
+          />
           {hasMoreActions && (
             <div className="relative">
-              <button
+              <IconButton
+                icon={<EllipsisVerticalIcon />}
+                label="More message actions"
+                size="sm"
+                variant={showMoreMenu ? 'secondary' : 'ghost'}
                 onClick={() => {
                   setShowMoreMenu((prev) => !prev);
                   setShowReactionPicker(false);
                 }}
                 disabled={isActionPending}
-                className={`p-1.5 hover:bg-[var(--token-card-bg)/0.8] ${
-                  showMoreMenu ? 'text-primary-400' : 'text-gray-400 hover:text-white'
-                } disabled:opacity-50`}
-                title="More Actions"
                 aria-haspopup="menu"
                 aria-expanded={showMoreMenu}
-              >
-                <EllipsisVerticalIcon className="h-4 w-4" />
-              </button>
+              />
 
               {showMoreMenu && (
                 <div
                   role="menu"
                   aria-label="Message actions"
-                  className="absolute right-0 top-full z-50 mt-1 w-36 rounded-lg border border-white/10 bg-[var(--token-card-bg)] py-1 shadow-xl"
+                  className="cgraph-dialog-content absolute right-0 top-full z-50 mt-1 w-40 p-1"
                 >
                   {canEdit && (
-                    <button
-                      role="menuitem"
+                    <MessageMenuItem
+                      icon={<PencilSquareIcon />}
+                      label="Edit"
                       onClick={() => {
                         setEditDraft(message.content);
                         setIsEditing(true);
                         setShowMoreMenu(false);
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
-                    >
-                      <PencilSquareIcon className="h-4 w-4" />
-                      Edit
-                    </button>
+                    />
                   )}
                   {canPin && (
-                    <button
-                      role="menuitem"
+                    <MessageMenuItem
+                      icon={<BookmarkIcon />}
+                      label="Pin"
                       onClick={() => void runMessageAction(() => onPinMessage?.())}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
-                    >
-                      <BookmarkIcon className="h-4 w-4" />
-                      Pin
-                    </button>
+                    />
                   )}
                   {onCopyLink && (
-                    <button
-                      role="menuitem"
+                    <MessageMenuItem
+                      icon={<LinkIcon />}
+                      label="Copy link"
                       onClick={() => void runMessageAction(() => onCopyLink())}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
-                    >
-                      <LinkIcon className="h-4 w-4" />
-                      Copy Link
-                    </button>
+                    />
                   )}
                   {onReport && currentUserId && message.authorId !== currentUserId && (
-                    <button
-                      role="menuitem"
+                    <MessageMenuItem
+                      icon={<FlagIcon />}
+                      label="Report"
                       onClick={() => void runMessageAction(() => onReport())}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-gray-200 hover:bg-white/[0.08]"
-                    >
-                      <FlagIcon className="h-4 w-4" />
-                      Report
-                    </button>
+                    />
                   )}
                   {canDelete && (
-                    <button
-                      role="menuitem"
+                    <MessageMenuItem
+                      icon={<TrashIcon />}
+                      label="Delete"
+                      variant="danger"
                       onClick={() => {
                         if (window.confirm('Delete this message?')) {
                           void runMessageAction(() => onDeleteMessage?.());
                         }
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-red-300 hover:bg-red-500/10"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                      Delete
-                    </button>
+                    />
                   )}
                 </div>
               )}
@@ -387,7 +400,34 @@ export function ChannelMessageItem({
           />
         )}
       </Suspense>
-    </div>
+    </article>
+  );
+}
+
+function MessageMenuItem({
+  icon,
+  label,
+  onClick,
+  variant = 'ghost',
+}: {
+  readonly icon: ReactNode;
+  readonly label: string;
+  readonly onClick: () => void;
+  readonly variant?: 'ghost' | 'danger';
+}) {
+  return (
+    <Button
+      role="menuitem"
+      variant={variant}
+      size="sm"
+      animated={false}
+      fullWidth
+      leftIcon={icon}
+      onClick={onClick}
+      className="min-h-9 justify-start border-transparent px-2 shadow-none"
+    >
+      {label}
+    </Button>
   );
 }
 
@@ -410,35 +450,11 @@ function RoleBadge({ role }: { readonly role: Role | null }): React.ReactElement
   if (!role) return null;
   return (
     <span
-      style={{
-        background: `${role.color}20`,
-        color: role.color,
-        borderRadius: '4px',
-        padding: '1px 6px',
-        fontSize: '11px',
-        fontWeight: 500,
-        lineHeight: '1.4',
-        whiteSpace: 'nowrap',
-      }}
+      className="cgraph-role-badge"
+      style={{ backgroundColor: `${role.color}20`, borderColor: `${role.color}52`, color: role.color }}
     >
       {role.name}
     </span>
-  );
-}
-
-/**
- * Reply icon SVG component
- */
-function ReplyIcon() {
-  return (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-      />
-    </svg>
   );
 }
 
@@ -562,7 +578,7 @@ function ChannelMessageContent({
     return (
       <div className="mt-1 inline-flex flex-col items-center gap-1" aria-label={`Sticker ${label}`}>
         <span className="text-5xl leading-none">{emoji}</span>
-        {label && <span className="text-xs text-gray-400">{label}</span>}
+        {label && <span className="text-xs text-[var(--token-text-muted)]">{label}</span>}
       </div>
     );
   }
@@ -580,7 +596,7 @@ function ChannelMessageContent({
           audioUrl={audioUrl}
           duration={metadataNumber(message.metadata, 'duration') ?? 0}
           waveformData={metadataNumberArray(message.metadata, 'waveform') ?? undefined}
-          className="rounded-lg border border-white/10 bg-white/[0.04] p-2"
+          className="cgraph-message-attachment p-2"
         />
       </div>
     );
@@ -605,7 +621,7 @@ function MessageAttachment({ message }: { readonly message: ChannelMessageItemPr
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="mt-2 block max-w-sm overflow-hidden rounded-lg border border-white/10 bg-black/20"
+        className="cgraph-message-attachment mt-2 block max-w-sm overflow-hidden"
       >
         <img src={url} alt={fileName} className="max-h-80 w-full object-cover" loading="lazy" />
       </a>
@@ -617,11 +633,13 @@ function MessageAttachment({ message }: { readonly message: ChannelMessageItemPr
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="mt-2 flex max-w-sm items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-gray-100 transition-colors hover:bg-white/[0.08]"
+      className="cgraph-message-attachment mt-2 flex max-w-sm items-center gap-3 px-3 py-2 text-sm text-[var(--token-text-primary)]"
     >
-      <PaperClipIcon className="h-5 w-5 shrink-0 text-gray-400" />
+      <PaperClipIcon className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]" />
       <span className="min-w-0 flex-1 truncate">{fileName}</span>
-      {displaySize && <span className="shrink-0 text-xs text-gray-500">{displaySize}</span>}
+      {displaySize && (
+        <span className="shrink-0 text-xs text-[var(--token-text-muted)]">{displaySize}</span>
+      )}
     </a>
   );
 }
@@ -633,13 +651,13 @@ function ChannelMarkdown({ content }: { readonly content: string }): ReactNode {
   const blocks = splitCodeBlocks(content);
 
   return (
-    <div className="whitespace-pre-wrap break-words text-gray-100">
+    <div className="whitespace-pre-wrap break-words text-[var(--token-text-primary)]">
       {blocks.map((block, blockIdx) => {
         if (block.type === 'code') {
           return (
             <pre
               key={blockIdx}
-              className="my-1 overflow-x-auto rounded-lg bg-[var(--token-card-bg)] p-3 font-mono text-sm text-emerald-300"
+              className="my-1 overflow-x-auto rounded-[var(--product-radius-md)] bg-[var(--product-surface-recessed)] p-3 font-mono text-sm text-[var(--token-feedback-success)]"
             >
               {block.content.trim()}
             </pre>
@@ -656,7 +674,7 @@ function ChannelMarkdown({ content }: { readonly content: string }): ReactNode {
             return (
               <div
                 key={`${blockIdx}-${lineIdx}`}
-                className="my-0.5 border-l-2 border-indigo-400/60 pl-2.5 italic text-gray-300"
+                className="my-0.5 border-l-2 border-[var(--token-interactive-primary)] pl-2.5 italic text-[var(--token-text-secondary)]"
               >
                 {rendered}
               </div>

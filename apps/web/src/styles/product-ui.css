@@ -249,6 +249,76 @@
   opacity: 0.58;
 }
 
+.cgraph-message-row {
+  border: 1px solid transparent;
+  border-radius: var(--product-radius-md);
+  transition:
+    background-color 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cgraph-message-row[data-header='true'] {
+  margin-top: 16px;
+}
+
+.cgraph-message-row:hover,
+.cgraph-message-row:focus-visible,
+.cgraph-message-row:focus-within {
+  border-color: var(--product-line);
+  background: color-mix(in srgb, var(--token-text-primary) 4%, transparent);
+  outline: none;
+}
+
+.cgraph-message-row[data-highlighted='true'] {
+  border-color: color-mix(in srgb, var(--token-interactive-primary) 42%, var(--product-line));
+  background: color-mix(in srgb, var(--token-interactive-primary) 10%, transparent);
+  box-shadow: inset 3px 0 0 var(--token-interactive-primary);
+}
+
+.cgraph-message-toolbar,
+.cgraph-message-attachment {
+  border: 1px solid var(--product-line);
+  border-radius: var(--product-radius-md);
+  background: var(--product-surface-raised);
+  box-shadow: var(--product-shadow-raised);
+}
+
+.cgraph-message-attachment {
+  box-shadow: none;
+  transition:
+    border-color 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cgraph-message-attachment:hover {
+  border-color: var(--product-line-strong);
+  background: color-mix(in srgb, var(--token-text-primary) 4%, var(--product-surface-raised));
+}
+
+.cgraph-reaction {
+  border: 1px solid var(--product-line);
+  background: var(--product-surface-recessed);
+  color: var(--token-text-secondary);
+  box-shadow: none;
+}
+
+.cgraph-reaction[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--token-interactive-primary) 46%, var(--product-line));
+  background: color-mix(in srgb, var(--token-interactive-primary) 14%, var(--product-surface-recessed));
+  color: var(--token-interactive-primary);
+}
+
+.cgraph-role-badge {
+  padding: 1px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--product-radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
 .cgraph-field {
   min-height: var(--product-control-height);
   border: 1px solid var(--product-line);
