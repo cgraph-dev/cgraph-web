@@ -1,7 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { getPermState, cyclePermState, applyPermChange } from '../permission-utils';
+import { PERMISSION_FLAGS } from '../types';
 
 describe('permission-utils', () => {
+  it('matches the backend channel permission bit contract exactly', () => {
+    expect(Object.fromEntries(PERMISSION_FLAGS.map(({ label, bit }) => [label, bit]))).toEqual({
+      'View Channel': 1,
+      'Send Messages': 2,
+      'Attach Files': 4,
+      'Embed Links': 8,
+      'Add Reactions': 16,
+      'Use External Emoji': 32,
+      'Mention Everyone': 64,
+      'Manage Messages': 128,
+      'Read Message History': 256,
+      Connect: 512,
+      Speak: 1024,
+    });
+  });
+
+  it('uses one unique power-of-two bit per permission', () => {
+    const bits = PERMISSION_FLAGS.map(({ bit }) => bit);
+    expect(new Set(bits).size).toBe(bits.length);
+    expect(bits.every((bit) => bit > 0 && (bit & (bit - 1)) === 0)).toBe(true);
+  });
+
   describe('getPermState', () => {
     const BIT = 0b0100;
 

@@ -8,32 +8,38 @@ interface PermissionRowProps {
   description: string;
   state: PermState;
   onToggle: (bit: number) => void;
+  disabled?: boolean;
 }
 
-/**
- * Permission Row component.
- */
-export function PermissionRow({ bit, label, description, state, onToggle }: PermissionRowProps) {
+export function PermissionRow({
+  bit,
+  label,
+  description,
+  state,
+  onToggle,
+  disabled = false,
+}: PermissionRowProps) {
   return (
-    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-[var(--token-card-bg)/0.6]">
-      <div>
-        <p className="text-sm font-medium text-white">{label}</p>
-        <p className="text-xs text-gray-500">{description}</p>
+    <div className="cgraph-list-row flex items-center justify-between gap-4 bg-[var(--token-bg-secondary)] px-3 py-2">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-[var(--token-text-primary)]">{label}</p>
+        <p className="text-xs text-[var(--token-text-muted)]">{description}</p>
       </div>
       <Button
         variant={state === 'allow' ? 'success' : state === 'deny' ? 'danger' : 'secondary'}
         size="sm"
         animated={false}
+        disabled={disabled}
         onClick={() => onToggle(bit)}
         aria-label={`${label}: ${state}`}
         data-permission-state={state}
         leftIcon={
           state === 'allow' ? (
-            <CheckIcon />
+            <CheckIcon aria-hidden="true" />
           ) : state === 'deny' ? (
-            <XCircleIcon />
+            <XCircleIcon aria-hidden="true" />
           ) : (
-            <MinusIcon />
+            <MinusIcon aria-hidden="true" />
           )
         }
       >

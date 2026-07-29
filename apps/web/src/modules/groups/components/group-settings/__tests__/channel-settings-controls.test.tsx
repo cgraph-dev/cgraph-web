@@ -220,8 +220,9 @@ describe('ChannelPermissionsPanel controls', () => {
     await screen.findByText('Owners');
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Override' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Select a role...' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Moderators' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Role' }), {
+      target: { value: 'moderators' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     await waitFor(() =>
@@ -283,5 +284,49 @@ describe('ChannelPermissionsPanel controls', () => {
     expect(screen.getByRole('dialog', { name: 'Channel Permissions' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close channel permissions' }));
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('shows a recoverable load error without presenting an empty permission state', async () => {
+    apiMocks.get.mockRejectedValue(new Error('offline'));
+
+    render(
+      <ChannelPermissionsPanel
+        groupId="group-1"
+        channelId="general"
+        channelName="general"
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not load channel permissions. Please try again.'
+    );
+    expect(screen.queryByText('No permission overrides.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+  });
+
+  it('keeps an overwrite editable and reports a failed save', async () => {
+    apiMocks.put.mockRejectedValue(new Error('save failed'));
+
+    render(
+      <ChannelPermissionsPanel
+        groupId="group-1"
+        channelId="general"
+        channelName="general"
+        onClose={vi.fn()}
+      />
+    );
+    await screen.findByText('Owners');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Attach Files: inherit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('save failed');
+    expect(screen.getByRole('button', { name: 'Attach Files: allow' })).toBeInTheDocument();
+    expect(apiMocks.put).toHaveBeenCalledWith(
+      '/api/v1/groups/group-1/channels/general/permissions/overwrite-1',
+      { allow: 4, deny: 0 }
+    );
   });
 });

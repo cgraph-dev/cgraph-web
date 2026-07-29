@@ -24,15 +24,11 @@ export interface ChannelPermissionsPanelProps {
 
 export type PermState = 'allow' | 'deny' | 'inherit';
 
-/**
- * Permission flags for the channel permission system.
- * Stored as bitmask integers.
- */
 export const PERMISSION_FLAGS = [
   { bit: 1 << 0, label: 'View Channel', description: 'Allow viewing the channel' },
   { bit: 1 << 1, label: 'Send Messages', description: 'Allow sending messages' },
-  { bit: 1 << 2, label: 'Embed Links', description: 'Allow embedding links' },
-  { bit: 1 << 3, label: 'Attach Files', description: 'Allow attaching files' },
+  { bit: 1 << 2, label: 'Attach Files', description: 'Allow attaching files' },
+  { bit: 1 << 3, label: 'Embed Links', description: 'Allow embedding links' },
   { bit: 1 << 4, label: 'Add Reactions', description: 'Allow adding reactions' },
   { bit: 1 << 5, label: 'Use External Emoji', description: 'Allow external emoji' },
   { bit: 1 << 6, label: 'Mention Everyone', description: 'Allow @everyone mentions' },

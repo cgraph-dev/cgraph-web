@@ -1,13 +1,3 @@
-/**
- * ChannelPermissionsPanel - Manage per-channel permission overwrites
- *
- * Channel permission overrides for roles and members.
- * Uses the permissions API at /api/v1/groups/:group_id/channels/:channel_id/permissions
- *
- * Orchestrator that composes sub-components from ./channel-permissions/
- *
- */
-
 import { useState, useEffect, useCallback } from 'react';
 import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { http } from '@/lib/api-client';
@@ -21,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import Skeleton from '@/components/ui/skeleton';
+import { getGroupPermissionError } from '../../permission-errors';
 
 const logger = createLogger('ChannelPermissions');
 
@@ -39,9 +30,6 @@ import type {
 
 export type { ChannelPermissionsPanelProps } from './channel-permissions/types';
 
-/**
- * Channel Permissions Panel component.
- */
 export function ChannelPermissionsPanel({
   groupId,
   channelId,
@@ -51,7 +39,9 @@ export function ChannelPermissionsPanel({
   const [overwrites, setOverwrites] = useState<PermissionOverwrite[]>([]);
   const [roles, setRoles] = useState<RoleOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+  const [mutationKey, setMutationKey] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addType, setAddType] = useState<'role' | 'member'>('role');
   const [selectedTargetId, setSelectedTargetId] = useState('');
@@ -63,6 +53,7 @@ export function ChannelPermissionsPanel({
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const [permsRes, rolesRes] = await Promise.all([
         http.get(`/api/v1/groups/${groupId}/channels/${channelId}/permissions`),
         http.get(`/api/v1/groups/${groupId}/roles`),
@@ -90,12 +81,13 @@ export function ChannelPermissionsPanel({
           ? rolesData.map((r: Record<string, unknown>) => ({
               id: asString(r.id),
               name: asString(r.name),
-              color: asString(r.color, '#718096'),
+              color: asString(r.color),
             }))
           : []
       );
     } catch (error) {
       logger.error('Failed to fetch channel permissions and roles', error);
+      setLoadError('Could not load channel permissions. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -106,7 +98,9 @@ export function ChannelPermissionsPanel({
   }, [fetchData]);
 
   const handleAdd = async () => {
-    if (!selectedTargetId) return;
+    if (!selectedTargetId || mutationKey) return;
+    setMutationKey('add');
+    setMutationError(null);
     try {
       await http.post(`/api/v1/groups/${groupId}/channels/${channelId}/permissions`, {
         type: addType,
@@ -117,17 +111,27 @@ export function ChannelPermissionsPanel({
       });
       setShowAddForm(false);
       setSelectedTargetId('');
-      fetchData();
+      await fetchData();
     } catch (error) {
       logger.error('Failed to add permission override', error);
+      setMutationError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to add channel overrides.',
+          'Could not add the channel override. Please try again.'
+        )
+      );
+    } finally {
+      setMutationKey(null);
     }
   };
 
   const handleSave = async (overwriteId: string) => {
     const changes = pendingChanges[overwriteId];
-    if (!changes) return;
+    if (!changes || mutationKey) return;
+    setMutationKey(`save:${overwriteId}`);
+    setMutationError(null);
     try {
-      setSaving(true);
       await http.put(`/api/v1/groups/${groupId}/channels/${channelId}/permissions/${overwriteId}`, {
         allow: changes.allow,
         deny: changes.deny,
@@ -138,15 +142,25 @@ export function ChannelPermissionsPanel({
         return next;
       });
       setEditingId(null);
-      fetchData();
+      await fetchData();
     } catch (error) {
       logger.error('Failed to save permission overwrite', error);
+      setMutationError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to update channel overrides.',
+          'Could not save the channel override. Please try again.'
+        )
+      );
     } finally {
-      setSaving(false);
+      setMutationKey(null);
     }
   };
 
   const handleDelete = async (overwriteId: string) => {
+    if (mutationKey) return;
+    setMutationKey(`delete:${overwriteId}`);
+    setMutationError(null);
     try {
       await http.delete(
         `/api/v1/groups/${groupId}/channels/${channelId}/permissions/${overwriteId}`
@@ -154,6 +168,15 @@ export function ChannelPermissionsPanel({
       setOverwrites((prev) => prev.filter((o) => o.id !== overwriteId));
     } catch (error) {
       logger.error('Failed to delete permission overwrite', error);
+      setMutationError(
+        getGroupPermissionError(
+          error,
+          'You do not have permission to remove channel overrides.',
+          'Could not remove the channel override. Please try again.'
+        )
+      );
+    } finally {
+      setMutationKey(null);
     }
   };
 
@@ -172,7 +195,6 @@ export function ChannelPermissionsPanel({
     setPendingChanges((prev) => ({ ...prev, [overwriteId]: updated }));
   };
 
-  // Filter roles not already assigned
   const availableRoles = roles.filter(
     (r) => !overwrites.some((o) => o.type === 'role' && o.roleId === r.id)
   );
@@ -183,16 +205,14 @@ export function ChannelPermissionsPanel({
         ariaLabel="Channel Permissions"
         className="max-h-[85dvh] !max-w-2xl overflow-hidden p-0"
       >
-        {/* Header */}
         <DialogHeader className="mb-0 flex items-center justify-between border-b border-[var(--token-card-border)] px-6 py-4">
           <div>
             <DialogTitle>Channel Permissions</DialogTitle>
-            <p className="text-sm text-gray-400">#{channelName}</p>
+            <p className="text-sm text-[var(--token-text-muted)]">#{channelName}</p>
           </div>
           <IconButton icon={<XMarkIcon />} label="Close channel permissions" onClick={onClose} />
         </DialogHeader>
 
-        {/* Content */}
         <div className="max-h-[calc(85dvh-78px)] overflow-y-auto p-6">
           {loading ? (
             <div className="space-y-3" aria-label="Loading channel permissions" role="status">
@@ -200,13 +220,29 @@ export function ChannelPermissionsPanel({
               <Skeleton variant="rectangular" height={96} />
               <Skeleton variant="rectangular" height={96} />
             </div>
+          ) : loadError ? (
+            <div className="cgraph-section-surface px-4 py-5 text-center" role="alert">
+              <p className="text-sm text-[var(--token-feedback-error)]">{loadError}</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={fetchData}>
+                Retry
+              </Button>
+            </div>
           ) : (
             <div className="space-y-4">
-              {/* Add Overwrite Button */}
+              {mutationError && (
+                <div
+                  role="alert"
+                  className="cgraph-section-surface border-[var(--token-feedback-error)] px-4 py-3 text-sm text-[var(--token-feedback-error)]"
+                >
+                  {mutationError}
+                </div>
+              )}
+
               <div className="flex justify-end">
                 <Button
                   size="sm"
-                  leftIcon={<PlusIcon />}
+                  leftIcon={<PlusIcon aria-hidden="true" />}
+                  disabled={mutationKey !== null}
                   onClick={() => setShowAddForm(true)}
                   aria-expanded={showAddForm}
                 >
@@ -214,7 +250,6 @@ export function ChannelPermissionsPanel({
                 </Button>
               </div>
 
-              {/* Add Override Form */}
               <AddOverrideForm
                 show={showAddForm}
                 addType={addType}
@@ -227,11 +262,11 @@ export function ChannelPermissionsPanel({
                   setShowAddForm(false);
                   setSelectedTargetId('');
                 }}
+                disabled={mutationKey !== null}
               />
 
-              {/* Overwrites List */}
               {overwrites.length === 0 ? (
-                <div className="py-8 text-center text-gray-500">
+                <div className="py-8 text-center text-sm text-[var(--token-text-muted)]">
                   No permission overrides. Channel inherits all permissions from roles.
                 </div>
               ) : (
@@ -244,7 +279,9 @@ export function ChannelPermissionsPanel({
                         overwrite={overwrite}
                         roles={roles}
                         isEditing={editingId === overwrite.id}
-                        saving={saving}
+                        saving={mutationKey === `save:${overwrite.id}`}
+                        deleting={mutationKey === `delete:${overwrite.id}`}
+                        disabled={mutationKey !== null}
                         pendingAllow={changes?.allow ?? overwrite.allow}
                         pendingDeny={changes?.deny ?? overwrite.deny}
                         hasPendingChanges={!!changes}

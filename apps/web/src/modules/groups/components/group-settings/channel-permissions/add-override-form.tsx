@@ -1,8 +1,7 @@
 import { ShieldCheckIcon, UserIcon } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import Card from '@/components/ui/card';
+import { Input, Select } from '@/components/ui/input';
 import type { RoleOption } from './types';
 
 interface AddOverrideFormProps {
@@ -14,11 +13,9 @@ interface AddOverrideFormProps {
   onTargetChange: (id: string) => void;
   onAdd: () => void;
   onCancel: () => void;
+  disabled?: boolean;
 }
 
-/**
- * Add Override Form component.
- */
 export function AddOverrideForm({
   show,
   addType,
@@ -28,16 +25,18 @@ export function AddOverrideForm({
   onTargetChange,
   onAdd,
   onCancel,
+  disabled = false,
 }: AddOverrideFormProps) {
   if (!show) return null;
 
   return (
-    <GlassCard variant="frosted" className="space-y-3 p-4">
+    <Card className="space-y-3">
       <div className="flex gap-3">
         <Button
           variant={addType === 'role' ? 'secondary' : 'outline'}
           size="sm"
-          leftIcon={<ShieldCheckIcon />}
+          leftIcon={<ShieldCheckIcon aria-hidden="true" />}
+          disabled={disabled}
           onClick={() => onTypeChange('role')}
           aria-pressed={addType === 'role'}
         >
@@ -46,7 +45,8 @@ export function AddOverrideForm({
         <Button
           variant={addType === 'member' ? 'secondary' : 'outline'}
           size="sm"
-          leftIcon={<UserIcon />}
+          leftIcon={<UserIcon aria-hidden="true" />}
+          disabled={disabled}
           onClick={() => onTypeChange('member')}
           aria-pressed={addType === 'member'}
         >
@@ -58,9 +58,10 @@ export function AddOverrideForm({
         <Select
           label="Role"
           value={selectedTargetId}
-          onChange={onTargetChange}
+          onChange={(event) => onTargetChange(event.target.value)}
           placeholder="Select a role..."
           options={availableRoles.map((role) => ({ value: role.id, label: role.name }))}
+          disabled={disabled}
         />
       ) : (
         <Input
@@ -68,17 +69,18 @@ export function AddOverrideForm({
           placeholder="Enter member ID..."
           value={selectedTargetId}
           onChange={(e) => onTargetChange(e.target.value)}
+          disabled={disabled}
         />
       )}
 
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={onCancel}>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={disabled}>
           Cancel
         </Button>
-        <Button size="sm" onClick={onAdd} disabled={!selectedTargetId}>
+        <Button size="sm" onClick={onAdd} disabled={disabled || !selectedTargetId}>
           Add
         </Button>
       </div>
-    </GlassCard>
+    </Card>
   );
 }

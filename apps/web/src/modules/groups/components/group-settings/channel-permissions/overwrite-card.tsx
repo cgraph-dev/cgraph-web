@@ -1,6 +1,6 @@
 import { ShieldCheckIcon, UserIcon } from '@heroicons/react/24/outline';
-import { GlassCard } from '@/shared/components/ui';
 import { Button } from '@/components/ui/button';
+import Card from '@/components/ui/card';
 import { PermissionRow } from './permission-row';
 import { getPermState } from './permission-utils';
 import { PERMISSION_FLAGS } from './types';
@@ -11,6 +11,8 @@ interface OverwriteCardProps {
   roles: RoleOption[];
   isEditing: boolean;
   saving: boolean;
+  deleting: boolean;
+  disabled: boolean;
   pendingAllow: number;
   pendingDeny: number;
   hasPendingChanges: boolean;
@@ -27,21 +29,20 @@ function getOverwriteLabel(o: PermissionOverwrite, roles: RoleOption[]): string 
   return o.memberName ?? 'Unknown Member';
 }
 
-function getOverwriteColor(o: PermissionOverwrite, roles: RoleOption[]): string {
+function getOverwriteColor(o: PermissionOverwrite, roles: RoleOption[]): string | undefined {
   if (o.type === 'role' && o.roleId) {
-    return roles.find((r) => r.id === o.roleId)?.color ?? '#718096';
+    return roles.find((r) => r.id === o.roleId)?.color;
   }
-  return '#718096';
+  return undefined;
 }
 
-/**
- * Overwrite Card display component.
- */
 export function OverwriteCard({
   overwrite,
   roles,
   isEditing,
   saving,
+  deleting,
+  disabled,
   pendingAllow,
   pendingDeny,
   hasPendingChanges,
@@ -54,30 +55,47 @@ export function OverwriteCard({
   const label = getOverwriteLabel(overwrite, roles);
 
   return (
-    <GlassCard variant="frosted" className="p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <Card>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           {overwrite.type === 'role' ? (
-            <ShieldCheckIcon className="h-5 w-5" style={{ color }} />
+            <ShieldCheckIcon aria-hidden="true" className="h-5 w-5 shrink-0" style={{ color }} />
           ) : (
-            <UserIcon className="h-5 w-5 text-gray-400" />
+            <UserIcon
+              aria-hidden="true"
+              className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]"
+            />
           )}
-          <span className="font-medium" style={{ color }}>
+          <span
+            className="truncate font-medium text-[var(--token-text-primary)]"
+            style={color ? { color } : undefined}
+          >
             {label}
           </span>
-          <span className="text-xs text-gray-500">({overwrite.type})</span>
+          <span className="text-xs text-[var(--token-text-muted)]">({overwrite.type})</span>
         </div>
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={onToggleEdit} aria-expanded={isEditing}>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={disabled}
+            onClick={onToggleEdit}
+            aria-expanded={isEditing}
+          >
             {isEditing ? 'Collapse' : 'Edit'}
           </Button>
-          <Button variant="danger" size="sm" onClick={onDelete}>
+          <Button
+            variant="danger"
+            size="sm"
+            disabled={disabled}
+            isLoading={deleting}
+            onClick={onDelete}
+          >
             Remove
           </Button>
         </div>
       </div>
 
-      {/* Permissions Grid */}
       {isEditing && (
         <div className="mt-3 space-y-2">
           <div className="grid gap-1.5">
@@ -91,21 +109,21 @@ export function OverwriteCard({
                   description={description}
                   state={state}
                   onToggle={onPermToggle}
+                  disabled={disabled}
                 />
               );
             })}
           </div>
 
-          {/* Save button for this overwrite */}
           {hasPendingChanges && (
             <div className="flex justify-end pt-2">
-              <Button size="sm" onClick={onSave} isLoading={saving}>
+              <Button size="sm" onClick={onSave} isLoading={saving} disabled={disabled}>
                 Save Changes
               </Button>
             </div>
           )}
         </div>
       )}
-    </GlassCard>
+    </Card>
   );
 }
