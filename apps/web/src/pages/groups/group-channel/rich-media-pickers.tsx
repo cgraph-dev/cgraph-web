@@ -67,7 +67,7 @@ export function RichMediaPickers({
         <div
           role="menu"
           aria-label="Sticker picker"
-          className="bg-[var(--token-card-bg)]/95 fixed bottom-24 left-36 z-50 grid w-64 grid-cols-3 gap-2 rounded-xl border border-[var(--token-card-border)] p-3 shadow-2xl backdrop-blur-xl"
+          className="cgraph-dialog-content fixed bottom-24 left-3 right-3 z-50 grid grid-cols-3 gap-2 p-3 sm:left-24 sm:right-auto sm:w-64 lg:left-36"
         >
           {STICKERS.map((sticker) => (
             <button
@@ -75,7 +75,11 @@ export function RichMediaPickers({
               type="button"
               role="menuitem"
               onClick={() => onStickerSelect(sticker)}
-              className="rounded-lg border border-white/10 bg-white/[0.06] p-3 text-2xl transition-colors hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="cgraph-control cgraph-control-secondary flex min-h-12 items-center justify-center p-2 text-2xl"
+              data-cgraph-material="control"
+              data-cgraph-surface="control"
+              data-cgraph-state="idle"
+              data-cgraph-variant="secondary"
               aria-label={`Send sticker ${sticker.label}`}
               title={sticker.label}
             >

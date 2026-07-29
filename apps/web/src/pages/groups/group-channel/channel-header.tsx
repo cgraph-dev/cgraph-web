@@ -4,7 +4,6 @@
  * Header bar with channel info and actions.
  */
 
-import { motion } from 'motion/react';
 import {
   HashtagIcon,
   BookmarkIcon,
@@ -15,6 +14,7 @@ import {
   MegaphoneIcon,
   ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
+import { IconButton } from '@/components/ui/button';
 import type { ChannelHeaderProps } from './types';
 
 const channelIcons = {
@@ -23,11 +23,7 @@ const channelIcons = {
   forum: ChatBubbleLeftRightIcon,
 } as const;
 
-/**
- */
-/**
- * Channel Header component.
- */
+/** Channel identity and actions. */
 export function ChannelHeader({
   channelName,
   channelTopic,
@@ -48,83 +44,72 @@ export function ChannelHeader({
   const NotificationIcon = notificationLevel === 'none' ? BellSlashIcon : BellIcon;
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-2 sm:px-4 lg:h-12">
+    <header className="cgraph-pane-header flex h-14 shrink-0 items-center justify-between px-2 sm:px-4">
       <div className="flex min-w-0 items-center gap-2">
-        <Icon className="h-5 w-5 text-gray-400" />
-        <span className="truncate font-semibold text-white">{channelName}</span>
+        <Icon className="h-5 w-5 text-[var(--token-text-muted)]" />
+        <span className="truncate font-semibold text-[var(--token-text-primary)]">
+          {channelName}
+        </span>
         {channelLabel && (
-          <span className="hidden rounded bg-white/[0.08] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/60 sm:inline">
+          <span className="hidden rounded-md bg-[var(--product-surface-recessed)] px-2 py-0.5 text-[11px] font-semibold uppercase text-[var(--token-text-muted)] sm:inline">
             {channelLabel}
           </span>
         )}
         {channelTopic && (
           <div className="hidden min-w-0 items-center sm:flex">
-            <div className="mx-2 h-5 w-px bg-white/[0.08]" />
-            <span className="max-w-md truncate text-sm text-gray-400">{channelTopic}</span>
+            <div className="mx-2 h-5 w-px bg-[var(--product-line)]" />
+            <span className="max-w-md truncate text-sm text-[var(--token-text-muted)]">
+              {channelTopic}
+            </span>
           </div>
         )}
       </div>
 
-      <div className="flex shrink-0 items-center">
+      <div className="flex shrink-0 items-center gap-0.5">
         {onToggleSearch && (
-          <motion.button
-            whileTap={{ scale: 0.88 }}
+          <IconButton
+            icon={<MagnifyingGlassIcon />}
+            label="Search messages"
+            size="sm"
+            variant={isSearchOpen ? 'secondary' : 'ghost'}
             onClick={onToggleSearch}
-            className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors lg:h-8 lg:w-8 ${
-              isSearchOpen
-                ? 'bg-white/[0.08] text-white'
-                : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
-            }`}
-            title="Search Messages"
             aria-pressed={isSearchOpen}
-          >
-            <MagnifyingGlassIcon className="h-5 w-5" />
-          </motion.button>
+          />
         )}
         {onToggleNotifications && (
-          <motion.button
-            whileTap={{ scale: 0.88 }}
+          <IconButton
+            icon={<NotificationIcon />}
+            label={notificationLevel === 'none' ? 'Unmute channel' : 'Mute channel'}
+            size="sm"
+            variant={notificationLevel === 'none' ? 'danger' : 'ghost'}
             onClick={onToggleNotifications}
             disabled={isSavingNotifications}
-            className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors disabled:cursor-wait disabled:opacity-60 lg:h-8 lg:w-8 ${
-              notificationLevel === 'none'
-                ? 'bg-white/[0.08] text-red-300'
-                : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
-            }`}
-            title={notificationLevel === 'none' ? 'Unmute Channel' : 'Mute Channel'}
             aria-pressed={notificationLevel === 'none'}
-          >
-            <NotificationIcon className="h-5 w-5" />
-          </motion.button>
+          />
         )}
-        <motion.button
-          whileTap={{ scale: 0.88 }}
-          onClick={onTogglePinnedMessages}
-          className={`relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors lg:h-8 lg:w-8 ${
-            showPinnedMessages
-              ? 'bg-white/[0.08] text-white'
-              : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
-          }`}
-          title="Pinned Messages"
-        >
-          <BookmarkIcon className="h-5 w-5" />
+        <span className="relative">
+          <IconButton
+            icon={<BookmarkIcon />}
+            label="Pinned messages"
+            size="sm"
+            variant={showPinnedMessages ? 'secondary' : 'ghost'}
+            onClick={onTogglePinnedMessages}
+            aria-pressed={showPinnedMessages}
+          />
           {(pinnedCount ?? 0) > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary-600 px-1 text-[10px] font-bold text-white">
+            <span className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--token-interactive-primary)] px-1 text-[10px] font-bold text-[var(--token-text-on-primary)]">
               {pinnedCount}
             </span>
           )}
-        </motion.button>
-        <motion.button
-          whileTap={{ scale: 0.88 }}
+        </span>
+        <IconButton
+          icon={<UserGroupIcon />}
+          label={showMembers ? 'Hide members' : 'Show members'}
+          size="sm"
+          variant={showMembers ? 'secondary' : 'ghost'}
           onClick={onToggleMembers}
-          className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors lg:h-8 lg:w-8 ${
-            showMembers
-              ? 'bg-white/[0.08] text-white'
-              : 'text-gray-400 hover:bg-white/[0.08] hover:text-white'
-          }`}
-        >
-          <UserGroupIcon className="h-5 w-5" />
-        </motion.button>
+          aria-pressed={showMembers}
+        />
       </div>
     </header>
   );

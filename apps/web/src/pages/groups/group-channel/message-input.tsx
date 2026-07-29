@@ -11,6 +11,7 @@ import type { MessageInputProps } from './types';
 import { VoiceMessageRecorder } from '@/components/media/voice-message-recorder';
 import { getDisplayName } from './utils';
 import { RichMediaPickers } from './rich-media-pickers';
+import { IconButton } from '@/components/ui/button';
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -105,27 +106,29 @@ export function MessageInput({
   return (
     <>
       {replyTo && (
-        <div className="flex items-center justify-between border-t border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4 py-2">
+        <div className="cgraph-pane flex items-center justify-between border-t px-4 py-2">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-1 rounded-full bg-primary-500" />
+            <div className="h-8 w-1 rounded-full bg-[var(--token-interactive-primary)]" />
             <div>
-              <p className="text-xs text-primary-400">
+              <p className="text-xs text-[var(--token-interactive-primary)]">
                 Replying to {getDisplayName(replyTo.author.username, replyTo.author.displayName)}
               </p>
-              <p className="max-w-md truncate text-sm text-gray-400">{replyTo.content}</p>
+              <p className="max-w-md truncate text-sm text-[var(--token-text-muted)]">
+                {replyTo.content}
+              </p>
             </div>
           </div>
-          <button
+          <IconButton
+            icon={<XMarkIcon />}
+            label="Cancel reply"
+            size="sm"
             onClick={onCancelReply}
-            className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white"
-          >
-            <CloseIcon />
-          </button>
+          />
         </div>
       )}
 
       {attachment && (
-        <div className="flex items-center gap-3 border-t border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] px-4 py-2">
+        <div className="cgraph-pane flex items-center gap-3 border-t px-4 py-2">
           {imagePreviewUrl ? (
             <img
               src={imagePreviewUrl}
@@ -133,21 +136,22 @@ export function MessageInput({
               className="h-16 w-16 rounded-lg object-cover"
             />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-white/[0.08]">
-              <PaperClipIcon className="h-6 w-6 text-gray-400" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--product-surface-recessed)]">
+              <PaperClipIcon className="h-6 w-6 text-[var(--token-text-muted)]" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm text-white">{attachment.name}</p>
-            <p className="text-xs text-gray-400">{formatFileSize(attachment.size)}</p>
+            <p className="truncate text-sm text-[var(--token-text-primary)]">{attachment.name}</p>
+            <p className="text-xs text-[var(--token-text-muted)]">
+              {formatFileSize(attachment.size)}
+            </p>
           </div>
-          <button
+          <IconButton
+            icon={<XMarkIcon />}
+            label="Remove attachment"
+            size="sm"
             onClick={handleClearAttachment}
-            className="rounded p-1 text-gray-400 hover:bg-white/[0.08] hover:text-white"
-            title="Remove attachment"
-          >
-            <XMarkIcon className="h-4 w-4" />
-          </button>
+          />
         </div>
       )}
 
@@ -176,8 +180,8 @@ export function MessageInput({
         accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip"
       />
 
-      <div className="border-t border-[var(--token-border-muted)] p-4">
-        <div className="flex items-end gap-2 rounded-lg bg-[var(--token-card-bg)/0.6] px-4 py-2">
+      <div className="border-t border-[var(--product-line)] p-3 sm:p-4">
+        <div className="cgraph-field flex flex-col gap-1 px-2 py-1 sm:flex-row sm:items-end">
           {isVoiceMode ? (
             <VoiceMessageRecorder
               onComplete={onVoiceComplete}
@@ -187,15 +191,6 @@ export function MessageInput({
             />
           ) : (
             <>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="p-1 text-gray-400 transition-colors hover:text-white"
-                title="Attach file"
-                aria-label="Attach file"
-              >
-                <PaperClipIcon className="h-5 w-5" />
-              </button>
-
               <textarea
                 ref={textareaRef}
                 value={messageInput}
@@ -203,89 +198,81 @@ export function MessageInput({
                 onKeyDown={onKeyDown}
                 placeholder={placeholder ?? `Message #${channelName}`}
                 rows={1}
-                className="max-h-32 flex-1 resize-none bg-transparent text-white placeholder-white/30 focus:outline-none"
+                className="max-h-32 min-h-10 w-full min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-[var(--token-text-primary)] placeholder:text-[var(--token-text-muted)] focus:outline-none"
                 style={{ minHeight: '24px' }}
               />
 
-              <button
-                onClick={() => {
-                  setShowEmojiPicker((prev) => !prev);
-                  setShowGifPicker(false);
-                  setShowStickerPicker(false);
-                }}
-                className={`p-1 transition-colors ${
-                  showEmojiPicker ? 'text-primary-400' : 'text-gray-400 hover:text-white'
-                }`}
-                title="Add emoji"
-                aria-label="Open emoji picker"
-              >
-                <FaceSmileIcon className="h-5 w-5" />
-              </button>
+              <div className="flex shrink-0 items-center justify-between gap-0.5 sm:justify-start">
+                <IconButton
+                  icon={<PaperClipIcon />}
+                  label="Attach file"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                />
 
-              <button
-                onClick={() => {
-                  setShowStickerPicker((prev) => !prev);
-                  setShowEmojiPicker(false);
-                  setShowGifPicker(false);
-                }}
-                className={`p-1 transition-colors ${
-                  showStickerPicker ? 'text-primary-400' : 'text-gray-400 hover:text-white'
-                }`}
-                title="Send sticker"
-                aria-label="Open sticker picker"
-              >
-                <FaceSmileIcon className="h-5 w-5" />
-              </button>
+                <IconButton
+                  icon={<FaceSmileIcon />}
+                  label="Open emoji picker"
+                  size="sm"
+                  variant={showEmojiPicker ? 'secondary' : 'ghost'}
+                  onClick={() => {
+                    setShowEmojiPicker((prev) => !prev);
+                    setShowGifPicker(false);
+                    setShowStickerPicker(false);
+                  }}
+                  aria-pressed={showEmojiPicker}
+                />
 
-              <button
-                onClick={() => {
-                  setShowGifPicker((prev) => !prev);
-                  setShowEmojiPicker(false);
-                  setShowStickerPicker(false);
-                }}
-                className={`p-1 transition-colors ${
-                  showGifPicker ? 'text-primary-400' : 'text-gray-400 hover:text-white'
-                }`}
-                title="Send GIF"
-                aria-label="Open GIF picker"
-              >
-                <SparklesIcon className="h-5 w-5" />
-              </button>
+                <IconButton
+                  icon={<FaceSmileIcon />}
+                  label="Open sticker picker"
+                  size="sm"
+                  variant={showStickerPicker ? 'secondary' : 'ghost'}
+                  onClick={() => {
+                    setShowStickerPicker((prev) => !prev);
+                    setShowEmojiPicker(false);
+                    setShowGifPicker(false);
+                  }}
+                  aria-pressed={showStickerPicker}
+                />
 
-              <button
-                onClick={() => {
-                  closeRichPickers();
-                  onVoiceModeChange(true);
-                }}
-                disabled={isSending}
-                className="p-1 text-gray-400 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                title="Record voice message"
-                aria-label="Record voice message"
-              >
-                <MicrophoneIcon className="h-5 w-5" />
-              </button>
+                <IconButton
+                  icon={<SparklesIcon />}
+                  label="Open GIF picker"
+                  size="sm"
+                  variant={showGifPicker ? 'secondary' : 'ghost'}
+                  onClick={() => {
+                    setShowGifPicker((prev) => !prev);
+                    setShowEmojiPicker(false);
+                    setShowStickerPicker(false);
+                  }}
+                  aria-pressed={showGifPicker}
+                />
 
-              <button
-                onClick={onSend}
-                disabled={!canSend}
-                className="p-1 text-primary-400 transition-colors hover:text-primary-300 disabled:cursor-not-allowed disabled:opacity-50"
-                title="Send message"
-                aria-label="Send message"
-              >
-                <PaperAirplaneIcon className="h-5 w-5" />
-              </button>
+                <IconButton
+                  icon={<MicrophoneIcon />}
+                  label="Record voice message"
+                  size="sm"
+                  onClick={() => {
+                    closeRichPickers();
+                    onVoiceModeChange(true);
+                  }}
+                  disabled={isSending}
+                />
+
+                <IconButton
+                  icon={<PaperAirplaneIcon />}
+                  label="Send message"
+                  size="sm"
+                  variant="primary"
+                  onClick={onSend}
+                  disabled={!canSend}
+                />
+              </div>
             </>
           )}
         </div>
       </div>
     </>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-    </svg>
   );
 }
