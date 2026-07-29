@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Search } from 'lucide-react';
 import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { Button, IconButton } from '@/components/ui/button';
 import {
@@ -119,16 +120,20 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
         </DialogHeader>
 
         <div className="space-y-4 px-5 pt-4">
-          <div className="relative">
+          <div className="cgraph-search-field relative">
             <input
               type="text"
               placeholder="Search users..."
+              aria-label="Search users"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="cgraph-field peer w-full pl-9 pr-4 text-sm"
+              className="cgraph-field w-full pl-10 pr-4 text-sm"
               autoFocus
             />
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
+            <Search
+              aria-hidden="true"
+              className="cgraph-search-icon pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+            />
           </div>
 
           {selectedUsers.length > 0 && (

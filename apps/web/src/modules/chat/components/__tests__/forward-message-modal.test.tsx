@@ -176,9 +176,16 @@ describe('ForwardMessageModal', () => {
     expect(screen.getByText('Group')).toBeInTheDocument();
   });
 
-  it('has search input', () => {
+  it('uses the shared search material', () => {
     render(<ForwardMessageModal {...defaultProps} />);
-    expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+
+    const input = screen.getByRole('textbox', { name: 'Search conversations to forward' });
+    expect(input).toHaveClass('cgraph-field');
+    expect(input.parentElement).toHaveClass('cgraph-search-field');
+    expect(input.parentElement?.querySelector('.cgraph-search-icon')).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    );
   });
 
   it('filters conversations by search query', () => {

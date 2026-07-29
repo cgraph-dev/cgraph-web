@@ -11,9 +11,9 @@ const logger = createLogger('ForwardMessageModal');
 import {
   PaperAirplaneIcon,
   XMarkIcon,
-  MagnifyingGlassIcon,
   CheckIcon,
 } from '@heroicons/react/24/outline';
+import { Search } from 'lucide-react';
 import { GlassCard } from '@/shared/components/ui';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { useChatStore, type Message } from '@/modules/chat/store/chatStore.impl';
@@ -211,15 +211,19 @@ export function ForwardMessageModal({
 
                 {/* Search */}
                 <div className="mb-4">
-                  <div className="relative">
+                  <div className="cgraph-search-field relative">
                     <input
                       type="text"
                       placeholder="Search conversations..."
+                      aria-label="Search conversations to forward"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="focus:border-primary-500/40 focus:ring-primary-500/10 peer w-full rounded-xl border border-[var(--token-border-muted)] bg-[var(--token-card-bg)/0.4] py-2 pl-10 pr-4 text-sm text-white shadow-inner shadow-black/20 backdrop-blur-xl transition-all duration-200 placeholder:text-white/20 focus:bg-[var(--token-card-bg)/0.6] focus:outline-none focus:ring-4"
+                      className="cgraph-field w-full pl-10 pr-4 text-sm"
                     />
-                    <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/20 transition-all duration-200 peer-focus:text-primary-400" />
+                    <Search
+                      aria-hidden="true"
+                      className="cgraph-search-icon pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2"
+                    />
                   </div>
                 </div>
 
