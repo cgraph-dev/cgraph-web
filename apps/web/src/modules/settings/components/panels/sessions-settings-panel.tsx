@@ -15,6 +15,7 @@ import {
   GlassCard,
 } from '@/shared/components/ui';
 import { useSessions } from '@/modules/auth/hooks';
+import { InlineLoadingSpinner } from '@/components/feedback/loading-spinner';
 import { tweens } from '@/lib/animation-presets';
 import { FADE_UP } from '@/lib/animations/transitions';
 
@@ -100,7 +101,7 @@ export function SessionsSettingsPanel() {
   if (isLoading && sessions.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+        <InlineLoadingSpinner label="Loading active sessions" size="lg" />
       </div>
     );
   }

@@ -87,6 +87,17 @@ describe('BlockedUsersSettings', () => {
     expect(screen.getByText('51 blocked')).toBeInTheDocument();
   });
 
+  it('announces the initial dialog loading state', () => {
+    profileStore.blockedUsers = [];
+    profileStore.isLoadingBlocked = true;
+    profileStore.fetchBlockedUsers.mockImplementation(() => new Promise(() => undefined));
+
+    renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Manage' }));
+
+    expect(screen.getByRole('status', { name: 'Loading blocked users' })).toBeInTheDocument();
+  });
+
   it('loads the next cursor page from the explicit dialog action', async () => {
     renderPanel();
     fireEvent.click(screen.getByRole('button', { name: 'Manage' }));

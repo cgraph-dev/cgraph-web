@@ -86,6 +86,15 @@ describe('SessionsSettingsPanel', () => {
     });
   });
 
+  it('announces the initial loading state', () => {
+    sessionsHook.sessions = [];
+    sessionsHook.isLoading = true;
+
+    renderPanel();
+
+    expect(screen.getByRole('status', { name: 'Loading active sessions' })).toBeInTheDocument();
+  });
+
   it('renders the current session first and never gives it a revoke control', () => {
     sessionsHook.sessions = [
       { ...defaultSessions[1]! },

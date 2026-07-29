@@ -11,6 +11,7 @@ import {
   DialogTitle,
   GlassCard,
 } from '@/shared/components/ui';
+import { InlineLoadingSpinner } from '@/components/feedback/loading-spinner';
 import { useProfileStore, type BlockedUser } from '@/modules/social/store';
 
 const PAGE_SIZE = 50;
@@ -213,8 +214,8 @@ export function BlockedUsersSettings() {
               ) : null}
 
               {isLoadingBlocked && blockedUsers.length === 0 ? (
-                <div className="flex justify-center py-8" aria-label="Loading blocked users">
-                  <div className="size-7 animate-spin rounded-full border-2 border-primary-400 border-t-transparent" />
+                <div className="flex justify-center py-8">
+                  <InlineLoadingSpinner label="Loading blocked users" size="lg" />
                 </div>
               ) : blockedUsers.length === 0 ? (
                 <p className="py-8 text-center text-sm text-[var(--token-text-muted)]">

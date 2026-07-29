@@ -18,6 +18,15 @@ describe('InlineLoadingSpinner', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
   });
+
+  it('supports explicit labels and stable sizes', () => {
+    const { container } = render(
+      <InlineLoadingSpinner label="Loading active sessions" size="lg" />
+    );
+
+    expect(screen.getByRole('status', { name: 'Loading active sessions' })).toBeInTheDocument();
+    expect(container.querySelector('svg')).toHaveClass('h-8', 'w-8');
+  });
 });
 
 describe('LoadingOverlay', () => {
