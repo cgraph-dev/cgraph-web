@@ -26,11 +26,19 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({
-    warn: vi.fn(),
-  }),
-}));
+vi.mock('@/lib/logger', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/logger')>();
+
+  return {
+    ...actual,
+    createLogger: () => ({
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    }),
+  };
+});
 
 const mockedHttp = http as unknown as {
   get: ReturnType<typeof vi.fn>;

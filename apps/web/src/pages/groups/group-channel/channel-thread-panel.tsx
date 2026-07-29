@@ -11,6 +11,9 @@ import { entranceVariants, springs } from '@/lib/animation-presets';
 import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import { useChannelThreadStore } from '@/modules/groups/store/channelThreadStore';
 import { captureError } from '@/lib/error-tracking';
+import { IconButton } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import Skeleton from '@/components/ui/skeleton';
 
 /**
  * Channel Thread Panel component.
@@ -79,30 +82,29 @@ export function ChannelThreadPanel() {
           transition={springs.gentle}
           role="complementary"
           aria-label="Message thread"
-          className="absolute inset-0 z-40 flex h-full w-full flex-col border-l border-[var(--token-card-border)] bg-[var(--token-bg-primary)] xl:static xl:w-96 xl:bg-[var(--token-card-bg)/0.4]"
+          className="cgraph-pane absolute inset-0 z-40 flex h-full w-full flex-col border-l xl:static xl:w-96"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--token-card-border)] px-4 py-3">
+          <div className="cgraph-pane-header flex items-center justify-between px-4">
             <div className="flex items-center gap-2">
-              <ChatBubbleLeftRightIcon className="h-5 w-5 text-primary-400" />
-              <h3 className="font-semibold text-white">Thread</h3>
-              <span className="text-xs text-white/40">
+              <ChatBubbleLeftRightIcon className="h-5 w-5 text-[var(--token-interactive-primary)]" />
+              <h3 className="font-semibold text-[var(--token-text-primary)]">Thread</h3>
+              <span className="text-xs text-[var(--token-text-muted)]">
                 {threadReplies.length} {threadReplies.length === 1 ? 'reply' : 'replies'}
               </span>
             </div>
-            <button
+            <IconButton
+              icon={<XMarkIcon />}
+              label="Close thread"
+              size="sm"
               onClick={closeThread}
-              aria-label="Close thread"
-              className="rounded-lg p-1.5 text-white/40 hover:bg-white/10 hover:text-white"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
+            />
           </div>
 
           {/* Parent message */}
-          <div className="border-b border-[var(--token-card-border)] px-4 py-3">
+          <div className="border-b border-[var(--product-line)] px-4 py-3">
             <div className="flex items-start gap-3">
-              <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--product-surface-recessed)] text-[var(--token-interactive-primary)]">
                 {activeThread.author.avatarUrl ? (
                   <img
                     src={activeThread.author.avatarUrl}
@@ -110,7 +112,7 @@ export function ChannelThreadPanel() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white">
+                  <div className="flex h-full w-full items-center justify-center text-sm font-bold">
                     {(activeThread.author.displayName ?? activeThread.author.username)
                       .charAt(0)
                       .toUpperCase()}
@@ -119,14 +121,14 @@ export function ChannelThreadPanel() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm font-semibold text-[var(--token-text-primary)]">
                     {activeThread.author.displayName ?? activeThread.author.username}
                   </span>
-                  <span className="text-xs text-white/30">
+                  <span className="text-xs text-[var(--token-text-muted)]">
                     {formatTime(activeThread.createdAt)}
                   </span>
                 </div>
-                <p className="mt-1 whitespace-pre-wrap break-words text-sm text-white/80">
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm text-[var(--token-text-secondary)]">
                   {activeThread.content}
                 </p>
               </div>
@@ -136,15 +138,17 @@ export function ChannelThreadPanel() {
           {/* Replies list */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+              <div className="space-y-3 py-4" role="status" aria-label="Loading thread replies">
+                <span className="sr-only">Loading thread replies</span>
+                <Skeleton shape="message" count={3} />
               </div>
             ) : threadReplies.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <ChatBubbleLeftRightIcon className="mb-3 h-10 w-10 text-white/20" />
-                <p className="text-sm text-white/40">No replies yet</p>
-                <p className="mt-1 text-xs text-white/20">Be the first to reply</p>
-              </div>
+              <EmptyState
+                icon={<ChatBubbleLeftRightIcon className="h-7 w-7" />}
+                title="No replies yet"
+                message="Be the first to reply."
+                className="min-h-52"
+              />
             ) : (
               <div className="space-y-4">
                 {threadReplies.map((reply) => (
@@ -154,7 +158,7 @@ export function ChannelThreadPanel() {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-start gap-3"
                   >
-                    <div className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600">
+                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--product-surface-recessed)] text-[var(--token-interactive-primary)]">
                       {reply.author?.avatarUrl ? (
                         <img
                           src={reply.author.avatarUrl}
@@ -162,7 +166,7 @@ export function ChannelThreadPanel() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs font-bold text-white">
+                        <div className="flex h-full w-full items-center justify-center text-xs font-bold">
                           {(reply.author?.displayName ?? reply.author?.username ?? '?')
                             .charAt(0)
                             .toUpperCase()}
@@ -171,12 +175,14 @@ export function ChannelThreadPanel() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-sm font-medium text-white">
+                        <span className="text-sm font-medium text-[var(--token-text-primary)]">
                           {reply.author?.displayName ?? reply.author?.username}
                         </span>
-                        <span className="text-xs text-white/30">{formatTime(reply.createdAt)}</span>
+                        <span className="text-xs text-[var(--token-text-muted)]">
+                          {formatTime(reply.createdAt)}
+                        </span>
                       </div>
-                      <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-white/70">
+                      <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-[var(--token-text-secondary)]">
                         {reply.content}
                       </p>
                     </div>
@@ -187,8 +193,8 @@ export function ChannelThreadPanel() {
           </div>
 
           {/* Reply input */}
-          <div className="border-t border-[var(--token-card-border)] p-3">
-            <div className="flex items-end gap-2 rounded-xl bg-[var(--token-card-bg)/0.6] px-3 py-2">
+          <div className="border-t border-[var(--product-line)] p-3">
+            <div className="cgraph-field flex items-end gap-2 px-2 py-1">
               <textarea
                 ref={inputRef}
                 value={replyText}
@@ -196,16 +202,17 @@ export function ChannelThreadPanel() {
                 onKeyDown={handleKeyDown}
                 placeholder="Reply to thread..."
                 rows={1}
-                className="flex-1 resize-none bg-transparent text-sm text-white placeholder-white/30 focus:outline-none"
+                className="min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm text-[var(--token-text-primary)] placeholder:text-[var(--token-text-muted)] focus:outline-none"
                 style={{ maxHeight: '100px' }}
               />
-              <button
+              <IconButton
+                icon={<PaperAirplaneIcon />}
+                label="Send thread reply"
+                size="sm"
+                variant="primary"
                 onClick={handleSend}
                 disabled={!replyText.trim() || isSending}
-                className="hover:bg-primary-500/10 rounded-lg p-1.5 text-primary-400 disabled:opacity-30 disabled:hover:bg-transparent"
-              >
-                <PaperAirplaneIcon className="h-5 w-5" />
-              </button>
+              />
             </div>
           </div>
         </motion.div>

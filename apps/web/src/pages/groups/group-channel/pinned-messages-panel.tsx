@@ -6,13 +6,16 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { BookmarkIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getErrorMessage } from '@/lib/api';
 import { http } from '@/lib/api-client';
 import { createLogger } from '@/lib/logger';
 import type { ChannelMessage } from '@/modules/groups/store';
 import { springs } from '@/lib/animation-presets';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { Button, IconButton } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import Skeleton from '@/components/ui/skeleton';
 
 const logger = createLogger('PinnedMessagesPanel');
 
@@ -57,11 +60,7 @@ function getPinnedMessageError(error: unknown, forbiddenMessage: string, fallbac
   return message || fallback;
 }
 
-/**
- */
-/**
- * Pinned Messages Panel component.
- */
+/** Pinned messages for the active channel. */
 export function PinnedMessagesPanel({
   groupId,
   channelId,
@@ -133,20 +132,19 @@ export function PinnedMessagesPanel({
       animate={{ width: isNarrowLayout ? '100%' : 320, opacity: 1 }}
       exit={{ width: 0, opacity: 0 }}
       transition={{ ...springs.stiff, mass: 0.8 }}
-      className="absolute inset-0 z-40 flex flex-col overflow-hidden border-l border-[var(--token-border-muted)] bg-[var(--token-bg-primary)] xl:static xl:bg-[var(--token-card-bg)/0.4]"
+      className="cgraph-pane absolute inset-0 z-40 flex flex-col overflow-hidden border-l xl:static"
       role="complementary"
       aria-label="Pinned messages"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--token-border-muted)] px-4 py-3">
-        <h3 className="text-sm font-semibold text-white">Pinned Messages</h3>
-        <button
+      <div className="cgraph-pane-header flex items-center justify-between px-4">
+        <h3 className="text-sm font-semibold text-[var(--token-text-primary)]">Pinned Messages</h3>
+        <IconButton
+          icon={<XMarkIcon />}
+          label="Close pinned messages"
+          size="sm"
           onClick={onClose}
-          className="rounded p-1 text-gray-400 transition-colors hover:bg-white/[0.08] hover:text-white"
-          aria-label="Close pinned messages"
-        >
-          <XMarkIcon className="h-4 w-4" />
-        </button>
+        />
       </div>
 
       {/* Content */}
@@ -154,28 +152,26 @@ export function PinnedMessagesPanel({
         {errorMessage && (
           <div
             role="alert"
-            className="m-3 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200"
+            className="m-3 rounded-md border border-[color-mix(in_srgb,var(--token-feedback-error)_35%,transparent)] bg-[color-mix(in_srgb,var(--token-feedback-error)_10%,transparent)] px-3 py-2 text-xs text-[var(--token-feedback-error)]"
           >
             {errorMessage}
           </div>
         )}
 
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+          <div className="space-y-3 p-4" role="status" aria-label="Loading pinned messages">
+            <span className="sr-only">Loading pinned messages</span>
+            <Skeleton shape="message" count={3} />
           </div>
         )}
 
         {!isLoading && pins.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center px-6 py-12 text-center"
-          >
-            <span className="mb-2 text-3xl">📌</span>
-            <p className="text-sm font-medium text-gray-300">No pinned messages</p>
-            <p className="mt-1 text-xs text-gray-500">Use a message menu to pin it here.</p>
-          </motion.div>
+          <EmptyState
+            icon={<BookmarkIcon className="h-7 w-7" />}
+            title="No pinned messages"
+            message="Use a message menu to pin it here."
+            className="min-h-52"
+          />
         )}
 
         <AnimatePresence>
@@ -186,7 +182,7 @@ export function PinnedMessagesPanel({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={springs.stiff}
-              className="group border-b border-[var(--token-border-muted)] px-4 py-3 hover:bg-[var(--token-card-bg)/0.5]"
+              className="group border-b border-[var(--product-line)] px-4 py-3 hover:bg-[color-mix(in_srgb,var(--token-text-primary)_4%,transparent)]"
             >
               {pin.message ? (
                 <>
@@ -199,35 +195,38 @@ export function PinnedMessagesPanel({
                         className="h-5 w-5 rounded-full"
                       />
                     ) : (
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--token-interactive-primary)] text-[10px] font-bold text-[var(--token-text-on-primary)]">
                         {(pin.message.author?.username || 'U').charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <span className="text-xs font-semibold text-white">
+                    <span className="text-xs font-semibold text-[var(--token-text-primary)]">
                       {pin.message.author?.displayName || pin.message.author?.username || 'Unknown'}
                     </span>
-                    <span className="text-[10px] text-gray-500">
+                    <span className="text-[10px] text-[var(--token-text-muted)]">
                       {new Date(pin.message.createdAt).toLocaleDateString()}
                     </span>
                   </div>
 
                   {/* Message content */}
-                  <p className="line-clamp-3 text-sm leading-relaxed text-gray-300">
+                  <p className="line-clamp-3 text-sm leading-relaxed text-[var(--token-text-secondary)]">
                     {pin.message.content}
                   </p>
 
                   {/* Unpin button (visible on hover) */}
-                  <button
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    animated={false}
                     onClick={() => handleUnpin(pin)}
                     disabled={unpinningId === pin.id}
-                    className="mt-2 hidden text-xs text-red-400 transition-colors hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-60 group-hover:inline-block"
+                    className="mt-2 hidden group-hover:inline-flex group-focus-within:inline-flex"
                     aria-label={`Unpin ${pin.message.content}`}
                   >
                     {unpinningId === pin.id ? 'Unpinning...' : 'Unpin'}
-                  </button>
+                  </Button>
                 </>
               ) : (
-                <p className="text-xs italic text-gray-500">
+                <p className="text-xs italic text-[var(--token-text-muted)]">
                   Message not loaded (ID: {pin.message_id?.slice(0, 8)}...)
                 </p>
               )}

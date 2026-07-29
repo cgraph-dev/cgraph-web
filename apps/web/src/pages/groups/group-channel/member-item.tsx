@@ -8,11 +8,7 @@
 import type { MemberItemProps } from './types';
 import { getAvatarInitial, getDisplayName } from './utils';
 
-/**
- */
-/**
- * Member Item component.
- */
+/** Compact member row with presence and role color. */
 export function MemberItem({ member, isOffline = false }: MemberItemProps) {
   const roleColor = member.roles?.[0]?.color;
   const displayName = getDisplayName(member.user.username, member.user.displayName);
@@ -20,12 +16,11 @@ export function MemberItem({ member, isOffline = false }: MemberItemProps) {
 
   return (
     <div
-      className={`flex cursor-pointer items-center gap-2 rounded p-1.5 hover:bg-white/[0.08] ${
-        isOffline ? 'opacity-60' : ''
-      }`}
+      className="cgraph-list-row flex items-center gap-2 px-2 py-1.5"
+      data-offline={isOffline || undefined}
     >
       <div className="relative">
-        <div className="h-8 w-8 overflow-hidden rounded-full bg-white/[0.08]">
+        <div className="h-8 w-8 overflow-hidden rounded-full bg-[var(--product-surface-recessed)]">
           {member.user.avatarUrl ? (
             <img
               src={member.user.avatarUrl}
@@ -33,18 +28,18 @@ export function MemberItem({ member, isOffline = false }: MemberItemProps) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm font-bold text-gray-400">
+            <div className="flex h-full w-full items-center justify-center text-sm font-bold text-[var(--token-text-muted)]">
               {initial}
             </div>
           )}
         </div>
         {!isOffline && (
-          <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-dark-800 bg-green-500" />
+          <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[var(--product-surface-pane)] bg-[var(--token-feedback-success)]" />
         )}
       </div>
       <span
         className="truncate text-sm"
-        style={{ color: roleColor || (isOffline ? '#6b7280' : '#ffffff') }}
+        style={{ color: roleColor || 'var(--token-text-primary)' }}
       >
         {member.nickname || displayName}
       </span>

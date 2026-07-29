@@ -245,6 +245,10 @@
   box-shadow: inset 3px 0 0 var(--product-brand-secondary);
 }
 
+.cgraph-list-row[data-offline='true'] {
+  opacity: 0.58;
+}
+
 .cgraph-field {
   min-height: var(--product-control-height);
   border: 1px solid var(--product-line);
