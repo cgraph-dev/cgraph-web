@@ -1,32 +1,28 @@
-/**
- * ChannelMessageItem Component
- *
- * Displays a single message in the channel with avatar,
- * content, reactions, and action menu.
- */
-
 import React, { useState, lazy, Suspense, type ReactNode } from 'react';
 import {
-  ArrowUturnLeftIcon,
-  BookmarkIcon,
-  CheckIcon,
-  EllipsisVerticalIcon,
-  FaceSmileIcon,
-  ChatBubbleLeftRightIcon,
-  FlagIcon,
-  LinkIcon,
-  PaperClipIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Bookmark,
+  Check,
+  EllipsisVertical,
+  Flag,
+  Link2,
+  MessagesSquare,
+  Paperclip,
+  Pencil,
+  Reply,
+  Smile,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { VoiceMessagePlayer } from '@/components/media/voice-message-player';
+import { ThemedAvatar } from '@/components/theme/themed-avatar';
 import { DisplayName } from '@/shared/components/ui';
 import { getNameplateBubbleStyle } from '@/lib/cosmetics/nameplate-bubble';
+import { publicProfilePath } from '@/lib/profile-route';
 import { cn } from '@/lib/utils';
 import type { ChannelMessageItemProps } from './types';
 import type { Role } from '@/modules/groups/store';
-import { formatMessageTime, getAvatarInitial, getDisplayName, getTopRole } from './utils';
+import { formatMessageTime, getDisplayName, getTopRole } from './utils';
 import { Button, IconButton } from '@/components/ui/button';
 
 const EmojiPicker = lazy(() =>
@@ -59,7 +55,8 @@ export function ChannelMessageItem({
   const [isActionPending, setIsActionPending] = useState(false);
 
   const displayName = getDisplayName(message.author.username, message.author.displayName);
-  const initial = getAvatarInitial(message.author.username, message.author.displayName);
+  const profilePath = publicProfilePath(message.author);
+  const topRole = getTopRole(message.author.member?.roles);
   const isOwnMessage = currentUserId === message.authorId;
   const canEdit = Boolean(onEditMessage && isOwnMessage && message.messageType === 'text');
   const canDelete = Boolean(onDeleteMessage && (isOwnMessage || canManageMessages));
@@ -134,52 +131,54 @@ export function ChannelMessageItem({
         }
       }}
     >
-      {/* Avatar or spacer */}
       <div className="w-10 flex-shrink-0">
         {showHeader && (
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-[var(--product-surface-recessed)]">
-            {message.author.avatarUrl ? (
-              <img
-                src={message.author.avatarUrl}
-                alt={displayName}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[var(--token-text-muted)]">
-                {initial}
-              </div>
-            )}
-          </div>
+          <Link
+            to={profilePath}
+            aria-label={`View profile for ${displayName}`}
+            className="block w-fit rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focus-ring)]"
+          >
+            <ThemedAvatar
+              src={message.author.avatarUrl}
+              alt={displayName}
+              size="small"
+              avatarBorderId={message.author.avatarBorderId}
+              fallbackText={displayName}
+            />
+          </Link>
         )}
       </div>
 
-      {/* Content */}
       <div className="min-w-0 flex-1">
         {showHeader && (
           <div className="mb-0.5 flex items-baseline gap-2">
-            <DisplayName
-              name={displayName}
-              font={message.author.displayNameFont ?? 'default'}
-              effect={message.author.displayNameEffect ?? 'solid'}
-              color={
-                message.author.displayNameColor ??
-                message.author.member?.roles?.[0]?.color ??
-                'var(--token-text-primary)'
-              }
-              secondaryColor={message.author.displayNameSecondaryColor ?? undefined}
-              className="cursor-pointer hover:underline"
-            />
-            <RoleBadge role={getTopRole(message.author.member?.roles)} />
+            <Link
+              to={profilePath}
+              aria-label={`Open profile for ${displayName}`}
+              className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--token-focus-ring)] hover:underline"
+            >
+              <DisplayName
+                name={displayName}
+                font={message.author.displayNameFont ?? 'default'}
+                effect={message.author.displayNameEffect ?? 'solid'}
+                color={
+                  message.author.displayNameColor ??
+                  topRole?.color ??
+                  'var(--token-text-primary)'
+                }
+                secondaryColor={message.author.displayNameSecondaryColor ?? undefined}
+              />
+            </Link>
+            <RoleBadge role={topRole} />
             <span className="text-xs text-[var(--token-text-muted)]">
               {formatMessageTime(new Date(message.createdAt))}
             </span>
           </div>
         )}
 
-        {/* Reply preview */}
         {message.replyTo && (
           <div className="mb-1 flex items-center gap-1 text-xs text-[var(--token-text-muted)]">
-            <ArrowUturnLeftIcon className="h-4 w-4" />
+            <Reply className="h-4 w-4" />
             <span className="text-[var(--token-interactive-primary)]">
               {getDisplayName(message.replyTo.author.username, message.replyTo.author.displayName)}
             </span>
@@ -209,7 +208,7 @@ export function ChannelMessageItem({
               <Button
                 size="sm"
                 animated={false}
-                leftIcon={<CheckIcon />}
+                leftIcon={<Check />}
                 onClick={() => void handleSaveEdit()}
                 disabled={isActionPending || !editDraft.trim()}
               >
@@ -219,7 +218,7 @@ export function ChannelMessageItem({
                 size="sm"
                 variant="ghost"
                 animated={false}
-                leftIcon={<XMarkIcon />}
+                leftIcon={<X />}
                 onClick={handleCancelEdit}
                 disabled={isActionPending}
               >
@@ -252,7 +251,6 @@ export function ChannelMessageItem({
           </div>
         )}
 
-        {/* Reactions */}
         {message.reactions.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {message.reactions.map((reaction) => (
@@ -273,13 +271,12 @@ export function ChannelMessageItem({
           </div>
         )}
 
-        {/* Thread reply count badge */}
         {threadReplyCount != null && threadReplyCount > 0 && (
           <Button
             variant="ghost"
             size="sm"
             animated={false}
-            leftIcon={<ChatBubbleLeftRightIcon />}
+            leftIcon={<MessagesSquare />}
             onClick={onOpenThread}
             className="mt-1 min-h-8 px-2 py-1 text-xs text-[var(--token-interactive-primary)]"
           >
@@ -290,7 +287,6 @@ export function ChannelMessageItem({
         )}
       </div>
 
-      {/* Actions */}
       {showActions && (
         <div
           className="cgraph-message-toolbar absolute -top-5 right-4 z-10 flex items-center gap-0.5 p-0.5"
@@ -298,7 +294,7 @@ export function ChannelMessageItem({
           aria-label="Message shortcuts"
         >
           <IconButton
-            icon={<FaceSmileIcon />}
+            icon={<Smile />}
             label="React"
             size="sm"
             variant={showReactionPicker ? 'secondary' : 'ghost'}
@@ -306,13 +302,13 @@ export function ChannelMessageItem({
             aria-pressed={showReactionPicker}
           />
           <IconButton
-            icon={<ArrowUturnLeftIcon />}
+            icon={<Reply />}
             label="Reply"
             size="sm"
             onClick={onReply}
           />
           <IconButton
-            icon={<ChatBubbleLeftRightIcon />}
+            icon={<MessagesSquare />}
             label="Reply in thread"
             size="sm"
             onClick={onOpenThread}
@@ -320,7 +316,7 @@ export function ChannelMessageItem({
           {hasMoreActions && (
             <div className="relative">
               <IconButton
-                icon={<EllipsisVerticalIcon />}
+                icon={<EllipsisVertical />}
                 label="More message actions"
                 size="sm"
                 variant={showMoreMenu ? 'secondary' : 'ghost'}
@@ -341,7 +337,7 @@ export function ChannelMessageItem({
                 >
                   {canEdit && (
                     <MessageMenuItem
-                      icon={<PencilSquareIcon />}
+                      icon={<Pencil />}
                       label="Edit"
                       onClick={() => {
                         setEditDraft(message.content);
@@ -352,28 +348,28 @@ export function ChannelMessageItem({
                   )}
                   {canPin && (
                     <MessageMenuItem
-                      icon={<BookmarkIcon />}
+                      icon={<Bookmark />}
                       label="Pin"
                       onClick={() => void runMessageAction(() => onPinMessage?.())}
                     />
                   )}
                   {onCopyLink && (
                     <MessageMenuItem
-                      icon={<LinkIcon />}
+                      icon={<Link2 />}
                       label="Copy link"
                       onClick={() => void runMessageAction(() => onCopyLink())}
                     />
                   )}
                   {onReport && currentUserId && message.authorId !== currentUserId && (
                     <MessageMenuItem
-                      icon={<FlagIcon />}
+                      icon={<Flag />}
                       label="Report"
                       onClick={() => void runMessageAction(() => onReport())}
                     />
                   )}
                   {canDelete && (
                     <MessageMenuItem
-                      icon={<TrashIcon />}
+                      icon={<Trash2 />}
                       label="Delete"
                       variant="danger"
                       onClick={() => {
@@ -390,7 +386,6 @@ export function ChannelMessageItem({
         </div>
       )}
 
-      {/* Reaction emoji picker */}
       <Suspense fallback={null}>
         {showReactionPicker && (
           <EmojiPicker
@@ -624,7 +619,7 @@ function MessageAttachment({ message }: { readonly message: ChannelMessageItemPr
       rel="noreferrer"
       className="cgraph-message-attachment mt-2 flex max-w-sm items-center gap-3 px-3 py-2 text-sm text-[var(--token-text-primary)]"
     >
-      <PaperClipIcon className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]" />
+      <Paperclip className="h-5 w-5 shrink-0 text-[var(--token-text-muted)]" />
       <span className="min-w-0 flex-1 truncate">{fileName}</span>
       {displaySize && (
         <span className="shrink-0 text-xs text-[var(--token-text-muted)]">{displaySize}</span>

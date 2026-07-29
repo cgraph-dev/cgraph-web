@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
-import type { ChannelMessage } from '@/modules/groups/store';
+import type { ChannelMessage, Role } from '@/modules/groups/store';
 import { ChannelMessageItem } from './channel-message-item';
 
 vi.mock('@/modules/chat/components/emoji-picker', () => ({
@@ -18,6 +19,38 @@ vi.mock('@/modules/chat/components/emoji-picker', () => ({
       </button>
     ) : null,
 }));
+
+vi.mock('@/components/theme/themed-avatar', () => ({
+  ThemedAvatar: ({
+    alt,
+    avatarBorderId,
+    fallbackText,
+  }: {
+    alt: string;
+    avatarBorderId?: string | null;
+    fallbackText?: string;
+  }) => (
+    <span
+      data-testid={`avatar-${alt}`}
+      data-avatar-border-id={avatarBorderId}
+      data-fallback-text={fallbackText}
+    />
+  ),
+}));
+
+function makeRole(overrides: Partial<Role>): Role {
+  return {
+    id: 'role',
+    name: 'Member',
+    color: '#687486',
+    position: 0,
+    permissions: 0,
+    isDefault: false,
+    isHoisted: false,
+    isMentionable: false,
+    ...overrides,
+  };
+}
 
 function makeMessage(overrides: Partial<ChannelMessage> = {}): ChannelMessage {
   return {
@@ -66,10 +99,70 @@ function renderMessage(
     ...overrides,
   };
 
-  return { ...render(<ChannelMessageItem {...props} />), props };
+  return {
+    ...render(
+      <MemoryRouter>
+        <ChannelMessageItem {...props} />
+      </MemoryRouter>
+    ),
+    props,
+  };
 }
 
 describe('ChannelMessageItem', () => {
+  it('links the author identity and preserves avatar and highest-role cosmetics', () => {
+    const roles = [
+      makeRole({ id: 'member', name: 'Member', color: '#687486', position: 1 }),
+      makeRole({ id: 'owner', name: 'Owner', color: '#25c48a', position: 20 }),
+      makeRole({
+        id: 'default',
+        name: 'Everyone',
+        color: '#ffffff',
+        position: 100,
+        isDefault: true,
+      }),
+    ];
+    renderMessage({
+      message: makeMessage({
+        author: {
+          ...makeMessage().author,
+          avatarBorderId: 'aurora-ring',
+          member: {
+            id: 'member-1',
+            userId: 'user-1',
+            nickname: null,
+            user: {
+              id: 'user-1',
+              username: 'owner',
+              displayName: 'Owner',
+              avatarUrl: null,
+              status: 'online',
+            },
+            roles,
+            joinedAt: '2026-07-29T00:00:00.000Z',
+          },
+        },
+      }),
+    });
+
+    expect(screen.getByRole('link', { name: 'View profile for Owner' })).toHaveAttribute(
+      'href',
+      '/owner'
+    );
+    expect(screen.getByRole('link', { name: 'Open profile for Owner' })).toHaveAttribute(
+      'href',
+      '/owner'
+    );
+    expect(screen.getByTestId('avatar-Owner')).toHaveAttribute(
+      'data-avatar-border-id',
+      'aurora-ring'
+    );
+    expect(screen.getByText('Owner', { selector: '.cgraph-role-badge' })).toHaveStyle({
+      color: '#25c48a',
+    });
+    expect(roles.map((role) => role.id)).toEqual(['member', 'owner', 'default']);
+  });
+
   it('reveals labelled shortcuts on keyboard focus and forwards reply actions', async () => {
     const { props } = renderMessage();
     const message = screen.getByRole('article', { name: 'Message from Owner' });
