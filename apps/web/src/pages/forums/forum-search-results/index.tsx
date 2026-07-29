@@ -1,19 +1,37 @@
-/**
- * Forum Search Results Page
- *
- * Full search results page with search bar, filter chips,
- * results list, and infinite scroll.
- *
- */
-
+import type { FormEvent } from 'react';
 import { useEffect, useRef } from 'react';
+import { MessagesSquare, Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { InlineLoadingSpinner } from '@/components/feedback/loading-spinner';
+import { Button } from '@/components/ui/button';
 import { useForumStore } from '@/modules/forums/store';
 import type { ForumSearchFilters } from '@/modules/forums/store/forumStore.types';
 import { SearchResultCard } from './search-result-card';
 import { SearchFiltersPanel } from './search-filters-panel';
 
-/** Forum Search Results component. */
+const VALID_TYPES: ReadonlyArray<ForumSearchFilters['type']> = [
+  'thread',
+  'post',
+  'comment',
+  'all',
+];
+
+const VALID_SORTS: ReadonlyArray<ForumSearchFilters['sort']> = [
+  'relevance',
+  'newest',
+  'oldest',
+  'most_votes',
+];
+
+function buildSearchParams(query: string, filters: ForumSearchFilters): URLSearchParams {
+  const params = new URLSearchParams({ q: query });
+  if (filters.type && filters.type !== 'all') params.set('type', filters.type);
+  if (filters.sort) params.set('sort', filters.sort);
+  if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+  if (filters.dateTo) params.set('date_to', filters.dateTo);
+  return params;
+}
+
 function ForumSearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
   const {
@@ -28,24 +46,9 @@ function ForumSearchResults() {
   } = useForumStore();
 
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Read URL params on mount
   const urlQuery = searchParams.get('q') ?? '';
-
-  const VALID_TYPES: ReadonlyArray<ForumSearchFilters['type']> = [
-    'thread',
-    'post',
-    'comment',
-    'all',
-  ];
-  const VALID_SORTS: ReadonlyArray<ForumSearchFilters['sort']> = [
-    'relevance',
-    'newest',
-    'oldest',
-    'most_votes',
-  ];
   const rawType = searchParams.get('type') ?? '';
   const rawSort = searchParams.get('sort') ?? '';
   const urlType: ForumSearchFilters['type'] | null = VALID_TYPES.find((t) => t === rawType) ?? null;
@@ -53,7 +56,6 @@ function ForumSearchResults() {
   const urlDateFrom = searchParams.get('date_from') ?? undefined;
   const urlDateTo = searchParams.get('date_to') ?? undefined;
 
-  // Trigger search from URL params on mount / param change
   useEffect(() => {
     if (urlQuery) {
       const filters: ForumSearchFilters = {};
@@ -68,7 +70,6 @@ function ForumSearchResults() {
     };
   }, [urlQuery, urlType, urlSort, urlDateFrom, urlDateTo, searchForums, clearSearch]);
 
-  // Infinite scroll observer
   function sentinelCallback(node: HTMLDivElement | null): void {
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver((entries) => {
@@ -77,102 +78,94 @@ function ForumSearchResults() {
       }
     });
     if (node) observerRef.current.observe(node);
-    sentinelRef.current = node;
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
     const q = inputRef.current?.value.trim();
     if (!q) return;
-    const params = new URLSearchParams({ q });
-    if (searchFilters.type && searchFilters.type !== 'all') params.set('type', searchFilters.type);
-    if (searchFilters.sort) params.set('sort', searchFilters.sort);
-    if (searchFilters.dateFrom) params.set('date_from', searchFilters.dateFrom);
-    if (searchFilters.dateTo) params.set('date_to', searchFilters.dateTo);
-    setSearchParams(params);
+    setSearchParams(buildSearchParams(q, searchFilters));
   };
 
-  const handleFiltersChange = (newFilters: ForumSearchFilters) => {
+  const handleFiltersChange = (newFilters: ForumSearchFilters): void => {
     const q = searchQuery || inputRef.current?.value.trim() || '';
     if (!q) return;
-    const params = new URLSearchParams({ q });
-    if (newFilters.type && newFilters.type !== 'all') params.set('type', newFilters.type);
-    if (newFilters.sort) params.set('sort', newFilters.sort);
-    if (newFilters.dateFrom) params.set('date_from', newFilters.dateFrom);
-    if (newFilters.dateTo) params.set('date_to', newFilters.dateTo);
-    setSearchParams(params);
+    setSearchParams(buildSearchParams(q, newFilters));
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
-      {/* Header */}
+    <div className="cgraph-workspace mx-auto max-w-4xl space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Search Forums</h1>
+        <h1 className="text-2xl font-bold text-[var(--token-text-primary)]">Search Forums</h1>
         {searchQuery && !searchLoading && (
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
             {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for &quot;
             {searchQuery}&quot;
           </p>
         )}
       </div>
 
-      {/* Search Bar */}
       <form onSubmit={handleSearch} className="flex gap-2">
+        <label htmlFor="forum-search-query" className="sr-only">
+          Search forums
+        </label>
         <input
+          id="forum-search-query"
           ref={inputRef}
           type="text"
           defaultValue={urlQuery}
           placeholder="Search threads, posts, comments…"
-          className="flex-1 rounded-lg border border-[var(--token-border-muted)] bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500"
+          className="min-w-0 flex-1 rounded-lg border border-[var(--token-input-border)] bg-[var(--token-input-bg)] px-4 py-2.5 text-sm text-[var(--token-text-primary)] outline-none placeholder:text-[var(--token-text-muted)] focus:border-[var(--token-interactive-primary)] focus:ring-2 focus:ring-[var(--token-focus-ring)]"
         />
-        <button
-          type="submit"
-          className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
-        >
+        <Button type="submit" leftIcon={<Search aria-hidden="true" />}>
           Search
-        </button>
+        </Button>
       </form>
 
-      {/* Filters */}
       <SearchFiltersPanel filters={searchFilters} onFiltersChange={handleFiltersChange} />
 
-      {/* Results */}
       <div className="space-y-3">
         {searchResults.map((result) => (
           <SearchResultCard key={`${result.type}-${result.id}`} result={result} />
         ))}
 
-        {/* Loading indicator */}
         {searchLoading && (
           <div className="flex justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+            <InlineLoadingSpinner label="Searching forums" />
           </div>
         )}
 
-        {/* Empty state */}
         {!searchLoading && searchQuery && searchResults.length === 0 && (
-          <div className="py-16 text-center">
-            <div className="mb-3 text-4xl">🔍</div>
-            <h3 className="text-lg font-semibold text-white">No results found</h3>
-            <p className="mt-1 text-sm text-gray-400">
+          <div className="flex flex-col items-center py-16 text-center">
+            <Search
+              className="mb-3 h-10 w-10 text-[var(--token-text-muted)]"
+              aria-hidden="true"
+            />
+            <h3 className="text-lg font-semibold text-[var(--token-text-primary)]">
+              No results found
+            </h3>
+            <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
               Try adjusting your search terms or filters.
             </p>
           </div>
         )}
 
-        {/* Initial state */}
         {!searchLoading && !searchQuery && searchResults.length === 0 && (
-          <div className="py-16 text-center">
-            <div className="mb-3 text-4xl">💬</div>
-            <h3 className="text-lg font-semibold text-white">Search the forums</h3>
-            <p className="mt-1 text-sm text-gray-400">
+          <div className="flex flex-col items-center py-16 text-center">
+            <MessagesSquare
+              className="mb-3 h-10 w-10 text-[var(--token-text-muted)]"
+              aria-hidden="true"
+            />
+            <h3 className="text-lg font-semibold text-[var(--token-text-primary)]">
+              Search the forums
+            </h3>
+            <p className="mt-1 text-sm text-[var(--token-text-secondary)]">
               Find threads, posts, and comments across all forums.
             </p>
           </div>
         )}
 
-        {/* Infinite scroll sentinel */}
-        {searchHasMore && <div ref={sentinelCallback} className="h-4" />}
+        {searchHasMore && <div ref={sentinelCallback} className="h-4" aria-hidden="true" />}
       </div>
     </div>
   );
