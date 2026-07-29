@@ -1,142 +1,103 @@
-/**
- * Profile form input fields component.
- */
-import { motion } from 'motion/react';
-import { GlassCard } from '@/shared/components/ui';
+import { Save } from 'lucide-react';
+import { Select as FieldSelect } from '@/components/ui/input';
 import type { User } from '@/modules/auth/store/authStore.types';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  Card,
+  Input,
+  Textarea,
+} from '@/shared/components/ui';
 
 interface ProfileFormFieldsProps {
   user: User | null;
-  email: string;
-  setEmail: (value: string) => void;
   isSaving: boolean;
   saveError: string | null;
 }
 
-/**
- */
-/**
- * Profile Form Fields component.
- */
-export function ProfileFormFields({
-  user,
-  email,
-  setEmail,
-  isSaving,
-  saveError,
-}: ProfileFormFieldsProps) {
+const PRONOUN_OPTIONS = [
+  { value: '', label: 'Prefer not to say' },
+  { value: 'he/him', label: 'he/him' },
+  { value: 'she/her', label: 'she/her' },
+  { value: 'they/them', label: 'they/them' },
+  { value: 'he/they', label: 'he/they' },
+  { value: 'she/they', label: 'she/they' },
+  { value: 'any', label: 'Any pronouns' },
+  { value: 'ask', label: 'Ask me' },
+] as const;
+
+export function ProfileFormFields({ user, isSaving, saveError }: ProfileFormFieldsProps) {
   return (
-    <>
+    <div className="space-y-4">
       {saveError && (
-        <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-4 text-sm text-red-400 shadow-lg shadow-red-500/5">
-          {saveError}
-        </div>
+        <Alert variant="error">
+          <AlertTitle>Profile was not saved</AlertTitle>
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
       )}
 
-      {/* Display Name */}
-      <GlassCard
-        variant="default"
-        className="aurora-social-panel relative mb-5 overflow-hidden p-6"
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <label
-          htmlFor="profile-display-name"
-          className="mb-3 block text-sm font-semibold text-[var(--token-text-secondary)]"
-        >
-          Display Name
-        </label>
-        <input
-          id="profile-display-name"
-          type="text"
-          name="displayName"
-          defaultValue={user?.displayName || ''}
-          placeholder="How should we call you?"
-          className="aurora-social-select w-full rounded-xl px-4 py-3 text-[var(--token-text-primary)] placeholder-[var(--token-text-muted)]"
-        />
-      </GlassCard>
+      <Card padding="lg">
+        <div className="mb-5">
+          <h2 className="text-base font-semibold text-[var(--token-text-primary)]">
+            Profile information
+          </h2>
+          <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+            This information appears on your public profile.
+          </p>
+        </div>
 
-      {/* Bio */}
-      <GlassCard
-        variant="default"
-        className="aurora-social-panel relative mb-5 overflow-hidden p-6"
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <label
-          htmlFor="profile-bio"
-          className="mb-3 block text-sm font-semibold text-[var(--token-text-secondary)]"
-        >
-          About Me
-        </label>
-        <textarea
-          id="profile-bio"
-          name="bio"
-          defaultValue={user?.bio || ''}
-          placeholder="Tell others about yourself..."
-          maxLength={300}
-          rows={3}
-          className="aurora-social-select w-full resize-none rounded-xl px-4 py-3 text-[var(--token-text-primary)] placeholder-[var(--token-text-muted)]"
-        />
-      </GlassCard>
+        <div className="space-y-5">
+          <Input
+            id="profile-display-name"
+            label="Display name"
+            type="text"
+            name="displayName"
+            defaultValue={user?.displayName || ''}
+            placeholder="How should we call you?"
+            maxLength={50}
+            disabled={isSaving}
+            autoComplete="name"
+          />
+          <Textarea
+            id="profile-bio"
+            label="About me"
+            name="bio"
+            defaultValue={user?.bio || ''}
+            placeholder="Tell others about yourself..."
+            maxLength={300}
+            rows={3}
+            disabled={isSaving}
+          />
+          <FieldSelect
+            id="profile-pronouns"
+            label="Pronouns"
+            name="pronouns"
+            defaultValue={user?.pronouns || ''}
+            options={PRONOUN_OPTIONS}
+            disabled={isSaving}
+          />
+          <Input
+            id="profile-email"
+            label="Email"
+            type="email"
+            value={user?.email || ''}
+            readOnly
+            disabled
+            autoComplete="email"
+          />
+        </div>
+      </Card>
 
-      {/* Pronouns */}
-      <GlassCard
-        variant="default"
-        className="aurora-social-panel relative mb-5 overflow-hidden p-6"
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <label
-          htmlFor="profile-pronouns"
-          className="mb-3 block text-sm font-semibold text-[var(--token-text-secondary)]"
-        >
-          Pronouns
-        </label>
-        <select
-          id="profile-pronouns"
-          name="pronouns"
-          defaultValue={user?.pronouns || ''}
-          className="aurora-social-select w-full rounded-xl px-4 py-3 text-[var(--token-text-primary)]"
-        >
-          <option value="">Prefer not to say</option>
-          <option value="he/him">he/him</option>
-          <option value="she/her">she/her</option>
-          <option value="they/them">they/them</option>
-          <option value="he/they">he/they</option>
-          <option value="she/they">she/they</option>
-          <option value="any">Any pronouns</option>
-          <option value="ask">Ask me</option>
-        </select>
-      </GlassCard>
-
-      {/* Email */}
-      <GlassCard
-        variant="default"
-        className="aurora-social-panel relative mb-5 overflow-hidden p-6"
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <label
-          htmlFor="profile-email"
-          className="mb-3 block text-sm font-semibold text-[var(--token-text-secondary)]"
-        >
-          Email
-        </label>
-        <input
-          id="profile-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="aurora-social-select w-full rounded-xl px-4 py-3 text-[var(--token-text-primary)] placeholder-[var(--token-text-muted)]"
-        />
-      </GlassCard>
-
-      {/* Save Button */}
-      <motion.button
+      <Button
         type="submit"
-        whileTap={{ scale: 0.88 }}
-        disabled={isSaving}
-        className="aurora-social-button w-full rounded-xl px-6 py-3 font-semibold text-white disabled:opacity-40 sm:w-auto"
+        isLoading={isSaving}
+        leftIcon={<Save aria-hidden="true" />}
+        className="w-full sm:w-auto"
       >
-        {isSaving ? 'Saving...' : 'Save Changes'}
-      </motion.button>
-    </>
+        Save changes
+      </Button>
+    </div>
   );
 }

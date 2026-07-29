@@ -1,21 +1,17 @@
-/**
- * Account settings form component.
- */
-import { useState, useActionState } from 'react';
-import { motion } from 'motion/react';
+import { useActionState, useState } from 'react';
+import { AtSign } from 'lucide-react';
 import { HapticFeedback } from '@/lib/animations/animation-engine';
 import { http } from '@/lib/api-client';
-import { tweens } from '@/lib/animation-presets';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/modules/auth/store';
-import { GlassCard, toast } from '@/shared/components/ui';
+import { getApiErrorMessage } from '@/modules/auth/store/authStore.utils';
+import { Button, Card, Input, toast } from '@/shared/components/ui';
 import type { SaveProfileState } from './account-settings.types';
 import { AvatarSection } from './avatar-section';
 import { ProfileFormFields } from './profile-form-fields';
 
 const logger = createLogger('AccountSettings');
 
-/** Safely extract a string from FormData */
 function getFormString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === 'string' ? value : '';
@@ -47,22 +43,9 @@ function profileUpdatePayload(formData: FormData): {
   return { displayName, bio, pronouns, user: userPayload };
 }
 
-/**
- * AccountSettings - User account management component
- *
- * Handles:
- * - Profile picture upload
- * - Username changes (14-day cooldown)
- * - Display name updates
- * - Email management
- * - Wallet connection
- *
- * Uses React 19 useActionState for profile save and username change actions.
- */
 export function AccountSettings() {
   const { user, updateUser } = useAuthStore();
   const [username, setUsername] = useState(user?.username || '');
-  const [email, setEmail] = useState(user?.email || '');
   const [isChangingUsername, setIsChangingUsername] = useState(false);
 
   const canChangeUsername = user?.canChangeUsername ?? true;
@@ -71,14 +54,13 @@ export function AccountSettings() {
     : null;
 
   const [saveState, saveAction, isSaving] = useActionState(
-    async (_prev: SaveProfileState, formData: FormData): Promise<SaveProfileState> => {
+    async (_previous: SaveProfileState, formData: FormData): Promise<SaveProfileState> => {
       const payload = profileUpdatePayload(formData);
 
       try {
-        const response = await http.put('/api/v1/me', {
-          user: payload.user,
-        });
+        const response = await http.put('/api/v1/me', { user: payload.user });
         const updated = response.data.data ?? response.data.user ?? response.data;
+
         updateUser({
           displayName:
             updated.display_name ??
@@ -102,7 +84,7 @@ export function AccountSettings() {
     { error: null }
   );
 
-  const handleChangeUsername = async () => {
+  async function handleChangeUsername(): Promise<void> {
     if (!username.trim() || username === user?.username) return;
 
     setIsChangingUsername(true);
@@ -114,87 +96,76 @@ export function AccountSettings() {
         usernameNextChangeAt: response.data.data.username_next_change_at,
       });
       toast.success('Username changed successfully');
-    } catch (error: unknown) {
-      const resp = error instanceof Object && 'response' in error ? error.response : undefined;
-      const data = resp instanceof Object && 'data' in resp ? resp.data : undefined;
-      const errField = data instanceof Object && 'error' in data ? data.error : undefined;
-      const errorMessage =
-        errField instanceof Object && 'message' in errField && typeof errField.message === 'string'
-          ? errField.message
-          : 'Failed to change username';
-      toast.error(errorMessage);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Failed to change username'));
     } finally {
       setIsChangingUsername(false);
     }
-  };
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={tweens.standard}
-      className="space-y-6"
-    >
+    <div className="space-y-6">
       <AvatarSection user={user} />
 
-      {/* Username with 14-day cooldown */}
-      <GlassCard variant="default" className="relative mb-6 overflow-hidden p-6">
-        {/* Section accent */}
-        <div className="via-primary-500/30 pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent" />
-        <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-white/70">
-          Username
+      <Card padding="lg">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--token-text-primary)]">Username</h2>
+            <p className="mt-1 text-sm text-[var(--token-text-muted)]">
+              Letters, numbers, and underscores only.
+            </p>
+          </div>
           {!canChangeUsername && nextChangeDate && (
-            <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-400 ring-1 ring-amber-500/20">
+            <span className="text-xs font-medium text-[var(--token-feedback-warning)]">
               Locked until {nextChangeDate}
             </span>
           )}
-        </label>
-        <div className="flex gap-3">
-          <input
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <Input
+            label="Public username"
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+            onChange={(event) =>
+              setUsername(event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))
+            }
             disabled={!canChangeUsername}
             placeholder={user?.username || 'Choose a username'}
-            className={`focus:ring-primary-500/20 flex-1 rounded-xl border bg-[var(--token-bg-secondary)] px-4 py-3 text-white placeholder-white/30 shadow-inner shadow-black/20 transition-all focus:outline-none focus:ring-2 ${
-              canChangeUsername
-                ? 'focus:border-primary-500/40 border-[var(--token-card-border)]'
-                : 'cursor-not-allowed border-[var(--token-border-muted)] text-gray-500'
-            }`}
+            leftIcon={<AtSign aria-hidden="true" />}
+            autoComplete="username"
+            minLength={3}
           />
           {canChangeUsername && username !== user?.username && username.length >= 3 && (
-            <motion.button
-              whileTap={{ scale: 0.88 }}
+            <Button
+              variant="secondary"
+              isLoading={isChangingUsername}
+              className="shrink-0"
               onClick={() => {
-                handleChangeUsername();
+                void handleChangeUsername();
                 HapticFeedback.medium();
               }}
-              disabled={isChangingUsername}
-              className="rounded-xl border border-[var(--token-card-border)] bg-[var(--token-bg-secondary)] px-5 py-3 text-sm font-semibold text-white/90 shadow-[0_4px_16px_rgba(0,0,0,0.3),rgba(255,255,255,0.02)_0px_1px_1px_inset] backdrop-blur-md transition-all hover:border-[var(--token-card-border)] hover:bg-[var(--token-card-bg)] disabled:opacity-40"
             >
-              {isChangingUsername ? 'Saving...' : 'Change'}
-            </motion.button>
+              Change username
+            </Button>
           )}
         </div>
-        <p className="mt-2 text-xs text-white/30">
+
+        <p className="mt-3 text-xs text-[var(--token-text-muted)]">
           {canChangeUsername
-            ? 'Username can be changed every 14 days. Letters, numbers, and underscores only.'
+            ? 'You can change your username once every 14 days.'
             : `You changed your username recently. Next change available on ${nextChangeDate}.`}
         </p>
-      </GlassCard>
+      </Card>
 
-      {/* Profile Form — uses React 19 useActionState */}
       <form action={saveAction}>
         <ProfileFormFields
           user={user}
-          email={email}
-          setEmail={setEmail}
           isSaving={isSaving}
           saveError={saveState.error}
         />
       </form>
-    </motion.div>
+    </div>
   );
 }
 

@@ -1,8 +1,5 @@
-/**
- * Profile avatar upload and display section.
- */
 import { useState } from 'react';
-import { GlassCard } from '@/shared/components/ui';
+import { Card } from '@/shared/components/ui';
 import {
   AvatarUploadCropper,
   type CroppedAvatarPayload,
@@ -19,11 +16,6 @@ interface AvatarSectionProps {
   user: User | null;
 }
 
-/**
- */
-/**
- * Avatar Section component.
- */
 export function AvatarSection({ user }: AvatarSectionProps) {
   const updateUser = useAuthStore((state) => state.updateUser);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,11 +62,10 @@ export function AvatarSection({ user }: AvatarSectionProps) {
   }
 
   return (
-    <GlassCard variant="crystal" className="aurora-social-panel relative mb-6 overflow-hidden p-6">
-      <div className="via-primary-500/30 pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent to-transparent" />
-      <label className="mb-4 block text-sm font-semibold text-[var(--token-text-secondary)]">
-        Profile Picture
-      </label>
+    <Card padding="lg">
+      <h2 className="mb-4 text-base font-semibold text-[var(--token-text-primary)]">
+        Profile picture
+      </h2>
       <AvatarUploadCropper
         avatarUrl={user?.avatarUrl}
         displayName={user?.displayName || user?.username}
@@ -87,6 +78,6 @@ export function AvatarSection({ user }: AvatarSectionProps) {
         helperText="Crop once and it updates your profile, sidebar, chats, and profile cards."
         onAvatarCropped={handleAvatarCropped}
       />
-    </GlassCard>
+    </Card>
   );
 }
